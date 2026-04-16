@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id                String         @id @default(cuid())
+  youtubePlaylistId String         @unique
+  title             String
+  description       String         @default("")
+  thumbnailUrl      String         @default("")
+  videoCount        Int            @default(0)
+  syncedAt          DateTime?
+  createdAt         DateTime       @default(now())
+
+  videos            Video[]
+  quizQuestions     QuizQuestion[]
+}
+
+model Video {
+  id              String         @id @default(cuid())
+  courseId        String
+  youtubeVideoId  String         @unique
+  title           String
+  description     String         @default("")
+  thumbnailUrl    String         @default("")
+  position        Int
+  durationSeconds Int            @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+
+  course          Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quizQuestions   QuizQuestion[]
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  videoId      String?
+  courseId     String?
+  prompt       String
+  options      Json
+  correctIndex Int
+  explanation  String   @default("")
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  video        Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  course       Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
