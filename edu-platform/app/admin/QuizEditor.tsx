@@ -19,9 +19,6 @@ const EMPTY_FORM = {
   explanation: "",
 };
 
-function getAdminPassword() {
-  return document.cookie.match(/admin_auth=([^;]+)/)?.[1] ?? "";
-}
 
 export default function QuizEditor({
   initialQuestions,
@@ -63,10 +60,7 @@ export default function QuizEditor({
     setSaving(true);
     setError("");
     try {
-      const headers = {
-        "Content-Type": "application/json",
-        "x-admin-password": getAdminPassword(),
-      };
+      const headers = { "Content-Type": "application/json" };
       const body = { ...form, videoId, courseId, position: questions.length };
 
       if (editingId) {
@@ -93,10 +87,7 @@ export default function QuizEditor({
 
   async function remove(id: string) {
     if (!confirm("Delete this question?")) return;
-    await fetch(`/api/quiz/${id}`, {
-      method: "DELETE",
-      headers: { "x-admin-password": getAdminPassword() },
-    });
+    await fetch(`/api/quiz/${id}`, { method: "DELETE" });
     setQuestions((qs) => qs.filter((q) => q.id !== id));
     router.refresh();
   }

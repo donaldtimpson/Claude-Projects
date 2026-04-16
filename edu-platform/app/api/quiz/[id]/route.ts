@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 
-function isAdmin(req: Request) {
-  return req.headers.get("x-admin-password") === process.env.ADMIN_PASSWORD;
+async function isAdmin() {
+  const cookieStore = await cookies();
+  return cookieStore.get("admin_auth")?.value === process.env.ADMIN_PASSWORD;
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const [body, { id }] = await Promise.all([req.json(), params]);
   const { prompt, options, correctIndex, explanation, position } = body;
@@ -24,8 +26,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json(question);
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
   await db.quizQuestion.delete({ where: { id } });

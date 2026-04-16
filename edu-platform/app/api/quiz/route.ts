@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 
-function isAdmin(req: Request) {
-  return req.headers.get("x-admin-password") === process.env.ADMIN_PASSWORD;
+async function isAdmin() {
+  const cookieStore = await cookies();
+  return cookieStore.get("admin_auth")?.value === process.env.ADMIN_PASSWORD;
 }
 
 export async function GET(req: Request) {
@@ -18,7 +20,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
   const { videoId, courseId, prompt, options, correctIndex, explanation, position } = body;
