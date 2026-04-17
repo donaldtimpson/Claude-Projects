@@ -12,30 +12,42 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1">
-      <header className="border-b border-slate-800 px-6 py-5">
+      <header className="bg-crimson-900 border-b border-crimson-700 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white">Donald Timpson</h1>
-            <p className="text-sm text-slate-400">Free courses in math, physics &amp; CS</p>
-          </div>
-          <a
-            href="https://www.youtube.com/@donaldDtimpson"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-red-400 hover:text-red-300 transition-colors"
-          >
-            YouTube ↗
-          </a>
+          <Link href="/" className="flex items-center gap-3">
+            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={44} height={44} />
+            <span className="font-display text-sm tracking-[0.2em] uppercase text-gold-300">
+              The Timpson Lyceum
+            </span>
+          </Link>
+          <nav className="flex items-center gap-6 font-display text-xs tracking-[0.15em] uppercase text-parchment-dim">
+            <Link href="/" className="hover:text-gold-300 transition-colors">
+              Courses
+            </Link>
+            <a
+              href="https://www.youtube.com/@donaldDtimpson"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gold-300 transition-colors"
+            >
+              YouTube ↗
+            </a>
+            <Link href="/admin/login" className="hover:text-gold-300 transition-colors">
+              Login
+            </Link>
+          </nav>
         </div>
       </header>
 
       <section className="max-w-6xl mx-auto px-6 py-12">
-        <h2 className="text-2xl font-bold mb-8 text-white">Courses</h2>
+        <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+          Courses
+        </h2>
 
         {courses.length === 0 ? (
-          <p className="text-slate-400">
+          <p className="text-parchment-dim">
             No courses yet.{" "}
-            <Link href="/admin" className="text-indigo-400 hover:underline">
+            <Link href="/admin" className="text-gold-400 hover:text-gold-300 underline">
               Sync from YouTube
             </Link>{" "}
             to get started.
@@ -46,7 +58,7 @@ export default async function HomePage() {
               <Link
                 key={course.id}
                 href={`/courses/${course.id}`}
-                className="group bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-indigo-500 transition-colors"
+                className="group bg-crimson-900 border border-crimson-700 rounded-lg overflow-hidden hover:border-gold-500 transition-colors"
               >
                 {course.thumbnailUrl ? (
                   <div className="relative aspect-video">
@@ -54,23 +66,23 @@ export default async function HomePage() {
                       src={course.thumbnailUrl}
                       alt={course.title}
                       fill
-                      className="object-cover"
+                      className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                     />
                   </div>
                 ) : (
-                  <div className="aspect-video bg-slate-800 flex items-center justify-center">
-                    <span className="text-slate-600 text-sm">No thumbnail</span>
+                  <div className="aspect-video bg-crimson-800 flex items-center justify-center">
+                    <span className="text-parchment-dim text-sm">No thumbnail</span>
                   </div>
                 )}
                 <div className="p-4">
-                  <h3 className="font-semibold text-white group-hover:text-indigo-300 transition-colors line-clamp-2">
+                  <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                     {course.title}
                   </h3>
-                  <p className="text-sm text-slate-400 mt-1">
+                  <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
                     {course._count.videos} video{course._count.videos !== 1 ? "s" : ""}
                   </p>
                   {course.description && (
-                    <p className="text-sm text-slate-500 mt-2 line-clamp-2">
+                    <p className="text-sm text-parchment-dim mt-2 line-clamp-2">
                       {course.description}
                     </p>
                   )}

@@ -1,18 +1,28 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Cinzel, EB_Garamond } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  variable: "--font-cinzel",
+  weight: ["400", "600", "700"],
+});
+
+const ebGaramond = EB_Garamond({
+  subsets: ["latin"],
+  variable: "--font-garamond",
+  weight: ["400", "500", "600"],
+});
 
 export const metadata: Metadata = {
-  title: "Donald Timpson — Courses",
-  description: "Free educational courses in calculus, physics, computation theory, and more.",
+  title: "The Timpson Lyceum",
+  description: "A classical education in mathematics, logic, and philosophy.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100">{children}</body>
+    <html lang="en" className={`${cinzel.variable} ${ebGaramond.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-crimson-950 text-parchment">{children}</body>
     </html>
   );
 }
