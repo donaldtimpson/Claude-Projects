@@ -12,10 +12,10 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1">
-      <header className="bg-crimson-900 border-b border-crimson-700 px-6 py-4">
+      <header className="bg-crimson-900 border-b border-crimson-700 px-6 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={44} height={44} />
+            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={64} height={64} />
             <span className="font-display text-sm tracking-[0.2em] uppercase text-gold-300">
               The Timpson Lyceum
             </span>
@@ -38,6 +38,14 @@ export default async function HomePage() {
           </nav>
         </div>
       </header>
+
+      <div className="bg-crimson-950 border-b border-crimson-800 px-6 py-16 text-center">
+        <h1 className="font-display text-4xl md:text-5xl text-parchment leading-tight">
+          A Classical Education in
+          <br />
+          Mathematics, Logic, and Philosophy.
+        </h1>
+      </div>
 
       <section className="max-w-6xl mx-auto px-6 py-12">
         <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
