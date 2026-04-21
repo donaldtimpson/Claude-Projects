@@ -90,7 +90,18 @@ export default async function AttemptPage({
               {courseTitle}
             </Link>
           )}
-          <h1 className="text-xl font-bold text-parchment">{title ?? "Quiz"}</h1>
+          <h1 className="text-xl font-bold text-parchment">
+            {isVideoQuiz && courseId && videoId ? (
+              <Link
+                href={`/courses/${courseId}/${videoId}`}
+                className="hover:text-gold-300 transition-colors"
+              >
+                {title ?? "Quiz"}
+              </Link>
+            ) : (
+              <>{title ?? "Quiz"}</>
+            )}
+          </h1>
           <p className="text-xs text-parchment-dim">
             {attempt.completedAt.toLocaleDateString("en-US", {
               month: "long",

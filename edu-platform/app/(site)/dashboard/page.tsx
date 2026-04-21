@@ -3,36 +3,44 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import AttemptRow from "@/components/AttemptRow";
 
 export const dynamic = "force-dynamic";
-
-function formatDate(iso: Date) {
-  return iso.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/auth/signin");
 
-  const attempts = await db.quizAttempt.findMany({
-    where: { userId: session.user.id },
-    include: {
-      video: {
-        select: {
-          id: true,
-          title: true,
-          courseId: true,
-          course: { select: { id: true, title: true } },
-        },
-      },
-      course: { select: { id: true, title: true } },
-    },
-    orderBy: { completedAt: "desc" },
-  });
+  const userId = session.user.id;
 
-  const videoAttempts = attempts.filter((a) => a.videoId !== null);
-  const testAttempts = attempts.filter((a) => a.courseId !== null && a.videoId === null);
+  const [courses, allProgress] = await Promise.all([
+    db.course.findMany({
+      include: { videos: { select: { id: true }, orderBy: { position: "asc" } } },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.videoProgress.findMany({
+      where: { userId },
+      select: { videoId: true },
+    }),
+  ]);
+
+  const watchedSet = new Set(allProgress.map((p) => p.videoId));
+
+  type CourseEntry = { id: string; title: string; watchedCount: number; totalCount: number };
+  const inProgress: CourseEntry[] = [];
+  const completed: CourseEntry[] = [];
+
+  for (const course of courses) {
+    const totalCount = course.videos.length;
+    if (totalCount === 0) continue;
+    const watchedCount = course.videos.filter((v) => watchedSet.has(v.id)).length;
+    if (watchedCount === 0) continue;
+    const entry: CourseEntry = { id: course.id, title: course.title, watchedCount, totalCount };
+    if (watchedCount === totalCount) {
+      completed.push(entry);
+    } else {
+      inProgress.push(entry);
+    }
+  }
 
   return (
     <main className="flex-1">
@@ -54,52 +62,32 @@ export default async function DashboardPage() {
 
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
-            Video Quizzes
+            In Progress
           </h2>
-          {videoAttempts.length === 0 ? (
-            <p className="text-parchment-dim text-sm">No quiz attempts yet.</p>
+          {inProgress.length === 0 ? (
+            <p className="text-parchment-dim text-sm">No courses in progress yet.</p>
           ) : (
             <ul className="space-y-3">
-              {videoAttempts.map((a) => {
-                const courseId = a.video?.courseId ?? a.video?.course?.id;
-                const videoId = a.video?.id;
-                return (
-                  <li key={a.id}>
-                    <AttemptRow
-                      attemptId={a.id}
-                      label={a.video?.title ?? "Unknown video"}
-                      subtitle={a.video?.course?.title}
-                      subtitleHref={courseId && videoId ? `/courses/${courseId}/${videoId}` : undefined}
-                      date={formatDate(a.completedAt)}
-                      score={a.score}
-                      total={a.totalQuestions}
-                    />
-                  </li>
-                );
-              })}
+              {inProgress.map((c) => (
+                <li key={c.id}>
+                  <CourseProgressCard {...c} />
+                </li>
+              ))}
             </ul>
           )}
         </section>
 
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
-            Playlist Tests
+            Completed
           </h2>
-          {testAttempts.length === 0 ? (
-            <p className="text-parchment-dim text-sm">No test attempts yet.</p>
+          {completed.length === 0 ? (
+            <p className="text-parchment-dim text-sm">No completed courses yet.</p>
           ) : (
             <ul className="space-y-3">
-              {testAttempts.map((a) => (
-                <li key={a.id}>
-                  <AttemptRow
-                    attemptId={a.id}
-                    label="Playlist Test"
-                    subtitle={a.course?.title}
-                    subtitleHref={a.course ? `/courses/${a.course.id}/test` : undefined}
-                    date={formatDate(a.completedAt)}
-                    score={a.score}
-                    total={a.totalQuestions}
-                  />
+              {completed.map((c) => (
+                <li key={c.id}>
+                  <CourseProgressCard {...c} />
                 </li>
               ))}
             </ul>
@@ -107,5 +95,42 @@ export default async function DashboardPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function CourseProgressCard({
+  id,
+  title,
+  watchedCount,
+  totalCount,
+}: {
+  id: string;
+  title: string;
+  watchedCount: number;
+  totalCount: number;
+}) {
+  const pct = Math.round((watchedCount / totalCount) * 100);
+  const isComplete = watchedCount === totalCount;
+
+  return (
+    <Link
+      href={`/dashboard/course/${id}`}
+      className="group block bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-1">
+          {title}
+        </p>
+        <span className={`text-xs font-medium shrink-0 ml-4 ${isComplete ? "text-green-400" : "text-parchment-dim"}`}>
+          {watchedCount} / {totalCount}
+        </span>
+      </div>
+      <div className="h-1.5 bg-crimson-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all ${isComplete ? "bg-green-500" : "bg-gold-500"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </Link>
   );
 }

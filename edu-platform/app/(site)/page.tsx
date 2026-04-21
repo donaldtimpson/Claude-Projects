@@ -20,7 +20,7 @@ export default async function HomePage() {
           <h1 className="flex-1 text-center font-display text-4xl md:text-5xl text-parchment leading-tight">
             A Classical Education in
             <br />
-            Mathematics, Logic, and Philosophy.
+            Logic, Mathematics, and Philosophy.
           </h1>
           <div className="w-[360px] flex-shrink-0" />
         </div>
