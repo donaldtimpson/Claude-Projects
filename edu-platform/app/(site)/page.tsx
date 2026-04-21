@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
-import UserMenu from "@/components/UserMenu";
 
 export const revalidate = 3600;
 
@@ -13,40 +12,10 @@ export default async function HomePage() {
 
   return (
     <main className="flex-1">
-      <header className="bg-crimson-900 border-b border-crimson-700 px-6 py-0">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={80} height={80} />
-            <span className="font-display text-sm tracking-[0.2em] uppercase text-gold-300">
-              The Timpson Lyceum
-            </span>
-          </Link>
-          <nav className="flex items-center gap-6 font-display text-xs tracking-[0.15em] uppercase text-parchment-dim">
-            <Link href="/" className="hover:text-gold-300 transition-colors">
-              Courses
-            </Link>
-            <a
-              href="https://www.youtube.com/@donaldDtimpson"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-gold-300 transition-colors"
-            >
-              YouTube ↗
-            </a>
-            <UserMenu />
-          </nav>
-        </div>
-      </header>
-
       <div className="bg-crimson-950 border-b border-crimson-800 px-6 py-16">
         <div className="flex items-center">
           <div className="w-[360px] flex-shrink-0">
-            <Image
-              src="/logo.png"
-              alt="The Timpson Lyceum seal"
-              width={360}
-              height={360}
-            />
+            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={360} height={360} />
           </div>
           <h1 className="flex-1 text-center font-display text-4xl md:text-5xl text-parchment leading-tight">
             A Classical Education in

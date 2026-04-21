@@ -27,7 +27,14 @@ export default async function DashboardPage() {
   const attempts = await db.quizAttempt.findMany({
     where: { userId: session.user.id },
     include: {
-      video: { select: { id: true, title: true, courseId: true, course: { select: { id: true, title: true } } } },
+      video: {
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          course: { select: { id: true, title: true } },
+        },
+      },
       course: { select: { id: true, title: true } },
     },
     orderBy: { completedAt: "desc" },
@@ -68,33 +75,33 @@ export default async function DashboardPage() {
                 const courseId = a.video?.courseId ?? a.video?.course?.id;
                 const videoId = a.video?.id;
                 return (
-                  <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      {a.video?.course && (
-                        <p className="text-xs text-parchment-dim mb-0.5 truncate">
-                          {a.video.course.title}
-                        </p>
-                      )}
-                      {courseId && videoId ? (
-                        <Link
-                          href={`/courses/${courseId}/${videoId}`}
-                          className="text-sm font-medium text-parchment hover:text-gold-300 transition-colors line-clamp-1"
-                        >
+                  <li key={a.id}>
+                    <Link
+                      href={`/dashboard/attempt/${a.id}`}
+                      className="group bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center gap-4 hover:border-gold-500 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        {a.video?.course && courseId && videoId && (
+                          <Link
+                            href={`/courses/${courseId}/${videoId}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-parchment-dim hover:text-gold-300 transition-colors mb-0.5 block truncate"
+                          >
+                            {a.video.course.title} ↗
+                          </Link>
+                        )}
+                        <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-1">
                           {a.video?.title ?? "Unknown video"}
-                        </Link>
-                      ) : (
-                        <p className="text-sm font-medium text-parchment line-clamp-1">
-                          {a.video?.title ?? "Unknown video"}
                         </p>
-                      )}
-                      <p className="text-xs text-parchment-dim mt-0.5">{formatDate(a.completedAt)}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={`text-lg font-bold ${scoreColor(p)}`}>
-                        {a.score}/{a.totalQuestions}
-                      </p>
-                      <p className={`text-xs ${scoreColor(p)}`}>{p}%</p>
-                    </div>
+                        <p className="text-xs text-parchment-dim mt-0.5">{formatDate(a.completedAt)}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-lg font-bold ${scoreColor(p)}`}>
+                          {a.score}/{a.totalQuestions}
+                        </p>
+                        <p className={`text-xs ${scoreColor(p)}`}>{p}%</p>
+                      </div>
+                    </Link>
                   </li>
                 );
               })}
@@ -114,26 +121,33 @@ export default async function DashboardPage() {
               {testAttempts.map((a) => {
                 const p = pct(a.score, a.totalQuestions);
                 return (
-                  <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center gap-4">
-                    <div className="flex-1 min-w-0">
-                      {a.course ? (
-                        <Link
-                          href={`/courses/${a.course.id}/test`}
-                          className="text-sm font-medium text-parchment hover:text-gold-300 transition-colors line-clamp-1"
-                        >
-                          {a.course.title}
-                        </Link>
-                      ) : (
-                        <p className="text-sm font-medium text-parchment">Unknown course</p>
-                      )}
-                      <p className="text-xs text-parchment-dim mt-0.5">{formatDate(a.completedAt)}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className={`text-lg font-bold ${scoreColor(p)}`}>
-                        {a.score}/{a.totalQuestions}
-                      </p>
-                      <p className={`text-xs ${scoreColor(p)}`}>{p}%</p>
-                    </div>
+                  <li key={a.id}>
+                    <Link
+                      href={`/dashboard/attempt/${a.id}`}
+                      className="group bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center gap-4 hover:border-gold-500 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        {a.course && (
+                          <Link
+                            href={`/courses/${a.course.id}/test`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="text-xs text-parchment-dim hover:text-gold-300 transition-colors mb-0.5 block truncate"
+                          >
+                            {a.course.title} ↗
+                          </Link>
+                        )}
+                        <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                          Playlist Test
+                        </p>
+                        <p className="text-xs text-parchment-dim mt-0.5">{formatDate(a.completedAt)}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-lg font-bold ${scoreColor(p)}`}>
+                          {a.score}/{a.totalQuestions}
+                        </p>
+                        <p className={`text-xs ${scoreColor(p)}`}>{p}%</p>
+                      </div>
+                    </Link>
                   </li>
                 );
               })}

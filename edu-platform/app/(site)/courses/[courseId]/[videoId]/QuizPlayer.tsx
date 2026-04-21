@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import AttemptReview from "@/components/AttemptReview";
 
 type Question = {
   id: string;
@@ -15,7 +16,7 @@ export default function QuizPlayer({
   onAttemptComplete,
 }: {
   questions: Question[];
-  onAttemptComplete?: (score: number, total: number) => void;
+  onAttemptComplete?: (score: number, total: number, answers: (number | null)[]) => void;
 }) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -60,9 +61,9 @@ export default function QuizPlayer({
   useEffect(() => {
     if (done && !savedRef.current && onAttemptComplete) {
       savedRef.current = true;
-      onAttemptComplete(score, questions.length);
+      onAttemptComplete(score, questions.length, answers);
     }
-  }, [done, score, questions.length, onAttemptComplete]);
+  }, [done, score, questions.length, answers, onAttemptComplete]);
 
   if (done && reviewing) {
     return (
@@ -76,47 +77,7 @@ export default function QuizPlayer({
             ← Back to Results
           </button>
         </div>
-        <ol className="space-y-6">
-          {questions.map((question, qi) => {
-            const chosen = answers[qi];
-            const isCorrect = chosen === question.correctIndex;
-            return (
-              <li key={question.id} className="space-y-2">
-                <p className="text-parchment font-medium text-sm">
-                  <span className="text-parchment-dim mr-2">{qi + 1}.</span>
-                  {question.prompt}
-                </p>
-                <ul className="space-y-1">
-                  {question.options.map((opt, oi) => {
-                    let style = "px-3 py-2 rounded text-sm border ";
-                    if (oi === question.correctIndex) {
-                      style += "border-green-500 bg-green-900/30 text-green-300";
-                    } else if (oi === chosen && !isCorrect) {
-                      style += "border-red-500 bg-red-900/30 text-red-300";
-                    } else {
-                      style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
-                    }
-                    return (
-                      <li key={oi} className={style}>
-                        <span className="font-medium mr-2">{String.fromCharCode(65 + oi)}.</span>
-                        {opt}
-                        {oi === question.correctIndex && (
-                          <span className="ml-2 text-green-400 text-xs">✓ correct</span>
-                        )}
-                        {oi === chosen && !isCorrect && (
-                          <span className="ml-2 text-red-400 text-xs">✗ your answer</span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-                {question.explanation && (
-                  <p className="text-xs text-parchment-dim pl-1">{question.explanation}</p>
-                )}
-              </li>
-            );
-          })}
-        </ol>
+        <AttemptReview questions={questions} answers={answers} />
         <button
           onClick={restart}
           className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"

@@ -20,6 +20,7 @@ export async function saveQuizAttempt(
   courseId: string | null,
   score: number,
   total: number,
+  answers: (number | null)[],
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return;
@@ -30,6 +31,7 @@ export async function saveQuizAttempt(
       courseId,
       score,
       totalQuestions: total,
+      answers,
     },
   });
 }
