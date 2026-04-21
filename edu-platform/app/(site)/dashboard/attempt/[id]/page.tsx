@@ -71,10 +71,10 @@ export default async function AttemptPage({
       <header className="border-b border-crimson-700 px-6 py-4">
         <div className="max-w-3xl mx-auto">
           <Link
-            href="/dashboard"
+            href={courseId ? `/dashboard/course/${courseId}` : "/dashboard"}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"
           >
-            ← My Progress
+            {courseId ? "← Course Progress" : "← My Progress"}
           </Link>
         </div>
       </header>

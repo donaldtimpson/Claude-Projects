@@ -68,14 +68,16 @@ export default async function DashboardCoursePage({
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-10">
         {/* Course header */}
         <div className="space-y-4">
-          <div>
-            <Link
-              href={`/courses/${course.id}`}
-              className="text-sm text-parchment-dim hover:text-gold-300 transition-colors"
-            >
-              {course.title} ↗
-            </Link>
-            <h1 className="font-display text-2xl text-parchment mt-1">Course Progress</h1>
+          <div className="space-y-1">
+            <p className="text-sm text-parchment-dim">Course Progress</p>
+            <h1 className="text-2xl font-bold text-parchment">
+              <Link
+                href={`/courses/${course.id}`}
+                className="hover:text-gold-300 transition-colors"
+              >
+                {course.title}
+              </Link>
+            </h1>
           </div>
 
           {/* Progress bar */}
