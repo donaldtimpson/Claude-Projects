@@ -14,7 +14,12 @@ export default async function AdminDashboard() {
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-parchment">Dashboard</h1>
-        <SyncButton />
+        <div className="flex items-center gap-4">
+          <Link href="/admin/categories" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
+            Categories
+          </Link>
+          <SyncButton />
+        </div>
       </div>
 
       {courses.length === 0 ? (
