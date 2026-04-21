@@ -7,6 +7,7 @@ import { saveQuizAttempt } from "@/lib/actions";
 import QuizPlayer from "./QuizPlayer";
 import MarkWatchedButton from "@/components/MarkWatchedButton";
 import CommentSection from "@/components/CommentSection";
+import VideoDescription from "@/components/VideoDescription";
 
 export const revalidate = 3600;
 
@@ -81,11 +82,7 @@ export default async function VideoPage({
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-parchment">{video.title}</h1>
-            {video.description && (
-              <p className="mt-3 text-parchment-dim leading-relaxed whitespace-pre-line">
-                {video.description}
-              </p>
-            )}
+            {video.description && <VideoDescription text={video.description} />}
           </div>
           {userId && (
             <div className="flex-shrink-0 pt-1">
