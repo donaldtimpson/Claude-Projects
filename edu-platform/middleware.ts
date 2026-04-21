@@ -14,4 +14,4 @@ export function middleware(request: NextRequest) {
   return NextResponse.redirect(loginUrl);
 }
 
-export const config = { matcher: ["/admin/:path*"] };
+export const config = { matcher: ["/admin/:path*", "/api/auth/:path*", "/auth/:path*"] };

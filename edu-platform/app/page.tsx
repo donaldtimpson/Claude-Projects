@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
+import UserMenu from "@/components/UserMenu";
 
 export const revalidate = 3600;
 
@@ -32,9 +33,7 @@ export default async function HomePage() {
             >
               YouTube ↗
             </a>
-            <Link href="/admin/login" className="hover:text-gold-300 transition-colors">
-              Login
-            </Link>
+            <UserMenu />
           </nav>
         </div>
       </header>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type Question = {
   id: string;
@@ -10,11 +10,19 @@ type Question = {
   explanation: string;
 };
 
-export default function QuizPlayer({ questions }: { questions: Question[] }) {
+export default function QuizPlayer({
+  questions,
+  onAttemptComplete,
+}: {
+  questions: Question[];
+  onAttemptComplete?: (score: number, total: number) => void;
+}) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(questions.length).fill(null));
   const [done, setDone] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
+  const savedRef = useRef(false);
 
   const q = questions[current];
   const answered = selected !== null;
@@ -42,28 +50,76 @@ export default function QuizPlayer({ questions }: { questions: Question[] }) {
     setSelected(null);
     setAnswers(Array(questions.length).fill(null));
     setDone(false);
+    setReviewing(false);
+    savedRef.current = false;
   }
 
-  if (done) {
-    const score = answers.filter((a, i) => a === questions[i].correctIndex).length;
-    const pct = Math.round((score / questions.length) * 100);
+  const score = answers.filter((a, i) => a === questions[i].correctIndex).length;
+
+  // Fire the callback exactly once when the quiz is completed
+  useEffect(() => {
+    if (done && !savedRef.current && onAttemptComplete) {
+      savedRef.current = true;
+      onAttemptComplete(score, questions.length);
+    }
+  }, [done, score, questions.length, onAttemptComplete]);
+
+  if (done && reviewing) {
     return (
-      <section className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
-        <h2 className="text-lg font-bold text-white">Quiz Results</h2>
-        <p className="text-4xl font-bold text-indigo-400">
-          {score}/{questions.length}
-          <span className="text-xl text-slate-400 ml-2">({pct}%)</span>
-        </p>
-        <p className="text-slate-400">
-          {pct === 100
-            ? "Perfect score!"
-            : pct >= 70
-            ? "Good work — review the ones you missed."
-            : "Keep studying and try again."}
-        </p>
+      <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-parchment">Answer Review</h2>
+          <button
+            onClick={() => setReviewing(false)}
+            className="text-sm text-parchment-dim hover:text-gold-300 transition-colors"
+          >
+            ← Back to Results
+          </button>
+        </div>
+        <ol className="space-y-6">
+          {questions.map((question, qi) => {
+            const chosen = answers[qi];
+            const isCorrect = chosen === question.correctIndex;
+            return (
+              <li key={question.id} className="space-y-2">
+                <p className="text-parchment font-medium text-sm">
+                  <span className="text-parchment-dim mr-2">{qi + 1}.</span>
+                  {question.prompt}
+                </p>
+                <ul className="space-y-1">
+                  {question.options.map((opt, oi) => {
+                    let style = "px-3 py-2 rounded text-sm border ";
+                    if (oi === question.correctIndex) {
+                      style += "border-green-500 bg-green-900/30 text-green-300";
+                    } else if (oi === chosen && !isCorrect) {
+                      style += "border-red-500 bg-red-900/30 text-red-300";
+                    } else {
+                      style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
+                    }
+                    return (
+                      <li key={oi} className={style}>
+                        <span className="font-medium mr-2">{String.fromCharCode(65 + oi)}.</span>
+                        {opt}
+                        {oi === question.correctIndex && (
+                          <span className="ml-2 text-green-400 text-xs">✓ correct</span>
+                        )}
+                        {oi === chosen && !isCorrect && (
+                          <span className="ml-2 text-red-400 text-xs">✗ your answer</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                {question.explanation && (
+                  <p className="text-xs text-parchment-dim pl-1">{question.explanation}</p>
+                )}
+              </li>
+            );
+          })}
+        </ol>
         <button
           onClick={restart}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
         >
           Retake Quiz
         </button>
@@ -71,29 +127,63 @@ export default function QuizPlayer({ questions }: { questions: Question[] }) {
     );
   }
 
+  if (done) {
+    const pct = Math.round((score / questions.length) * 100);
+    return (
+      <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-4">
+        <h2 className="text-lg font-bold text-parchment">Quiz Results</h2>
+        <p className="text-4xl font-bold text-gold-400">
+          {score}/{questions.length}
+          <span className="text-xl text-parchment-dim ml-2">({pct}%)</span>
+        </p>
+        <p className="text-parchment-dim">
+          {pct === 100
+            ? "Perfect score!"
+            : pct >= 70
+            ? "Good work — review the ones you missed."
+            : "Keep studying and try again."}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setReviewing(true)}
+            className="px-4 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+          >
+            Review Answers
+          </button>
+          <button
+            onClick={restart}
+            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+          >
+            Retake Quiz
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
+    <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">Quiz</h2>
-        <span className="text-sm text-slate-500">
+        <h2 className="text-lg font-bold text-parchment">Quiz</h2>
+        <span className="text-sm text-parchment-dim">
           {current + 1} / {questions.length}
         </span>
       </div>
 
-      <p className="text-slate-100 font-medium">{q.prompt}</p>
+      <p className="text-parchment font-medium">{q.prompt}</p>
 
       <ol className="space-y-2">
         {q.options.map((opt, idx) => {
           let style =
             "w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ";
           if (!answered) {
-            style += "border-slate-700 bg-slate-800 hover:border-indigo-400 text-slate-200";
+            style += "border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment";
           } else if (idx === q.correctIndex) {
             style += "border-green-500 bg-green-900/30 text-green-300";
           } else if (idx === selected) {
             style += "border-red-500 bg-red-900/30 text-red-300";
           } else {
-            style += "border-slate-700 bg-slate-800 text-slate-500";
+            style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
           }
 
           return (
@@ -112,10 +202,10 @@ export default function QuizPlayer({ questions }: { questions: Question[] }) {
           <p className={`font-semibold ${correct ? "text-green-400" : "text-red-400"}`}>
             {correct ? "Correct!" : "Incorrect"}
           </p>
-          {q.explanation && <p className="text-sm text-slate-300">{q.explanation}</p>}
+          {q.explanation && <p className="text-sm text-parchment-dim">{q.explanation}</p>}
           <button
             onClick={advance}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
           >
             {current < questions.length - 1 ? "Next Question →" : "See Results"}
           </button>

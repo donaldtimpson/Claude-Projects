@@ -20,22 +20,26 @@ model Course {
 
   videos            Video[]
   quizQuestions     QuizQuestion[]
+  quizAttempts      QuizAttempt[]
 }
 
 model Video {
-  id              String         @id @default(cuid())
+  id              String          @id @default(cuid())
   courseId        String
-  youtubeVideoId  String         @unique
+  youtubeVideoId  String          @unique
   title           String
-  description     String         @default("")
-  thumbnailUrl    String         @default("")
+  description     String          @default("")
+  thumbnailUrl    String          @default("")
   position        Int
-  durationSeconds Int            @default(0)
+  durationSeconds Int             @default(0)
   publishedAt     DateTime?
-  createdAt       DateTime       @default(now())
+  createdAt       DateTime        @default(now())
 
-  course          Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course          Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   quizQuestions   QuizQuestion[]
+  videoProgress   VideoProgress[]
+  quizAttempts    QuizAttempt[]
+  comments        Comment[]
 }
 
 model QuizQuestion {
@@ -51,4 +55,62 @@ model QuizQuestion {
 
   video        Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
   course       Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  password      String
+  createdAt     DateTime        @default(now())
+
+  sessions      Session[]
+  videoProgress VideoProgress[]
+  quizAttempts  QuizAttempt[]
+  comments      Comment[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VideoProgress {
+  userId    String
+  videoId   String
+  watchedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
+
+model QuizAttempt {
+  id             String   @id @default(cuid())
+  userId         String
+  videoId        String?
+  courseId       String?
+  score          Int
+  totalQuestions Int
+  completedAt    DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video          Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  course         Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  body      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
 }

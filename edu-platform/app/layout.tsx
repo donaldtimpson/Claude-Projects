@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cinzel, EB_Garamond } from "next/font/google";
+import SessionProvider from "@/components/SessionProvider";
 import "./globals.css";
 
 const cinzel = Cinzel({
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${ebGaramond.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-crimson-950 text-parchment">{children}</body>
+      <body className="min-h-full flex flex-col bg-crimson-950 text-parchment">
+          <SessionProvider>{children}</SessionProvider>
+        </body>
     </html>
   );
 }

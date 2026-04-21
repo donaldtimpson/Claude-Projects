@@ -19,10 +19,10 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
   return (
     <main className="max-w-3xl mx-auto px-6 py-10 space-y-10">
       <div>
-        <Link href="/admin" className="text-sm text-slate-400 hover:text-slate-200 transition-colors">
+        <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-white mt-3">{course.title} — Video Quizzes</h1>
+        <h1 className="text-2xl font-bold text-parchment mt-3">{course.title} — Video Quizzes</h1>
       </div>
 
       {course.videos.map((video) => {
@@ -30,11 +30,11 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
         return (
           <section key={video.id} className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-slate-200">
-                <span className="text-slate-500 mr-2">{video.position + 1}.</span>
+              <h2 className="font-semibold text-parchment">
+                <span className="text-parchment-dim mr-2">{video.position + 1}.</span>
                 {video.title}
               </h2>
-              <span className="text-xs text-slate-500">{questions.length} question{questions.length !== 1 ? "s" : ""}</span>
+              <span className="text-xs text-parchment-dim">{questions.length} question{questions.length !== 1 ? "s" : ""}</span>
             </div>
             <QuizEditor
               videoId={video.id}

@@ -16,11 +16,11 @@ export default async function AdminPlaylistTest({ params }: { params: Promise<{ 
   return (
     <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
       <div>
-        <Link href="/admin" className="text-sm text-slate-400 hover:text-slate-200 transition-colors">
+        <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-white mt-3">{course.title} — Playlist Test</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold text-parchment mt-3">{course.title} — Playlist Test</h1>
+        <p className="text-sm text-parchment-dim mt-1">
           These questions appear on the end-of-playlist test, not on individual videos.
         </p>
       </div>
