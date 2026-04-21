@@ -11,9 +11,12 @@ export default function UserMenu() {
   if (session?.user) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-parchment-300 text-xs tracking-widest uppercase font-display hidden sm:block">
+        <Link href="/dashboard" className="hover:text-gold-300 transition-colors hidden sm:block text-parchment-300 text-xs tracking-widest uppercase font-display">
           {session.user.name}
-        </span>
+        </Link>
+        <Link href="/dashboard" className="hover:text-gold-300 transition-colors sm:hidden">
+          Progress
+        </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className="hover:text-gold-300 transition-colors"
