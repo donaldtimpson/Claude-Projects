@@ -19,18 +19,8 @@ export default async function HomePage() {
   return (
     <main className="flex-1">
       {/* Hero */}
-      <div className="bg-crimson-950 border-b border-crimson-800 px-6 py-16">
-        <div className="flex items-center">
-          <div className="w-[360px] flex-shrink-0">
-            <Image src="/logo.png" alt="The Timpson Lyceum seal" width={360} height={360} />
-          </div>
-          <h1 className="flex-1 text-center font-display text-4xl md:text-5xl text-parchment leading-tight">
-            A Classical Education in
-            <br />
-            Logic, Mathematics, and Philosophy.
-          </h1>
-          <div className="w-[360px] flex-shrink-0" />
-        </div>
+      <div className="w-full">
+        <Image src="/banner.png" alt="The Timpson Lyceum" width={1983} height={523} className="w-full h-auto" priority />
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
