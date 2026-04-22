@@ -27,7 +27,9 @@ export default async function CategoryPage({
 
   if (!category) notFound();
 
-  const courses = category.courses.map((cc) => cc.course);
+  const courses = category.courses
+    .map((cc) => cc.course)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
     <main className="flex-1">

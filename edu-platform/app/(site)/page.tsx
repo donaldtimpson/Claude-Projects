@@ -7,7 +7,7 @@ export const revalidate = 3600;
 export default async function HomePage() {
   const [courses, categories] = await Promise.all([
     db.course.findMany({
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: "desc" },
       include: { _count: { select: { videos: true } } },
     }),
     db.category.findMany({
