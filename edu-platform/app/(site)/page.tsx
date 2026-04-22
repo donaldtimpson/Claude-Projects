@@ -122,13 +122,14 @@ export default async function HomePage() {
 }
 
 function CategoryImageSlot({ slug, name }: { slug: string; name: string }) {
-  // Placeholder shown until /public/categories/{slug}.png is dropped in.
-  // The aspect ratio matches course thumbnails (16:9) for visual consistency.
   return (
-    <div className="relative aspect-video bg-crimson-800 flex items-center justify-center overflow-hidden">
-      <span className="font-display text-3xl text-crimson-700 select-none">
-        {name.charAt(0).toUpperCase()}
-      </span>
+    <div className="relative aspect-video bg-crimson-800 overflow-hidden">
+      <Image
+        src={`/categories/${slug}.png`}
+        alt={name}
+        fill
+        className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+      />
     </div>
   );
 }
