@@ -133,7 +133,15 @@ export default async function AttemptPage({
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             Answer Review
           </h2>
-          {questions.length > 0 ? (
+          {questions.length === 0 ? (
+            <p className="text-parchment-dim text-sm">
+              Questions for this quiz are no longer available.
+            </p>
+          ) : attempt.answers === null ? (
+            <p className="text-parchment-dim text-sm">
+              Answer details are not available for this attempt.
+            </p>
+          ) : (
             <AttemptReview
               questions={questions.map((q) => ({
                 id: q.id,
@@ -144,10 +152,6 @@ export default async function AttemptPage({
               }))}
               answers={storedAnswers}
             />
-          ) : (
-            <p className="text-parchment-dim text-sm">
-              Questions for this quiz are no longer available.
-            </p>
           )}
         </div>
       </div>
