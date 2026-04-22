@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function CategoryPage({
   params,
@@ -32,16 +32,9 @@ export default async function CategoryPage({
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
-    <main
-      className="flex-1"
-      style={{
-        backgroundImage: `linear-gradient(rgba(15,4,4,0.78),rgba(15,4,4,0.78)),url('/categories/${slug}.png')`,
-        backgroundAttachment: "fixed",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <header className="border-b border-crimson-700/60 px-6 py-4">
+    <main className="flex-1">
+      {/* Breadcrumb */}
+      <header className="border-b border-crimson-700 px-6 py-4">
         <div className="max-w-6xl mx-auto">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Courses
@@ -49,9 +42,28 @@ export default async function CategoryPage({
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
-        <h1 className="font-display text-4xl text-parchment">{category.name}</h1>
+      {/* Hero banner — image contained to content width with title overlay */}
+      <div className="max-w-6xl mx-auto px-6 pt-8">
+        <div className="relative rounded-xl overflow-hidden h-48 sm:h-64">
+          <Image
+            src={`/categories/${slug}.png`}
+            alt={category.name}
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Gradient: transparent → crimson-950 so title is readable and bleeds into page */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-crimson-950/50 to-crimson-950/95" />
+          <div className="absolute bottom-0 left-0 p-6">
+            <h1 className="font-display text-4xl text-parchment drop-shadow-lg">
+              {category.name}
+            </h1>
+          </div>
+        </div>
+      </div>
 
+      {/* Course grid */}
+      <div className="max-w-6xl mx-auto px-6 py-10">
         {courses.length === 0 ? (
           <p className="text-parchment-dim text-sm">No courses in this category yet.</p>
         ) : (

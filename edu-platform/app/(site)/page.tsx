@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [courses, categories] = await Promise.all([
