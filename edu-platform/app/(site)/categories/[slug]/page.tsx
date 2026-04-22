@@ -72,7 +72,7 @@ export default async function CategoryPage({
 
         {/* Scroll layer — sits on top, scrolls independently */}
         <div className="absolute inset-0 overflow-y-auto">
-          <div className="px-6 py-12 space-y-10">
+          <div className="px-6 pt-12 pb-72 space-y-10">
             <h1 className="font-display text-4xl text-parchment">{category.name}</h1>
 
             {courses.length === 0 ? (
