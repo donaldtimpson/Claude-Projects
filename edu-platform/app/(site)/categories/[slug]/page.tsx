@@ -32,8 +32,16 @@ export default async function CategoryPage({
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   return (
-    <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
+    <main
+      className="flex-1"
+      style={{
+        backgroundImage: `linear-gradient(rgba(15,4,4,0.78),rgba(15,4,4,0.78)),url('/categories/${slug}.png')`,
+        backgroundAttachment: "fixed",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <header className="border-b border-crimson-700/60 px-6 py-4">
         <div className="max-w-6xl mx-auto">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Courses
@@ -42,7 +50,7 @@ export default async function CategoryPage({
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-10">
-        <h1 className="font-display text-3xl text-parchment">{category.name}</h1>
+        <h1 className="font-display text-4xl text-parchment">{category.name}</h1>
 
         {courses.length === 0 ? (
           <p className="text-parchment-dim text-sm">No courses in this category yet.</p>
