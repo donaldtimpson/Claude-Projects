@@ -23,6 +23,7 @@ export async function POST() {
           description: pl.description,
           thumbnailUrl: pl.thumbnailUrl,
           videoCount: pl.itemCount,
+          publishedAt: pl.publishedAt ? new Date(pl.publishedAt) : null,
           syncedAt: new Date(),
         },
         update: {
@@ -30,6 +31,7 @@ export async function POST() {
           description: pl.description,
           thumbnailUrl: pl.thumbnailUrl,
           videoCount: pl.itemCount,
+          publishedAt: pl.publishedAt ? new Date(pl.publishedAt) : null,
           syncedAt: new Date(),
         },
       });

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const [courses, categories] = await Promise.all([
     db.course.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { _count: { select: { videos: true } } },
     }),
     db.category.findMany({

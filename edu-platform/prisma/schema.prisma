@@ -15,6 +15,7 @@ model Course {
   description       String         @default("")
   thumbnailUrl      String         @default("")
   videoCount        Int            @default(0)
+  publishedAt       DateTime?
   syncedAt          DateTime?
   createdAt         DateTime       @default(now())
 

@@ -8,6 +8,7 @@ export type YTPlaylist = {
   description: string;
   thumbnailUrl: string;
   itemCount: number;
+  publishedAt: string;
 };
 
 export type YTVideo = {
@@ -58,6 +59,7 @@ export async function fetchChannelPlaylists(): Promise<YTPlaylist[]> {
         thumbnailUrl:
           thumbnails?.maxres?.url ?? thumbnails?.high?.url ?? thumbnails?.default?.url ?? "",
         itemCount: (contentDetails.itemCount as number) ?? 0,
+        publishedAt: (snippet.publishedAt as string) ?? "",
       };
     }
   );

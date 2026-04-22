@@ -29,7 +29,11 @@ export default async function CategoryPage({
 
   const courses = category.courses
     .map((cc) => cc.course)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => {
+      const aDate = a.publishedAt ?? a.createdAt;
+      const bDate = b.publishedAt ?? b.createdAt;
+      return bDate.getTime() - aDate.getTime();
+    });
 
   return (
     <main className="flex-1">
