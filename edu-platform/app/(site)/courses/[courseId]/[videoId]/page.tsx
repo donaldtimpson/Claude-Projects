@@ -9,7 +9,7 @@ import MarkWatchedButton from "@/components/MarkWatchedButton";
 import CommentSection from "@/components/CommentSection";
 import VideoDescription from "@/components/VideoDescription";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function VideoPage({
   params,

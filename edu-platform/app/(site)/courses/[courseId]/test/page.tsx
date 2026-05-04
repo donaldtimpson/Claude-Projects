@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { saveQuizAttempt } from "@/lib/actions";
 import QuizPlayer from "../[videoId]/QuizPlayer";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function PlaylistTestPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;

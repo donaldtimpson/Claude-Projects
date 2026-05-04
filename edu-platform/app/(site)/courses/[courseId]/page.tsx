@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 function formatDuration(secs: number) {
   const h = Math.floor(secs / 3600);
