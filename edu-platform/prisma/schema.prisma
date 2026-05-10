@@ -23,6 +23,7 @@ model Course {
   quizQuestions     QuizQuestion[]
   quizAttempts      QuizAttempt[]
   categories        CourseCategory[]
+  resources         CourseResource[]
 }
 
 model Category {
@@ -135,4 +136,38 @@ model Comment {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+model Resource {
+  id          String           @id @default(cuid())
+  title       String
+  url         String
+  kind        ResourceKind
+  description String           @default("")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  courses     CourseResource[]
+}
+
+model CourseResource {
+  courseId   String
+  resourceId String
+  position   Int      @default(0)
+
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, resourceId])
+  @@index([courseId])
+}
+
+enum ResourceKind {
+  TEXTBOOK
+  SLIDES
+  PROBLEM_SET
+  TOOL
+  VIDEO
+  DOCUMENT
+  LINK
 }

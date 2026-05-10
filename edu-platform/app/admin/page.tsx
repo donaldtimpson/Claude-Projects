@@ -18,6 +18,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/categories" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
             Categories
           </Link>
+          <Link href="/admin/resources" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
+            Resources
+          </Link>
           <SyncButton />
         </div>
       </div>

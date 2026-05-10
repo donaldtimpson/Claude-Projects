@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,10 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       include: {
         videos: { orderBy: { position: "asc" } },
         _count: { select: { quizQuestions: true } },
+        resources: {
+          include: { resource: true },
+          orderBy: [{ position: "asc" }, { resource: { kind: "asc" } }],
+        },
       },
     }),
     getServerSession(authOptions),
@@ -74,6 +79,36 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             </Link>
           )}
         </div>
+
+        {course.resources.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Resources</h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {course.resources.map(({ resource }) => (
+                <li key={resource.id}>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group h-full"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
+                          {resource.title}
+                        </p>
+                        <p className="text-xs text-parchment-dim mt-0.5">
+                          {resource.description || RESOURCE_KIND_LABELS[resource.kind]}
+                        </p>
+                      </div>
+                      <span className="text-parchment-dim group-hover:text-gold-300 transition-colors shrink-0">↗</span>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <ol className="space-y-3">
           {course.videos.map((video, idx) => {
