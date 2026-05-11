@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
+import ContinueWatching from "./ContinueWatching";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [courses, categories] = await Promise.all([
+  const [courses, categories, currentCourses] = await Promise.all([
     db.course.findMany({
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { _count: { select: { videos: true } } },
@@ -13,6 +14,16 @@ export default async function HomePage() {
     db.category.findMany({
       orderBy: { name: "asc" },
       include: { _count: { select: { courses: true } } },
+    }),
+    db.course.findMany({
+      where: { isCurrent: true },
+      orderBy: { publishedAt: "desc" },
+      include: {
+        videos: {
+          orderBy: [{ publishedAt: "desc" }, { position: "desc" }],
+          take: 1,
+        },
+      },
     }),
   ]);
 
@@ -24,6 +35,76 @@ export default async function HomePage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+        {/* Continue Watching (signed-in users with in-progress courses) */}
+        <ContinueWatching />
+
+        {/* Currently Teaching */}
+        {currentCourses.length > 0 && (
+          <section>
+            <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+              Currently Teaching
+            </h2>
+            <div
+              className={`grid gap-6 ${
+                currentCourses.length === 1
+                  ? "grid-cols-1 max-w-2xl"
+                  : currentCourses.length === 2
+                  ? "grid-cols-1 sm:grid-cols-2"
+                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+              }`}
+            >
+              {currentCourses.map((course) => {
+                const latest = course.videos[0];
+                const href = latest
+                  ? `/courses/${course.id}/${latest.id}`
+                  : `/courses/${course.id}`;
+                return (
+                  <Link
+                    key={course.id}
+                    href={href}
+                    className="group bg-crimson-900 border-2 border-gold-500 rounded-lg overflow-hidden hover:border-gold-300 transition-colors shadow-lg shadow-gold-500/10"
+                  >
+                    {(latest?.thumbnailUrl || course.thumbnailUrl) ? (
+                      <div className="relative aspect-video">
+                        <Image
+                          src={latest?.thumbnailUrl || course.thumbnailUrl}
+                          alt={course.title}
+                          fill
+                          className="object-cover opacity-95 group-hover:opacity-100 transition-opacity"
+                        />
+                        <span className="absolute top-2 left-2 bg-gold-500 text-crimson-950 text-[10px] font-display tracking-widest uppercase px-2 py-0.5 rounded">
+                          Live
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-crimson-800 flex items-center justify-center">
+                        <span className="text-parchment-dim text-sm">No thumbnail</span>
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+                        {course.title}
+                      </h3>
+                      {latest ? (
+                        <p className="text-sm text-parchment-dim mt-2 line-clamp-2">
+                          Latest: {latest.title}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-parchment-dim mt-2">No lectures yet</p>
+                      )}
+                      {latest?.publishedAt && (
+                        <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
+                          {new Date(latest.publishedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* Categories */}
         {categories.length > 0 && (
           <section>

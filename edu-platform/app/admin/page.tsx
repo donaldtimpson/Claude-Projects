@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import SyncButton from "./SyncButton";
+import CurrentToggle from "./CurrentToggle";
 
 export default async function AdminDashboard() {
   const courses = await db.course.findMany({
@@ -45,7 +46,8 @@ export default async function AdminDashboard() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-3 shrink-0">
+              <div className="flex items-center gap-3 shrink-0">
+                <CurrentToggle courseId={course.id} initial={course.isCurrent} />
                 <Link
                   href={`/admin/courses/${course.id}`}
                   className="text-sm text-gold-400 hover:text-gold-300 transition-colors"

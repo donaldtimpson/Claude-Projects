@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Course" ADD COLUMN     "isCurrent" BOOLEAN NOT NULL DEFAULT false;
