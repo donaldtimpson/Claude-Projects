@@ -104,7 +104,9 @@ export default async function CategoryPage({
                         {course.title}
                       </h3>
                       <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
-                        {course._count.videos} video{course._count.videos !== 1 ? "s" : ""}
+                        {course._count.videos === 0
+                          ? "Coming soon"
+                          : `${course._count.videos} video${course._count.videos !== 1 ? "s" : ""}`}
                       </p>
                       {course.description && (
                         <p className="text-sm text-parchment-dim mt-2 line-clamp-2">

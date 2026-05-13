@@ -2,11 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import ContinueWatching from "./ContinueWatching";
+import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [courses, categories, currentCourses] = await Promise.all([
+  const [courses, categories, currentCourses, announcements] = await Promise.all([
     db.course.findMany({
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { _count: { select: { videos: true } } },
@@ -25,6 +26,11 @@ export default async function HomePage() {
         },
       },
     }),
+    db.announcement.findMany({
+      where: { courseId: null },
+      orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+      include: { course: { select: { id: true, title: true } } },
+    }),
   ]);
 
   return (
@@ -35,6 +41,8 @@ export default async function HomePage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-12 space-y-16">
+        {announcements.length > 0 && <AnnouncementsFeed announcements={announcements} />}
+
         {/* Continue Watching (signed-in users with in-progress courses) */}
         <ContinueWatching />
 
@@ -90,7 +98,7 @@ export default async function HomePage() {
                           Latest: {latest.title}
                         </p>
                       ) : (
-                        <p className="text-sm text-parchment-dim mt-2">No lectures yet</p>
+                        <p className="text-sm text-gold-500 mt-2 font-display tracking-wider">Coming soon</p>
                       )}
                       {latest?.publishedAt && (
                         <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
@@ -174,7 +182,9 @@ export default async function HomePage() {
                       {course.title}
                     </h3>
                     <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
-                      {course._count.videos} video{course._count.videos !== 1 ? "s" : ""}
+                      {course._count.videos === 0
+                        ? "Coming soon"
+                        : `${course._count.videos} video${course._count.videos !== 1 ? "s" : ""}`}
                     </p>
                     {course.description && (
                       <p className="text-sm text-parchment-dim mt-2 line-clamp-2">

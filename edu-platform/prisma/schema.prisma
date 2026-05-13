@@ -25,6 +25,7 @@ model Course {
   quizAttempts      QuizAttempt[]
   categories        CourseCategory[]
   resources         CourseResource[]
+  announcements     Announcement[]
 }
 
 model Category {
@@ -161,6 +162,20 @@ model CourseResource {
 
   @@id([courseId, resourceId])
   @@index([courseId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  courseId  String?
+  title     String
+  body      String   @default("")
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, pinned, createdAt])
 }
 
 enum ResourceKind {

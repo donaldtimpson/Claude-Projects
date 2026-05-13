@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
+import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,14 @@ function formatDuration(secs: number) {
 export default async function CoursePage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
 
-  const [course, session] = await Promise.all([
+  const [course, session, announcements] = await Promise.all([
     db.course.findUnique({
       where: { id: courseId },
       include: {
-        videos: { orderBy: { position: "asc" } },
+        videos: {
+          orderBy: { position: "asc" },
+          include: { _count: { select: { comments: true } } },
+        },
         _count: { select: { quizQuestions: true } },
         resources: {
           include: { resource: true },
@@ -32,6 +36,11 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       },
     }),
     getServerSession(authOptions),
+    db.announcement.findMany({
+      where: { OR: [{ courseId }, { courseId: null }] },
+      orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
+      include: { course: { select: { id: true, title: true } } },
+    }),
   ]);
 
   if (!course) notFound();
@@ -60,7 +69,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-parchment mb-2">{course.title}</h1>
           <p className="text-parchment-dim">
-            {course.videos.length} video{course.videos.length !== 1 ? "s" : ""}
+            {course.videos.length === 0
+              ? "Coming soon"
+              : `${course.videos.length} video${course.videos.length !== 1 ? "s" : ""}`}
             {userId && watchedSet.size > 0 && (
               <span className="ml-2 text-green-400">
                 · {watchedSet.size} watched
@@ -79,6 +90,12 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             </Link>
           )}
         </div>
+
+        {announcements.length > 0 && (
+          <div className="mb-8">
+            <AnnouncementsFeed announcements={announcements} showScope />
+          </div>
+        )}
 
         {course.resources.length > 0 && (
           <section className="mb-8">
@@ -110,7 +127,14 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           </section>
         )}
 
-        <ol className="space-y-3">
+        {course.videos.length === 0 ? (
+          <div className="bg-crimson-900 border border-crimson-700 border-dashed rounded-xl p-8 text-center">
+            <p className="text-parchment-dim">
+              No lectures yet — check back soon for the first video in this course.
+            </p>
+          </div>
+        ) : (
+          <ol className="space-y-3">
           {course.videos.map((video, idx) => {
             const isWatched = watchedSet.has(video.id);
             return (
@@ -131,9 +155,14 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                     <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                       {video.title}
                     </p>
-                    {video.durationSeconds > 0 && (
-                      <p className="text-xs text-parchment-dim mt-1">{formatDuration(video.durationSeconds)}</p>
-                    )}
+                    <p className="text-xs text-parchment-dim mt-1 flex items-center gap-3">
+                      {video.durationSeconds > 0 && <span>{formatDuration(video.durationSeconds)}</span>}
+                      {video._count.comments > 0 && (
+                        <span>
+                          {video._count.comments} comment{video._count.comments === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </p>
                   </div>
                   {isWatched && (
                     <span className="shrink-0 text-green-400 text-sm self-center" title="Watched">✓</span>
@@ -142,7 +171,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               </li>
             );
           })}
-        </ol>
+          </ol>
+        )}
       </div>
     </main>
   );
