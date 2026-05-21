@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${cinzel.variable} ${ebGaramond.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-crimson-950 text-parchment">
+      <body className="min-h-full flex flex-col bg-crimson-950 text-parchment" suppressHydrationWarning>
           <SessionProvider>{children}</SessionProvider>
         </body>
     </html>
