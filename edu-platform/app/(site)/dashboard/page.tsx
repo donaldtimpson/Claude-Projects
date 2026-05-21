@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   const [courses, allProgress] = await Promise.all([
     db.course.findMany({
-      include: { videos: { select: { id: true }, orderBy: { position: "asc" } } },
+      include: { videos: { select: { id: true }, orderBy: [{ publishedAt: "asc" }, { position: "asc" }] } },
       orderBy: { createdAt: "asc" },
     }),
     db.videoProgress.findMany({

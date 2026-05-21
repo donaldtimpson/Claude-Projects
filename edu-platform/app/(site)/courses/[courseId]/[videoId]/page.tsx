@@ -27,16 +27,11 @@ export default async function VideoPage({
 
   const userId = session?.user?.id ?? null;
 
-  const [questions, prevVideo, nextVideo, watched, comments] = await Promise.all([
+  const [questions, siblings, watched, comments] = await Promise.all([
     db.quizQuestion.findMany({ where: { videoId: video.id }, orderBy: { position: "asc" } }),
-    db.video.findFirst({
-      where: { courseId, position: { lt: video.position } },
-      orderBy: { position: "desc" },
-      select: { id: true, title: true },
-    }),
-    db.video.findFirst({
-      where: { courseId, position: { gt: video.position } },
-      orderBy: { position: "asc" },
+    db.video.findMany({
+      where: { courseId },
+      orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
       select: { id: true, title: true },
     }),
     userId
@@ -48,6 +43,10 @@ export default async function VideoPage({
       orderBy: { createdAt: "asc" },
     }),
   ]);
+
+  const currentIdx = siblings.findIndex((v) => v.id === video.id);
+  const prevVideo = currentIdx > 0 ? siblings[currentIdx - 1] : null;
+  const nextVideo = currentIdx >= 0 && currentIdx < siblings.length - 1 ? siblings[currentIdx + 1] : null;
 
   // Bind videoId+courseId so client only passes (score, total)
   const saveAttempt = userId

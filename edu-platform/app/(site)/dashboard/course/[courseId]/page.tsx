@@ -26,7 +26,7 @@ export default async function DashboardCoursePage({
     db.course.findUnique({
       where: { id: courseId },
       include: {
-        videos: { orderBy: { position: "asc" }, select: { id: true, title: true } },
+        videos: { orderBy: [{ publishedAt: "asc" }, { position: "asc" }], select: { id: true, title: true } },
         _count: { select: { quizQuestions: true } },
       },
     }),

@@ -7,7 +7,7 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
   const { courseId } = await params;
   const course = await db.course.findUnique({
     where: { id: courseId },
-    include: { videos: { orderBy: { position: "asc" } } },
+    include: { videos: { orderBy: [{ publishedAt: "asc" }, { position: "asc" }] } },
   });
   if (!course) notFound();
 
@@ -25,13 +25,13 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
         <h1 className="text-2xl font-bold text-parchment mt-3">{course.title} — Video Quizzes</h1>
       </div>
 
-      {course.videos.map((video) => {
+      {course.videos.map((video, idx) => {
         const questions = allQuestions.filter((q) => q.videoId === video.id);
         return (
           <section key={video.id} className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-parchment">
-                <span className="text-parchment-dim mr-2">{video.position + 1}.</span>
+                <span className="text-parchment-dim mr-2">{idx + 1}.</span>
                 {video.title}
               </h2>
               <span className="text-xs text-parchment-dim">{questions.length} question{questions.length !== 1 ? "s" : ""}</span>
