@@ -5,9 +5,10 @@ import CurrentToggle from "./CurrentToggle";
 
 export default async function AdminDashboard() {
   const courses = await db.course.findMany({
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ isCurrent: "desc" }, { createdAt: "asc" }],
     include: {
       _count: { select: { videos: true, quizQuestions: true } },
+      videos: { select: { _count: { select: { quizQuestions: true } } } },
     },
   });
 
@@ -36,7 +37,10 @@ export default async function AdminDashboard() {
         <p className="text-parchment-dim">No courses yet. Click Sync to import from YouTube.</p>
       ) : (
         <div className="space-y-3">
-          {courses.map((course) => (
+          {courses.map((course) => {
+            const videoQuestions = course.videos.reduce((s, v) => s + v._count.quizQuestions, 0);
+            const totalQuestions = videoQuestions + course._count.quizQuestions;
+            return (
             <div
               key={course.id}
               className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 flex items-start justify-between gap-4"
@@ -44,7 +48,7 @@ export default async function AdminDashboard() {
               <div>
                 <h2 className="font-semibold text-parchment">{course.title}</h2>
                 <p className="text-sm text-parchment-dim mt-1">
-                  {course._count.videos} videos · {course._count.quizQuestions} quiz questions
+                  {course._count.videos} videos · {totalQuestions} quiz questions
                 </p>
                 {course.syncedAt && (
                   <p className="text-xs text-parchment-dim mt-1">
@@ -68,7 +72,8 @@ export default async function AdminDashboard() {
                 </Link>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
