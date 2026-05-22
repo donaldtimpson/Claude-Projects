@@ -75,6 +75,7 @@ model QuizQuestion {
   correctIndex Int
   explanation  String   @default("")
   position     Int      @default(0)
+  isDraft      Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   video        Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)

@@ -18,7 +18,7 @@ export default async function PlaylistTestPage({ params }: { params: Promise<{ c
   if (!course) notFound();
 
   const questions = await db.quizQuestion.findMany({
-    where: { courseId, videoId: null },
+    where: { courseId, videoId: null, isDraft: false },
     orderBy: { position: "asc" },
   });
 

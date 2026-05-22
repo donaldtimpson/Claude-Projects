@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env
+
+# quiz-generation pipeline (derived/ephemeral data)
+/scripts/transcripts/
+/scripts/drafts/
+/scripts/exemplars.json

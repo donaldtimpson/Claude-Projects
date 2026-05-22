@@ -34,6 +34,7 @@ export default async function AdminPlaylistTest({ params }: { params: Promise<{ 
           correctIndex: q.correctIndex,
           explanation: q.explanation,
           position: q.position,
+          isDraft: q.isDraft,
         }))}
       />
     </main>

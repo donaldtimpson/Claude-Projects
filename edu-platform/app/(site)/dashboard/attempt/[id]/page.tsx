@@ -46,11 +46,11 @@ export default async function AttemptPage({
   // Load the questions for this attempt
   const questions = attempt.videoId
     ? await db.quizQuestion.findMany({
-        where: { videoId: attempt.videoId },
+        where: { videoId: attempt.videoId, isDraft: false },
         orderBy: { position: "asc" },
       })
     : await db.quizQuestion.findMany({
-        where: { courseId: attempt.courseId ?? undefined, videoId: null },
+        where: { courseId: attempt.courseId ?? undefined, videoId: null, isDraft: false },
         orderBy: { position: "asc" },
       });
 

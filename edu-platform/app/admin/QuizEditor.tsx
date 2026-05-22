@@ -10,6 +10,7 @@ type Question = {
   correctIndex: number;
   explanation: string;
   position: number;
+  isDraft: boolean;
 };
 
 const EMPTY_FORM = {
@@ -92,6 +93,17 @@ export default function QuizEditor({
     router.refresh();
   }
 
+  async function publish(id: string) {
+    const res = await fetch(`/api/quiz/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isDraft: false }),
+    });
+    const updated = await res.json();
+    setQuestions((qs) => qs.map((q) => (q.id === id ? updated : q)));
+    router.refresh();
+  }
+
   return (
     <div className="space-y-6">
       {/* Question list */}
@@ -100,13 +112,23 @@ export default function QuizEditor({
       ) : (
         <ol className="space-y-3">
           {questions.map((q, idx) => (
-            <li key={q.id} className="bg-crimson-800 border border-crimson-700 rounded-xl p-4 space-y-2">
+            <li key={q.id} className={`border rounded-xl p-4 space-y-2 ${q.isDraft ? "bg-crimson-800/50 border-amber-700 border-dashed" : "bg-crimson-800 border-crimson-700"}`}>
               <div className="flex justify-between gap-4">
                 <p className="font-medium text-parchment">
                   <span className="text-parchment-dim mr-2">{idx + 1}.</span>
+                  {q.isDraft && (
+                    <span className="inline-block mr-2 px-1.5 py-0.5 bg-amber-900/40 border border-amber-700 text-amber-300 text-[10px] uppercase tracking-wider rounded">
+                      Draft
+                    </span>
+                  )}
                   {q.prompt}
                 </p>
                 <div className="flex gap-3 shrink-0 text-sm">
+                  {q.isDraft && (
+                    <button onClick={() => publish(q.id)} className="text-green-400 hover:text-green-300">
+                      Publish
+                    </button>
+                  )}
                   <button onClick={() => startEdit(q)} className="text-gold-400 hover:text-gold-300">
                     Edit
                   </button>

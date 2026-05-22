@@ -11,7 +11,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!await isAdmin()) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const [body, { id }] = await Promise.all([req.json(), params]);
-  const { prompt, options, correctIndex, explanation, position } = body;
+  const { prompt, options, correctIndex, explanation, position, isDraft } = body;
 
   const question = await db.quizQuestion.update({
     where: { id },
@@ -21,6 +21,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       ...(correctIndex != null && { correctIndex }),
       ...(explanation != null && { explanation }),
       ...(position != null && { position }),
+      ...(isDraft != null && { isDraft }),
     },
   });
   return NextResponse.json(question);

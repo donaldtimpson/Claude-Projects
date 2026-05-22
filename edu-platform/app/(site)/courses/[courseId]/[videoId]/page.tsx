@@ -28,7 +28,7 @@ export default async function VideoPage({
   const userId = session?.user?.id ?? null;
 
   const [questions, siblings, watched, comments] = await Promise.all([
-    db.quizQuestion.findMany({ where: { videoId: video.id }, orderBy: { position: "asc" } }),
+    db.quizQuestion.findMany({ where: { videoId: video.id, isDraft: false }, orderBy: { position: "asc" } }),
     db.video.findMany({
       where: { courseId },
       orderBy: [{ publishedAt: "asc" }, { position: "asc" }],

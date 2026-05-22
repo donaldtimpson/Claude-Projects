@@ -27,7 +27,7 @@ export default async function DashboardCoursePage({
       where: { id: courseId },
       include: {
         videos: { orderBy: [{ publishedAt: "asc" }, { position: "asc" }], select: { id: true, title: true } },
-        _count: { select: { quizQuestions: true } },
+        _count: { select: { quizQuestions: { where: { isDraft: false } } } },
       },
     }),
     db.videoProgress.findMany({

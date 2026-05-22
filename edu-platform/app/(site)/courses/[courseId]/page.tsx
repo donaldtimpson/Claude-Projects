@@ -28,7 +28,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
           include: { _count: { select: { comments: true } } },
         },
-        _count: { select: { quizQuestions: true } },
+        _count: { select: { quizQuestions: { where: { isDraft: false } } } },
         resources: {
           include: { resource: true },
           orderBy: [{ position: "asc" }, { resource: { kind: "asc" } }],

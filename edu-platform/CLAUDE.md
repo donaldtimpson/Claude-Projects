@@ -35,7 +35,7 @@ ADMIN_PASSWORD      # Password for /admin area
 **Database models** (`prisma/schema.prisma`):
 - `Course` — mirrors a YouTube playlist (`youtubePlaylistId` unique key)
 - `Video` — mirrors a playlist item (`youtubeVideoId` unique key, `position` for ordering)
-- `QuizQuestion` — belongs to either a `Video` (per-video quiz) OR a `Course` with `videoId: null` (playlist test), never both
+- `QuizQuestion` — belongs to either a `Video` (per-video quiz) OR a `Course` with `videoId: null` (playlist test), never both. `isDraft: true` hides the question from students; admin still sees it with a "Draft" badge + Publish button.
 
 **Key lib files:**
 - `lib/db.ts` — Prisma client singleton (safe for hot reload in dev)
@@ -80,3 +80,28 @@ ADMIN_PASSWORD      # Password for /admin area
 - NextAuth.js student accounts
 - `QuizAttempt` table to persist per-student scores
 - Comment/question threads per video
+
+## Quiz-draft generation pipeline (`scripts/`)
+
+Free workflow for backfilling quizzes across the YouTube back catalog without paying for the Anthropic API. The "LLM" is Claude in a session — read transcript + exemplars from context, write draft JSONs, no external API call.
+
+**Setup (once per machine):**
+- `brew install yt-dlp`
+- DB must have the `isDraft` column applied (`npx prisma migrate dev`)
+
+**Workflow:**
+
+1. `npx tsx scripts/export-exemplars.ts` — writes `scripts/exemplars.json` with every published `QuizQuestion`. Used as few-shot style guide.
+2. `npx tsx scripts/fetch-transcripts.ts [courseId]` — uses yt-dlp to pull YouTube auto-captions for every `Video` (or just one course's videos), strips VTT to plaintext, caches at `scripts/transcripts/{youtubeVideoId}.txt`. Idempotent — skips existing files.
+3. **Ask Claude in a session: "generate drafts for course X"**. Claude reads the relevant `scripts/transcripts/*.txt` files + `scripts/exemplars.json` and writes one `scripts/drafts/{videoId}.json` per video. JSON shape:
+   ```json
+   { "scope": "video", "videoId": "<Prisma Video.id, NOT youtubeVideoId>",
+     "questions": [{ "prompt": "...", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "..." }] }
+   ```
+   For playlist tests use `{ "scope": "course", "courseId": "...", "questions": [...] }`.
+4. `npx tsx scripts/import-drafts.ts --dry-run` (preview), then drop the flag to insert. Inserts as `isDraft: true`. Idempotent at the file level — skips a draft file if any drafts already exist for that video/course.
+5. Review/edit/publish in `/admin/courses/{id}` or `/admin/test/{id}`.
+
+**Public reads** (video page, course test page, attempt review, `_count` badges, `GET /api/quiz`) all filter `isDraft: false`. Admin SSR pages and `GET /api/quiz?includeDrafts=true` (admin-only) include drafts.
+
+`scripts/transcripts/`, `scripts/drafts/`, `scripts/exemplars.json` should be gitignored — high churn, not source of truth.
