@@ -31,7 +31,7 @@ export default async function VideoPage({
     db.quizQuestion.findMany({ where: { videoId: video.id, isDraft: false }, orderBy: { position: "asc" } }),
     db.video.findMany({
       where: { courseId },
-      orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
+      orderBy: { position: "asc" },
       select: { id: true, title: true },
     }),
     userId

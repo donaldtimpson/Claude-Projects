@@ -19,7 +19,7 @@ export default async function ContinueWatching() {
             include: {
               videos: {
                 select: { id: true, position: true, title: true, thumbnailUrl: true },
-                orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
+                orderBy: { position: "asc" },
               },
             },
           },

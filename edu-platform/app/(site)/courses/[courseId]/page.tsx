@@ -25,7 +25,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       where: { id: courseId },
       include: {
         videos: {
-          orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
+          orderBy: { position: "asc" },
           include: { _count: { select: { comments: true } } },
         },
         _count: { select: { quizQuestions: { where: { isDraft: false } } } },

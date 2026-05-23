@@ -7,7 +7,7 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
   const { courseId } = await params;
   const course = await db.course.findUnique({
     where: { id: courseId },
-    include: { videos: { orderBy: [{ publishedAt: "asc" }, { position: "asc" }] } },
+    include: { videos: { orderBy: { position: "asc" } } },
   });
   if (!course) notFound();
 
