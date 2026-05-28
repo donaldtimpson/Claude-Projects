@@ -44,4 +44,4 @@ next-env.d.ts
 # quiz-generation pipeline (derived/ephemeral data)
 /scripts/transcripts/
 /scripts/drafts/
-/scripts/exemplars.json
+/scripts/exemplars*.json
