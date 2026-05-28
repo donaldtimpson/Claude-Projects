@@ -39,7 +39,7 @@ export default async function AdminDashboard() {
         <div className="space-y-3">
           {courses.map((course) => {
             const videoQuestions = course.videos.reduce((s, v) => s + v._count.quizQuestions, 0);
-            const totalQuestions = videoQuestions + course._count.quizQuestions;
+            const testQuestions = course._count.quizQuestions;
             return (
             <div
               key={course.id}
@@ -48,7 +48,10 @@ export default async function AdminDashboard() {
               <div>
                 <h2 className="font-semibold text-parchment">{course.title}</h2>
                 <p className="text-sm text-parchment-dim mt-1">
-                  {course._count.videos} videos · {totalQuestions} quiz questions
+                  {course._count.videos} videos · {videoQuestions} quiz questions ·{" "}
+                  <span className={testQuestions === 0 ? "text-red-400" : undefined}>
+                    {testQuestions} test questions
+                  </span>
                 </p>
                 {course.syncedAt && (
                   <p className="text-xs text-parchment-dim mt-1">
