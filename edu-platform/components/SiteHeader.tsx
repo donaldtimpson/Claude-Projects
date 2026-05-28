@@ -1,8 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import UserMenu from "@/components/UserMenu";
 
-export default function SiteHeader() {
+export default async function SiteHeader() {
+  const cookieStore = await cookies();
+  const isAdmin = cookieStore.get("admin_auth")?.value === process.env.ADMIN_PASSWORD;
+
   return (
     <header className="bg-crimson-900 border-b border-crimson-700 px-6 py-0">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -30,6 +34,11 @@ export default function SiteHeader() {
           >
             YouTube ↗
           </a>
+          {isAdmin && (
+            <Link href="/admin" className="text-gold-400 hover:text-gold-300 transition-colors">
+              Admin
+            </Link>
+          )}
           <UserMenu />
         </nav>
       </div>
