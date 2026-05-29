@@ -45,3 +45,4 @@ next-env.d.ts
 /scripts/transcripts/
 /scripts/drafts/
 /scripts/exemplars*.json
+/scripts/bank-*.json
