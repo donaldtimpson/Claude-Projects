@@ -104,4 +104,39 @@ Free workflow for backfilling quizzes across the YouTube back catalog without pa
 
 **Public reads** (video page, course test page, attempt review, `_count` badges, `GET /api/quiz`) all filter `isDraft: false`. Admin SSR pages and `GET /api/quiz?includeDrafts=true` (admin-only) include drafts.
 
-`scripts/transcripts/`, `scripts/drafts/`, `scripts/exemplars.json` should be gitignored — high churn, not source of truth.
+`scripts/transcripts/`, `scripts/drafts/`, `scripts/exemplars.json`, `scripts/bank-*.json` should be gitignored — high churn, not source of truth.
+
+## Consistent quizzes across repeated offerings
+
+Several subjects were taught multiple times (same textbook, different years) with non-aligned lectures. To
+keep the un-quizzed offerings consistent with the one that's already done, **reuse the finished offering's
+questions verbatim wherever a topic matches**, keyed by topic — NOT by lecture number (a sibling lecture may
+merge two anchor lectures or split one across two). Still 10 per lecture, 20 per course test.
+
+1. **Anchor = the already-published offering.** Its questions are the canonical bank.
+   `npx tsx scripts/export-exemplars.ts --course <anchorCourseId> --out scripts/bank-<subject>.json`
+   writes the bank topic-ordered (by `lecturePosition`), so each question shows its source lecture.
+2. `npx tsx scripts/fetch-transcripts.ts <siblingCourseId>` (pre-`touch` review/no-material videos to skip).
+3. **Map sibling→anchor by TOPIC.** If sibling lectures are topic-titled, map from titles. If generic
+   ("Lecture N"), first run a read-only "mapper" subagent that reads the sibling transcripts and returns a
+   `sibling-position → anchor-position` table (the anchor's topic arc, derived from the bank, guides it).
+4. **Partition into batches with DISJOINT anchor pools** (each anchor lecture owned by exactly one batch) so
+   parallel drafting agents can't reuse the same anchor question twice. Each agent: read transcript → confirm
+   the real topic (mapper guesses are often wrong — the agent MUST verify from the transcript) → reuse
+   matching anchor questions verbatim → author new (house style) only to fill to 10 or for sibling-only
+   topics. Cap: each anchor question reused at most once across the sibling.
+5. **Course test:** reuse the anchor's 20 only for topics the sibling actually covered; author replacements
+   for topics it skipped (e.g. a sibling that stops before integration). Don't test uncovered material.
+6. **Validate before import** (a node script): exactly 10/20 per file, 4 options, 0 instructor-name mentions,
+   no intra-course duplicate prompts, and the correct answer is never the conspicuously-longest option
+   (reused anchor questions are exempt — they're already-reviewed canon; only rebalance NET-NEW ones).
+   Then `import-drafts.ts --dry-run`, import, review in `/admin`, publish.
+
+**Gotcha:** before importing a new sibling's drafts, move the previous sibling's `scripts/drafts/*.json`
+into `scripts/drafts/_imported/`. `import-drafts.ts` is idempotent only against existing *drafts* — if the
+prior batch was already *published* (isDraft:false), it would re-insert duplicates. (`import-drafts.ts` reads
+only top-level `scripts/drafts/*.json`, not the `_imported/` subdir.)
+
+Reuse rate tracks how aligned the offerings are: clean re-teaches (e.g. Calculus 2021, DM 2022) hit ~85–95%;
+reordered/divergent ones (e.g. DM 2019/2020, which add group theory / Fermat / relativity not in the anchor)
+land ~50–55% with the rest authored new and topic-appropriate.
