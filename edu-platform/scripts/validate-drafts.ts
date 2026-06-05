@@ -15,8 +15,13 @@ const promptsByCourse: Record<string, { prompt: string; file: string }[]> = {};
 for (const f of files) {
   const d = JSON.parse(readFileSync(join(dir, f), "utf8"));
   const qs = d.questions ?? [];
-  const expected = d.scope === "course" ? 20 : 10;
-  if (qs.length !== expected) err(`${f}: ${qs.length} questions (expected ${expected})`);
+  // Video quizzes are exactly 10. Course tests are 30 (full set), 20 (legacy), or
+  // 10 (an additive batch of new questions appended to an existing published test).
+  if (d.scope === "video") {
+    if (qs.length !== 10) err(`${f}: ${qs.length} questions (expected 10)`);
+  } else if (![10, 20, 30].includes(qs.length)) {
+    err(`${f}: ${qs.length} questions (expected 10 additive, or 20/30 full)`);
+  }
   const seen = new Set<string>();
   for (const [i, q] of qs.entries()) {
     if (!Array.isArray(q.options) || q.options.length !== 4) err(`${f} q${i}: ${q.options?.length} options (expected 4)`);

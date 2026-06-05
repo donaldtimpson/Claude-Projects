@@ -111,7 +111,8 @@ Free workflow for backfilling quizzes across the YouTube back catalog without pa
 Several subjects were taught multiple times (same textbook, different years) with non-aligned lectures. To
 keep the un-quizzed offerings consistent with the one that's already done, **reuse the finished offering's
 questions verbatim wherever a topic matches**, keyed by topic — NOT by lecture number (a sibling lecture may
-merge two anchor lectures or split one across two). Still 10 per lecture, 20 per course test.
+merge two anchor lectures or split one across two). 10 per lecture, 30 per course test (was 20 before
+2026-06-05; the extra 10 weight later-course material to balance coverage).
 
 1. **Anchor = the already-published offering.** Its questions are the canonical bank.
    `npx tsx scripts/export-exemplars.ts --course <anchorCourseId> --out scripts/bank-<subject>.json`
@@ -127,7 +128,7 @@ merge two anchor lectures or split one across two). Still 10 per lecture, 20 per
    topics. Cap: each anchor question reused at most once across the sibling.
 5. **Course test:** reuse the anchor's 20 only for topics the sibling actually covered; author replacements
    for topics it skipped (e.g. a sibling that stops before integration). Don't test uncovered material.
-6. **Validate before import** (a node script): exactly 10/20 per file, 4 options, 0 instructor-name mentions,
+6. **Validate before import** (a node script): 10 per video file / 10·20·30 per course file, 4 options, 0 instructor-name mentions,
    no intra-course duplicate prompts, and the correct answer is never the conspicuously-longest option
    (reused anchor questions are exempt — they're already-reviewed canon; only rebalance NET-NEW ones).
    Then `import-drafts.ts --dry-run`, import, review in `/admin`, publish.

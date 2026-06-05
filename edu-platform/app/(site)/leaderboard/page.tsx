@@ -140,7 +140,7 @@ function ScholarRow({ entry, rank, isMe }: { entry: ScholarEntry; rank: number; 
 function ScoreRule({ points, label }: { points: string; label: string }) {
   return (
     <li className="flex gap-3">
-      <span className="font-bold text-gold-300 tabular-nums shrink-0 w-14 text-right">{points}</span>
+      <span className="font-bold text-gold-300 tabular-nums shrink-0 w-20 text-right whitespace-nowrap">{points}</span>
       <span>{label}</span>
     </li>
   );

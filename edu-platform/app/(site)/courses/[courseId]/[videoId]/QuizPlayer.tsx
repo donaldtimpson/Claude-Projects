@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AttemptReview from "@/components/AttemptReview";
 import { useToast, type ToastBadge } from "@/components/Toast";
 
@@ -30,6 +31,7 @@ export default function QuizPlayer({
   const [reviewing, setReviewing] = useState(false);
   const savedRef = useRef(false);
   const toast = useToast();
+  const router = useRouter();
 
   const q = questions[current];
   const answered = selected !== null;
@@ -70,9 +72,11 @@ export default function QuizPlayer({
       savedRef.current = true;
       Promise.resolve(onAttemptComplete(score, questions.length, answers)).then((earned) => {
         if (earned && earned.length && toast) toast.celebrate(earned);
+        // Refresh server components so the Hall of Aces reflects a new perfect score.
+        router.refresh();
       });
     }
-  }, [done, score, questions.length, answers, onAttemptComplete, toast]);
+  }, [done, score, questions.length, answers, onAttemptComplete, toast, router]);
 
   if (done && reviewing) {
     return (
@@ -106,13 +110,18 @@ export default function QuizPlayer({
           {score}/{questions.length}
           <span className="text-xl text-parchment-dim ml-2">({pct}%)</span>
         </p>
-        <p className="text-parchment-dim">
-          {pct === 100
-            ? "Perfect score!"
-            : pct >= 70
-            ? "Good work — review the ones you missed."
-            : "Keep studying and try again."}
-        </p>
+        {pct === 100 ? (
+          <div className="rounded-lg border border-gold-500 bg-crimson-800 px-4 py-3">
+            <p className="font-display text-sm uppercase tracking-[0.15em] text-gold-300">
+              ✦ Perfect — you aced this lecture
+            </p>
+            <p className="text-xs text-parchment-dim mt-1">Your handle now joins the Hall of Aces below.</p>
+          </div>
+        ) : (
+          <p className="text-parchment-dim">
+            {pct >= 70 ? "Good work — review the ones you missed." : "Keep studying and try again."}
+          </p>
+        )}
         <div className="flex gap-3">
           <button
             onClick={() => setReviewing(true)}

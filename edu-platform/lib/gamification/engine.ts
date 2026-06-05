@@ -145,7 +145,6 @@ function evaluate(
   const perfectVideos = new Set<string>();
   const perfectCourses = new Set<string>();
   let anyPerfect = false;
-  let test90 = false;
   let perfectTest = false;
 
   for (const a of attempts) {
@@ -159,7 +158,6 @@ function evaluate(
     if (a.courseId) {
       const prev = bestCourse.get(a.courseId);
       if (!prev || a.score > prev.score) bestCourse.set(a.courseId, { score: a.score, total: a.totalQuestions });
-      if (a.totalQuestions > 0 && a.score / a.totalQuestions >= 0.9) test90 = true;
       if (perfect) {
         perfectTest = true;
         perfectCourses.add(a.courseId);
@@ -186,6 +184,7 @@ function evaluate(
   const completedCourses = new Set<string>();
   let halfCourse = false;
   let courseAllPerfect = false;
+  let courseThreeAces = false;
   const subjects = new Set<string>();
 
   for (const c of structure.courses) {
@@ -206,6 +205,10 @@ function evaluate(
       return !!b && b.total > 0 && b.score / b.total >= PASS_RATIO;
     });
     if (allWatched && quizzesPassed && testPassed) completedCourses.add(c.id);
+
+    // Aces within the course (perfect best attempt on a video quiz).
+    const perfectInCourse = quizVideos.filter((v) => perfectVideos.has(v)).length;
+    if (perfectInCourse >= 3) courseThreeAces = true;
 
     // Perfect on every quiz (and test, if any) in the course.
     if (
@@ -246,8 +249,8 @@ function evaluate(
     "lectures-100": lecturesWatched >= 100,
     "lectures-250": lecturesWatched >= 250,
     "first-perfect": anyPerfect,
-    "test-90": test90,
-    "perfect-streak-3": bestPerfectRun >= 3,
+    "course-3-aces": courseThreeAces,
+    "perfect-streak-5": bestPerfectRun >= 5,
     "perfect-test": perfectTest,
     "course-all-perfect": courseAllPerfect,
     "half-course": halfCourse,
@@ -364,6 +367,28 @@ export async function getScholarByHandle(
   const idx = all.findIndex((e) => e.scholar.handle.toLowerCase() === target);
   if (idx === -1) return null;
   return { ...all[idx], rank: idx + 1, total: all.length };
+}
+
+// Scholars who have aced a given video's quiz (a perfect best attempt), in
+// earliest-ace order, shown by pseudonym on the lecture page's Hall of Aces.
+export async function getQuizAces(videoId: string): Promise<{ userId: string; handle: string }[]> {
+  const attempts = await db.quizAttempt.findMany({
+    where: { videoId, totalQuestions: { gt: 0 } },
+    select: {
+      userId: true,
+      score: true,
+      totalQuestions: true,
+      user: { select: { handle: true } },
+    },
+    orderBy: { completedAt: "asc" },
+  });
+  const acers = new Map<string, string>();
+  for (const a of attempts) {
+    if (a.score === a.totalQuestions && !acers.has(a.userId)) {
+      acers.set(a.userId, a.user.handle ?? generateHandle(a.userId));
+    }
+  }
+  return [...acers.entries()].map(([userId, handle]) => ({ userId, handle }));
 }
 
 // A user's full badge set (rule-earned ∪ instructor-granted) for their own

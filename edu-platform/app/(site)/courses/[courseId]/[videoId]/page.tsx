@@ -4,7 +4,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { saveQuizAttempt } from "@/lib/actions";
+import { getQuizAces } from "@/lib/gamification/engine";
 import QuizPlayer from "./QuizPlayer";
+import QuizAces from "./QuizAces";
 import MarkWatchedButton from "@/components/MarkWatchedButton";
 import CommentSection from "@/components/CommentSection";
 import VideoDescription from "@/components/VideoDescription";
@@ -53,6 +55,14 @@ export default async function VideoPage({
     ? saveQuizAttempt.bind(null, video.id, null)
     : undefined;
 
+  const aces = questions.length > 0 ? await getQuizAces(video.id) : [];
+
+  // On the last lecture the "Next" slot becomes a "Take Test" CTA — but only if
+  // the course actually has a published playlist test.
+  const hasTest =
+    !nextVideo &&
+    (await db.quizQuestion.count({ where: { courseId, videoId: null, isDraft: false } })) > 0;
+
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -77,6 +87,39 @@ export default async function VideoPage({
             className="w-full h-full"
           />
         </div>
+
+        {/* Quick lecture nav — directly under the video so there's no need to scroll */}
+        {(prevVideo || nextVideo) && (
+          <div className="flex items-center justify-between gap-3">
+            {prevVideo ? (
+              <Link
+                href={`/courses/${courseId}/${prevVideo.id}`}
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+              >
+                ← Previous
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextVideo ? (
+              <Link
+                href={`/courses/${courseId}/${nextVideo.id}`}
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+              >
+                Next →
+              </Link>
+            ) : hasTest ? (
+              <Link
+                href={`/courses/${courseId}/test`}
+                className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 font-semibold rounded-lg px-4 py-2 transition-colors"
+              >
+                Take Test →
+              </Link>
+            ) : (
+              <span />
+            )}
+          </div>
+        )}
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
@@ -103,6 +146,9 @@ export default async function VideoPage({
             onAttemptComplete={saveAttempt}
           />
         )}
+
+        {/* Hall of Aces */}
+        {questions.length > 0 && <QuizAces acers={aces} myUserId={userId} />}
 
         {/* Comments */}
         <CommentSection

@@ -77,8 +77,8 @@ export const MOCK_BADGES: Badge[] = [
 
   // 🎯 Mastery — quality
   { key: "first-perfect", name: "Flawless", blurb: "Earn your first perfect score.", tier: "bronze", category: "mastery", unlocked: true },
-  { key: "test-90", name: "Sharp", blurb: "Score 90%+ on a playlist test.", tier: "silver", category: "mastery", unlocked: false },
-  { key: "perfect-streak-3", name: "Perfectionist", blurb: "Three perfect quizzes in a row.", tier: "gold", category: "mastery", unlocked: false },
+  { key: "course-3-aces", name: "Sharp", blurb: "Ace 3 quizzes in one course.", tier: "silver", category: "mastery", unlocked: false },
+  { key: "perfect-streak-5", name: "Perfectionist", blurb: "Ace 5 quizzes in a row.", tier: "gold", category: "mastery", unlocked: false },
   { key: "perfect-test", name: "Top of the Class", blurb: "Score 100% on a playlist test.", tier: "gold", category: "mastery", unlocked: false },
   { key: "course-all-perfect", name: "Summa Cum Laude", blurb: "Perfect score on every quiz in a course.", tier: "platinum", category: "mastery", unlocked: false },
 
