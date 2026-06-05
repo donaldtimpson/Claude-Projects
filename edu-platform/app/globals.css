@@ -18,4 +18,13 @@
 
   --color-parchment: #f5ecd8;
   --color-parchment-dim: #c4af8e;
+
+  /* Body text a touch larger than the Tailwind defaults. `text-sm` (15px) is the
+     workhorse body size; `text-xs` (13px) carries secondary copy — badge/achievement
+     blurbs, counts, resource descriptions, labels. Truly-tiny chrome uses the literal
+     text-[10px] (tier chips), which is left untouched. */
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.4;
 }
