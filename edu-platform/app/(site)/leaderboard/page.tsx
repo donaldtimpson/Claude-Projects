@@ -95,7 +95,7 @@ export default async function LeaderboardPage() {
                 label="per correct answer on a quiz — your best attempt counts, so retrying to learn only helps"
               />
               <ScoreRule points={`+${SCORING.testPerCorrect}`} label="per correct answer on a playlist test (best attempt)" />
-              <ScoreRule points={`+${fmt(SCORING.completion)}`} label="for finishing a course (all lectures watched + test passed)" />
+              <ScoreRule points={`+${fmt(SCORING.completion)}`} label="for finishing a course (all lectures watched, every quiz passed, and the test passed)" />
               <ScoreRule points={`+${TIERS.bronze.points}–${TIERS.platinum.points}`} label="for each achievement you unlock, by tier (Bronze → Platinum)" />
             </ul>
             <p className="text-xs text-parchment-dim pt-2 border-t border-crimson-800">

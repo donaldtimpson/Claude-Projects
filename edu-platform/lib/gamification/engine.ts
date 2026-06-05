@@ -140,7 +140,7 @@ function evaluate(
   const lecturesWatched = watched.size;
 
   // Best-of per quiz / test (no cheat pressure), plus perfect tracking.
-  const bestVideo = new Map<string, number>();
+  const bestVideo = new Map<string, { score: number; total: number }>();
   const bestCourse = new Map<string, { score: number; total: number }>();
   const perfectVideos = new Set<string>();
   const perfectCourses = new Set<string>();
@@ -152,7 +152,8 @@ function evaluate(
     const perfect = a.totalQuestions > 0 && a.score === a.totalQuestions;
     if (perfect) anyPerfect = true;
     if (a.videoId) {
-      bestVideo.set(a.videoId, Math.max(bestVideo.get(a.videoId) ?? 0, a.score));
+      const prevV = bestVideo.get(a.videoId);
+      if (!prevV || a.score > prevV.score) bestVideo.set(a.videoId, { score: a.score, total: a.totalQuestions });
       if (perfect) perfectVideos.add(a.videoId);
     }
     if (a.courseId) {
@@ -178,7 +179,7 @@ function evaluate(
     }
   }
 
-  const videoCorrect = [...bestVideo.values()].reduce((s, v) => s + v, 0);
+  const videoCorrect = [...bestVideo.values()].reduce((s, v) => s + v.score, 0);
   const testCorrect = [...bestCourse.values()].reduce((s, v) => s + v.score, 0);
 
   // Completion + breadth.
@@ -197,10 +198,16 @@ function evaluate(
     const hasTest = structure.coursesWithTest.has(c.id);
     const best = bestCourse.get(c.id);
     const testPassed = !hasTest || (!!best && best.total > 0 && best.score / best.total >= PASS_RATIO);
-    if (allWatched && testPassed) completedCourses.add(c.id);
+
+    // Completion requires PASSING every quiz too — not just clicking "watched".
+    const quizVideos = c.videoIds.filter((v) => structure.videosWithQuiz.has(v));
+    const quizzesPassed = quizVideos.every((v) => {
+      const b = bestVideo.get(v);
+      return !!b && b.total > 0 && b.score / b.total >= PASS_RATIO;
+    });
+    if (allWatched && quizzesPassed && testPassed) completedCourses.add(c.id);
 
     // Perfect on every quiz (and test, if any) in the course.
-    const quizVideos = c.videoIds.filter((v) => structure.videosWithQuiz.has(v));
     if (
       quizVideos.length > 0 &&
       quizVideos.every((v) => perfectVideos.has(v)) &&
