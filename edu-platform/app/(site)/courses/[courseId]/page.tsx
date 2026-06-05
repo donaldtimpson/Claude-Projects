@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -8,6 +9,46 @@ import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ courseId: string }>;
+}): Promise<Metadata> {
+  const { courseId } = await params;
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: {
+      title: true,
+      description: true,
+      thumbnailUrl: true,
+      videos: { select: { thumbnailUrl: true }, orderBy: { position: "asc" }, take: 1 },
+    },
+  });
+  if (!course) return {};
+
+  const description =
+    course.description?.trim().slice(0, 200) || "A classical course at The Timpson Lyceum.";
+  // Prefer the course thumbnail, else its first lecture's thumbnail; otherwise the
+  // site's default card (inherited from the root opengraph-image) is used.
+  const image = course.thumbnailUrl || course.videos[0]?.thumbnailUrl || undefined;
+
+  return {
+    title: course.title,
+    description,
+    openGraph: {
+      title: course.title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: course.title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
+}
 
 function formatDuration(secs: number) {
   const h = Math.floor(secs / 3600);
