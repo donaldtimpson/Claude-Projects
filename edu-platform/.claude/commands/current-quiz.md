@@ -23,6 +23,8 @@ The "current course" is the `Course` row with `isCurrent: true`. The target vide
    - **Length parity:** correct option must not be the longest. Target option lengths within ~15-20% of each other. Move nuance/caveats into the `explanation` field if the correct answer is getting too long.
    - **Honest framing:** describe what happened/what is true, not what an action was "supposed" to accomplish.
    - **No personal-name attribution.** Don't write "Donald says X" or "Per Donald, …" — restate as the position the course takes.
+   - **Pronoun convention.** Use **masculine** pronouns (he/him/his) for an arbitrary/generic individual ("a student", "a skater", "an observer"). Reserve the **feminine** for personification (Lady Justice, or a nation/city as *her* — e.g. "Rome") and for an actual specific woman (named or clearly real historical figure). Don't blind-replace — judge by context.
+   - **Dates use BC/AD**, never BCE/CE.
    - Spread `correctIndex` across 0–3 (don't pile them all on one index).
    - Match the tone of existing published questions for this course. For University Physics, `explanation` has been left empty — keep it `""` unless Donald asks for explanations.
 
