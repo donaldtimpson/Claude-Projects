@@ -1,21 +1,21 @@
 import Link from "next/link";
 import {
   SCORING,
+  TIERS,
   MOCK_SCHOLARS,
   MOCK_ME,
   MOCK_BADGES,
   rankMedal,
   type Scholar,
-  type Badge,
 } from "@/lib/gamification/mock";
+import AchievementsGrid from "./AchievementsGrid";
+import StandingCard from "./StandingCard";
 
 export const dynamic = "force-dynamic";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 export default function LeaderboardPage() {
-  const unlocked = MOCK_BADGES.filter((b) => b.unlocked).length;
-
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -40,7 +40,7 @@ export default function LeaderboardPage() {
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             Your Standing
           </h2>
-          <YourStanding />
+          <StandingCard scholar={MOCK_ME} rank={MOCK_ME.rank} totalScholars={MOCK_SCHOLARS.length} />
         </section>
 
         {/* 2. The board */}
@@ -59,17 +59,10 @@ export default function LeaderboardPage() {
 
         {/* 3. Achievements */}
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700 flex items-center justify-between">
-            <span>Achievements</span>
-            <span className="text-parchment-dim normal-case tracking-normal text-xs">
-              {unlocked} / {MOCK_BADGES.length} earned
-            </span>
+          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            Achievements
           </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {MOCK_BADGES.map((b) => (
-              <BadgeCard key={b.key} badge={b} />
-            ))}
-          </div>
+          <AchievementsGrid badges={MOCK_BADGES} />
         </section>
 
         {/* 4. Explainer */}
@@ -86,11 +79,14 @@ export default function LeaderboardPage() {
               />
               <ScoreRule points={`+${SCORING.testPerCorrect}`} label="per correct answer on a playlist test (best attempt)" />
               <ScoreRule points={`+${fmt(SCORING.completion)}`} label="for finishing a course (all lectures watched + test passed)" />
-              <ScoreRule points={`+${SCORING.badgeMinor}–${SCORING.badgeMajor}`} label="for each achievement you unlock" />
+              <ScoreRule points={`+${TIERS.bronze.points}–${TIERS.platinum.points}`} label="for each achievement you unlock, by tier (Bronze → Platinum)" />
             </ul>
             <p className="text-xs text-parchment-dim pt-2 border-t border-crimson-800">
               Because quizzes count your <span className="text-parchment">best</span> attempt, there's no reason
-              to look up answers — you're rewarded for mastering the material, not for guessing fast.
+              to look up answers — you're rewarded for mastering the material, not for guessing fast. And the
+              legendary <span className="text-gold-300">Omniscient</span> badge is worth{" "}
+              {TIERS.omniscient.points.toLocaleString()} — but you'd have to do absolutely everything,
+              perfectly, to claim it.
             </p>
           </div>
         </section>
@@ -99,56 +95,12 @@ export default function LeaderboardPage() {
   );
 }
 
-function YourStanding() {
-  const me = MOCK_ME;
-  const total = me.standing || 1;
-  const segments = [
-    { label: "Lectures", value: me.lectures, className: "bg-gold-500" },
-    { label: "Quizzes", value: me.quizPts, className: "bg-gold-400" },
-    { label: "Completion", value: me.completions, className: "bg-green-500" },
-    { label: "Badges", value: me.badgePts, className: "bg-crimson-600" },
-  ];
-
-  return (
-    <div className="bg-crimson-900 border border-gold-500 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <p className="font-display text-lg text-gold-300">{me.handle}</p>
-          <p className="text-xs text-parchment-dim mt-0.5">Rank #{me.rank} of {MOCK_SCHOLARS.length}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-parchment">{fmt(me.standing)}</p>
-          <p className="text-xs text-parchment-dim">standing</p>
-        </div>
-      </div>
-
-      {/* Stacked breakdown bar */}
-      <div className="h-2 bg-crimson-800 rounded-full overflow-hidden flex">
-        {segments.map((seg) => (
-          <div
-            key={seg.label}
-            className={`h-full ${seg.className}`}
-            style={{ width: `${(seg.value / total) * 100}%` }}
-          />
-        ))}
-      </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
-        {segments.map((seg) => (
-          <span key={seg.label} className="flex items-center gap-1.5 text-xs text-parchment-dim">
-            <span className={`inline-block h-2 w-2 rounded-sm ${seg.className}`} />
-            {seg.label} <span className="text-parchment">{fmt(seg.value)}</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function ScholarRow({ scholar, rank, isMe }: { scholar: Scholar; rank: number; isMe: boolean }) {
   const { color, medal } = rankMedal(rank);
   return (
-    <div
-      className={`rounded-xl p-4 flex items-center gap-4 border transition-colors ${
+    <Link
+      href={`/leaderboard/${scholar.handle.toLowerCase()}`}
+      className={`group rounded-xl p-4 flex items-center gap-4 border transition-colors ${
         isMe
           ? "bg-crimson-800 border-gold-500"
           : "bg-crimson-900 border-crimson-700 hover:border-gold-500"
@@ -158,37 +110,14 @@ function ScholarRow({ scholar, rank, isMe }: { scholar: Scholar; rank: number; i
         {medal || rank}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-parchment truncate">
+        <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
           {scholar.handle}
           {isMe && <span className="text-gold-400 text-xs ml-2">you</span>}
         </p>
       </div>
       <p className="text-lg font-bold text-gold-300 shrink-0 tabular-nums">{fmt(scholar.standing)}</p>
-    </div>
-  );
-}
-
-function BadgeCard({ badge }: { badge: Badge }) {
-  return (
-    <div
-      className={`rounded-xl p-4 border text-center ${
-        badge.unlocked
-          ? "bg-crimson-900 border-gold-500"
-          : "bg-crimson-950 border-crimson-800 opacity-60"
-      }`}
-    >
-      <span
-        className={`inline-block text-[10px] uppercase tracking-widest rounded px-2 py-0.5 mb-2 font-display ${
-          badge.unlocked ? "bg-gold-500 text-crimson-950" : "bg-crimson-800 text-parchment-dim"
-        }`}
-      >
-        {badge.unlocked ? "Earned" : "Locked"}
-      </span>
-      <p className={`text-sm font-medium ${badge.unlocked ? "text-gold-300" : "text-parchment-dim"}`}>
-        {badge.name}
-      </p>
-      <p className="text-xs text-parchment-dim mt-1 leading-snug">{badge.blurb}</p>
-    </div>
+      <span className="text-parchment-dim group-hover:text-gold-300 transition-colors shrink-0">→</span>
+    </Link>
   );
 }
 
