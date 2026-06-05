@@ -29,6 +29,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/resources" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
             Resources
           </Link>
+          <Link href="/admin/achievements" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
+            Achievements
+          </Link>
           <SyncButton />
         </div>
       </div>

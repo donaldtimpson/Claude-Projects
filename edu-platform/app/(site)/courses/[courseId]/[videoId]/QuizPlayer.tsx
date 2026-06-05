@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import AttemptReview from "@/components/AttemptReview";
+import { useToast, type ToastBadge } from "@/components/Toast";
 
 type Question = {
   id: string;
@@ -16,7 +17,11 @@ export default function QuizPlayer({
   onAttemptComplete,
 }: {
   questions: Question[];
-  onAttemptComplete?: (score: number, total: number, answers: (number | null)[]) => void;
+  onAttemptComplete?: (
+    score: number,
+    total: number,
+    answers: (number | null)[],
+  ) => Promise<ToastBadge[]> | void;
 }) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
@@ -24,6 +29,7 @@ export default function QuizPlayer({
   const [done, setDone] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const savedRef = useRef(false);
+  const toast = useToast();
 
   const q = questions[current];
   const answered = selected !== null;
@@ -57,13 +63,16 @@ export default function QuizPlayer({
 
   const score = answers.filter((a, i) => a === questions[i].correctIndex).length;
 
-  // Fire the callback exactly once when the quiz is completed
+  // Fire the callback exactly once when the quiz is completed; celebrate any
+  // achievements the attempt unlocked.
   useEffect(() => {
     if (done && !savedRef.current && onAttemptComplete) {
       savedRef.current = true;
-      onAttemptComplete(score, questions.length, answers);
+      Promise.resolve(onAttemptComplete(score, questions.length, answers)).then((earned) => {
+        if (earned && earned.length && toast) toast.celebrate(earned);
+      });
     }
-  }, [done, score, questions.length, answers, onAttemptComplete]);
+  }, [done, score, questions.length, answers, onAttemptComplete, toast]);
 
   if (done && reviewing) {
     return (

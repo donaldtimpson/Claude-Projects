@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { markVideoWatched } from "@/lib/actions";
+import { useToast } from "@/components/Toast";
 
 export default function MarkWatchedButton({
   videoId,
@@ -11,10 +12,14 @@ export default function MarkWatchedButton({
   initialWatched: boolean;
 }) {
   const [watched, setWatched] = useState(initialWatched);
+  const toast = useToast();
 
   async function handleClick() {
     setWatched(true);
-    await markVideoWatched(videoId);
+    const earned = await markVideoWatched(videoId);
+    if (earned.length && toast) {
+      toast.celebrate(earned.map((b) => ({ key: b.key, name: b.name, tier: b.tier, blurb: b.blurb })));
+    }
   }
 
   if (watched) {

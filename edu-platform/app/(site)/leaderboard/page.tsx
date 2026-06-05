@@ -1,21 +1,23 @@
 import Link from "next/link";
-import {
-  SCORING,
-  TIERS,
-  MOCK_SCHOLARS,
-  MOCK_ME,
-  MOCK_BADGES,
-  rankMedal,
-  type Scholar,
-} from "@/lib/gamification/mock";
-import AchievementsGrid from "./AchievementsGrid";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { SCORING, TIERS, rankMedal } from "@/lib/gamification/mock";
+import { getLeaderboard, type ScholarEntry } from "@/lib/gamification/engine";
 import StandingCard from "./StandingCard";
 
 export const dynamic = "force-dynamic";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 
-export default function LeaderboardPage() {
+export default async function LeaderboardPage() {
+  const session = await getServerSession(authOptions);
+  const myId = session?.user?.id;
+
+  const entries = await getLeaderboard();
+  const total = entries.length;
+  const meIndex = myId ? entries.findIndex((e) => e.scholar.userId === myId) : -1;
+  const me = meIndex >= 0 ? entries[meIndex] : null;
+
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -40,7 +42,30 @@ export default function LeaderboardPage() {
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             Your Standing
           </h2>
-          <StandingCard scholar={MOCK_ME} rank={MOCK_ME.rank} totalScholars={MOCK_SCHOLARS.length} />
+          {me ? (
+            <div className="space-y-2">
+              <StandingCard scholar={me.scholar} rank={meIndex + 1} totalScholars={total} />
+              <div className="text-right">
+                <Link href="/dashboard" className="text-xs text-parchment-dim hover:text-gold-300 transition-colors">
+                  Change your handle →
+                </Link>
+              </div>
+            </div>
+          ) : myId ? (
+            <div className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 text-sm text-parchment-dim">
+              You're not on the board yet. Watch a lecture or take a quiz and you'll claim your place in the Hall.
+            </div>
+          ) : (
+            <div className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 flex items-center justify-between gap-4">
+              <p className="text-sm text-parchment-dim">Sign in to earn a place in the Hall of Scholars.</p>
+              <Link
+                href="/auth/signin"
+                className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+              >
+                Sign In
+              </Link>
+            </div>
+          )}
         </section>
 
         {/* 2. The board */}
@@ -49,23 +74,15 @@ export default function LeaderboardPage() {
             The Hall
           </h2>
           <ul className="space-y-2">
-            {MOCK_SCHOLARS.map((s, i) => (
-              <li key={s.handle}>
-                <ScholarRow scholar={s} rank={i + 1} isMe={s.handle === MOCK_ME.handle} />
+            {entries.map((e, i) => (
+              <li key={e.scholar.userId ?? e.scholar.handle}>
+                <ScholarRow entry={e} rank={i + 1} isMe={!!myId && e.scholar.userId === myId} />
               </li>
             ))}
           </ul>
         </section>
 
-        {/* 3. Achievements */}
-        <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
-            Achievements
-          </h2>
-          <AchievementsGrid badges={MOCK_BADGES} />
-        </section>
-
-        {/* 4. Explainer */}
+        {/* 3. Explainer */}
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             How Standing Is Earned
@@ -95,8 +112,9 @@ export default function LeaderboardPage() {
   );
 }
 
-function ScholarRow({ scholar, rank, isMe }: { scholar: Scholar; rank: number; isMe: boolean }) {
+function ScholarRow({ entry, rank, isMe }: { entry: ScholarEntry; rank: number; isMe: boolean }) {
   const { color, medal } = rankMedal(rank);
+  const { scholar } = entry;
   return (
     <Link
       href={`/leaderboard/${scholar.handle.toLowerCase()}`}
@@ -106,9 +124,7 @@ function ScholarRow({ scholar, rank, isMe }: { scholar: Scholar; rank: number; i
           : "bg-crimson-900 border-crimson-700 hover:border-gold-500"
       }`}
     >
-      <span className={`font-display text-lg w-10 shrink-0 text-center ${color}`}>
-        {medal || rank}
-      </span>
+      <span className={`font-display text-lg w-10 shrink-0 text-center ${color}`}>{medal || rank}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
           {scholar.handle}

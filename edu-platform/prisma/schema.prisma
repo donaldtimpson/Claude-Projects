@@ -87,12 +87,26 @@ model User {
   name          String?
   email         String          @unique
   password      String
+  handle        String?         @unique // public pseudonym shown in the Hall of Scholars
   createdAt     DateTime        @default(now())
 
   sessions      Session[]
   videoProgress VideoProgress[]
   quizAttempts  QuizAttempt[]
   comments      Comment[]
+  achievements  UserAchievement[]
+}
+
+model UserAchievement {
+  userId    String
+  key       String // matches a Badge.key in lib/gamification
+  earnedAt  DateTime @default(now())
+  grantedBy String?  // null = auto-earned; otherwise an admin label for instructor-granted badges
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@index([userId])
 }
 
 model Session {

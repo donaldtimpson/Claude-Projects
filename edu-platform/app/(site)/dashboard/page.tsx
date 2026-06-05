@@ -3,6 +3,9 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { generateHandle, getUserBadges } from "@/lib/gamification/engine";
+import HandleForm from "./HandleForm";
+import AchievementsGrid from "../leaderboard/AchievementsGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +15,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [courses, allProgress] = await Promise.all([
+  const [courses, allProgress, me, myBadges] = await Promise.all([
     db.course.findMany({
       include: { videos: { select: { id: true }, orderBy: { position: "asc" } } },
       orderBy: { createdAt: "asc" },
@@ -21,7 +24,11 @@ export default async function DashboardPage() {
       where: { userId },
       select: { videoId: true },
     }),
+    db.user.findUnique({ where: { id: userId }, select: { handle: true } }),
+    getUserBadges(userId),
   ]);
+
+  const handlePlaceholder = generateHandle(userId);
 
   const watchedSet = new Set(allProgress.map((p) => p.videoId));
 
@@ -62,6 +69,27 @@ export default async function DashboardPage() {
 
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            Your Handle
+          </h2>
+          <div className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 space-y-3">
+            <p className="text-sm text-parchment-dim">
+              The only name shown publicly in the{" "}
+              <Link href="/leaderboard" className="text-gold-400 hover:text-gold-300 transition-colors">
+                Hall of Scholars
+              </Link>{" "}
+              — never your real name or email.{" "}
+              {me?.handle ? (
+                <>Currently <span className="text-gold-300 font-medium">{me.handle}</span>.</>
+              ) : (
+                <>You're using the auto-assigned <span className="text-parchment">{handlePlaceholder}</span> — pick your own below.</>
+              )}
+            </p>
+            <HandleForm current={me?.handle ?? null} placeholder={handlePlaceholder} />
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             In Progress
           </h2>
           {inProgress.length === 0 ? (
@@ -92,6 +120,13 @@ export default async function DashboardPage() {
               ))}
             </ul>
           )}
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            Your Achievements
+          </h2>
+          <AchievementsGrid badges={myBadges} />
         </section>
       </div>
     </main>

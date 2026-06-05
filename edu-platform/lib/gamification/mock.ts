@@ -117,6 +117,13 @@ export const MOCK_BADGES: Badge[] = [
   },
 ];
 
+// The canonical catalog without per-user state — the real engine (engine.ts)
+// maps this to unlocked/locked per scholar. MOCK_BADGES keeps its `unlocked`
+// flags for the static house-scholar fallback only.
+export const BADGE_CATALOG: Omit<Badge, "unlocked">[] = MOCK_BADGES.map(
+  ({ unlocked: _unlocked, ...rest }) => rest,
+);
+
 // ---- Badge derivation helpers ----------------------------------------------
 
 const TIER_DIFFICULTY: Tier[] = ["bronze", "silver", "gold", "platinum", "omniscient"];
