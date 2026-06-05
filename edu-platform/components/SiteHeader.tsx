@@ -26,6 +26,9 @@ export default async function SiteHeader() {
           <Link href="/" className="hover:text-gold-300 transition-colors">
             Courses
           </Link>
+          <Link href="/leaderboard" className="hover:text-gold-300 transition-colors">
+            Hall of Scholars
+          </Link>
           <a
             href="https://www.youtube.com/@donaldDtimpson"
             target="_blank"
