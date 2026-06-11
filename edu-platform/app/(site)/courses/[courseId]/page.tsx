@@ -66,7 +66,10 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
       where: { id: courseId },
       include: {
         videos: {
-          orderBy: { position: "asc" },
+          // Chronological (oldest lecture first). publishedAt is reliable lecture
+          // order across all courses; position can be reversed for active playlists
+          // that YouTube sorts newest-first.
+          orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
           include: { _count: { select: { comments: true } } },
         },
         _count: { select: { quizQuestions: { where: { isDraft: false } } } },

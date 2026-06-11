@@ -33,7 +33,8 @@ export default async function VideoPage({
     db.quizQuestion.findMany({ where: { videoId: video.id, isDraft: false }, orderBy: { position: "asc" } }),
     db.video.findMany({
       where: { courseId },
-      orderBy: { position: "asc" },
+      // Chronological order so prev/next nav follows lecture order (see course page note).
+      orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
       select: { id: true, title: true },
     }),
     userId
