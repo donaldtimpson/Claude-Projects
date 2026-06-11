@@ -63,6 +63,22 @@ export async function POST() {
         });
         totalVideos++;
       }
+
+      // Use the first lecture's thumbnail as the course cover. YouTube's playlist
+      // thumbnail tracks the newest upload for active playlists, which would show
+      // the most recent lecture instead of lecture 1. publishedAt is reliable
+      // lecture order across all courses.
+      const firstVideo = await db.video.findFirst({
+        where: { courseId: course.id },
+        orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
+        select: { thumbnailUrl: true },
+      });
+      if (firstVideo?.thumbnailUrl) {
+        await db.course.update({
+          where: { id: course.id },
+          data: { thumbnailUrl: firstVideo.thumbnailUrl },
+        });
+      }
     }
 
     return NextResponse.json({ synced: { courses: playlists.length, videos: totalVideos } });
