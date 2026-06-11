@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
@@ -12,6 +13,48 @@ import CommentSection from "@/components/CommentSection";
 import VideoDescription from "@/components/VideoDescription";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ courseId: string; videoId: string }>;
+}): Promise<Metadata> {
+  const { courseId, videoId } = await params;
+  const video = await db.video.findUnique({
+    where: { id: videoId },
+    select: {
+      courseId: true,
+      title: true,
+      description: true,
+      thumbnailUrl: true,
+      course: { select: { title: true } },
+    },
+  });
+  if (!video || video.courseId !== courseId) return {};
+
+  const description =
+    video.description?.trim().slice(0, 200) || `A lecture from ${video.course.title} at The Timpson Lyceum.`;
+  // Per-lecture share card: use the video's own thumbnail so Facebook/X/etc.
+  // show that lecture. Falls back to the site default (root opengraph-image).
+  const image = video.thumbnailUrl || undefined;
+
+  return {
+    title: video.title,
+    description,
+    openGraph: {
+      type: "video.other",
+      title: video.title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: video.title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
+}
 
 export default async function VideoPage({
   params,
