@@ -7,8 +7,11 @@ export default async function AdminDashboard() {
   const courses = await db.course.findMany({
     orderBy: [{ isCurrent: "desc" }, { createdAt: "asc" }],
     include: {
-      _count: { select: { videos: true, quizQuestions: true } },
+      _count: {
+        select: { videos: true, quizQuestions: true, linksFrom: true, linksTo: true, offerings: true },
+      },
       videos: { select: { _count: { select: { quizQuestions: true } } } },
+      canonicalCourse: { select: { title: true } },
     },
   });
 
@@ -43,13 +46,34 @@ export default async function AdminDashboard() {
           {courses.map((course) => {
             const videoQuestions = course.videos.reduce((s, v) => s + v._count.quizQuestions, 0);
             const testQuestions = course._count.quizQuestions;
+            const isSibling = course.canonicalCourseId != null;
+            const connectionCount = course._count.linksFrom + course._count.linksTo;
+            const pill = "text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap";
             return (
             <div
               key={course.id}
               className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 flex items-start justify-between gap-4"
             >
               <div>
-                <h2 className="font-semibold text-parchment">{course.title}</h2>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="font-semibold text-parchment">{course.title}</h2>
+                  {isSibling ? (
+                    <span className={`${pill} border-crimson-700 text-parchment-dim`}>
+                      ↳ offering of {course.canonicalCourse?.title}
+                    </span>
+                  ) : connectionCount > 0 ? (
+                    <span className={`${pill} border-gold-600/60 text-gold-300`}>
+                      {connectionCount} connection{connectionCount === 1 ? "" : "s"}
+                    </span>
+                  ) : (
+                    <span className={`${pill} border-red-800 text-red-400`}>no connections</span>
+                  )}
+                  {!isSibling && course._count.offerings > 0 && (
+                    <span className={`${pill} border-crimson-700 text-parchment-dim`}>
+                      canonical · {course._count.offerings} offering{course._count.offerings === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-parchment-dim mt-1">
                   {course._count.videos} videos · {videoQuestions} quiz questions ·{" "}
                   <span className={testQuestions === 0 ? "text-red-400" : undefined}>
