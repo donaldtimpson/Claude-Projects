@@ -26,7 +26,7 @@ const GROUPS = [
     key: "related" as const,
     kind: "RELATED" as Kind,
     flip: false,
-    title: "Related material",
+    title: "Related Courses",
     blurb: "Thematically connected, in no particular order. Shows on both courses.",
   },
 ];

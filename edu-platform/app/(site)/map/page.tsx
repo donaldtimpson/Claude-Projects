@@ -94,7 +94,7 @@ export default async function CourseMapPage() {
                 strokeDasharray="5 4"
               />
             </svg>
-            Related material
+            Related Courses
           </span>
         </div>
       </div>

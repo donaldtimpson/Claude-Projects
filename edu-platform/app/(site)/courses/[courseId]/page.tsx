@@ -125,7 +125,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const connectionGroups: { title: string; courses: { id: string; title: string }[] }[] = [
     { title: "Builds on", courses: buildsOn },
     { title: "Leads to", courses: leadsTo },
-    { title: "Related material", courses: related },
+    { title: "Related Courses", courses: related },
   ].filter((g) => g.courses.length > 0);
 
   return (
