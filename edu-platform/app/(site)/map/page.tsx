@@ -170,11 +170,13 @@ export default async function CourseMapPage() {
     const ca = center(l.fromCourseId);
     const cb = center(l.toCourseId);
 
-    // Same row but not side-by-side: arch over the boxes in between (down from the
-    // top row, up otherwise) so the line doesn't appear to touch them.
+    // Same row but not side-by-side: arch over the boxes in between so the line
+    // doesn't appear to touch them. Bow down (the output side, away from the
+    // incoming arrowheads at the top); the bottom row bows up since it has no
+    // room below.
     if (pa.lvl === pb.lvl && Math.abs(pa.idx - pb.idx) > 1) {
       const top = pos.get(l.fromCourseId)!.y;
-      const down = pa.lvl === 0;
+      const down = pa.lvl !== maxLevel;
       const attachY = down ? top + NODE_H + 4 : top - 4;
       const h = Math.min(V_GAP - 16, 30 + 14 * (Math.abs(pa.idx - pb.idx) - 1));
       const cy = down ? attachY + h : attachY - h;
