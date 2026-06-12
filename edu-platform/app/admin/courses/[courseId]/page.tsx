@@ -45,6 +45,7 @@ export default async function AdminCourseQuizzes({ params }: { params: Promise<{
             <NotesEditor
               videoId={video.id}
               initialNote={note ? { id: note.id, content: note.content, isDraft: note.isDraft } : null}
+              printHref={`/courses/${courseId}/${video.id}/notes`}
             />
             <QuizEditor
               videoId={video.id}

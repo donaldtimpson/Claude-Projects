@@ -13,9 +13,11 @@ type Note = {
 export default function NotesEditor({
   videoId,
   initialNote,
+  printHref,
 }: {
   videoId: string;
   initialNote: Note | null;
+  printHref: string;
 }) {
   const router = useRouter();
   const [note, setNote] = useState<Note | null>(initialNote);
@@ -158,6 +160,16 @@ export default function NotesEditor({
               <button onClick={remove} className="text-red-400 hover:text-red-300 text-sm">
                 Delete
               </button>
+            )}
+            {note && (
+              <a
+                href={printHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-parchment-dim hover:text-gold-300 text-sm ml-auto"
+              >
+                PDF view ↗
+              </a>
             )}
           </div>
         </div>

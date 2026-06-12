@@ -180,7 +180,9 @@ export default async function VideoPage({
         </div>
 
         {/* Lecture notes (only when published) */}
-        {note && !note.isDraft && <LectureNotes content={note.content} />}
+        {note && !note.isDraft && (
+          <LectureNotes content={note.content} printHref={`/courses/${courseId}/${video.id}/notes`} />
+        )}
 
         {/* Quiz */}
         {questions.length > 0 && (
