@@ -14,11 +14,16 @@
     "@prisma/client": "^5.22.0",
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
+    "katex": "^0.17.0",
     "next": "16.2.4",
     "next-auth": "^4.24.14",
     "prisma": "^5.22.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "engines": {
     "node": "20.x"

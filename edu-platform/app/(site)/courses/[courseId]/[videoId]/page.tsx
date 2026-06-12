@@ -11,6 +11,7 @@ import QuizAces from "./QuizAces";
 import MarkWatchedButton from "@/components/MarkWatchedButton";
 import CommentSection from "@/components/CommentSection";
 import VideoDescription from "@/components/VideoDescription";
+import LectureNotes from "@/components/LectureNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -72,7 +73,7 @@ export default async function VideoPage({
 
   const userId = session?.user?.id ?? null;
 
-  const [questions, siblings, watched, comments] = await Promise.all([
+  const [questions, siblings, watched, comments, note] = await Promise.all([
     db.quizQuestion.findMany({ where: { videoId: video.id, isDraft: false }, orderBy: { position: "asc" } }),
     db.video.findMany({
       where: { courseId },
@@ -88,6 +89,7 @@ export default async function VideoPage({
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: "asc" },
     }),
+    db.lectureNote.findUnique({ where: { videoId: video.id } }),
   ]);
 
   const currentIdx = siblings.findIndex((v) => v.id === video.id);
@@ -176,6 +178,9 @@ export default async function VideoPage({
             </div>
           )}
         </div>
+
+        {/* Lecture notes (only when published) */}
+        {note && !note.isDraft && <LectureNotes content={note.content} />}
 
         {/* Quiz */}
         {questions.length > 0 && (

@@ -95,6 +95,18 @@ model Video {
   videoProgress   VideoProgress[]
   quizAttempts    QuizAttempt[]
   comments        Comment[]
+  lectureNote     LectureNote?
+}
+
+model LectureNote {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  content   String              // Markdown study notes
+  isDraft   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
 }
 
 model QuizQuestion {

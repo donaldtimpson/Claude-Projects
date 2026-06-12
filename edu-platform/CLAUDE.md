@@ -36,6 +36,7 @@ ADMIN_PASSWORD      # Password for /admin area
 - `Course` — mirrors a YouTube playlist (`youtubePlaylistId` unique key)
 - `Video` — mirrors a playlist item (`youtubeVideoId` unique key, `position` for ordering)
 - `QuizQuestion` — belongs to either a `Video` (per-video quiz) OR a `Course` with `videoId: null` (playlist test), never both. `isDraft: true` hides the question from students; admin still sees it with a "Draft" badge + Publish button.
+- `LectureNote` — Markdown study notes, 1:1 with `Video` (unique `videoId`). Same `isDraft` gate as `QuizQuestion`. See the lecture-notes pipeline section below.
 
 **Key lib files:**
 - `lib/db.ts` — Prisma client singleton (safe for hot reload in dev)
@@ -141,3 +142,39 @@ only top-level `scripts/drafts/*.json`, not the `_imported/` subdir.)
 Reuse rate tracks how aligned the offerings are: clean re-teaches (e.g. Calculus 2021, DM 2022) hit ~85–95%;
 reordered/divergent ones (e.g. DM 2019/2020, which add group theory / Fermat / relativity not in the anchor)
 land ~50–55% with the rest authored new and topic-appropriate.
+
+## Lecture-notes generation pipeline (`scripts/`)
+
+Same zero-API-cost, human-in-the-loop shape as the quiz pipeline. Notes live in the `LectureNote` model
+(1:1 with `Video`, unique `videoId`) behind the same `isDraft` gate: imported as drafts, reviewed in
+`/admin`, then published. Public reads (`app/(site)/courses/[courseId]/[videoId]/page.tsx`,
+`GET /api/notes`) show a note only when `isDraft: false`; the admin course page and
+`GET /api/notes?includeDrafts=true` include drafts.
+
+**Workflow:**
+
+1. `npx tsx scripts/fetch-transcripts.ts [courseId]` — reuse the quiz pipeline's transcript cache at
+   `scripts/transcripts/{youtubeVideoId}.txt` (already populated for most of the catalog).
+2. **Ask Claude in a session: "generate lecture notes for course X"**. Claude reads the relevant
+   `scripts/transcripts/*.txt` and writes one Markdown file per lecture to `scripts/notes/{videoId}.md`
+   (filename = Prisma `Video.id`, **not** youtubeVideoId). Source = transcript backbone + well-established
+   subject knowledge to fix obvious mis-transcriptions; no textbook-PDF ingestion. Structured format,
+   four sections required by the validator:
+   ```markdown
+   ## Overview
+   ## Key Concepts        (term → definition bullets)
+   ## Worked Example       (numbered steps; LaTeX math via $…$ / $$…$$ renders with KaTeX)
+   ## Summary              (takeaway bullets)
+   ```
+3. `npx tsx scripts/validate-notes.ts` (structure + instructor-name check) → `npx tsx scripts/import-notes.ts --dry-run`
+   (preview) → drop the flag to insert as `isDraft: true`. Idempotent: skips a file if a note already
+   exists for that video.
+4. Review/edit/publish per video in `/admin/courses/{id}` (the `NotesEditor` above each video's quiz).
+
+`scripts/notes/` is gitignored (derived, not source of truth — the DB is).
+
+| Route added | Purpose |
+|---|---|
+| `GET /api/notes?videoId=` | Fetch a video's note (drafts hidden unless admin + `includeDrafts=true`) |
+| `PUT /api/notes` | Upsert note content for a video (creates as draft) |
+| `PATCH/DELETE /api/notes/[id]` | Publish/unpublish (toggle `isDraft`) or delete |

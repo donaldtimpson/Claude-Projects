@@ -46,3 +46,6 @@ next-env.d.ts
 /scripts/drafts/
 /scripts/exemplars*.json
 /scripts/bank-*.json
+
+# lecture-notes pipeline (derived/ephemeral data)
+/scripts/notes/
