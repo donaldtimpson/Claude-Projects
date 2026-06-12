@@ -77,10 +77,6 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           include: { resource: true },
           orderBy: [{ position: "asc" }, { resource: { kind: "asc" } }],
         },
-        // Course connections. RELATED links are stored once (from < to), so a
-        // related course can sit on either side — gather them from both.
-        linksFrom: { include: { toCourse: { select: { id: true, title: true } } } },
-        linksTo: { include: { fromCourse: { select: { id: true, title: true } } } },
       },
     }),
     getServerSession(authOptions),
@@ -103,17 +99,28 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     progress.forEach((p) => watchedSet.add(p.videoId));
   }
 
-  // Connections, split into the three display groups.
-  const buildsOn = course.linksTo
-    .filter((l) => l.kind === "RECOMMENDED")
+  // Connections live on the subject's canonical (representative) course; a sibling
+  // offering inherits them. Resolve to the representative, then load its links.
+  const repId = course.canonicalCourseId ?? course.id;
+  const connectionLinks = await db.courseLink.findMany({
+    where: { OR: [{ fromCourseId: repId }, { toCourseId: repId }] },
+    include: {
+      fromCourse: { select: { id: true, title: true } },
+      toCourse: { select: { id: true, title: true } },
+    },
+  });
+
+  // Endpoints are always representatives, so each chip links straight to the
+  // canonical offering of the linked subject.
+  const buildsOn = connectionLinks
+    .filter((l) => l.kind === "RECOMMENDED" && l.toCourseId === repId)
     .map((l) => l.fromCourse);
-  const leadsTo = course.linksFrom
-    .filter((l) => l.kind === "RECOMMENDED")
+  const leadsTo = connectionLinks
+    .filter((l) => l.kind === "RECOMMENDED" && l.fromCourseId === repId)
     .map((l) => l.toCourse);
-  const related = [
-    ...course.linksFrom.filter((l) => l.kind === "RELATED").map((l) => l.toCourse),
-    ...course.linksTo.filter((l) => l.kind === "RELATED").map((l) => l.fromCourse),
-  ];
+  const related = connectionLinks
+    .filter((l) => l.kind === "RELATED")
+    .map((l) => (l.fromCourseId === repId ? l.toCourse : l.fromCourse));
 
   const connectionGroups: { title: string; courses: { id: string; title: string }[] }[] = [
     { title: "Builds on", courses: buildsOn },

@@ -14,21 +14,39 @@ type Body = {
   kind?: "RECOMMENDED" | "RELATED";
 };
 
-function normalize(body: Body): { from: string; to: string; kind: "RECOMMENDED" | "RELATED" } | null {
+type Link = { from: string; to: string; kind: "RECOMMENDED" | "RELATED" };
+
+// Connections live at the subject level, so resolve each endpoint to its
+// representative (canonical) course before storing — links from/to a sibling
+// offering normalize onto the subject's canonical course. Returns null if a
+// course is missing or both endpoints resolve to the same subject.
+async function resolveLink(body: Body): Promise<Link | null> {
   const { fromCourseId, toCourseId, kind } = body;
   if (!fromCourseId || !toCourseId || (kind !== "RECOMMENDED" && kind !== "RELATED")) return null;
-  if (fromCourseId === toCourseId) return null;
+
+  const courses = await db.course.findMany({
+    where: { id: { in: [fromCourseId, toCourseId] } },
+    select: { id: true, canonicalCourseId: true },
+  });
+  const repOf = (id: string) => {
+    const c = courses.find((x) => x.id === id);
+    return c ? (c.canonicalCourseId ?? c.id) : null;
+  };
+  const from = repOf(fromCourseId);
+  const to = repOf(toCourseId);
+  if (!from || !to || from === to) return null;
+
   if (kind === "RELATED") {
-    const [from, to] = canonicalRelatedPair(fromCourseId, toCourseId);
-    return { from, to, kind };
+    const [a, b] = canonicalRelatedPair(from, to);
+    return { from: a, to: b, kind };
   }
-  return { from: fromCourseId, to: toCourseId, kind };
+  return { from, to, kind };
 }
 
 export async function POST(req: Request) {
   if (!(await isAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const link = normalize(await req.json());
+  const link = await resolveLink(await req.json());
   if (!link) return NextResponse.json({ error: "Invalid link" }, { status: 400 });
 
   if (link.kind === "RECOMMENDED") {
@@ -62,7 +80,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   if (!(await isAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const link = normalize(await req.json());
+  const link = await resolveLink(await req.json());
   if (!link) return NextResponse.json({ error: "Invalid link" }, { status: 400 });
 
   await db.courseLink.deleteMany({

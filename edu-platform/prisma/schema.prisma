@@ -28,6 +28,15 @@ model Course {
   announcements     Announcement[]
   linksFrom         CourseLink[]     @relation("CourseLinkFrom")
   linksTo           CourseLink[]     @relation("CourseLinkTo")
+
+  // Same-subject grouping. null = this course is its own subject (a "representative"
+  // / canonical offering). Non-null = a sibling offering pointing at its
+  // representative. Connections live on the representative; siblings inherit them.
+  canonicalCourseId String?
+  canonicalCourse   Course?          @relation("CourseOfferings", fields: [canonicalCourseId], references: [id], onDelete: SetNull)
+  offerings         Course[]         @relation("CourseOfferings")
+
+  @@index([canonicalCourseId])
 }
 
 enum CourseLinkKind {
