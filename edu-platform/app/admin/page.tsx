@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import SyncButton from "./SyncButton";
-import CurrentToggle from "./CurrentToggle";
 
 export default async function AdminDashboard() {
   const courses = await db.course.findMany({
@@ -50,64 +49,52 @@ export default async function AdminDashboard() {
             const connectionCount = course._count.linksFrom + course._count.linksTo;
             const pill = "text-[11px] px-2 py-0.5 rounded-full border whitespace-nowrap";
             return (
-            <div
-              key={course.id}
-              className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 flex items-start justify-between gap-4"
-            >
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-semibold text-parchment">{course.title}</h2>
-                  {isSibling ? (
-                    <span className={`${pill} border-crimson-700 text-parchment-dim`}>
-                      ↳ offering of {course.canonicalCourse?.title}
-                    </span>
-                  ) : connectionCount > 0 ? (
-                    <span className={`${pill} border-gold-600/60 text-gold-300`}>
-                      {connectionCount} connection{connectionCount === 1 ? "" : "s"}
-                    </span>
-                  ) : (
-                    <span className={`${pill} border-red-800 text-red-400`}>no connections</span>
-                  )}
-                  {!isSibling && course._count.offerings > 0 && (
-                    <span className={`${pill} border-crimson-700 text-parchment-dim`}>
-                      canonical · {course._count.offerings} offering{course._count.offerings === 1 ? "" : "s"}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-parchment-dim mt-1">
-                  {course._count.videos} videos · {videoQuestions} quiz questions ·{" "}
-                  <span className={testQuestions === 0 ? "text-red-400" : undefined}>
-                    {testQuestions} test questions
+              <Link
+                key={course.id}
+                href={`/admin/courses/${course.id}`}
+                className="group block bg-crimson-900 border border-crimson-700 rounded-xl p-5 hover:border-gold-500/60 hover:bg-crimson-800/40 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="font-semibold text-parchment">{course.title}</h2>
+                      {course.isCurrent && (
+                        <span className={`${pill} border-gold-500 bg-gold-500 text-crimson-950`}>★ Current</span>
+                      )}
+                      {isSibling ? (
+                        <span className={`${pill} border-crimson-700 text-parchment-dim`}>
+                          ↳ offering of {course.canonicalCourse?.title}
+                        </span>
+                      ) : connectionCount > 0 ? (
+                        <span className={`${pill} border-gold-600/60 text-gold-300`}>
+                          {connectionCount} connection{connectionCount === 1 ? "" : "s"}
+                        </span>
+                      ) : (
+                        <span className={`${pill} border-red-800 text-red-400`}>no connections</span>
+                      )}
+                      {!isSibling && course._count.offerings > 0 && (
+                        <span className={`${pill} border-crimson-700 text-parchment-dim`}>
+                          canonical · {course._count.offerings} offering{course._count.offerings === 1 ? "" : "s"}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-parchment-dim mt-1">
+                      {course._count.videos} videos · {videoQuestions} quiz questions ·{" "}
+                      <span className={testQuestions === 0 ? "text-red-400" : undefined}>
+                        {testQuestions} test questions
+                      </span>
+                    </p>
+                    {course.syncedAt && (
+                      <p className="text-xs text-parchment-dim mt-1">
+                        Last synced {new Date(course.syncedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-parchment-dim group-hover:text-gold-300 transition-colors" aria-hidden="true">
+                    →
                   </span>
-                </p>
-                {course.syncedAt && (
-                  <p className="text-xs text-parchment-dim mt-1">
-                    Last synced {new Date(course.syncedAt).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <CurrentToggle courseId={course.id} initial={course.isCurrent} />
-                <Link
-                  href={`/admin/courses/${course.id}`}
-                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                >
-                  Edit Quizzes
-                </Link>
-                <Link
-                  href={`/admin/test/${course.id}`}
-                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                >
-                  Edit Test
-                </Link>
-                <Link
-                  href={`/admin/links/${course.id}`}
-                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                >
-                  Connections
-                </Link>
-              </div>
-            </div>
+                </div>
+              </Link>
             );
           })}
         </div>
