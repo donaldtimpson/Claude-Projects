@@ -76,6 +76,12 @@ export default async function AdminDashboard() {
                 >
                   Edit Test
                 </Link>
+                <Link
+                  href={`/admin/links/${course.id}`}
+                  className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
+                >
+                  Connections
+                </Link>
               </div>
             </div>
             );

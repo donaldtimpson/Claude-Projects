@@ -77,6 +77,10 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           include: { resource: true },
           orderBy: [{ position: "asc" }, { resource: { kind: "asc" } }],
         },
+        // Course connections. RELATED links are stored once (from < to), so a
+        // related course can sit on either side — gather them from both.
+        linksFrom: { include: { toCourse: { select: { id: true, title: true } } } },
+        linksTo: { include: { fromCourse: { select: { id: true, title: true } } } },
       },
     }),
     getServerSession(authOptions),
@@ -98,6 +102,24 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     });
     progress.forEach((p) => watchedSet.add(p.videoId));
   }
+
+  // Connections, split into the three display groups.
+  const buildsOn = course.linksTo
+    .filter((l) => l.kind === "RECOMMENDED")
+    .map((l) => l.fromCourse);
+  const leadsTo = course.linksFrom
+    .filter((l) => l.kind === "RECOMMENDED")
+    .map((l) => l.toCourse);
+  const related = [
+    ...course.linksFrom.filter((l) => l.kind === "RELATED").map((l) => l.toCourse),
+    ...course.linksTo.filter((l) => l.kind === "RELATED").map((l) => l.fromCourse),
+  ];
+
+  const connectionGroups: { title: string; courses: { id: string; title: string }[] }[] = [
+    { title: "Builds on", courses: buildsOn },
+    { title: "Leads to", courses: leadsTo },
+    { title: "Related material", courses: related },
+  ].filter((g) => g.courses.length > 0);
 
   return (
     <main className="flex-1">
@@ -134,6 +156,29 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             </Link>
           )}
         </div>
+
+        {connectionGroups.length > 0 && (
+          <section className="mb-8 space-y-4">
+            {connectionGroups.map((group) => (
+              <div key={group.title}>
+                <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-2">
+                  {group.title}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {group.courses.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/courses/${c.id}`}
+                      className="text-sm px-3 py-1.5 rounded-full border border-crimson-700 text-parchment-dim hover:border-gold-500 hover:text-gold-300 transition-colors"
+                    >
+                      {c.title}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
 
         {announcements.length > 0 && (
           <div className="mb-8">

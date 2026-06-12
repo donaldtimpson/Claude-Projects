@@ -73,6 +73,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
 
           <div className="flex-1 overflow-y-auto py-4 font-display text-xs tracking-[0.15em] uppercase">
             <DrawerLink href="/" label="Courses" active={isActive("/")} />
+            <DrawerLink href="/map" label="Course Map" active={isActive("/map")} />
             <DrawerLink href="/leaderboard" label="Hall of Scholars" active={isActive("/leaderboard")} />
             {session?.user && (
               <DrawerLink href="/dashboard" label="My Progress" active={isActive("/dashboard")} />

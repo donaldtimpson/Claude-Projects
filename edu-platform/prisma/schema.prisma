@@ -26,6 +26,28 @@ model Course {
   categories        CourseCategory[]
   resources         CourseResource[]
   announcements     Announcement[]
+  linksFrom         CourseLink[]     @relation("CourseLinkFrom")
+  linksTo           CourseLink[]     @relation("CourseLinkTo")
+}
+
+enum CourseLinkKind {
+  RECOMMENDED // directional: fromCourse is recommended background for toCourse
+  RELATED     // undirected: stored once (fromCourseId < toCourseId), shown on both
+}
+
+model CourseLink {
+  id           String         @id @default(cuid())
+  fromCourseId String
+  toCourseId   String
+  kind         CourseLinkKind
+  createdAt    DateTime       @default(now())
+
+  fromCourse   Course @relation("CourseLinkFrom", fields: [fromCourseId], references: [id], onDelete: Cascade)
+  toCourse     Course @relation("CourseLinkTo", fields: [toCourseId], references: [id], onDelete: Cascade)
+
+  @@unique([fromCourseId, toCourseId, kind])
+  @@index([fromCourseId])
+  @@index([toCourseId])
 }
 
 model Category {
