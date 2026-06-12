@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import MarkdownNotes from "@/components/MarkdownNotes";
 
 type Note = {
   id: string;
@@ -20,6 +21,7 @@ export default function NotesEditor({
   const [note, setNote] = useState<Note | null>(initialNote);
   const [content, setContent] = useState(initialNote?.content ?? "");
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"edit" | "preview">("edit");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -102,13 +104,39 @@ export default function NotesEditor({
 
       {open && (
         <div className="px-4 pb-4 space-y-3">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={14}
-            placeholder="## Overview&#10;…&#10;&#10;## Key Concepts&#10;- **Term** — definition&#10;&#10;## Worked Example&#10;1. step&#10;&#10;## Summary&#10;- takeaway"
-            className="w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
-          />
+          <div className="flex gap-1 text-xs">
+            {(["edit", "preview"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`px-3 py-1.5 rounded-t-lg border-b-2 transition-colors capitalize ${
+                  mode === m
+                    ? "border-gold-500 text-parchment"
+                    : "border-transparent text-parchment-dim hover:text-parchment"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+
+          {mode === "edit" ? (
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={14}
+              placeholder="## Overview&#10;…&#10;&#10;## Key Concepts&#10;- **Term** — definition&#10;&#10;## Worked Example&#10;1. step&#10;&#10;## Summary&#10;- takeaway"
+              className="w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
+            />
+          ) : (
+            <div className="px-4 py-3 bg-crimson-900 border border-crimson-700 rounded-lg min-h-[8rem]">
+              {content.trim() ? (
+                <MarkdownNotes content={content} />
+              ) : (
+                <p className="text-parchment-dim text-sm">Nothing to preview yet.</p>
+              )}
+            </div>
+          )}
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <div className="flex flex-wrap gap-3 items-center">
             <button
