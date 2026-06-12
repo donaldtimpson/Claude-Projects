@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { db } from "@/lib/db";
 import { layerByLongestPath, type Edge } from "@/lib/course-graph";
+import CourseMapView, { type MapNode, type RecEdge, type RelEdge } from "./CourseMapView";
 
 export const dynamic = "force-dynamic";
 
@@ -139,13 +139,42 @@ export default async function CourseMapPage() {
     return { x: c.cx + dx * t, y: c.cy + dy * t };
   };
 
+  // Precompute serializable geometry for the client view.
+  const nodes: MapNode[] = connectedIds.map((id) => ({
+    id,
+    title: titleById.get(id)!,
+    x: pos.get(id)!.x,
+    y: pos.get(id)!.y,
+  }));
+
+  const recEdges: RecEdge[] = recommended
+    .map((l) => {
+      const ex = exitPort.get(key(l));
+      const en = entryPort.get(key(l));
+      if (!ex || !en) return null;
+      const ty = en.y - GAP;
+      const dy = ty - ex.y;
+      const d = `M ${ex.x} ${ex.y} C ${ex.x} ${ex.y + dy * 0.5}, ${en.x} ${ty - dy * 0.5}, ${en.x} ${ty}`;
+      return { from: l.fromCourseId, to: l.toCourseId, d };
+    })
+    .filter((e): e is RecEdge => e !== null);
+
+  const relEdges: RelEdge[] = related.map((l) => {
+    const a = center(l.fromCourseId);
+    const b = center(l.toCourseId);
+    const s = boundary(l.fromCourseId, b.cx, b.cy, 4);
+    const e = boundary(l.toCourseId, a.cx, a.cy, 4);
+    return { a: l.fromCourseId, b: l.toCourseId, x1: s.x, y1: s.y, x2: e.x, y2: e.y };
+  });
+
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-parchment mb-2">Course Map</h1>
         <p className="text-parchment-dim">
           How the courses build on and relate to one another. These are recommendations, not
-          requirements — watch anything in any order.
+          requirements — watch anything in any order.{" "}
+          <span className="text-parchment-dim/80">Hover a course to light up where it leads.</span>
         </p>
         <div className="flex flex-wrap gap-5 mt-4 text-xs text-parchment-dim">
           <span className="flex items-center gap-2">
@@ -172,86 +201,15 @@ export default async function CourseMapPage() {
         </div>
       </div>
 
-      <div className="overflow-x-auto border border-crimson-700 rounded-xl bg-crimson-900/40">
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="max-w-none"
-        >
-          <defs>
-            <marker
-              id="arrow"
-              viewBox="0 0 10 10"
-              refX="9.5"
-              refY="5"
-              markerWidth="9"
-              markerHeight="9"
-              markerUnits="userSpaceOnUse"
-              orient="auto"
-            >
-              <path d="M 0 1 L 9.5 5 L 0 9 z" fill="var(--color-gold-500)" />
-            </marker>
-          </defs>
-
-          {/* Related links first (behind), dashed and undirected, clipped to box edges. */}
-          {related.map((l, i) => {
-            const a = center(l.fromCourseId);
-            const b = center(l.toCourseId);
-            const s = boundary(l.fromCourseId, b.cx, b.cy, 4);
-            const e = boundary(l.toCourseId, a.cx, a.cy, 4);
-            return (
-              <line
-                key={`r${i}`}
-                x1={s.x}
-                y1={s.y}
-                x2={e.x}
-                y2={e.y}
-                stroke="var(--color-parchment-dim)"
-                strokeWidth="1.5"
-                strokeDasharray="5 4"
-                opacity="0.6"
-              />
-            );
-          })}
-
-          {/* Recommended links: a curve that leaves the source vertically and arrives
-              at the target vertically, into a distinct port, stopping short of the box. */}
-          {recommended.map((l, i) => {
-            const ex = exitPort.get(key(l));
-            const en = entryPort.get(key(l));
-            if (!ex || !en) return null;
-            const ty = en.y - GAP;
-            const dy = ty - ex.y;
-            const d = `M ${ex.x} ${ex.y} C ${ex.x} ${ex.y + dy * 0.5}, ${en.x} ${ty - dy * 0.5}, ${en.x} ${ty}`;
-            return (
-              <path
-                key={`d${i}`}
-                d={d}
-                fill="none"
-                stroke="var(--color-gold-500)"
-                strokeWidth="1.75"
-                markerEnd="url(#arrow)"
-              />
-            );
-          })}
-
-          {/* Nodes on top. */}
-          {connectedIds.map((id) => {
-            const p = pos.get(id)!;
-            return (
-              <foreignObject key={id} x={p.x} y={p.y} width={NODE_W} height={NODE_H}>
-                <Link
-                  href={`/courses/${id}`}
-                  className="flex h-full w-full items-center justify-center text-center px-2 rounded-lg border border-crimson-700 bg-crimson-900 text-parchment text-sm leading-tight hover:border-gold-500 hover:text-gold-300 transition-colors"
-                >
-                  {titleById.get(id)}
-                </Link>
-              </foreignObject>
-            );
-          })}
-        </svg>
-      </div>
+      <CourseMapView
+        nodes={nodes}
+        recEdges={recEdges}
+        relEdges={relEdges}
+        width={svgWidth}
+        height={svgHeight}
+        nodeW={NODE_W}
+        nodeH={NODE_H}
+      />
     </main>
   );
 }
