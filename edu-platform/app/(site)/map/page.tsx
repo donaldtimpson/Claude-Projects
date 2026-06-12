@@ -159,12 +159,33 @@ export default async function CourseMapPage() {
     })
     .filter((e): e is RecEdge => e !== null);
 
+  // Final row/column placement, for detecting related edges that would run
+  // straight through unrelated boxes on the same row.
+  const place = new Map<string, { lvl: number; idx: number }>();
+  rows.forEach((row, lvl) => row.forEach((id, idx) => place.set(id, { lvl, idx })));
+
   const relEdges: RelEdge[] = related.map((l) => {
-    const a = center(l.fromCourseId);
-    const b = center(l.toCourseId);
-    const s = boundary(l.fromCourseId, b.cx, b.cy, 4);
-    const e = boundary(l.toCourseId, a.cx, a.cy, 4);
-    return { a: l.fromCourseId, b: l.toCourseId, x1: s.x, y1: s.y, x2: e.x, y2: e.y };
+    const pa = place.get(l.fromCourseId)!;
+    const pb = place.get(l.toCourseId)!;
+    const ca = center(l.fromCourseId);
+    const cb = center(l.toCourseId);
+
+    // Same row but not side-by-side: arch over the boxes in between (down from the
+    // top row, up otherwise) so the line doesn't appear to touch them.
+    if (pa.lvl === pb.lvl && Math.abs(pa.idx - pb.idx) > 1) {
+      const top = pos.get(l.fromCourseId)!.y;
+      const down = pa.lvl === 0;
+      const attachY = down ? top + NODE_H + 4 : top - 4;
+      const h = Math.min(V_GAP - 16, 30 + 14 * (Math.abs(pa.idx - pb.idx) - 1));
+      const cy = down ? attachY + h : attachY - h;
+      const d = `M ${ca.cx} ${attachY} C ${ca.cx} ${cy}, ${cb.cx} ${cy}, ${cb.cx} ${attachY}`;
+      return { a: l.fromCourseId, b: l.toCourseId, d };
+    }
+
+    // Otherwise a straight line clipped to each box's border.
+    const s = boundary(l.fromCourseId, cb.cx, cb.cy, 4);
+    const e = boundary(l.toCourseId, ca.cx, ca.cy, 4);
+    return { a: l.fromCourseId, b: l.toCourseId, d: `M ${s.x} ${s.y} L ${e.x} ${e.y}` };
   });
 
   return (
@@ -174,7 +195,7 @@ export default async function CourseMapPage() {
         <p className="text-parchment-dim">
           How the courses build on and relate to one another. These are recommendations, not
           requirements — watch anything in any order.{" "}
-          <span className="text-parchment-dim/80">Hover a course to light up where it leads.</span>
+          <span className="text-parchment-dim/80">Hover a course to light up its connections.</span>
         </p>
         <div className="flex flex-wrap gap-5 mt-4 text-xs text-parchment-dim">
           <span className="flex items-center gap-2">
@@ -182,7 +203,14 @@ export default async function CourseMapPage() {
               <line x1="0" y1="5" x2="21" y2="5" stroke="var(--color-gold-500)" strokeWidth="2" />
               <polygon points="21,1 28,5 21,9" fill="var(--color-gold-500)" />
             </svg>
-            Builds toward (recommended)
+            Where it leads
+          </span>
+          <span className="flex items-center gap-2">
+            <svg width="28" height="10" aria-hidden>
+              <line x1="0" y1="5" x2="21" y2="5" stroke="#7fb0e0" strokeWidth="2" />
+              <polygon points="21,1 28,5 21,9" fill="#7fb0e0" />
+            </svg>
+            What builds toward it
           </span>
           <span className="flex items-center gap-2">
             <svg width="28" height="10" aria-hidden>

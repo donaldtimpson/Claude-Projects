@@ -5,7 +5,10 @@ import Link from "next/link";
 
 export type MapNode = { id: string; title: string; x: number; y: number };
 export type RecEdge = { from: string; to: string; d: string };
-export type RelEdge = { a: string; b: string; x1: number; y1: number; x2: number; y2: number };
+export type RelEdge = { a: string; b: string; d: string };
+
+// Heraldic azure for incoming ("builds toward it"); gold stays for outgoing.
+const AZURE = "#7fb0e0";
 
 export default function CourseMapView({
   nodes,
@@ -26,53 +29,50 @@ export default function CourseMapView({
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
 
-  // Recommended arrows exiting the hovered node light up; related edges touching
-  // it brighten too. Draw highlighted edges last so they sit on top.
-  const recActive = (e: RecEdge) => hovered != null && e.from === hovered;
+  // On hover: outgoing recommended arrows go gold, incoming go azure, related
+  // edges touching the node brighten. Draw active edges last so they sit on top.
+  const outActive = (e: RecEdge) => hovered != null && e.from === hovered;
+  const inActive = (e: RecEdge) => hovered != null && e.to === hovered;
+  const recState = (e: RecEdge) => (outActive(e) ? "out" : inActive(e) ? "in" : "off");
   const relActive = (e: RelEdge) => hovered != null && (e.a === hovered || e.b === hovered);
-  const sortedRec = [...recEdges].sort((a, b) => Number(recActive(a)) - Number(recActive(b)));
+  const sortedRec = [...recEdges].sort(
+    (a, b) => Number(recState(a) !== "off") - Number(recState(b) !== "off"),
+  );
   const sortedRel = [...relEdges].sort((a, b) => Number(relActive(a)) - Number(relActive(b)));
 
   return (
     <div className="overflow-x-auto border border-crimson-700 rounded-xl bg-crimson-900/40">
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="max-w-none">
         <defs>
-          <marker
-            id="arrow-muted"
-            viewBox="0 0 10 10"
-            refX="9.5"
-            refY="5"
-            markerWidth="9"
-            markerHeight="9"
-            markerUnits="userSpaceOnUse"
-            orient="auto"
-          >
-            <path d="M 0 1 L 9.5 5 L 0 9 z" fill="var(--color-parchment-dim)" />
-          </marker>
-          <marker
-            id="arrow-gold"
-            viewBox="0 0 10 10"
-            refX="9.5"
-            refY="5"
-            markerWidth="10"
-            markerHeight="10"
-            markerUnits="userSpaceOnUse"
-            orient="auto"
-          >
-            <path d="M 0 1 L 9.5 5 L 0 9 z" fill="var(--color-gold-500)" />
-          </marker>
+          {[
+            ["arrow-muted", "var(--color-parchment-dim)"],
+            ["arrow-gold", "var(--color-gold-500)"],
+            ["arrow-azure", AZURE],
+          ].map(([id, fill]) => (
+            <marker
+              key={id}
+              id={id}
+              viewBox="0 0 10 10"
+              refX="9.5"
+              refY="5"
+              markerWidth={id === "arrow-muted" ? 9 : 10}
+              markerHeight={id === "arrow-muted" ? 9 : 10}
+              markerUnits="userSpaceOnUse"
+              orient="auto"
+            >
+              <path d="M 0 1 L 9.5 5 L 0 9 z" fill={fill} />
+            </marker>
+          ))}
         </defs>
 
         {/* Related (dashed, undirected) — muted by default, brighter when touching hover. */}
         {sortedRel.map((e, i) => {
           const on = relActive(e);
           return (
-            <line
+            <path
               key={`r${i}`}
-              x1={e.x1}
-              y1={e.y1}
-              x2={e.x2}
-              y2={e.y2}
+              d={e.d}
+              fill="none"
               stroke={on ? "var(--color-gold-400)" : "var(--color-parchment-dim)"}
               strokeWidth="1.5"
               strokeDasharray="5 4"
@@ -81,18 +81,27 @@ export default function CourseMapView({
           );
         })}
 
-        {/* Recommended arrows — muted by default, gold when exiting the hovered node. */}
+        {/* Recommended arrows — muted by default; gold leaving the hovered node,
+            azure arriving into it. */}
         {sortedRec.map((e, i) => {
-          const on = recActive(e);
+          const state = recState(e);
+          const stroke =
+            state === "out"
+              ? "var(--color-gold-500)"
+              : state === "in"
+                ? AZURE
+                : "var(--color-parchment-dim)";
+          const marker =
+            state === "out" ? "arrow-gold" : state === "in" ? "arrow-azure" : "arrow-muted";
           return (
             <path
               key={`d${i}`}
               d={e.d}
               fill="none"
-              stroke={on ? "var(--color-gold-500)" : "var(--color-parchment-dim)"}
-              strokeWidth={on ? 2.25 : 1.5}
-              opacity={on ? 1 : 0.45}
-              markerEnd={`url(#${on ? "arrow-gold" : "arrow-muted"})`}
+              stroke={stroke}
+              strokeWidth={state === "off" ? 1.5 : 2.25}
+              opacity={state === "off" ? 0.45 : 1}
+              markerEnd={`url(#${marker})`}
             />
           );
         })}
