@@ -11,11 +11,14 @@ export const metadata: Metadata = {
 };
 
 // Layout constants (SVG user units).
-const NODE_W = 168;
-const NODE_H = 52;
-const H_GAP = 32;
-const V_GAP = 84;
-const PAD = 32;
+const NODE_W = 172;
+const NODE_H = 54;
+const H_GAP = 40;
+const V_GAP = 104;
+const PAD = 36;
+const GAP = 8; // arrowhead stops this far short of the target box
+const PORT_LO = 0.18; // incoming/outgoing ports spread across this band of the edge
+const PORT_HI = 0.82;
 
 export default async function CourseMapPage() {
   const [courses, links] = await Promise.all([
@@ -48,6 +51,38 @@ export default async function CourseMapPage() {
   for (const id of connectedIds) rows[level.get(id) ?? 0].push(id);
   rows.forEach((row) => row.sort((a, b) => (titleById.get(a)! < titleById.get(b)! ? -1 : 1)));
 
+  // Recommended adjacency (parents above, children below).
+  const parents = new Map<string, string[]>();
+  const children = new Map<string, string[]>();
+  for (const e of recommended) {
+    (children.get(e.fromCourseId) ?? children.set(e.fromCourseId, []).get(e.fromCourseId)!).push(e.toCourseId);
+    (parents.get(e.toCourseId) ?? parents.set(e.toCourseId, []).get(e.toCourseId)!).push(e.fromCourseId);
+  }
+
+  // Crossing reduction (Sugiyama-style barycenter): repeatedly reorder each row
+  // toward the average position of its neighbours in the adjacent row. Nodes with
+  // no neighbours keep their place (fall back to their current index).
+  const indexOf = new Map<string, number>();
+  const reindex = () => rows.forEach((row) => row.forEach((id, i) => indexOf.set(id, i)));
+  reindex();
+  const bary = (neighbors: string[]): number | null =>
+    neighbors.length ? neighbors.reduce((s, n) => s + (indexOf.get(n) ?? 0), 0) / neighbors.length : null;
+  const sortRow = (row: string[], keyFn: (id: string) => number | null) =>
+    row
+      .map((id, i) => ({ id, k: keyFn(id), i }))
+      .sort((a, b) => (a.k ?? a.i) - (b.k ?? b.i))
+      .map((w) => w.id);
+  for (let iter = 0; iter < 4; iter++) {
+    for (let l = 1; l <= maxLevel; l++) {
+      rows[l] = sortRow(rows[l], (id) => bary(parents.get(id) ?? []));
+      reindex();
+    }
+    for (let l = maxLevel - 1; l >= 0; l--) {
+      rows[l] = sortRow(rows[l], (id) => bary(children.get(id) ?? []));
+      reindex();
+    }
+  }
+
   // Position every node. pos: id -> {x,y} of the box's top-left.
   const contentWidth = Math.max(...rows.map((row) => row.length * NODE_W + (row.length - 1) * H_GAP));
   const pos = new Map<string, { x: number; y: number }>();
@@ -60,10 +95,48 @@ export default async function CourseMapPage() {
 
   const svgWidth = contentWidth + PAD * 2;
   const svgHeight = PAD * 2 + (maxLevel + 1) * NODE_H + maxLevel * V_GAP;
-
-  const centerOf = (id: string) => {
+  const center = (id: string) => {
     const p = pos.get(id)!;
     return { cx: p.x + NODE_W / 2, cy: p.y + NODE_H / 2 };
+  };
+  const portX = (id: string, i: number, n: number) => {
+    const frac = n <= 1 ? 0.5 : PORT_LO + (PORT_HI - PORT_LO) * (i / (n - 1));
+    return pos.get(id)!.x + NODE_W * frac;
+  };
+
+  // Assign each recommended edge a distinct exit port (bottom of source) and entry
+  // port (top of target). Sorting ports by the opposite node's x keeps the little
+  // fans from crossing themselves.
+  type Pt = { x: number; y: number };
+  const exitPort = new Map<string, Pt>();
+  const entryPort = new Map<string, Pt>();
+  const key = (e: Edge) => `${e.fromCourseId}|${e.toCourseId}`;
+  for (const src of connectedIds) {
+    const outs = recommended
+      .filter((e) => e.fromCourseId === src)
+      .sort((a, b) => center(a.toCourseId).cx - center(b.toCourseId).cx);
+    const p = pos.get(src)!;
+    outs.forEach((e, i) => exitPort.set(key(e), { x: portX(src, i, outs.length), y: p.y + NODE_H }));
+  }
+  for (const tgt of connectedIds) {
+    const ins = recommended
+      .filter((e) => e.toCourseId === tgt)
+      .sort((a, b) => center(a.fromCourseId).cx - center(b.fromCourseId).cx);
+    const p = pos.get(tgt)!;
+    ins.forEach((e, i) => entryPort.set(key(e), { x: portX(tgt, i, ins.length), y: p.y }));
+  }
+
+  // Point on a node's border (expanded by `gap`) in the direction of (tx,ty).
+  const boundary = (id: string, tx: number, ty: number, gap: number): Pt => {
+    const c = center(id);
+    const dx = tx - c.cx;
+    const dy = ty - c.cy;
+    if (dx === 0 && dy === 0) return { x: c.cx, y: c.cy };
+    const t = Math.min(
+      dx !== 0 ? (NODE_W / 2 + gap) / Math.abs(dx) : Infinity,
+      dy !== 0 ? (NODE_H / 2 + gap) / Math.abs(dy) : Infinity,
+    );
+    return { x: c.cx + dx * t, y: c.cy + dy * t };
   };
 
   return (
@@ -77,8 +150,8 @@ export default async function CourseMapPage() {
         <div className="flex flex-wrap gap-5 mt-4 text-xs text-parchment-dim">
           <span className="flex items-center gap-2">
             <svg width="28" height="10" aria-hidden>
-              <line x1="0" y1="5" x2="22" y2="5" stroke="var(--color-gold-500)" strokeWidth="2" />
-              <polygon points="22,1 28,5 22,9" fill="var(--color-gold-500)" />
+              <line x1="0" y1="5" x2="21" y2="5" stroke="var(--color-gold-500)" strokeWidth="2" />
+              <polygon points="21,1 28,5 21,9" fill="var(--color-gold-500)" />
             </svg>
             Builds toward (recommended)
           </span>
@@ -110,50 +183,54 @@ export default async function CourseMapPage() {
             <marker
               id="arrow"
               viewBox="0 0 10 10"
-              refX="9"
+              refX="9.5"
               refY="5"
-              markerWidth="7"
-              markerHeight="7"
-              orient="auto-start-reverse"
+              markerWidth="9"
+              markerHeight="9"
+              markerUnits="userSpaceOnUse"
+              orient="auto"
             >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--color-gold-500)" />
+              <path d="M 0 1 L 9.5 5 L 0 9 z" fill="var(--color-gold-500)" />
             </marker>
           </defs>
 
-          {/* Related links first (behind), dashed and undirected. */}
+          {/* Related links first (behind), dashed and undirected, clipped to box edges. */}
           {related.map((l, i) => {
-            const a = centerOf(l.fromCourseId);
-            const b = centerOf(l.toCourseId);
+            const a = center(l.fromCourseId);
+            const b = center(l.toCourseId);
+            const s = boundary(l.fromCourseId, b.cx, b.cy, 4);
+            const e = boundary(l.toCourseId, a.cx, a.cy, 4);
             return (
               <line
                 key={`r${i}`}
-                x1={a.cx}
-                y1={a.cy}
-                x2={b.cx}
-                y2={b.cy}
+                x1={s.x}
+                y1={s.y}
+                x2={e.x}
+                y2={e.y}
                 stroke="var(--color-parchment-dim)"
                 strokeWidth="1.5"
                 strokeDasharray="5 4"
-                opacity="0.7"
+                opacity="0.6"
               />
             );
           })}
 
-          {/* Recommended links: arrow from bottom of source to top of target
-              (target always sits at a lower level, so arrows point downward). */}
+          {/* Recommended links: a curve that leaves the source vertically and arrives
+              at the target vertically, into a distinct port, stopping short of the box. */}
           {recommended.map((l, i) => {
-            const from = pos.get(l.fromCourseId);
-            const to = pos.get(l.toCourseId);
-            if (!from || !to) return null;
+            const ex = exitPort.get(key(l));
+            const en = entryPort.get(key(l));
+            if (!ex || !en) return null;
+            const ty = en.y - GAP;
+            const dy = ty - ex.y;
+            const d = `M ${ex.x} ${ex.y} C ${ex.x} ${ex.y + dy * 0.5}, ${en.x} ${ty - dy * 0.5}, ${en.x} ${ty}`;
             return (
-              <line
+              <path
                 key={`d${i}`}
-                x1={from.x + NODE_W / 2}
-                y1={from.y + NODE_H}
-                x2={to.x + NODE_W / 2}
-                y2={to.y}
+                d={d}
+                fill="none"
                 stroke="var(--color-gold-500)"
-                strokeWidth="2"
+                strokeWidth="1.75"
                 markerEnd="url(#arrow)"
               />
             );
