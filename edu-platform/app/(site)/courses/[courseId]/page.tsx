@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
+import VideoThumb from "@/components/VideoThumb";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -240,13 +240,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                   className="group flex gap-4 items-start bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
                 >
                   <span className="text-parchment-dim text-sm w-6 shrink-0 mt-0.5">{idx + 1}</span>
-                  {video.thumbnailUrl ? (
-                    <div className="relative w-32 aspect-video shrink-0 rounded-md overflow-hidden">
-                      <Image src={video.thumbnailUrl} alt={video.title} fill className="object-cover" />
-                    </div>
-                  ) : (
-                    <div className="w-32 aspect-video shrink-0 bg-crimson-800 rounded-md" />
-                  )}
+                  <div className="relative w-32 aspect-video shrink-0 rounded-md overflow-hidden bg-crimson-800">
+                    <VideoThumb videoId={video.youtubeVideoId} src={video.thumbnailUrl} alt={video.title} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                       {video.title}
