@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import SyncButton from "./SyncButton";
 
 export default async function AdminDashboard() {
   const courses = await db.course.findMany({
@@ -16,27 +15,7 @@ export default async function AdminDashboard() {
 
   return (
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-parchment">Dashboard</h1>
-        <div className="flex items-center gap-4">
-          <Link href="/admin/comments" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
-            Comments
-          </Link>
-          <Link href="/admin/announcements" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
-            Announcements
-          </Link>
-          <Link href="/admin/categories" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
-            Categories
-          </Link>
-          <Link href="/admin/resources" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
-            Resources
-          </Link>
-          <Link href="/admin/achievements" className="text-sm text-gold-400 hover:text-gold-300 transition-colors">
-            Achievements
-          </Link>
-          <SyncButton />
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-parchment">Courses</h1>
 
       {courses.length === 0 ? (
         <p className="text-parchment-dim">No courses yet. Click Sync to import from YouTube.</p>
