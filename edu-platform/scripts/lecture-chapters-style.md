@@ -29,13 +29,22 @@ autopilot. Mirrors the role of `lecture-notes-style.md`.
 
 ## Content rules
 
-- **Target ~5–12 chapters** for a typical lecture; fewer for short videos. Each chapter should
-  be a genuine topic shift, not an arbitrary time slice. Aim for chapters at least ~45–90s long
-  so they're useful navigation, never sub-15s slivers.
-- **Titles: concise and scannable** (≈3–8 words), describing the topic a viewer is choosing to
-  jump to. Title Case or sentence case, consistent within a video. No trailing punctuation.
-- Name the **worked example / proof / demo** sections explicitly (e.g. "Worked example: …") —
-  those are the parts students scrub back to.
+- **Target ~10–12 chapters** (Donald's preferred granularity — the major topic blocks, not the
+  finest subdivisions); fewer (~4–6) for short videos. Example-dense 2-hour lectures may run to
+  **~14–16** when each worked example deserves its own scrub point. Each chapter is a genuine
+  topic shift, not an arbitrary slice; aim for chapters ≥ ~45–90s, never sub-15s slivers.
+- **Don't touch the existing description.** Many of Donald's descriptions already have a manual
+  `__________VIDEO CONTENTS__________` outline; the pipeline appends the timestamped `Chapters`
+  block *below* it and leaves everything above untouched (decided 2026-06-13).
+- **Titles: terse and scannable** (≈2–6 words), describing the topic a viewer is jumping to.
+  Sentence case, consistent within a video. No trailing punctuation (a real "?" is fine).
+  Prefer the short noun phrase over a full clause ("Solid sphere on a ramp", not "Worked
+  example: a solid sphere rolling down a ramp"). Drop the "Worked example:" prefix unless it
+  genuinely aids scanning; the title itself signals it.
+- **Math: use plain unicode**, not LaTeX — descriptions are UTF-8 and render symbols like
+  `τ = Iα`, `r × F`, `ω`, `Δx`, `→` fine, but NOT `\tau` or `$…$`. Keep it short and readable.
+- Still call out the worked examples / derivations as their own chapters (students scrub back to
+  them) — just title them tersely.
 - Match the lecture's real subject; don't title a chapter after a tangent or a preview of a
   later lecture.
 
