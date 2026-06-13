@@ -23,9 +23,9 @@ An importer validates their presence, so use them verbatim:
   labels** and bullet points; use bold sub-section labels if the lecture has distinct parts.
 - **Worked Example** — one (or two short) representative problem(s)/proof(s) from the lecture. State the
   symbolic rule/formula FIRST, then put the numeric/algebraic work on a NEW line. Use a single
-  `$$\begin{aligned} ... \end{aligned}$$` block: symbolic form on line 1, the substitution/steps on the
-  following line(s), aligned on `=` (or another relation). For a proof-based lecture, a short
-  representative derivation/proof sketch is fine.
+  `aligned` display block (see the Math section for the exact delimiter layout): symbolic form on line 1,
+  the substitution/steps on the following line(s), aligned on `=` (or another relation). For a proof-based
+  lecture, a short representative derivation/proof sketch is fine.
 - **Summary** — 4–6 bullet takeaways.
 
 ## Style
@@ -35,10 +35,28 @@ An importer validates their presence, so use them verbatim:
   topic, keep the notes on the current lecture (mention a preview in at most one phrase).
 
 ## Math / KaTeX (rendered with remark-math + rehype-katex)
-- Inline math `$...$`, display math `$$...$$`.
+- Inline math `$...$`, single-line display math `$$...$$`.
+- **Multi-line display blocks: put the `$$` delimiters on their OWN lines, flush at column 0** (NOT
+  indented under a list bullet). remark-math parses a multi-line `$$` block like a fenced code block: any
+  text on the opening `$$` line is silently dropped, and the closing `$$` must start its own line — so
+  `$$\begin{aligned}` on one line drops the `\begin{aligned}` and the whole block renders as red error
+  text. Always write:
+  ```
+  $$
+  \begin{aligned}
+  a &= b \\[4pt]
+  c &= d
+  \end{aligned}
+  $$
+  ```
+  If the equation belongs to a bullet, leave a blank line before the `$$` and keep the fence at column 0
+  (an indented `  $$` is not recognized as a display fence and corrupts everything after it).
 - NEVER stack multiple consecutive `$$...$$` blocks — they render run-together with no visible break.
-  Put any set of related equations/steps in ONE display block using
-  `\begin{aligned} ... \\[4pt] ... \end{aligned}`, aligned on `=` (or another relation).
+  Put any set of related equations/steps in ONE `aligned` display block, aligned on `=` (or another relation).
+- **Never write a literal `$` next to math delimiters** (e.g. a stack-bottom marker as `$\$$`, or currency
+  as `... = \$5$` inside `$...$`). The stray `$` breaks delimiter pairing and renders red. For a dollar
+  sign INSIDE math use `\mathdollar` (e.g. `$S\mathdollar$`); for currency in prose, write `\$5` OUTSIDE
+  any `$...$`.
 - Inverse trig functions: always write `\tan^{-1}`, `\sin^{-1}`, `\cos^{-1}` — never `\arctan` etc.
 - Use standard notation for the subject (e.g. `\lim_{x \to a}`, `\frac{d}{dx}`, `\int_a^b`, `\sum`, set
   and logic symbols, etc.).
