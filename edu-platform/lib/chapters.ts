@@ -64,6 +64,13 @@ export function validateChapters(
   const errors: string[] = [];
   for (const bad of badLines) errors.push(`unparseable line: "${bad}"`);
 
+  // YouTube rejects descriptions containing ASCII angle brackets ("invalidDescription").
+  for (const c of chapters) {
+    if (/[<>]/.test(c.label)) {
+      errors.push(`title has "<" or ">" (YouTube rejects these — use words or ≤/≥): "${c.label}"`);
+    }
+  }
+
   if (chapters.length < MIN_CHAPTERS) {
     errors.push(`only ${chapters.length} chapter(s); YouTube needs at least ${MIN_CHAPTERS}`);
   }
