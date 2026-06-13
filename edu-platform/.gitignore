@@ -49,3 +49,7 @@ next-env.d.ts
 
 # lecture-notes pipeline (derived/ephemeral data)
 /scripts/notes/
+
+# youtube-chapters pipeline (derived/ephemeral data)
+/scripts/transcripts-timed/
+/scripts/chapters/

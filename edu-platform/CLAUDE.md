@@ -21,9 +21,15 @@ npx prisma studio    # browser-based DB viewer
 
 ```
 DATABASE_URL        # Neon PostgreSQL connection string
-YOUTUBE_API_KEY     # Google Cloud — YouTube Data API v3
+YOUTUBE_API_KEY     # Google Cloud — YouTube Data API v3 (READ-ONLY: playlist/video sync)
 YOUTUBE_CHANNEL_ID  # UCxxxxxxxxxxxxxxxxxxxxxxxx (not the handle, the ID)
 ADMIN_PASSWORD      # Password for /admin area
+
+# OAuth — only needed to WRITE to YouTube (the chapters pipeline). Set the first
+# two from a "Desktop app" OAuth client; mint the third via scripts/youtube-auth.ts.
+YOUTUBE_OAUTH_CLIENT_ID
+YOUTUBE_OAUTH_CLIENT_SECRET
+YOUTUBE_OAUTH_REFRESH_TOKEN
 ```
 
 ## Architecture
@@ -178,3 +184,42 @@ Same zero-API-cost, human-in-the-loop shape as the quiz pipeline. Notes live in 
 | `GET /api/notes?videoId=` | Fetch a video's note (drafts hidden unless admin + `includeDrafts=true`) |
 | `PUT /api/notes` | Upsert note content for a video (creates as draft) |
 | `PATCH/DELETE /api/notes/[id]` | Publish/unpublish (toggle `isDraft`) or delete |
+
+## YouTube chapters pipeline (`scripts/`)
+
+Generate chapter timestamps from a lecture's transcript and write them into the **YouTube video
+description** via the official Data API v3 (`videos.update`, `part=snippet`). Same
+generate → review → push shape as the quiz/notes pipelines. Editing descriptions is
+API-sanctioned (unlike community/quiz posts, which have no API — see the parked idea).
+
+**Auth:** the read path (`lib/youtube.ts`) uses the read-only `YOUTUBE_API_KEY`. WRITING needs
+**OAuth 2.0** (`youtube.force-ssl` scope). One-time setup: create a "Desktop app" OAuth client
+in the same Google Cloud project, put its id/secret in `.env` as `YOUTUBE_OAUTH_CLIENT_ID` /
+`_CLIENT_SECRET`, then `npx tsx scripts/youtube-auth.ts` (loopback consent flow) writes
+`YOUTUBE_OAUTH_REFRESH_TOKEN`. Set the consent screen to **In production** so the refresh token
+is long-lived (Testing-mode tokens expire after 7 days). Helpers live in `lib/youtube-oauth.ts`.
+
+**Gotcha:** `videos.update` with `part=snippet` REPLACES the snippet, so `updateVideoDescription`
+fetches the full snippet and resends title/categoryId/tags/languages, swapping only the
+description.
+
+**Workflow:**
+
+1. `npx tsx scripts/fetch-timed-transcripts.ts [courseId]` — like `fetch-transcripts.ts` but
+   keeps cue start times, writing `scripts/transcripts-timed/{youtubeVideoId}.json` as
+   `[{ start, text }]` (the plaintext pipeline strips timecodes). Idempotent.
+2. **Ask Claude in a session: "generate chapters for course X"** — reads the timed transcript +
+   `scripts/lecture-chapters-style.md`, picks ~5–12 topic-shift breakpoints snapped to real cue
+   starts, writes `scripts/chapters/{youtubeVideoId}.txt` (one `0:00 Title` line per chapter).
+3. `npx tsx scripts/validate-chapters.ts` — enforces YouTube's clickable-chapter rules (first
+   stamp `0:00`, ≥3, strictly ascending, each ≥10s, last within the video's `durationSeconds`).
+4. `npx tsx scripts/push-chapters.ts <courseId|--video <id>> --dry-run` — prints the proposed
+   description; drop `--dry-run` to push live. The chapters go in a managed block under a
+   `Chapters` header; re-pushing replaces that block in place (idempotent, non-destructive to
+   the rest of the description). `videos.update` is 50 quota units (10k/day default).
+
+`scripts/transcripts-timed/` and `scripts/chapters/` are gitignored (derived/ephemeral).
+
+**Future:** extend `/current-quiz` to also draft chapters for the newest video (alongside the
+quiz + notes it already generates), and optionally persist chapters to render clickable seek
+points on the on-site lecture page.
