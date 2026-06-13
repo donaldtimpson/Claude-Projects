@@ -109,6 +109,36 @@ export function renderChaptersBlock(chapters: Chapter[]): string {
   return `${CHAPTER_HEADER}\n${lines.join("\n")}`;
 }
 
+// Decide whether a live description already has chapters, so the pipeline can
+// skip videos Donald already chaptered by hand instead of appending a duplicate
+// set (YouTube would honor the first list and ignore ours).
+//   "preexisting" — a YouTube-valid chapter list already lives ABOVE/outside our
+//                   managed block (a hand-authored set) → skip, don't touch.
+//   "ours"        — only our managed `Chapters` block is present → safe to update.
+//   "none"        — no chapter list at all → safe to generate + add.
+// YouTube treats a description as chaptered when it has ≥3 timestamps including a
+// 0:00. We strip our own managed block first so re-runs read as "ours", not
+// "preexisting".
+export function descriptionChapterStatus(description: string): "preexisting" | "ours" | "none" {
+  const lines = description.split("\n");
+  const headerIdx = lines.findIndex((l) => l.trim() === CHAPTER_HEADER);
+  const body = headerIdx === -1 ? description : lines.slice(0, headerIdx).join("\n");
+
+  const tsRe = /(?:^|[\s(\[])(\d{1,3}:[0-5]\d(?::[0-5]\d)?)(?=[\s)\].,]|$)/gm;
+  const secs: number[] = [];
+  let hasZero = false;
+  let m: RegExpExecArray | null;
+  while ((m = tsRe.exec(body))) {
+    const p = m[1].split(":").map(Number);
+    const s = p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1];
+    secs.push(s);
+    if (s === 0) hasZero = true;
+  }
+  const preexisting = hasZero && secs.length >= 3 && Math.max(...secs) >= 60;
+  if (preexisting) return "preexisting";
+  return headerIdx === -1 ? "none" : "ours";
+}
+
 // Merge the chapters block into an existing description. If a managed block (a
 // line equal to CHAPTER_HEADER) already exists, replace from there to the end;
 // otherwise append after a blank line. Non-destructive to everything above the

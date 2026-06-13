@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { parseChapters, validateChapters, mergeDescription, CHAPTER_HEADER } from "../lib/chapters";
+import { parseChapters, validateChapters, mergeDescription, descriptionChapterStatus, CHAPTER_HEADER } from "../lib/chapters";
 import { getVideoSnippet, updateVideoDescription, MAX_DESCRIPTION_LENGTH } from "../lib/youtube-oauth";
 
 // Push generated chapters into YouTube video descriptions. Reads
@@ -85,6 +85,12 @@ async function main() {
     } catch (e) {
       console.log(`✗ ${t.title}: ${(e as Error).message}`);
       failed++;
+      continue;
+    }
+
+    // Don't clobber/duplicate a hand-authored chapter list that's already live.
+    if (descriptionChapterStatus(existing) === "preexisting") {
+      console.log(`— skip ${t.title}: description already has chapters (hand-authored); leaving it alone`);
       continue;
     }
 
