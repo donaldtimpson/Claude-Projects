@@ -96,6 +96,7 @@ model Video {
   quizAttempts    QuizAttempt[]
   comments        Comment[]
   lectureNote     LectureNote?
+  transcript      Transcript?
 }
 
 model LectureNote {
@@ -103,6 +104,23 @@ model LectureNote {
   videoId   String   @unique
   content   String              // Markdown study notes
   isDraft   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+// Lecture transcript (YouTube auto-captions), 1:1 with Video. `content` is the
+// deduped plaintext used for full-text search; `segments` is the [{start,text}]
+// timed array used to deep-link a search hit to its moment. Public (no draft
+// gate) — captions are already public. Full-text search runs against GIN
+// expression indexes added in the migration (to_tsvector('english', content));
+// see lib/search.ts. Imported from scripts/transcripts/ via import-transcripts.ts.
+model Transcript {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  content   String
+  segments  Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

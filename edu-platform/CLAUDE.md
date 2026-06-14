@@ -223,3 +223,27 @@ description.
 **Future:** extend `/current-quiz` to also draft chapters for the newest video (alongside the
 quiz + notes it already generates), and optionally persist chapters to render clickable seek
 points on the on-site lecture page.
+
+## Catalog search (`lib/search.ts`, `scripts/`)
+
+Global full-text search across courses, lectures, published notes, and **transcripts** — so a topic
+can be found by what was *said*, not just titles. Header search box (`components/SearchBox.tsx`,
+wrapped in `<Suspense>` in `SiteHeader.tsx`) → `/search?q=` (`app/(site)/search/page.tsx`); also
+`GET /api/search?q=`. Both call `searchCatalog()` in `lib/search.ts`.
+
+- **Storage:** `Transcript` model (1:1 with `Video`): `content` (plaintext) + `segments` (timed
+  `[{start,text}]` JSON, when available). Public, no draft gate.
+- **Backend:** Postgres FTS via GIN expression indexes (`to_tsvector('english', …)`) added in the
+  `add_transcript_and_fts` migration; queried with raw SQL (`websearch_to_tsquery` + `ts_rank` +
+  `ts_headline`). The to_tsvector expressions in `lib/search.ts` must match the index expressions.
+- **Deep-link to the moment:** a transcript hit's earliest matching segment → `?t=<seconds>` on the
+  lecture link; the lecture page passes it as `?start=` to the YouTube embed. Lectures lacking timed
+  segments still match (plaintext) and link to the top.
+- **Import (required — transcript files are gitignored, not deployed):**
+  `npx tsx scripts/fetch-transcripts.ts [courseId]` (plaintext) and `fetch-timed-transcripts.ts`
+  (timed) populate the caches, then `npx tsx scripts/import-transcripts.ts [--dry-run]` upserts them
+  into the `Transcript` table (idempotent; keyed by youtubeVideoId). Re-run after syncing new videos.
+
+Snippets come from rough auto-captions, so results lean on the lecture title + timestamp with the
+snippet as supporting context. Search currently includes sibling offerings (not just canonical) —
+filter to canonical later if duplicates feel noisy.

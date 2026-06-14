@@ -59,10 +59,15 @@ export async function generateMetadata({
 
 export default async function VideoPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseId: string; videoId: string }>;
+  searchParams: Promise<{ t?: string }>;
 }) {
   const { courseId, videoId } = await params;
+  // ?t=<seconds> deep-links into the video (used by search transcript hits).
+  const t = Number((await searchParams).t);
+  const startParam = Number.isFinite(t) && t > 0 ? `?start=${Math.floor(t)}` : "";
 
   const [video, session] = await Promise.all([
     db.video.findUnique({ where: { id: videoId }, include: { course: true } }),
@@ -126,7 +131,7 @@ export default async function VideoPage({
         {/* Video embed */}
         <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
           <iframe
-            src={`https://www.youtube.com/embed/${video.youtubeVideoId}`}
+            src={`https://www.youtube.com/embed/${video.youtubeVideoId}${startParam}`}
             title={video.title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

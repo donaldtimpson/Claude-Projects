@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import UserMenu from "@/components/UserMenu";
 import SiteNav from "@/components/SiteNav";
 import NavBreadcrumb from "@/components/NavBreadcrumb";
+import SearchBox from "@/components/SearchBox";
 
 export default async function SiteHeader() {
   const cookieStore = await cookies();
@@ -28,6 +30,9 @@ export default async function SiteHeader() {
           </Link>
           <NavBreadcrumb />
         </div>
+        <Suspense fallback={<div className="flex-1 max-w-xs sm:max-w-sm" />}>
+          <SearchBox />
+        </Suspense>
         <UserMenu />
       </div>
     </header>
