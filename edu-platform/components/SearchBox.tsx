@@ -1,28 +1,123 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-// Header search box. Submits to /search?q=… (a plain navigation, no fetch).
-// Prefills with the current query when already on the results page.
+type CourseHit = { id: string; title: string; description: string };
+type LectureHit = {
+  videoId: string;
+  courseId: string;
+  title: string;
+  courseTitle: string;
+  startSeconds: number | null;
+};
+type Results = { courses: CourseHit[]; lectures: LectureHit[] };
+
+function formatTime(s: number): string {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+}
+
+function lectureHref(l: LectureHit): string {
+  return l.startSeconds != null
+    ? `/courses/${l.courseId}/${l.videoId}?t=${l.startSeconds}`
+    : `/courses/${l.courseId}/${l.videoId}`;
+}
+
+// Live type-ahead search. Results appear in a dropdown as you type (debounced,
+// with a spinner). The component lives in the persistent SiteHeader, so its state
+// survives navigation — after clicking a result you can re-focus the box and your
+// results are right there (easy mis-click recovery). Enter (or "see all") goes to
+// the full /search page.
 export default function SearchBox() {
   const router = useRouter();
-  const params = useSearchParams();
-  const [value, setValue] = useState("");
+  // Prefill once from the URL (so /search?q=… and refreshes keep the term); not
+  // re-synced afterward, so the value persists across navigations.
+  const [value, setValue] = useState(useSearchParams().get("q") ?? "");
+  const [results, setResults] = useState<Results | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const boxRef = useRef<HTMLDivElement>(null);
 
-  // Keep in sync with the URL's q when on /search (e.g. back/forward nav).
+  const q = value.trim();
+
+  // Debounced fetch, cancelling any in-flight request on each keystroke.
   useEffect(() => {
-    setValue(params.get("q") ?? "");
-  }, [params]);
+    if (q.length < 2) {
+      setResults(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const ctrl = new AbortController();
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: ctrl.signal });
+        setResults((await res.json()) as Results);
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") setResults({ courses: [], lectures: [] });
+      } finally {
+        setLoading(false);
+      }
+    }, 250);
+    return () => {
+      clearTimeout(id);
+      ctrl.abort();
+    };
+  }, [q]);
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const q = value.trim();
-    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
+  // Close when clicking outside.
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  useEffect(() => setActive(-1), [results]);
+
+  // Flat list of navigable rows (courses then lectures) for keyboard nav.
+  const items: string[] = [];
+  if (results) {
+    results.courses.forEach((c) => items.push(`/courses/${c.id}`));
+    results.lectures.forEach((l) => items.push(lectureHref(l)));
   }
 
+  function navigate(href: string) {
+    setOpen(false);
+    router.push(href);
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") {
+      setOpen(false);
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setOpen(true);
+      setActive((a) => Math.min(a + 1, items.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => Math.max(a - 1, -1));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (active >= 0 && items[active]) navigate(items[active]);
+      else if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+    }
+  }
+
+  const showDropdown = open && q.length >= 2;
+  const nCourses = results?.courses.length ?? 0;
+  const empty = results && nCourses === 0 && results.lectures.length === 0;
+
   return (
-    <form onSubmit={submit} role="search" className="flex-1 max-w-xs sm:max-w-sm">
+    <div ref={boxRef} className="relative flex-1 max-w-xs sm:max-w-sm">
       <div className="relative">
         <svg
           aria-hidden="true"
@@ -35,14 +130,104 @@ export default function SearchBox() {
         </svg>
         <input
           type="search"
-          name="q"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
           placeholder="Search lectures…"
           aria-label="Search the catalog"
-          className="w-full rounded-lg border border-crimson-700 bg-crimson-950/60 pl-9 pr-3 py-2 text-sm text-parchment placeholder:text-parchment-dim focus:border-gold-500 focus:outline-none"
+          role="combobox"
+          aria-expanded={showDropdown}
+          aria-controls="search-results"
+          className="w-full rounded-lg border border-crimson-700 bg-crimson-950/60 pl-9 pr-9 py-2 text-sm text-parchment placeholder:text-parchment-dim focus:border-gold-500 focus:outline-none"
         />
+        {loading && (
+          <span
+            aria-hidden="true"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin rounded-full border-2 border-crimson-600 border-t-gold-400"
+          />
+        )}
       </div>
-    </form>
+
+      {showDropdown && (
+        <div
+          id="search-results"
+          role="listbox"
+          className="absolute right-0 z-50 mt-2 w-[min(28rem,90vw)] max-h-[70vh] overflow-y-auto rounded-xl border border-crimson-700 bg-crimson-900 shadow-2xl"
+        >
+          {loading && !results && (
+            <p className="px-4 py-3 text-sm text-parchment-dim">Searching…</p>
+          )}
+
+          {empty && (
+            <p className="px-4 py-3 text-sm text-parchment-dim">No matches for &ldquo;{q}&rdquo;.</p>
+          )}
+
+          {results && nCourses > 0 && (
+            <div className="border-b border-crimson-800 py-1">
+              <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
+                Courses
+              </p>
+              {results.courses.map((c, i) => (
+                <Link
+                  key={c.id}
+                  href={`/courses/${c.id}`}
+                  onClick={() => setOpen(false)}
+                  onMouseEnter={() => setActive(i)}
+                  role="option"
+                  aria-selected={active === i}
+                  className={`block px-4 py-2 text-sm text-parchment ${active === i ? "bg-crimson-800" : ""}`}
+                >
+                  {c.title}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {results && results.lectures.length > 0 && (
+            <div className="py-1">
+              <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
+                Lectures
+              </p>
+              {results.lectures.map((l, j) => {
+                const idx = nCourses + j;
+                return (
+                  <Link
+                    key={l.videoId}
+                    href={lectureHref(l)}
+                    onClick={() => setOpen(false)}
+                    onMouseEnter={() => setActive(idx)}
+                    role="option"
+                    aria-selected={active === idx}
+                    className={`block px-4 py-2 ${active === idx ? "bg-crimson-800" : ""}`}
+                  >
+                    <span className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm text-parchment">{l.title}</span>
+                      {l.startSeconds != null && (
+                        <span className="shrink-0 text-xs text-gold-300">{formatTime(l.startSeconds)}</span>
+                      )}
+                    </span>
+                    <span className="block truncate text-xs text-parchment-dim">{l.courseTitle}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {results && !empty && (
+            <Link
+              href={`/search?q=${encodeURIComponent(q)}`}
+              onClick={() => setOpen(false)}
+              className="block border-t border-crimson-800 px-4 py-2 text-center text-xs font-medium text-gold-300 hover:bg-crimson-800"
+            >
+              See all results for &ldquo;{q}&rdquo; →
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

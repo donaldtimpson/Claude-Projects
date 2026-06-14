@@ -227,9 +227,12 @@ points on the on-site lecture page.
 ## Catalog search (`lib/search.ts`, `scripts/`)
 
 Global full-text search across courses, lectures, published notes, and **transcripts** — so a topic
-can be found by what was *said*, not just titles. Header search box (`components/SearchBox.tsx`,
-wrapped in `<Suspense>` in `SiteHeader.tsx`) → `/search?q=` (`app/(site)/search/page.tsx`); also
-`GET /api/search?q=`. Both call `searchCatalog()` in `lib/search.ts`.
+can be found by what was *said*, not just titles. The header `SearchBox` (`components/SearchBox.tsx`,
+wrapped in `<Suspense>` in `SiteHeader.tsx`) is a **live type-ahead dropdown**: debounced fetches to
+`GET /api/search?q=` show results as you type (spinner + arrow-key nav); it lives in the persistent
+layout header, so results survive navigation (re-focus after a mis-click → they're still there).
+Enter / "see all" goes to the full `/search?q=` page (`app/(site)/search/page.tsx`, with a route
+`loading.tsx` skeleton). Everything calls `searchCatalog()` in `lib/search.ts`.
 
 - **Storage:** `Transcript` model (1:1 with `Video`): `content` (plaintext) + `segments` (timed
   `[{start,text}]` JSON, when available). Public, no draft gate.
