@@ -104,12 +104,22 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
        LEFT JOIN "LectureNote" n ON n."videoId" = v.id AND n."isDraft" = false
        LEFT JOIN "Transcript" t ON t."videoId" = v.id
        WHERE c."canonicalCourseId" IS NULL
-         AND (
-              to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,''))
-                @@ websearch_to_tsquery('english', $1)
-           OR to_tsvector('english', coalesce(n.content,'')) @@ websearch_to_tsquery('english', $1)
-           OR (t.content IS NOT NULL
-                AND to_tsvector('english', t.content) @@ websearch_to_tsquery('english', $1))
+         -- Pick candidate videos via per-table indexed subqueries. An OR across
+         -- the joined note/transcript tables can't use their GIN indexes and makes
+         -- Postgres re-tokenize every transcript per search (~5s); this UNION lets
+         -- each match hit its index (~150ms). ts_rank/ts_headline below then run
+         -- only on the small candidate set.
+         AND v.id IN (
+           SELECT v2.id FROM "Video" v2
+             WHERE to_tsvector('english', coalesce(v2.title,'') || ' ' || coalesce(v2.description,''))
+                   @@ websearch_to_tsquery('english', $1)
+           UNION
+           SELECT n2."videoId" FROM "LectureNote" n2
+             WHERE n2."isDraft" = false
+               AND to_tsvector('english', n2.content) @@ websearch_to_tsquery('english', $1)
+           UNION
+           SELECT tr."videoId" FROM "Transcript" tr
+             WHERE to_tsvector('english', tr.content) @@ websearch_to_tsquery('english', $1)
          )
        ORDER BY (
            ts_rank(to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,'')),
