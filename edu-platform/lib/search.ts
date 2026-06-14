@@ -30,7 +30,47 @@ export type LectureHit = {
   startSeconds: number | null;
 };
 
-export type SearchResults = { courses: CourseHit[]; lectures: LectureHit[] };
+// `fuzzy` is set when the exact full-text search found nothing and these are
+// trigram-similarity ("did you mean") matches instead.
+export type SearchResults = { courses: CourseHit[]; lectures: LectureHit[]; fuzzy?: boolean };
+
+const FUZZY_THRESHOLD = 0.3; // word_similarity cutoff for typo-tolerant fallback
+
+// Typo-tolerant fallback: trigram word-similarity over (short, few) titles. Only
+// run when exact FTS returns nothing, so the title seq-scans are cheap. Transcripts
+// are too large to trigram, so the fallback is title-based only.
+async function fuzzyFallback(q: string): Promise<SearchResults> {
+  const [courses, lectureRows] = await Promise.all([
+    db.$queryRawUnsafe<CourseHit[]>(
+      `SELECT id, title, description, "thumbnailUrl"
+       FROM "Course"
+       WHERE "canonicalCourseId" IS NULL AND word_similarity($1, title) > ${FUZZY_THRESHOLD}
+       ORDER BY word_similarity($1, title) DESC
+       LIMIT 8`,
+      q,
+    ),
+    db.$queryRawUnsafe<{ videoId: string; courseId: string; title: string; courseTitle: string }[]>(
+      `SELECT v.id AS "videoId", v."courseId" AS "courseId", v.title AS "title", c.title AS "courseTitle"
+       FROM "Video" v
+       JOIN "Course" c ON c.id = v."courseId"
+       WHERE c."canonicalCourseId" IS NULL
+         AND v.title NOT ILIKE '%Lecture NA%' AND v.title NOT ILIKE '%No New Material%'
+         AND word_similarity($1, v.title) > ${FUZZY_THRESHOLD}
+       ORDER BY word_similarity($1, v.title) DESC
+       LIMIT 10`,
+      q,
+    ),
+  ]);
+  const lectures: LectureHit[] = lectureRows.map((r) => ({
+    videoId: r.videoId,
+    courseId: r.courseId,
+    title: r.title,
+    courseTitle: r.courseTitle,
+    snippet: null,
+    startSeconds: null,
+  }));
+  return { courses, lectures, fuzzy: true };
+}
 
 type Segment = { start: number; text: string };
 
@@ -160,6 +200,9 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
     snippet: r.snippet,
     startSeconds: r.transcriptMatched ? earliestMatchSeconds(r.segments, terms) : null,
   }));
+
+  // Nothing matched exactly → try a typo-tolerant title search ("did you mean").
+  if (courses.length === 0 && lectures.length === 0) return fuzzyFallback(q);
 
   return { courses, lectures };
 }

@@ -12,7 +12,11 @@ type LectureHit = {
   courseTitle: string;
   startSeconds: number | null;
 };
-type Results = { courses: CourseHit[]; lectures: LectureHit[] };
+type Results = { courses: CourseHit[]; lectures: LectureHit[]; fuzzy?: boolean };
+
+// How many of each to show in the compact dropdown; the rest live behind "see all".
+const COURSE_CAP = 3;
+const LECTURE_CAP = 6;
 
 function formatTime(s: number): string {
   const h = Math.floor(s / 3600);
@@ -34,8 +38,6 @@ function lectureHref(l: LectureHit): string {
 // the full /search page.
 export default function SearchBox() {
   const router = useRouter();
-  // Prefill once from the URL (so /search?q=… and refreshes keep the term); not
-  // re-synced afterward, so the value persists across navigations.
   const [value, setValue] = useState(useSearchParams().get("q") ?? "");
   const [results, setResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,12 +83,17 @@ export default function SearchBox() {
 
   useEffect(() => setActive(-1), [results]);
 
-  // Flat list of navigable rows (courses then lectures) for keyboard nav.
-  const items: string[] = [];
-  if (results) {
-    results.courses.forEach((c) => items.push(`/courses/${c.id}`));
-    results.lectures.forEach((l) => items.push(lectureHref(l)));
-  }
+  // Keep the keyboard-highlighted row scrolled into view.
+  useEffect(() => {
+    if (active >= 0) document.getElementById(`sr-opt-${active}`)?.scrollIntoView({ block: "nearest" });
+  }, [active]);
+
+  // Capped, displayed rows (and the parallel hrefs for keyboard nav).
+  const courses = results?.courses.slice(0, COURSE_CAP) ?? [];
+  const lectures = results?.lectures.slice(0, LECTURE_CAP) ?? [];
+  const items = [...courses.map((c) => `/courses/${c.id}`), ...lectures.map(lectureHref)];
+  const total = (results?.courses.length ?? 0) + (results?.lectures.length ?? 0);
+  const empty = results != null && total === 0;
 
   function navigate(href: string) {
     setOpen(false);
@@ -113,11 +120,9 @@ export default function SearchBox() {
   }
 
   const showDropdown = open && q.length >= 2;
-  const nCourses = results?.courses.length ?? 0;
-  const empty = results && nCourses === 0 && results.lectures.length === 0;
 
   return (
-    <div ref={boxRef} className="relative flex-1 max-w-xs sm:max-w-sm">
+    <div ref={boxRef} className="relative flex-1 min-w-0 max-w-xs sm:max-w-sm">
       <div className="relative">
         <svg
           aria-hidden="true"
@@ -142,6 +147,8 @@ export default function SearchBox() {
           role="combobox"
           aria-expanded={showDropdown}
           aria-controls="search-results"
+          aria-autocomplete="list"
+          aria-activedescendant={active >= 0 ? `sr-opt-${active}` : undefined}
           className="w-full rounded-lg border border-crimson-700 bg-crimson-950/60 pl-9 pr-9 py-2 text-sm text-parchment placeholder:text-parchment-dim focus:border-gold-500 focus:outline-none"
         />
         {loading && (
@@ -158,22 +165,25 @@ export default function SearchBox() {
           role="listbox"
           className="absolute right-0 z-50 mt-2 w-[min(28rem,90vw)] max-h-[70vh] overflow-y-auto rounded-xl border border-crimson-700 bg-crimson-900 shadow-2xl"
         >
-          {loading && !results && (
-            <p className="px-4 py-3 text-sm text-parchment-dim">Searching…</p>
+          {loading && !results && <p className="px-4 py-3 text-sm text-parchment-dim">Searching…</p>}
+
+          {empty && <p className="px-4 py-3 text-sm text-parchment-dim">No matches for &ldquo;{q}&rdquo;.</p>}
+
+          {results?.fuzzy && !empty && (
+            <p className="border-b border-crimson-800 px-4 py-2 text-xs text-parchment-dim">
+              No exact matches — did you mean:
+            </p>
           )}
 
-          {empty && (
-            <p className="px-4 py-3 text-sm text-parchment-dim">No matches for &ldquo;{q}&rdquo;.</p>
-          )}
-
-          {results && nCourses > 0 && (
+          {courses.length > 0 && (
             <div className="border-b border-crimson-800 py-1">
               <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
                 Courses
               </p>
-              {results.courses.map((c, i) => (
+              {courses.map((c, i) => (
                 <Link
                   key={c.id}
+                  id={`sr-opt-${i}`}
                   href={`/courses/${c.id}`}
                   onClick={() => setOpen(false)}
                   onMouseEnter={() => setActive(i)}
@@ -187,16 +197,17 @@ export default function SearchBox() {
             </div>
           )}
 
-          {results && results.lectures.length > 0 && (
+          {lectures.length > 0 && (
             <div className="py-1">
               <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
                 Lectures
               </p>
-              {results.lectures.map((l, j) => {
-                const idx = nCourses + j;
+              {lectures.map((l, j) => {
+                const idx = courses.length + j;
                 return (
                   <Link
                     key={l.videoId}
+                    id={`sr-opt-${idx}`}
                     href={lectureHref(l)}
                     onClick={() => setOpen(false)}
                     onMouseEnter={() => setActive(idx)}
@@ -223,7 +234,7 @@ export default function SearchBox() {
               onClick={() => setOpen(false)}
               className="block border-t border-crimson-800 px-4 py-2 text-center text-xs font-medium text-gold-300 hover:bg-crimson-800"
             >
-              See all results for &ldquo;{q}&rdquo; →
+              See all {total} result{total === 1 ? "" : "s"} →
             </Link>
           )}
         </div>

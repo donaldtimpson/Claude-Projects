@@ -26,7 +26,7 @@ export default function NavBreadcrumb() {
   if (!title) return null;
 
   return (
-    <span className="flex items-center gap-2 min-w-0 font-display text-xs tracking-[0.15em] uppercase text-parchment-dim">
+    <span className="hidden sm:flex items-center gap-2 min-w-0 font-display text-xs tracking-[0.15em] uppercase text-parchment-dim">
       <span className="text-gold-500/50">/</span>
       <span className="truncate">{title}</span>
     </span>

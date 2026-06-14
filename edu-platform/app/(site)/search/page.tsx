@@ -34,7 +34,8 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const q = ((await searchParams).q ?? "").trim();
-  const { courses, lectures } = q ? await searchCatalog(q) : { courses: [], lectures: [] };
+  const results = q ? await searchCatalog(q) : { courses: [], lectures: [], fuzzy: false };
+  const { courses, lectures } = results;
   const total = courses.length + lectures.length;
 
   return (
@@ -48,6 +49,9 @@ export default async function SearchPage({
             <p className="text-sm text-parchment-dim">
               {total === 0 ? "No matches found." : `${total} result${total === 1 ? "" : "s"}`}
             </p>
+          )}
+          {results.fuzzy && total > 0 && (
+            <p className="text-sm text-gold-300">No exact matches — showing the closest results.</p>
           )}
         </header>
 
