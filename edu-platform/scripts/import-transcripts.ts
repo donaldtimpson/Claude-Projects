@@ -7,7 +7,8 @@ import { join } from "node:path";
 // attaches the timed segments from scripts/transcripts-timed/{youtubeVideoId}.json
 // when present (used to deep-link a search hit to its moment). Filename (minus
 // .txt) is the YouTube video id. Idempotent: upserts, so re-running refreshes
-// content. Pass --dry-run to preview.
+// content. Pass --video <youtubeVideoId> to import just one (the autopilot uses
+// this); pass --dry-run to preview.
 const prisma = new PrismaClient();
 
 type Segment = { start: number; text: string };
@@ -20,9 +21,14 @@ async function main() {
     process.exit(1);
   }
 
-  const files = readdirSync(dir).filter((f) => f.endsWith(".txt"));
-  const dryRun = process.argv.includes("--dry-run");
-  console.log(`Found ${files.length} transcript file(s).${dryRun ? " (dry run)" : ""}`);
+  const args = process.argv.slice(2);
+  const dryRun = args.includes("--dry-run");
+  const vIdx = args.indexOf("--video");
+  const single = vIdx !== -1 ? args[vIdx + 1] : undefined; // import just one youtubeVideoId
+
+  let files = readdirSync(dir).filter((f) => f.endsWith(".txt"));
+  if (single) files = files.filter((f) => f === `${single}.txt`);
+  console.log(`Found ${files.length} transcript file(s).${single ? ` (video ${single})` : ""}${dryRun ? " (dry run)" : ""}`);
 
   let imported = 0;
   let withSegments = 0;

@@ -10,6 +10,9 @@ import { db } from "@/lib/db";
 // or its transcript matches; ranked by summed ts_rank. Transcript hits get a
 // snippet (highlighted via [[hl]]…[[/hl]] sentinels the UI turns into <mark>)
 // and a best-effort start timestamp for deep-linking into the video.
+//
+// Results are limited to CANONICAL courses (canonicalCourseId IS NULL) so repeated
+// sibling offerings of the same subject don't show up as near-duplicate hits.
 
 export type CourseHit = {
   id: string;
@@ -71,7 +74,8 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
     db.$queryRawUnsafe<CourseHit[]>(
       `SELECT id, title, description, "thumbnailUrl"
        FROM "Course"
-       WHERE to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,''))
+       WHERE "canonicalCourseId" IS NULL
+         AND to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,''))
              @@ websearch_to_tsquery('english', $1)
        ORDER BY ts_rank(
          to_tsvector('english', coalesce(title,'') || ' ' || coalesce(description,'')),
@@ -99,11 +103,14 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
        JOIN "Course" c ON c.id = v."courseId"
        LEFT JOIN "LectureNote" n ON n."videoId" = v.id AND n."isDraft" = false
        LEFT JOIN "Transcript" t ON t."videoId" = v.id
-       WHERE to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,''))
-               @@ websearch_to_tsquery('english', $1)
-          OR to_tsvector('english', coalesce(n.content,'')) @@ websearch_to_tsquery('english', $1)
-          OR (t.content IS NOT NULL
-               AND to_tsvector('english', t.content) @@ websearch_to_tsquery('english', $1))
+       WHERE c."canonicalCourseId" IS NULL
+         AND (
+              to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,''))
+                @@ websearch_to_tsquery('english', $1)
+           OR to_tsvector('english', coalesce(n.content,'')) @@ websearch_to_tsquery('english', $1)
+           OR (t.content IS NOT NULL
+                AND to_tsvector('english', t.content) @@ websearch_to_tsquery('english', $1))
+         )
        ORDER BY (
            ts_rank(to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,'')),
                    websearch_to_tsquery('english', $1))
