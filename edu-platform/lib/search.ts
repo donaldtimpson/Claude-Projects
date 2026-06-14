@@ -104,6 +104,10 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
        LEFT JOIN "LectureNote" n ON n."videoId" = v.id AND n."isDraft" = false
        LEFT JOIN "Transcript" t ON t."videoId" = v.id
        WHERE c."canonicalCourseId" IS NULL
+         -- Drop test / "no new material" review videos (titled "… Lecture NA" or
+         -- "… No New Material") — they shouldn't surface as lecture results.
+         AND v.title NOT ILIKE '%Lecture NA%'
+         AND v.title NOT ILIKE '%No New Material%'
          -- Pick candidate videos via per-table indexed subqueries. An OR across
          -- the joined note/transcript tables can't use their GIN indexes and makes
          -- Postgres re-tokenize every transcript per search (~5s); this UNION lets
@@ -121,12 +125,27 @@ export async function searchCatalog(rawQuery: string): Promise<SearchResults> {
            SELECT tr."videoId" FROM "Transcript" tr
              WHERE to_tsvector('english', tr.content) @@ websearch_to_tsquery('english', $1)
          )
-       ORDER BY (
-           ts_rank(to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,'')),
-                   websearch_to_tsquery('english', $1))
-         + ts_rank(to_tsvector('english', coalesce(n.content,'')), websearch_to_tsquery('english', $1))
-         + ts_rank(to_tsvector('english', coalesce(t.content,'')), websearch_to_tsquery('english', $1))
-       ) DESC
+       ORDER BY
+         -- Tier first: a lecture whose TITLE matches outranks one matched only in
+         -- its notes, which outranks a transcript-only (passing-mention) match.
+         (CASE
+            WHEN to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,''))
+                 @@ websearch_to_tsquery('english', $1) THEN 2
+            WHEN to_tsvector('english', coalesce(n.content,'')) @@ websearch_to_tsquery('english', $1) THEN 1
+            ELSE 0
+          END) DESC,
+         -- Within a tier: weighted + length-normalized relevance. setweight tags
+         -- title=A, notes=B, transcript=C; the {D,C,B,A} weight array favors A>B>C,
+         -- and normalization flag 1 (÷ 1+log(len)) stops long transcripts from
+         -- saturating so a focused lecture beats a long one that merely says the word.
+         ts_rank(
+           '{0.1, 0.2, 0.4, 1.0}'::float4[],
+           setweight(to_tsvector('english', coalesce(v.title,'') || ' ' || coalesce(v.description,'')), 'A')
+             || setweight(to_tsvector('english', coalesce(n.content,'')), 'B')
+             || setweight(to_tsvector('english', coalesce(t.content,'')), 'C'),
+           websearch_to_tsquery('english', $1),
+           1
+         ) DESC
        LIMIT 30`,
       q,
     ),
