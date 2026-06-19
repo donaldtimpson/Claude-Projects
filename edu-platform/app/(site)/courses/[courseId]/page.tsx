@@ -89,6 +89,13 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
   if (!course) notFound();
 
+  // Course Review drills the whole pool — per-lecture quizzes AND the course test —
+  // so it's offered whenever the course has any published question (the _count above
+  // only covers the course test).
+  const reviewQuestionCount = await db.quizQuestion.count({
+    where: { isDraft: false, OR: [{ courseId, videoId: null }, { video: { courseId } }] },
+  });
+
   const userId = session?.user?.id ?? null;
   const watchedSet = new Set<string>();
   if (userId) {
@@ -154,13 +161,25 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           {course.description && (
             <p className="mt-3 text-parchment-dim leading-relaxed">{course.description}</p>
           )}
-          {course._count.quizQuestions > 0 && (
-            <Link
-              href={`/courses/${course.id}/test`}
-              className="inline-block mt-4 px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
-            >
-              Take Playlist Test ({course._count.quizQuestions} questions)
-            </Link>
+          {(course._count.quizQuestions > 0 || reviewQuestionCount > 0) && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              {course._count.quizQuestions > 0 && (
+                <Link
+                  href={`/courses/${course.id}/test`}
+                  className="inline-block px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Take Playlist Test ({course._count.quizQuestions} questions)
+                </Link>
+              )}
+              {reviewQuestionCount > 0 && (
+                <Link
+                  href={`/courses/${course.id}/review`}
+                  className="inline-block px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+                >
+                  Review Course ({reviewQuestionCount} questions)
+                </Link>
+              )}
+            </div>
           )}
         </div>
 

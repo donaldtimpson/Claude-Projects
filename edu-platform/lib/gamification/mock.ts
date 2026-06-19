@@ -74,9 +74,11 @@ export const MOCK_BADGES: Badge[] = [
   { key: "quizzes-25", name: "Quick Study", blurb: "Complete 25 quizzes.", tier: "silver", category: "milestones", unlocked: true },
   { key: "lectures-100", name: "Devoted", blurb: "Watch 100 lectures.", tier: "gold", category: "milestones", unlocked: false },
   { key: "lectures-250", name: "Marathon Mind", blurb: "Watch 250 lectures.", tier: "platinum", category: "milestones", unlocked: false },
+  { key: "course-reviewed", name: "Revision", blurb: "Complete a full course review.", tier: "bronze", category: "milestones", unlocked: false },
 
   // 🎯 Mastery — quality
   { key: "first-perfect", name: "Flawless", blurb: "Earn your first perfect score.", tier: "bronze", category: "mastery", unlocked: true },
+  { key: "course-review-perfect", name: "Total Recall", blurb: "Clear a course review with a flawless first pass.", tier: "silver", category: "mastery", unlocked: false },
   { key: "course-3-aces", name: "Sharp", blurb: "Ace 3 quizzes in one course.", tier: "silver", category: "mastery", unlocked: false },
   { key: "perfect-streak-5", name: "Perfectionist", blurb: "Ace 5 quizzes in a row.", tier: "gold", category: "mastery", unlocked: false },
   { key: "perfect-test", name: "Top of the Class", blurb: "Score 100% on a playlist test.", tier: "gold", category: "mastery", unlocked: false },
