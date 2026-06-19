@@ -51,12 +51,16 @@ export function generateHandle(userId: string): string {
 // ---- Global course structure (same for every scholar; fetched once) ---------
 
 type Structure = {
-  courses: { id: string; videoIds: string[]; categoryIds: string[] }[];
+  courses: { id: string; videoIds: string[]; categoryIds: string[]; isCurrent: boolean }[];
   allVideoIds: string[];
   videosWithQuiz: Set<string>;
   coursesWithTest: Set<string>;
   totalCategories: number;
   categoryCourses: Map<string, string[]>;
+  // A course flagged `isCurrent` is still being released, so it can't be
+  // "finished" yet — these sets let the completion/omniscient rules exclude it.
+  currentCourseIds: Set<string>;
+  currentVideoIds: Set<string>;
 };
 
 async function fetchStructure(): Promise<Structure> {
@@ -64,6 +68,7 @@ async function fetchStructure(): Promise<Structure> {
     db.course.findMany({
       select: {
         id: true,
+        isCurrent: true,
         videos: { select: { id: true } },
         categories: { select: { categoryId: true } },
       },
@@ -85,8 +90,11 @@ async function fetchStructure(): Promise<Structure> {
     for (const cat of categoryIds) {
       categoryCourses.set(cat, [...(categoryCourses.get(cat) ?? []), c.id]);
     }
-    return { id: c.id, videoIds: c.videos.map((v) => v.id), categoryIds };
+    return { id: c.id, videoIds: c.videos.map((v) => v.id), categoryIds, isCurrent: c.isCurrent };
   });
+
+  const currentCourseIds = new Set(courseInfo.filter((c) => c.isCurrent).map((c) => c.id));
+  const currentVideoIds = new Set(courseInfo.filter((c) => c.isCurrent).flatMap((c) => c.videoIds));
 
   return {
     courses: courseInfo,
@@ -95,6 +103,8 @@ async function fetchStructure(): Promise<Structure> {
     coursesWithTest,
     totalCategories,
     categoryCourses,
+    currentCourseIds,
+    currentVideoIds,
   };
 }
 
@@ -198,13 +208,17 @@ function evaluate(
     const best = bestCourse.get(c.id);
     const testPassed = !hasTest || (!!best && best.total > 0 && best.score / best.total >= PASS_RATIO);
 
+    // A course still being released can't be "finished" — exclude it from every
+    // completion-style achievement (but keep counting its lectures/aces/breadth).
+    const inProgress = c.isCurrent;
+
     // Completion requires PASSING every quiz too — not just clicking "watched".
     const quizVideos = c.videoIds.filter((v) => structure.videosWithQuiz.has(v));
     const quizzesPassed = quizVideos.every((v) => {
       const b = bestVideo.get(v);
       return !!b && b.total > 0 && b.score / b.total >= PASS_RATIO;
     });
-    if (allWatched && quizzesPassed && testPassed) completedCourses.add(c.id);
+    if (!inProgress && allWatched && quizzesPassed && testPassed) completedCourses.add(c.id);
 
     // Aces within the course (perfect best attempt on a video quiz).
     const perfectInCourse = quizVideos.filter((v) => perfectVideos.has(v)).length;
@@ -212,6 +226,7 @@ function evaluate(
 
     // Perfect on every quiz (and test, if any) in the course.
     if (
+      !inProgress &&
       quizVideos.length > 0 &&
       quizVideos.every((v) => perfectVideos.has(v)) &&
       (!hasTest || perfectCourses.has(c.id))
@@ -234,12 +249,15 @@ function evaluate(
 
   const quizzesCompleted = bestVideo.size;
 
-  // Omniscient: everything watched, every quiz + test taken and perfect.
+  // Omniscient: everything in every FINISHED course watched, with every quiz +
+  // test perfect. In-progress courses are excluded — they're not done yet, so
+  // their (incomplete) content can't be required for, nor prematurely grant, it.
+  const omniVideos = structure.allVideoIds.filter((v) => !structure.currentVideoIds.has(v));
   const omniscient =
-    structure.allVideoIds.length > 0 &&
-    structure.allVideoIds.every((v) => watched.has(v)) &&
-    [...structure.videosWithQuiz].every((v) => perfectVideos.has(v)) &&
-    [...structure.coursesWithTest].every((c) => perfectCourses.has(c));
+    omniVideos.length > 0 &&
+    omniVideos.every((v) => watched.has(v)) &&
+    [...structure.videosWithQuiz].filter((v) => !structure.currentVideoIds.has(v)).every((v) => perfectVideos.has(v)) &&
+    [...structure.coursesWithTest].filter((c) => !structure.currentCourseIds.has(c)).every((c) => perfectCourses.has(c));
 
   const rules: Record<string, boolean> = {
     "first-lecture": lecturesWatched >= 1,
