@@ -53,3 +53,8 @@ next-env.d.ts
 # youtube-chapters pipeline (derived/ephemeral data)
 /scripts/transcripts-timed/
 /scripts/chapters/
+
+# youtube community-quiz-post pipeline (local automation; never deployed)
+/.yt-profile/
+/scripts/community-posts/
+/scripts/community-debug/

@@ -250,3 +250,48 @@ Enter / "see all" goes to the full `/search?q=` page (`app/(site)/search/page.ts
 Snippets come from rough auto-captions, so results lean on the lecture title + timestamp with the
 snippet as supporting context. Search currently includes sibling offerings (not just canonical) —
 filter to canonical later if duplicates feel noisy.
+
+## Community quiz-post scheduler (`scripts/`, local-only)
+
+Schedules a lecture's 10 published quiz questions as **YouTube Community "Quiz" posts, 12h apart**
+(a ~5-day engagement funnel, each linking back to the lecture). Unlike the chapters pipeline, this
+is **NOT API-backed**: the YouTube Data API v3 has no endpoint for community/quiz posts, so the only
+fully-automated path is **browser automation of the youtube.com composer**. This runs **only locally
+on Donald's Mac and is never deployed to Vercel** (Playwright is a devDependency).
+
+**Auth (one-time):** `npx tsx scripts/yt-community-auth.ts` opens a persistent Chrome profile
+(`.yt-profile/`, gitignored) headed; log into @donaldDtimpson manually once and the session sticks.
+Google blocks sign-in from automation-flagged browsers, so `lib/yt-studio.ts` launches Chrome with
+`ignoreDefaultArgs:["--enable-automation"]` + `--disable-blink-features=AutomationControlled` (no
+`navigator.webdriver`, no infobar) — that's what lets the manual login through.
+
+**Pieces:**
+- `lib/community-post.ts` — pure builder. `buildQuizPosts(prisma, youtubeVideoId, {start, intervalHours})`
+  reads the 10 published `QuizQuestion` rows and returns posts. The post **caption carries the question
+  prompt** (the quiz module only holds the answer choices + an optional explanation) plus a CTA link to
+  `/courses/{courseId}/{videoId}`. Schedule times must land on :00/:15/:30/:45 (the picker's increments).
+- `lib/yt-studio.ts` — Playwright helpers: persistent-context launch, `need()` (waits for an expected
+  element, else screenshots to `scripts/community-debug/` and **aborts** — never blind-clicks), jitter.
+- `scripts/post-quiz-community.ts` — the automation.
+
+**Usage:**
+```
+npx tsx scripts/post-quiz-community.ts --video <youtubeVideoId> [--dry-run] \
+    [--start "YYYY-MM-DD HH:mm"] [--interval-hours 12] [--from <n>] [--force]
+```
+- `--dry-run` composes the first post + sets its schedule, screenshots, and aborts **before
+  confirming** (nothing posts). Always dry-run first.
+- `--from <n>` (1-based) resumes mid-run without re-posting earlier ones; pin `--start` to keep the
+  spacing aligned with already-scheduled posts.
+- On success writes a marker `scripts/community-posts/{youtubeVideoId}.json` (idempotent; `--force`
+  overrides). Posts are **scheduled**, so review/delete them in YouTube Studio (Content → Posts →
+  Scheduled) before they publish.
+
+**Composer flow (reverse-engineered; selectors are fragile):** youtube.com `/channel/{id}/community`
+→ "Add a quiz" → fill `Answer N` placeholders (+ "Add answer" for >2) → per-option "Mark as correct
+answer" toggle (option 0 correct by default) → optional "Add an explanation (optional)" → type the
+caption into the `[contenteditable]` ("What's on your mind?") via `insertText` → "Action menu" →
+"Schedule post" → `#date-picker` calendar (click the `.calendar-day` whose text is the day, past days
+are disabled; **read `#date-label-text` back to confirm**) → time `option` (e.g. "9:00 AM") → confirm
+"Schedule". Each post reloads the page for a clean composer. If YouTube redesigns the composer, the
+selectors here are the first thing to re-check.
