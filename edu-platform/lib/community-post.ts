@@ -48,9 +48,10 @@ export type BuildOptions = {
 };
 
 // The post body IS the question — YouTube's quiz module holds only the answer
-// choices + explanation, so the prompt goes in the caption, followed by the CTA.
-function caption(prompt: string, lectureTitle: string, n: number, total: number, url: string): string {
-  return `${prompt}\n\nPop quiz ${n}/${total} from ${lectureTitle} — pick your answer, then watch the full lecture:\n${url}`;
+// choices + explanation, so the prompt goes in the caption, followed by a
+// curiosity-gap CTA: pose the question, then dangle the "why" to drive the click.
+function caption(prompt: string, url: string): string {
+  return `${prompt}\n\nThink you've got it? The "why" is in the lecture 👇\n${url}`;
 }
 
 // Reads the published quiz for a video (by youtubeVideoId) and lays the
@@ -98,7 +99,7 @@ export async function buildQuizPosts(
     options.forEach((o, j) => {
       if (o.length > SOFT_OPTION_MAX) warnings.push(`Q${i + 1} option ${j + 1} is ${o.length} chars (soft cap ${SOFT_OPTION_MAX})`);
     });
-    const cap = caption(q.prompt, video.title, i + 1, questions.length, url);
+    const cap = caption(q.prompt, url);
     if (cap.length > SOFT_CAPTION_MAX) warnings.push(`Q${i + 1} caption is ${cap.length} chars (soft cap ${SOFT_CAPTION_MAX})`);
 
     return {
