@@ -137,6 +137,23 @@ function longestWeekRun(dates: Date[]): number {
   return best;
 }
 
+// Current (today-anchored) streak: consecutive UTC days of activity up to today.
+// If there's been no activity yet today, we anchor on yesterday (grace) so the
+// streak still shows — `activeToday` tells callers whether today is already kept.
+export function currentDayStreak(dates: Date[]): { count: number; activeToday: boolean } {
+  if (dates.length === 0) return { count: 0, activeToday: false };
+  const days = new Set(dates.map((d) => Math.floor(d.getTime() / 86_400_000)));
+  const today = Math.floor(Date.now() / 86_400_000);
+  const activeToday = days.has(today);
+  let cursor = activeToday ? today : today - 1;
+  let count = 0;
+  while (days.has(cursor)) {
+    count++;
+    cursor--;
+  }
+  return { count, activeToday };
+}
+
 // Evaluate one scholar from their activity. Returns the points breakdown,
 // the unlocked badge keys, and the full Badge[] (catalog with unlocked flags).
 function evaluate(
@@ -145,6 +162,7 @@ function evaluate(
   grantedKeys: Set<string>,
   createdAt: Date,
   structure: Structure,
+  reviewStamps: Date[] = [],
 ): { breakdown: { lectures: number; quizPts: number; completions: number; badgePts: number }; badges: Badge[]; unlocked: Set<string> } {
   const watched = new Set(progress.map((p) => p.videoId));
   const lecturesWatched = watched.size;
@@ -239,8 +257,12 @@ function evaluate(
     (courseIds) => courseIds.length > 0 && courseIds.every((id) => completedCourses.has(id)),
   );
 
-  // Streaks + time-of-day.
-  const stamps = [...progress.map((p) => p.watchedAt), ...attempts.map((a) => a.completedAt)];
+  // Streaks + time-of-day. Daily-review activity counts toward streaks too.
+  const stamps = [
+    ...progress.map((p) => p.watchedAt),
+    ...attempts.map((a) => a.completedAt),
+    ...reviewStamps,
+  ];
   const dayStreak = longestDayStreak(stamps);
   const weekRun = longestWeekRun(stamps);
   const hours = stamps.map((d) => d.getUTCHours());
@@ -320,7 +342,7 @@ export type ScholarEntry = {
 
 // Build every entry (real users with activity + house scholars), badges included, sorted.
 async function buildAll(): Promise<ScholarEntry[]> {
-  const [users, allProgress, allAttempts, allGranted, structure] = await Promise.all([
+  const [users, allProgress, allAttempts, allGranted, allReviews, structure] = await Promise.all([
     db.user.findMany({ select: { id: true, handle: true, createdAt: true } }),
     db.videoProgress.findMany({ select: { userId: true, videoId: true, watchedAt: true } }),
     db.quizAttempt.findMany({
@@ -328,6 +350,7 @@ async function buildAll(): Promise<ScholarEntry[]> {
       orderBy: { completedAt: "asc" },
     }),
     db.userAchievement.findMany({ select: { userId: true, key: true } }),
+    db.questionReview.findMany({ select: { userId: true, lastReviewedAt: true } }),
     fetchStructure(),
   ]);
 
@@ -337,15 +360,18 @@ async function buildAll(): Promise<ScholarEntry[]> {
   for (const a of allAttempts) attemptsByUser.set(a.userId, [...(attemptsByUser.get(a.userId) ?? []), a]);
   const grantedByUser = new Map<string, Set<string>>();
   for (const g of allGranted) grantedByUser.set(g.userId, (grantedByUser.get(g.userId) ?? new Set()).add(g.key));
+  const reviewsByUser = new Map<string, Date[]>();
+  for (const r of allReviews) reviewsByUser.set(r.userId, [...(reviewsByUser.get(r.userId) ?? []), r.lastReviewedAt]);
 
   const real: ScholarEntry[] = [];
   for (const u of users) {
     const progress = progressByUser.get(u.id) ?? [];
     const attempts = attemptsByUser.get(u.id) ?? [];
     const granted = grantedByUser.get(u.id) ?? new Set<string>();
+    const reviewStamps = reviewsByUser.get(u.id) ?? [];
     // Show everyone — even brand-new accounts with 0 standing (they sort to the bottom).
 
-    const { breakdown, badges } = evaluate(progress, attempts, granted, u.createdAt, structure);
+    const { breakdown, badges } = evaluate(progress, attempts, granted, u.createdAt, structure, reviewStamps);
     real.push({
       scholar: {
         userId: u.id,
@@ -412,7 +438,7 @@ export async function getQuizAces(videoId: string): Promise<{ userId: string; ha
 // A user's full badge set (rule-earned ∪ instructor-granted) for their own
 // dashboard. Read-only — no persistence.
 export async function getUserBadges(userId: string): Promise<Badge[]> {
-  const [structure, progress, attempts, user, granted] = await Promise.all([
+  const [structure, progress, attempts, user, granted, reviews] = await Promise.all([
     fetchStructure(),
     db.videoProgress.findMany({ where: { userId }, select: { videoId: true, watchedAt: true } }),
     db.quizAttempt.findMany({
@@ -422,10 +448,29 @@ export async function getUserBadges(userId: string): Promise<Badge[]> {
     }),
     db.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
     db.userAchievement.findMany({ where: { userId }, select: { key: true } }),
+    db.questionReview.findMany({ where: { userId }, select: { lastReviewedAt: true } }),
   ]);
   if (!user) return BADGE_CATALOG.map((b) => ({ ...b, unlocked: false }));
   const grantedKeys = new Set(granted.map((g) => g.key));
-  return evaluate(progress, attempts, grantedKeys, user.createdAt, structure).badges;
+  const reviewStamps = reviews.map((r) => r.lastReviewedAt);
+  return evaluate(progress, attempts, grantedKeys, user.createdAt, structure, reviewStamps).badges;
+}
+
+// A user's current (today-anchored) learning streak — any activity that day
+// (lecture watched, quiz taken, or review done) keeps it alive. For the
+// dashboard streak stat + header badge.
+export async function getStreak(userId: string): Promise<{ count: number; activeToday: boolean }> {
+  const [progress, attempts, reviews] = await Promise.all([
+    db.videoProgress.findMany({ where: { userId }, select: { watchedAt: true } }),
+    db.quizAttempt.findMany({ where: { userId }, select: { completedAt: true } }),
+    db.questionReview.findMany({ where: { userId }, select: { lastReviewedAt: true } }),
+  ]);
+  const stamps = [
+    ...progress.map((p) => p.watchedAt),
+    ...attempts.map((a) => a.completedAt),
+    ...reviews.map((r) => r.lastReviewedAt),
+  ];
+  return currentDayStreak(stamps);
 }
 
 // Evaluate a user's rule-based achievements, persist any newly-earned ones to
@@ -433,7 +478,7 @@ export async function getUserBadges(userId: string): Promise<Badge[]> {
 // toast). Called from the mark-watched / save-quiz server actions. Idempotent —
 // re-running awards nothing new.
 export async function syncAchievements(userId: string): Promise<Badge[]> {
-  const [structure, progress, attempts, user, existing] = await Promise.all([
+  const [structure, progress, attempts, user, existing, reviews] = await Promise.all([
     fetchStructure(),
     db.videoProgress.findMany({ where: { userId }, select: { videoId: true, watchedAt: true } }),
     db.quizAttempt.findMany({
@@ -443,11 +488,13 @@ export async function syncAchievements(userId: string): Promise<Badge[]> {
     }),
     db.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
     db.userAchievement.findMany({ where: { userId }, select: { key: true } }),
+    db.questionReview.findMany({ where: { userId }, select: { lastReviewedAt: true } }),
   ]);
   if (!user) return [];
 
   // Rule-based only (no granted union) — grants are awarded separately by admins.
-  const { unlocked } = evaluate(progress, attempts, new Set(), user.createdAt, structure);
+  const reviewStamps = reviews.map((r) => r.lastReviewedAt);
+  const { unlocked } = evaluate(progress, attempts, new Set(), user.createdAt, structure, reviewStamps);
   const have = new Set(existing.map((e) => e.key));
   const fresh = [...unlocked].filter((k) => !have.has(k));
   if (fresh.length === 0) return [];

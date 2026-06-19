@@ -83,6 +83,7 @@ export const MOCK_BADGES: Badge[] = [
   { key: "perfect-streak-5", name: "Perfectionist", blurb: "Ace 5 quizzes in a row.", tier: "gold", category: "mastery", unlocked: false },
   { key: "perfect-test", name: "Top of the Class", blurb: "Score 100% on a playlist test.", tier: "gold", category: "mastery", unlocked: false },
   { key: "course-all-perfect", name: "Summa Cum Laude", blurb: "Perfect score on every quiz in a course.", tier: "platinum", category: "mastery", unlocked: false },
+  { key: "review-mastery-30", name: "Spaced Master", blurb: "Send 30 review cards to the top box.", tier: "gold", category: "mastery", unlocked: false },
 
   // 🏛️ Completion — finishing
   { key: "half-course", name: "Halfway There", blurb: "Watch half a course's lectures.", tier: "bronze", category: "completion", unlocked: true },
@@ -96,6 +97,7 @@ export const MOCK_BADGES: Badge[] = [
   { key: "weekly-month", name: "Weekly Scholar", blurb: "Study every week for a month.", tier: "silver", category: "consistency", unlocked: false },
   { key: "streak-30", name: "Unwavering", blurb: "Keep a 30-day learning streak.", tier: "gold", category: "consistency", unlocked: false },
   { key: "streak-100", name: "Eternal Flame", blurb: "Keep a 100-day learning streak.", tier: "platinum", category: "consistency", unlocked: false },
+  { key: "review-clean-slate", name: "Clean Slate", blurb: "Clear every due review card in a day.", tier: "bronze", category: "consistency", unlocked: false },
 
   // 🧭 Exploration — breadth
   { key: "subjects-2", name: "Curious", blurb: "Watch lectures in two subjects.", tier: "bronze", category: "exploration", unlocked: true },

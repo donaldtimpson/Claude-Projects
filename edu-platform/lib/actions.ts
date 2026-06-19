@@ -5,6 +5,12 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { syncAchievements } from "@/lib/gamification/engine";
 import { BADGE_CATALOG, type Badge } from "@/lib/gamification/mock";
+import {
+  recordQuizAnswersForSrs,
+  applyReviewGrade,
+  getDueCount,
+  masteredCardCount,
+} from "@/lib/srs";
 
 export async function markVideoWatched(videoId: string): Promise<Badge[]> {
   const session = await getServerSession(authOptions);
@@ -63,5 +69,48 @@ export async function saveQuizAttempt(
       answers,
     },
   });
+  // Auto-enroll each answered question into the student's spaced-repetition deck.
+  await recordQuizAnswersForSrs(session.user.id, { videoId, courseId }, answers);
   return syncAchievements(session.user.id);
+}
+
+// Grade a single card in the cross-course daily review (/review). Persists the
+// card's new Leitner box + due date immediately, so leaving mid-session keeps
+// the progress already made.
+export async function gradeReview(questionId: string, correct: boolean): Promise<void> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return;
+  await applyReviewGrade(session.user.id, questionId, correct);
+}
+
+// Called when a daily-review session ends. Direct-grants the SRS badges (same
+// idempotent pattern as recordReviewCleared — no engine rules, scoring untouched):
+// Clean Slate when no cards remain due today, Spaced Master at 30 mastered cards.
+export async function finishDailyReview(): Promise<Badge[]> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return [];
+  const userId = session.user.id;
+
+  const [dueRemaining, mastered] = await Promise.all([
+    getDueCount(userId),
+    masteredCardCount(userId),
+  ]);
+  const keys: string[] = [];
+  if (dueRemaining === 0) keys.push("review-clean-slate");
+  if (mastered >= 30) keys.push("review-mastery-30");
+  if (keys.length === 0) return [];
+
+  const existing = await db.userAchievement.findMany({
+    where: { userId, key: { in: keys } },
+    select: { key: true },
+  });
+  const have = new Set(existing.map((e) => e.key));
+  const fresh = keys.filter((k) => !have.has(k));
+  if (fresh.length === 0) return [];
+
+  await db.userAchievement.createMany({
+    data: fresh.map((key) => ({ userId, key })),
+    skipDuplicates: true,
+  });
+  return BADGE_CATALOG.filter((b) => fresh.includes(b.key)).map((b) => ({ ...b, unlocked: true }));
 }

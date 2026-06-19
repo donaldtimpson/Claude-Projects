@@ -6,6 +6,7 @@ import UserMenu from "@/components/UserMenu";
 import SiteNav from "@/components/SiteNav";
 import NavBreadcrumb from "@/components/NavBreadcrumb";
 import SearchBox from "@/components/SearchBox";
+import StreakBadge from "@/components/StreakBadge";
 
 export default async function SiteHeader() {
   const cookieStore = await cookies();
@@ -33,7 +34,12 @@ export default async function SiteHeader() {
         <Suspense fallback={<div className="flex-1 max-w-xs sm:max-w-sm" />}>
           <SearchBox />
         </Suspense>
-        <UserMenu />
+        <div className="flex items-center gap-3 shrink-0">
+          <Suspense fallback={null}>
+            <StreakBadge />
+          </Suspense>
+          <UserMenu />
+        </div>
       </div>
     </header>
   );

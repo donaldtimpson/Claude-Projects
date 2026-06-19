@@ -3,7 +3,8 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { generateHandle, getUserBadges } from "@/lib/gamification/engine";
+import { generateHandle, getUserBadges, getStreak } from "@/lib/gamification/engine";
+import { getDueCount } from "@/lib/srs";
 import HandleForm from "./HandleForm";
 import AchievementsGrid from "../leaderboard/AchievementsGrid";
 
@@ -15,7 +16,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [courses, allProgress, me, myBadges] = await Promise.all([
+  const [courses, allProgress, me, myBadges, streak, dueCount] = await Promise.all([
     db.course.findMany({
       include: { videos: { select: { id: true }, orderBy: { position: "asc" } } },
       orderBy: { createdAt: "asc" },
@@ -26,6 +27,8 @@ export default async function DashboardPage() {
     }),
     db.user.findUnique({ where: { id: userId }, select: { handle: true } }),
     getUserBadges(userId),
+    getStreak(userId),
+    getDueCount(userId),
   ]);
 
   const handlePlaceholder = generateHandle(userId);
@@ -65,6 +68,27 @@ export default async function DashboardPage() {
           <p className="text-parchment-dim text-sm">
             Signed in as <span className="text-parchment">{session.user.name}</span>
           </p>
+        </div>
+
+        <div className="bg-crimson-900 border border-gold-500 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-2xl font-bold text-gold-300">
+              {streak.count > 0 ? `🔥 ${streak.count}-day streak` : "Start your streak today"}
+            </p>
+            <p className="text-sm text-parchment-dim mt-1">
+              {dueCount > 0
+                ? `${dueCount} card${dueCount === 1 ? "" : "s"} due for review`
+                : streak.activeToday
+                  ? "All caught up — see you tomorrow"
+                  : "Study anything today to keep your streak alive"}
+            </p>
+          </div>
+          <Link
+            href="/review"
+            className="px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors shrink-0"
+          >
+            {dueCount > 0 ? "Start daily review" : "Open review"}
+          </Link>
         </div>
 
         <section className="space-y-4">

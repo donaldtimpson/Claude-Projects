@@ -141,6 +141,7 @@ model QuizQuestion {
 
   video        Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
   course       Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  reviews      QuestionReview[]
 }
 
 model User {
@@ -151,11 +152,12 @@ model User {
   handle        String?         @unique // public pseudonym shown in the Hall of Scholars
   createdAt     DateTime        @default(now())
 
-  sessions      Session[]
-  videoProgress VideoProgress[]
-  quizAttempts  QuizAttempt[]
-  comments      Comment[]
-  achievements  UserAchievement[]
+  sessions        Session[]
+  videoProgress   VideoProgress[]
+  quizAttempts    QuizAttempt[]
+  comments        Comment[]
+  achievements    UserAchievement[]
+  questionReviews QuestionReview[]
 }
 
 model UserAchievement {
@@ -203,6 +205,27 @@ model QuizAttempt {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   video          Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
   course         Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// Spaced-repetition schedule: one row per (student, published question). A
+// question auto-enrolls the first time the student answers it in a quiz/test
+// (see recordQuizAnswersForSrs in lib/srs.ts); the cross-course daily review at
+// /review serves the rows whose dueAt has passed. Leitner scheduling: correct
+// promotes a box (longer interval), wrong resets to box 1.
+model QuestionReview {
+  userId         String
+  questionId     String
+  box            Int      @default(1)
+  dueAt          DateTime
+  lastReviewedAt DateTime @default(now())
+  reps           Int      @default(0)
+  lapses         Int      @default(0)
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
+  @@index([userId, dueAt])
 }
 
 model Comment {
