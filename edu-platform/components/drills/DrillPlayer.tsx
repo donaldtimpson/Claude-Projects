@@ -45,8 +45,17 @@ export default function DrillPlayer({
 
   const startedAt = useRef(Date.now());
   const savedRef = useRef(false);
+  const firstInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const router = useRouter();
+
+  // Focus the answer box each time a fresh problem loads, so typed-answer drills
+  // (arithmetic, vectors) never need a click between problems. autoFocus only
+  // fires on mount; the input stays mounted across problems, hence this effect.
+  useEffect(() => {
+    if (!answered) firstInputRef.current?.focus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current.id]);
 
   const total = results.length;
   const correctCount = results.filter(Boolean).length;
@@ -254,6 +263,7 @@ export default function DrillPlayer({
                 </span>
               )}
               <input
+                ref={i === 0 ? firstInputRef : undefined}
                 type="text"
                 inputMode="decimal"
                 autoFocus={i === 0}
