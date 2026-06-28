@@ -28,11 +28,17 @@ function arcPath(deg: number, radius: number): string {
   return pts.join(" ");
 }
 
-export default function DrillDiagram({ spec }: { spec: DiagramSpec }) {
+export default function DrillDiagram({
+  spec,
+  className = "w-56 h-56 mx-auto",
+}: {
+  spec: DiagramSpec;
+  className?: string;
+}) {
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}
-      className="w-56 h-56 mx-auto"
+      className={className}
       role="img"
       aria-label={spec.kind === "vector" ? "Vector diagram" : "Unit circle diagram"}
     >

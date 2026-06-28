@@ -205,6 +205,94 @@ export default function DrillPlayer({
 
   // ---- Active problem -------------------------------------------------------
   const input = current.input;
+
+  const answerEl =
+    input.kind === "choice" ? (
+      <ol className="grid grid-cols-2 gap-2">
+        {input.options.map((opt, idx) => {
+          let style = "w-full px-4 py-3 rounded-lg border text-base transition-colors ";
+          if (!answered) {
+            style += "border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment";
+          } else if (idx === input.correctIndex) {
+            style += "border-green-500 bg-green-900/30 text-green-300";
+          } else if (idx === selected) {
+            style += "border-red-500 bg-red-900/30 text-red-300";
+          } else {
+            style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
+          }
+          return (
+            <li key={idx}>
+              <button className={style} onClick={() => choose(idx)} disabled={answered}>
+                <Tex value={opt} />
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+    ) : (
+      <form onSubmit={submitTyped} className="flex flex-wrap items-end gap-4">
+        {(input.kind === "numeric"
+          ? [{ label: undefined as Renderable | undefined, unit: input.unit }]
+          : input.fields.map((f) => ({ label: f.label as Renderable | undefined, unit: f.unit }))
+        ).map((f, i) => (
+          // key includes the problem id so the input REMOUNTS on each new problem —
+          // that re-fires autoFocus, which otherwise only runs on the very first mount.
+          <label key={`${current.id}-${i}`} className="flex items-center gap-2">
+            {f.label && (
+              <span className="text-parchment">
+                <Tex value={f.label} /> =
+              </span>
+            )}
+            <input
+              ref={i === 0 ? firstInputRef : undefined}
+              type="text"
+              inputMode="decimal"
+              autoFocus={i === 0}
+              value={texts[i] ?? ""}
+              disabled={answered}
+              onChange={(e) =>
+                setTexts((t) => {
+                  const n = [...t];
+                  n[i] = e.target.value;
+                  return n;
+                })
+              }
+              className="w-28 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment placeholder:text-parchment-dim/60 transition-colors disabled:opacity-60"
+              placeholder="?"
+            />
+            {f.unit && <span className="text-parchment-dim text-sm">{f.unit}</span>}
+          </label>
+        ))}
+        {!answered && (
+          <button
+            type="submit"
+            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+          >
+            Submit
+          </button>
+        )}
+      </form>
+    );
+
+  const feedbackEl = answered ? (
+    <div className="space-y-3">
+      <p className={`font-semibold ${wasCorrect ? "text-green-400" : "text-red-400"}`}>
+        {wasCorrect ? "Correct!" : "Incorrect"}
+      </p>
+      {current.explanation && (
+        <p className="text-sm text-parchment-dim">
+          <Tex value={current.explanation} />
+        </p>
+      )}
+      <button
+        onClick={next}
+        className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+      >
+        {isLastOfCount ? "See results" : "Next →"}
+      </button>
+    </div>
+  ) : null;
+
   return (
     <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-5">
       <div className="flex items-center justify-between gap-3 text-sm">
@@ -222,94 +310,30 @@ export default function DrillPlayer({
         </div>
       </div>
 
-      <div className="text-xl text-parchment text-center py-2">
-        <Tex value={current.prompt} block />
-      </div>
-
-      {current.diagram && <DrillDiagram spec={current.diagram} />}
-
-      {input.kind === "choice" ? (
-        <ol className="grid grid-cols-2 gap-2">
-          {input.options.map((opt, idx) => {
-            let style = "w-full px-4 py-3 rounded-lg border text-base transition-colors ";
-            if (!answered) {
-              style += "border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment";
-            } else if (idx === input.correctIndex) {
-              style += "border-green-500 bg-green-900/30 text-green-300";
-            } else if (idx === selected) {
-              style += "border-red-500 bg-red-900/30 text-red-300";
-            } else {
-              style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
-            }
-            return (
-              <li key={idx}>
-                <button className={style} onClick={() => choose(idx)} disabled={answered}>
-                  <Tex value={opt} />
-                </button>
-              </li>
-            );
-          })}
-        </ol>
-      ) : (
-        <form onSubmit={submitTyped} className="flex flex-wrap items-end gap-4">
-          {(input.kind === "numeric"
-            ? [{ label: undefined as Renderable | undefined, unit: input.unit }]
-            : input.fields.map((f) => ({ label: f.label as Renderable | undefined, unit: f.unit }))
-          ).map((f, i) => (
-            <label key={i} className="flex items-center gap-2">
-              {f.label && (
-                <span className="text-parchment">
-                  <Tex value={f.label} /> =
-                </span>
-              )}
-              <input
-                ref={i === 0 ? firstInputRef : undefined}
-                type="text"
-                inputMode="decimal"
-                autoFocus={i === 0}
-                value={texts[i] ?? ""}
-                disabled={answered}
-                onChange={(e) =>
-                  setTexts((t) => {
-                    const n = [...t];
-                    n[i] = e.target.value;
-                    return n;
-                  })
-                }
-                className="w-28 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment placeholder:text-parchment-dim/60 transition-colors disabled:opacity-60"
-                placeholder="?"
-              />
-              {f.unit && <span className="text-parchment-dim text-sm">{f.unit}</span>}
-            </label>
-          ))}
-          {!answered && (
-            <button
-              type="submit"
-              className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
-            >
-              Submit
-            </button>
-          )}
-        </form>
-      )}
-
-      {answered && (
-        <div className="space-y-3">
-          <p className={`font-semibold ${wasCorrect ? "text-green-400" : "text-red-400"}`}>
-            {wasCorrect ? "Correct!" : "Incorrect"}
-          </p>
-          {current.explanation && (
-            <p className="text-sm text-parchment-dim">
-              <Tex value={current.explanation} />
-            </p>
-          )}
-          <button
-            onClick={next}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
-          >
-            {isLastOfCount ? "See results" : "Next →"}
-          </button>
+      {current.diagram ? (
+        // Diagram drills (unit circle, vectors): prompt + answers on the left, the
+        // diagram on the right — keeps the whole problem in one screenful so "Next"
+        // stays in view without scrolling.
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+          <div className="flex-1 min-w-0 space-y-5">
+            <div className="text-2xl text-parchment">
+              <Tex value={current.prompt} />
+            </div>
+            {answerEl}
+            {feedbackEl}
+          </div>
+          <div className="shrink-0 mx-auto sm:mx-0">
+            <DrillDiagram spec={current.diagram} className="w-40 h-40 sm:w-44 sm:h-44" />
+          </div>
         </div>
+      ) : (
+        <>
+          <div className="text-xl text-parchment text-center py-2">
+            <Tex value={current.prompt} block />
+          </div>
+          {answerEl}
+          {feedbackEl}
+        </>
       )}
     </section>
   );
