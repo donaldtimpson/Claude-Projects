@@ -19,6 +19,7 @@ const ITEMS: { label: string; href: string; match: (p: string) => boolean }[] = 
   { label: "Announcements", href: "/admin/announcements", match: (p) => p.startsWith("/admin/announcements") },
   { label: "Categories", href: "/admin/categories", match: (p) => p.startsWith("/admin/categories") },
   { label: "Resources", href: "/admin/resources", match: (p) => p.startsWith("/admin/resources") },
+  { label: "Drills", href: "/admin/drills", match: (p) => p.startsWith("/admin/drills") },
   { label: "Achievements", href: "/admin/achievements", match: (p) => p.startsWith("/admin/achievements") },
 ];
 

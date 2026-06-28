@@ -9,7 +9,10 @@ import type { DrillMode, Level } from "@/lib/drills/types";
 const COUNT_OPTIONS = [10, 20, 50];
 const TIMED_OPTIONS = [60, 120];
 
-export default function DrillSession({ slug }: { slug: string }) {
+// `persist` (default true) records the session for badges/streak via the server
+// action. The admin tester passes persist={false} to play without writing to the
+// DB or needing a student session.
+export default function DrillSession({ slug, persist = true }: { slug: string; persist?: boolean }) {
   const def = drillBySlug(slug);
   const [level, setLevel] = useState<Level>(1);
   const [mode, setMode] = useState<DrillMode>({ type: "count", n: 10 });
@@ -26,7 +29,7 @@ export default function DrillSession({ slug }: { slug: string }) {
         def={def}
         level={level}
         mode={mode}
-        onSessionComplete={recordDrillSession}
+        onSessionComplete={persist ? recordDrillSession : undefined}
         onExit={() => setPlaying(false)}
       />
     );
