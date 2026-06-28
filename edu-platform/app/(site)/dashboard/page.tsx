@@ -91,6 +91,21 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
+        <div className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-parchment font-medium">Sharpen your skills</p>
+            <p className="text-sm text-parchment-dim mt-1">
+              Endless timed practice — arithmetic, the unit circle, and vector components.
+            </p>
+          </div>
+          <Link
+            href="/drills"
+            className="px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors shrink-0"
+          >
+            Practice drills
+          </Link>
+        </div>
+
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
             Your Handle

@@ -75,6 +75,8 @@ export const MOCK_BADGES: Badge[] = [
   { key: "lectures-100", name: "Devoted", blurb: "Watch 100 lectures.", tier: "gold", category: "milestones", unlocked: false },
   { key: "lectures-250", name: "Marathon Mind", blurb: "Watch 250 lectures.", tier: "platinum", category: "milestones", unlocked: false },
   { key: "course-reviewed", name: "Revision", blurb: "Complete a full course review.", tier: "bronze", category: "milestones", unlocked: false },
+  { key: "drill-first", name: "Warmed Up", blurb: "Finish your first practice drill.", tier: "bronze", category: "milestones", unlocked: false },
+  { key: "drill-sessions-25", name: "Drillmaster", blurb: "Complete 25 practice drills.", tier: "gold", category: "milestones", unlocked: false },
 
   // 🎯 Mastery — quality
   { key: "first-perfect", name: "Flawless", blurb: "Earn your first perfect score.", tier: "bronze", category: "mastery", unlocked: true },
@@ -84,6 +86,8 @@ export const MOCK_BADGES: Badge[] = [
   { key: "perfect-test", name: "Top of the Class", blurb: "Score 100% on a playlist test.", tier: "gold", category: "mastery", unlocked: false },
   { key: "course-all-perfect", name: "Summa Cum Laude", blurb: "Perfect score on every quiz in a course.", tier: "platinum", category: "mastery", unlocked: false },
   { key: "review-mastery-30", name: "Spaced Master", blurb: "Send 30 review cards to the top box.", tier: "gold", category: "mastery", unlocked: false },
+  { key: "drill-streak-10", name: "In the Zone", blurb: "Hit a 10-answer streak in a single drill.", tier: "silver", category: "mastery", unlocked: false },
+  { key: "drill-flawless-timed", name: "Lightning", blurb: "Ace a timed sprint — every answer correct.", tier: "gold", category: "mastery", unlocked: false },
 
   // 🏛️ Completion — finishing
   { key: "half-course", name: "Halfway There", blurb: "Watch half a course's lectures.", tier: "bronze", category: "completion", unlocked: true },

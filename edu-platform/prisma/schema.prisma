@@ -158,6 +158,28 @@ model User {
   comments        Comment[]
   achievements    UserAchievement[]
   questionReviews QuestionReview[]
+  drillAttempts   DrillAttempt[]
+}
+
+// One row per completed practice-drill session (/drills). Drills are procedurally
+// generated, so there's no question FK — just the drill `slug` + outcome. Feeds the
+// streak (completedAt) and the direct-granted drill badges (see recordDrillSession).
+model DrillAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  slug        String   // drill type: "arithmetic" | "unit-circle" | "vectors"
+  level       Int
+  total       Int
+  correct     Int
+  bestStreak  Int      @default(0)
+  mode        String   // "count" | "timed"
+  durationSec Int      @default(0)
+  completedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([userId, slug])
 }
 
 model UserAchievement {

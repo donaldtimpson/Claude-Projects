@@ -251,6 +251,42 @@ Snippets come from rough auto-captions, so results lean on the lecture title + t
 snippet as supporting context. Search currently includes sibling offerings (not just canonical) —
 filter to canonical later if duplicates feel noisy.
 
+## Practice drills (`/drills`)
+
+Procedurally-generated, timed/scored practice — distinct from quizzes (which draw from the stored
+`QuizQuestion` bank). A drill generates an endless stream of random problems **client-side**; there
+is no question bank and nothing to author. Three drills ship: `arithmetic`, `unit-circle`, `vectors`.
+
+- **Framework:** a drill type is pure data + a `generate(level)` function (`lib/drills/types.ts`
+  `DrillDef`). One generic client player (`components/drills/DrillPlayer.tsx`) renders and grades any
+  drill; the only thing that varies is the answer-input mode — a discriminated union on
+  `Problem.input` (`numeric` | `choice` | `fields`). The correct answer lives inside the input
+  descriptor, so grading is mechanical.
+- **Adding a drill** = write `lib/drills/generators/<name>.ts` exporting a `DrillDef`, then add it to
+  `DRILLS` in `lib/drills/registry.ts`. The hub card, `/drills/<slug>` route, mode/level selection,
+  KaTeX, and persistence all work automatically. Candidates that map onto existing input modes:
+  degree↔radian / log rules / derivative-of-power (`numeric`), truth tables / dot-cross + right-hand
+  rule (`choice`/`fields`), factoring (`choice`).
+- **Math + diagrams:** KaTeX via `components/drills/Tex.tsx` (a thin `katex.renderToString` wrapper,
+  lighter than `MarkdownNotes`). Diagrams are inline SVG (`components/drills/DrillDiagram.tsx`) — no
+  image hosting. Unit-circle exact values are matched by a **canonical key, never a float compare**;
+  `Math.sin` only positions the diagram.
+- **Gamification:** finishing a session calls `recordDrillSession` (`lib/actions.ts`), which writes a
+  `DrillAttempt` row and direct-grants drill badges (`drill-first`, `drill-streak-10`,
+  `drill-sessions-25`, `drill-flawless-timed`) — same idempotent pattern as the review badges, so
+  existing scoring is untouched. `DrillAttempt.completedAt` feeds the 🔥 streak via `getStreak` in
+  `lib/gamification/engine.ts`. Drills are fully playable signed-out (no persistence, no toast).
+- **Per-course discoverability (no code):** attach a `TOOL` Resource whose `url` is an internal path
+  like `/drills/unit-circle` to a relevant course — the existing course Resources section renders it.
+- **Migration:** `DrillAttempt` was added in `prisma/migrations/20260628000000_add_drill_attempt/`.
+  Apply with `npx prisma migrate deploy && npx prisma generate` from `edu-platform/` (no TTY for
+  `migrate dev` here; local + prod share the Neon DB).
+
+| Route | Purpose |
+|---|---|
+| `/drills` | Hub — one card per registered drill |
+| `/drills/[slug]` | Difficulty + mode picker, then the drill session |
+
 ## Community quiz-post scheduler (`scripts/`, local-only)
 
 Schedules a lecture's 10 published quiz questions as **YouTube Community "Quiz" posts, 12h apart**

@@ -460,15 +460,17 @@ export async function getUserBadges(userId: string): Promise<Badge[]> {
 // (lecture watched, quiz taken, or review done) keeps it alive. For the
 // dashboard streak stat + header badge.
 export async function getStreak(userId: string): Promise<{ count: number; activeToday: boolean }> {
-  const [progress, attempts, reviews] = await Promise.all([
+  const [progress, attempts, reviews, drills] = await Promise.all([
     db.videoProgress.findMany({ where: { userId }, select: { watchedAt: true } }),
     db.quizAttempt.findMany({ where: { userId }, select: { completedAt: true } }),
     db.questionReview.findMany({ where: { userId }, select: { lastReviewedAt: true } }),
+    db.drillAttempt.findMany({ where: { userId }, select: { completedAt: true } }),
   ]);
   const stamps = [
     ...progress.map((p) => p.watchedAt),
     ...attempts.map((a) => a.completedAt),
     ...reviews.map((r) => r.lastReviewedAt),
+    ...drills.map((d) => d.completedAt),
   ];
   return currentDayStreak(stamps);
 }

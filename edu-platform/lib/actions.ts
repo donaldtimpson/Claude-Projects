@@ -11,6 +11,7 @@ import {
   getDueCount,
   masteredCardCount,
 } from "@/lib/srs";
+import type { DrillSummary } from "@/lib/drills/types";
 
 export async function markVideoWatched(videoId: string): Promise<Badge[]> {
   const session = await getServerSession(authOptions);
@@ -72,6 +73,53 @@ export async function saveQuizAttempt(
   // Auto-enroll each answered question into the student's spaced-repetition deck.
   await recordQuizAnswersForSrs(session.user.id, { videoId, courseId }, answers);
   return syncAchievements(session.user.id);
+}
+
+// Records a completed practice-drill session (/drills). Drills are procedurally
+// generated and write no QuizAttempt, so — like the review badges — their badges
+// are directly-granted UserAchievement rows (idempotent; engine treats any such row
+// as unlocked, never revokes, so existing scoring is untouched). The stored
+// DrillAttempt.completedAt also feeds the streak via getStreak. Returns the
+// freshly-earned badges for the "unlocked!" toast. No-ops for signed-out users.
+export async function recordDrillSession(s: DrillSummary): Promise<Badge[]> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return [];
+  const userId = session.user.id;
+
+  await db.drillAttempt.create({
+    data: {
+      userId,
+      slug: s.slug,
+      level: s.level,
+      total: s.total,
+      correct: s.correct,
+      bestStreak: s.bestStreak,
+      mode: s.mode,
+      durationSec: s.durationSec,
+    },
+  });
+
+  const keys = ["drill-first"];
+  if (s.bestStreak >= 10) keys.push("drill-streak-10");
+  // A flawless sprint: timed mode, every answer correct, with enough volume to mean it.
+  if (s.mode === "timed" && s.total >= 10 && s.correct === s.total) keys.push("drill-flawless-timed");
+  // Volume badge — count includes the row just inserted above.
+  const sessionCount = await db.drillAttempt.count({ where: { userId } });
+  if (sessionCount >= 25) keys.push("drill-sessions-25");
+
+  const existing = await db.userAchievement.findMany({
+    where: { userId, key: { in: keys } },
+    select: { key: true },
+  });
+  const have = new Set(existing.map((e) => e.key));
+  const fresh = keys.filter((k) => !have.has(k));
+  if (fresh.length === 0) return [];
+
+  await db.userAchievement.createMany({
+    data: fresh.map((key) => ({ userId, key })),
+    skipDuplicates: true,
+  });
+  return BADGE_CATALOG.filter((b) => fresh.includes(b.key)).map((b) => ({ ...b, unlocked: true }));
 }
 
 // Grade a single card in the cross-course daily review (/review). Persists the
