@@ -57,6 +57,22 @@ export default function DrillPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current.id]);
 
+  // After a problem is answered, Enter advances to the next one — so the whole
+  // drill is keyboard-only (type → Enter to submit → Enter to advance). The submit
+  // Enter fires before `answered` flips, so this listener can't double-trigger.
+  useEffect(() => {
+    if (!answered || done) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        next();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answered, done]);
+
   const total = results.length;
   const correctCount = results.filter(Boolean).length;
   const isLastOfCount = mode.type === "count" && total >= mode.n;
