@@ -7,6 +7,11 @@ import Tex from "@/components/drills/Tex";
 import DrillDiagram from "@/components/drills/DrillDiagram";
 import type { DrillDef, DrillMode, DrillSummary, Level, Problem, Renderable } from "@/lib/drills/types";
 
+// Auto-advance delays: snappy on a correct answer, longer on a wrong one so the
+// correct answer (shown in the feedback toast) has time to register.
+const CORRECT_MS = 650;
+const WRONG_MS = 2200;
+
 function blankTexts(p: Problem): string[] {
   if (p.input.kind === "numeric") return [""];
   if (p.input.kind === "fields") return p.input.fields.map(() => "");
@@ -57,19 +62,27 @@ export default function DrillPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current.id]);
 
-  // After a problem is answered, Enter advances to the next one — so the whole
-  // drill is keyboard-only (type → Enter to submit → Enter to advance). The submit
-  // Enter fires before `answered` flips, so this listener can't double-trigger.
+  // Once a problem is answered, auto-advance — no "Next" click. Correct answers
+  // flash by quickly; wrong answers linger so the correct answer (in the toast)
+  // can be read. This effect runs in the render where `answered` flips true, so
+  // `next` here sees the up-to-date results count (last-problem → results screen).
   useEffect(() => {
     if (!answered || done) return;
+    const delay = wasCorrect ? CORRECT_MS : WRONG_MS;
+    const t = setTimeout(() => next(), delay);
+    // Enter advances immediately, skipping the wait.
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault();
+        clearTimeout(t);
         next();
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answered, done]);
 
@@ -290,22 +303,27 @@ export default function DrillPlayer({
       </form>
     );
 
-  const feedbackEl = answered ? (
-    <div className="space-y-3">
-      <p className={`font-semibold ${wasCorrect ? "text-green-400" : "text-red-400"}`}>
-        {wasCorrect ? "Correct!" : "Incorrect"}
-      </p>
-      {current.explanation && (
-        <p className="text-sm text-parchment-dim">
-          <Tex value={current.explanation} />
-        </p>
-      )}
-      <button
-        onClick={next}
-        className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+  // Non-intrusive feedback while the problem auto-advances: a small fixed pill —
+  // ✓ on correct, or ✗ with the correct answer (the per-problem explanation) on
+  // wrong. Fixed-position so it never shifts the problem layout.
+  const toastEl = answered ? (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 pointer-events-none">
+      <div
+        className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease-out] ${
+          wasCorrect
+            ? "border-green-500 bg-green-900/90 text-green-200"
+            : "border-red-500 bg-red-900/90 text-red-100"
+        }`}
       >
-        {isLastOfCount ? "See results" : "Next →"}
-      </button>
+        <span aria-hidden>{wasCorrect ? "✓" : "✗"}</span>
+        {wasCorrect ? (
+          <span>Correct</span>
+        ) : current.explanation ? (
+          <Tex value={current.explanation} />
+        ) : (
+          <span>Incorrect</span>
+        )}
+      </div>
     </div>
   ) : null;
 
@@ -336,7 +354,6 @@ export default function DrillPlayer({
               <Tex value={current.prompt} />
             </div>
             {answerEl}
-            {feedbackEl}
           </div>
           <div className="shrink-0 mx-auto sm:mx-0">
             <DrillDiagram spec={current.diagram} className="w-40 h-40 sm:w-44 sm:h-44" />
@@ -348,9 +365,10 @@ export default function DrillPlayer({
             <Tex value={current.prompt} block />
           </div>
           {answerEl}
-          {feedbackEl}
         </>
       )}
+
+      {toastEl}
     </section>
   );
 }

@@ -28,3 +28,15 @@
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.4;
 }
+
+/* Used by the achievement toast (components/Toast.tsx) and the drill feedback
+   toast (components/drills/DrillPlayer.tsx). Opacity-only so it never clashes with
+   a positioning transform like -translate-x-1/2. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
