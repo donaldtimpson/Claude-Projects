@@ -42,7 +42,7 @@ export type DrillInput = NumericInput | ChoiceInput | FieldsInput;
 
 // ---- Optional diagram (pure data; DrillDiagram renders inline SVG) ----------
 export type DiagramSpec =
-  | { kind: "vector"; magnitude: number; angleDeg: number }
+  | { kind: "vector"; magnitude: number; angleDeg: number; component?: "x" | "y" }
   | { kind: "unit-circle"; angleRad: number; fn: "sin" | "cos" | "tan" };
 
 // ---- A generated problem ----------------------------------------------------

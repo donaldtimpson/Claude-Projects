@@ -67,17 +67,24 @@ function VectorDiagram({ spec }: { spec: Extract<DiagramSpec, { kind: "vector" }
   const ex = C + len * Math.cos(rad);
   const ey = C - len * Math.sin(rad);
 
+  // Emphasize whichever component the question asks for.
+  const emphX = spec.component === "x";
+  const emphY = spec.component === "y";
+
   return (
     <>
       <Axes />
-      {/* dashed component projections */}
-      <line x1={ex} y1={ey} x2={ex} y2={C} stroke={GOLD_DIM} strokeWidth={1} strokeDasharray="4 3" />
-      <line x1={ex} y1={ey} x2={C} y2={ey} stroke={GOLD_DIM} strokeWidth={1} strokeDasharray="4 3" />
+      {/* dashed drop lines from the tip to each axis */}
+      <line x1={ex} y1={ey} x2={ex} y2={C} stroke={FAINT} strokeWidth={1} strokeDasharray="4 3" />
+      <line x1={ex} y1={ey} x2={C} y2={ey} stroke={FAINT} strokeWidth={1} strokeDasharray="4 3" />
+      {/* component legs along the axes (x along the x-axis, y along the y-axis) */}
+      <line x1={C} y1={C} x2={ex} y2={C} stroke={emphX ? GOLD : GOLD_DIM} strokeWidth={emphX ? 3 : 1.5} />
+      <line x1={C} y1={C} x2={C} y2={ey} stroke={emphY ? GOLD : GOLD_DIM} strokeWidth={emphY ? 3 : 1.5} />
       {/* angle arc + label */}
       <path d={arcPath(spec.angleDeg, 26)} fill="none" stroke={GOLD} strokeWidth={1.25} />
       <text
-        x={C + 36 * Math.cos((rad / 2))}
-        y={C - 36 * Math.sin((rad / 2)) + 4}
+        x={C + 38 * Math.cos(rad / 2)}
+        y={C - 38 * Math.sin(rad / 2) + 4}
         fill={TEXT}
         fontSize={11}
         textAnchor="middle"
@@ -86,9 +93,13 @@ function VectorDiagram({ spec }: { spec: Extract<DiagramSpec, { kind: "vector" }
       </text>
       {/* the vector */}
       <line x1={C} y1={C} x2={ex} y2={ey} stroke={GOLD} strokeWidth={2.5} markerEnd="url(#drill-arrow)" />
-      {/* component axis labels */}
-      <text x={(C + ex) / 2} y={C + 14} fill={TEXT} fontSize={11} textAnchor="middle">vₓ</text>
-      <text x={ex + (ex >= C ? 8 : -8)} y={(C + ey) / 2} fill={TEXT} fontSize={11} textAnchor="middle">v_y</text>
+      {/* component labels, brighter for the asked one */}
+      <text x={(C + ex) / 2} y={C + 15} fill={emphX ? GOLD : TEXT} fontSize={11} fontWeight={emphX ? 700 : 400} textAnchor="middle">
+        vₓ
+      </text>
+      <text x={C - 12} y={(C + ey) / 2} fill={emphY ? GOLD : TEXT} fontSize={11} fontWeight={emphY ? 700 : 400} textAnchor="end">
+        v_y
+      </text>
       <text x={ex} y={ey - 6} fill={GOLD} fontSize={11} textAnchor="middle">|v|={spec.magnitude}</text>
     </>
   );
