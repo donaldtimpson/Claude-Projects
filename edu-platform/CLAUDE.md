@@ -36,7 +36,7 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 
 **Stack:** Next.js (App Router) · Prisma 5 · PostgreSQL (Neon) · Tailwind CSS
 
-> Note: Prisma 5 is pinned because Node 21 is installed locally. Prisma 6+ requires Node 20.19+/22.12+.
+> Note: local runtime is **Node 22** (`.nvmrc` = 22, `engines.node` = "22.x"). Prisma is still on **5** — the Node-version blocker is gone (Node 22 satisfies Prisma 6/7's ≥22.12 requirement), so the pin is now a deliberate deferral of a major upgrade, not a hard constraint. `@prisma/client`, `prisma`, and `@prisma/adapter-neon` must stay on the same 5.x line together; `@neondatabase/serverless` stays `^0.10.4` to match `@prisma/adapter-neon@5.22.0`. Upgrading to Prisma 7 is a scoped migration (Bytes→Uint8Array, ESM client, driver-adapter changes touch the raw-SQL FTS in `lib/search.ts`) — do it on its own and test against the shared Neon DB.
 
 **Database models** (`prisma/schema.prisma`):
 - `Course` — mirrors a YouTube playlist (`youtubePlaylistId` unique key)
