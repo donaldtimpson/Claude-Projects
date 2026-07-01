@@ -34,9 +34,11 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 
 ## Architecture
 
-**Stack:** Next.js (App Router) · Prisma 5 · PostgreSQL (Neon) · Tailwind CSS
+**Stack:** Next.js (App Router) · Prisma 6 · PostgreSQL (Neon) · Tailwind CSS
 
-> Note: local runtime is **Node 22** (`.nvmrc` = 22, `engines.node` = "22.x"). Prisma is still on **5** — the Node-version blocker is gone (Node 22 satisfies Prisma 6/7's ≥22.12 requirement), so the pin is now a deliberate deferral of a major upgrade, not a hard constraint. `@prisma/client`, `prisma`, and `@prisma/adapter-neon` must stay on the same 5.x line together; `@neondatabase/serverless` stays `^0.10.4` to match `@prisma/adapter-neon@5.22.0`. Upgrading to Prisma 7 is a scoped migration (Bytes→Uint8Array, ESM client, driver-adapter changes touch the raw-SQL FTS in `lib/search.ts`) — do it on its own and test against the shared Neon DB.
+> Note: local runtime is **Node 22** (`.nvmrc` = 22, `engines.node` = "22.x"). On **Prisma 6** (6.19.3) as of 2026-07-01. `@prisma/client`, `prisma`, and `@prisma/adapter-neon` must stay on the same 6.x line together; `@neondatabase/serverless` stays `^0.10.4` (still satisfies the v6 adapter). **`driverAdapters` is GA in 6** — no `previewFeatures` flag needed. The v6 Neon adapter takes a **PoolConfig** (`new PrismaNeon({ connectionString })`) and builds the pool itself; v5 took a pre-built `Pool` (see `lib/db.ts`). Scripts that use a bare `new PrismaClient()` (no adapter) still work — the Rust query engine is still the default in 6.
+>
+> Prisma **7** is the current latest but is a scoped migration deferred on purpose: it swaps to the `prisma-client` generator (ESM output + required `output` path) and would rewrite the `@prisma/client` import in ~27 files. Do it on its own and re-run the read-only DB smoke test against the shared Neon DB.
 
 **Database models** (`prisma/schema.prisma`):
 - `Course` — mirrors a YouTube playlist (`youtubePlaylistId` unique key)

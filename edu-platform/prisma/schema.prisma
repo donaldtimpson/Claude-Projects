@@ -1,6 +1,7 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  // driverAdapters went GA in Prisma 6 — no preview flag needed. The Neon
+  // adapter is wired up in lib/db.ts.
 }
 
 datasource db {
