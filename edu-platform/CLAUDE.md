@@ -51,7 +51,7 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 - `lib/youtube.ts` — YouTube Data API v3 client; `fetchChannelPlaylists()` and `fetchPlaylistVideos(playlistId)` handle pagination automatically
 - `lib/admin-auth.ts` — password comparison helper
 
-**Admin auth:** Cookie-based (`admin_auth`). `middleware.ts` guards all `/admin/*` routes, redirecting to `/admin/login` if the cookie is missing or wrong. The cookie is set by `POST /api/admin/login` and cleared by `DELETE` on the same route.
+**Admin auth:** Cookie-based (`admin_auth`). `proxy.ts` (Next 16's renamed middleware convention — exports a `proxy` function) guards all `/admin/*` routes, redirecting to `/admin/login` if the cookie is missing or wrong. The cookie is set by `POST /api/admin/login` and cleared by `DELETE` on the same route.
 
 **YouTube sync:** `POST /api/youtube/sync` (requires `x-admin-password` header) fetches all channel playlists then all videos per playlist, upserting into `Course` and `Video` tables. Called from the admin dashboard's Sync button (`app/admin/SyncButton.tsx`).
 
