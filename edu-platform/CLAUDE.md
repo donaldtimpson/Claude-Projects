@@ -326,7 +326,9 @@ npx tsx scripts/post-quiz-community.ts --video <youtubeVideoId> [--dry-run] \
   Scheduled) before they publish.
 
 **Composer flow (reverse-engineered; selectors are fragile):** youtube.com `/channel/{id}/community`
-→ "Add a quiz" → fill `Answer N` placeholders (+ "Add answer" for >2) → per-option "Mark as correct
+→ masthead **"Create" → "Create post"** (as of 2026-07 the post-type buttons no longer render inline;
+they live behind this menu — `openComposer` clicks both) → "Add a quiz" → fill `Answer N` placeholders
+(+ "Add answer" for >2) → per-option "Mark as correct
 answer" toggle (option 0 correct by default) → optional "Add an explanation (optional)" → type the
 caption into the `[contenteditable]` ("What's on your mind?") via `insertText` → "Action menu" →
 "Schedule post" → `#date-picker` calendar (click the `.calendar-day` whose text is the day, past days

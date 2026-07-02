@@ -40,15 +40,27 @@ function round15(d: Date): Date {
 }
 
 // Load a fresh community page and return the "Add a quiz" button once the
-// composer is ready. The masthead "Create" button is flaky across reloads and
-// isn't actually required (the composer toolbar renders by default), so it's
-// best-effort; we anchor on "Add a quiz" and reload once if it's slow.
+// composer is ready. YouTube moved the post-type buttons (image/poll/quiz/video)
+// behind the masthead "Create" menu → "Create post"; they no longer render
+// inline, so both clicks are now required before "Add a quiz" appears.
 async function openComposer(page: Page) {
   for (let attempt = 0; attempt < 3; attempt++) {
     await page.goto(COMMUNITY_URL, { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(4500);
+    // Open the "Create" menu, then choose "Create post" to reveal the composer.
     const create = page.getByRole("button", { name: "Create" }).first();
-    if (await create.isVisible().catch(() => false)) await create.click().catch(() => {});
+    if (await create.isVisible().catch(() => false)) {
+      await create.click().catch(() => {});
+      await page.waitForTimeout(1200);
+      const createPost = page
+        .getByRole("menuitem", { name: /create post/i })
+        .first()
+        .or(page.getByText(/^Create post$/).first());
+      if (await createPost.isVisible().catch(() => false)) {
+        await createPost.click().catch(() => {});
+        await page.waitForTimeout(2500);
+      }
+    }
     const quiz = page.getByRole("button", { name: "Add a quiz" }).first();
     if (await quiz.isVisible().catch(() => false)) return quiz;
     await page.waitForTimeout(3000);
