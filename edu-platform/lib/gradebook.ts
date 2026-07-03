@@ -1,30 +1,93 @@
 import { db } from "@/lib/db";
 
-// Read-only gradebook aggregation for one class section. Surfaces the three
-// already-recorded categories per enrolled student: attendance (lecture watches),
-// quizzes (best attempt per video quiz), and the final course test (best attempt).
-// Homework + manual exam columns arrive in later phases. Best-of logic mirrors
-// lib/gamification/engine.ts (max score per quiz, no cheat pressure), batched
-// across the whole roster.
+// Gradebook aggregation for one class section. Combines already-recorded data
+// (attendance from lecture watches; quizzes + final test as best-attempt) with
+// homework submission scores and the instructor's manual midterm/final marks,
+// then computes a weighted current grade per student. Best-of logic mirrors
+// lib/gamification/engine.ts. Weights + exam maxes live in Section.gradeConfig.
+
+export type GradeWeights = {
+  attendance: number;
+  quizzes: number;
+  test: number;
+  homework: number;
+  midterm: number;
+  final: number;
+};
+
+export const DEFAULT_WEIGHTS: GradeWeights = {
+  attendance: 10,
+  quizzes: 10,
+  test: 5,
+  homework: 25,
+  midterm: 25,
+  final: 25,
+};
+
+export type GradeConfig = { weights: GradeWeights; midtermMax: number; finalMax: number };
+export const DEFAULT_CONFIG: GradeConfig = { weights: DEFAULT_WEIGHTS, midtermMax: 100, finalMax: 100 };
+
+const num = (v: unknown, d: number) => (typeof v === "number" && isFinite(v) && v >= 0 ? v : d);
+
+export function parseGradeConfig(raw: unknown): GradeConfig {
+  if (raw && typeof raw === "object") {
+    const r = raw as Record<string, unknown>;
+    const w = (r.weights ?? {}) as Record<string, unknown>;
+    return {
+      weights: {
+        attendance: num(w.attendance, DEFAULT_WEIGHTS.attendance),
+        quizzes: num(w.quizzes, DEFAULT_WEIGHTS.quizzes),
+        test: num(w.test, DEFAULT_WEIGHTS.test),
+        homework: num(w.homework, DEFAULT_WEIGHTS.homework),
+        midterm: num(w.midterm, DEFAULT_WEIGHTS.midterm),
+        final: num(w.final, DEFAULT_WEIGHTS.final),
+      },
+      midtermMax: num(r.midtermMax, 100) || 100,
+      finalMax: num(r.finalMax, 100) || 100,
+    };
+  }
+  return DEFAULT_CONFIG;
+}
+
+// Weighted average over the categories that actually have data — a running grade,
+// so a not-yet-taken final doesn't read as a zero.
+function weightedGrade(cats: { pct: number | null; weight: number }[]): number | null {
+  let sum = 0;
+  let wsum = 0;
+  for (const c of cats) {
+    if (c.pct === null || c.weight <= 0) continue;
+    sum += c.pct * c.weight;
+    wsum += c.weight;
+  }
+  return wsum > 0 ? sum / wsum : null;
+}
 
 export type StudentRow = {
   userId: string;
   name: string | null;
   email: string;
   watchedCount: number;
+  attendancePct: number | null; // effective (override if set, else watched/total)
+  attendanceOverride: number | null; // raw override for the input default
   quizzesTaken: number;
-  quizAvgPct: number | null; // average of best % across quizzes the student attempted
-  testPct: number | null; // best course-test %
-  hwGradedCount: number; // # assignments graded for this student
-  hwPct: number | null; // points-weighted % across graded assignments
+  quizAvgPct: number | null;
+  testPct: number | null;
+  hwGradedCount: number;
+  hwPct: number | null;
+  midtermScore: number | null; // raw points
+  finalScore: number | null; // raw points
+  midtermPct: number | null;
+  finalPct: number | null;
+  currentGrade: number | null; // weighted over categories with data
 };
 
 export type SectionGradebook = {
   section: { id: string; name: string; course: { id: string; title: string; isCurrent: boolean } };
   totalLectures: number;
-  totalQuizzes: number; // # videos with a published quiz
+  totalQuizzes: number;
   hasTest: boolean;
   totalAssignments: number;
+  config: GradeConfig;
   students: StudentRow[];
 };
 
@@ -43,9 +106,9 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   if (!section) return null;
 
   const courseId = section.course.id;
+  const config = parseGradeConfig(section.gradeConfig);
   const userIds = section.enrollments.map((e) => e.user.id);
 
-  // Course videos + which of them have a published quiz.
   const videos = await db.video.findMany({
     where: { courseId },
     select: { id: true, _count: { select: { quizQuestions: { where: { isDraft: false } } } } },
@@ -54,8 +117,6 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   const quizVideoIds = new Set(videos.filter((v) => v._count.quizQuestions > 0).map((v) => v.id));
   const hasTest = (await db.quizQuestion.count({ where: { courseId, videoId: null, isDraft: false } })) > 0;
 
-  // Assignments belong to the section (not the course) — count them for the header
-  // regardless of roster size.
   const sectionAssignments = await db.assignment.findMany({
     where: { sectionId: section.id },
     select: { id: true, points: true },
@@ -68,6 +129,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     totalQuizzes: quizVideoIds.size,
     hasTest,
     totalAssignments: sectionAssignments.length,
+    config,
   };
 
   if (userIds.length === 0) return { ...base, students: [] };
@@ -96,7 +158,6 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
       : Promise.resolve([] as { userId: string; assignmentId: string; score: number | null }[]),
   ]);
 
-  // Homework: points-weighted % across the student's GRADED assignments.
   const hwEarned = new Map<string, number>();
   const hwPossible = new Map<string, number>();
   const hwCount = new Map<string, number>();
@@ -107,11 +168,9 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     hwCount.set(s.userId, (hwCount.get(s.userId) ?? 0) + 1);
   }
 
-  // Attendance: count of watched course-lectures per user.
   const watched = new Map<string, number>();
   for (const p of progress) watched.set(p.userId, (watched.get(p.userId) ?? 0) + 1);
 
-  // Best % per (user, video quiz) and best course-test % per user.
   const bestQuiz = new Map<string, Map<string, number>>();
   const bestTest = new Map<string, number>();
   for (const a of attempts) {
@@ -129,23 +188,51 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     }
   }
 
+  const { weights, midtermMax, finalMax } = config;
+
   const students: StudentRow[] = section.enrollments.map((e) => {
-    const m = bestQuiz.get(e.user.id);
+    const uid = e.user.id;
+    const m = bestQuiz.get(uid);
     const quizzesTaken = m ? m.size : 0;
-    const quizAvgPct =
-      m && m.size > 0 ? [...m.values()].reduce((s, v) => s + v, 0) / m.size : null;
-    const possible = hwPossible.get(e.user.id) ?? 0;
-    const hwPct = possible > 0 ? ((hwEarned.get(e.user.id) ?? 0) / possible) * 100 : null;
+    const quizAvgPct = m && m.size > 0 ? [...m.values()].reduce((s, v) => s + v, 0) / m.size : null;
+
+    const possible = hwPossible.get(uid) ?? 0;
+    const hwPct = possible > 0 ? ((hwEarned.get(uid) ?? 0) / possible) * 100 : null;
+
+    const watchedCount = watched.get(uid) ?? 0;
+    const autoAttendance = base.totalLectures > 0 ? (watchedCount / base.totalLectures) * 100 : null;
+    const attendancePct = e.attendanceOverride ?? autoAttendance;
+
+    const midtermPct = e.midtermScore !== null ? (e.midtermScore / midtermMax) * 100 : null;
+    const finalPct = e.finalScore !== null ? (e.finalScore / finalMax) * 100 : null;
+    const testPct = bestTest.get(uid) ?? null;
+
+    const currentGrade = weightedGrade([
+      { pct: attendancePct, weight: weights.attendance },
+      { pct: quizAvgPct, weight: weights.quizzes },
+      { pct: testPct, weight: weights.test },
+      { pct: hwPct, weight: weights.homework },
+      { pct: midtermPct, weight: weights.midterm },
+      { pct: finalPct, weight: weights.final },
+    ]);
+
     return {
-      userId: e.user.id,
+      userId: uid,
       name: e.user.name,
       email: e.user.email,
-      watchedCount: watched.get(e.user.id) ?? 0,
+      watchedCount,
+      attendancePct,
+      attendanceOverride: e.attendanceOverride,
       quizzesTaken,
       quizAvgPct,
-      testPct: bestTest.get(e.user.id) ?? null,
-      hwGradedCount: hwCount.get(e.user.id) ?? 0,
+      testPct,
+      hwGradedCount: hwCount.get(uid) ?? 0,
       hwPct,
+      midtermScore: e.midtermScore,
+      finalScore: e.finalScore,
+      midtermPct,
+      finalPct,
+      currentGrade,
     };
   });
 

@@ -5,10 +5,20 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateHandle, getUserBadges, getStreak } from "@/lib/gamification/engine";
 import { getDueCount } from "@/lib/srs";
+import { getSectionGradebook } from "@/lib/gradebook";
 import HandleForm from "./HandleForm";
 import AchievementsGrid from "../leaderboard/AchievementsGrid";
 
 export const dynamic = "force-dynamic";
+
+const gradePct = (v: number | null | undefined) =>
+  v === null || v === undefined ? "—" : `${Math.round(v)}%`;
+function gradeColor(v: number | null | undefined): string {
+  if (v === null || v === undefined) return "text-parchment-dim";
+  if (v >= 90) return "text-green-400";
+  if (v >= 70) return "text-gold-300";
+  return "text-red-400";
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -37,6 +47,20 @@ export default async function DashboardPage() {
   ]);
 
   const handlePlaceholder = generateHandle(userId);
+
+  // Current grade + breakdown per enrolled class (this student's own row only).
+  const classGrades = await Promise.all(
+    myClasses.map(async (e) => {
+      const gb = await getSectionGradebook(e.sectionId);
+      return {
+        sectionId: e.sectionId,
+        courseId: e.section.course.id,
+        courseTitle: e.section.course.title,
+        sectionName: e.section.name,
+        row: gb?.students.find((s) => s.userId === userId) ?? null,
+      };
+    }),
+  );
 
   const watchedSet = new Set(allProgress.map((p) => p.videoId));
 
@@ -111,23 +135,41 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {myClasses.length > 0 && (
+        {classGrades.length > 0 && (
           <section className="space-y-4">
             <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
               My Classes
             </h2>
             <ul className="space-y-3">
-              {myClasses.map((e) => (
-                <li key={e.sectionId}>
-                  <Link
-                    href={`/courses/${e.section.course.id}`}
-                    className="group block bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
-                  >
-                    <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors">
-                      {e.section.course.title}
-                    </p>
-                    <p className="text-xs text-parchment-dim mt-0.5">Registered · {e.section.name}</p>
-                  </Link>
+              {classGrades.map((c) => (
+                <li key={c.sectionId} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <Link
+                        href={`/courses/${c.courseId}`}
+                        className="text-sm font-medium text-parchment hover:text-gold-300 transition-colors"
+                      >
+                        {c.courseTitle}
+                      </Link>
+                      <p className="text-xs text-parchment-dim mt-0.5">{c.sectionName}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-2xl font-bold ${gradeColor(c.row?.currentGrade)}`}>
+                        {gradePct(c.row?.currentGrade)}
+                      </p>
+                      <p className="text-[11px] text-parchment-dim">current grade</p>
+                    </div>
+                  </div>
+                  {c.row && (
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-parchment-dim">
+                      <span>Attendance <span className={gradeColor(c.row.attendancePct)}>{gradePct(c.row.attendancePct)}</span></span>
+                      <span>Quizzes <span className={gradeColor(c.row.quizAvgPct)}>{gradePct(c.row.quizAvgPct)}</span></span>
+                      <span>Homework <span className={gradeColor(c.row.hwPct)}>{gradePct(c.row.hwPct)}</span></span>
+                      <span>Final Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
+                      <span>Midterm <span className={gradeColor(c.row.midtermPct)}>{gradePct(c.row.midtermPct)}</span></span>
+                      <span>Final <span className={gradeColor(c.row.finalPct)}>{gradePct(c.row.finalPct)}</span></span>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

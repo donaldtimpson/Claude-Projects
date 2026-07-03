@@ -193,6 +193,13 @@ model Enrollment {
   enrolledAt DateTime @default(now())
   status     String   @default("active") // "active" | "dropped"
 
+  // Manual grade inputs (Phase 4). Midterm/final are in-class exams entered as
+  // points (out of Section.gradeConfig midtermMax/finalMax). attendanceOverride
+  // is a percent (0–100) that replaces the watch-based attendance when set.
+  midtermScore       Int?
+  finalScore         Int?
+  attendanceOverride Int?
+
   section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

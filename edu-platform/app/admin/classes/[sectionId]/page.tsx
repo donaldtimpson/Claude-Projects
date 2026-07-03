@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
 import { createAssignment, deleteAssignment } from "@/lib/assignments";
+import { setGradeWeights, setManualMarks } from "@/lib/grades";
 
 const fmtDue = (d: Date | null) =>
   d ? new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "no due date";
@@ -49,6 +50,9 @@ export default async function GradebookPage({
     }),
   ]);
 
+  const w = gb.config.weights;
+  const weightTotal = w.attendance + w.quizzes + w.test + w.homework + w.midterm + w.final;
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
       <div>
@@ -66,53 +70,163 @@ export default async function GradebookPage({
       </div>
 
       <p className="text-xs text-parchment-dim bg-crimson-900 border border-crimson-700 rounded-lg px-4 py-3">
-        Auto-tracked columns below (attendance from lecture watches; quizzes and the final test are
-        best-attempt). Homework, midterm, and final columns — plus the weighted final grade — arrive in
-        later phases.
+        Attendance, quizzes, homework, and the final test are auto-tracked; midterm, final, and any
+        attendance override are entered by you. <strong>Grade</strong> is the weighted average over the
+        categories that have data so far (a running grade).
       </p>
+
+      {/* Grade weights */}
+      <details className="bg-crimson-900 border border-crimson-700 rounded-xl px-4 py-3">
+        <summary className="cursor-pointer text-sm text-parchment">
+          Grade weights (total {weightTotal}%) &amp; exam maxes
+        </summary>
+        <form action={setGradeWeights} className="mt-3 flex flex-wrap items-end gap-3">
+          <input type="hidden" name="sectionId" value={sectionId} />
+          {(
+            [
+              ["attendance", "Attendance"],
+              ["quizzes", "Quizzes"],
+              ["test", "Final Test"],
+              ["homework", "Homework"],
+              ["midterm", "Midterm"],
+              ["final", "Final"],
+            ] as const
+          ).map(([key, label]) => (
+            <label key={key} className="text-xs text-parchment-dim flex flex-col gap-1">
+              {label} %
+              <input
+                name={key}
+                type="number"
+                min={0}
+                defaultValue={gb.config.weights[key]}
+                className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+              />
+            </label>
+          ))}
+          <span className="text-parchment-dim self-center">|</span>
+          <label className="text-xs text-parchment-dim flex flex-col gap-1">
+            Midterm max
+            <input
+              name="midtermMax"
+              type="number"
+              min={1}
+              defaultValue={gb.config.midtermMax}
+              className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+            />
+          </label>
+          <label className="text-xs text-parchment-dim flex flex-col gap-1">
+            Final max
+            <input
+              name="finalMax"
+              type="number"
+              min={1}
+              defaultValue={gb.config.finalMax}
+              className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+            />
+          </label>
+          <button
+            type="submit"
+            className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+          >
+            Save weights
+          </button>
+        </form>
+      </details>
 
       {gb.students.length === 0 ? (
         <p className="text-parchment-dim text-sm">No students registered yet.</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-crimson-700">
+          {/* One hidden form per student — inputs/buttons in the table reference it
+              by id (HTML `form` attribute) so a whole row saves together. */}
+          {gb.students.map((s) => (
+            <form key={`f-${s.userId}`} id={`marks-${s.userId}`} action={setManualMarks}>
+              <input type="hidden" name="sectionId" value={sectionId} />
+              <input type="hidden" name="userId" value={s.userId} />
+            </form>
+          ))}
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-crimson-900 text-left">
-                <th className="px-4 py-3 font-medium text-parchment-dim">Student</th>
-                <th className="px-4 py-3 font-medium text-parchment-dim whitespace-nowrap">
-                  Attendance
-                </th>
-                <th className="px-4 py-3 font-medium text-parchment-dim whitespace-nowrap">Quizzes</th>
-                <th className="px-4 py-3 font-medium text-parchment-dim whitespace-nowrap">Homework</th>
-                <th className="px-4 py-3 font-medium text-parchment-dim whitespace-nowrap">Final Test</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim">Student</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Attendance</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Quizzes</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Homework</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Test</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Midterm</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Final</th>
+                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Grade</th>
+                <th className="px-3 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-crimson-800">
               {gb.students.map((s) => {
-                const attendancePct =
-                  gb.totalLectures > 0 ? (s.watchedCount / gb.totalLectures) * 100 : null;
+                const f = `marks-${s.userId}`;
+                const inputCls =
+                  "w-14 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded px-2 py-1 text-parchment text-sm transition-colors";
                 return (
-                  <tr key={s.userId} className="bg-crimson-950/40">
-                    <td className="px-4 py-3">
+                  <tr key={s.userId} className="bg-crimson-950/40 align-top">
+                    <td className="px-3 py-3">
                       <p className="text-parchment">{s.name ?? "—"}</p>
                       <p className="text-xs text-parchment-dim">{s.email}</p>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={pctClass(attendancePct)}>
-                        {s.watchedCount}/{gb.totalLectures}
-                      </span>
-                      <span className="text-parchment-dim"> · {pct(attendancePct)}</span>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span className={pctClass(s.attendancePct)}>{pct(s.attendancePct)}</span>
+                      <span className="text-parchment-dim text-xs"> ({s.watchedCount}/{gb.totalLectures})</span>
+                      <input
+                        form={f}
+                        name="attendanceOverride"
+                        type="number"
+                        min={0}
+                        max={100}
+                        defaultValue={s.attendanceOverride ?? ""}
+                        placeholder="ovr"
+                        className={`${inputCls} block mt-1`}
+                        title="Attendance override %"
+                      />
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className={pctClass(s.quizAvgPct)}>{pct(s.quizAvgPct)}</span>
-                      <span className="text-parchment-dim"> · {s.quizzesTaken}/{gb.totalQuizzes} taken</span>
+                      <span className="text-parchment-dim text-xs"> ({s.quizzesTaken}/{gb.totalQuizzes})</span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className={pctClass(s.hwPct)}>{pct(s.hwPct)}</span>
-                      <span className="text-parchment-dim"> · {s.hwGradedCount}/{gb.totalAssignments} graded</span>
+                      <span className="text-parchment-dim text-xs"> ({s.hwGradedCount}/{gb.totalAssignments})</span>
                     </td>
-                    <td className={`px-4 py-3 whitespace-nowrap ${pctClass(s.testPct)}`}>
-                      {pct(s.testPct)}
+                    <td className={`px-3 py-3 whitespace-nowrap ${pctClass(s.testPct)}`}>{pct(s.testPct)}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <input
+                        form={f}
+                        name="midtermScore"
+                        type="number"
+                        min={0}
+                        defaultValue={s.midtermScore ?? ""}
+                        className={inputCls}
+                      />
+                      <span className="text-parchment-dim text-xs"> /{gb.config.midtermMax}</span>
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <input
+                        form={f}
+                        name="finalScore"
+                        type="number"
+                        min={0}
+                        defaultValue={s.finalScore ?? ""}
+                        className={inputCls}
+                      />
+                      <span className="text-parchment-dim text-xs"> /{gb.config.finalMax}</span>
+                    </td>
+                    <td className={`px-3 py-3 whitespace-nowrap font-semibold ${pctClass(s.currentGrade)}`}>
+                      {pct(s.currentGrade)}
+                    </td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <button
+                        form={f}
+                        type="submit"
+                        className="text-xs text-gold-400 hover:text-gold-300 transition-colors"
+                      >
+                        Save
+                      </button>
                     </td>
                   </tr>
                 );
