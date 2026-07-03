@@ -1,0 +1,151 @@
+"use server";
+
+// Homework server actions: course-level problem sets + section assignments (admin)
+// and link submissions (students). Mirrors the auth/write patterns in
+// lib/classes.ts and app/admin/achievements/actions.ts.
+
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { checkAdminPassword } from "@/lib/admin-auth";
+
+async function assertAdmin() {
+  const store = await cookies();
+  if (!checkAdminPassword(store.get("admin_auth")?.value ?? null)) {
+    throw new Error("Unauthorized");
+  }
+}
+
+function parseDueAt(raw: FormDataEntryValue | null): Date | null {
+  const s = String(raw ?? "").trim();
+  if (!s) return null;
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+// ---- Problem sets (course-level, public) ----
+
+export async function createProblemSet(formData: FormData) {
+  await assertAdmin();
+  const courseId = String(formData.get("courseId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "");
+  const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim() || null;
+  if (!courseId || !title) throw new Error("Course and title are required");
+  await db.problemSet.create({ data: { courseId, title, body, attachmentUrl } });
+  revalidatePath("/admin/problem-sets");
+  revalidatePath(`/courses/${courseId}`);
+}
+
+export async function updateProblemSet(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const body = String(formData.get("body") ?? "");
+  const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim() || null;
+  if (!id || !title) throw new Error("Missing id or title");
+  const ps = await db.problemSet.update({
+    where: { id },
+    data: { title, body, attachmentUrl },
+    select: { courseId: true },
+  });
+  revalidatePath("/admin/problem-sets");
+  revalidatePath(`/courses/${ps.courseId}`);
+  revalidatePath(`/courses/${ps.courseId}/problems/${id}`);
+}
+
+export async function deleteProblemSet(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing id");
+  const ps = await db.problemSet.delete({ where: { id }, select: { courseId: true } });
+  revalidatePath("/admin/problem-sets");
+  revalidatePath(`/courses/${ps.courseId}`);
+}
+
+// ---- Assignments (section-level) ----
+
+export async function createAssignment(formData: FormData) {
+  await assertAdmin();
+  const sectionId = String(formData.get("sectionId") ?? "");
+  const problemSetId = String(formData.get("problemSetId") ?? "");
+  const points = Math.max(0, parseInt(String(formData.get("points") ?? "100"), 10) || 100);
+  const videoId = String(formData.get("videoId") ?? "").trim() || null;
+  const dueAt = parseDueAt(formData.get("dueAt"));
+  if (!sectionId || !problemSetId) throw new Error("Section and problem set are required");
+  await db.assignment.create({ data: { sectionId, problemSetId, points, videoId, dueAt } });
+  const section = await db.section.findUnique({ where: { id: sectionId }, select: { courseId: true } });
+  revalidatePath(`/admin/classes/${sectionId}`);
+  if (section) revalidatePath(`/courses/${section.courseId}`);
+}
+
+export async function deleteAssignment(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing id");
+  const a = await db.assignment.delete({
+    where: { id },
+    select: { sectionId: true, section: { select: { courseId: true } } },
+  });
+  revalidatePath(`/admin/classes/${a.sectionId}`);
+  revalidatePath(`/courses/${a.section.courseId}`);
+}
+
+export async function gradeSubmission(formData: FormData) {
+  await assertAdmin();
+  const assignmentId = String(formData.get("assignmentId") ?? "");
+  const userId = String(formData.get("userId") ?? "");
+  if (!assignmentId || !userId) throw new Error("Missing assignment or student");
+  const rawScore = String(formData.get("score") ?? "").trim();
+  const score = rawScore === "" ? null : Math.max(0, parseInt(rawScore, 10) || 0);
+  const feedback = String(formData.get("feedback") ?? "").trim() || null;
+  const sub = await db.submission.update({
+    where: { assignmentId_userId: { assignmentId, userId } },
+    data: { score, feedback, gradedAt: score === null ? null : new Date() },
+    select: { assignment: { select: { sectionId: true } } },
+  });
+  revalidatePath(`/admin/classes/${sub.assignment.sectionId}`);
+  revalidatePath(`/admin/classes/${sub.assignment.sectionId}/assignments/${assignmentId}`);
+  revalidatePath("/dashboard");
+}
+
+// ---- Student submission ----
+
+export type SubmitState = { error?: string; success?: string };
+
+export async function submitAssignment(_prev: SubmitState, formData: FormData): Promise<SubmitState> {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return { error: "You must be signed in to submit." };
+  const userId = session.user.id;
+
+  const assignmentId = String(formData.get("assignmentId") ?? "");
+  const url = String(formData.get("url") ?? "").trim();
+  if (!assignmentId) return { error: "Missing assignment." };
+  if (!/^https?:\/\//i.test(url)) return { error: "Paste a link starting with http(s):// to your solution." };
+
+  const assignment = await db.assignment.findUnique({
+    where: { id: assignmentId },
+    select: { sectionId: true, section: { select: { courseId: true } } },
+  });
+  if (!assignment) return { error: "That assignment no longer exists." };
+
+  const enrollment = await db.enrollment.findUnique({
+    where: { sectionId_userId: { sectionId: assignment.sectionId, userId } },
+    select: { status: true },
+  });
+  if (!enrollment || enrollment.status !== "active") {
+    return { error: "You're not registered for this class." };
+  }
+
+  await db.submission.upsert({
+    where: { assignmentId_userId: { assignmentId, userId } },
+    create: { assignmentId, userId, url },
+    update: { url, submittedAt: new Date() },
+  });
+
+  revalidatePath(`/courses/${assignment.section.courseId}`);
+  revalidatePath("/dashboard");
+  return { success: "Submitted — your instructor can now see your link." };
+}

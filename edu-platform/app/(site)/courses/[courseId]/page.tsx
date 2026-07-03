@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 import RegisterForm from "./RegisterForm";
+import SubmitForm from "./SubmitForm";
 
 export const dynamic = "force-dynamic";
 
@@ -107,25 +108,55 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     progress.forEach((p) => watchedSet.add(p.videoId));
   }
 
-  // Class registration — only offered on the currently-active course, and only if
-  // the instructor has created a section (which holds the join code). This never
-  // gates the materials; it only records who's in the live class for grading.
-  let enrolledSectionName: string | null = null;
-  let registrationOpen = false;
-  if (course.isCurrent) {
-    const sections = await db.section.findMany({
-      where: { courseId: course.id },
-      select: { id: true },
+  // Class registration + homework. Registration never gates the materials; it only
+  // records who's in the live class for grading. Problem sets are public; only an
+  // enrolled student sees their section's assignments + a submit box.
+  let myEnrollment: { sectionId: string; sectionName: string } | null = null;
+  if (userId) {
+    const enr = await db.enrollment.findFirst({
+      where: { userId, status: "active", section: { courseId: course.id } },
+      select: { sectionId: true, section: { select: { name: true } } },
     });
-    registrationOpen = sections.length > 0;
-    if (userId && sections.length > 0) {
-      const enr = await db.enrollment.findFirst({
-        where: { userId, status: "active", sectionId: { in: sections.map((s) => s.id) } },
-        select: { section: { select: { name: true } } },
-      });
-      enrolledSectionName = enr?.section.name ?? null;
-    }
+    if (enr) myEnrollment = { sectionId: enr.sectionId, sectionName: enr.section.name };
   }
+
+  // Show the join-code form only on the current course, when a section exists and
+  // the viewer isn't already enrolled.
+  let registrationOpen = false;
+  if (course.isCurrent && !myEnrollment) {
+    registrationOpen = (await db.section.count({ where: { courseId: course.id } })) > 0;
+  }
+
+  // Public problem sets for this course (visible to everyone).
+  const problemSets = await db.problemSet.findMany({
+    where: { courseId: course.id },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true },
+  });
+
+  // The enrolled student's assignments + their own submission on each.
+  const myAssignments = myEnrollment
+    ? (
+        await db.assignment.findMany({
+          where: { sectionId: myEnrollment.sectionId },
+          orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+          include: {
+            problemSet: { select: { id: true, title: true } },
+            submissions: {
+              where: { userId: userId! },
+              select: { url: true, score: true, feedback: true },
+            },
+          },
+        })
+      ).map((a) => ({
+        id: a.id,
+        problemSetId: a.problemSet.id,
+        title: a.problemSet.title,
+        dueAt: a.dueAt,
+        points: a.points,
+        sub: a.submissions[0] ?? null,
+      }))
+    : [];
 
   // Connections live on the subject's canonical (representative) course; a sibling
   // offering inherits them. Resolve to the representative, then load its links.
@@ -204,13 +235,13 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           )}
         </div>
 
-        {course.isCurrent && registrationOpen && (
+        {(myEnrollment || registrationOpen) && (
           <section className="mb-8">
             <div className="bg-crimson-900 border border-gold-500 rounded-xl p-5">
-              {enrolledSectionName ? (
+              {myEnrollment ? (
                 <p className="text-parchment">
                   ✓ You&apos;re registered for this class
-                  <span className="text-gold-300"> — {enrolledSectionName}</span>.
+                  <span className="text-gold-300"> — {myEnrollment.sectionName}</span>.
                 </p>
               ) : userId ? (
                 <>
@@ -231,6 +262,69 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                 </p>
               )}
             </div>
+          </section>
+        )}
+
+        {myAssignments.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Your Homework</h2>
+            <ul className="space-y-3">
+              {myAssignments.map((a) => {
+                const graded = a.sub && a.sub.score !== null;
+                return (
+                  <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="min-w-0">
+                        <Link
+                          href={`/courses/${course.id}/problems/${a.problemSetId}`}
+                          className="font-medium text-parchment hover:text-gold-300 transition-colors"
+                        >
+                          {a.title}
+                        </Link>
+                        <p className="text-xs text-parchment-dim mt-0.5">
+                          {a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"} · {a.points} pts
+                        </p>
+                      </div>
+                      {graded ? (
+                        <span className="text-sm text-gold-300 shrink-0">
+                          {a.sub!.score}/{a.points}
+                        </span>
+                      ) : a.sub ? (
+                        <span className="text-xs text-green-400 shrink-0">submitted · awaiting grade</span>
+                      ) : (
+                        <span className="text-xs text-parchment-dim shrink-0">not submitted</span>
+                      )}
+                    </div>
+                    {graded && a.sub!.feedback && (
+                      <p className="text-sm text-parchment-dim border-l-2 border-crimson-700 pl-3">
+                        {a.sub!.feedback}
+                      </p>
+                    )}
+                    <SubmitForm assignmentId={a.id} currentUrl={a.sub?.url ?? null} />
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        {problemSets.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Problem Sets</h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {problemSets.map((ps) => (
+                <li key={ps.id}>
+                  <Link
+                    href={`/courses/${course.id}/problems/${ps.id}`}
+                    className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group"
+                  >
+                    <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                      {ps.title}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
 

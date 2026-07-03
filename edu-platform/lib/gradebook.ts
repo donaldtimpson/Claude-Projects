@@ -15,6 +15,8 @@ export type StudentRow = {
   quizzesTaken: number;
   quizAvgPct: number | null; // average of best % across quizzes the student attempted
   testPct: number | null; // best course-test %
+  hwGradedCount: number; // # assignments graded for this student
+  hwPct: number | null; // points-weighted % across graded assignments
 };
 
 export type SectionGradebook = {
@@ -22,6 +24,7 @@ export type SectionGradebook = {
   totalLectures: number;
   totalQuizzes: number; // # videos with a published quiz
   hasTest: boolean;
+  totalAssignments: number;
   students: StudentRow[];
 };
 
@@ -51,16 +54,25 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   const quizVideoIds = new Set(videos.filter((v) => v._count.quizQuestions > 0).map((v) => v.id));
   const hasTest = (await db.quizQuestion.count({ where: { courseId, videoId: null, isDraft: false } })) > 0;
 
+  // Assignments belong to the section (not the course) — count them for the header
+  // regardless of roster size.
+  const sectionAssignments = await db.assignment.findMany({
+    where: { sectionId: section.id },
+    select: { id: true, points: true },
+  });
+  const pointsByAssignment = new Map(sectionAssignments.map((a) => [a.id, a.points]));
+
   const base = {
     section: { id: section.id, name: section.name, course: section.course },
     totalLectures: videos.length,
     totalQuizzes: quizVideoIds.size,
     hasTest,
+    totalAssignments: sectionAssignments.length,
   };
 
   if (userIds.length === 0) return { ...base, students: [] };
 
-  const [progress, attempts] = await Promise.all([
+  const [progress, attempts, submissions] = await Promise.all([
     db.videoProgress.findMany({
       where: { userId: { in: userIds }, videoId: { in: videoIds } },
       select: { userId: true },
@@ -72,7 +84,28 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
       },
       select: { userId: true, videoId: true, courseId: true, score: true, totalQuestions: true },
     }),
+    sectionAssignments.length > 0
+      ? db.submission.findMany({
+          where: {
+            userId: { in: userIds },
+            assignmentId: { in: sectionAssignments.map((a) => a.id) },
+            score: { not: null },
+          },
+          select: { userId: true, assignmentId: true, score: true },
+        })
+      : Promise.resolve([] as { userId: string; assignmentId: string; score: number | null }[]),
   ]);
+
+  // Homework: points-weighted % across the student's GRADED assignments.
+  const hwEarned = new Map<string, number>();
+  const hwPossible = new Map<string, number>();
+  const hwCount = new Map<string, number>();
+  for (const s of submissions) {
+    const pts = pointsByAssignment.get(s.assignmentId) ?? 0;
+    hwEarned.set(s.userId, (hwEarned.get(s.userId) ?? 0) + (s.score ?? 0));
+    hwPossible.set(s.userId, (hwPossible.get(s.userId) ?? 0) + pts);
+    hwCount.set(s.userId, (hwCount.get(s.userId) ?? 0) + 1);
+  }
 
   // Attendance: count of watched course-lectures per user.
   const watched = new Map<string, number>();
@@ -101,6 +134,8 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     const quizzesTaken = m ? m.size : 0;
     const quizAvgPct =
       m && m.size > 0 ? [...m.values()].reduce((s, v) => s + v, 0) / m.size : null;
+    const possible = hwPossible.get(e.user.id) ?? 0;
+    const hwPct = possible > 0 ? ((hwEarned.get(e.user.id) ?? 0) / possible) * 100 : null;
     return {
       userId: e.user.id,
       name: e.user.name,
@@ -109,6 +144,8 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
       quizzesTaken,
       quizAvgPct,
       testPct: bestTest.get(e.user.id) ?? null,
+      hwGradedCount: hwCount.get(e.user.id) ?? 0,
+      hwPct,
     };
   });
 

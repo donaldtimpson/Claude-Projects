@@ -28,6 +28,7 @@ model Course {
   resources         CourseResource[]
   announcements     Announcement[]
   sections          Section[]
+  problemSets       ProblemSet[]
   linksFrom         CourseLink[]     @relation("CourseLinkFrom")
   linksTo           CourseLink[]     @relation("CourseLinkTo")
 
@@ -99,6 +100,7 @@ model Video {
   comments        Comment[]
   lectureNote     LectureNote?
   transcript      Transcript?
+  assignments     Assignment[]
 }
 
 model LectureNote {
@@ -162,6 +164,7 @@ model User {
   questionReviews QuestionReview[]
   drillAttempts   DrillAttempt[]
   enrollments     Enrollment[]
+  submissions     Submission[]
 }
 
 // A live class instance Donald teaches against a public Course: its own roster,
@@ -177,6 +180,7 @@ model Section {
 
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
+  assignments Assignment[]
 
   @@index([courseId])
 }
@@ -193,6 +197,61 @@ model Enrollment {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([sectionId, userId])
+  @@index([userId])
+}
+
+// A public, course-level set of homework problems (Markdown + KaTeX, optional
+// attached PDF/link). Visible to everyone on the course page; a Section turns one
+// into a graded Assignment for its roster.
+model ProblemSet {
+  id            String       @id @default(cuid())
+  courseId      String
+  title         String
+  body          String       @default("") // Markdown + KaTeX
+  attachmentUrl String? // optional problem-set PDF / external link
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assignments   Assignment[]
+
+  @@index([courseId])
+}
+
+// A ProblemSet assigned to one Section with a due date + point value. Only the
+// section's enrolled students can submit. Optionally tagged to a lecture.
+model Assignment {
+  id           String       @id @default(cuid())
+  sectionId    String
+  problemSetId String
+  videoId      String? // optional "relates to lecture" tag
+  points       Int          @default(100)
+  dueAt        DateTime?
+  createdAt    DateTime     @default(now())
+
+  section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  problemSet   ProblemSet   @relation(fields: [problemSetId], references: [id], onDelete: Cascade)
+  video        Video?       @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  submissions  Submission[]
+
+  @@index([sectionId])
+}
+
+// A student's homework submission: a pasted link to their solution, plus the
+// instructor's score + feedback once graded.
+model Submission {
+  assignmentId String
+  userId       String
+  url          String
+  submittedAt  DateTime  @default(now())
+  score        Int?
+  feedback     String?
+  gradedAt     DateTime?
+
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([assignmentId, userId])
   @@index([userId])
 }
 

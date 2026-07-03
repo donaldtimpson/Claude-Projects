@@ -16,6 +16,7 @@ const ITEMS: { label: string; href: string; match: (p: string) => boolean }[] = 
       p.startsWith("/admin/links"),
   },
   { label: "Classes", href: "/admin/classes", match: (p) => p.startsWith("/admin/classes") },
+  { label: "Problem Sets", href: "/admin/problem-sets", match: (p) => p.startsWith("/admin/problem-sets") },
   { label: "Comments", href: "/admin/comments", match: (p) => p.startsWith("/admin/comments") },
   { label: "Announcements", href: "/admin/announcements", match: (p) => p.startsWith("/admin/announcements") },
   { label: "Categories", href: "/admin/categories", match: (p) => p.startsWith("/admin/categories") },
