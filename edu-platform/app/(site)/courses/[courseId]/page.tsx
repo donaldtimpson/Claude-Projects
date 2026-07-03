@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
+import RegisterForm from "./RegisterForm";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +107,26 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     progress.forEach((p) => watchedSet.add(p.videoId));
   }
 
+  // Class registration — only offered on the currently-active course, and only if
+  // the instructor has created a section (which holds the join code). This never
+  // gates the materials; it only records who's in the live class for grading.
+  let enrolledSectionName: string | null = null;
+  let registrationOpen = false;
+  if (course.isCurrent) {
+    const sections = await db.section.findMany({
+      where: { courseId: course.id },
+      select: { id: true },
+    });
+    registrationOpen = sections.length > 0;
+    if (userId && sections.length > 0) {
+      const enr = await db.enrollment.findFirst({
+        where: { userId, status: "active", sectionId: { in: sections.map((s) => s.id) } },
+        select: { section: { select: { name: true } } },
+      });
+      enrolledSectionName = enr?.section.name ?? null;
+    }
+  }
+
   // Connections live on the subject's canonical (representative) course; a sibling
   // offering inherits them. Resolve to the representative, then load its links.
   const repId = course.canonicalCourseId ?? course.id;
@@ -182,6 +203,36 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             </div>
           )}
         </div>
+
+        {course.isCurrent && registrationOpen && (
+          <section className="mb-8">
+            <div className="bg-crimson-900 border border-gold-500 rounded-xl p-5">
+              {enrolledSectionName ? (
+                <p className="text-parchment">
+                  ✓ You&apos;re registered for this class
+                  <span className="text-gold-300"> — {enrolledSectionName}</span>.
+                </p>
+              ) : userId ? (
+                <>
+                  <p className="text-parchment font-medium mb-1">Taking this class for a grade?</p>
+                  <p className="text-sm text-parchment-dim mb-3">
+                    Enter the class code you were given to register. This lets your homework be
+                    collected and your grade tracked — every lecture and quiz stays open to
+                    everyone either way.
+                  </p>
+                  <RegisterForm />
+                </>
+              ) : (
+                <p className="text-parchment-dim text-sm">
+                  <Link href="/auth/signin" className="text-gold-400 hover:text-gold-300 transition-colors">
+                    Sign in
+                  </Link>{" "}
+                  and enter your class code to register for this class.
+                </p>
+              )}
+            </div>
+          </section>
+        )}
 
         {connectionGroups.length > 0 && (
           <section className="mb-8 space-y-4">

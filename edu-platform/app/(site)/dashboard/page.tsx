@@ -16,7 +16,7 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [courses, allProgress, me, myBadges, streak, dueCount] = await Promise.all([
+  const [courses, allProgress, me, myBadges, streak, dueCount, myClasses] = await Promise.all([
     db.course.findMany({
       include: { videos: { select: { id: true }, orderBy: { position: "asc" } } },
       orderBy: { createdAt: "asc" },
@@ -29,6 +29,11 @@ export default async function DashboardPage() {
     getUserBadges(userId),
     getStreak(userId),
     getDueCount(userId),
+    db.enrollment.findMany({
+      where: { userId, status: "active" },
+      include: { section: { include: { course: { select: { id: true, title: true } } } } },
+      orderBy: { enrolledAt: "desc" },
+    }),
   ]);
 
   const handlePlaceholder = generateHandle(userId);
@@ -105,6 +110,29 @@ export default async function DashboardPage() {
             Practice drills
           </Link>
         </div>
+
+        {myClasses.length > 0 && (
+          <section className="space-y-4">
+            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+              My Classes
+            </h2>
+            <ul className="space-y-3">
+              {myClasses.map((e) => (
+                <li key={e.sectionId}>
+                  <Link
+                    href={`/courses/${e.section.course.id}`}
+                    className="group block bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
+                  >
+                    <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                      {e.section.course.title}
+                    </p>
+                    <p className="text-xs text-parchment-dim mt-0.5">Registered · {e.section.name}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className="space-y-4">
           <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">

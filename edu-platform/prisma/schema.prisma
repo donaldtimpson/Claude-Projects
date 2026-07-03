@@ -27,6 +27,7 @@ model Course {
   categories        CourseCategory[]
   resources         CourseResource[]
   announcements     Announcement[]
+  sections          Section[]
   linksFrom         CourseLink[]     @relation("CourseLinkFrom")
   linksTo           CourseLink[]     @relation("CourseLinkTo")
 
@@ -160,6 +161,39 @@ model User {
   achievements    UserAchievement[]
   questionReviews QuestionReview[]
   drillAttempts   DrillAttempt[]
+  enrollments     Enrollment[]
+}
+
+// A live class instance Donald teaches against a public Course: its own roster,
+// join code, and (later) assignments + grades. Registration is only open while the
+// linked course is `isCurrent`. gradeConfig holds per-category weights; null until set.
+model Section {
+  id          String       @id @default(cuid())
+  courseId    String
+  name        String       // e.g. "Fall 2026 · Period 3"
+  joinCode    String       @unique
+  gradeConfig Json?
+  createdAt   DateTime     @default(now())
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+
+  @@index([courseId])
+}
+
+// A student's registration in a Section (the roster). Created when a student enters
+// a valid join code for a section on the current course.
+model Enrollment {
+  sectionId  String
+  userId     String
+  enrolledAt DateTime @default(now())
+  status     String   @default("active") // "active" | "dropped"
+
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, userId])
+  @@index([userId])
 }
 
 // One row per completed practice-drill session (/drills). Drills are procedurally
