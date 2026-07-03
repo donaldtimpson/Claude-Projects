@@ -19,13 +19,15 @@ function Pane({
   value,
   onChange,
   placeholder,
+  initialMode,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
+  initialMode: "edit" | "preview";
 }) {
-  const [mode, setMode] = useState<"edit" | "preview">("edit");
+  const [mode, setMode] = useState<"edit" | "preview">(initialMode);
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -62,7 +64,15 @@ function Pane({
   );
 }
 
-export default function ProblemSetEditor({ ps, courseId }: { ps: PS; courseId: string }) {
+export default function ProblemSetEditor({
+  ps,
+  courseId,
+  initialMode = "edit",
+}: {
+  ps: PS;
+  courseId: string;
+  initialMode?: "edit" | "preview";
+}) {
   const router = useRouter();
   const [title, setTitle] = useState(ps.title);
   const [body, setBody] = useState(ps.body);
@@ -126,6 +136,7 @@ export default function ProblemSetEditor({ ps, courseId }: { ps: PS; courseId: s
         label="Problems (public)"
         value={body}
         onChange={setBody}
+        initialMode={initialMode}
         placeholder="**1.** (2 pts ••) …  — Markdown + $…$ / $$…$$ math"
       />
 
@@ -133,6 +144,7 @@ export default function ProblemSetEditor({ ps, courseId }: { ps: PS; courseId: s
         label="Solutions (instructor / released per assignment)"
         value={solution}
         onChange={setSolution}
+        initialMode={initialMode}
         placeholder="Worked solutions — Markdown + math. Students see these only when you release them for their class."
       />
 

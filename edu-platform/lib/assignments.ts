@@ -35,8 +35,8 @@ export async function createProblemSet(formData: FormData) {
   if (!courseId || !title) throw new Error("Course and title are required");
   const ps = await db.problemSet.create({ data: { courseId, title } });
   revalidatePath("/admin/problem-sets");
-  // Straight into the editor to author problems + solution.
-  redirect(`/admin/problem-sets/${ps.id}`);
+  // Straight into the editor (edit mode — it's empty) to author problems + solution.
+  redirect(`/admin/problem-sets/${ps.id}?mode=edit`);
 }
 
 export async function updateProblemSet(formData: FormData) {

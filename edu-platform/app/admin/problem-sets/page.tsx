@@ -79,14 +79,11 @@ export default async function AdminProblemSetsPage() {
               key={ps.id}
               className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-start justify-between gap-4"
             >
-              <div className="min-w-0">
+              <Link href={`/admin/problem-sets/${ps.id}`} className="min-w-0 group">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={`/admin/problem-sets/${ps.id}`}
-                    className="font-medium text-parchment hover:text-gold-300 transition-colors"
-                  >
+                  <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
                     {ps.title}
-                  </Link>
+                  </span>
                   <span
                     className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                       ps.isDraft ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-green-900/30 border-green-700 text-green-300"
@@ -99,7 +96,7 @@ export default async function AdminProblemSetsPage() {
                   {ps.course.title} · assigned to {ps._count.assignments} class
                   {ps._count.assignments === 1 ? "" : "es"}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-3 shrink-0 text-sm">
                 {!ps.isDraft && (
                   <Link
@@ -110,7 +107,10 @@ export default async function AdminProblemSetsPage() {
                     view ↗
                   </Link>
                 )}
-                <Link href={`/admin/problem-sets/${ps.id}`} className="text-gold-400 hover:text-gold-300 transition-colors">
+                <Link
+                  href={`/admin/problem-sets/${ps.id}?mode=edit`}
+                  className="text-gold-400 hover:text-gold-300 transition-colors"
+                >
                   edit
                 </Link>
               </div>

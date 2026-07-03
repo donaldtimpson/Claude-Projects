@@ -7,10 +7,13 @@ export const dynamic = "force-dynamic";
 
 export default async function EditProblemSetPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   const { id } = await params;
+  const initialMode = (await searchParams).mode === "edit" ? "edit" : "preview";
   const ps = await db.problemSet.findUnique({
     where: { id },
     include: { course: { select: { id: true, title: true } } },
@@ -36,6 +39,7 @@ export default async function EditProblemSetPage({
           isDraft: ps.isDraft,
         }}
         courseId={ps.course.id}
+        initialMode={initialMode}
       />
     </main>
   );
