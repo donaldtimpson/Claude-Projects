@@ -15,7 +15,7 @@ export default async function GradeAssignmentPage({
   const assignment = await db.assignment.findUnique({
     where: { id: assignmentId },
     include: {
-      problemSet: { select: { title: true } },
+      problemSet: { select: { title: true, extraCreditPoints: true } },
       section: {
         select: {
           id: true,
@@ -89,12 +89,15 @@ export default async function GradeAssignmentPage({
                       name="score"
                       type="number"
                       min={0}
-                      max={assignment.points}
+                      max={assignment.points + assignment.problemSet.extraCreditPoints}
                       defaultValue={sub.score ?? ""}
                       placeholder="—"
                       className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
                     />
-                    <span className="text-parchment-dim">/ {assignment.points}</span>
+                    <span className="text-parchment-dim">
+                      / {assignment.points}
+                      {assignment.problemSet.extraCreditPoints > 0 ? ` (+${assignment.problemSet.extraCreditPoints} EC)` : ""}
+                    </span>
                   </label>
                   <input
                     name="feedback"

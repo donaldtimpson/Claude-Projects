@@ -37,6 +37,8 @@ export default async function EditProblemSetPage({
           solution: ps.solution,
           attachmentUrl: ps.attachmentUrl,
           isDraft: ps.isDraft,
+          points: ps.points,
+          extraCreditPoints: ps.extraCreditPoints,
         }}
         courseId={ps.course.id}
         initialMode={initialMode}

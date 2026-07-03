@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
-import { createAssignment, deleteAssignment, toggleSolutionsReleased } from "@/lib/assignments";
+import { deleteAssignment, toggleSolutionsReleased } from "@/lib/assignments";
 import { setGradeWeights, setManualMarks } from "@/lib/grades";
+import AssignForm from "./AssignForm";
 
 const fmtDue = (d: Date | null) =>
   d ? new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "no due date";
@@ -31,9 +32,9 @@ export default async function GradebookPage({
 
   const [problemSets, videos, assignments] = await Promise.all([
     db.problemSet.findMany({
-      where: { courseId: gb.section.course.id },
+      where: { courseId: gb.section.course.id, isDraft: false },
       orderBy: { createdAt: "desc" },
-      select: { id: true, title: true },
+      select: { id: true, title: true, points: true },
     }),
     db.video.findMany({
       where: { courseId: gb.section.course.id },
@@ -244,71 +245,14 @@ export default async function GradebookPage({
 
         {problemSets.length === 0 ? (
           <p className="text-sm text-parchment-dim">
-            No problem sets for this course yet.{" "}
+            No published problem sets for this course yet.{" "}
             <Link href="/admin/problem-sets" className="text-gold-400 hover:text-gold-300 transition-colors">
-              Create one
+              Create &amp; publish one
             </Link>{" "}
             first, then assign it here.
           </p>
         ) : (
-          <form action={createAssignment} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
-            <input type="hidden" name="sectionId" value={sectionId} />
-            <div className="flex flex-col sm:flex-row gap-2">
-              <select
-                name="problemSetId"
-                required
-                defaultValue=""
-                className="flex-[2] bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-              >
-                <option value="" disabled>
-                  Problem set…
-                </option>
-                {problemSets.map((ps) => (
-                  <option key={ps.id} value={ps.id}>
-                    {ps.title}
-                  </option>
-                ))}
-              </select>
-              <select
-                name="videoId"
-                defaultValue=""
-                className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-              >
-                <option value="">(optional) relates to lecture…</option>
-                {videos.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <label className="text-sm text-parchment-dim flex items-center gap-2">
-                Points
-                <input
-                  name="points"
-                  type="number"
-                  min={0}
-                  defaultValue={100}
-                  className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-                />
-              </label>
-              <label className="text-sm text-parchment-dim flex items-center gap-2">
-                Due
-                <input
-                  name="dueAt"
-                  type="datetime-local"
-                  className="bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-                />
-              </label>
-              <button
-                type="submit"
-                className="sm:ml-auto font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
-              >
-                Assign
-              </button>
-            </div>
-          </form>
+          <AssignForm sectionId={sectionId} problemSets={problemSets} videos={videos} />
         )}
 
         {assignments.length > 0 && (

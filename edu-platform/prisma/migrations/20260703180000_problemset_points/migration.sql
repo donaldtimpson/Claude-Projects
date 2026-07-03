@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "ProblemSet" ADD COLUMN "points" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "ProblemSet" ADD COLUMN "extraCreditPoints" INTEGER NOT NULL DEFAULT 0;

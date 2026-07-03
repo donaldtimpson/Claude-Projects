@@ -46,10 +46,12 @@ export async function updateProblemSet(formData: FormData) {
   const body = String(formData.get("body") ?? "");
   const solution = String(formData.get("solution") ?? "");
   const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim() || null;
+  const points = Math.max(0, parseInt(String(formData.get("points") ?? "0"), 10) || 0);
+  const extraCreditPoints = Math.max(0, parseInt(String(formData.get("extraCreditPoints") ?? "0"), 10) || 0);
   if (!id || !title) throw new Error("Missing id or title");
   const ps = await db.problemSet.update({
     where: { id },
-    data: { title, body, solution, attachmentUrl },
+    data: { title, body, solution, attachmentUrl, points, extraCreditPoints },
     select: { courseId: true },
   });
   revalidatePath("/admin/problem-sets");

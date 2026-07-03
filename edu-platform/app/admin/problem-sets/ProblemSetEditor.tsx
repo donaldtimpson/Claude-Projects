@@ -12,6 +12,8 @@ type PS = {
   solution: string;
   attachmentUrl: string | null;
   isDraft: boolean;
+  points: number;
+  extraCreditPoints: number;
 };
 
 function Pane({
@@ -78,6 +80,8 @@ export default function ProblemSetEditor({
   const [body, setBody] = useState(ps.body);
   const [solution, setSolution] = useState(ps.solution);
   const [attachmentUrl, setAttachmentUrl] = useState(ps.attachmentUrl ?? "");
+  const [points, setPoints] = useState(ps.points);
+  const [extraCredit, setExtraCredit] = useState(ps.extraCreditPoints);
   const [isDraft, setIsDraft] = useState(ps.isDraft);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -91,6 +95,8 @@ export default function ProblemSetEditor({
     fd.set("body", body);
     fd.set("solution", solution);
     fd.set("attachmentUrl", attachmentUrl);
+    fd.set("points", String(points));
+    fd.set("extraCreditPoints", String(extraCredit));
     await updateProblemSet(fd);
     setSaving(false);
     setSaved(true);
@@ -129,6 +135,32 @@ export default function ProblemSetEditor({
           }`}
         >
           {isDraft ? "Draft" : "Published"}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-4 flex-wrap text-sm">
+        <label className="text-parchment-dim flex items-center gap-2">
+          Points
+          <input
+            type="number"
+            min={0}
+            value={points}
+            onChange={(e) => setPoints(parseInt(e.target.value, 10) || 0)}
+            className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
+          />
+        </label>
+        <label className="text-parchment-dim flex items-center gap-2">
+          Extra credit
+          <input
+            type="number"
+            min={0}
+            value={extraCredit}
+            onChange={(e) => setExtraCredit(parseInt(e.target.value, 10) || 0)}
+            className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
+          />
+        </label>
+        <span className="text-xs text-parchment-dim/70">
+          Core points become the assignment total in the gradebook; extra credit is bonus on top.
         </span>
       </div>
 

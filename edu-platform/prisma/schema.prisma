@@ -217,6 +217,8 @@ model ProblemSet {
   body          String       @default("") // Markdown + KaTeX (the public problems)
   solution      String       @default("") // Markdown + KaTeX worked solutions (admin; released per-assignment)
   isDraft       Boolean      @default(true) // hidden from public until published (like quizzes/notes)
+  points        Int          @default(0) // core graded total (becomes the assignment denominator)
+  extraCreditPoints Int      @default(0) // bonus beyond the core total (not in the denominator)
   attachmentUrl String? // optional problem-set PDF / external link
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
