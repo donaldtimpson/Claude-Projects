@@ -8,7 +8,6 @@ import { db } from "@/lib/db";
 import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 import RegisterForm from "./RegisterForm";
-import SubmitForm from "./SubmitForm";
 
 export const dynamic = "force-dynamic";
 
@@ -134,29 +133,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     select: { id: true, title: true },
   });
 
-  // The enrolled student's assignments + their own submission on each.
-  const myAssignments = myEnrollment
-    ? (
-        await db.assignment.findMany({
-          where: { sectionId: myEnrollment.sectionId },
-          orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
-          include: {
-            problemSet: { select: { id: true, title: true } },
-            submissions: {
-              where: { userId: userId! },
-              select: { url: true, score: true, feedback: true },
-            },
-          },
-        })
-      ).map((a) => ({
-        id: a.id,
-        problemSetId: a.problemSet.id,
-        title: a.problemSet.title,
-        dueAt: a.dueAt,
-        points: a.points,
-        sub: a.submissions[0] ?? null,
-      }))
-    : [];
+  // (Homework moved to the student's class hub: /dashboard/class/[sectionId].)
 
   // Connections live on the subject's canonical (representative) course; a sibling
   // offering inherits them. Resolve to the representative, then load its links.
@@ -235,77 +212,76 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           )}
         </div>
 
-        {(myEnrollment || registrationOpen) && (
-          <section className="mb-8">
-            <div className="bg-crimson-900 border border-gold-500 rounded-xl p-5">
-              {myEnrollment ? (
-                <p className="text-parchment">
-                  ✓ You&apos;re registered for this class
-                  <span className="text-gold-300"> — {myEnrollment.sectionName}</span>.
-                </p>
-              ) : userId ? (
-                <>
-                  <p className="text-parchment font-medium mb-1">Taking this class for a grade?</p>
-                  <p className="text-sm text-parchment-dim mb-3">
-                    Enter the class code you were given to register. This lets your homework be
-                    collected and your grade tracked — every lecture and quiz stays open to
-                    everyone either way.
-                  </p>
-                  <RegisterForm />
-                </>
+        {myEnrollment ? (
+          <div className="mb-8">
+            <Link
+              href={`/dashboard/class/${myEnrollment.sectionId}`}
+              className="inline-flex items-center gap-2 text-sm bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 text-parchment hover:text-gold-300 transition-colors"
+            >
+              ✓ You&apos;re in this class ({myEnrollment.sectionName}) — view your grade &amp; homework →
+            </Link>
+          </div>
+        ) : registrationOpen ? (
+          <details className="mb-8 text-sm">
+            <summary className="cursor-pointer text-parchment-dim hover:text-parchment transition-colors">
+              Taking this class for a grade? Register with your class code
+            </summary>
+            <div className="mt-3 max-w-md">
+              {userId ? (
+                <RegisterForm />
               ) : (
-                <p className="text-parchment-dim text-sm">
+                <p className="text-parchment-dim">
                   <Link href="/auth/signin" className="text-gold-400 hover:text-gold-300 transition-colors">
                     Sign in
                   </Link>{" "}
-                  and enter your class code to register for this class.
+                  and enter your class code to register.
                 </p>
               )}
             </div>
-          </section>
-        )}
+          </details>
+        ) : null}
 
-        {myAssignments.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Your Homework</h2>
-            <ul className="space-y-3">
-              {myAssignments.map((a) => {
-                const graded = a.sub && a.sub.score !== null;
-                return (
-                  <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div className="min-w-0">
-                        <Link
-                          href={`/courses/${course.id}/problems/${a.problemSetId}`}
-                          className="font-medium text-parchment hover:text-gold-300 transition-colors"
-                        >
-                          {a.title}
-                        </Link>
-                        <p className="text-xs text-parchment-dim mt-0.5">
-                          {a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"} · {a.points} pts
-                        </p>
-                      </div>
-                      {graded ? (
-                        <span className="text-sm text-gold-300 shrink-0">
-                          {a.sub!.score}/{a.points}
+        {course.videos.length === 0 ? (
+          <div className="bg-crimson-900 border border-crimson-700 border-dashed rounded-xl p-8 text-center mb-8">
+            <p className="text-parchment-dim">
+              No lectures yet — check back soon for the first video in this course.
+            </p>
+          </div>
+        ) : (
+          <ol className="space-y-3 mb-8">
+          {course.videos.map((video, idx) => {
+            const isWatched = watchedSet.has(video.id);
+            return (
+              <li key={video.id}>
+                <Link
+                  href={`/courses/${course.id}/${video.id}`}
+                  className="group flex gap-4 items-start bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
+                >
+                  <span className="text-parchment-dim text-sm w-6 shrink-0 mt-0.5">{idx + 1}</span>
+                  <div className="relative w-32 aspect-video shrink-0 rounded-md overflow-hidden bg-crimson-800">
+                    <VideoThumb videoId={video.youtubeVideoId} src={video.thumbnailUrl} alt={video.title} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+                      {video.title}
+                    </p>
+                    <p className="text-xs text-parchment-dim mt-1 flex items-center gap-3">
+                      {video.durationSeconds > 0 && <span>{formatDuration(video.durationSeconds)}</span>}
+                      {video._count.comments > 0 && (
+                        <span>
+                          {video._count.comments} comment{video._count.comments === 1 ? "" : "s"}
                         </span>
-                      ) : a.sub ? (
-                        <span className="text-xs text-green-400 shrink-0">submitted · awaiting grade</span>
-                      ) : (
-                        <span className="text-xs text-parchment-dim shrink-0">not submitted</span>
                       )}
-                    </div>
-                    {graded && a.sub!.feedback && (
-                      <p className="text-sm text-parchment-dim border-l-2 border-crimson-700 pl-3">
-                        {a.sub!.feedback}
-                      </p>
-                    )}
-                    <SubmitForm assignmentId={a.id} currentUrl={a.sub?.url ?? null} />
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+                    </p>
+                  </div>
+                  {isWatched && (
+                    <span className="shrink-0 text-green-400 text-sm self-center" title="Watched">✓</span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+          </ol>
         )}
 
         {problemSets.length > 0 && (
@@ -387,48 +363,6 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           </section>
         )}
 
-        {course.videos.length === 0 ? (
-          <div className="bg-crimson-900 border border-crimson-700 border-dashed rounded-xl p-8 text-center">
-            <p className="text-parchment-dim">
-              No lectures yet — check back soon for the first video in this course.
-            </p>
-          </div>
-        ) : (
-          <ol className="space-y-3">
-          {course.videos.map((video, idx) => {
-            const isWatched = watchedSet.has(video.id);
-            return (
-              <li key={video.id}>
-                <Link
-                  href={`/courses/${course.id}/${video.id}`}
-                  className="group flex gap-4 items-start bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
-                >
-                  <span className="text-parchment-dim text-sm w-6 shrink-0 mt-0.5">{idx + 1}</span>
-                  <div className="relative w-32 aspect-video shrink-0 rounded-md overflow-hidden bg-crimson-800">
-                    <VideoThumb videoId={video.youtubeVideoId} src={video.thumbnailUrl} alt={video.title} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
-                      {video.title}
-                    </p>
-                    <p className="text-xs text-parchment-dim mt-1 flex items-center gap-3">
-                      {video.durationSeconds > 0 && <span>{formatDuration(video.durationSeconds)}</span>}
-                      {video._count.comments > 0 && (
-                        <span>
-                          {video._count.comments} comment{video._count.comments === 1 ? "" : "s"}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  {isWatched && (
-                    <span className="shrink-0 text-green-400 text-sm self-center" title="Watched">✓</span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-          </ol>
-        )}
       </div>
     </main>
   );

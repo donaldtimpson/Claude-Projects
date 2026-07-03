@@ -142,34 +142,36 @@ export default async function DashboardPage() {
             </h2>
             <ul className="space-y-3">
               {classGrades.map((c) => (
-                <li key={c.sectionId} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <Link
-                        href={`/courses/${c.courseId}`}
-                        className="text-sm font-medium text-parchment hover:text-gold-300 transition-colors"
-                      >
-                        {c.courseTitle}
-                      </Link>
-                      <p className="text-xs text-parchment-dim mt-0.5">{c.sectionName}</p>
+                <li key={c.sectionId}>
+                  <Link
+                    href={`/dashboard/class/${c.sectionId}`}
+                    className="group block bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                          {c.courseTitle}
+                        </p>
+                        <p className="text-xs text-parchment-dim mt-0.5">{c.sectionName}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={`text-2xl font-bold ${gradeColor(c.row?.currentGrade)}`}>
+                          {gradePct(c.row?.currentGrade)}
+                        </p>
+                        <p className="text-[11px] text-parchment-dim">current grade</p>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className={`text-2xl font-bold ${gradeColor(c.row?.currentGrade)}`}>
-                        {gradePct(c.row?.currentGrade)}
-                      </p>
-                      <p className="text-[11px] text-parchment-dim">current grade</p>
-                    </div>
-                  </div>
-                  {c.row && (
-                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-parchment-dim">
-                      <span>Attendance <span className={gradeColor(c.row.attendancePct)}>{gradePct(c.row.attendancePct)}</span></span>
-                      <span>Quizzes <span className={gradeColor(c.row.quizAvgPct)}>{gradePct(c.row.quizAvgPct)}</span></span>
-                      <span>Homework <span className={gradeColor(c.row.hwPct)}>{gradePct(c.row.hwPct)}</span></span>
-                      <span>Final Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
-                      <span>Midterm <span className={gradeColor(c.row.midtermPct)}>{gradePct(c.row.midtermPct)}</span></span>
-                      <span>Final <span className={gradeColor(c.row.finalPct)}>{gradePct(c.row.finalPct)}</span></span>
-                    </div>
-                  )}
+                    {c.row && (
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-parchment-dim">
+                        <span>Attendance <span className={gradeColor(c.row.attendancePct)}>{gradePct(c.row.attendancePct)}</span></span>
+                        <span>Quizzes <span className={gradeColor(c.row.quizAvgPct)}>{gradePct(c.row.quizAvgPct)}</span></span>
+                        <span>Homework <span className={gradeColor(c.row.hwPct)}>{gradePct(c.row.hwPct)}</span></span>
+                        <span>Final Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
+                        <span>Midterm <span className={gradeColor(c.row.midtermPct)}>{gradePct(c.row.midtermPct)}</span></span>
+                        <span>Final <span className={gradeColor(c.row.finalPct)}>{gradePct(c.row.finalPct)}</span></span>
+                      </div>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>
