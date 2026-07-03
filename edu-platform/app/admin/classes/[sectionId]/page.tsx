@@ -2,12 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
-import { deleteAssignment, toggleSolutionsReleased } from "@/lib/assignments";
+import { deleteAssignment, toggleSolutionsReleased, updateAssignment } from "@/lib/assignments";
 import { setGradeWeights, setManualMarks } from "@/lib/grades";
 import AssignForm from "./AssignForm";
 
 const fmtDue = (d: Date | null) =>
   d ? new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "no due date";
+
+// Prefill a <input type="datetime-local"> — "YYYY-MM-DDTHH:mm" (round-trips with parseDueAt's new Date()).
+const toDueInput = (d: Date | null) => (d ? new Date(d).toISOString().slice(0, 16) : "");
 
 export const dynamic = "force-dynamic";
 
@@ -260,42 +263,87 @@ export default async function GradebookPage({
             {assignments.map((a) => (
               <li
                 key={a.id}
-                className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center justify-between gap-4"
+                className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3"
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-parchment truncate">{a.title ?? a.problemSet.title}</p>
-                  <p className="text-xs text-parchment-dim mt-0.5">
-                    {a.title ? `${a.problemSet.title} · ` : ""}Due {fmtDue(a.dueAt)} · {a.points} pts · {a._count.submissions}/{gb.students.length} submitted
-                  </p>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-parchment truncate">{a.title ?? a.problemSet.title}</p>
+                    <p className="text-xs text-parchment-dim mt-0.5">
+                      {a.title ? `${a.problemSet.title} · ` : ""}Due {fmtDue(a.dueAt)} · {a.points} pts · {a._count.submissions}/{gb.students.length} submitted
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 text-sm">
+                    <form action={toggleSolutionsReleased}>
+                      <input type="hidden" name="assignmentId" value={a.id} />
+                      <button
+                        type="submit"
+                        className={
+                          a.solutionsReleased
+                            ? "text-green-400 hover:text-green-300 transition-colors"
+                            : "text-parchment-dim hover:text-gold-300 transition-colors"
+                        }
+                        title="Toggle whether students in this class can see the solution"
+                      >
+                        {a.solutionsReleased ? "solutions: shown" : "solutions: hidden"}
+                      </button>
+                    </form>
+                    <Link
+                      href={`/admin/classes/${sectionId}/assignments/${a.id}`}
+                      className="text-gold-400 hover:text-gold-300 transition-colors"
+                    >
+                      Grade →
+                    </Link>
+                    <form action={deleteAssignment}>
+                      <input type="hidden" name="id" value={a.id} />
+                      <button type="submit" className="text-parchment-dim hover:text-red-400 transition-colors">
+                        delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 text-sm">
-                  <form action={toggleSolutionsReleased}>
-                    <input type="hidden" name="assignmentId" value={a.id} />
+
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
+                    edit
+                  </summary>
+                  <form action={updateAssignment} className="mt-3 flex flex-wrap items-end gap-3">
+                    <input type="hidden" name="id" value={a.id} />
+                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                      Label
+                      <input
+                        name="title"
+                        defaultValue={a.title ?? ""}
+                        placeholder={a.problemSet.title}
+                        className="w-56 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                      Points
+                      <input
+                        name="points"
+                        type="number"
+                        min={0}
+                        defaultValue={a.points}
+                        className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                      Due date (empty = none)
+                      <input
+                        name="dueAt"
+                        type="datetime-local"
+                        defaultValue={toDueInput(a.dueAt)}
+                        className="bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                      />
+                    </label>
                     <button
                       type="submit"
-                      className={
-                        a.solutionsReleased
-                          ? "text-green-400 hover:text-green-300 transition-colors"
-                          : "text-parchment-dim hover:text-gold-300 transition-colors"
-                      }
-                      title="Toggle whether students in this class can see the solution"
+                      className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
                     >
-                      {a.solutionsReleased ? "solutions: shown" : "solutions: hidden"}
+                      Save
                     </button>
                   </form>
-                  <Link
-                    href={`/admin/classes/${sectionId}/assignments/${a.id}`}
-                    className="text-gold-400 hover:text-gold-300 transition-colors"
-                  >
-                    Grade →
-                  </Link>
-                  <form action={deleteAssignment}>
-                    <input type="hidden" name="id" value={a.id} />
-                    <button type="submit" className="text-parchment-dim hover:text-red-400 transition-colors">
-                      delete
-                    </button>
-                  </form>
-                </div>
+                </details>
               </li>
             ))}
           </ul>

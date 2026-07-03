@@ -120,6 +120,23 @@ export async function createAssignment(formData: FormData) {
   if (section) revalidatePath(`/courses/${section.courseId}`);
 }
 
+export async function updateAssignment(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing assignment");
+  const title = String(formData.get("title") ?? "").trim() || null;
+  const points = Math.max(0, parseInt(String(formData.get("points") ?? "0"), 10) || 0);
+  const dueAt = parseDueAt(formData.get("dueAt")); // empty clears the due date
+  const a = await db.assignment.update({
+    where: { id },
+    data: { title, points, dueAt },
+    select: { sectionId: true, section: { select: { courseId: true } } },
+  });
+  revalidatePath(`/admin/classes/${a.sectionId}`);
+  revalidatePath(`/courses/${a.section.courseId}`);
+  revalidatePath("/dashboard");
+}
+
 export async function deleteAssignment(formData: FormData) {
   await assertAdmin();
   const id = String(formData.get("id") ?? "");
