@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MarkdownNotes from "./MarkdownNotes";
 
 export default function LectureNotes({ content, printHref }: { content: string; printHref: string }) {
   const [open, setOpen] = useState(false);
+
+  // Auto-expand when the page targets the notes (the lecture "Notes" jump link, or
+  // landing on the page with #notes) — otherwise jumping to an already-visible
+  // collapsed header feels like nothing happened.
+  useEffect(() => {
+    const openIfTargeted = () => {
+      if (window.location.hash === "#notes") setOpen(true);
+    };
+    openIfTargeted();
+    window.addEventListener("hashchange", openIfTargeted);
+    return () => window.removeEventListener("hashchange", openIfTargeted);
+  }, []);
 
   return (
     <section className="border border-crimson-700 rounded-xl overflow-hidden">
