@@ -98,7 +98,10 @@ export default async function AdminClassesPage() {
                     <Link href={`/courses/${s.course.id}`} className="hover:text-gold-300 transition-colors">
                       {s.course.title}
                     </Link>{" "}
-                    · {s.enrollments.length} student{s.enrollments.length === 1 ? "" : "s"}
+                    · {s.enrollments.length} student{s.enrollments.length === 1 ? "" : "s"} ·{" "}
+                    <Link href={`/admin/classes/${s.id}`} className="text-gold-400 hover:text-gold-300 transition-colors">
+                      Gradebook →
+                    </Link>
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
