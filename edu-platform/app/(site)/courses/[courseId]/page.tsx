@@ -126,9 +126,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     registrationOpen = (await db.section.count({ where: { courseId: course.id } })) > 0;
   }
 
-  // Public problem sets for this course (visible to everyone).
+  // Public problem sets for this course (published only; drafts are admin-only).
   const problemSets = await db.problemSet.findMany({
-    where: { courseId: course.id },
+    where: { courseId: course.id, isDraft: false },
     orderBy: { createdAt: "desc" },
     select: { id: true, title: true },
   });

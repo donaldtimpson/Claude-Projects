@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
-import { createAssignment, deleteAssignment } from "@/lib/assignments";
+import { createAssignment, deleteAssignment, toggleSolutionsReleased } from "@/lib/assignments";
 import { setGradeWeights, setManualMarks } from "@/lib/grades";
 
 const fmtDue = (d: Date | null) =>
@@ -325,6 +325,20 @@ export default async function GradebookPage({
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 text-sm">
+                  <form action={toggleSolutionsReleased}>
+                    <input type="hidden" name="assignmentId" value={a.id} />
+                    <button
+                      type="submit"
+                      className={
+                        a.solutionsReleased
+                          ? "text-green-400 hover:text-green-300 transition-colors"
+                          : "text-parchment-dim hover:text-gold-300 transition-colors"
+                      }
+                      title="Toggle whether students in this class can see the solution"
+                    >
+                      {a.solutionsReleased ? "solutions: shown" : "solutions: hidden"}
+                    </button>
+                  </form>
                   <Link
                     href={`/admin/classes/${sectionId}/assignments/${a.id}`}
                     className="text-gold-400 hover:text-gold-300 transition-colors"

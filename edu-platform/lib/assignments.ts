@@ -5,6 +5,7 @@
 // lib/classes.ts and app/admin/achievements/actions.ts.
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -31,12 +32,11 @@ export async function createProblemSet(formData: FormData) {
   await assertAdmin();
   const courseId = String(formData.get("courseId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
-  const body = String(formData.get("body") ?? "");
-  const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim() || null;
   if (!courseId || !title) throw new Error("Course and title are required");
-  await db.problemSet.create({ data: { courseId, title, body, attachmentUrl } });
+  const ps = await db.problemSet.create({ data: { courseId, title } });
   revalidatePath("/admin/problem-sets");
-  revalidatePath(`/courses/${courseId}`);
+  // Straight into the editor to author problems + solution.
+  redirect(`/admin/problem-sets/${ps.id}`);
 }
 
 export async function updateProblemSet(formData: FormData) {
@@ -44,16 +44,52 @@ export async function updateProblemSet(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const title = String(formData.get("title") ?? "").trim();
   const body = String(formData.get("body") ?? "");
+  const solution = String(formData.get("solution") ?? "");
   const attachmentUrl = String(formData.get("attachmentUrl") ?? "").trim() || null;
   if (!id || !title) throw new Error("Missing id or title");
   const ps = await db.problemSet.update({
     where: { id },
-    data: { title, body, attachmentUrl },
+    data: { title, body, solution, attachmentUrl },
     select: { courseId: true },
   });
   revalidatePath("/admin/problem-sets");
+  revalidatePath(`/admin/problem-sets/${id}`);
   revalidatePath(`/courses/${ps.courseId}`);
   revalidatePath(`/courses/${ps.courseId}/problems/${id}`);
+}
+
+// Publish / unpublish a problem set (draft gate, like quizzes/notes).
+export async function setProblemSetDraft(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  const isDraft = String(formData.get("isDraft") ?? "") === "true";
+  if (!id) throw new Error("Missing id");
+  const ps = await db.problemSet.update({
+    where: { id },
+    data: { isDraft },
+    select: { courseId: true },
+  });
+  revalidatePath("/admin/problem-sets");
+  revalidatePath(`/admin/problem-sets/${id}`);
+  revalidatePath(`/courses/${ps.courseId}`);
+}
+
+// Instructor-controlled per-assignment toggle to reveal the solution to a section.
+export async function toggleSolutionsReleased(formData: FormData) {
+  await assertAdmin();
+  const assignmentId = String(formData.get("assignmentId") ?? "");
+  if (!assignmentId) throw new Error("Missing assignment");
+  const a = await db.assignment.findUnique({
+    where: { id: assignmentId },
+    select: { sectionId: true, solutionsReleased: true },
+  });
+  if (!a) throw new Error("Assignment not found");
+  await db.assignment.update({
+    where: { id: assignmentId },
+    data: { solutionsReleased: !a.solutionsReleased },
+  });
+  revalidatePath(`/admin/classes/${a.sectionId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function deleteProblemSet(formData: FormData) {

@@ -214,7 +214,9 @@ model ProblemSet {
   id            String       @id @default(cuid())
   courseId      String
   title         String
-  body          String       @default("") // Markdown + KaTeX
+  body          String       @default("") // Markdown + KaTeX (the public problems)
+  solution      String       @default("") // Markdown + KaTeX worked solutions (admin; released per-assignment)
+  isDraft       Boolean      @default(true) // hidden from public until published (like quizzes/notes)
   attachmentUrl String? // optional problem-set PDF / external link
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -234,6 +236,7 @@ model Assignment {
   videoId      String? // optional "relates to lecture" tag
   points       Int          @default(100)
   dueAt        DateTime?
+  solutionsReleased Boolean  @default(false) // instructor-controlled: reveal the solution to this section
   createdAt    DateTime     @default(now())
 
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)

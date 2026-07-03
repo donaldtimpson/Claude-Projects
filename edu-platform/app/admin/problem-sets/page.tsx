@@ -4,8 +4,8 @@ import { createProblemSet } from "@/lib/assignments";
 
 export const dynamic = "force-dynamic";
 
-// Admin: author course-level problem sets. These are PUBLIC (shown on the course
-// page for everyone); a section turns one into a graded assignment for its roster.
+// Admin: author course-level problem sets (problems + solutions). Problems are
+// PUBLIC once published; solutions are released to students per-assignment.
 export default async function AdminProblemSetsPage() {
   const [courses, problemSets] = await Promise.all([
     db.course.findMany({
@@ -13,8 +13,11 @@ export default async function AdminProblemSetsPage() {
       select: { id: true, title: true, isCurrent: true },
     }),
     db.problemSet.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
+      orderBy: [{ isDraft: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        title: true,
+        isDraft: true,
         course: { select: { id: true, title: true } },
         _count: { select: { assignments: true } },
       },
@@ -26,9 +29,9 @@ export default async function AdminProblemSetsPage() {
       <div>
         <h1 className="text-2xl font-bold text-parchment">Problem Sets</h1>
         <p className="text-sm text-parchment-dim mt-1">
-          Course-level homework problems (Markdown + math). These are <strong>public</strong> — anyone
-          can read them on the course page. Assign one to a class (in Classes) to collect graded
-          submissions from your roster.
+          Course-level homework (problems + solutions, Markdown + math). Problems are{" "}
+          <strong>public once published</strong>; solutions are revealed to students per class when you
+          release them. Assign a published set to a class (in Classes) to collect graded submissions.
         </p>
       </div>
 
@@ -54,29 +57,17 @@ export default async function AdminProblemSetsPage() {
           <input
             name="title"
             required
-            placeholder="Title (e.g. Homework 1 — Capacitors)"
+            placeholder="Title (e.g. Homework 21 — Electric Charge & the Field)"
             autoComplete="off"
             className="flex-[2] bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
           />
+          <button
+            type="submit"
+            className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2.5 font-semibold transition-colors"
+          >
+            Create &amp; edit
+          </button>
         </div>
-        <textarea
-          name="body"
-          rows={6}
-          placeholder="Problem text — Markdown supported; math with $…$ and $$…$$ (KaTeX)."
-          className="w-full bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 font-mono text-sm transition-colors"
-        />
-        <input
-          name="attachmentUrl"
-          placeholder="Optional attachment URL (e.g. a GitHub-hosted PDF)"
-          autoComplete="off"
-          className="w-full bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
-        />
-        <button
-          type="submit"
-          className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2.5 font-semibold transition-colors"
-        >
-          Create problem set
-        </button>
       </form>
 
       {problemSets.length === 0 ? (
@@ -89,24 +80,37 @@ export default async function AdminProblemSetsPage() {
               className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-start justify-between gap-4"
             >
               <div className="min-w-0">
-                <p className="font-medium text-parchment">{ps.title}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Link
+                    href={`/admin/problem-sets/${ps.id}`}
+                    className="font-medium text-parchment hover:text-gold-300 transition-colors"
+                  >
+                    {ps.title}
+                  </Link>
+                  <span
+                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                      ps.isDraft ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-green-900/30 border-green-700 text-green-300"
+                    }`}
+                  >
+                    {ps.isDraft ? "Draft" : "Published"}
+                  </span>
+                </div>
                 <p className="text-xs text-parchment-dim mt-0.5">
                   {ps.course.title} · assigned to {ps._count.assignments} class
                   {ps._count.assignments === 1 ? "" : "es"}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0 text-sm">
-                <Link
-                  href={`/courses/${ps.course.id}/problems/${ps.id}`}
-                  target="_blank"
-                  className="text-parchment-dim hover:text-gold-300 transition-colors"
-                >
-                  view ↗
-                </Link>
-                <Link
-                  href={`/admin/problem-sets/${ps.id}`}
-                  className="text-gold-400 hover:text-gold-300 transition-colors"
-                >
+                {!ps.isDraft && (
+                  <Link
+                    href={`/courses/${ps.course.id}/problems/${ps.id}`}
+                    target="_blank"
+                    className="text-parchment-dim hover:text-gold-300 transition-colors"
+                  >
+                    view ↗
+                  </Link>
+                )}
+                <Link href={`/admin/problem-sets/${ps.id}`} className="text-gold-400 hover:text-gold-300 transition-colors">
                   edit
                 </Link>
               </div>

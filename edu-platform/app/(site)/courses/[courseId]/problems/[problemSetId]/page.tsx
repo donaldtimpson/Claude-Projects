@@ -17,7 +17,7 @@ export default async function ProblemSetPage({
     where: { id: problemSetId },
     include: { course: { select: { id: true, title: true } } },
   });
-  if (!ps || ps.courseId !== courseId) notFound();
+  if (!ps || ps.courseId !== courseId || ps.isDraft) notFound();
 
   return (
     <main className="flex-1">
