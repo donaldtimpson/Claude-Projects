@@ -236,6 +236,7 @@ model Assignment {
   sectionId    String
   problemSetId String
   videoId      String? // optional "relates to lecture" tag
+  title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's title
   points       Int          @default(100)
   dueAt        DateTime?
   solutionsReleased Boolean  @default(false) // instructor-controlled: reveal the solution to this section

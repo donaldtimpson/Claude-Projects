@@ -166,9 +166,10 @@ export default async function ClassHubPage({
                           href={`/courses/${courseId}/problems/${a.problemSet.id}`}
                           className="font-medium text-parchment hover:text-gold-300 transition-colors"
                         >
-                          {a.problemSet.title}
+                          {a.title ?? a.problemSet.title}
                         </Link>
                         <p className="text-xs text-parchment-dim mt-0.5">
+                          {a.title ? `${a.problemSet.title} · ` : ""}
                           {a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"} · {a.points} pts
                         </p>
                       </div>

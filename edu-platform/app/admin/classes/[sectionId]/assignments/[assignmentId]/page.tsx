@@ -42,8 +42,9 @@ export default async function GradeAssignmentPage({
         <Link href={`/admin/classes/${sectionId}`} className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← {assignment.section.name}
         </Link>
-        <h1 className="text-2xl font-bold text-parchment mt-2">{assignment.problemSet.title}</h1>
+        <h1 className="text-2xl font-bold text-parchment mt-2">{assignment.title ?? assignment.problemSet.title}</h1>
         <p className="text-sm text-parchment-dim mt-1">
+          {assignment.title ? `${assignment.problemSet.title} · ` : ""}
           {assignment.points} points · {assignment.submissions.length}/{assignment.section.enrollments.length} submitted
         </p>
       </div>

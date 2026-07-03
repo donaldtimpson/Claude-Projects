@@ -29,6 +29,12 @@ export default function AssignForm({
   return (
     <form action={createAssignment} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
       <input type="hidden" name="sectionId" value={sectionId} />
+      <input
+        name="title"
+        placeholder="Label (optional, e.g. Homework 1) — defaults to the problem set's name"
+        autoComplete="off"
+        className={`w-full ${inputCls} placeholder:text-parchment-dim/60`}
+      />
       <div className="flex flex-col sm:flex-row gap-2">
         <select
           name="problemSetId"

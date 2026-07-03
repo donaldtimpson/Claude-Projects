@@ -263,9 +263,9 @@ export default async function GradebookPage({
                 className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-center justify-between gap-4"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-parchment truncate">{a.problemSet.title}</p>
+                  <p className="text-sm font-medium text-parchment truncate">{a.title ?? a.problemSet.title}</p>
                   <p className="text-xs text-parchment-dim mt-0.5">
-                    Due {fmtDue(a.dueAt)} · {a.points} pts · {a._count.submissions}/{gb.students.length} submitted
+                    {a.title ? `${a.problemSet.title} · ` : ""}Due {fmtDue(a.dueAt)} · {a.points} pts · {a._count.submissions}/{gb.students.length} submitted
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0 text-sm">

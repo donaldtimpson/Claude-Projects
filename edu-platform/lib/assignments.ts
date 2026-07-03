@@ -111,9 +111,10 @@ export async function createAssignment(formData: FormData) {
   const problemSetId = String(formData.get("problemSetId") ?? "");
   const points = Math.max(0, parseInt(String(formData.get("points") ?? "100"), 10) || 100);
   const videoId = String(formData.get("videoId") ?? "").trim() || null;
+  const title = String(formData.get("title") ?? "").trim() || null;
   const dueAt = parseDueAt(formData.get("dueAt"));
   if (!sectionId || !problemSetId) throw new Error("Section and problem set are required");
-  await db.assignment.create({ data: { sectionId, problemSetId, points, videoId, dueAt } });
+  await db.assignment.create({ data: { sectionId, problemSetId, points, videoId, dueAt, title } });
   const section = await db.section.findUnique({ where: { id: sectionId }, select: { courseId: true } });
   revalidatePath(`/admin/classes/${sectionId}`);
   if (section) revalidatePath(`/courses/${section.courseId}`);
