@@ -114,6 +114,9 @@ export default async function VideoPage({
     !nextVideo &&
     (await db.quizQuestion.count({ where: { courseId, videoId: null, isDraft: false } })) > 0;
 
+  const hasNotes = !!note && !note.isDraft;
+  const hasQuiz = questions.length > 0;
+
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -184,40 +187,74 @@ export default async function VideoPage({
           )}
         </div>
 
+        {/* In-page jump nav — skip straight to notes / quiz / discussion */}
+        {(hasNotes || hasQuiz) && (
+          <nav className="flex flex-wrap gap-2">
+            {hasNotes && (
+              <a
+                href="#notes"
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                Notes
+              </a>
+            )}
+            {hasQuiz && (
+              <a
+                href="#quiz"
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                Quiz
+              </a>
+            )}
+            <a
+              href="#discussion"
+              className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+            >
+              Discussion
+            </a>
+          </nav>
+        )}
+
         {/* Lecture notes (only when published) */}
         {note && !note.isDraft && (
-          <LectureNotes content={note.content} printHref={`/courses/${courseId}/${video.id}/notes`} />
+          <div id="notes" className="scroll-mt-24">
+            <LectureNotes content={note.content} printHref={`/courses/${courseId}/${video.id}/notes`} />
+          </div>
         )}
 
         {/* Quiz */}
         {questions.length > 0 && (
-          <QuizPlayer
-            questions={questions.map((q) => ({
-              id: q.id,
-              prompt: q.prompt,
-              options: q.options as string[],
-              correctIndex: q.correctIndex,
-              explanation: q.explanation,
-            }))}
-            onAttemptComplete={saveAttempt}
-          />
+          <div id="quiz" className="scroll-mt-24">
+            <QuizPlayer
+              questions={questions.map((q) => ({
+                id: q.id,
+                prompt: q.prompt,
+                options: q.options as string[],
+                correctIndex: q.correctIndex,
+                explanation: q.explanation,
+              }))}
+              onAttemptComplete={saveAttempt}
+            />
+          </div>
         )}
 
         {/* Hall of Aces */}
         {questions.length > 0 && <QuizAces acers={aces} myUserId={userId} />}
 
         {/* Comments */}
-        <CommentSection
-          videoId={video.id}
-          userId={userId}
-          userName={session?.user?.name ?? null}
-          initialComments={comments.map((c) => ({
-            id: c.id,
-            body: c.body,
-            createdAt: c.createdAt.toISOString(),
-            user: { id: c.user.id, name: c.user.name ?? "Student" },
-          }))}
-        />
+        <div id="discussion" className="scroll-mt-24">
+          <CommentSection
+            videoId={video.id}
+            userId={userId}
+            userName={session?.user?.name ?? null}
+            initialComments={comments.map((c) => ({
+              id: c.id,
+              body: c.body,
+              createdAt: c.createdAt.toISOString(),
+              user: { id: c.user.id, name: c.user.name ?? "Student" },
+            }))}
+          />
+        </div>
 
         {/* Prev / Next navigation */}
         <div className="flex justify-between gap-4 pt-4 border-t border-crimson-700">
