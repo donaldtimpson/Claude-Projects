@@ -64,26 +64,28 @@ export default async function ProblemSetPage({
           <p className="text-parchment-dim">See the attachment above for the problems.</p>
         )}
 
-        {/* Prev / Next navigation */}
+        {/* Prev / Next navigation — matches the lecture page's quick nav buttons */}
         {(prevSet || nextSet) && (
-          <div className="flex justify-between gap-4 pt-4 border-t border-crimson-700">
+          <div className="flex items-center justify-between gap-3 pt-4 border-t border-crimson-700">
             {prevSet ? (
               <Link
                 href={`/courses/${courseId}/problems/${prevSet.id}`}
-                className="text-sm text-parchment-dim hover:text-parchment transition-colors"
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
-                ← {prevSet.title}
+                ← Previous
               </Link>
             ) : (
               <span />
             )}
-            {nextSet && (
+            {nextSet ? (
               <Link
                 href={`/courses/${courseId}/problems/${nextSet.id}`}
-                className="text-sm text-parchment-dim hover:text-parchment transition-colors text-right"
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
-                {nextSet.title} →
+                Next →
               </Link>
+            ) : (
+              <span />
             )}
           </div>
         )}
