@@ -129,7 +129,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   // Public problem sets for this course (published only; drafts are admin-only).
   const problemSets = await db.problemSet.findMany({
     where: { courseId: course.id, isDraft: false },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: "asc" },
     select: { id: true, title: true },
   });
 
