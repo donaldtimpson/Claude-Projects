@@ -19,6 +19,18 @@ export default async function ProblemSetPage({
   });
   if (!ps || ps.courseId !== courseId || ps.isDraft) notFound();
 
+  // Sibling problem sets (published only) for prev/next nav — same order as the
+  // course page lists them (oldest first).
+  const siblings = await db.problemSet.findMany({
+    where: { courseId, isDraft: false },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, title: true },
+  });
+  const currentIdx = siblings.findIndex((s) => s.id === ps.id);
+  const prevSet = currentIdx > 0 ? siblings[currentIdx - 1] : null;
+  const nextSet =
+    currentIdx >= 0 && currentIdx < siblings.length - 1 ? siblings[currentIdx + 1] : null;
+
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -50,6 +62,30 @@ export default async function ProblemSetPage({
           <MarkdownNotes content={ps.body} />
         ) : (
           <p className="text-parchment-dim">See the attachment above for the problems.</p>
+        )}
+
+        {/* Prev / Next navigation */}
+        {(prevSet || nextSet) && (
+          <div className="flex justify-between gap-4 pt-4 border-t border-crimson-700">
+            {prevSet ? (
+              <Link
+                href={`/courses/${courseId}/problems/${prevSet.id}`}
+                className="text-sm text-parchment-dim hover:text-parchment transition-colors"
+              >
+                ← {prevSet.title}
+              </Link>
+            ) : (
+              <span />
+            )}
+            {nextSet && (
+              <Link
+                href={`/courses/${courseId}/problems/${nextSet.id}`}
+                className="text-sm text-parchment-dim hover:text-parchment transition-colors text-right"
+              >
+                {nextSet.title} →
+              </Link>
+            )}
+          </div>
         )}
       </div>
     </main>
