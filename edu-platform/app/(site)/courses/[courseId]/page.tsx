@@ -241,6 +241,36 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           </details>
         ) : null}
 
+        {course.resources.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Resources</h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {course.resources.map(({ resource }) => (
+                <li key={resource.id}>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group h-full"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
+                          {resource.title}
+                        </p>
+                        <p className="text-xs text-parchment-dim mt-0.5">
+                          {resource.description || RESOURCE_KIND_LABELS[resource.kind]}
+                        </p>
+                      </div>
+                      <span className="text-parchment-dim group-hover:text-gold-300 transition-colors shrink-0">↗</span>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {course.videos.length === 0 ? (
           <div className="bg-crimson-900 border border-crimson-700 border-dashed rounded-xl p-8 text-center mb-8">
             <p className="text-parchment-dim">
@@ -331,36 +361,6 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           <div className="mb-8">
             <AnnouncementsFeed announcements={announcements} showScope />
           </div>
-        )}
-
-        {course.resources.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Resources</h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {course.resources.map(({ resource }) => (
-                <li key={resource.id}>
-                  <a
-                    href={resource.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group h-full"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
-                          {resource.title}
-                        </p>
-                        <p className="text-xs text-parchment-dim mt-0.5">
-                          {resource.description || RESOURCE_KIND_LABELS[resource.kind]}
-                        </p>
-                      </div>
-                      <span className="text-parchment-dim group-hover:text-gold-300 transition-colors shrink-0">↗</span>
-                    </div>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
         )}
 
       </div>
