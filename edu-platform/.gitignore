@@ -50,6 +50,9 @@ next-env.d.ts
 # lecture-notes pipeline (derived/ephemeral data)
 /scripts/notes/
 
+# problem-set pipeline (authored drafts; DB is source of truth after import)
+/scripts/problem-sets/
+
 # youtube-chapters pipeline (derived/ephemeral data)
 /scripts/transcripts-timed/
 /scripts/chapters/
