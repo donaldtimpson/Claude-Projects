@@ -45,7 +45,7 @@ export default async function ClassHubPage({
   const assignments = (
     await db.assignment.findMany({
       where: { sectionId },
-      orderBy: [{ dueAt: "asc" }, { createdAt: "desc" }],
+      orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }],
       include: {
         problemSet: { select: { id: true, title: true, solution: true } },
         submissions: { where: { userId }, select: { url: true, score: true, feedback: true } },

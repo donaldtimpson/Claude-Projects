@@ -46,7 +46,7 @@ export default async function GradebookPage({
     }),
     db.assignment.findMany({
       where: { sectionId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       include: {
         problemSet: { select: { title: true } },
         _count: { select: { submissions: true } },
