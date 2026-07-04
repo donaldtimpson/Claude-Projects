@@ -4,25 +4,33 @@ import { createProblemSet } from "@/lib/assignments";
 
 export const dynamic = "force-dynamic";
 
-// Admin: author course-level problem sets (problems + solutions). Problems are
-// PUBLIC once published; solutions are released to students per-assignment.
+// Admin: problem sets grouped by course. This index lists one card per course
+// that has problem sets; drilling into a course (course/[courseId]) shows and
+// manages that course's sets. Authoring happens on the per-course page or via
+// the quick-create form here.
 export default async function AdminProblemSetsPage() {
-  const [courses, problemSets] = await Promise.all([
+  const [courses, byCourse] = await Promise.all([
     db.course.findMany({
       orderBy: [{ isCurrent: "desc" }, { createdAt: "asc" }],
       select: { id: true, title: true, isCurrent: true },
     }),
-    db.problemSet.findMany({
-      orderBy: [{ isDraft: "desc" }, { createdAt: "desc" }],
-      select: {
-        id: true,
-        title: true,
-        isDraft: true,
-        course: { select: { id: true, title: true } },
-        _count: { select: { assignments: true } },
-      },
+    db.problemSet.groupBy({
+      by: ["courseId", "isDraft"],
+      _count: { _all: true },
     }),
   ]);
+
+  // courseId -> { total, drafts, published }
+  const counts = new Map<string, { total: number; drafts: number; published: number }>();
+  for (const row of byCourse) {
+    const c = counts.get(row.courseId) ?? { total: 0, drafts: 0, published: 0 };
+    c.total += row._count._all;
+    if (row.isDraft) c.drafts += row._count._all;
+    else c.published += row._count._all;
+    counts.set(row.courseId, c);
+  }
+
+  const coursesWithSets = courses.filter((c) => counts.has(c.id));
 
   return (
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-8">
@@ -31,7 +39,7 @@ export default async function AdminProblemSetsPage() {
         <p className="text-sm text-parchment-dim mt-1">
           Course-level homework (problems + solutions, Markdown + math). Problems are{" "}
           <strong>public once published</strong>; solutions are revealed to students per class when you
-          release them. Assign a published set to a class (in Classes) to collect graded submissions.
+          release them. Choose a course to see and manage its problem sets.
         </p>
       </div>
 
@@ -70,52 +78,42 @@ export default async function AdminProblemSetsPage() {
         </div>
       </form>
 
-      {problemSets.length === 0 ? (
-        <p className="text-parchment-dim text-sm">No problem sets yet.</p>
+      {coursesWithSets.length === 0 ? (
+        <p className="text-parchment-dim text-sm">No problem sets yet. Create one above to get started.</p>
       ) : (
         <ul className="space-y-3">
-          {problemSets.map((ps) => (
-            <li
-              key={ps.id}
-              className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 flex items-start justify-between gap-4"
-            >
-              <Link href={`/admin/problem-sets/${ps.id}`} className="min-w-0 group">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
-                    {ps.title}
-                  </span>
-                  <span
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
-                      ps.isDraft ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-green-900/30 border-green-700 text-green-300"
-                    }`}
-                  >
-                    {ps.isDraft ? "Draft" : "Published"}
-                  </span>
-                </div>
-                <p className="text-xs text-parchment-dim mt-0.5">
-                  {ps.course.title} · assigned to {ps._count.assignments} class
-                  {ps._count.assignments === 1 ? "" : "es"}
-                </p>
-              </Link>
-              <div className="flex items-center gap-3 shrink-0 text-sm">
-                {!ps.isDraft && (
-                  <Link
-                    href={`/courses/${ps.course.id}/problems/${ps.id}`}
-                    target="_blank"
-                    className="text-parchment-dim hover:text-gold-300 transition-colors"
-                  >
-                    view ↗
-                  </Link>
-                )}
+          {coursesWithSets.map((c) => {
+            const count = counts.get(c.id)!;
+            return (
+              <li key={c.id}>
                 <Link
-                  href={`/admin/problem-sets/${ps.id}?mode=edit`}
-                  className="text-gold-400 hover:text-gold-300 transition-colors"
+                  href={`/admin/problem-sets/course/${c.id}`}
+                  className="group flex items-center justify-between gap-4 bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors"
                 >
-                  edit
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                        {c.title}
+                      </span>
+                      {c.isCurrent && (
+                        <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border bg-gold-900/30 border-gold-700 text-gold-300">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-parchment-dim mt-0.5">
+                      {count.total} problem set{count.total === 1 ? "" : "s"}
+                      {" · "}
+                      {count.published} published · {count.drafts} draft{count.drafts === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-parchment-dim group-hover:text-gold-300 transition-colors" aria-hidden>
+                    →
+                  </span>
                 </Link>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>

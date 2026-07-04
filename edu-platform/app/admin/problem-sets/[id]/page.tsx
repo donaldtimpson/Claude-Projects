@@ -23,10 +23,12 @@ export default async function EditProblemSetPage({
   return (
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-6">
       <div>
-        <Link href="/admin/problem-sets" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
-          ← Problem Sets
+        <Link
+          href={`/admin/problem-sets/course/${ps.course.id}`}
+          className="text-sm text-parchment-dim hover:text-parchment transition-colors"
+        >
+          ← {ps.course.title}
         </Link>
-        <p className="text-sm text-parchment-dim mt-2">{ps.course.title}</p>
       </div>
 
       <ProblemSetEditor
