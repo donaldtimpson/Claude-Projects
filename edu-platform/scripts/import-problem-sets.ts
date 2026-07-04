@@ -10,6 +10,11 @@ import { PROBLEM_SETS_DIR, listProblemSetFiles } from "./problem-sets-lib";
 //
 //   npx tsx scripts/import-problem-sets.ts --course <courseId> [--dry-run]
 //
+// Pass --update to also overwrite the body/solution/points of problem sets that
+// already exist (matched by title) — used to sync corrected drafts back to the DB
+// in place, preserving each row's createdAt (and therefore the 1.1 → 8.6 order).
+// Without --update, existing sets are skipped (safe first-import default).
+//
 const prisma = new PrismaClient();
 
 function getArg(flag: string): string | undefined {
@@ -24,6 +29,7 @@ async function main() {
   }
 
   const dryRun = process.argv.includes("--dry-run");
+  const update = process.argv.includes("--update");
   const courseId = getArg("--course");
   if (!courseId) {
     console.error("Missing --course <courseId>. (Pass the Linear Algebra course id.)");
@@ -51,6 +57,7 @@ async function main() {
   );
 
   let inserted = 0;
+  let updated = 0;
   let skipped = 0;
 
   // Sequential create() (not createMany) so createdAt increments in section order.
@@ -60,8 +67,30 @@ async function main() {
       select: { id: true },
     });
     if (existing) {
-      console.log(`  • ${ps.title}: already exists — skipping`);
-      skipped++;
+      if (!update) {
+        console.log(`  • ${ps.title}: already exists — skipping`);
+        skipped++;
+        continue;
+      }
+      if (dryRun) {
+        console.log(`  ↻ ${ps.title}: would update existing draft`);
+        updated++;
+        continue;
+      }
+      // Update content in place — preserves createdAt (and the 1.1 → 8.6 order).
+      // Does NOT touch isDraft, so an already-published set stays published.
+      await prisma.problemSet.update({
+        where: { id: existing.id },
+        data: {
+          body: ps.body,
+          solution: ps.solution,
+          points: ps.points,
+          extraCreditPoints: ps.extraCreditPoints,
+          attachmentUrl: ps.attachmentUrl,
+        },
+      });
+      console.log(`  ↻ ${ps.title}: updated`);
+      updated++;
       continue;
     }
 
@@ -91,7 +120,7 @@ async function main() {
     inserted++;
   }
 
-  console.log(`\nDone. inserted=${inserted} skipped=${skipped}`);
+  console.log(`\nDone. inserted=${inserted} updated=${updated} skipped=${skipped}`);
   await prisma.$disconnect();
 }
 
