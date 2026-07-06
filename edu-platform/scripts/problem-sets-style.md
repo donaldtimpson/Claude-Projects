@@ -56,6 +56,21 @@ _Discrete Dynamical Systems_
     hardest as extra credit (`••`) where appropriate.
 - **Point tags** on every problem: `(3 pts)` for core, `(3 pts ••)` for extra credit. Core tags sum
   to the frontmatter `points`; `••` tags sum to `extraCreditPoints`. Aim for `points` ≈ 20 per set.
+- **Multi-part items** (a problem with `(a)`, `(b)`, `(c)`, …): put each labelled part on its **own
+  line**, and separate the parts (and the stem) with a **blank line** so each renders on a separate
+  line (the renderer collapses single newlines, so parts on consecutive lines would run together).
+  This applies to the **solutions** too — each part's solution on its own blank-line-separated line.
+  Do **not** string parts inline in one sentence (`… (a) X and (b) Y`). Example:
+
+  ```markdown
+  **6.** (3 pts) State whether each is true or false, and justify.
+
+  (a) …
+
+  (b) …
+
+  (c) …
+  ```
 
 ## Solutions
 
