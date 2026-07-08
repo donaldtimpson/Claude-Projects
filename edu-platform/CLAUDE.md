@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Educational course website for Donald Timpson (@donaldDtimpson on YouTube). Surfaces YouTube playlists as courses, with per-video quizzes and per-playlist tests. Admin UI for authoring quiz content. Phase 2 (not yet built) will add student accounts and progress tracking.
+Educational course website for Donald Timpson (@donaldDtimpson on YouTube). Surfaces YouTube playlists as courses, with per-video quizzes and per-playlist tests, lecture notes, transcript search, and procedural practice drills. Admin UI for authoring content. Students have accounts (NextAuth) with persisted quiz scores, progress tracking, spaced-repetition review, gamification (badges/streaks/leaderboard), threaded discussion, and a live-class registration + gradebook layer.
 
 ## Commands
 
@@ -17,6 +17,11 @@ npx prisma generate  # regenerate client after schema edits without migrating
 npx prisma studio    # browser-based DB viewer
 ```
 
+> **Migrations in this Claude Code env:** `migrate dev` needs a TTY, which isn't available here.
+> Hand-write the migration SQL under `prisma/migrations/<timestamp>_<name>/migration.sql` (edit
+> `schema.prisma` to match), then `npx prisma migrate deploy && npx prisma generate`. Local + prod
+> share the one Neon DB, so a migration hits production immediately — make it additive/backward-safe.
+
 ## Environment Variables (`.env`)
 
 ```
@@ -24,6 +29,9 @@ DATABASE_URL        # Neon PostgreSQL connection string
 YOUTUBE_API_KEY     # Google Cloud — YouTube Data API v3 (READ-ONLY: playlist/video sync)
 YOUTUBE_CHANNEL_ID  # UCxxxxxxxxxxxxxxxxxxxxxxxx (not the handle, the ID)
 ADMIN_PASSWORD      # Password for /admin area
+NEXTAUTH_SECRET     # NextAuth JWT signing secret (student accounts)
+NEXTAUTH_URL        # Base URL for NextAuth callbacks (e.g. http://localhost:3000)
+NEXT_PUBLIC_SITE_URL # Optional — absolute base URL for share links/metadata (falls back to a default)
 
 # OAuth — only needed to WRITE to YouTube (the chapters pipeline). Set the first
 # two from a "Desktop app" OAuth client; mint the third via scripts/youtube-auth.ts.
@@ -45,6 +53,11 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 - `Video` — mirrors a playlist item (`youtubeVideoId` unique key, `position` for ordering)
 - `QuizQuestion` — belongs to either a `Video` (per-video quiz) OR a `Course` with `videoId: null` (playlist test), never both. `isDraft: true` hides the question from students; admin still sees it with a "Draft" badge + Publish button.
 - `LectureNote` — Markdown study notes, 1:1 with `Video` (unique `videoId`). Same `isDraft` gate as `QuizQuestion`. See the lecture-notes pipeline section below.
+- `Transcript` — plaintext + timed segments per `Video`, powers catalog search (see that section).
+- `Comment` — per-`Video` discussion, single-level threaded (`parentId` self-relation; soft-delete via `deletedAt` when a comment has replies).
+- **Student accounts & gamification:** `User`/`Session` (NextAuth credentials), `QuizAttempt` (persisted scores), `VideoProgress` (watched state), `UserAchievement` (badges), `QuestionReview` (spaced repetition), `DrillAttempt` (practice drills). See the drills / spaced-repetition sections and `lib/gamification/`.
+- **Classroom layer:** `Section`, `Enrollment`, `Assignment`, `ProblemSet`, `Submission` — live-class registration, rostering, homework, and the weighted gradebook.
+- **Catalog structure:** `Category`/`CourseCategory` (subject grouping), `CourseLink` (course dependency graph / `/map`), `Resource`/`CourseResource`, `Announcement`.
 
 **Key lib files:**
 - `lib/db.ts` — Prisma client singleton (safe for hot reload in dev)
@@ -53,42 +66,51 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 
 **Admin auth:** Cookie-based (`admin_auth`). `proxy.ts` (Next 16's renamed middleware convention — exports a `proxy` function) guards all `/admin/*` routes, redirecting to `/admin/login` if the cookie is missing or wrong. The cookie is set by `POST /api/admin/login` and cleared by `DELETE` on the same route.
 
+**Student auth (separate from admin):** NextAuth with a `CredentialsProvider` (email + bcrypt), JWT sessions, sign-in at `/auth/signin`, sign-up at `/auth/signup` (`lib/auth.ts`). `session.user.id` is the canonical current-user id used across server components, API routes, and server actions (`getServerSession(authOptions)`).
+
 **YouTube sync:** `POST /api/youtube/sync` (requires `x-admin-password` header) fetches all channel playlists then all videos per playlist, upserting into `Course` and `Video` tables. Called from the admin dashboard's Sync button (`app/admin/SyncButton.tsx`).
 
-**Quiz flow (public):** `app/courses/[courseId]/[videoId]/QuizPlayer.tsx` is a client component that handles all quiz state locally (no server round-trips during answering). Score is shown at end but not persisted (Phase 2).
+**Quiz flow (public):** `app/(site)/courses/[courseId]/[videoId]/QuizPlayer.tsx` is a client component that handles all quiz state locally (no server round-trips during answering). The final score is persisted for signed-in students via `saveQuizAttempt` (`lib/actions.ts`) into `QuizAttempt`, which also drives gamification (badges/streaks/leaderboard).
 
 **Quiz authoring (admin):** `app/admin/QuizEditor.tsx` is a shared client component used by both the per-video editor (`/admin/courses/[courseId]`) and the playlist test editor (`/admin/test/[courseId]`). It reads the admin password from the cookie to attach to API calls.
 
 ## Route Map
 
+Public pages live under the `app/(site)/` route group; the table lists paths as seen by users.
+Feature-specific routes are also documented in each feature's section below — this is the orientation map, not an exhaustive list.
+
 | Route | Purpose |
 |---|---|
 | `/` | Course grid (server component, revalidates hourly) |
-| `/courses/[courseId]` | Video list + playlist test CTA |
-| `/courses/[courseId]/[videoId]` | YouTube embed + video quiz |
+| `/courses/[courseId]` | Video list, resources, problem sets + playlist test CTA |
+| `/courses/[courseId]/[videoId]` | YouTube embed, video quiz, notes, threaded discussion |
 | `/courses/[courseId]/test` | Full playlist test |
+| `/categories/[slug]` · `/map` | Subject grouping · course dependency graph |
+| `/dashboard` · `/leaderboard` · `/leaderboard/[handle]` | Student home · gamification leaderboard + profiles |
+| `/review` · `/drills` · `/drills/[slug]` | Spaced-repetition review · practice drills |
+| `/search` | Full-text catalog + transcript search |
+| `/auth/signin` · `/auth/signup` | Student NextAuth pages |
 | `/admin` | Dashboard: course list + Sync YouTube button |
 | `/admin/login` | Password login |
-| `/admin/courses/[courseId]` | Edit per-video quiz questions |
-| `/admin/test/[courseId]` | Edit playlist test questions |
+| `/admin/courses/[courseId]` | Per-video quiz + notes editor |
+| `/admin/test/[courseId]` | Playlist test editor |
+| `/admin/{categories,resources,links,problem-sets,classes,announcements,achievements,drills,comments}` | Admin management areas |
 | `POST /api/youtube/sync` | Sync playlists+videos from YouTube |
-| `GET/POST /api/quiz` | List or create quiz questions |
-| `PATCH/DELETE /api/quiz/[id]` | Update or delete a question |
-| `POST /api/admin/login` | Set auth cookie |
-| `DELETE /api/admin/login` | Clear auth cookie (logout) |
+| `GET/POST /api/quiz` · `PATCH/DELETE /api/quiz/[id]` | Quiz question CRUD |
+| `GET/POST /api/comments` · `DELETE /api/comments/[id]` | Discussion comments + replies |
+| `GET/PUT /api/notes` · `PATCH/DELETE /api/notes/[id]` | Lecture notes |
+| `GET /api/search` | Search backend (`lib/search.ts`) |
+| `POST/DELETE /api/admin/login` | Set / clear admin auth cookie |
+| `/api/auth/[...nextauth]` · `POST /api/auth/signup` | NextAuth handlers · student registration |
+
+Other API routes exist under `app/api/` (categories, resources, announcements, admin course links/offerings) — grep there for the full set.
 
 ## Setup After Clone
 
-1. Set all four env vars in `.env`
-2. `npx prisma migrate dev --name init`
+1. Set the env vars above in `.env` (at minimum `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `ADMIN_PASSWORD`, and the YouTube read keys)
+2. `npx prisma migrate deploy && npx prisma generate` (or `migrate dev --name init` on a fresh local DB with a TTY)
 3. `npm run dev`
 4. Go to `/admin`, log in, click **Sync YouTube**
-
-## Phase 2 (Not Yet Built)
-
-- NextAuth.js student accounts
-- `QuizAttempt` table to persist per-student scores
-- Comment/question threads per video
 
 ## Quiz-draft generation pipeline (`scripts/`)
 
