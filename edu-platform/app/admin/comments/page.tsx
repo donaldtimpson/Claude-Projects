@@ -66,6 +66,9 @@ export default async function AdminCommentsPage({
                   <span className="text-sm font-semibold text-gold-300 truncate">
                     {c.user.name || c.user.email}
                   </span>
+                  {c.parentId && (
+                    <span className="text-xs text-parchment-dim shrink-0" title="Reply">↳ reply</span>
+                  )}
                   <span className="text-xs text-parchment-dim shrink-0">{timeAgo(c.createdAt)}</span>
                 </div>
                 <Link
@@ -78,8 +81,12 @@ export default async function AdminCommentsPage({
               <p className="text-xs text-parchment-dim truncate">
                 {c.video.course.title} · {c.video.title}
               </p>
-              <p className="text-sm text-parchment leading-relaxed whitespace-pre-wrap line-clamp-6">
-                {c.body}
+              <p
+                className={`text-sm leading-relaxed whitespace-pre-wrap line-clamp-6 ${
+                  c.deletedAt ? "italic text-parchment-dim" : "text-parchment"
+                }`}
+              >
+                {c.deletedAt ? "[comment deleted]" : c.body}
               </p>
             </li>
           ))}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { nestComments } from "@/lib/comments";
 import { saveQuizAttempt } from "@/lib/actions";
 import { getQuizAces } from "@/lib/gamification/engine";
 import QuizPlayer from "./QuizPlayer";
@@ -247,12 +248,7 @@ export default async function VideoPage({
             videoId={video.id}
             userId={userId}
             userName={session?.user?.name ?? null}
-            initialComments={comments.map((c) => ({
-              id: c.id,
-              body: c.body,
-              createdAt: c.createdAt.toISOString(),
-              user: { id: c.user.id, name: c.user.name ?? "Student" },
-            }))}
+            initialComments={nestComments(comments)}
           />
         </div>
 
