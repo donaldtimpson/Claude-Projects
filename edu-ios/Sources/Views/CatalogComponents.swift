@@ -84,6 +84,40 @@ struct CategoryRow: View {
     }
 }
 
+// "2:05:16" (or "5:42" under an hour).
+func formatDuration(_ seconds: Int) -> String {
+    let h = seconds / 3600, m = (seconds % 3600) / 60, s = seconds % 60
+    return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
+}
+
+// Lecture row — mirrors CourseRow (thumbnail + title + metadata), with the
+// lecture's duration in place of the course's lecture count.
+struct LectureRow: View {
+    let video: VideoListItem
+    var highlight: String? = nil
+    var body: some View {
+        HStack(spacing: 12) {
+            Thumb(url: video.thumbnailUrl)
+            VStack(alignment: .leading, spacing: 4) {
+                titleText.font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
+                if video.durationSeconds > 0 {
+                    Text(formatDuration(video.durationSeconds))
+                        .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .lyceumCard()
+    }
+
+    private var titleText: Text {
+        if let highlight, !highlight.isEmpty {
+            return Text(searchHighlighted(video.title, highlight))
+        }
+        return Text(video.title)
+    }
+}
+
 struct CourseRow: View {
     let course: CourseListItem
     var highlight: String? = nil
