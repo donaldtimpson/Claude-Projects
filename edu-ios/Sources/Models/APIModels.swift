@@ -46,6 +46,7 @@ struct Badge: Codable, Identifiable, Hashable {
 struct CourseListItem: Codable, Identifiable, Hashable {
     let id: String
     let title: String
+    var shortTitle: String?
     let description: String
     let thumbnailUrl: String
     let videoCount: Int
@@ -129,6 +130,7 @@ struct CourseOffering: Codable, Identifiable, Hashable {
 struct CourseDetail: Codable, Identifiable, Hashable {
     let id: String
     let title: String
+    var shortTitle: String?
     let description: String
     let thumbnailUrl: String
     let videoCount: Int

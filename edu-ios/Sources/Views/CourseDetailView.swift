@@ -15,7 +15,7 @@ struct CourseDetailView: View {
 
     var body: some View {
         content
-            .navigationTitle("Course")
+            .navigationTitle(course?.shortTitle ?? course?.title ?? "Course")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Filter lectures")
             .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
