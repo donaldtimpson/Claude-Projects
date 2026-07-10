@@ -29,7 +29,7 @@ struct CourseDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
                     if !course.description.isEmpty {
-                        Text(course.description).foregroundStyle(Theme.ink)
+                        ExpandableText(text: course.description)
                     }
                     Text("\(course.videos.count) lectures")
                         .font(.subheadline).foregroundStyle(Theme.inkSoft)

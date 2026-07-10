@@ -44,6 +44,63 @@ struct SecondaryButton: View {
     }
 }
 
+// App Store / Music–style expandable body text: truncated to `lineLimit`, with an
+// inline "more" that expands it in place. The toggle only appears when the text
+// actually overflows (measured against a hidden full-height copy).
+struct ExpandableText: View {
+    let text: String
+    var lineLimit: Int = 3
+
+    @State private var expanded = false
+    @State private var isTruncated = false
+    @State private var fullHeight: CGFloat = 0
+    @State private var limitedHeight: CGFloat = 0
+
+    private struct FullHeightKey: PreferenceKey {
+        static var defaultValue: CGFloat = 0
+        static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+    }
+    private struct LimitedHeightKey: PreferenceKey {
+        static var defaultValue: CGFloat = 0
+        static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(text)
+                .font(.serif(16))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(expanded ? nil : lineLimit)
+                .fixedSize(horizontal: false, vertical: true)
+                .background(measurers)
+
+            if isTruncated {
+                Button(expanded ? "Show less" : "more") {
+                    withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
+                }
+                .font(.serif(15))
+                .foregroundStyle(Theme.gold400)
+            }
+        }
+        .onPreferenceChange(FullHeightKey.self) { fullHeight = $0; updateTruncation() }
+        .onPreferenceChange(LimitedHeightKey.self) { limitedHeight = $0; updateTruncation() }
+    }
+
+    private var measurers: some View {
+        ZStack {
+            Text(text).font(.serif(16)).lineLimit(lineLimit).fixedSize(horizontal: false, vertical: true)
+                .background(GeometryReader { g in Color.clear.preference(key: LimitedHeightKey.self, value: g.size.height) })
+            Text(text).font(.serif(16)).fixedSize(horizontal: false, vertical: true)
+                .background(GeometryReader { g in Color.clear.preference(key: FullHeightKey.self, value: g.size.height) })
+        }
+        .hidden()
+    }
+
+    private func updateTruncation() {
+        isTruncated = fullHeight > limitedHeight + 1
+    }
+}
+
 // Reusable multiple-choice question: select → check → continue. Give it a fresh
 // `id` per question to reset. Shared by the quiz and review runners.
 struct MCQCard: View {
