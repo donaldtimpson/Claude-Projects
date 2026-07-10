@@ -61,6 +61,7 @@ struct CategoryItem: Codable, Identifiable, Hashable {
     let id: String
     let name: String
     let slug: String
+    var courseCount: Int?
 }
 
 struct CategoriesResponse: Codable {

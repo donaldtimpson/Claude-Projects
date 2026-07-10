@@ -51,15 +51,8 @@ struct LearnView: View {
                 if !categories.isEmpty {
                     SectionHeader(title: "Browse by Category")
                     ForEach(categories) { category in
-                        NavigationLink(value: category) {
-                            HStack {
-                                Text(category.name).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink)
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
-                            }
-                            .lyceumCard()
-                        }
-                        .buttonStyle(.plain)
+                        NavigationLink(value: category) { CategoryTile(category: category) }
+                            .buttonStyle(.plain)
                     }
                 }
 

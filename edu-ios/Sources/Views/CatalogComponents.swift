@@ -29,6 +29,33 @@ struct Thumb: View {
     }
 }
 
+// Full-width category banner (the artwork already carries the category name),
+// with a course-count pill. Uses our web category images (/categories/<slug>.png).
+struct CategoryTile: View {
+    let category: CategoryItem
+    var body: some View {
+        AsyncImage(url: AppConfig.assetURL("/categories/\(category.slug).png")) { image in
+            image.resizable().aspectRatio(contentMode: .fit)
+        } placeholder: {
+            Rectangle().fill(Theme.parchmentDeep).aspectRatio(16.0 / 9.0, contentMode: .fit)
+        }
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+        .overlay(alignment: .bottomTrailing) {
+            if let count = category.courseCount {
+                Text("\(count) course\(count == 1 ? "" : "s")")
+                    .font(.serif(12))
+                    .foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(.black.opacity(0.55))
+                    .clipShape(Capsule())
+                    .padding(8)
+            }
+        }
+    }
+}
+
 struct CourseRow: View {
     let course: CourseListItem
     var body: some View {
