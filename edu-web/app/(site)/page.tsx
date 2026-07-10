@@ -9,6 +9,9 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const [courses, categories, currentCourses, announcements] = await Promise.all([
     db.course.findMany({
+      // Only representative (canonical) offerings in the browse grid; other
+      // offerings are reachable from a course's page.
+      where: { canonicalCourseId: null },
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { _count: { select: { videos: true } } },
     }),

@@ -158,6 +158,14 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     .filter((l) => l.kind === "RELATED")
     .map((l) => (l.fromCourseId === repId ? l.toCourse : l.fromCourse));
 
+  // Other offerings of this subject (representative + siblings, minus the current
+  // one) so a student can reach the specific version they took.
+  const otherOfferings = await db.course.findMany({
+    where: { OR: [{ id: repId }, { canonicalCourseId: repId }], NOT: { id: course.id } },
+    orderBy: { publishedAt: "desc" },
+    select: { id: true, title: true, publishedAt: true },
+  });
+
   const connectionGroups: { title: string; courses: { id: string; title: string }[] }[] = [
     { title: "Builds on", courses: buildsOn },
     { title: "Leads to", courses: leadsTo },
@@ -331,6 +339,27 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {otherOfferings.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-2">Other Offerings</h2>
+            <div className="flex flex-wrap gap-2">
+              {otherOfferings.map((o) => {
+                const year = o.publishedAt?.getUTCFullYear();
+                const label = year && !o.title.includes(String(year)) ? `${o.title} (${year})` : o.title;
+                return (
+                  <Link
+                    key={o.id}
+                    href={`/courses/${o.id}`}
+                    className="text-sm px-3 py-1.5 rounded-full border border-crimson-700 text-parchment-dim hover:border-gold-500 hover:text-gold-300 transition-colors"
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
           </section>
         )}
 

@@ -29,6 +29,7 @@ export default async function CategoryPage({
 
   const courses = category.courses
     .map((cc) => cc.course)
+    .filter((c) => c.canonicalCourseId === null) // representative offerings only
     .sort((a, b) => {
       const aDate = a.publishedAt ?? a.createdAt;
       const bDate = b.publishedAt ?? b.createdAt;
