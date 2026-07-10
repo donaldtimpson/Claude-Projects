@@ -17,7 +17,8 @@ export default async function HomePage() {
     }),
     db.category.findMany({
       orderBy: { name: "asc" },
-      include: { _count: { select: { courses: true } } },
+      // Count only canonical offerings, matching the category page's list.
+      include: { _count: { select: { courses: { where: { course: { canonicalCourseId: null } } } } } },
     }),
     db.course.findMany({
       where: { isCurrent: true },
