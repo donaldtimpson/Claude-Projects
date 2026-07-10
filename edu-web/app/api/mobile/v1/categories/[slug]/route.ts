@@ -15,7 +15,15 @@ export async function GET(
       courses: {
         select: {
           course: {
-            select: { id: true, title: true, thumbnailUrl: true, videoCount: true, isCurrent: true },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              thumbnailUrl: true,
+              videoCount: true,
+              isCurrent: true,
+              updatedAt: true,
+            },
           },
         },
       },
