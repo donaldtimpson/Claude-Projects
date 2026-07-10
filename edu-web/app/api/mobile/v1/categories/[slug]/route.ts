@@ -13,8 +13,9 @@ export async function GET(
       name: true,
       slug: true,
       courses: {
-        // Only representative (canonical) offerings.
+        // Only representative (canonical) offerings, alphabetical by title.
         where: { course: { canonicalCourseId: null } },
+        orderBy: { course: { title: "asc" } },
         select: {
           course: {
             select: {
