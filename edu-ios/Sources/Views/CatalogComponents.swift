@@ -65,15 +65,17 @@ struct CourseRow: View {
             Thumb(url: course.thumbnailUrl)
             VStack(alignment: .leading, spacing: 4) {
                 Text(course.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
-                Text("\(course.videoCount) lectures").font(.serif(15)).foregroundStyle(Theme.inkSoft)
-                if course.isCurrent {
-                    Text("Live")
-                        .font(.display(10)).kerning(1).foregroundStyle(Theme.onAccent)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Theme.gold500).clipShape(Capsule())
+                HStack(spacing: 8) {
+                    Text("\(course.videoCount) lectures").font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                    Spacer(minLength: 8)
+                    if course.isCurrent {
+                        Text("Live")
+                            .font(.display(10)).kerning(1).foregroundStyle(Theme.onAccent)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(Theme.gold500).clipShape(Capsule())
+                    }
                 }
             }
-            Spacer(minLength: 0)
         }
         .lyceumCard()
     }
