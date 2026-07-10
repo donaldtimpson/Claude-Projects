@@ -14,6 +14,7 @@ struct LearnView: View {
     var body: some View {
         content
             .navigationTitle("The Lyceum")
+            .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
             .navigationDestination(for: CourseListItem.self) { CourseDetailView(courseId: $0.id) }
