@@ -29,30 +29,32 @@ struct Thumb: View {
     }
 }
 
-// Full-width category banner (the artwork already carries the category name),
-// with a course-count pill. Uses our web category images (/categories/<slug>.png).
-struct CategoryTile: View {
+// Category row — same shape as CourseRow (thumbnail left, name + count right) so
+// the category name is crisp native text. Thumbnail uses our web category
+// artwork (/categories/<slug>.png).
+struct CategoryRow: View {
     let category: CategoryItem
     var body: some View {
-        AsyncImage(url: AppConfig.assetURL("/categories/\(category.slug).png")) { image in
-            image.resizable().aspectRatio(contentMode: .fit)
-        } placeholder: {
-            Rectangle().fill(Theme.parchmentDeep).aspectRatio(16.0 / 9.0, contentMode: .fit)
-        }
-        .frame(maxWidth: .infinity)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
-        .overlay(alignment: .bottomTrailing) {
-            if let count = category.courseCount {
-                Text("\(count) course\(count == 1 ? "" : "s")")
-                    .font(.serif(12))
-                    .foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(.black.opacity(0.55))
-                    .clipShape(Capsule())
-                    .padding(8)
+        HStack(spacing: 12) {
+            AsyncImage(url: AppConfig.assetURL("/categories/\(category.slug).png")) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle().fill(Theme.parchmentDeep)
             }
+            .frame(width: 96, height: 60)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(category.name).font(.display(16)).kerning(0.5).foregroundStyle(Theme.ink)
+                if let count = category.courseCount {
+                    Text("\(count) course\(count == 1 ? "" : "s")")
+                        .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
         }
+        .lyceumCard()
     }
 }
 
