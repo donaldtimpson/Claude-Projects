@@ -13,6 +13,8 @@ export async function GET(
       name: true,
       slug: true,
       courses: {
+        // Only representative (canonical) offerings.
+        where: { course: { canonicalCourseId: null } },
         select: {
           course: {
             select: {

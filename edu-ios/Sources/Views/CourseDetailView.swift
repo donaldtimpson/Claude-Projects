@@ -19,6 +19,7 @@ struct CourseDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Filter lectures")
             .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
+            .navigationDestination(for: CourseOffering.self) { CourseDetailView(courseId: $0.id) }
             .task { if course == nil { await load() } }
     }
 
@@ -55,11 +56,34 @@ struct CourseDetailView: View {
                             .buttonStyle(.plain)
                         }
                     }
+
+                    if query.isEmpty, let offerings = course.offerings, !offerings.isEmpty {
+                        SectionHeader(title: "Other Offerings")
+                        ForEach(offerings) { offering in
+                            NavigationLink(value: offering) { offeringRow(offering) }
+                                .buttonStyle(.plain)
+                        }
+                    }
                 }
                 .padding()
             }
             .background(Theme.parchment)
         }
+    }
+
+    private func offeringRow(_ offering: CourseOffering) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(offering.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
+                // Show the year only when the title doesn't already include it.
+                if let year = offering.year, !offering.title.contains(String(year)) {
+                    Text(String(year)).font(.serif(14)).foregroundStyle(Theme.inkSoft)
+                }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+        }
+        .lyceumCard()
     }
 
     private func load() async {

@@ -120,6 +120,12 @@ struct CourseResourceItem: Codable, Identifiable, Hashable {
     let kind: String
 }
 
+struct CourseOffering: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let year: Int?
+}
+
 struct CourseDetail: Codable, Identifiable, Hashable {
     let id: String
     let title: String
@@ -131,6 +137,7 @@ struct CourseDetail: Codable, Identifiable, Hashable {
     let videos: [VideoListItem]
     let problemSets: [ProblemSetItem]
     let resources: [CourseResourceItem]
+    var offerings: [CourseOffering]?
 }
 
 struct CourseDetailResponse: Codable {

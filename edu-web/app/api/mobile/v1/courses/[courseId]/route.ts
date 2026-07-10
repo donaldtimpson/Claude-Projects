@@ -17,6 +17,7 @@ export async function GET(
       videoCount: true,
       isCurrent: true,
       updatedAt: true,
+      canonicalCourseId: true,
       videos: {
         orderBy: { position: "asc" },
         select: {
@@ -44,11 +45,26 @@ export async function GET(
   });
   if (!course) return fail(404, "Course not found.");
 
-  const { resources, ...rest } = course;
+  // Other offerings of the same subject. All versions = the representative
+  // (canonicalCourseId null) + its siblings; exclude the one being viewed.
+  const repId = course.canonicalCourseId ?? course.id;
+  const group = await db.course.findMany({
+    where: { OR: [{ id: repId }, { canonicalCourseId: repId }], NOT: { id: course.id } },
+    orderBy: { publishedAt: "desc" },
+    select: { id: true, title: true, publishedAt: true },
+  });
+  const offerings = group.map((c) => ({
+    id: c.id,
+    title: c.title,
+    year: c.publishedAt ? c.publishedAt.getUTCFullYear() : null,
+  }));
+
+  const { resources, canonicalCourseId: _canon, ...rest } = course;
   return ok({
     course: {
       ...rest,
       resources: resources.map((r) => ({ position: r.position, ...r.resource })),
+      offerings,
     },
   });
 }
