@@ -142,10 +142,9 @@ struct CourseRow: View {
     }
 
     private var titleText: Text {
-        let display = course.shortTitle ?? course.title
         if let highlight, !highlight.isEmpty {
-            return Text(searchHighlighted(display, highlight))
+            return Text(searchHighlighted(course.title, highlight))
         }
-        return Text(display)
+        return Text(course.title)
     }
 }

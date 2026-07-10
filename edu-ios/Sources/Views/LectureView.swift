@@ -18,7 +18,7 @@ struct LectureView: View {
 
     var body: some View {
         content
-            .navigationTitle("Lecture")
+            .navigationTitle(detail.map { "Lecture \($0.video.position + 1)" } ?? "Lecture")
             .navigationBarTitleDisplayMode(.inline)
             .task { if detail == nil { await load() } }
     }
@@ -31,16 +31,16 @@ struct LectureView: View {
         } else if let detail {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    YouTubePlayer(videoId: detail.video.youtubeVideoId)
-                        .aspectRatio(16.0 / 9.0, contentMode: .fit)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-
                     Text(detail.video.title)
                         .font(.display(20))
                         .kerning(0.5)
                         .foregroundStyle(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    YouTubePlayer(videoId: detail.video.youtubeVideoId)
+                        .aspectRatio(16.0 / 9.0, contentMode: .fit)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
 
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)
