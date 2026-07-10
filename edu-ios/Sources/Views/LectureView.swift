@@ -20,7 +20,6 @@ struct LectureView: View {
         content
             .navigationTitle(route.title)
             .navigationBarTitleDisplayMode(.inline)
-            .wrappingNavTitle(route.title)
             .task { if detail == nil { await load() } }
     }
 
