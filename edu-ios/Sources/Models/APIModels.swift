@@ -57,6 +57,45 @@ struct CoursesResponse: Codable {
     let courses: [CourseListItem]
 }
 
+struct CategoryItem: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let slug: String
+}
+
+struct CategoriesResponse: Codable {
+    let categories: [CategoryItem]
+}
+
+struct CategoryDetailResponse: Codable {
+    let category: CategoryItem
+    let courses: [CourseListItem]
+}
+
+// Search (mirrors lib/search.ts)
+struct CourseHit: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let description: String
+    let thumbnailUrl: String
+}
+
+struct LectureHit: Codable, Identifiable, Hashable {
+    var id: String { videoId }
+    let videoId: String
+    let courseId: String
+    let title: String
+    let courseTitle: String
+    let snippet: String?
+    let startSeconds: Int?
+}
+
+struct SearchResults: Codable {
+    let courses: [CourseHit]
+    let lectures: [LectureHit]
+    let fuzzy: Bool?
+}
+
 struct VideoListItem: Codable, Identifiable, Hashable {
     let id: String
     let youtubeVideoId: String
