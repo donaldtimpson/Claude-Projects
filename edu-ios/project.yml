@@ -21,11 +21,14 @@ targets:
     sources:
       - path: Sources
       - path: Resources
-    entitlements:
-      path: Lyceum.entitlements
-      properties:
-        com.apple.developer.applesignin:
-          - Default
+    # Sign in with Apple requires a paid Apple Developer account, so it's disabled
+    # to allow building to a device with a free Apple ID. Re-enable (and flip
+    # appleSignInAvailable in AuthViews.swift) once enrolled in the paid program:
+    #   entitlements:
+    #     path: Lyceum.entitlements
+    #     properties:
+    #       com.apple.developer.applesignin:
+    #         - Default
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.timpsonlyceum.Lyceum

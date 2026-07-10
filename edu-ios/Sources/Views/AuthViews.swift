@@ -6,6 +6,11 @@ import SwiftUI
 struct AuthView: View {
     @EnvironmentObject private var auth: AuthViewModel
 
+    // Sign in with Apple needs a paid Developer account + entitlement; hidden so
+    // the app builds to a device with a free Apple ID. Flip to true when the
+    // entitlement is re-enabled in project.yml.
+    private let appleSignInAvailable = false
+
     @State private var mode: Mode = .signIn
     @State private var name = ""
     @State private var email = ""
@@ -51,22 +56,24 @@ struct AuthView: View {
                     .font(.callout)
                     .tint(Theme.crimson)
 
-                    HStack {
-                        Rectangle().fill(Theme.line).frame(height: 1)
-                        Text("or").font(.footnote).foregroundStyle(Theme.inkSoft)
-                        Rectangle().fill(Theme.line).frame(height: 1)
-                    }
-                    .padding(.vertical, 4)
+                    if appleSignInAvailable {
+                        HStack {
+                            Rectangle().fill(Theme.line).frame(height: 1)
+                            Text("or").font(.footnote).foregroundStyle(Theme.inkSoft)
+                            Rectangle().fill(Theme.line).frame(height: 1)
+                        }
+                        .padding(.vertical, 4)
 
-                    SignInWithAppleButton(.continue) { request in
-                        request.requestedScopes = [.fullName, .email]
-                    } onCompletion: { result in
-                        handleApple(result)
+                        SignInWithAppleButton(.continue) { request in
+                            request.requestedScopes = [.fullName, .email]
+                        } onCompletion: { result in
+                            handleApple(result)
+                        }
+                        .signInWithAppleButtonStyle(.black)
+                        .frame(height: 50)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .disabled(busy)
                     }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 50)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .disabled(busy)
                 }
 
                 Text("Uses the same account as the website.")
