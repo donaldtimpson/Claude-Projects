@@ -35,9 +35,10 @@ struct SplashView: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("The Lyceum")
-                .font(.system(size: 34, weight: .bold, design: .serif))
-                .foregroundStyle(Theme.crimson)
-            ProgressView().tint(Theme.crimson)
+                .font(.display(38))
+                .kerning(2)
+                .foregroundStyle(Theme.gold300)
+            ProgressView().tint(Theme.gold300)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)

@@ -1,17 +1,48 @@
 import SwiftUI
 
-// The "lyceum" palette, echoing the web app: crimson + gold on parchment.
+extension Color {
+    init(hex: UInt) {
+        self.init(
+            .sRGB,
+            red: Double((hex >> 16) & 0xff) / 255,
+            green: Double((hex >> 8) & 0xff) / 255,
+            blue: Double(hex & 0xff) / 255
+        )
+    }
+}
+
+// Palette mirrors edu-web's globals.css: a dark, classical "lyceum" look —
+// near-black crimson field, crimson surfaces, gold accents, parchment text.
 enum Theme {
-    static let crimson = Color(red: 0.482, green: 0.067, blue: 0.075)
-    static let gold = Color(red: 0.722, green: 0.525, blue: 0.043)
-    static let parchment = Color(red: 0.961, green: 0.937, blue: 0.878)
-    static let parchmentDeep = Color(red: 0.925, green: 0.890, blue: 0.812)
-    static let card = Color(red: 1.0, green: 0.992, blue: 0.969)
-    static let ink = Color(red: 0.169, green: 0.137, blue: 0.125)
-    static let inkSoft = Color(red: 0.42, green: 0.38, blue: 0.34)
-    static let line = Color(red: 0.886, green: 0.847, blue: 0.761)
-    static let danger = Color(red: 0.627, green: 0.071, blue: 0.071)
-    static let success = Color(red: 0.18, green: 0.49, blue: 0.196)
+    // Raw palette
+    static let crimson950 = Color(hex: 0x0f0404)
+    static let crimson900 = Color(hex: 0x190808)
+    static let crimson800 = Color(hex: 0x2d1212)
+    static let crimson700 = Color(hex: 0x4a1a1a)
+    static let gold500 = Color(hex: 0xb8860b)
+    static let gold400 = Color(hex: 0xcfa135)
+    static let gold300 = Color(hex: 0xddb954)
+
+    // Semantic aliases (names kept stable across the app)
+    static let parchment = crimson950 // screen background
+    static let card = crimson900 // surfaces / cards
+    static let parchmentDeep = crimson800 // secondary surfaces / selection
+    static let line = crimson700 // borders / dividers
+    static let ink = Color(hex: 0xf5ecd8) // primary text (parchment)
+    static let inkSoft = Color(hex: 0xc4af8e) // secondary text (parchment-dim)
+    static let crimson = gold300 // brand accent: titles, tints, selection
+    static let gold = gold500 // gold accents (numbers, badges)
+    static let accent = gold500 // primary-button fill
+    static let onAccent = crimson950 // text on a gold fill
+    static let success = Color(hex: 0x5cb85c)
+    static let danger = Color(hex: 0xe06666)
+    static let white = Color.white
+}
+
+// Brand fonts (bundled TTFs): Cinzel for display, EB Garamond for body — same as web.
+extension Font {
+    static func display(_ size: CGFloat) -> Font { .custom("Cinzel", size: size) }
+    static func serif(_ size: CGFloat) -> Font { .custom("EB Garamond", size: size) }
 }
 
 extension View {
@@ -21,8 +52,6 @@ extension View {
             .padding(16)
             .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1)
-            )
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
     }
 }

@@ -9,12 +9,16 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             Group {
-                if loading { ProgressView().tint(.white) } else { Text(title).font(.headline) }
+                if loading {
+                    ProgressView().tint(Theme.onAccent)
+                } else {
+                    Text(title).font(.display(16)).kerning(1)
+                }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(Theme.onAccent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Theme.crimson)
+            .background(Theme.accent)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .opacity(enabled ? 1 : 0.5)
         }
@@ -29,18 +33,19 @@ struct SecondaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.headline)
-                .foregroundStyle(Theme.crimson)
+                .font(.display(16)).kerning(1)
+                .foregroundStyle(Theme.gold300)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(Theme.parchmentDeep)
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.line, lineWidth: 1))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
 
 // Reusable multiple-choice question: select → check → continue. Give it a fresh
-// `id`/`key` per question to reset. Shared by the quiz and review runners.
+// `id` per question to reset. Shared by the quiz and review runners.
 struct MCQCard: View {
     let prompt: String
     let options: [String]
@@ -56,14 +61,14 @@ struct MCQCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(progress)
-                .font(.footnote)
+                .font(.serif(14))
                 .foregroundStyle(Theme.inkSoft)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             if prompt.contains("$") {
                 MathWebView(markdown: prompt, height: $promptHeight).frame(height: promptHeight)
             } else {
-                Text(prompt).font(.title3).fontWeight(.semibold).foregroundStyle(Theme.ink)
+                Text(prompt).font(.serif(20)).foregroundStyle(Theme.ink)
             }
 
             VStack(spacing: 8) {
@@ -72,14 +77,12 @@ struct MCQCard: View {
                         if !revealed { selected = i }
                     } label: {
                         Text(options[i])
+                            .font(.serif(17))
                             .foregroundStyle(Theme.ink)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
                             .background(optionBackground(i))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(optionBorder(i), lineWidth: 1.5)
-                            )
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(optionBorder(i), lineWidth: 1.5))
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
@@ -89,8 +92,8 @@ struct MCQCard: View {
 
             if revealed && !explanation.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Explanation").font(.caption).textCase(.uppercase).foregroundStyle(Theme.inkSoft)
-                    Text(explanation).foregroundStyle(Theme.ink)
+                    Text("Explanation").font(.display(11)).kerning(1).foregroundStyle(Theme.gold400)
+                    Text(explanation).font(.serif(15)).foregroundStyle(Theme.ink)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,13 +113,13 @@ struct MCQCard: View {
 
     private func optionBackground(_ i: Int) -> Color {
         guard revealed else { return i == selected ? Theme.parchmentDeep : Theme.card }
-        if i == correctIndex { return Color(red: 0.906, green: 0.953, blue: 0.910) }
-        if i == selected { return Color(red: 0.965, green: 0.890, blue: 0.890) }
+        if i == correctIndex { return Color(hex: 0x1e3a24) }
+        if i == selected { return Color(hex: 0x3a1e1e) }
         return Theme.card
     }
 
     private func optionBorder(_ i: Int) -> Color {
-        guard revealed else { return i == selected ? Theme.crimson : Theme.line }
+        guard revealed else { return i == selected ? Theme.gold300 : Theme.line }
         if i == correctIndex { return Theme.success }
         if i == selected { return Theme.danger }
         return Theme.line

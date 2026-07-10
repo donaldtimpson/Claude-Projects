@@ -60,13 +60,13 @@ private struct CourseRow: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(course.title).font(.headline).foregroundStyle(Theme.ink).lineLimit(2)
-                Text("\(course.videoCount) lectures").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                Text(course.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
+                Text("\(course.videoCount) lectures").font(.serif(15)).foregroundStyle(Theme.inkSoft)
                 if course.isCurrent {
-                    Text("Current course")
-                        .font(.caption).fontWeight(.bold).foregroundStyle(.white)
+                    Text("Live")
+                        .font(.display(10)).kerning(1).foregroundStyle(Theme.onAccent)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Theme.crimson).clipShape(Capsule())
+                        .background(Theme.gold500).clipShape(Capsule())
                 }
             }
             Spacer(minLength: 0)

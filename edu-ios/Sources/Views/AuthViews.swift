@@ -18,11 +18,13 @@ struct AuthView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Text("The Lyceum")
-                        .font(.system(size: 34, weight: .bold, design: .serif))
-                        .foregroundStyle(Theme.crimson)
+                        .font(.display(38))
+                        .kerning(2)
+                        .foregroundStyle(Theme.gold300)
                     Text(mode == .signIn ? "Sign in to continue" : "Create your account")
+                        .font(.serif(17))
                         .foregroundStyle(Theme.inkSoft)
                 }
                 .padding(.top, 48)

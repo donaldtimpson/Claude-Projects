@@ -63,11 +63,14 @@ struct MathWebView: UIViewRepresentable {
         <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
         <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>
         <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js'></script>
-        <style>html,body{margin:0;background:transparent;color:#2b2320;
-        font:16px/1.55 -apple-system,Georgia,serif;padding:2px}
-        h2{color:#7b1113;font-size:20px} h3{color:#7b1113;font-size:17px}
-        code{background:#ece3cf;padding:1px 4px;border-radius:4px}
-        pre{background:#ece3cf;padding:10px;border-radius:8px;overflow-x:auto}
+        <style>html,body{margin:0;background:transparent;color:#f5ecd8;
+        font:16px/1.6 Georgia,'EB Garamond',serif;padding:2px}
+        h1,h2,h3{color:#cfa135;font-family:Georgia,serif}
+        h2{font-size:20px} h3{font-size:17px}
+        a{color:#ddb954}
+        code{background:#2d1212;color:#e8cb7e;padding:1px 4px;border-radius:4px}
+        pre{background:#2d1212;padding:10px;border-radius:8px;overflow-x:auto}
+        .katex{color:#f5ecd8}
         .katex-display{overflow-x:auto;overflow-y:hidden}</style></head>
         <body><div id='c'></div>
         <script>
