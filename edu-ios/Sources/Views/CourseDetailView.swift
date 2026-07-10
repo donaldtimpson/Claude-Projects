@@ -15,7 +15,7 @@ struct CourseDetailView: View {
 
     var body: some View {
         content
-            .navigationTitle(course?.title ?? "Course")
+            .navigationTitle("Course")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Filter lectures")
             .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
@@ -38,6 +38,12 @@ struct CourseDetailView: View {
             let videos = filteredVideos(course)
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    Text(course.title)
+                        .font(.display(24))
+                        .kerning(0.5)
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     // Hide the description while filtering to keep results focused.
                     if query.isEmpty, !course.description.isEmpty {
                         ExpandableText(text: course.description)

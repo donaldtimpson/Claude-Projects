@@ -18,7 +18,7 @@ struct LectureView: View {
 
     var body: some View {
         content
-            .navigationTitle(route.title)
+            .navigationTitle("Lecture")
             .navigationBarTitleDisplayMode(.inline)
             .task { if detail == nil { await load() } }
     }
@@ -35,6 +35,12 @@ struct LectureView: View {
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
                         .frame(maxWidth: .infinity)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    Text(detail.video.title)
+                        .font(.display(20))
+                        .kerning(0.5)
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)
