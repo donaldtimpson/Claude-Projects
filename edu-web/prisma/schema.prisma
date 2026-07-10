@@ -155,7 +155,8 @@ model User {
   id            String          @id @default(cuid())
   name          String?
   email         String          @unique
-  password      String
+  password      String?         // null for accounts created via Sign in with Apple
+  appleUserId   String?         @unique // Apple's stable `sub`; links returning SIWA users
   handle        String?         @unique // public pseudonym shown in the Hall of Scholars
   createdAt     DateTime        @default(now())
 

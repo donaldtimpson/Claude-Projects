@@ -14,7 +14,7 @@ export async function verifyCredentials(
   if (!email || !password) return null;
   const normalized = email.trim().toLowerCase();
   const user = await db.user.findUnique({ where: { email: normalized } });
-  if (!user) return null;
+  if (!user || !user.password) return null; // Apple-only accounts have no password
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return null;
   return { id: user.id, name: user.name, email: user.email };
