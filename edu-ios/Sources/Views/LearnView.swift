@@ -50,9 +50,14 @@ struct LearnView: View {
 
                 if !categories.isEmpty {
                     SectionHeader(title: "Browse by Category")
-                    ForEach(categories) { category in
-                        NavigationLink(value: category) { CategoryTile(category: category) }
-                            .buttonStyle(.plain)
+                    LazyVGrid(
+                        columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                        spacing: 12
+                    ) {
+                        ForEach(categories) { category in
+                            NavigationLink(value: category) { CategoryTile(category: category) }
+                                .buttonStyle(.plain)
+                        }
                     }
                 }
 
