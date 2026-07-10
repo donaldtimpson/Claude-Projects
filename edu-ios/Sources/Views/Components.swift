@@ -1,5 +1,23 @@
 import SwiftUI
 
+extension View {
+    /// An inline nav-bar title that can wrap to two lines — for long course /
+    /// lecture titles that would otherwise truncate. Keep .navigationTitle(_:) as
+    /// well so the back button still gets a label.
+    func wrappingNavTitle(_ title: String) -> some View {
+        toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(title)
+                    .font(.display(15))
+                    .foregroundStyle(Theme.gold300)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.75)
+            }
+        }
+    }
+}
+
 struct PrimaryButton: View {
     let title: String
     var enabled: Bool = true
