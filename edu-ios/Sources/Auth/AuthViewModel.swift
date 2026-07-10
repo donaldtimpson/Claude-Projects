@@ -42,6 +42,18 @@ final class AuthViewModel: ObservableObject {
         user = res.user
     }
 
+    func loginWithApple(identityToken: String, givenName: String?, familyName: String?) async throws {
+        let name = (givenName != nil || familyName != nil)
+            ? AppleName(givenName: givenName, familyName: familyName) : nil
+        let res: AuthResponse = try await APIClient.shared.post(
+            "/auth/apple",
+            body: AppleSignInBody(identityToken: identityToken, fullName: name),
+            auth: false
+        )
+        TokenStore.save(access: res.accessToken, refresh: res.refreshToken)
+        user = res.user
+    }
+
     func logout() async {
         if let rt = TokenStore.refreshToken {
             struct OK: Codable { let ok: Bool? }

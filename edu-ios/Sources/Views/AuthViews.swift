@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 // The app's entry screen when signed out (the whole app is gated behind auth).
@@ -47,6 +48,23 @@ struct AuthView: View {
                     }
                     .font(.callout)
                     .tint(Theme.crimson)
+
+                    HStack {
+                        Rectangle().fill(Theme.line).frame(height: 1)
+                        Text("or").font(.footnote).foregroundStyle(Theme.inkSoft)
+                        Rectangle().fill(Theme.line).frame(height: 1)
+                    }
+                    .padding(.vertical, 4)
+
+                    SignInWithAppleButton(.continue) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        handleApple(result)
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 50)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .disabled(busy)
                 }
 
                 Text("Uses the same account as the website.")
@@ -79,6 +97,38 @@ struct AuthView: View {
             self.error = error.localizedDescription
         }
         busy = false
+    }
+
+    private func handleApple(_ result: Result<ASAuthorization, Error>) {
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+                  let tokenData = credential.identityToken,
+                  let token = String(data: tokenData, encoding: .utf8) else {
+                error = "Apple sign-in didn't return a token. Please try again."
+                return
+            }
+            let fullName = credential.fullName
+            Task {
+                busy = true
+                error = nil
+                do {
+                    try await auth.loginWithApple(
+                        identityToken: token,
+                        givenName: fullName?.givenName,
+                        familyName: fullName?.familyName
+                    )
+                } catch {
+                    self.error = error.localizedDescription
+                }
+                busy = false
+            }
+        case .failure(let err):
+            // Swallow the user-cancelled case; surface real errors.
+            if (err as? ASAuthorizationError)?.code != .canceled {
+                error = err.localizedDescription
+            }
+        }
     }
 
     @ViewBuilder

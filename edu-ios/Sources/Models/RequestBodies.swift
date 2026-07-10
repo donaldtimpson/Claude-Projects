@@ -46,3 +46,13 @@ struct RegisterBody: Encodable {
     let email: String
     let password: String
 }
+
+struct AppleName: Encodable {
+    let givenName: String?
+    let familyName: String?
+}
+
+struct AppleSignInBody: Encodable {
+    let identityToken: String
+    let fullName: AppleName?
+}

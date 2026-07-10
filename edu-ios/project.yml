@@ -20,6 +20,11 @@ targets:
     platform: iOS
     sources:
       - path: Sources
+    entitlements:
+      path: Lyceum.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.timpsonlyceum.Lyceum
