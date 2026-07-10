@@ -92,13 +92,16 @@ struct LearnView: View {
             VStack(alignment: .leading, spacing: 12) {
                 if !courseHits.isEmpty {
                     SectionHeader(title: "Courses")
-                    ForEach(courseHits) { courseLink($0) }
+                    ForEach(courseHits) { course in
+                        NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
+                            .buttonStyle(.plain)
+                    }
                 }
 
                 if !categoryHits.isEmpty {
                     SectionHeader(title: "Categories")
                     ForEach(categoryHits) { category in
-                        NavigationLink(value: category) { CategoryRow(category: category) }
+                        NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
                             .buttonStyle(.plain)
                     }
                 }
