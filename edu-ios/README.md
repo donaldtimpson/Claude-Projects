@@ -32,7 +32,8 @@ Use the LAN IP, not `localhost` (a device/simulator's localhost is itself).
 
 ## Layout
 
-- `project.yml` — xcodegen spec (universal iPhone/iPad, iOS 17+, SwiftData, test target).
+- `project.yml` — xcodegen spec (universal iPhone/iPad, iOS 18+, SwiftData, test target).
+  Navigation uses a `.sidebarAdaptable` TabView: bottom tabs on iPhone, sidebar on iPad.
 - `Sources/` — SwiftUI app.
   - `Networking/` — `APIClient` (async/await + token refresh), `TokenStore` (Keychain).
   - `Auth/`, `Models/`, `Offline/` (SwiftData write queue), `Drills/` (native generators).

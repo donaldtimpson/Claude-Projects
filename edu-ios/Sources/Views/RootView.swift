@@ -9,16 +9,24 @@ struct RootView: View {
         } else if auth.user == nil {
             AuthView()
         } else {
+            // A bottom tab bar on iPhone and an expandable sidebar on iPad, from
+            // one TabView — scales cleanly as we add destinations (search,
+            // leaderboard, course map, settings…). See .sidebarAdaptable.
             TabView {
-                NavigationStack { LearnView() }
-                    .tabItem { Label("Learn", systemImage: "books.vertical") }
-                NavigationStack { ReviewView() }
-                    .tabItem { Label("Review", systemImage: "square.stack.3d.up") }
-                NavigationStack { DrillsView() }
-                    .tabItem { Label("Drills", systemImage: "figure.strengthtraining.traditional") }
-                NavigationStack { ProfileView() }
-                    .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                Tab("Learn", systemImage: "books.vertical") {
+                    NavigationStack { LearnView() }
+                }
+                Tab("Review", systemImage: "square.stack.3d.up") {
+                    NavigationStack { ReviewView() }
+                }
+                Tab("Drills", systemImage: "figure.strengthtraining.traditional") {
+                    NavigationStack { DrillsView() }
+                }
+                Tab("Profile", systemImage: "person.crop.circle") {
+                    NavigationStack { ProfileView() }
+                }
             }
+            .tabViewStyle(.sidebarAdaptable)
         }
     }
 }
