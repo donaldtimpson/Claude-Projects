@@ -1,0 +1,460 @@
+generator client {
+  provider = "prisma-client-js"
+  // driverAdapters went GA in Prisma 6 — no preview flag needed. The Neon
+  // adapter is wired up in lib/db.ts.
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id                String         @id @default(cuid())
+  youtubePlaylistId String         @unique
+  title             String
+  description       String         @default("")
+  thumbnailUrl      String         @default("")
+  videoCount        Int            @default(0)
+  isCurrent         Boolean        @default(false)
+  publishedAt       DateTime?
+  syncedAt          DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @default(now()) @updatedAt // powers the mobile offline sync manifest
+
+  videos            Video[]
+  quizQuestions     QuizQuestion[]
+  quizAttempts      QuizAttempt[]
+  categories        CourseCategory[]
+  resources         CourseResource[]
+  announcements     Announcement[]
+  sections          Section[]
+  problemSets       ProblemSet[]
+  linksFrom         CourseLink[]     @relation("CourseLinkFrom")
+  linksTo           CourseLink[]     @relation("CourseLinkTo")
+
+  // Same-subject grouping. null = this course is its own subject (a "representative"
+  // / canonical offering). Non-null = a sibling offering pointing at its
+  // representative. Connections live on the representative; siblings inherit them.
+  canonicalCourseId String?
+  canonicalCourse   Course?          @relation("CourseOfferings", fields: [canonicalCourseId], references: [id], onDelete: SetNull)
+  offerings         Course[]         @relation("CourseOfferings")
+
+  @@index([canonicalCourseId])
+}
+
+enum CourseLinkKind {
+  RECOMMENDED // directional: fromCourse is recommended background for toCourse
+  RELATED     // undirected: stored once (fromCourseId < toCourseId), shown on both
+}
+
+model CourseLink {
+  id           String         @id @default(cuid())
+  fromCourseId String
+  toCourseId   String
+  kind         CourseLinkKind
+  createdAt    DateTime       @default(now())
+
+  fromCourse   Course @relation("CourseLinkFrom", fields: [fromCourseId], references: [id], onDelete: Cascade)
+  toCourse     Course @relation("CourseLinkTo", fields: [toCourseId], references: [id], onDelete: Cascade)
+
+  @@unique([fromCourseId, toCourseId, kind])
+  @@index([fromCourseId])
+  @@index([toCourseId])
+}
+
+model Category {
+  id        String          @id @default(cuid())
+  name      String          @unique
+  slug      String          @unique
+  createdAt DateTime        @default(now())
+
+  courses   CourseCategory[]
+}
+
+model CourseCategory {
+  courseId   String
+  categoryId String
+
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, categoryId])
+}
+
+model Video {
+  id              String          @id @default(cuid())
+  courseId        String
+  youtubeVideoId  String          @unique
+  title           String
+  description     String          @default("")
+  thumbnailUrl    String          @default("")
+  position        Int
+  durationSeconds Int             @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt // powers the mobile offline sync manifest
+
+  course          Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  quizQuestions   QuizQuestion[]
+  videoProgress   VideoProgress[]
+  quizAttempts    QuizAttempt[]
+  comments        Comment[]
+  lectureNote     LectureNote?
+  transcript      Transcript?
+  assignments     Assignment[]
+}
+
+model LectureNote {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  content   String              // Markdown study notes
+  isDraft   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+// Lecture transcript (YouTube auto-captions), 1:1 with Video. `content` is the
+// deduped plaintext used for full-text search; `segments` is the [{start,text}]
+// timed array used to deep-link a search hit to its moment. Public (no draft
+// gate) — captions are already public. Full-text search runs against GIN
+// expression indexes added in the migration (to_tsvector('english', content));
+// see lib/search.ts. Imported from scripts/transcripts/ via import-transcripts.ts.
+model Transcript {
+  id        String   @id @default(cuid())
+  videoId   String   @unique
+  content   String
+  segments  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  videoId      String?
+  courseId     String?
+  prompt       String
+  options      Json
+  correctIndex Int
+  explanation  String   @default("")
+  position     Int      @default(0)
+  isDraft      Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt // powers the mobile offline sync manifest
+
+  video        Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  course       Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  reviews      QuestionReview[]
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  password      String
+  handle        String?         @unique // public pseudonym shown in the Hall of Scholars
+  createdAt     DateTime        @default(now())
+
+  sessions        Session[]
+  videoProgress   VideoProgress[]
+  quizAttempts    QuizAttempt[]
+  comments        Comment[]
+  achievements    UserAchievement[]
+  questionReviews QuestionReview[]
+  drillAttempts   DrillAttempt[]
+  enrollments     Enrollment[]
+  submissions     Submission[]
+  mobileRefreshTokens MobileRefreshToken[]
+}
+
+// Long-lived, revocable refresh token for the native mobile app (apps/mobile).
+// Access tokens are short-lived stateless JWTs (see lib/mobile-auth.ts); refresh
+// tokens are opaque random strings stored ONLY as a sha256 hash so a DB leak
+// can't mint access tokens. Rotated on every use; deleted on logout. Separate
+// from NextAuth's cookie session (web) and its unused Session model.
+model MobileRefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique // sha256 hex of the opaque refresh token
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Dedup guard for offline-queued mobile writes replayed on reconnect. The client
+// tags each queued mutation (quiz attempt, review grade, drill session) with a
+// stable clientId; the endpoint records it here first and skips the work if the
+// key already exists, so a replay can't double-insert an attempt or double-count
+// a review rep. See lib/mobile/idempotency.ts.
+model IdempotencyKey {
+  key       String   @id
+  userId    String
+  scope     String   @default("") // e.g. "quiz-attempt" | "review-grade" | "drill-session"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// A live class instance Donald teaches against a public Course: its own roster,
+// join code, and (later) assignments + grades. Registration is only open while the
+// linked course is `isCurrent`. gradeConfig holds per-category weights; null until set.
+model Section {
+  id          String       @id @default(cuid())
+  courseId    String
+  name        String       // e.g. "Fall 2026 · Period 3"
+  joinCode    String       @unique
+  gradeConfig Json?
+  createdAt   DateTime     @default(now())
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollments Enrollment[]
+  assignments Assignment[]
+
+  @@index([courseId])
+}
+
+// A student's registration in a Section (the roster). Created when a student enters
+// a valid join code for a section on the current course.
+model Enrollment {
+  sectionId  String
+  userId     String
+  enrolledAt DateTime @default(now())
+  status     String   @default("active") // "active" | "dropped"
+
+  // Manual grade inputs (Phase 4). Midterm/final are in-class exams entered as
+  // points (out of Section.gradeConfig midtermMax/finalMax). attendanceOverride
+  // is a percent (0–100) that replaces the watch-based attendance when set.
+  midtermScore       Int?
+  finalScore         Int?
+  attendanceOverride Int?
+
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, userId])
+  @@index([userId])
+}
+
+// A public, course-level set of homework problems (Markdown + KaTeX, optional
+// attached PDF/link). Visible to everyone on the course page; a Section turns one
+// into a graded Assignment for its roster.
+model ProblemSet {
+  id            String       @id @default(cuid())
+  courseId      String
+  title         String
+  body          String       @default("") // Markdown + KaTeX (the public problems)
+  solution      String       @default("") // Markdown + KaTeX worked solutions (admin; released per-assignment)
+  isDraft       Boolean      @default(true) // hidden from public until published (like quizzes/notes)
+  points        Int          @default(0) // core graded total (becomes the assignment denominator)
+  extraCreditPoints Int      @default(0) // bonus beyond the core total (not in the denominator)
+  attachmentUrl String? // optional problem-set PDF / external link
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  assignments   Assignment[]
+
+  @@index([courseId])
+}
+
+// A ProblemSet assigned to one Section with a due date + point value. Only the
+// section's enrolled students can submit. Optionally tagged to a lecture.
+model Assignment {
+  id           String       @id @default(cuid())
+  sectionId    String
+  problemSetId String
+  videoId      String? // optional "relates to lecture" tag
+  title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's title
+  points       Int          @default(100)
+  dueAt        DateTime?
+  solutionsReleased Boolean  @default(false) // instructor-controlled: reveal the solution to this section
+  createdAt    DateTime     @default(now())
+
+  section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  problemSet   ProblemSet   @relation(fields: [problemSetId], references: [id], onDelete: Cascade)
+  video        Video?       @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  submissions  Submission[]
+
+  @@index([sectionId])
+}
+
+// A student's homework submission: a pasted link to their solution, plus the
+// instructor's score + feedback once graded.
+model Submission {
+  assignmentId String
+  userId       String
+  url          String
+  submittedAt  DateTime  @default(now())
+  score        Int?
+  feedback     String?
+  gradedAt     DateTime?
+
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([assignmentId, userId])
+  @@index([userId])
+}
+
+// One row per completed practice-drill session (/drills). Drills are procedurally
+// generated, so there's no question FK — just the drill `slug` + outcome. Feeds the
+// streak (completedAt) and the direct-granted drill badges (see recordDrillSession).
+model DrillAttempt {
+  id          String   @id @default(cuid())
+  userId      String
+  slug        String   // drill type: "arithmetic" | "unit-circle" | "vectors"
+  level       Int
+  total       Int
+  correct     Int
+  bestStreak  Int      @default(0)
+  mode        String   // "count" | "timed"
+  durationSec Int      @default(0)
+  completedAt DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([userId, slug])
+}
+
+model UserAchievement {
+  userId    String
+  key       String // matches a Badge.key in lib/gamification
+  earnedAt  DateTime @default(now())
+  grantedBy String?  // null = auto-earned; otherwise an admin label for instructor-granted badges
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VideoProgress {
+  userId    String
+  videoId   String
+  watchedAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
+
+model QuizAttempt {
+  id             String   @id @default(cuid())
+  userId         String
+  videoId        String?
+  courseId       String?
+  score          Int
+  totalQuestions Int
+  answers        Json?
+  completedAt    DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video          Video?   @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  course         Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+// Spaced-repetition schedule: one row per (student, published question). A
+// question auto-enrolls the first time the student answers it in a quiz/test
+// (see recordQuizAnswersForSrs in lib/srs.ts); the cross-course daily review at
+// /review serves the rows whose dueAt has passed. Leitner scheduling: correct
+// promotes a box (longer interval), wrong resets to box 1.
+model QuestionReview {
+  userId         String
+  questionId     String
+  box            Int      @default(1)
+  dueAt          DateTime
+  lastReviewedAt DateTime @default(now())
+  reps           Int      @default(0)
+  lapses         Int      @default(0)
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, questionId])
+  @@index([userId, dueAt])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  userId    String
+  videoId   String
+  parentId  String?
+  body      String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("Replies")
+
+  @@index([parentId])
+  @@index([videoId])
+}
+
+model Resource {
+  id          String           @id @default(cuid())
+  title       String
+  url         String
+  kind        ResourceKind
+  description String           @default("")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  courses     CourseResource[]
+}
+
+model CourseResource {
+  courseId   String
+  resourceId String
+  position   Int      @default(0)
+
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, resourceId])
+  @@index([courseId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  courseId  String?
+  title     String
+  body      String   @default("")
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course    Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, pinned, createdAt])
+}
+
+enum ResourceKind {
+  TEXTBOOK
+  SLIDES
+  PROBLEM_SET
+  TOOL
+  VIDEO
+  DOCUMENT
+  LINK
+}
