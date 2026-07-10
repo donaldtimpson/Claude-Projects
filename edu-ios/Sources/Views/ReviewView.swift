@@ -21,6 +21,7 @@ struct ReviewView: View {
             }
         }
         .navigationTitle("Daily Review")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var cards: [DueCard] { deck?.cards ?? [] }

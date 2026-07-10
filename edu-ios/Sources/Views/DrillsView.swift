@@ -23,6 +23,7 @@ struct DrillsView: View {
         }
         .background(Theme.parchment)
         .navigationTitle("Practice Drills")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: String.self) { DrillRunnerView(slug: $0) }
     }
 }

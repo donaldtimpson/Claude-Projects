@@ -8,6 +8,7 @@ struct ProfileView: View {
     var body: some View {
         signedIn
             .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
     }
 
     private var earned: [Badge] { badges.filter { $0.unlocked } }
