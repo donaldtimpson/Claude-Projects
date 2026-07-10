@@ -13,6 +13,7 @@ model Course {
   id                String         @id @default(cuid())
   youtubePlaylistId String         @unique
   title             String
+  shortTitle        String?        // clean subject name for compact display (rows, nav); falls back to title
   description       String         @default("")
   thumbnailUrl      String         @default("")
   videoCount        Int            @default(0)

@@ -11,6 +11,7 @@ export async function GET() {
     select: {
       id: true,
       title: true,
+      shortTitle: true,
       description: true,
       thumbnailUrl: true,
       videoCount: true,
