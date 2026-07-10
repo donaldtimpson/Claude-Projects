@@ -70,61 +70,78 @@ struct LearnView: View {
         NavigationLink(value: course) { CourseRow(course: course) }.buttonStyle(.plain)
     }
 
-    // MARK: search
+    // MARK: search (hybrid: instant local filter + server-backed lecture search)
+    private var queryLower: String { query.trimmingCharacters(in: .whitespaces).lowercased() }
+
+    private var filteredCourses: [CourseListItem] {
+        guard !queryLower.isEmpty else { return [] }
+        return courses.filter { $0.title.lowercased().contains(queryLower) }
+    }
+
+    private var filteredCategories: [CategoryItem] {
+        guard !queryLower.isEmpty else { return [] }
+        return categories.filter { $0.name.lowercased().contains(queryLower) }
+    }
+
     @ViewBuilder private var searchResults: some View {
+        let courseHits = filteredCourses
+        let categoryHits = filteredCategories
+        let lectureHits = results?.lectures ?? []
+
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                if searching {
-                    ProgressView().frame(maxWidth: .infinity).padding(.top, 24)
-                } else if let results {
-                    if results.fuzzy == true {
-                        Text("No exact matches — showing similar results.")
-                            .font(.serif(14)).foregroundStyle(Theme.inkSoft)
-                    }
-                    if results.courses.isEmpty && results.lectures.isEmpty {
-                        Text("No results for “\(query)”.")
-                            .font(.serif(16)).foregroundStyle(Theme.inkSoft)
-                            .frame(maxWidth: .infinity, alignment: .center).padding(.top, 32)
-                    }
-                    if !results.courses.isEmpty {
-                        SectionHeader(title: "Courses")
-                        ForEach(results.courses) { hit in
-                            NavigationLink(value: hit) {
-                                HStack(spacing: 12) {
-                                    Thumb(url: hit.thumbnailUrl)
-                                    Text(hit.title).font(.display(15)).kerning(0.5)
-                                        .foregroundStyle(Theme.ink).lineLimit(2)
-                                    Spacer(minLength: 0)
-                                }
-                                .lyceumCard()
-                            }
+                if !courseHits.isEmpty {
+                    SectionHeader(title: "Courses")
+                    ForEach(courseHits) { courseLink($0) }
+                }
+
+                if !categoryHits.isEmpty {
+                    SectionHeader(title: "Categories")
+                    ForEach(categoryHits) { category in
+                        NavigationLink(value: category) { CategoryRow(category: category) }
                             .buttonStyle(.plain)
+                    }
+                }
+
+                // Deep search across lecture notes/transcripts — needs the server,
+                // so it fills in after the instant local results above.
+                if searching || !lectureHits.isEmpty {
+                    SectionHeader(title: "In Lectures")
+                    if searching {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text("Searching lectures…").font(.serif(14)).foregroundStyle(Theme.inkSoft)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 8)
+                    } else {
+                        ForEach(lectureHits) { hit in
+                            NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.plain)
                         }
                     }
-                    if !results.lectures.isEmpty {
-                        SectionHeader(title: "Lectures")
-                        ForEach(results.lectures) { hit in
-                            NavigationLink(value: hit) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(hit.title).font(.display(14)).kerning(0.3)
-                                        .foregroundStyle(Theme.ink).lineLimit(2)
-                                    Text(hit.courseTitle).font(.serif(13)).foregroundStyle(Theme.gold400)
-                                    if let snippet = hit.snippet, !snippet.isEmpty {
-                                        Text(cleanSnippet(snippet))
-                                            .font(.serif(14)).foregroundStyle(Theme.inkSoft).lineLimit(3)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .lyceumCard()
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                }
+
+                if courseHits.isEmpty && categoryHits.isEmpty && lectureHits.isEmpty && !searching {
+                    Text("No results for “\(query)”.")
+                        .font(.serif(16)).foregroundStyle(Theme.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .center).padding(.top, 32)
                 }
             }
             .padding()
         }
         .background(Theme.parchment)
+    }
+
+    private func lectureResultRow(_ hit: LectureHit) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(hit.title).font(.display(14)).kerning(0.3).foregroundStyle(Theme.ink).lineLimit(2)
+            Text(hit.courseTitle).font(.serif(13)).foregroundStyle(Theme.gold400)
+            if let snippet = hit.snippet, !snippet.isEmpty {
+                Text(cleanSnippet(snippet)).font(.serif(14)).foregroundStyle(Theme.inkSoft).lineLimit(3)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lyceumCard()
     }
 
     private func cleanSnippet(_ s: String) -> String {
