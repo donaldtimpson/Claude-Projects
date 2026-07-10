@@ -34,10 +34,10 @@ struct CourseDetailView: View {
                     Text("\(course.videos.count) lectures")
                         .font(.subheadline).foregroundStyle(Theme.inkSoft)
 
-                    ForEach(course.videos) { video in
+                    ForEach(Array(course.videos.enumerated()), id: \.element.id) { index, video in
                         NavigationLink(value: LectureRoute(courseId: courseId, videoId: video.id, title: video.title)) {
                             HStack(spacing: 12) {
-                                Text("\(video.position)")
+                                Text("\(index + 1)")
                                     .font(.headline).foregroundStyle(Theme.gold).frame(width: 28)
                                 Text(video.title).foregroundStyle(Theme.ink).lineLimit(2)
                                 Spacer(minLength: 0)
