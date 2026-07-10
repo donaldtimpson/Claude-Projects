@@ -6,14 +6,8 @@ struct ProfileView: View {
     @State private var badges: [Badge] = []
 
     var body: some View {
-        Group {
-            if !auth.isSignedIn {
-                AuthGate(message: "Sign in to see your streak, badges, and progress.")
-            } else {
-                signedIn
-            }
-        }
-        .navigationTitle("Profile")
+        signedIn
+            .navigationTitle("Profile")
     }
 
     private var earned: [Badge] { badges.filter { $0.unlocked } }

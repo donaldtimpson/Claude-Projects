@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct ReviewView: View {
-    @EnvironmentObject private var auth: AuthViewModel
     @EnvironmentObject private var queue: WriteQueueManager
 
     @State private var deck: ReviewDeckResponse?
@@ -15,14 +14,10 @@ struct ReviewView: View {
 
     var body: some View {
         Group {
-            if !auth.isSignedIn {
-                AuthGate(message: "Sign in to start your daily spaced-repetition review.")
-            } else {
-                switch phase {
-                case .idle: idleView
-                case .running: runningView
-                case .done: doneView
-                }
+            switch phase {
+            case .idle: idleView
+            case .running: runningView
+            case .done: doneView
             }
         }
         .navigationTitle("Daily Review")

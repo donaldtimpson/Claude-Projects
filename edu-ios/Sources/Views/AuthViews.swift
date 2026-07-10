@@ -1,26 +1,9 @@
 import SwiftUI
 
-// Shown on personal tabs (Review, Profile) when signed out.
-struct AuthGate: View {
-    let message: String
-    @State private var showAuth = false
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text("Members only").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
-            Text(message).multilineTextAlignment(.center).foregroundStyle(Theme.ink)
-            PrimaryButton(title: "Sign in") { showAuth = true }
-        }
-        .padding(32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
-        .sheet(isPresented: $showAuth) { AuthView() }
-    }
-}
-
+// The app's entry screen when signed out (the whole app is gated behind auth).
+// On success it sets auth.user, and RootView swaps in the TabView automatically.
 struct AuthView: View {
     @EnvironmentObject private var auth: AuthViewModel
-    @Environment(\.dismiss) private var dismiss
 
     @State private var mode: Mode = .signIn
     @State private var name = ""
@@ -32,9 +15,18 @@ struct AuthView: View {
     enum Mode { case signIn, register }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
+        ScrollView {
+            VStack(spacing: 20) {
+                VStack(spacing: 6) {
+                    Text("The Lyceum")
+                        .font(.system(size: 34, weight: .bold, design: .serif))
+                        .foregroundStyle(Theme.crimson)
+                    Text(mode == .signIn ? "Sign in to continue" : "Create your account")
+                        .foregroundStyle(Theme.inkSoft)
+                }
+                .padding(.top, 48)
+
+                VStack(spacing: 12) {
                     if mode == .register {
                         field("Name", text: $name)
                     }
@@ -49,23 +41,22 @@ struct AuthView: View {
                                   enabled: canSubmit, loading: busy) {
                         Task { await submit() }
                     }
-                    Button(mode == .signIn ? "Create an account instead" : "I already have an account") {
+                    Button(mode == .signIn ? "New here? Create an account" : "I already have an account") {
                         withAnimation { mode = mode == .signIn ? .register : .signIn }
                         error = nil
                     }
                     .font(.callout)
                     .tint(Theme.crimson)
-
-                    Text("Same account as the website.")
-                        .font(.footnote).foregroundStyle(Theme.inkSoft)
                 }
-                .padding()
+
+                Text("Uses the same account as the website.")
+                    .font(.footnote).foregroundStyle(Theme.inkSoft)
             }
-            .background(Theme.parchment)
-            .navigationTitle(mode == .signIn ? "Welcome back" : "Create account")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+            .padding()
+            .frame(maxWidth: 520)
+            .frame(maxWidth: .infinity)
         }
+        .background(Theme.parchment)
     }
 
     private var canSubmit: Bool {
@@ -83,7 +74,7 @@ struct AuthView: View {
                                         email: email.trimmingCharacters(in: .whitespaces),
                                         password: password)
             }
-            dismiss()
+            // Success: auth.user is now set; RootView swaps to the TabView.
         } catch {
             self.error = error.localizedDescription
         }
