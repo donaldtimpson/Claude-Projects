@@ -21,9 +21,16 @@ actor APIClient {
     init() {
         let env = ProcessInfo.processInfo.environment["API_BASE_URL"]
         if let env, !env.isEmpty {
+            // Override for a physical device on the LAN, e.g. http://192.168.x.x:3000
             baseURL = env
         } else {
+            #if DEBUG
+            // The iOS Simulator reaches the Mac's `npm run dev` at localhost.
+            // (Production has the mobile API only after edu-web is deployed.)
+            baseURL = "http://localhost:3000"
+            #else
             baseURL = "https://timpson-lyceum.vercel.app"
+            #endif
         }
     }
 
