@@ -127,12 +127,19 @@ struct LectureRow: View {
             Thumb(url: video.thumbnailUrl)
             VStack(alignment: .leading, spacing: 4) {
                 titleText.font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
-                if video.durationSeconds > 0 {
-                    Text(formatDuration(video.durationSeconds))
-                        .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                // Duration (left) and the lecture number (right) share the bottom line,
+                // so students can see which lecture they're on without reading the title.
+                HStack(spacing: 8) {
+                    if video.durationSeconds > 0 {
+                        Text(formatDuration(video.durationSeconds))
+                            .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                    }
+                    Spacer(minLength: 8)
+                    Text("\(video.position + 1)")
+                        .font(.display(15)).foregroundStyle(Theme.gold400)
                 }
+                .frame(maxWidth: .infinity)
             }
-            Spacer(minLength: 0)
         }
         .lyceumCard()
     }
