@@ -14,6 +14,7 @@ enum DrillInput {
 enum DrillDiagramSpec {
     case vector(angleDeg: Double, component: String)   // "x" or "y"
     case unitCircle(angleDeg: Double, fn: String)      // sin / cos / tan
+    case matrix(rows: [[Int]])                         // determinant, drawn with bars
 }
 
 struct DrillProblem: Identifiable {
@@ -40,7 +41,8 @@ private func sampleDistinct<T>(_ pool: [T], _ n: Int) -> [T] {
 
 enum DrillCatalog {
     static let all: [DrillDef] = [
-        arithmetic, percentages, orderOfOps, powersOfTwo, squares, primes, unitCircle, vectors,
+        arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
+        sequences, logarithms, derivative, integral, determinant, unitCircle, vectors,
     ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
@@ -53,6 +55,35 @@ enum DrillCatalog {
     private static func draw(_ key: String, _ domain: () -> [Int]) -> Int {
         if bags[key]?.isEmpty ?? true { bags[key] = domain().shuffled() }
         return bags[key]!.removeLast()
+    }
+
+    // Unicode super/subscripts for exponents and bases (x⁴, log₂).
+    private static func sup(_ n: Int) -> String {
+        let m: [Character: Character] = ["-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹"]
+        return String(String(n).map { m[$0] ?? $0 })
+    }
+    private static func sub(_ n: Int) -> String {
+        let m: [Character: Character] = ["0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉"]
+        return String(String(n).map { m[$0] ?? $0 })
+    }
+    // Render c·xⁿ compactly: 12x⁴, 3x, 5 (n=0), x² (c=1), −x³.
+    private static func powTerm(_ c: Int, _ n: Int) -> String {
+        if n == 0 { return "\(c)" }
+        let base = n == 1 ? "x" : "x\(sup(n))"
+        if c == 1 { return base }
+        if c == -1 { return "−\(base)" }
+        return "\(c)\(base)"
+    }
+    private static func neg(_ x: Int) -> String { String(x).replacingOccurrences(of: "-", with: "−") }
+
+    // Build 4 shuffled options from a correct value + a pool of distractor strings.
+    private static func fourChoices(_ correct: String, _ pool: [String]) -> (options: [String], correctIndex: Int) {
+        var seen = Set([correct]); var d: [String] = []
+        for x in pool where seen.insert(x).inserted { d.append(x); if d.count == 3 { break } }
+        var pad = 2
+        while d.count < 3 { let f = "\(pad)"; if seen.insert(f).inserted { d.append(f) }; pad += 1 }
+        let opts = ([correct] + d).shuffled()
+        return (opts, opts.firstIndex(of: correct) ?? 0)
     }
     private static func isPrime(_ n: Int) -> Bool {
         if n < 2 { return false }
@@ -202,6 +233,126 @@ enum DrillCatalog {
             let divisor = Bool.random() ? a : b
             return problem(product, "÷", divisor, product / divisor)
         }
+    }
+
+    // MARK: - Logarithms (numeric keypad; log_b(bᵏ) = k)
+    static let logarithms = DrillDef(
+        slug: "logarithms",
+        title: "Logarithms",
+        blurb: "Evaluate a logarithm — the exponent that gets you there.",
+        icon: "㏒"
+    ) { level in
+        let bases = level == 1 ? [2] : level == 2 ? [2, 3] : [2, 3, 5, 10]
+        let b = bases.randomElement()!
+        let maxK = b == 2 ? (level == 1 ? 8 : 12) : b == 3 ? 5 : 4
+        let k = draw("log_\(b)_\(level)") { Array(1...maxK) }
+        let value = Int(pow(Double(b), Double(k)))
+        return DrillProblem(prompt: "log\(sub(b))(\(value))",
+                            input: .numeric(answer: k, unit: nil),
+                            explanation: "\(b)^\(k) = \(value), so log\(sub(b))(\(value)) = \(k)")
+    }
+
+    // MARK: - Greatest common divisor (numeric)
+    static let gcdDrill = DrillDef(
+        slug: "gcd",
+        title: "Greatest Common Divisor",
+        blurb: "Find the largest number that divides both.",
+        icon: "∩"
+    ) { level in
+        let hi = level == 1 ? 20 : level == 2 ? 60 : 120
+        let a = Int.random(in: 2...hi), b = Int.random(in: 2...hi)
+        return DrillProblem(prompt: "gcd(\(a), \(b))",
+                            input: .numeric(answer: gcd(a, b), unit: nil),
+                            explanation: "gcd(\(a), \(b)) = \(gcd(a, b))")
+    }
+
+    // MARK: - Next in sequence (numeric; arithmetic or geometric)
+    static let sequences = DrillDef(
+        slug: "sequences",
+        title: "Next in Sequence",
+        blurb: "Spot the pattern and give the next term.",
+        icon: "🔗"
+    ) { level in
+        if Bool.random() {
+            let a = Int.random(in: 1...9), d = Int.random(in: 2...(level == 1 ? 5 : 9))
+            let terms = (0..<4).map { a + $0 * d }
+            return DrillProblem(prompt: "\(terms.map(String.init).joined(separator: ",  ")),  ?",
+                                input: .numeric(answer: a + 4 * d, unit: nil),
+                                explanation: "Arithmetic, +\(d) each step → \(a + 4 * d)")
+        } else {
+            let a = Int.random(in: 1...4), r = Int.random(in: 2...(level == 1 ? 3 : 4))
+            let terms = (0..<4).map { a * Int(pow(Double(r), Double($0))) }
+            return DrillProblem(prompt: "\(terms.map(String.init).joined(separator: ",  ")),  ?",
+                                input: .numeric(answer: a * Int(pow(Double(r), 4)), unit: nil),
+                                explanation: "Geometric, ×\(r) each step → \(a * Int(pow(Double(r), 4)))")
+        }
+    }
+
+    // MARK: - Derivatives (choice; power rule on c·xⁿ)
+    static let derivative = DrillDef(
+        slug: "derivative",
+        title: "Derivatives",
+        blurb: "Differentiate c·xⁿ with the power rule.",
+        icon: "ƒ′"
+    ) { level in
+        let n = Int.random(in: 2...(level == 1 ? 5 : level == 2 ? 7 : 9))
+        let c = level == 1 ? Int.random(in: 1...5) : Int.random(in: 2...9)
+        let correct = powTerm(c * n, n - 1)
+        let (options, correctIndex) = fourChoices(correct, [
+            powTerm(c, n),            // forgot to differentiate
+            powTerm(c * n, n),        // forgot to drop the power
+            powTerm(c, n - 1),        // forgot the coefficient factor
+            powTerm(c * (n - 1), n - 1),
+        ])
+        return DrillProblem(prompt: "d/dx (\(powTerm(c, n)))",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "Bring down \(n), reduce the power: \(correct)")
+    }
+
+    // MARK: - Integrals (choice; power rule + C)
+    static let integral = DrillDef(
+        slug: "integral",
+        title: "Integrals",
+        blurb: "Integrate c·xⁿ with the power rule — don't forget + C.",
+        icon: "∫"
+    ) { level in
+        let n = Int.random(in: 1...(level == 1 ? 4 : level == 2 ? 6 : 8))
+        let m = n + 1
+        let k = level == 1 ? Int.random(in: 1...3) : Int.random(in: 1...5)
+        let c = k * m
+        let correct = "\(powTerm(k, m)) + C"
+        let (options, correctIndex) = fourChoices(correct, [
+            "\(powTerm(c, m)) + C",   // forgot to divide by the new power
+            "\(powTerm(k, n)) + C",   // wrong power
+            powTerm(k, m),            // forgot + C
+            "\(powTerm(c, n)) + C",
+        ])
+        return DrillProblem(prompt: "∫ \(powTerm(c, n)) dx",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "Raise the power, divide by it: \(correct)")
+    }
+
+    // MARK: - 2×2 Determinant (choice; ad − bc, with a rendered matrix)
+    static let determinant = DrillDef(
+        slug: "determinant",
+        title: "2×2 Determinant",
+        blurb: "Compute ad − bc for a 2×2 matrix.",
+        icon: "▦"
+    ) { level in
+        let range = level == 1 ? 1...6 : level == 2 ? -6...9 : -12...12
+        func e() -> Int { Int.random(in: range) }
+        let a = e(), b = e(), c = e(), d = e()
+        let det = a * d - b * c
+        let (options, correctIndex) = fourChoices(neg(det), [
+            neg(a * d + b * c),   // sign slip on the second product
+            neg(b * c - a * d),   // reversed (−det)
+            neg(a * b - c * d),   // multiplied the wrong pairs
+            neg(det + 3), neg(det - 4),
+        ])
+        return DrillProblem(prompt: "Determinant = ?",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "ad − bc = (\(a))(\(d)) − (\(b))(\(c)) = \(neg(det))",
+                            diagram: .matrix(rows: [[a, b], [c, d]]))
     }
 
     // MARK: - Unit circle (choice; sin/cos/tan at standard angles, exact values)

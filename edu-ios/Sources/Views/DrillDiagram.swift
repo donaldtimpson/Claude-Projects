@@ -8,15 +8,49 @@ struct DrillDiagram: View {
     var size: CGFloat = 168
 
     var body: some View {
+        switch spec {
+        case let .matrix(rows): matrixView(rows)
+        default: canvasView
+        }
+    }
+
+    private var canvasView: some View {
         Canvas { ctx, sz in
             let c = CGPoint(x: sz.width / 2, y: sz.height / 2)
             let r = min(sz.width, sz.height) / 2 - 16
             switch spec {
             case let .unitCircle(deg, fn): drawUnitCircle(&ctx, c, r, deg, fn)
             case let .vector(deg, comp): drawVector(&ctx, c, r, deg, comp)
+            case .matrix: break
             }
         }
         .frame(width: size, height: size)
+    }
+
+    // Determinant matrix, drawn with the |·| bars.
+    private func matrixView(_ rows: [[Int]]) -> some View {
+        HStack(spacing: 12) {
+            bar
+            Grid(horizontalSpacing: 20, verticalSpacing: 10) {
+                ForEach(rows.indices, id: \.self) { i in
+                    GridRow {
+                        ForEach(rows[i].indices, id: \.self) { j in
+                            Text("\(rows[i][j])".replacingOccurrences(of: "-", with: "−"))
+                                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(Theme.ink)
+                                .frame(minWidth: 34)
+                        }
+                    }
+                }
+            }
+            bar
+        }
+        .padding(.vertical, 10)
+    }
+
+    private var bar: some View {
+        RoundedRectangle(cornerRadius: 1.5).fill(Theme.gold400).frame(width: 3, height: 68)
     }
 
     private func point(_ c: CGPoint, _ deg: Double, _ r: CGFloat) -> CGPoint {
