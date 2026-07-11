@@ -107,8 +107,8 @@ struct DrillRunnerView: View {
     @ViewBuilder private func inputWidget(_ problem: DrillProblem) -> some View {
         switch problem.input {
         case let .choice(options, correctIndex):
-            // Tapping an option answers immediately (no Check button).
-            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed) { i in
+            // Tapping a tile answers immediately (no Check button); 2×2 grid.
+            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: true) { i in
                 guard !revealed else { return }
                 choice = i
                 reveal(correct: i == correctIndex)

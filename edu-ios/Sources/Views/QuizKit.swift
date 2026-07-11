@@ -49,33 +49,64 @@ struct OptionButtons: View {
     let correctIndex: Int
     let selected: Int?
     let revealed: Bool
+    var grid: Bool = false   // 2×2 tiles for short math options (drills); list otherwise
     let onSelect: (Int) -> Void
 
+    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+
     var body: some View {
-        VStack(spacing: 8) {
-            ForEach(options.indices, id: \.self) { i in
-                Button {
-                    if !revealed { Haptics.tap(); onSelect(i) }
-                } label: {
-                    HStack {
-                        Text(options[i])
-                            .font(.serif(17)).foregroundStyle(Theme.ink)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        if revealed && i == correctIndex {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
-                        } else if revealed && i == selected {
-                            Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.danger)
-                        }
-                    }
-                    .padding()
-                    .background(background(i))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(border(i), lineWidth: 1.5))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                }
-                .buttonStyle(.plain)
-                .disabled(revealed)
+        if grid {
+            LazyVGrid(columns: cols, spacing: 12) {
+                ForEach(options.indices, id: \.self) { i in tile(i) }
+            }
+        } else {
+            VStack(spacing: 8) {
+                ForEach(options.indices, id: \.self) { i in row(i) }
             }
         }
+    }
+
+    // Big centered tile — larger tap target, harder to mis-tap.
+    private func tile(_ i: Int) -> some View {
+        Button { tap(i) } label: {
+            Text(options[i])
+                .font(.system(size: 24, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.ink)
+                .minimumScaleFactor(0.6)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 76)
+                .padding(.horizontal, 8)
+                .background(background(i))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(border(i), lineWidth: 2))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .disabled(revealed)
+    }
+
+    private func row(_ i: Int) -> some View {
+        Button { tap(i) } label: {
+            HStack {
+                Text(options[i])
+                    .font(.serif(17)).foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if revealed && i == correctIndex {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
+                } else if revealed && i == selected {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.danger)
+                }
+            }
+            .padding()
+            .background(background(i))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(border(i), lineWidth: 1.5))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .disabled(revealed)
+    }
+
+    private func tap(_ i: Int) {
+        if !revealed { Haptics.tap(); onSelect(i) }
     }
 
     private func background(_ i: Int) -> Color {
