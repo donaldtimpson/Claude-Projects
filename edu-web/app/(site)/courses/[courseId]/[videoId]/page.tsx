@@ -84,8 +84,9 @@ export default async function VideoPage({
     db.video.findMany({
       where: { courseId },
       // Chronological order so prev/next nav follows lecture order (see course page note).
+      // Manual-order courses are re-sorted by position below.
       orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
-      select: { id: true, title: true },
+      select: { id: true, title: true, position: true },
     }),
     userId
       ? db.videoProgress.findUnique({ where: { userId_videoId: { userId, videoId: video.id } } })
@@ -97,6 +98,11 @@ export default async function VideoPage({
     }),
     db.lectureNote.findUnique({ where: { videoId: video.id } }),
   ]);
+
+  // Manual-order courses: prev/next nav follows the hand-arranged position.
+  if (video.course.manualOrder) {
+    siblings.sort((a, b) => a.position - b.position);
+  }
 
   const currentIdx = siblings.findIndex((v) => v.id === video.id);
   const prevVideo = currentIdx > 0 ? siblings[currentIdx - 1] : null;

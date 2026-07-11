@@ -38,6 +38,11 @@ export default async function CourseReviewPage({
   ]);
   if (!course) notFound();
 
+  // Manual-order courses: pool questions in the hand-arranged lecture order.
+  if (course.manualOrder) {
+    course.videos.sort((a, b) => a.position - b.position);
+  }
+
   // Flatten the full pool: every published per-lecture question, then the course test.
   const pool = [
     ...course.videos.flatMap((v) =>

@@ -94,6 +94,13 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
   if (!course) notFound();
 
+  // Manual-order courses: honor the hand-arranged position. The query above sorts
+  // chronologically (publishedAt, then position) for normal courses; for a manual
+  // course, position IS the intended order, so re-sort by it.
+  if (course.manualOrder) {
+    course.videos.sort((a, b) => a.position - b.position);
+  }
+
   // Course Review drills the whole pool — per-lecture quizzes AND the course test —
   // so it's offered whenever the course has any published question (the _count above
   // only covers the course test).
