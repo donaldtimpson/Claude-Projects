@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import CurrentToggle from "../../CurrentToggle";
 import LectureRow from "./LectureRow";
+import LectureOrderEditor from "./LectureOrderEditor";
 
 export default async function AdminCourseHub({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -48,6 +49,14 @@ export default async function AdminCourseHub({ params }: { params: Promise<{ cou
           </Link>
         </div>
       </div>
+
+      {course.videos.length > 1 && (
+        <LectureOrderEditor
+          courseId={course.id}
+          initialManualOrder={course.manualOrder}
+          lectures={course.videos.map((v) => ({ id: v.id, title: v.title }))}
+        />
+      )}
 
       <section className="space-y-3">
         <h2 className="font-display text-sm tracking-[0.15em] uppercase text-parchment-dim">Lectures</h2>

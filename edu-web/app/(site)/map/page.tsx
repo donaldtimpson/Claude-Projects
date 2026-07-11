@@ -22,11 +22,12 @@ const PORT_HI = 0.82;
 
 export default async function CourseMapPage() {
   const [courses, links] = await Promise.all([
-    db.course.findMany({ select: { id: true, title: true } }),
+    db.course.findMany({ select: { id: true, title: true, shortTitle: true } }),
     db.courseLink.findMany({ select: { fromCourseId: true, toCourseId: true, kind: true } }),
   ]);
 
-  const titleById = new Map(courses.map((c) => [c.id, c.title]));
+  // Prefer the clean short name (as shown on mobile) for the map's compact labels.
+  const titleById = new Map(courses.map((c) => [c.id, c.shortTitle || c.title]));
   const recommended: Edge[] = links.filter((l) => l.kind === "RECOMMENDED");
   const related: Edge[] = links.filter((l) => l.kind === "RELATED");
 

@@ -39,8 +39,23 @@ export async function POST() {
       const course = await db.course.findUnique({ where: { youtubePlaylistId: pl.id } });
       if (!course) continue;
 
+      // Manual-order courses keep their hand-arranged Video.position: existing
+      // lectures are never repositioned by sync, and brand-new lectures are
+      // appended after the current max position. Normal courses track the
+      // playlist order (position = YouTube's playlist position).
+      const existing = await db.video.findMany({
+        where: { courseId: course.id },
+        select: { youtubeVideoId: true, position: true },
+      });
+      const known = new Set(existing.map((v) => v.youtubeVideoId));
+      let nextPosition = existing.reduce((m, v) => Math.max(m, v.position), -1) + 1;
+
       const videos = await fetchPlaylistVideos(pl.id);
       for (const vid of videos) {
+        const isNew = !known.has(vid.id);
+        // New lecture in a manual course => append at the end; otherwise use the
+        // playlist position. (create-only value; existing manual videos keep theirs.)
+        const createPosition = course.manualOrder && isNew ? nextPosition++ : vid.position;
         await db.video.upsert({
           where: { youtubeVideoId: vid.id },
           create: {
@@ -49,7 +64,7 @@ export async function POST() {
             title: vid.title,
             description: vid.description,
             thumbnailUrl: vid.thumbnailUrl,
-            position: vid.position,
+            position: createPosition,
             durationSeconds: vid.durationSeconds,
             publishedAt: vid.publishedAt ? new Date(vid.publishedAt) : null,
           },
@@ -57,7 +72,8 @@ export async function POST() {
             title: vid.title,
             description: vid.description,
             thumbnailUrl: vid.thumbnailUrl,
-            position: vid.position,
+            // Preserve manual ordering: don't touch position on existing videos.
+            ...(course.manualOrder ? {} : { position: vid.position }),
             durationSeconds: vid.durationSeconds,
           },
         });
@@ -70,7 +86,9 @@ export async function POST() {
       // lecture order across all courses.
       const firstVideo = await db.video.findFirst({
         where: { courseId: course.id },
-        orderBy: [{ publishedAt: "asc" }, { position: "asc" }],
+        orderBy: course.manualOrder
+          ? [{ position: "asc" }]
+          : [{ publishedAt: "asc" }, { position: "asc" }],
         select: { thumbnailUrl: true },
       });
       if (firstVideo?.thumbnailUrl) {

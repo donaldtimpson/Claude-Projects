@@ -18,6 +18,7 @@ model Course {
   thumbnailUrl      String         @default("")
   videoCount        Int            @default(0)
   isCurrent         Boolean        @default(false)
+  manualOrder       Boolean        @default(false) // true = lecture order is hand-arranged; YouTube sync won't reorder
   publishedAt       DateTime?
   syncedAt          DateTime?
   createdAt         DateTime       @default(now())
