@@ -106,14 +106,25 @@ struct LectureView: View {
 
     @ViewBuilder private func notesSection(_ detail: VideoDetailResponse) -> some View {
         if let note = detail.note {
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
+                HStack {
+                    Spacer(minLength: 0)
+                    Button {
+                        exportNotesPDF(markdown: note.content, lectureTitle: detail.video.title)
+                    } label: {
+                        if generatingPDF {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "square.and.arrow.up").font(.title3)
+                        }
+                    }
+                    .disabled(generatingPDF)
+                    .foregroundStyle(Theme.gold400)
+                    .accessibilityLabel("Share notes as PDF")
+                }
                 MathWebView(markdown: note.content, height: $noteHeight)
                     .frame(height: noteHeight)
                     .lyceumCard()
-                SecondaryButton(title: generatingPDF ? "Preparing PDF…" : "Share notes as PDF") {
-                    exportNotesPDF(markdown: note.content, lectureTitle: detail.video.title)
-                }
-                .disabled(generatingPDF)
             }
         } else {
             Text("No study notes for this lecture yet.").foregroundStyle(Theme.inkSoft)
