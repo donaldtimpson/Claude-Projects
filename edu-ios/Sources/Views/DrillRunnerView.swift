@@ -61,61 +61,79 @@ struct DrillRunnerView: View {
     // MARK: runner
     @ViewBuilder private func runner(def: DrillDef, level: Int, problem: DrillProblem) -> some View {
         VStack(spacing: 0) {
-            VStack(spacing: 8) {
-                QuizProgressBar(fraction: Double(answered) / Double(count))
-                HStack {
-                    Text("\(min(answered + 1, count)) / \(count)")
-                        .font(.footnote).foregroundStyle(Theme.inkSoft)
-                    Spacer()
-                    StreakPill(streak: streak)
-                }
-            }
-            .padding()
-
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    Text(problem.prompt)
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundStyle(Theme.ink)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 8)
-
-                    inputWidget(problem)
-
-                    if revealed {
-                        feedback(problem)
-                        Text(answered >= count ? "Tap to finish" : "Tap to continue")
-                            .font(.footnote).foregroundStyle(Theme.inkSoft)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                }
-                .padding()
-            }
-
-            // Multiple choice answers on tap; only numeric needs an explicit submit.
-            if !revealed, isNumeric(problem) {
-                VStack {
-                    PrimaryButton(title: "Check", enabled: Int(numericEntry) != nil) { submitNumeric(problem) }
-                }
-                .padding()
+            header
+            switch problem.input {
+            case let .numeric(_, unit): numericBody(unit: unit, problem: problem)
+            case let .choice(options, correctIndex): choiceBody(options: options, correctIndex: correctIndex, problem: problem)
             }
         }
         .contentShape(Rectangle())
         .onTapGesture { if revealed { next(def: def, level: level) } }
     }
 
-    @ViewBuilder private func inputWidget(_ problem: DrillProblem) -> some View {
-        switch problem.input {
-        case let .choice(options, correctIndex):
-            // Tapping a tile answers immediately (no Check button); 2×2 grid.
-            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: true) { i in
-                guard !revealed else { return }
-                choice = i
-                reveal(correct: i == correctIndex)
+    private var header: some View {
+        VStack(spacing: 8) {
+            QuizProgressBar(fraction: Double(answered) / Double(count))
+            HStack {
+                Text("\(min(answered + 1, count)) / \(count)")
+                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                Spacer()
+                StreakPill(streak: streak)
             }
-        case let .numeric(_, unit):
-            NumericKeypad(entry: $numericEntry, unit: unit, disabled: revealed)
         }
+        .padding()
+    }
+
+    // Numeric: big prompt up top, keypad + Check together in the thumb zone.
+    @ViewBuilder private func numericBody(unit: String?, problem: DrillProblem) -> some View {
+        VStack(spacing: 16) {
+            Spacer(minLength: 0)
+            Text(problem.prompt)
+                .font(.system(size: 46, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity)
+            if revealed {
+                feedback(problem)
+                tapHint
+            }
+            Spacer(minLength: 0)
+            NumericKeypad(entry: $numericEntry, unit: unit, disabled: revealed)
+            if !revealed {
+                PrimaryButton(title: "Check", enabled: Int(numericEntry) != nil) { submitNumeric(problem) }
+            }
+        }
+        .padding()
+    }
+
+    // Choice: prompt + a 2×2 grid of tiles; tapping a tile answers immediately.
+    @ViewBuilder private func choiceBody(options: [String], correctIndex: Int, problem: DrillProblem) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text(problem.prompt)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 8)
+
+                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: true) { i in
+                    guard !revealed else { return }
+                    choice = i
+                    reveal(correct: i == correctIndex)
+                }
+
+                if revealed {
+                    feedback(problem)
+                    tapHint
+                }
+            }
+            .padding()
+        }
+    }
+
+    private var tapHint: some View {
+        Text(answered >= count ? "Tap to finish" : "Tap to continue")
+            .font(.footnote).foregroundStyle(Theme.inkSoft)
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 
     @ViewBuilder private func feedback(_ problem: DrillProblem) -> some View {
@@ -169,11 +187,6 @@ struct DrillRunnerView: View {
         numericEntry = ""
         choice = nil
         revealed = false
-    }
-
-    private func isNumeric(_ problem: DrillProblem) -> Bool {
-        if case .numeric = problem.input { return true }
-        return false
     }
 
     private func submitNumeric(_ problem: DrillProblem) {
