@@ -320,12 +320,13 @@ enum DrillCatalog {
         let m = n + 1
         let k = level == 1 ? Int.random(in: 1...3) : Int.random(in: 1...5)
         let c = k * m
+        // Every option carries + C, so it's never a giveaway.
         let correct = "\(powTerm(k, m)) + C"
         let (options, correctIndex) = fourChoices(correct, [
-            "\(powTerm(c, m)) + C",   // forgot to divide by the new power
-            "\(powTerm(k, n)) + C",   // wrong power
-            powTerm(k, m),            // forgot + C
-            "\(powTerm(c, n)) + C",
+            "\(powTerm(c, m)) + C",       // forgot to divide by the new power
+            "\(powTerm(k, n)) + C",       // didn't raise the power
+            "\(powTerm(k, m + 1)) + C",   // raised the power too far
+            "\(powTerm(c, n)) + C",       // both mistakes
         ])
         return DrillProblem(prompt: "∫ \(powTerm(c, n)) dx",
                             input: .choice(options: options, correctIndex: correctIndex),
