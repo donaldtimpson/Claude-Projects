@@ -31,8 +31,12 @@ export async function generateMetadata({
   const description =
     course.description?.trim().slice(0, 200) || "A classical course at The Timpson Lyceum.";
   // Prefer the course thumbnail, else its first lecture's thumbnail; otherwise the
-  // site's default card (inherited from the root opengraph-image) is used.
-  const image = course.thumbnailUrl || course.videos[0]?.thumbnailUrl || undefined;
+  // site's default card (inherited from the root opengraph-image) is used. For an
+  // empty playlist, skip the (gray) YouTube placeholder and let the default card show.
+  const image =
+    course.videos.length > 0
+      ? course.thumbnailUrl || course.videos[0]?.thumbnailUrl || undefined
+      : undefined;
 
   return {
     title: course.title,

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import CourseThumb from "@/components/CourseThumb";
 
 export const dynamic = "force-dynamic";
 
@@ -86,20 +86,11 @@ export default async function CategoryPage({
                     href={`/courses/${course.id}`}
                     className="group bg-crimson-900 border border-crimson-700 rounded-lg overflow-hidden hover:border-gold-500 transition-colors"
                   >
-                    {course.thumbnailUrl ? (
-                      <div className="relative aspect-video">
-                        <Image
-                          src={course.thumbnailUrl}
-                          alt={course.title}
-                          fill
-                          className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video bg-crimson-800 flex items-center justify-center">
-                        <span className="text-parchment-dim text-sm">No thumbnail</span>
-                      </div>
-                    )}
+                    <CourseThumb
+                      thumbnailUrl={course.thumbnailUrl}
+                      title={course.title}
+                      videoCount={course._count.videos}
+                    />
                     <div className="p-4">
                       <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                         {course.title}

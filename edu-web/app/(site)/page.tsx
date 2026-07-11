@@ -3,6 +3,7 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import ContinueWatching from "./ContinueWatching";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
+import CourseThumb, { ComingSoonThumb } from "@/components/CourseThumb";
 
 export const dynamic = "force-dynamic";
 
@@ -76,23 +77,23 @@ export default async function HomePage() {
                     href={href}
                     className="group bg-crimson-900 border-2 border-gold-500 rounded-lg overflow-hidden hover:border-gold-300 transition-colors shadow-lg shadow-gold-500/10"
                   >
-                    {(latest?.thumbnailUrl || course.thumbnailUrl) ? (
-                      <div className="relative aspect-video">
-                        <Image
-                          src={latest?.thumbnailUrl || course.thumbnailUrl}
-                          alt={course.title}
-                          fill
-                          className="object-cover opacity-95 group-hover:opacity-100 transition-opacity"
-                        />
-                        <span className="absolute top-2 left-2 bg-gold-500 text-crimson-950 text-[10px] font-display tracking-widest uppercase px-2 py-0.5 rounded">
-                          Live
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="aspect-video bg-crimson-800 flex items-center justify-center">
-                        <span className="text-parchment-dim text-sm">No thumbnail</span>
-                      </div>
-                    )}
+                    <div className="relative">
+                      {latest?.thumbnailUrl ? (
+                        <div className="relative aspect-video">
+                          <Image
+                            src={latest.thumbnailUrl}
+                            alt={course.title}
+                            fill
+                            className="object-cover opacity-95 group-hover:opacity-100 transition-opacity"
+                          />
+                        </div>
+                      ) : (
+                        <ComingSoonThumb />
+                      )}
+                      <span className="absolute top-2 left-2 bg-gold-500 text-crimson-950 text-[10px] font-display tracking-widest uppercase px-2 py-0.5 rounded">
+                        Live
+                      </span>
+                    </div>
                     <div className="p-4">
                       <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                         {course.title}
@@ -167,20 +168,11 @@ export default async function HomePage() {
                   href={`/courses/${course.id}`}
                   className="group bg-crimson-900 border border-crimson-700 rounded-lg overflow-hidden hover:border-gold-500 transition-colors"
                 >
-                  {course.thumbnailUrl ? (
-                    <div className="relative aspect-video">
-                      <Image
-                        src={course.thumbnailUrl}
-                        alt={course.title}
-                        fill
-                        className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-crimson-800 flex items-center justify-center">
-                      <span className="text-parchment-dim text-sm">No thumbnail</span>
-                    </div>
-                  )}
+                  <CourseThumb
+                    thumbnailUrl={course.thumbnailUrl}
+                    title={course.title}
+                    videoCount={course._count.videos}
+                  />
                   <div className="p-4">
                     <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                       {course.title}
