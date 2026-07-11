@@ -27,19 +27,31 @@ struct ProfileView: View {
                 .frame(maxWidth: .infinity)
                 .lyceumCard()
 
-                Text("Badges").font(.headline).foregroundStyle(Theme.ink)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Badges").font(.headline).foregroundStyle(Theme.ink)
+                    Spacer()
+                    if !badges.isEmpty {
+                        NavigationLink { AchievementsView(badges: badges) } label: {
+                            Text("View all").font(.subheadline).foregroundStyle(Theme.gold400)
+                        }
+                    }
+                }
                 if earned.isEmpty {
                     Text("No badges yet — take a quiz or run a drill to start earning.")
                         .foregroundStyle(Theme.inkSoft)
                 } else {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], spacing: 8) {
-                        ForEach(earned) { badge in
-                            Text(badge.name)
-                                .font(.caption).fontWeight(.bold).foregroundStyle(.white)
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .frame(maxWidth: .infinity)
-                                .background(Theme.gold).clipShape(Capsule())
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 14) {
+                            ForEach(earned.prefix(10)) { badge in
+                                VStack(spacing: 5) {
+                                    BadgeMedallion(badge: badge, size: 60)
+                                    Text(badge.name)
+                                        .font(.caption2).foregroundStyle(Theme.inkSoft)
+                                        .lineLimit(1).frame(width: 72)
+                                }
+                            }
                         }
+                        .padding(.vertical, 2)
                     }
                 }
 
