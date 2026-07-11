@@ -34,6 +34,10 @@ actor APIClient {
         try await request(path, method: "POST", body: body, auth: auth)
     }
 
+    func delete<T: Decodable>(_ path: String, auth: Bool = true) async throws -> T {
+        try await request(path, method: "DELETE", body: Optional<Int>.none, auth: auth)
+    }
+
     // Replays an already-encoded JSON body (used by the offline write queue).
     func postRaw(_ path: String, jsonBody: Data, retry: Bool = true) async throws {
         guard let url = URL(string: v1 + path) else { throw APIError(status: 0, message: "Bad URL") }

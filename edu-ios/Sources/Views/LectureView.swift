@@ -13,6 +13,10 @@ struct LectureView: View {
     @State private var quizPhase = QuizPhase.idle
     @State private var quizScore: ScorePair?
     @State private var videoError: Int?
+    @State private var comments: [CommentItem] = []
+    @State private var showCompose = false
+    @State private var composeReplyTo: CommentItem?
+    @State private var pendingDelete: CommentItem?
 
     enum QuizPhase { case idle, running, done }
     struct ScorePair { let score: Int; let total: Int }
@@ -33,6 +37,20 @@ struct LectureView: View {
             .navigationTitle(detail.map { "Lecture \($0.video.position + 1)" } ?? "Lecture")
             .navigationBarTitleDisplayMode(.inline)
             .task { if detail == nil { await load() } }
+            .sheet(isPresented: $showCompose) {
+                CommentComposeSheet(replyingTo: composeReplyTo, onSubmit: postComment)
+            }
+            .confirmationDialog(
+                "Delete this comment?",
+                isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+                presenting: pendingDelete
+            ) { target in
+                Button("Delete", role: .destructive) {
+                    Task { await deleteComment(target) }
+                    pendingDelete = nil
+                }
+                Button("Cancel", role: .cancel) { pendingDelete = nil }
+            }
     }
 
     @ViewBuilder private var content: some View {
@@ -66,10 +84,15 @@ struct LectureView: View {
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)
                         Text("Quiz (\(detail.quiz.count))").tag(1)
+                        Text("Discussion (\(liveCommentCount(comments)))").tag(2)
                     }
                     .pickerStyle(.segmented)
 
-                    if tab == 0 { notesSection(detail) } else { quizSection(detail) }
+                    switch tab {
+                    case 0: notesSection(detail)
+                    case 1: quizSection(detail)
+                    default: discussionSection(detail)
+                    }
                 }
                 .padding()
             }
@@ -129,12 +152,56 @@ struct LectureView: View {
         }
     }
 
+    @ViewBuilder private func discussionSection(_ detail: VideoDetailResponse) -> some View {
+        DiscussionSection(
+            comments: comments,
+            isSignedIn: auth.isSignedIn,
+            currentUserId: auth.user?.id,
+            onAdd: { composeReplyTo = nil; showCompose = true },
+            onReply: { composeReplyTo = $0; showCompose = true },
+            onDelete: { pendingDelete = $0 }
+        )
+    }
+
+    private func reloadComments() async {
+        guard let videoId = detail?.video.id else { return }
+        if let res: CommentsResponse = try? await APIClient.shared.get(
+            "/comments?videoId=\(videoId)", auth: false) {
+            comments = res.comments
+        }
+    }
+
+    /// Posts a new comment or reply; returns true on success (the compose sheet dismisses).
+    private func postComment(_ body: String) async -> Bool {
+        guard let videoId = detail?.video.id else { return false }
+        do {
+            let _: CommentItem = try await APIClient.shared.post(
+                "/comments",
+                body: NewCommentBody(videoId: videoId, body: body, parentId: composeReplyTo?.id)
+            )
+            await reloadComments()
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func deleteComment(_ comment: CommentItem) async {
+        do {
+            let _: DeleteCommentResult = try await APIClient.shared.delete("/comments/\(comment.id)")
+        } catch {
+            // Swallow — a failed delete just leaves the comment in place.
+        }
+        await reloadComments()
+    }
+
     private func load() async {
         do {
             let res: VideoDetailResponse = try await APIClient.shared.get(
                 "/courses/\(route.courseId)/videos/\(route.videoId)", auth: false)
             detail = res
             error = nil
+            await reloadComments()
             if auth.isSignedIn {
                 _ = await queue.submit(
                     path: "/progress/video-watched",

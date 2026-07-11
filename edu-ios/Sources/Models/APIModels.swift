@@ -198,3 +198,37 @@ struct WriteResult: Codable {
     let duplicate: Bool
     let badges: [Badge]
 }
+
+// MARK: - Lecture discussion (comments)
+
+struct CommentAuthor: Codable, Hashable {
+    let id: String
+    let name: String
+}
+
+// Single-level threaded: top-level comments carry their replies. Deleted comments
+// come back with `deleted: true`, an empty author, and a placeholder body.
+struct CommentItem: Codable, Identifiable, Hashable {
+    let id: String
+    let body: String
+    let createdAt: String
+    let parentId: String?
+    let deleted: Bool
+    let user: CommentAuthor
+    let replies: [CommentItem]
+}
+
+struct CommentsResponse: Codable {
+    let comments: [CommentItem]
+}
+
+struct NewCommentBody: Encodable {
+    let videoId: String
+    let body: String
+    let parentId: String?  // nil => top-level comment
+}
+
+struct DeleteCommentResult: Codable {
+    let ok: Bool
+    let mode: String  // "soft" (kept as placeholder) or "hard" (removed)
+}
