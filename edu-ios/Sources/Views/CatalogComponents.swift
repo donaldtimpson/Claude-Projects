@@ -47,6 +47,33 @@ struct Thumb: View {
     }
 }
 
+// Compact "Coming Soon" thumbnail for an empty course (0 lectures) — the row-sized
+// counterpart to the web's CourseThumb placeholder. Crimson gradient + gold frame
+// so an empty course never shows YouTube's gray empty-playlist image.
+struct ComingSoonThumb: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Theme.crimson800, Theme.crimson900, Theme.crimson950],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            )
+            Text("COMING\nSOON")
+                .font(.display(10))
+                .kerning(2)
+                .multilineTextAlignment(.center)
+                .lineSpacing(1)
+                .foregroundStyle(Theme.gold300)
+        }
+        .frame(width: 96, height: 60)
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .inset(by: 4)
+                .stroke(Theme.gold500.opacity(0.4), lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
 // Category row — same shape as CourseRow (thumbnail left, name + count right) so
 // the category name is crisp native text. Thumbnail uses our web category
 // artwork (/categories/<slug>.png).
@@ -123,11 +150,16 @@ struct CourseRow: View {
     var highlight: String? = nil
     var body: some View {
         HStack(spacing: 12) {
-            Thumb(url: course.thumbnailUrl)
+            if course.videoCount == 0 {
+                ComingSoonThumb()
+            } else {
+                Thumb(url: course.thumbnailUrl)
+            }
             VStack(alignment: .leading, spacing: 4) {
                 titleText.font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
                 HStack(spacing: 8) {
-                    Text("\(course.videoCount) lectures").font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                    Text(course.videoCount == 0 ? "Coming soon" : "\(course.videoCount) lectures")
+                        .font(.serif(15)).foregroundStyle(Theme.inkSoft)
                     Spacer(minLength: 8)
                     if course.isCurrent {
                         Text("Live")
