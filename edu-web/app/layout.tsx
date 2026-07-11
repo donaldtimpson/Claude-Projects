@@ -15,7 +15,9 @@ const ebGaramond = EB_Garamond({
   weight: ["400", "500", "600"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://timpson-lyceum.vercel.app";
+// Use `||` (not `??`) so an empty-string env var also falls back — an empty
+// NEXT_PUBLIC_SITE_URL would make `new URL("")` throw at build time.
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://timpson-lyceum.vercel.app";
 const SITE_DESCRIPTION = "A classical education in mathematics, logic, and philosophy.";
 
 export const metadata: Metadata = {
