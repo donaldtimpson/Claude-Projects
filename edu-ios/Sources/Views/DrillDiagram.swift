@@ -10,6 +10,7 @@ struct DrillDiagram: View {
     var body: some View {
         switch spec {
         case let .matrix(rows): matrixView(rows)
+        case let .matrixVector(m, v): matrixVectorView(m, v)
         default: canvasView
         }
     }
@@ -21,10 +22,42 @@ struct DrillDiagram: View {
             switch spec {
             case let .unitCircle(deg, fn): drawUnitCircle(&ctx, c, r, deg, fn)
             case let .vector(deg, comp): drawVector(&ctx, c, r, deg, comp)
-            case .matrix: break
+            case .matrix, .matrixVector: break
             }
         }
         .frame(width: size, height: size)
+    }
+
+    // A·v in proper notation: bracketed 2×2 matrix beside a bracketed column vector.
+    private func matrixVectorView(_ m: [[Int]], _ v: [Int]) -> some View {
+        HStack(spacing: 8) {
+            bracketed {
+                Grid(horizontalSpacing: 16, verticalSpacing: 8) {
+                    GridRow { numCell(m[0][0]); numCell(m[0][1]) }
+                    GridRow { numCell(m[1][0]); numCell(m[1][1]) }
+                }
+            }
+            bracketed {
+                VStack(spacing: 8) { numCell(v[0]); numCell(v[1]) }
+            }
+        }
+        .padding(.vertical, 10)
+    }
+
+    private func numCell(_ v: Int) -> some View {
+        Text("\(v)".replacingOccurrences(of: "-", with: "−"))
+            .font(.system(size: 24, weight: .semibold, design: .rounded))
+            .monospacedDigit()
+            .foregroundStyle(Theme.ink)
+            .frame(minWidth: 28)
+    }
+
+    private func bracketed<C: View>(@ViewBuilder _ content: () -> C) -> some View {
+        HStack(spacing: 5) {
+            BracketShape(leading: true).stroke(Theme.gold400, lineWidth: 2).frame(width: 8)
+            content().padding(.vertical, 2)
+            BracketShape(leading: false).stroke(Theme.gold400, lineWidth: 2).frame(width: 8)
+        }
     }
 
     // Determinant matrix, drawn with the |·| bars.
@@ -115,5 +148,22 @@ struct DrillDiagram: View {
             line(&ctx, p, CGPoint(x: c.x, y: p.y), accent.opacity(0.6), 1.5, dashed: true)
         }
         dot(&ctx, p, accent, 4)
+    }
+}
+
+// A square bracket [ or ] as a Shape, so it stretches to the content's height.
+struct BracketShape: Shape {
+    let leading: Bool
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let x0 = rect.minX, x1 = rect.maxX, y0 = rect.minY, y1 = rect.maxY
+        if leading {
+            p.move(to: CGPoint(x: x1, y: y0)); p.addLine(to: CGPoint(x: x0, y: y0))
+            p.addLine(to: CGPoint(x: x0, y: y1)); p.addLine(to: CGPoint(x: x1, y: y1))
+        } else {
+            p.move(to: CGPoint(x: x0, y: y0)); p.addLine(to: CGPoint(x: x1, y: y0))
+            p.addLine(to: CGPoint(x: x1, y: y1)); p.addLine(to: CGPoint(x: x0, y: y1))
+        }
+        return p
     }
 }

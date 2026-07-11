@@ -14,7 +14,8 @@ enum DrillInput {
 enum DrillDiagramSpec {
     case vector(angleDeg: Double, component: String)   // "x" or "y"
     case unitCircle(angleDeg: Double, fn: String)      // sin / cos / tan
-    case matrix(rows: [[Int]])                         // determinant, drawn with bars
+    case matrix(rows: [[Int]])                         // determinant, drawn with | · | bars
+    case matrixVector(matrix: [[Int]], vector: [Int])  // A·v, drawn with [ ] brackets
 }
 
 struct DrillProblem: Identifiable {
@@ -413,9 +414,10 @@ enum DrillCatalog {
             pair(a * x + b * y, c * x - d * y),
             pair(p + 1, q),
         ])
-        return DrillProblem(prompt: "[\(neg(a)), \(neg(b)); \(neg(c)), \(neg(d))] · (\(neg(x)), \(neg(y)))\n\nA·v = ?",
+        return DrillProblem(prompt: "A·v = ?",
                             input: .choice(options: options, correctIndex: correctIndex),
-                            explanation: "Row 1 · v = \(neg(p)),  Row 2 · v = \(neg(q))")
+                            explanation: "Row 1 · v = \(neg(p)),  Row 2 · v = \(neg(q))",
+                            diagram: .matrixVector(matrix: [[a, b], [c, d]], vector: [x, y]))
     }
 
     // MARK: - Dot product (choice; scalar result, can be negative)
