@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { ok, fail } from "@/lib/mobile/respond";
+import { getQuizAces } from "@/lib/gamification/engine";
 
 // Lecture screen payload: video meta + published note + published quiz. Like the
 // web QuizPlayer, quiz grading happens client-side, so correctIndex is included.
@@ -41,5 +42,8 @@ export async function GET(
     }),
   ]);
 
-  return ok({ video, note, quiz });
+  // Hall of Aces — everyone who scored 100% on this lecture's quiz (empty if no quiz).
+  const aces = quiz.length > 0 ? await getQuizAces(videoId) : [];
+
+  return ok({ video, note, quiz, aces });
 }

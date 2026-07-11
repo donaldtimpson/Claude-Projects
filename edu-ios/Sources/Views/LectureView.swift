@@ -13,6 +13,7 @@ struct LectureView: View {
     @State private var quizPhase = QuizPhase.idle
     @State private var quizScore: ScorePair?
     @State private var videoError: Int?
+    @State private var aces: [QuizAce] = []
     @State private var comments: [CommentItem] = []
     @State private var showCompose = false
     @State private var composeReplyTo: CommentItem?
@@ -114,40 +115,46 @@ struct LectureView: View {
         if detail.quiz.isEmpty {
             Text("No quiz for this lecture yet.").foregroundStyle(Theme.inkSoft)
         } else {
-            switch quizPhase {
-            case .idle:
-                VStack(spacing: 12) {
-                    Text("\(detail.quiz.count) questions").foregroundStyle(Theme.ink)
-                    PrimaryButton(title: "Start quiz") { quizPhase = .running }
-                }
-                .lyceumCard()
-            case .running:
-                QuizView(questions: detail.quiz) { score, total, answers in
-                    Task {
-                        _ = await queue.submit(
-                            path: "/quiz/attempt",
-                            body: QuizAttemptBody(videoId: detail.video.id, courseId: nil,
-                                                  score: score, total: total, answers: answers,
-                                                  clientId: makeClientId()),
-                            clientId: makeClientId()
-                        )
-                    }
-                    quizScore = ScorePair(score: score, total: total)
-                    quizPhase = .done
-                }
-            case .done:
-                if let quizScore {
+            VStack(spacing: 16) {
+                switch quizPhase {
+                case .idle:
                     VStack(spacing: 12) {
-                        Text("\(quizScore.score) / \(quizScore.total)")
-                            .font(.largeTitle.weight(.bold)).foregroundStyle(Theme.crimson)
-                        if !auth.isSignedIn {
-                            Text("Sign in to save your score and feed spaced repetition.")
-                                .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
-                        }
-                        SecondaryButton(title: "Retake quiz") { quizPhase = .running }
+                        Text("\(detail.quiz.count) questions").foregroundStyle(Theme.ink)
+                        PrimaryButton(title: "Start quiz") { quizPhase = .running }
                     }
                     .lyceumCard()
+                case .running:
+                    QuizView(questions: detail.quiz) { score, total, answers in
+                        quizScore = ScorePair(score: score, total: total)
+                        quizPhase = .done
+                        Task {
+                            _ = await queue.submit(
+                                path: "/quiz/attempt",
+                                body: QuizAttemptBody(videoId: detail.video.id, courseId: nil,
+                                                      score: score, total: total, answers: answers,
+                                                      clientId: makeClientId()),
+                                clientId: makeClientId()
+                            )
+                            // A perfect score joins the Hall of Aces — refresh it.
+                            if score == total { await refreshAces() }
+                        }
+                    }
+                case .done:
+                    if let quizScore {
+                        VStack(spacing: 12) {
+                            Text("\(quizScore.score) / \(quizScore.total)")
+                                .font(.largeTitle.weight(.bold)).foregroundStyle(Theme.crimson)
+                            if !auth.isSignedIn {
+                                Text("Sign in to save your score and feed spaced repetition.")
+                                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                            }
+                            SecondaryButton(title: "Retake quiz") { quizPhase = .running }
+                        }
+                        .lyceumCard()
+                    }
                 }
+
+                QuizAcesView(aces: aces, myUserId: auth.user?.id)
             }
         }
     }
@@ -161,6 +168,13 @@ struct LectureView: View {
             onReply: { composeReplyTo = $0; showCompose = true },
             onDelete: { pendingDelete = $0 }
         )
+    }
+
+    private func refreshAces() async {
+        if let res: VideoDetailResponse = try? await APIClient.shared.get(
+            "/courses/\(route.courseId)/videos/\(route.videoId)", auth: false) {
+            aces = res.aces ?? []
+        }
     }
 
     private func reloadComments() async {
@@ -200,6 +214,7 @@ struct LectureView: View {
             let res: VideoDetailResponse = try await APIClient.shared.get(
                 "/courses/\(route.courseId)/videos/\(route.videoId)", auth: false)
             detail = res
+            aces = res.aces ?? []
             error = nil
             await reloadComments()
             if auth.isSignedIn {

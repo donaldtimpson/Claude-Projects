@@ -170,10 +170,17 @@ struct VideoMeta: Codable, Identifiable, Hashable {
     let updatedAt: String
 }
 
+struct QuizAce: Codable, Identifiable, Hashable {
+    let userId: String
+    let handle: String
+    var id: String { userId }
+}
+
 struct VideoDetailResponse: Codable {
     let video: VideoMeta
     let note: LectureNote?
     let quiz: [QuizQuestion]
+    let aces: [QuizAce]?  // optional for resilience against pre-aces server builds
 }
 
 struct DueCard: Codable, Identifiable, Hashable {
