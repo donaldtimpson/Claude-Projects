@@ -8,10 +8,13 @@ enum AppConfig {
         if let env = ProcessInfo.processInfo.environment["API_BASE_URL"], !env.isEmpty {
             return env
         }
-        #if DEBUG
+        // Key off the environment, not the build config: the Simulator can reach the
+        // Mac's dev server at localhost, but a physical device cannot — it needs the
+        // deployed production API (works over any network, no LAN IP needed).
+        #if targetEnvironment(simulator)
         return "http://localhost:3000" // Simulator -> Mac's `npm run dev`
         #else
-        return "https://timpson-lyceum.vercel.app"
+        return "https://timpson-lyceum.vercel.app" // Physical device (+ Release) -> production
         #endif
     }()
 
