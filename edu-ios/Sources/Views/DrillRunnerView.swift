@@ -20,6 +20,7 @@ struct DrillRunnerView: View {
     @State private var finished = false
     @State private var rapid = false
     @State private var rapidLevel: Int?
+    @State private var recentPrompts: [String] = []
 
     private let count = 10
     private var def: DrillDef? { DrillCatalog.drill(slug: slug) }
@@ -65,7 +66,15 @@ struct DrillRunnerView: View {
                 Text("Choose a difficulty")
                     .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
                 ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
-                    SecondaryButton(title: label) { start(def: def, level: value) }
+                    VStack(spacing: 4) {
+                        SecondaryButton(title: label) { start(def: def, level: value) }
+                        if rapid {
+                            let best = UserDefaults.standard.integer(forKey: rapidBestKey(value))
+                            Text(best > 0 ? "Rapid Fire best · \(best)" : "No Rapid Fire score yet")
+                                .font(.caption2)
+                                .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
+                        }
+                    }
                 }
             }
             .padding()
@@ -195,6 +204,9 @@ struct DrillRunnerView: View {
     }
 
     // MARK: logic
+    // Rapid Fire best-score key (per drill, difficulty, 60s) — matches RapidFireView.
+    private func rapidBestKey(_ level: Int) -> String { "rapidbest_\(slug)_L\(level)_60" }
+
     private func start(def: DrillDef, level value: Int) {
         if rapid {
             rapidLevel = value
@@ -207,10 +219,21 @@ struct DrillRunnerView: View {
     }
 
     private func generate(def: DrillDef, level value: Int) {
-        problem = def.generate(value)
+        problem = freshProblem(def, value)
         numericEntry = ""
         choice = nil
         revealed = false
+    }
+
+    // Avoid asking a question we just asked: retry a few times if the prompt
+    // matches one of the last few. Capped so tiny-domain drills can't spin.
+    private func freshProblem(_ def: DrillDef, _ value: Int) -> DrillProblem {
+        var p = def.generate(value)
+        var tries = 0
+        while recentPrompts.contains(p.prompt) && tries < 8 { p = def.generate(value); tries += 1 }
+        recentPrompts.append(p.prompt)
+        if recentPrompts.count > 3 { recentPrompts.removeFirst() }
+        return p
     }
 
     private func submitNumeric(_ problem: DrillProblem) {

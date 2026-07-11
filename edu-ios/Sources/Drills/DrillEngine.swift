@@ -70,10 +70,10 @@ enum DrillCatalog {
         blurb: "Mental percents of a number — tips, discounts, and more.",
         icon: "％"
     ) { level in
-        let ps = level == 1 ? [10, 25, 50] : level == 2 ? [5, 10, 20, 25, 50] : [5, 15, 20, 25, 40, 75]
+        let ps = level == 1 ? [5, 10, 20, 25, 50] : level == 2 ? [5, 10, 15, 20, 25, 50] : [5, 15, 20, 25, 40, 60, 75]
         let p = ps.randomElement()!
         let step = 100 / gcd(p, 100)          // smallest N that keeps the answer whole
-        let k = Int.random(in: 2...(level == 1 ? 9 : level == 2 ? 15 : 25))
+        let k = Int.random(in: 2...(level == 1 ? 10 : level == 2 ? 16 : 25))
         let n = step * k
         let answer = p * n / 100
         return DrillProblem(prompt: "\(p)% of \(n)",

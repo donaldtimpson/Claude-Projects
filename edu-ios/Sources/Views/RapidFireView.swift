@@ -25,6 +25,7 @@ struct RapidFireView: View {
     @State private var finished = false
     @State private var previousBest = 0
     @State private var startedAt = Date()
+    @State private var recent: [String] = []
 
     @AppStorage private var best: Int
 
@@ -36,7 +37,7 @@ struct RapidFireView: View {
         self.seconds = seconds
         self.onExit = onExit
         _timeLeft = State(initialValue: Double(seconds))
-        _best = AppStorage(wrappedValue: 0, "rapidbest_\(def.slug)_\(seconds)")
+        _best = AppStorage(wrappedValue: 0, "rapidbest_\(def.slug)_L\(level)_\(seconds)")
     }
 
     private var currentAnswer: Int? {
@@ -188,7 +189,12 @@ struct RapidFireView: View {
     }
 
     private func nextProblem() {
-        problem = def.generate(level)
+        var p = def.generate(level)
+        var tries = 0
+        while recent.contains(p.prompt) && tries < 8 { p = def.generate(level); tries += 1 }
+        recent.append(p.prompt)
+        if recent.count > 3 { recent.removeFirst() }
+        problem = p
         numericEntry = ""
     }
 
