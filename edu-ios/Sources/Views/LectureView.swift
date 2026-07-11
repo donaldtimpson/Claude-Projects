@@ -12,9 +12,21 @@ struct LectureView: View {
     @State private var noteHeight: CGFloat = 240
     @State private var quizPhase = QuizPhase.idle
     @State private var quizScore: ScorePair?
+    @State private var videoError: Int?
 
     enum QuizPhase { case idle, running, done }
     struct ScorePair { let score: Int; let total: Int }
+
+    /// Human-readable explanation of a YouTube IFrame Player API error code.
+    private func youtubeErrorMessage(_ code: Int) -> String {
+        switch code {
+        case 2:        return "Video unavailable (bad video ID). [YT error 2]"
+        case 5:        return "Playback error in the HTML5 player. [YT error 5]"
+        case 100:      return "This video was removed or is private. [YT error 100]"
+        case 101, 150: return "The owner doesn't allow this video to be played in embedded players. Watch it on YouTube. [YT error \(code)]"
+        default:       return "Video couldn't be played. [YT error \(code)]"
+        }
+    }
 
     var body: some View {
         content
@@ -37,10 +49,19 @@ struct LectureView: View {
                         .foregroundStyle(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    YouTubePlayer(videoId: detail.video.youtubeVideoId)
+                    YouTubePlayer(videoId: detail.video.youtubeVideoId) { code in
+                        videoError = code
+                    }
                         .aspectRatio(16.0 / 9.0, contentMode: .fit)
                         .frame(maxWidth: .infinity)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    if let videoError {
+                        Text(youtubeErrorMessage(videoError))
+                            .font(.footnote)
+                            .foregroundStyle(Theme.inkSoft)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
 
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)

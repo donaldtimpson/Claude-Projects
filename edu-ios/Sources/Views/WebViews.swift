@@ -1,15 +1,24 @@
 import SwiftUI
 import WebKit
 
-// Embedded YouTube player (WKWebView + iframe embed — the only supported way to
-// play YouTube content). Requires a network connection.
+// Embedded YouTube player (WKWebView). Uses the YouTube IFrame Player API
+// (`new YT.Player(...)`) rather than a bare <iframe src=…/embed> — the same
+// approach as Google's official youtube-ios-player-helper. The IFrame API is
+// far more reliable inside WKWebView (a bare embed often fails to load the
+// player with an opaque on-screen error). Requires a network connection.
 struct YouTubePlayer: UIViewRepresentable {
     let videoId: String
+    /// Called with YouTube's numeric IFrame error code (2, 5, 100, 101, 150) if
+    /// the player reports one, so the app can surface the real cause.
+    var onError: ((Int) -> Void)? = nil
+
+    func makeCoordinator() -> Coordinator { Coordinator(onError: onError) }
 
     func makeUIView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.userContentController.add(context.coordinator, name: "yt")
         let web = WKWebView(frame: .zero, configuration: config)
         web.scrollView.isScrollEnabled = false
         web.isOpaque = false
@@ -18,18 +27,51 @@ struct YouTubePlayer: UIViewRepresentable {
     }
 
     func updateUIView(_ web: WKWebView, context: Context) {
+        // Origin must be a real https origin that matches the baseURL below.
+        let origin = "https://www.youtube.com"
         let html = """
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <style>html,body{margin:0;background:#000;height:100%}
-        .wrap{position:relative;padding-bottom:56.25%;height:0}
-        iframe{position:absolute;top:0;left:0;width:100%;height:100%}</style></head>
-        <body><div class='wrap'>
-        <iframe src='https://www.youtube.com/embed/\(videoId)?playsinline=1'
-          frameborder='0' allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
-          allowfullscreen></iframe></div></body></html>
+        <style>html,body{margin:0;background:#000;height:100%;overflow:hidden}
+        #player{position:absolute;top:0;left:0;width:100%;height:100%}</style></head>
+        <body><div id='player'></div>
+        <script src='https://www.youtube.com/iframe_api'></script>
+        <script>
+        function post(m){try{window.webkit.messageHandlers.yt.postMessage(m)}catch(e){}}
+        function onYouTubeIframeAPIReady(){
+          new YT.Player('player',{
+            width:'100%',height:'100%',videoId:'\(videoId)',
+            playerVars:{playsinline:1,rel:0,modestbranding:1,origin:'\(origin)'},
+            events:{
+              onReady:function(){post({t:'ready'})},
+              onError:function(e){post({t:'error',code:e.data})}
+            }
+          });
+        }
+        </script></body></html>
         """
-        web.loadHTMLString(html, baseURL: URL(string: "https://www.youtube.com"))
+        web.loadHTMLString(html, baseURL: URL(string: origin))
+    }
+
+    static func dismantleUIView(_ web: WKWebView, coordinator: Coordinator) {
+        web.configuration.userContentController.removeScriptMessageHandler(forName: "yt")
+    }
+
+    final class Coordinator: NSObject, WKScriptMessageHandler {
+        let onError: ((Int) -> Void)?
+        init(onError: ((Int) -> Void)?) { self.onError = onError }
+
+        func userContentController(
+            _ userContentController: WKUserContentController, didReceive message: WKScriptMessage
+        ) {
+            guard let body = message.body as? [String: Any] else { return }
+            if body["t"] as? String == "error", let code = body["code"] as? Int {
+                #if DEBUG
+                print("[YouTubePlayer] IFrame error code: \(code) (videoId not embeddable=101/150, not found=100, html5=5, param=2)")
+                #endif
+                onError?(code)
+            }
+        }
     }
 }
 
