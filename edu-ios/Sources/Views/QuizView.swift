@@ -20,7 +20,8 @@ struct QuizView: View {
             options: q.options,
             correctIndex: q.correctIndex,
             explanation: q.explanation,
-            progress: "Question \(index + 1) of \(questions.count)"
+            progress: "Question \(index + 1) of \(questions.count)",
+            progressFraction: Double(index) / Double(max(questions.count, 1))
         ) { chosen, _ in
             answers[index] = chosen
             if index + 1 < questions.count {

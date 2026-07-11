@@ -4,17 +4,9 @@ import Foundation
 // own TS copy in lib/drills). Pure, synchronous, offline — no network.
 
 enum DrillInput {
-    case numeric(answer: Double, tolerance: Double, unit: String?)
+    // Integer numeric answer, entered on the custom keypad (non-negative).
+    case numeric(answer: Int, unit: String?)
     case choice(options: [String], correctIndex: Int)
-    case fields([DrillField])
-}
-
-struct DrillField: Identifiable {
-    let id = UUID()
-    let label: String
-    let answer: Double
-    let tolerance: Double
-    let unit: String?
 }
 
 struct DrillProblem: Identifiable {
@@ -38,7 +30,7 @@ enum DrillCatalog {
 
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
-    // MARK: arithmetic (numeric)
+    // MARK: arithmetic (numeric keypad)
     static let arithmetic = DrillDef(
         slug: "arithmetic",
         title: "Arithmetic",
@@ -48,12 +40,14 @@ enum DrillCatalog {
         let ops: [(String, (Int, Int) -> Int)] = [("+", (+)), ("−", (-)), ("×", (*))]
         let (symbol, fn) = ops.randomElement()!
         let bound = level == 1 ? 12 : level == 2 ? 40 : 120
-        let a = Int.random(in: 2...bound)
-        let b = Int.random(in: 2...bound)
+        var a = Int.random(in: 2...bound)
+        var b = Int.random(in: 2...bound)
+        // Keep subtraction non-negative so the keypad needs no minus sign.
+        if symbol == "−", a < b { swap(&a, &b) }
         let answer = fn(a, b)
         return DrillProblem(
             prompt: "\(a) \(symbol) \(b)",
-            input: .numeric(answer: Double(answer), tolerance: 0, unit: nil),
+            input: .numeric(answer: answer, unit: nil),
             explanation: "\(a) \(symbol) \(b) = \(answer)"
         )
     }
@@ -85,7 +79,7 @@ enum DrillCatalog {
         )
     }
 
-    // MARK: vectors (fields — components from magnitude & angle)
+    // MARK: vectors (choice — pick the correct components)
     static let vectors = DrillDef(
         slug: "vectors",
         title: "Vectors",
@@ -97,12 +91,29 @@ enum DrillCatalog {
         let rad = angleDeg * .pi / 180
         let vx = magnitude * cos(rad)
         let vy = magnitude * sin(rad)
+
+        func fmt(_ x: Double, _ y: Double) -> String {
+            String(format: "(%.2f, %.2f)", x, y)
+        }
+        let correct = fmt(vx, vy)
+        // Distractors: swapped components (sin/cos mix-up), and each axis zeroed —
+        // the classic mistakes. De-duped against the correct answer.
+        var options = Set<String>([correct])
+        for candidate in [fmt(vy, vx), fmt(vx, -vy), fmt(magnitude, 0), fmt(0, magnitude)] {
+            if options.count >= 4 { break }
+            options.insert(candidate)
+        }
+        // Pad (rare, e.g. angle 45° makes vx==vy) so there are always four choices.
+        var pad = 1
+        while options.count < 4 {
+            options.insert(fmt(vx + Double(pad), vy - Double(pad)))
+            pad += 1
+        }
+        let shuffled = options.shuffled()
+        let correctIndex = shuffled.firstIndex(of: correct) ?? 0
         return DrillProblem(
-            prompt: "A vector has magnitude \(Int(magnitude)) at \(Int(angleDeg))°. Find its components.",
-            input: .fields([
-                DrillField(label: "vₓ", answer: vx, tolerance: 0.1, unit: nil),
-                DrillField(label: "v_y", answer: vy, tolerance: 0.1, unit: nil),
-            ]),
+            prompt: "A vector has magnitude \(Int(magnitude)) at \(Int(angleDeg))°. Find its components (vₓ, v_y).",
+            input: .choice(options: shuffled, correctIndex: correctIndex),
             explanation: String(
                 format: "vₓ = %.0f·cos(%.0f°) = %.2f,  v_y = %.0f·sin(%.0f°) = %.2f",
                 magnitude, angleDeg, vx, magnitude, angleDeg, vy

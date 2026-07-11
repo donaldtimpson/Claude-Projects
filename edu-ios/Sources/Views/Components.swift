@@ -109,6 +109,7 @@ struct MCQCard: View {
     let correctIndex: Int
     let explanation: String
     let progress: String
+    var progressFraction: Double? = nil
     let onContinue: (_ chosen: Int, _ correct: Bool) -> Void
 
     @State private var selected: Int?
@@ -117,6 +118,8 @@ struct MCQCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if let progressFraction { QuizProgressBar(fraction: progressFraction) }
+
             Text(progress)
                 .font(.serif(14))
                 .foregroundStyle(Theme.inkSoft)
@@ -128,23 +131,8 @@ struct MCQCard: View {
                 Text(prompt).font(.serif(20)).foregroundStyle(Theme.ink)
             }
 
-            VStack(spacing: 8) {
-                ForEach(options.indices, id: \.self) { i in
-                    Button {
-                        if !revealed { selected = i }
-                    } label: {
-                        Text(options[i])
-                            .font(.serif(17))
-                            .foregroundStyle(Theme.ink)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding()
-                            .background(optionBackground(i))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(optionBorder(i), lineWidth: 1.5))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(revealed)
-                }
+            OptionButtons(options: options, correctIndex: correctIndex, selected: selected, revealed: revealed) {
+                selected = $0
             }
 
             if revealed && !explanation.isEmpty {
@@ -159,26 +147,15 @@ struct MCQCard: View {
             }
 
             if !revealed {
-                PrimaryButton(title: "Check", enabled: selected != nil) { revealed = true }
+                PrimaryButton(title: "Check", enabled: selected != nil) {
+                    withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
+                    if selected == correctIndex { Haptics.success() } else { Haptics.error() }
+                }
             } else {
                 PrimaryButton(title: "Continue") {
                     onContinue(selected ?? 0, selected == correctIndex)
                 }
             }
         }
-    }
-
-    private func optionBackground(_ i: Int) -> Color {
-        guard revealed else { return i == selected ? Theme.parchmentDeep : Theme.card }
-        if i == correctIndex { return Color(hex: 0x1e3a24) }
-        if i == selected { return Color(hex: 0x3a1e1e) }
-        return Theme.card
-    }
-
-    private func optionBorder(_ i: Int) -> Color {
-        guard revealed else { return i == selected ? Theme.gold300 : Theme.line }
-        if i == correctIndex { return Theme.success }
-        if i == selected { return Theme.danger }
-        return Theme.line
     }
 }

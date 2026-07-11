@@ -13,8 +13,7 @@ struct DrillRunnerView: View {
     @State private var bestStreak = 0
     @State private var startedAt = Date()
 
-    @State private var numericText = ""
-    @State private var fieldTexts: [String] = []
+    @State private var numericEntry = ""
     @State private var choice: Int?
     @State private var revealed = false
     @State private var wasCorrect = false
@@ -46,10 +45,11 @@ struct DrillRunnerView: View {
     // MARK: setup
     @ViewBuilder private func setup(_ def: DrillDef) -> some View {
         ScrollView {
-            VStack(spacing: 16) {
-                Text(def.icon).font(.system(size: 56))
+            VStack(spacing: 18) {
+                Text(def.icon).font(.system(size: 64))
                 Text(def.blurb).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
-                Text("Choose a difficulty").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                Text("Choose a difficulty")
+                    .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
                 ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
                     SecondaryButton(title: label) { start(def: def, level: value) }
                 }
@@ -60,31 +60,34 @@ struct DrillRunnerView: View {
 
     // MARK: runner
     @ViewBuilder private func runner(def: DrillDef, level: Int, problem: DrillProblem) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("\(min(answered + (revealed ? 0 : 1), count)) / \(count)  ·  streak \(streak)")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                Text(problem.prompt).font(.title3).fontWeight(.semibold).foregroundStyle(Theme.ink)
-
-                inputWidget(problem)
-
-                if revealed {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(wasCorrect ? "Correct ✓" : "Not quite ✗")
-                            .fontWeight(.bold)
-                            .foregroundStyle(wasCorrect ? Theme.success : Theme.danger)
-                        if let explanation = problem.explanation {
-                            Text(explanation).font(.callout).foregroundStyle(Theme.ink)
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.parchmentDeep)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+        VStack(spacing: 0) {
+            VStack(spacing: 8) {
+                QuizProgressBar(fraction: Double(answered) / Double(count))
+                HStack {
+                    Text("\(min(answered + 1, count)) / \(count)")
+                        .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    Spacer()
+                    StreakPill(streak: streak)
                 }
+            }
+            .padding()
 
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Text(problem.prompt)
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 8)
+
+                    inputWidget(problem)
+
+                    if revealed { feedback(problem) }
+                }
+                .padding()
+            }
+
+            VStack {
                 if !revealed {
                     PrimaryButton(title: "Check", enabled: canCheck(problem)) { check(problem) }
                 } else {
@@ -98,47 +101,41 @@ struct DrillRunnerView: View {
     @ViewBuilder private func inputWidget(_ problem: DrillProblem) -> some View {
         switch problem.input {
         case let .choice(options, correctIndex):
-            VStack(spacing: 8) {
-                ForEach(options.indices, id: \.self) { i in
-                    Button { if !revealed { choice = i } } label: {
-                        Text(options[i]).foregroundStyle(Theme.ink)
-                            .frame(maxWidth: .infinity, alignment: .leading).padding()
-                            .background(choiceBg(i, correctIndex))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(choiceBorder(i, correctIndex), lineWidth: 1.5))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    }
-                    .buttonStyle(.plain).disabled(revealed)
-                }
+            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed) {
+                choice = $0
             }
-        case let .numeric(_, _, unit):
-            HStack {
-                TextField("answer", text: $numericText)
-                    .keyboardType(.numbersAndPunctuation)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(revealed)
-                if let unit { Text(unit).foregroundStyle(Theme.ink) }
-            }
-        case let .fields(fields):
-            VStack(spacing: 8) {
-                ForEach(fields.indices, id: \.self) { i in
-                    HStack {
-                        Text(fields[i].label).foregroundStyle(Theme.ink).frame(minWidth: 44, alignment: .leading)
-                        TextField("?", text: binding(for: i, count: fields.count))
-                            .keyboardType(.numbersAndPunctuation)
-                            .textFieldStyle(.roundedBorder)
-                            .disabled(revealed)
-                        if let unit = fields[i].unit { Text(unit).foregroundStyle(Theme.ink) }
-                    }
-                }
+        case let .numeric(_, unit):
+            NumericKeypad(entry: $numericEntry, unit: unit, disabled: revealed)
+        }
+    }
+
+    @ViewBuilder private func feedback(_ problem: DrillProblem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(wasCorrect ? "Correct ✓" : "Not quite ✗")
+                .font(.headline)
+                .foregroundStyle(wasCorrect ? Theme.success : Theme.danger)
+            if let explanation = problem.explanation {
+                Text(explanation).font(.callout).foregroundStyle(Theme.ink)
             }
         }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.parchmentDeep)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .transition(.opacity)
     }
 
     // MARK: summary
     @ViewBuilder private var summaryView: some View {
-        VStack(spacing: 16) {
-            Text("Nice work").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
-            Text("\(correctCount) / \(count) correct").foregroundStyle(Theme.ink)
+        let pct = count > 0 ? Int((Double(correctCount) / Double(count) * 100).rounded()) : 0
+        VStack(spacing: 18) {
+            Text(pct == 100 ? "✦" : "✓").font(.system(size: 52)).foregroundStyle(Theme.gold400)
+            Text(pct == 100 ? "Flawless" : "Nice work").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
+            Text("\(correctCount) / \(count) correct · \(pct)%").foregroundStyle(Theme.ink)
+            HStack(spacing: 6) {
+                Text("Best streak").font(.footnote).foregroundStyle(Theme.inkSoft)
+                StreakPill(streak: bestStreak)
+            }
             if !auth.isSignedIn {
                 Text("Sign in to save drill progress and earn badges.")
                     .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
@@ -151,16 +148,6 @@ struct DrillRunnerView: View {
     }
 
     // MARK: logic
-    private func binding(for i: Int, count: Int) -> Binding<String> {
-        Binding(
-            get: { i < fieldTexts.count ? fieldTexts[i] : "" },
-            set: { newValue in
-                if fieldTexts.count != count { fieldTexts = Array(repeating: "", count: count) }
-                fieldTexts[i] = newValue
-            }
-        )
-    }
-
     private func start(def: DrillDef, level value: Int) {
         level = value
         startedAt = Date()
@@ -169,54 +156,38 @@ struct DrillRunnerView: View {
     }
 
     private func generate(def: DrillDef, level value: Int) {
-        let p = def.generate(value)
-        problem = p
-        numericText = ""
+        problem = def.generate(value)
+        numericEntry = ""
         choice = nil
         revealed = false
-        if case let .fields(fields) = p.input {
-            fieldTexts = Array(repeating: "", count: fields.count)
-        } else {
-            fieldTexts = []
-        }
     }
 
     private func canCheck(_ problem: DrillProblem) -> Bool {
         switch problem.input {
         case .choice: return choice != nil
-        case .numeric: return !numericText.trimmingCharacters(in: .whitespaces).isEmpty
-        case let .fields(fields):
-            return fields.indices.allSatisfy { i in
-                i < fieldTexts.count && !fieldTexts[i].trimmingCharacters(in: .whitespaces).isEmpty
-            }
+        case .numeric: return Int(numericEntry) != nil
         }
     }
 
     private func check(_ problem: DrillProblem) {
         let correct = grade(problem)
         wasCorrect = correct
-        revealed = true
+        withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         answered += 1
-        if correct { correctCount += 1; streak += 1; bestStreak = max(bestStreak, streak) } else { streak = 0 }
+        if correct {
+            correctCount += 1; streak += 1; bestStreak = max(bestStreak, streak)
+            Haptics.success()
+        } else {
+            streak = 0
+            Haptics.error()
+        }
     }
 
     private func grade(_ problem: DrillProblem) -> Bool {
         switch problem.input {
-        case let .numeric(answer, tolerance, _):
-            return numericMatch(numericText, answer, tolerance)
-        case let .choice(_, correctIndex):
-            return choice == correctIndex
-        case let .fields(fields):
-            return fields.enumerated().allSatisfy { idx, field in
-                numericMatch(idx < fieldTexts.count ? fieldTexts[idx] : "", field.answer, field.tolerance)
-            }
+        case let .numeric(answer, _): return Int(numericEntry) == answer
+        case let .choice(_, correctIndex): return choice == correctIndex
         }
-    }
-
-    private func numericMatch(_ text: String, _ answer: Double, _ tolerance: Double) -> Bool {
-        let cleaned = text.filter { "0123456789.-".contains($0) }
-        guard let value = Double(cleaned) else { return false }
-        return abs(value - answer) <= max(tolerance, 1e-9)
     }
 
     private func next(def: DrillDef, level value: Int) {
@@ -236,19 +207,5 @@ struct DrillRunnerView: View {
             durationSec: Int(Date().timeIntervalSince(startedAt)), clientId: makeClientId()
         )
         Task { _ = await queue.submit(path: "/drills/session", body: body, clientId: makeClientId()) }
-    }
-
-    private func choiceBg(_ i: Int, _ correctIndex: Int) -> Color {
-        guard revealed else { return i == choice ? Theme.parchmentDeep : Theme.card }
-        if i == correctIndex { return Color(red: 0.906, green: 0.953, blue: 0.910) }
-        if i == choice { return Color(red: 0.965, green: 0.890, blue: 0.890) }
-        return Theme.card
-    }
-
-    private func choiceBorder(_ i: Int, _ correctIndex: Int) -> Color {
-        guard revealed else { return i == choice ? Theme.crimson : Theme.line }
-        if i == correctIndex { return Theme.success }
-        if i == choice { return Theme.danger }
-        return Theme.line
     }
 }
