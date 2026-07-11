@@ -11,11 +11,17 @@ enum DrillInput {
     case choice(options: [String], correctIndex: Int) // always 4 options
 }
 
+enum DrillDiagramSpec {
+    case vector(angleDeg: Double, component: String)   // "x" or "y"
+    case unitCircle(angleDeg: Double, fn: String)      // sin / cos / tan
+}
+
 struct DrillProblem: Identifiable {
     let id = UUID()
     let prompt: String
     let input: DrillInput
     let explanation: String?
+    var diagram: DrillDiagramSpec? = nil
 }
 
 struct DrillDef: Identifiable {
@@ -190,25 +196,25 @@ enum DrillCatalog {
     }
 
     // MARK: - Unit circle (choice; sin/cos/tan at standard angles, exact values)
-    private struct Angle { let display: String; let sin: String; let cos: String; let tan: String }
+    private struct Angle { let display: String; let deg: Double; let sin: String; let cos: String; let tan: String }
     // 16 standard angles with exact-value KEYS (also used as display strings).
     private static let angles: [Angle] = [
-        Angle(display: "0",      sin: "0",     cos: "1",     tan: "0"),
-        Angle(display: "π/6",    sin: "1/2",   cos: "√3/2",  tan: "√3/3"),
-        Angle(display: "π/4",    sin: "√2/2",  cos: "√2/2",  tan: "1"),
-        Angle(display: "π/3",    sin: "√3/2",  cos: "1/2",   tan: "√3"),
-        Angle(display: "π/2",    sin: "1",     cos: "0",     tan: "undefined"),
-        Angle(display: "2π/3",   sin: "√3/2",  cos: "−1/2",  tan: "−√3"),
-        Angle(display: "3π/4",   sin: "√2/2",  cos: "−√2/2", tan: "−1"),
-        Angle(display: "5π/6",   sin: "1/2",   cos: "−√3/2", tan: "−√3/3"),
-        Angle(display: "π",      sin: "0",     cos: "−1",    tan: "0"),
-        Angle(display: "7π/6",   sin: "−1/2",  cos: "−√3/2", tan: "√3/3"),
-        Angle(display: "5π/4",   sin: "−√2/2", cos: "−√2/2", tan: "1"),
-        Angle(display: "4π/3",   sin: "−√3/2", cos: "−1/2",  tan: "√3"),
-        Angle(display: "3π/2",   sin: "−1",    cos: "0",     tan: "undefined"),
-        Angle(display: "5π/3",   sin: "−√3/2", cos: "1/2",   tan: "−√3"),
-        Angle(display: "7π/4",   sin: "−√2/2", cos: "√2/2",  tan: "−1"),
-        Angle(display: "11π/6",  sin: "−1/2",  cos: "√3/2",  tan: "−√3/3"),
+        Angle(display: "0",      deg: 0,   sin: "0",     cos: "1",     tan: "0"),
+        Angle(display: "π/6",    deg: 30,  sin: "1/2",   cos: "√3/2",  tan: "√3/3"),
+        Angle(display: "π/4",    deg: 45,  sin: "√2/2",  cos: "√2/2",  tan: "1"),
+        Angle(display: "π/3",    deg: 60,  sin: "√3/2",  cos: "1/2",   tan: "√3"),
+        Angle(display: "π/2",    deg: 90,  sin: "1",     cos: "0",     tan: "undefined"),
+        Angle(display: "2π/3",   deg: 120, sin: "√3/2",  cos: "−1/2",  tan: "−√3"),
+        Angle(display: "3π/4",   deg: 135, sin: "√2/2",  cos: "−√2/2", tan: "−1"),
+        Angle(display: "5π/6",   deg: 150, sin: "1/2",   cos: "−√3/2", tan: "−√3/3"),
+        Angle(display: "π",      deg: 180, sin: "0",     cos: "−1",    tan: "0"),
+        Angle(display: "7π/6",   deg: 210, sin: "−1/2",  cos: "−√3/2", tan: "√3/3"),
+        Angle(display: "5π/4",   deg: 225, sin: "−√2/2", cos: "−√2/2", tan: "1"),
+        Angle(display: "4π/3",   deg: 240, sin: "−√3/2", cos: "−1/2",  tan: "√3"),
+        Angle(display: "3π/2",   deg: 270, sin: "−1",    cos: "0",     tan: "undefined"),
+        Angle(display: "5π/3",   deg: 300, sin: "−√3/2", cos: "1/2",   tan: "−√3"),
+        Angle(display: "7π/4",   deg: 315, sin: "−√2/2", cos: "√2/2",  tan: "−1"),
+        Angle(display: "11π/6",  deg: 330, sin: "−1/2",  cos: "√3/2",  tan: "−√3/3"),
     ]
     private static let sinCosPool = ["0", "1", "−1", "1/2", "−1/2", "√2/2", "−√2/2", "√3/2", "−√3/2"]
     private static let tanPool = ["0", "1", "−1", "√3/3", "−√3/3", "√3", "−√3", "undefined"]
@@ -229,7 +235,8 @@ enum DrillCatalog {
         return DrillProblem(
             prompt: "\(fn)(\(angle.display)) = ?",
             input: .choice(options: options, correctIndex: options.firstIndex(of: correct) ?? 0),
-            explanation: "\(fn)(\(angle.display)) = \(correct)"
+            explanation: "\(fn)(\(angle.display)) = \(correct)",
+            diagram: .unitCircle(angleDeg: angle.deg, fn: fn)
         )
     }
 
@@ -310,7 +317,8 @@ enum DrillCatalog {
         return DrillProblem(
             prompt: "|v| = \(r),  θ = \(angle.deg)°\n\(axis)-component = ?",
             input: .choice(options: options, correctIndex: correctIndex),
-            explanation: "\(axis)-component = \(r)·\(fn)(\(angle.deg)°) = \(compDisplay(correct))"
+            explanation: "\(axis)-component = \(r)·\(fn)(\(angle.deg)°) = \(compDisplay(correct))",
+            diagram: .vector(angleDeg: Double(angle.deg), component: axis)
         )
     }
 }

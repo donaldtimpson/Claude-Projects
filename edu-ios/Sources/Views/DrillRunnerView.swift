@@ -129,6 +129,10 @@ struct DrillRunnerView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 8)
 
+                if let diagram = problem.diagram {
+                    DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
+                }
+
                 OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: true) { i in
                     guard !revealed else { return }
                     choice = i

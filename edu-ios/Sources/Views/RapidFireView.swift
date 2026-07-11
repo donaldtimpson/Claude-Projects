@@ -69,11 +69,14 @@ struct RapidFireView: View {
                 switch problem.input {
                 case let .choice(options, correctIndex):
                     ScrollView {
-                        VStack(spacing: 24) {
+                        VStack(spacing: 20) {
                             Text(problem.prompt)
                                 .font(.system(size: 28, weight: .bold, design: .rounded))
                                 .foregroundStyle(Theme.ink)
                                 .frame(maxWidth: .infinity).padding(.top, 12)
+                            if let diagram = problem.diagram {
+                                DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
+                            }
                             OptionButtons(options: options, correctIndex: correctIndex,
                                           selected: nil, revealed: false, grid: true) { i in
                                 submit(correct: i == correctIndex)
