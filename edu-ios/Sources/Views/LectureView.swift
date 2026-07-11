@@ -14,6 +14,8 @@ struct LectureView: View {
     @State private var quizScore: ScorePair?
     @State private var videoError: Int?
     @State private var aces: [QuizAce] = []
+    @State private var shareItem: ShareItem?
+    @State private var generatingPDF = false
     @State private var comments: [CommentItem] = []
     @State private var showCompose = false
     @State private var composeReplyTo: CommentItem?
@@ -41,6 +43,7 @@ struct LectureView: View {
             .sheet(isPresented: $showCompose) {
                 CommentComposeSheet(replyingTo: composeReplyTo, onSubmit: postComment)
             }
+            .sheet(item: $shareItem) { ShareSheet(url: $0.url) }
             .confirmationDialog(
                 "Delete this comment?",
                 isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
@@ -103,9 +106,15 @@ struct LectureView: View {
 
     @ViewBuilder private func notesSection(_ detail: VideoDetailResponse) -> some View {
         if let note = detail.note {
-            MathWebView(markdown: note.content, height: $noteHeight)
-                .frame(height: noteHeight)
-                .lyceumCard()
+            VStack(spacing: 12) {
+                MathWebView(markdown: note.content, height: $noteHeight)
+                    .frame(height: noteHeight)
+                    .lyceumCard()
+                SecondaryButton(title: generatingPDF ? "Preparing PDF…" : "Share notes as PDF") {
+                    exportNotesPDF(markdown: note.content, lectureTitle: detail.video.title)
+                }
+                .disabled(generatingPDF)
+            }
         } else {
             Text("No study notes for this lecture yet.").foregroundStyle(Theme.inkSoft)
         }
@@ -168,6 +177,16 @@ struct LectureView: View {
             onReply: { composeReplyTo = $0; showCompose = true },
             onDelete: { pendingDelete = $0 }
         )
+    }
+
+    private func exportNotesPDF(markdown: String, lectureTitle: String) {
+        generatingPDF = true
+        Task {
+            let exporter = NotesPDFExporter()
+            let url = await exporter.export(markdown: markdown, title: "\(lectureTitle) — Notes")
+            generatingPDF = false
+            if let url { shareItem = ShareItem(url: url) }
+        }
     }
 
     private func refreshAces() async {
