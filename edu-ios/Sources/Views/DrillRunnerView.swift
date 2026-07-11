@@ -82,27 +82,36 @@ struct DrillRunnerView: View {
 
                     inputWidget(problem)
 
-                    if revealed { feedback(problem) }
+                    if revealed {
+                        feedback(problem)
+                        Text(answered >= count ? "Tap to finish" : "Tap to continue")
+                            .font(.footnote).foregroundStyle(Theme.inkSoft)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
                 }
                 .padding()
             }
 
-            VStack {
-                if !revealed {
-                    PrimaryButton(title: "Check", enabled: canCheck(problem)) { check(problem) }
-                } else {
-                    PrimaryButton(title: answered >= count ? "Finish" : "Next") { next(def: def, level: level) }
+            // Multiple choice answers on tap; only numeric needs an explicit submit.
+            if !revealed, isNumeric(problem) {
+                VStack {
+                    PrimaryButton(title: "Check", enabled: Int(numericEntry) != nil) { submitNumeric(problem) }
                 }
+                .padding()
             }
-            .padding()
         }
+        .contentShape(Rectangle())
+        .onTapGesture { if revealed { next(def: def, level: level) } }
     }
 
     @ViewBuilder private func inputWidget(_ problem: DrillProblem) -> some View {
         switch problem.input {
         case let .choice(options, correctIndex):
-            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed) {
-                choice = $0
+            // Tapping an option answers immediately (no Check button).
+            OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed) { i in
+                guard !revealed else { return }
+                choice = i
+                reveal(correct: i == correctIndex)
             }
         case let .numeric(_, unit):
             NumericKeypad(entry: $numericEntry, unit: unit, disabled: revealed)
@@ -162,15 +171,17 @@ struct DrillRunnerView: View {
         revealed = false
     }
 
-    private func canCheck(_ problem: DrillProblem) -> Bool {
-        switch problem.input {
-        case .choice: return choice != nil
-        case .numeric: return Int(numericEntry) != nil
-        }
+    private func isNumeric(_ problem: DrillProblem) -> Bool {
+        if case .numeric = problem.input { return true }
+        return false
     }
 
-    private func check(_ problem: DrillProblem) {
-        let correct = grade(problem)
+    private func submitNumeric(_ problem: DrillProblem) {
+        guard case let .numeric(answer, _) = problem.input else { return }
+        reveal(correct: Int(numericEntry) == answer)
+    }
+
+    private func reveal(correct: Bool) {
         wasCorrect = correct
         withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         answered += 1
@@ -180,13 +191,6 @@ struct DrillRunnerView: View {
         } else {
             streak = 0
             Haptics.error()
-        }
-    }
-
-    private func grade(_ problem: DrillProblem) -> Bool {
-        switch problem.input {
-        case let .numeric(answer, _): return Int(numericEntry) == answer
-        case let .choice(_, correctIndex): return choice == correctIndex
         }
     }
 

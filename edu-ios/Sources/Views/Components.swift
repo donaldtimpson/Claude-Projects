@@ -131,31 +131,33 @@ struct MCQCard: View {
                 Text(prompt).font(.serif(20)).foregroundStyle(Theme.ink)
             }
 
-            OptionButtons(options: options, correctIndex: correctIndex, selected: selected, revealed: revealed) {
-                selected = $0
+            // Tap an option to answer — it grades and reveals immediately (no Check).
+            OptionButtons(options: options, correctIndex: correctIndex, selected: selected, revealed: revealed) { i in
+                guard !revealed else { return }
+                selected = i
+                withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
+                if i == correctIndex { Haptics.success() } else { Haptics.error() }
             }
 
-            if revealed && !explanation.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Explanation").font(.display(11)).kerning(1).foregroundStyle(Theme.gold400)
-                    Text(explanation).font(.serif(15)).foregroundStyle(Theme.ink)
+            if revealed {
+                if !explanation.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Explanation").font(.display(11)).kerning(1).foregroundStyle(Theme.gold400)
+                        Text(explanation).font(.serif(15)).foregroundStyle(Theme.ink)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.parchmentDeep)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.parchmentDeep)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-            }
-
-            if !revealed {
-                PrimaryButton(title: "Check", enabled: selected != nil) {
-                    withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
-                    if selected == correctIndex { Haptics.success() } else { Haptics.error() }
-                }
-            } else {
-                PrimaryButton(title: "Continue") {
-                    onContinue(selected ?? 0, selected == correctIndex)
-                }
+                Text("Tap to continue")
+                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 2)
             }
         }
+        // Once revealed, a tap anywhere advances (no Continue button).
+        .contentShape(Rectangle())
+        .onTapGesture { if revealed { onContinue(selected ?? 0, selected == correctIndex) } }
     }
 }
