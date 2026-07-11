@@ -42,7 +42,8 @@ private func sampleDistinct<T>(_ pool: [T], _ n: Int) -> [T] {
 enum DrillCatalog {
     static let all: [DrillDef] = [
         arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
-        sequences, logarithms, derivative, integral, determinant, unitCircle, vectors,
+        sequences, logarithms, derivative, integral,
+        determinant, solveSystem, matrixVector, dotProduct, unitCircle, vectors,
     ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
@@ -75,6 +76,19 @@ enum DrillCatalog {
         return "\(c)\(base)"
     }
     private static func neg(_ x: Int) -> String { String(x).replacingOccurrences(of: "-", with: "−") }
+
+    // Format a x + b y = c with tidy signs (x, −x, 2x; drops zero terms).
+    private static func eqn(_ a: Int, _ b: Int, _ c: Int) -> String {
+        var s = ""
+        if a != 0 { s += a == 1 ? "x" : a == -1 ? "−x" : "\(neg(a))x" }
+        if b != 0 {
+            let mag = abs(b) == 1 ? "y" : "\(abs(b))y"
+            if s.isEmpty { s += b < 0 ? "−\(mag)" : mag }
+            else { s += b < 0 ? " − \(mag)" : " + \(mag)" }
+        }
+        return s + " = \(neg(c))"
+    }
+    private static func pair(_ x: Int, _ y: Int) -> String { "(\(neg(x)), \(neg(y)))" }
 
     // Build 4 shuffled options from a correct value + a pool of distractor strings.
     private static func fourChoices(_ correct: String, _ pool: [String]) -> (options: [String], correctIndex: Int) {
@@ -354,6 +368,75 @@ enum DrillCatalog {
                             input: .choice(options: options, correctIndex: correctIndex),
                             explanation: "ad − bc = (\(a))(\(d)) − (\(b))(\(c)) = \(neg(det))",
                             diagram: .matrix(rows: [[a, b], [c, d]]))
+    }
+
+    // MARK: - Solve a 2×2 system (choice; pick the (x, y) that satisfies both)
+    static let solveSystem = DrillDef(
+        slug: "solve-system",
+        title: "Solve the System",
+        blurb: "Two equations, two unknowns — find the (x, y) that works.",
+        icon: "⊞"
+    ) { level in
+        let solR = level == 1 ? 0...4 : level == 2 ? -3...4 : -5...5
+        let coefR = level == 1 ? [-2, -1, 1, 2] : [-3, -2, -1, 1, 2, 3]
+        let x = Int.random(in: solR), y = Int.random(in: solR)
+        var a1 = 1, b1 = 1, a2 = 1, b2 = 1
+        repeat {
+            a1 = coefR.randomElement()!; b1 = coefR.randomElement()!
+            a2 = coefR.randomElement()!; b2 = coefR.randomElement()!
+        } while a1 * b2 - a2 * b1 == 0   // must be independent
+        let c1 = a1 * x + b1 * y, c2 = a2 * x + b2 * y
+        let (options, correctIndex) = fourChoices(pair(x, y), [
+            pair(y, x),          // swapped x and y
+            pair(-x, y), pair(x, -y),   // sign slips
+            pair(x + 1, y - 1),
+        ])
+        return DrillProblem(prompt: "\(eqn(a1, b1, c1))\n\(eqn(a2, b2, c2))\n\nSolve for (x, y)",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "x = \(neg(x)), y = \(neg(y)) satisfies both equations.")
+    }
+
+    // MARK: - Matrix × vector (choice; A·v for a 2×2 and a 2-vector)
+    static let matrixVector = DrillDef(
+        slug: "matrix-vector",
+        title: "Matrix × Vector",
+        blurb: "Multiply a 2×2 matrix by a vector — rows dotted with the vector.",
+        icon: "⧉"
+    ) { level in
+        let r = level == 1 ? -2...3 : level == 2 ? -3...4 : -5...5
+        func e() -> Int { Int.random(in: r) }
+        let a = e(), b = e(), c = e(), d = e(), x = e(), y = e()
+        let p = a * x + b * y, q = c * x + d * y
+        let (options, correctIndex) = fourChoices(pair(p, q), [
+            pair(a * x, d * y),   // multiplied component-wise (the classic mistake)
+            pair(q, p),           // rows swapped
+            pair(a * x + b * y, c * x - d * y),
+            pair(p + 1, q),
+        ])
+        return DrillProblem(prompt: "[\(neg(a)), \(neg(b)); \(neg(c)), \(neg(d))] · (\(neg(x)), \(neg(y)))\n\nA·v = ?",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "Row 1 · v = \(neg(p)),  Row 2 · v = \(neg(q))")
+    }
+
+    // MARK: - Dot product (choice; scalar result, can be negative)
+    static let dotProduct = DrillDef(
+        slug: "dot-product",
+        title: "Dot Product",
+        blurb: "Multiply matching components and add them up.",
+        icon: "•"
+    ) { level in
+        let r = level == 1 ? -3...4 : level == 2 ? -5...6 : -8...8
+        func e() -> Int { Int.random(in: r) }
+        let a1 = e(), a2 = e(), b1 = e(), b2 = e()
+        let dot = a1 * b1 + a2 * b2
+        let (options, correctIndex) = fourChoices(neg(dot), [
+            neg(a1 * b1 - a2 * b2),   // subtracted instead of added
+            neg(a1 * b2 + a2 * b1),   // paired the wrong components
+            neg(dot + 2), neg(dot - 3),
+        ])
+        return DrillProblem(prompt: "(\(neg(a1)), \(neg(a2))) · (\(neg(b1)), \(neg(b2))) = ?",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "(\(neg(a1)))(\(neg(b1))) + (\(neg(a2)))(\(neg(b2))) = \(neg(dot))")
     }
 
     // MARK: - Unit circle (choice; sin/cos/tan at standard angles, exact values)
