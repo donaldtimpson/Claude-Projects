@@ -45,6 +45,15 @@ enum DrillCatalog {
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
     private static func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
+
+    // Shuffle "bag" for small discrete domains (powers, squares…): draw the whole
+    // range in a random order before any value repeats, so you don't see the same
+    // number twice in quick succession. One bag per (drill, level); refills when empty.
+    private static var bags: [String: [Int]] = [:]
+    private static func draw(_ key: String, _ domain: () -> [Int]) -> Int {
+        if bags[key]?.isEmpty ?? true { bags[key] = domain().shuffled() }
+        return bags[key]!.removeLast()
+    }
     private static func isPrime(_ n: Int) -> Bool {
         if n < 2 { return false }
         if n < 4 { return true }
@@ -101,7 +110,7 @@ enum DrillCatalog {
         icon: "⚡️"
     ) { level in
         let maxK = level == 1 ? 8 : level == 2 ? 12 : 16
-        let k = Int.random(in: 2...maxK)
+        let k = draw("pow2_\(level)") { Array(2...maxK) }
         let answer = 1 << k
         return DrillProblem(prompt: "2^\(k)",
                             input: .numeric(answer: answer, unit: nil),
@@ -116,7 +125,7 @@ enum DrillCatalog {
         icon: "▧"
     ) { level in
         let hi = level == 1 ? 12 : level == 2 ? 20 : 30
-        let n = Int.random(in: 2...hi)
+        let n = draw("sq_\(level)") { Array(2...hi) }
         if Bool.random() {
             return DrillProblem(prompt: "\(n)²",
                                 input: .numeric(answer: n * n, unit: nil),

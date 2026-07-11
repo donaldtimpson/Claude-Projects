@@ -112,9 +112,11 @@ struct DrillRunnerView: View {
             }
             Spacer(minLength: 0)
             NumericKeypad(entry: $numericEntry, unit: unit, disabled: revealed)
-            if !revealed {
-                PrimaryButton(title: "Check", enabled: Int(numericEntry) != nil) { submitNumeric(problem) }
-            }
+                .onChange(of: numericEntry) { _, newValue in
+                    // Auto-submit once the entry reaches the answer's digit count — no Check button.
+                    guard !revealed, case let .numeric(answer, _) = problem.input else { return }
+                    if newValue.count >= String(answer).count { submitNumeric(problem) }
+                }
         }
         .padding()
     }

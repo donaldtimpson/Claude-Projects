@@ -93,7 +93,9 @@ struct RapidFireView: View {
                         Spacer(minLength: 0)
                         NumericKeypad(entry: $numericEntry, unit: unit, disabled: locked)
                             .onChange(of: numericEntry) { _, newValue in
-                                if let a = currentAnswer, Int(newValue) == a { submit(correct: true) }
+                                // Auto-submit at the answer's digit count (right or wrong).
+                                guard !locked, let a = currentAnswer else { return }
+                                if newValue.count >= String(a).count { submit(correct: Int(newValue) == a) }
                             }
                         PrimaryButton(title: "Skip", enabled: !locked) { submit(correct: false) }
                     }
