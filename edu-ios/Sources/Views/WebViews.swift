@@ -27,8 +27,11 @@ struct YouTubePlayer: UIViewRepresentable {
     }
 
     func updateUIView(_ web: WKWebView, context: Context) {
-        // Origin must be a real https origin that matches the baseURL below.
-        let origin = "https://www.youtube.com"
+        // The IFrame API validates the embedder's origin. It must be a real,
+        // external https web origin that matches the baseURL below — NOT
+        // youtube.com itself (self-referential origins are rejected → error 152).
+        // Use the site that already embeds these videos successfully on the web.
+        let origin = "https://timpson-lyceum.vercel.app"
         let html = """
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
