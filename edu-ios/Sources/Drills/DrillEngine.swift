@@ -33,8 +33,115 @@ private func sampleDistinct<T>(_ pool: [T], _ n: Int) -> [T] {
 }
 
 enum DrillCatalog {
-    static let all: [DrillDef] = [arithmetic, unitCircle, vectors]
+    static let all: [DrillDef] = [
+        arithmetic, percentages, orderOfOps, powersOfTwo, squares, primes, unitCircle, vectors,
+    ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
+
+    private static func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
+    private static func isPrime(_ n: Int) -> Bool {
+        if n < 2 { return false }
+        if n < 4 { return true }
+        if n % 2 == 0 { return false }
+        var i = 3
+        while i * i <= n { if n % i == 0 { return false }; i += 2 }
+        return true
+    }
+
+    // MARK: - Percentages (numeric; clean integer answers)
+    static let percentages = DrillDef(
+        slug: "percentages",
+        title: "Percentages",
+        blurb: "Mental percents of a number — tips, discounts, and more.",
+        icon: "％"
+    ) { level in
+        let ps = level == 1 ? [10, 25, 50] : level == 2 ? [5, 10, 20, 25, 50] : [5, 15, 20, 25, 40, 75]
+        let p = ps.randomElement()!
+        let step = 100 / gcd(p, 100)          // smallest N that keeps the answer whole
+        let k = Int.random(in: 2...(level == 1 ? 9 : level == 2 ? 15 : 25))
+        let n = step * k
+        let answer = p * n / 100
+        return DrillProblem(prompt: "\(p)% of \(n)",
+                            input: .numeric(answer: answer, unit: nil),
+                            explanation: "\(p)% of \(n) = \(answer)")
+    }
+
+    // MARK: - Order of operations (numeric; precedence, not left-to-right)
+    static let orderOfOps = DrillDef(
+        slug: "order-of-operations",
+        title: "Order of Operations",
+        blurb: "Evaluate expressions with the right precedence (PEMDAS).",
+        icon: "🔢"
+    ) { level in
+        let hi = level == 1 ? 9 : level == 2 ? 12 : 20
+        let a = Int.random(in: 2...hi), b = Int.random(in: 2...9), c = Int.random(in: 2...hi)
+        // Two shapes so the ×-term lands on either side; answer respects precedence.
+        if Bool.random() {
+            return DrillProblem(prompt: "\(a) + \(b) × \(c)",
+                                input: .numeric(answer: a + b * c, unit: nil),
+                                explanation: "\(b) × \(c) first = \(b * c), then + \(a) = \(a + b * c)")
+        } else {
+            return DrillProblem(prompt: "\(b) × \(c) + \(a)",
+                                input: .numeric(answer: b * c + a, unit: nil),
+                                explanation: "\(b) × \(c) first = \(b * c), then + \(a) = \(b * c + a)")
+        }
+    }
+
+    // MARK: - Powers of two (numeric; CS-flavored recall)
+    static let powersOfTwo = DrillDef(
+        slug: "powers-of-two",
+        title: "Powers of Two",
+        blurb: "Recall 2ⁿ — the numbers behind bytes, bits, and binary.",
+        icon: "⚡️"
+    ) { level in
+        let maxK = level == 1 ? 8 : level == 2 ? 12 : 16
+        let k = Int.random(in: 2...maxK)
+        let answer = 1 << k
+        return DrillProblem(prompt: "2^\(k)",
+                            input: .numeric(answer: answer, unit: nil),
+                            explanation: "2^\(k) = \(answer)")
+    }
+
+    // MARK: - Squares & roots (numeric)
+    static let squares = DrillDef(
+        slug: "squares",
+        title: "Squares & Roots",
+        blurb: "Perfect squares and their roots, on sight.",
+        icon: "▧"
+    ) { level in
+        let hi = level == 1 ? 12 : level == 2 ? 20 : 30
+        let n = Int.random(in: 2...hi)
+        if Bool.random() {
+            return DrillProblem(prompt: "\(n)²",
+                                input: .numeric(answer: n * n, unit: nil),
+                                explanation: "\(n)² = \(n * n)")
+        } else {
+            return DrillProblem(prompt: "√\(n * n)",
+                                input: .numeric(answer: n, unit: nil),
+                                explanation: "√\(n * n) = \(n)")
+        }
+    }
+
+    // MARK: - Prime or composite (choice)
+    static let primes = DrillDef(
+        slug: "primes",
+        title: "Prime or Composite",
+        blurb: "Snap-judge whether a number is prime.",
+        icon: "🧩"
+    ) { level in
+        let hi = level == 1 ? 40 : level == 2 ? 80 : 150
+        let n = Int.random(in: 2...hi)
+        let options = ["Prime", "Composite"]
+        let correctIndex = isPrime(n) ? 0 : 1
+        var why = ""
+        if !isPrime(n) {
+            var f = 2
+            while f * f <= n { if n % f == 0 { why = " (\(f) × \(n / f))"; break }; f += 1 }
+        }
+        return DrillProblem(prompt: "Is \(n) prime?",
+                            input: .choice(options: options, correctIndex: correctIndex),
+                            explanation: "\(n) is \(isPrime(n) ? "prime" : "composite")\(why).")
+    }
 
     // MARK: - Arithmetic (numeric keypad; +, −, ×, ÷ with clean inverses)
     static let arithmetic = DrillDef(

@@ -18,6 +18,8 @@ struct DrillRunnerView: View {
     @State private var revealed = false
     @State private var wasCorrect = false
     @State private var finished = false
+    @State private var rapid = false
+    @State private var rapidLevel: Int?
 
     private let count = 10
     private var def: DrillDef? { DrillCatalog.drill(slug: slug) }
@@ -27,6 +29,8 @@ struct DrillRunnerView: View {
             if let def {
                 if finished {
                     summaryView
+                } else if let rapidLevel {
+                    RapidFireView(def: def, level: rapidLevel, seconds: 60) { self.rapidLevel = nil }
                 } else if let level, let problem {
                     runner(def: def, level: level, problem: problem)
                 } else {
@@ -48,6 +52,16 @@ struct DrillRunnerView: View {
             VStack(spacing: 18) {
                 Text(def.icon).font(.system(size: 64))
                 Text(def.blurb).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+
+                Picker("Mode", selection: $rapid) {
+                    Text("Practice").tag(false)
+                    Text("Rapid Fire").tag(true)
+                }
+                .pickerStyle(.segmented)
+
+                Text(rapid ? "Beat the clock — 60 seconds, build a combo." : "Ten problems at your pace.")
+                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+
                 Text("Choose a difficulty")
                     .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
                 ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
@@ -176,6 +190,10 @@ struct DrillRunnerView: View {
 
     // MARK: logic
     private func start(def: DrillDef, level value: Int) {
+        if rapid {
+            rapidLevel = value
+            return
+        }
         level = value
         startedAt = Date()
         answered = 0; correctCount = 0; streak = 0; bestStreak = 0
