@@ -13,14 +13,17 @@ export async function GET(req: Request) {
       }),
       getStreak(userId),
       getDueCount(userId),
-      // Best Rapid Fire score per (drill, difficulty) — the synced high scores.
+      // Best Rapid Fire score per (drill, difficulty, sprint length) — the synced
+      // high scores. Duration is part of the key: 60s and 120s are separate boards.
       db.drillAttempt.groupBy({
-        by: ["slug", "level"],
+        by: ["slug", "level", "durationSec"],
         where: { userId, mode: "timed", score: { not: null } },
         _max: { score: true },
       }),
     ]);
-    const drillBests = bestRows.map((r) => ({ slug: r.slug, level: r.level, best: r._max.score ?? 0 }));
+    const drillBests = bestRows.map((r) => ({
+      slug: r.slug, level: r.level, durationSec: r.durationSec, best: r._max.score ?? 0,
+    }));
     return ok({ user, streak, dueCount, drillBests });
   });
 }

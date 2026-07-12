@@ -30,6 +30,7 @@ struct Streak: Codable, Hashable {
 struct DrillBest: Codable, Hashable {
     let slug: String
     let level: Int
+    let durationSec: Int
     let best: Int
 }
 

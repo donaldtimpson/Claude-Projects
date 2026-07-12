@@ -45,6 +45,7 @@ export default function DrillPlayer({
   const [results, setResults] = useState<boolean[]>([]);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [score, setScore] = useState(0); // arcade points (timed mode) — matches the iOS Rapid Fire
   const [done, setDone] = useState(false);
   const [remaining, setRemaining] = useState(mode.type === "timed" ? mode.seconds : 0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -99,6 +100,7 @@ export default function DrillPlayer({
       mode: mode.type,
       durationSec:
         mode.type === "timed" ? mode.seconds : Math.round((Date.now() - startedAt.current) / 1000),
+      ...(mode.type === "timed" ? { score } : {}),
     };
     if (onSessionComplete) {
       Promise.resolve(onSessionComplete(summary)).then((earned) => {
@@ -124,11 +126,11 @@ export default function DrillPlayer({
     lockRef.current = true;
     const newResults = [...results, correct];
     setResults(newResults);
-    setStreak((s) => {
-      const ns = correct ? s + 1 : 0;
-      setBestStreak((b) => Math.max(b, ns));
-      return ns;
-    });
+    const ns = correct ? streak + 1 : 0;
+    setStreak(ns);
+    setBestStreak((b) => Math.max(b, ns));
+    // Arcade score (timed mode only): 10 + combo bonus, mirroring the iOS Rapid Fire.
+    if (mode.type === "timed" && correct) setScore((sc) => sc + 10 + (ns - 1) * 2);
     setFeedback({ correct, answer: correct ? null : answer, seq: ++seqRef.current });
     if (mode.type === "count" && newResults.length >= mode.n) {
       setDone(true);
@@ -159,6 +161,7 @@ export default function DrillPlayer({
     setResults([]);
     setStreak(0);
     setBestStreak(0);
+    setScore(0);
     setFeedback(null);
     setRemaining(mode.type === "timed" ? mode.seconds : 0);
     startedAt.current = Date.now();
@@ -204,9 +207,15 @@ export default function DrillPlayer({
       <>
         <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-4">
           <h2 className="text-lg font-bold text-parchment">Session complete</h2>
-          <p className="text-4xl font-bold text-gold-400">
+          {mode.type === "timed" && (
+            <p className="text-5xl font-bold text-gold-300">
+              {score}
+              <span className="text-lg text-parchment-dim ml-2 font-normal">points</span>
+            </p>
+          )}
+          <p className={mode.type === "timed" ? "text-2xl font-bold text-gold-400" : "text-4xl font-bold text-gold-400"}>
             {correctCount}/{total}
-            <span className="text-xl text-parchment-dim ml-2">({pct}%)</span>
+            <span className="text-lg text-parchment-dim ml-2">({pct}%)</span>
           </p>
           <dl className="flex flex-wrap gap-x-8 gap-y-1 text-sm text-parchment-dim">
             <div>
@@ -311,6 +320,7 @@ export default function DrillPlayer({
               <span className="text-parchment">{correctCount}</span>/{total}
             </span>
             <span title="current streak">🔥 {streak}</span>
+            {mode.type === "timed" && <span title="score" className="text-gold-300">★ {score}</span>}
             {mode.type === "timed" ? (
               <span className={remaining <= 10 ? "text-red-400" : "text-gold-300"}>⏱ {remaining}s</span>
             ) : (

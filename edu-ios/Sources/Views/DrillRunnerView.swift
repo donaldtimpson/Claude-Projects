@@ -19,6 +19,7 @@ struct DrillRunnerView: View {
     @State private var wasCorrect = false
     @State private var finished = false
     @State private var rapid = false
+    @State private var rapidSeconds = 60
     @State private var rapidLevel: Int?
     @State private var recentPrompts: [String] = []
 
@@ -31,7 +32,7 @@ struct DrillRunnerView: View {
                 if finished {
                     summaryView
                 } else if let rapidLevel {
-                    RapidFireView(def: def, level: rapidLevel, seconds: 60) { self.rapidLevel = nil }
+                    RapidFireView(def: def, level: rapidLevel, seconds: rapidSeconds) { self.rapidLevel = nil }
                 } else if let level, let problem {
                     runner(def: def, level: level, problem: problem)
                 } else {
@@ -55,7 +56,7 @@ struct DrillRunnerView: View {
         guard auth.isSignedIn,
               let me: MeResponse = try? await APIClient.shared.get("/me") else { return }
         for b in me.drillBests ?? [] where b.slug == slug {
-            let key = rapidBestKey(b.level)
+            let key = rapidBestKey(b.level, b.durationSec)
             if b.best > UserDefaults.standard.integer(forKey: key) {
                 UserDefaults.standard.set(b.best, forKey: key)
             }
@@ -75,7 +76,15 @@ struct DrillRunnerView: View {
                 }
                 .pickerStyle(.segmented)
 
-                Text(rapid ? "Beat the clock — 60 seconds, build a combo." : "Ten problems at your pace.")
+                if rapid {
+                    Picker("Length", selection: $rapidSeconds) {
+                        Text("60s").tag(60)
+                        Text("120s").tag(120)
+                    }
+                    .pickerStyle(.segmented)
+                }
+
+                Text(rapid ? "Beat the clock — build a combo for a high score." : "Ten problems at your pace.")
                     .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
 
                 Text("Choose a difficulty")
@@ -84,8 +93,8 @@ struct DrillRunnerView: View {
                     VStack(spacing: 4) {
                         SecondaryButton(title: label) { start(def: def, level: value) }
                         if rapid {
-                            let best = UserDefaults.standard.integer(forKey: rapidBestKey(value))
-                            Text(best > 0 ? "Rapid Fire best · \(best)" : "No Rapid Fire score yet")
+                            let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
+                            Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
                                 .font(.caption2)
                                 .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
                         }
@@ -219,8 +228,8 @@ struct DrillRunnerView: View {
     }
 
     // MARK: logic
-    // Rapid Fire best-score key (per drill, difficulty, 60s) — matches RapidFireView.
-    private func rapidBestKey(_ level: Int) -> String { "rapidbest_\(slug)_L\(level)_60" }
+    // Rapid Fire best-score key (per drill, difficulty, sprint length) — matches RapidFireView.
+    private func rapidBestKey(_ level: Int, _ seconds: Int) -> String { "rapidbest_\(slug)_L\(level)_\(seconds)" }
 
     private func start(def: DrillDef, level value: Int) {
         if rapid {
