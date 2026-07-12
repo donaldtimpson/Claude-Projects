@@ -6,8 +6,21 @@ import type { DrillDef } from "./types";
 import { arithmeticDrill } from "./generators/arithmetic";
 import { unitCircleDrill } from "./generators/unit-circle";
 import { vectorsDrill } from "./generators/vectors";
+import {
+  percentagesDrill, orderOfOpsDrill, powersOfTwoDrill, squaresDrill,
+  gcdDrill, primesDrill, sequencesDrill, logarithmsDrill,
+} from "./generators/mental-math";
+import { derivativeDrill, integralDrill } from "./generators/calculus";
+import {
+  determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
+} from "./generators/linear-algebra";
 
-export const DRILLS: DrillDef[] = [arithmeticDrill, unitCircleDrill, vectorsDrill];
+export const DRILLS: DrillDef[] = [
+  arithmeticDrill, percentagesDrill, orderOfOpsDrill, powersOfTwoDrill, squaresDrill,
+  gcdDrill, primesDrill, sequencesDrill, logarithmsDrill, derivativeDrill, integralDrill,
+  determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
+  unitCircleDrill, vectorsDrill,
+];
 
 export function drillBySlug(slug: string): DrillDef | undefined {
   return DRILLS.find((d) => d.slug === slug);
