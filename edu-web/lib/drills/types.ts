@@ -82,4 +82,5 @@ export type DrillSummary = {
   bestStreak: number; // longest in-session correct run
   mode: "count" | "timed";
   durationSec: number;
+  score?: number; // arcade points for a Rapid Fire (timed) run; omitted for practice
 };

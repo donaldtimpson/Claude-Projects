@@ -88,6 +88,8 @@ export const MOCK_BADGES: Badge[] = [
   { key: "review-mastery-30", name: "Spaced Master", blurb: "Send 30 review cards to the top box.", tier: "gold", category: "mastery", unlocked: false },
   { key: "drill-streak-10", name: "In the Zone", blurb: "Hit a 10-answer streak in a single drill.", tier: "silver", category: "mastery", unlocked: false },
   { key: "drill-flawless-timed", name: "Lightning", blurb: "Ace a timed sprint — every answer correct.", tier: "gold", category: "mastery", unlocked: false },
+  { key: "drill-score-250", name: "Sharpshooter", blurb: "Score 250+ in a Rapid Fire drill.", tier: "silver", category: "mastery", unlocked: false },
+  { key: "drill-score-500", name: "Blitz Master", blurb: "Score 500+ in a Rapid Fire drill.", tier: "gold", category: "mastery", unlocked: false },
 
   // 🏛️ Completion — finishing
   { key: "half-course", name: "Halfway There", blurb: "Watch half a course's lectures.", tier: "bronze", category: "completion", unlocked: true },

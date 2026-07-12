@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     } catch {
       return badRequest();
     }
-    const { slug, level, total, correct, bestStreak, mode, durationSec, clientId } = body;
+    const { slug, level, total, correct, bestStreak, mode, durationSec, score, clientId } = body;
     if (
       typeof slug !== "string" ||
       typeof level !== "number" ||
@@ -25,7 +25,10 @@ export async function POST(req: Request) {
       return badRequest("Invalid drill summary.");
     }
 
-    const summary: DrillSummary = { slug, level, total, correct, bestStreak, mode, durationSec };
+    const summary: DrillSummary = {
+      slug, level, total, correct, bestStreak, mode, durationSec,
+      ...(typeof score === "number" ? { score } : {}),
+    };
     const { duplicate, result } = await withIdempotency(userId, clientId, "drill-session", () =>
       recordDrillSessionFor(userId, summary),
     );

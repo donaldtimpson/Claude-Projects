@@ -320,6 +320,7 @@ model DrillAttempt {
   bestStreak  Int      @default(0)
   mode        String   // "count" | "timed"
   durationSec Int      @default(0)
+  score       Int?     // arcade points for a Rapid Fire (timed) session; null for practice
   completedAt DateTime @default(now())
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)

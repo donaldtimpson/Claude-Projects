@@ -27,10 +27,17 @@ struct Streak: Codable, Hashable {
     let activeToday: Bool
 }
 
+struct DrillBest: Codable, Hashable {
+    let slug: String
+    let level: Int
+    let best: Int
+}
+
 struct MeResponse: Codable {
     let user: AuthUser
     let streak: Streak
     let dueCount: Int
+    var drillBests: [DrillBest]? = nil   // synced Rapid Fire high scores
 }
 
 struct Badge: Codable, Identifiable, Hashable {

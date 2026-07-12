@@ -33,6 +33,7 @@ struct DrillSessionBody: Encodable {
     let bestStreak: Int
     let mode: String
     let durationSec: Int
+    var score: Int? = nil   // Rapid Fire points; omitted for practice
     let clientId: String
 }
 

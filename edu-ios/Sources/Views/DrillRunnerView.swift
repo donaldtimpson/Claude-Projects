@@ -45,6 +45,21 @@ struct DrillRunnerView: View {
         .navigationBarTitleDisplayMode(.inline)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
+        .task { await syncBests() }
+    }
+
+    // Pull the server's synced Rapid Fire bests into local storage (merge by max),
+    // so high scores follow the user across devices. Recording a run pushes up;
+    // this pulls down. Offline / signed-out just keeps the local values.
+    private func syncBests() async {
+        guard auth.isSignedIn,
+              let me: MeResponse = try? await APIClient.shared.get("/me") else { return }
+        for b in me.drillBests ?? [] where b.slug == slug {
+            let key = rapidBestKey(b.level)
+            if b.best > UserDefaults.standard.integer(forKey: key) {
+                UserDefaults.standard.set(b.best, forKey: key)
+            }
+        }
     }
 
     // MARK: setup

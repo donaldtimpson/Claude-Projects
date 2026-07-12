@@ -88,6 +88,7 @@ export async function recordDrillSessionFor(userId: string, s: DrillSummary): Pr
       bestStreak: s.bestStreak,
       mode: s.mode,
       durationSec: s.durationSec,
+      score: s.score ?? null,
     },
   });
 
@@ -95,6 +96,9 @@ export async function recordDrillSessionFor(userId: string, s: DrillSummary): Pr
   if (s.bestStreak >= 10) keys.push("drill-streak-10");
   // A flawless sprint: timed mode, every answer correct, with enough volume to mean it.
   if (s.mode === "timed" && s.total >= 10 && s.correct === s.total) keys.push("drill-flawless-timed");
+  // Rapid Fire score milestones.
+  if (typeof s.score === "number" && s.score >= 250) keys.push("drill-score-250");
+  if (typeof s.score === "number" && s.score >= 500) keys.push("drill-score-500");
   // Volume badge — count includes the row just inserted above.
   const sessionCount = await db.drillAttempt.count({ where: { userId } });
   if (sessionCount >= 25) keys.push("drill-sessions-25");

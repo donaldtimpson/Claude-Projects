@@ -230,7 +230,7 @@ struct RapidFireView: View {
         let body = DrillSessionBody(
             slug: def.slug, level: level, total: answered, correct: correctCount,
             bestStreak: bestCombo, mode: "timed",
-            durationSec: seconds, clientId: makeClientId()
+            durationSec: seconds, score: score, clientId: makeClientId()
         )
         Task { _ = await queue.submit(path: "/drills/session", body: body, clientId: makeClientId()) }
     }
