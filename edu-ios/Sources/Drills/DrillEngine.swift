@@ -11,11 +11,15 @@ enum DrillInput {
     case choice(options: [String], correctIndex: Int) // always 4 options
 }
 
+// Which bundled atlas a map drill draws (resolved to geometry in the SwiftUI layer).
+enum GeoMapKind { case world, usStates }
+
 enum DrillDiagramSpec {
     case vector(angleDeg: Double, component: String)   // "x" or "y"
     case unitCircle(angleDeg: Double, fn: String)      // sin / cos / tan
     case matrix(rows: [[Int]])                         // determinant, drawn with | · | bars
     case matrixVector(matrix: [[Int]], vector: [Int])  // A·v, drawn with [ ] brackets
+    case geoMap(kind: GeoMapKind, highlightId: String) // map with one region highlighted
 }
 
 struct DrillProblem: Identifiable {
@@ -24,6 +28,10 @@ struct DrillProblem: Identifiable {
     let input: DrillInput
     let explanation: String?
     var diagram: DrillDiagramSpec? = nil
+    // Key the "don't repeat the last few questions" guard on this instead of the
+    // prompt when the prompt is constant (e.g. map drills all ask "What country…?").
+    var dedupeKey: String? = nil
+    var identity: String { dedupeKey ?? prompt }
 }
 
 struct DrillDef: Identifiable {
@@ -45,6 +53,7 @@ enum DrillCatalog {
         arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
         sequences, logarithms, derivative, integral,
         determinant, solveSystem, matrixVector, dotProduct, unitCircle, vectors,
+        nameCountry,
     ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
@@ -565,6 +574,39 @@ enum DrillCatalog {
             input: .choice(options: options, correctIndex: correctIndex),
             explanation: "\(axis)-component = \(r)·\(fn)(\(angle.deg)°) = \(compDisplay(correct))",
             diagram: .vector(angleDeg: Double(angle.deg), component: axis)
+        )
+    }
+
+    // MARK: - Name the Country (choice; identify the highlighted country on a world map)
+    static let nameCountry = DrillDef(
+        slug: "name-country",
+        title: "Name the Country",
+        blurb: "Identify the highlighted country on the world map.",
+        icon: "🌍"
+    ) { level in
+        // Difficulty = how obscure the target can be. L1 sticks to the most famous
+        // countries; L3 opens up the whole askable set (166 countries).
+        let maxRank = level == 1 ? 2 : level == 2 ? 3 : 7
+        let all = GeoAtlas.world.askable
+        let pool = GeoAtlas.world.askable(maxRank: maxRank)
+        let target = pool.randomElement() ?? all.randomElement()!
+
+        // Distractors: prefer the same continent (plausible), then fill from anywhere.
+        let sameContinent = all.filter { $0.continent == target.continent && $0.id != target.id }
+        var distractors: [String] = []
+        var seen: Set<String> = [target.name]
+        for r in sameContinent.shuffled() + all.shuffled() {
+            if seen.insert(r.name).inserted { distractors.append(r.name) }
+            if distractors.count == 3 { break }
+        }
+        let options = ([target.name] + distractors).shuffled()
+        let correctIndex = options.firstIndex(of: target.name) ?? 0
+        return DrillProblem(
+            prompt: "What country is highlighted?",
+            input: .choice(options: options, correctIndex: correctIndex),
+            explanation: "\(target.name) — \(target.continent).",
+            diagram: .geoMap(kind: .world, highlightId: target.id),
+            dedupeKey: target.id
         )
     }
 }

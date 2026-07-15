@@ -168,7 +168,10 @@ struct DrillRunnerView: View {
                     DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
                 }
 
-                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: true) { i in
+                // Short answers (math) tile nicely 2×2; long ones (country names) read
+                // better as a full-width list.
+                let useGrid = options.allSatisfy { $0.count <= 12 }
+                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid) { i in
                     guard !revealed else { return }
                     choice = i
                     reveal(correct: i == correctIndex)
@@ -254,8 +257,8 @@ struct DrillRunnerView: View {
     private func freshProblem(_ def: DrillDef, _ value: Int) -> DrillProblem {
         var p = def.generate(value)
         var tries = 0
-        while recentPrompts.contains(p.prompt) && tries < 8 { p = def.generate(value); tries += 1 }
-        recentPrompts.append(p.prompt)
+        while recentPrompts.contains(p.identity) && tries < 8 { p = def.generate(value); tries += 1 }
+        recentPrompts.append(p.identity)
         if recentPrompts.count > 3 { recentPrompts.removeFirst() }
         return p
     }

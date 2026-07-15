@@ -11,6 +11,7 @@ struct DrillDiagram: View {
         switch spec {
         case let .matrix(rows): matrixView(rows)
         case let .matrixVector(m, v): matrixVectorView(m, v)
+        case let .geoMap(kind, id): GeoMapDiagram(kind: kind, highlightId: id)
         default: canvasView
         }
     }
@@ -22,7 +23,7 @@ struct DrillDiagram: View {
             switch spec {
             case let .unitCircle(deg, fn): drawUnitCircle(&ctx, c, r, deg, fn)
             case let .vector(deg, comp): drawVector(&ctx, c, r, deg, comp)
-            case .matrix, .matrixVector: break
+            case .matrix, .matrixVector, .geoMap: break   // handled in body, not here
             }
         }
         .frame(width: size, height: size)
