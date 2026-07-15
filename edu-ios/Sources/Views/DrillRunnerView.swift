@@ -165,11 +165,13 @@ struct DrillRunnerView: View {
     @ViewBuilder private func choiceBody(options: [String], correctIndex: Int, problem: DrillProblem) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text(problem.prompt)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 8)
+                if !problem.prompt.isEmpty {
+                    Text(problem.prompt)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 8)
+                }
 
                 if let diagram = problem.diagram {
                     DrillDiagram(spec: diagram).frame(maxWidth: .infinity)

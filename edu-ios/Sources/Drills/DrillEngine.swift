@@ -602,7 +602,7 @@ enum DrillCatalog {
         let options = ([target.name] + distractors).shuffled()
         let correctIndex = options.firstIndex(of: target.name) ?? 0
         return DrillProblem(
-            prompt: "What country is highlighted?",
+            prompt: "",   // the map IS the question; the nav title already says the drill name
             input: .choice(options: options, correctIndex: correctIndex),
             explanation: "\(target.name) — \(target.continent).",
             diagram: .geoMap(kind: .world, highlightId: target.id),
