@@ -13,6 +13,7 @@ struct GeoRegion: Identifiable {
     let rank: Int           // prominence: 2 (most famous) … 7 (obscure)
     let askable: Bool        // false for disputed/dependency territories (still drawn)
     let path: Path          // in viewBox coordinates
+    let focus: CGRect       // bbox of the largest landmass (zoom target; ignores exclaves)
     var bounds: CGRect { path.boundingRect }
 }
 
@@ -52,12 +53,15 @@ enum GeoAtlas {
             guard let id = r["id"] as? String,
                   let name = r["name"] as? String,
                   let d = r["path"] as? String else { return nil }
+            let path = parsePath(d)
+            let fb = (r["focus"] as? [Double]).flatMap { $0.count == 4 ? $0 : nil }
+            let focus = fb.map { CGRect(x: $0[0], y: $0[1], width: $0[2], height: $0[3]) } ?? path.boundingRect
             return GeoRegion(
                 id: id, name: name,
                 continent: r["continent"] as? String ?? "",
                 rank: (r["rank"] as? NSNumber)?.intValue ?? 5,
                 askable: r["askable"] as? Bool ?? true,
-                path: parsePath(d)
+                path: path, focus: focus
             )
         }
         return GeoMap(viewBox: viewBox, regions: regions)

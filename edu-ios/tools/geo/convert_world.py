@@ -77,6 +77,11 @@ def rings_of(geom):
         return rings
     return []
 
+def bbox(pts):
+    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
+    return [round(min(xs), 1), round(min(ys), 1),
+            round(max(xs) - min(xs), 1), round(max(ys) - min(ys), 1)]
+
 def to_path(rings):
     parts = []
     kept = []
@@ -85,14 +90,18 @@ def to_path(rings):
         if len(s) >= 3:
             kept.append(s)
     if not kept:
-        return None
-    biggest = max(ring_area(k) for k in kept)
-    for s in kept:
-        if ring_area(s) < MIN_RING_AREA and ring_area(s) < biggest:
+        return None, None
+    areas = [ring_area(k) for k in kept]
+    biggest = max(areas)
+    # Zoom target = bbox of the LARGEST landmass, so overseas territories (French
+    # Guiana, Alaska, Svalbard) don't blow up the focus window.
+    focus = bbox(kept[areas.index(biggest)])
+    for s, a in zip(kept, areas):
+        if a < MIN_RING_AREA and a < biggest:
             continue
         seg = "M{:g} {:g}".format(*s[0]) + "".join("L{:g} {:g}".format(x, y) for x, y in s[1:]) + "Z"
         parts.append(seg)
-    return "".join(parts) if parts else None
+    return ("".join(parts) if parts else None), focus
 
 def main():
     gj = json.load(open("world.geojson"))
@@ -109,7 +118,7 @@ def main():
         continent = p.get("CONTINENT")
         if admin in DROP_ADMIN or continent in DROP_CONTINENT:
             continue
-        path = to_path(rings_of(f["geometry"]))
+        path, focus = to_path(rings_of(f["geometry"]))
         if not path:
             continue
         # A dependency (sovereign is a different country) isn't a fair "name this country".
@@ -121,6 +130,7 @@ def main():
             "continent": continent,
             "rank": p.get("LABELRANK"),
             "askable": askable,
+            "focus": focus,     # [x, y, w, h] of the largest landmass
             "path": path,
         })
     out.sort(key=lambda r: r["name"])

@@ -114,8 +114,15 @@ struct DrillRunnerView: View {
             case let .choice(options, correctIndex): choiceBody(options: options, correctIndex: correctIndex, problem: problem)
             }
         }
-        .contentShape(Rectangle())
-        .onTapGesture { if revealed { next(def: def, level: level) } }
+        // Tap-anywhere-to-advance only exists AFTER answering (options are disabled then).
+        // Pre-answer, a blanket tap gesture competes with the option buttons inside the
+        // ScrollView — which broke selection once the tall map made the card scroll.
+        .overlay {
+            if revealed {
+                Color.clear.contentShape(Rectangle())
+                    .onTapGesture { next(def: def, level: level) }
+            }
+        }
     }
 
     private var header: some View {
