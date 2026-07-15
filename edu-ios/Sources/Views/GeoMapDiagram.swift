@@ -2,13 +2,19 @@ import SwiftUI
 
 // Renders a bundled vector atlas with one region highlighted, for the map drills.
 // All shapes are cached SwiftUI Paths (GeoAtlas) drawn in a single Canvas — no image
-// assets. Fits the atlas viewBox into the available width, preserving aspect ratio.
+// assets. When the highlighted country changes, the view flies from the previous
+// location to the new one — zoom out, travel across the globe, zoom back in — so the
+// player sees where each country sits relative to the last (spatial context).
 struct GeoMapDiagram: View {
     let kind: GeoMapKind
     let highlightId: String
-    // Zoom to a window around the target (so small countries are legible). Off = whole
-    // atlas, for the future tap-to-locate mode where finding it is the challenge.
+    // Zoom/animate to a window around the target (so small countries are legible).
+    // Off = whole atlas, for the future tap-to-locate mode where finding it is the point.
     var focus: Bool = true
+
+    private static let aspect: CGFloat = 1.6   // fixed frame aspect: only the map pans, not the layout
+
+    @State private var displayed: CGRect = .zero   // the viewport currently drawn (animated)
 
     private var map: GeoMap {
         switch kind {
@@ -17,15 +23,76 @@ struct GeoMapDiagram: View {
         }
     }
 
-    // Muted land on a dark "sea"; the target pops in bright gold.
-    private let sea = Theme.parchmentDeep
+    var body: some View {
+        let port = displayed == .zero ? settledPort(highlightId) : displayed
+        MapCanvas(port: port, regions: map.regions, highlightId: highlightId)
+            .aspectRatio(Self.aspect, contentMode: .fit)
+            .frame(maxWidth: .infinity)
+            .background(Theme.parchmentDeep)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+            .onAppear { if displayed == .zero { displayed = settledPort(highlightId) } }
+            .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId) }
+    }
+
+    // MARK: viewports
+
+    // The settled window around a target: padded room for neighbors, clamped to the
+    // atlas, fixed aspect. Whole atlas when not focusing.
+    private func settledPort(_ id: String) -> CGRect {
+        guard focus, let target = map.region(id) else { return map.viewBox }
+        return window(around: target.focus, pad: 3.5)
+    }
+
+    // A window of the fixed aspect around `rect`, scaled by `pad`, centered and clamped.
+    private func window(around rect: CGRect, pad: CGFloat) -> CGRect {
+        let vb = map.viewBox
+        var w = max(rect.width, rect.height * Self.aspect) * pad
+        w = min(max(w, vb.width * 0.16), vb.width)
+        let h = min(w / Self.aspect, vb.height)
+        let w2 = min(w, h * Self.aspect)   // keep aspect if height was capped
+        let cx = rect.midX, cy = rect.midY
+        let x = w2 >= vb.width ? vb.minX : min(max(cx - w2 / 2, vb.minX), vb.maxX - w2)
+        let y = h >= vb.height ? vb.minY : min(max(cy - h / 2, vb.minY), vb.maxY - h)
+        return CGRect(x: x, y: y, width: w2, height: h)
+    }
+
+    // Fly old → (zoom out over both) → new.
+    private func flyBetween(_ oldId: String, _ newId: String) {
+        guard focus else { displayed = map.viewBox; return }
+        let target = settledPort(newId)
+        guard let a = map.region(oldId)?.focus, let b = map.region(newId)?.focus else {
+            withAnimation(.easeInOut(duration: 0.4)) { displayed = target }
+            return
+        }
+        let bridge = window(around: a.union(b), pad: 1.25)   // shows both locations
+        withAnimation(.easeIn(duration: 0.42)) { displayed = bridge }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) {
+            withAnimation(.easeOut(duration: 0.46)) { displayed = target }
+        }
+    }
+}
+
+// The Canvas is wrapped in an Animatable view so SwiftUI interpolates the viewport
+// rect frame-by-frame (a plain Canvas reading @State wouldn't redraw mid-animation),
+// keeping the vector map crisp at every zoom level.
+private struct MapCanvas: View, Animatable {
+    var port: CGRect
+    let regions: [GeoRegion]
+    let highlightId: String
+
+    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+        get { .init(.init(port.origin.x, port.origin.y), .init(port.size.width, port.size.height)) }
+        set { port = CGRect(x: newValue.first.first, y: newValue.first.second,
+                            width: max(newValue.second.first, 1), height: max(newValue.second.second, 1)) }
+    }
+
     private let land = Theme.inkSoft.opacity(0.30)
     private let border = Theme.parchment.opacity(0.85)
     private let highlight = Theme.gold300
     private let highlightStroke = Theme.gold500
 
     var body: some View {
-        let port = viewport
         Canvas { ctx, size in
             guard port.width > 0, port.height > 0 else { return }
             let scale = min(size.width / port.width, size.height / port.height)
@@ -33,12 +100,12 @@ struct GeoMapDiagram: View {
             let ty = (size.height - port.height * scale) / 2 - port.minY * scale
             let t = CGAffineTransform(a: scale, b: 0, c: 0, d: scale, tx: tx, ty: ty)
 
-            for region in map.regions where region.id != highlightId {
+            for region in regions where region.id != highlightId {
                 let p = region.path.applying(t)
                 ctx.fill(p, with: .color(land))
                 ctx.stroke(p, with: .color(border), lineWidth: 0.4)
             }
-            guard let target = map.region(highlightId) else { return }
+            guard let target = regions.first(where: { $0.id == highlightId }) else { return }
             let p = target.path.applying(t)
             ctx.fill(p, with: .color(highlight))
             ctx.stroke(p, with: .color(highlightStroke), lineWidth: 1)
@@ -52,27 +119,5 @@ struct GeoMapDiagram: View {
                 ctx.stroke(ring, with: .color(highlight), lineWidth: 1.5)
             }
         }
-        .aspectRatio(port.width / port.height, contentMode: .fit)
-        .frame(maxWidth: .infinity)
-        .background(sea)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
-    }
-
-    // The rectangle of the atlas actually drawn. Whole atlas unless focusing on a
-    // target, in which case a padded window around it (clamped inside the atlas),
-    // sized relative to the target so tiny countries zoom in more than large ones.
-    private var viewport: CGRect {
-        let vb = map.viewBox
-        guard focus, let target = map.region(highlightId) else { return vb }
-        let aspect: CGFloat = 1.5
-        let b = target.focus                             // largest landmass, not exclaves
-        var w = max(b.width, b.height * aspect) * 3.5   // ~3.5× the target = room for neighbors
-        w = min(max(w, vb.width * 0.16), vb.width)      // not too tight, not past the atlas
-        var h = w / aspect
-        if h > vb.height { h = vb.height; w = min(h * aspect, vb.width) }
-        let x = min(max(b.midX - w / 2, vb.minX), vb.maxX - w)
-        let y = min(max(b.midY - h / 2, vb.minY), vb.maxY - h)
-        return CGRect(x: x, y: y, width: w, height: h)
     }
 }
