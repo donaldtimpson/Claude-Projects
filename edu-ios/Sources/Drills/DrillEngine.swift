@@ -589,7 +589,10 @@ enum DrillCatalog {
         let maxRank = level == 1 ? 2 : level == 2 ? 3 : 7
         let all = GeoAtlas.world.askable
         let pool = GeoAtlas.world.askable(maxRank: maxRank)
-        let target = pool.randomElement() ?? all.randomElement()!
+        // Draw from a shuffle bag (like powers/squares/logs): cycle through the whole
+        // pool before any country repeats, so a 10-question quiz can't ask one twice.
+        let target = pool.isEmpty ? all.randomElement()!
+            : pool[draw("name-country-L\(level)") { Array(0..<pool.count) }]
 
         // Distractors: prefer the same continent (plausible), then fill from anywhere.
         let sameContinent = all.filter { $0.continent == target.continent && $0.id != target.id }
