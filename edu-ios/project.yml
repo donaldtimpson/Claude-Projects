@@ -13,6 +13,10 @@ settings:
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2" # 1 = iPhone, 2 = iPad (universal)
     GENERATE_INFOPLIST_FILE: YES
+    # Baked in so `xcodegen generate` stops wiping the signing team (you had to
+    # re-select it every regenerate). Change here if the team ever changes.
+    DEVELOPMENT_TEAM: LGF933VBP2
+    CODE_SIGN_STYLE: Automatic
 
 targets:
   Lyceum:
