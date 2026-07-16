@@ -1,5 +1,19 @@
 import SwiftUI
 
+// Map palette — EXPERIMENT: a traditional-atlas look (navy ocean, green land) with the
+// app's gold kept for the highlight. Swap these values to retheme the whole map in one
+// place. Original app-theme palette kept below for a quick revert.
+private enum MapPalette {
+    static let sea = Color(hex: 0x123a4d)              // ocean
+    static let land = Color(hex: 0x4a7856)             // land fill
+    static let border = Color(hex: 0x0c2733)           // country borders
+    static let frame = Color(hex: 0x0c2733)            // card outline
+    static let highlight = Theme.gold300               // the target country
+    static let highlightStroke = Theme.gold500
+    // App-theme original: sea=Theme.parchmentDeep, land=Theme.inkSoft.opacity(0.30),
+    // border=Theme.parchment.opacity(0.85), frame=Theme.line, highlight=gold300.
+}
+
 // Renders a bundled vector atlas with one region highlighted, for the map drills.
 // All shapes are cached SwiftUI Paths (GeoAtlas) drawn in a single Canvas — no image
 // assets. When the highlighted country changes, the view flies from the previous
@@ -28,9 +42,9 @@ struct GeoMapDiagram: View {
         MapCanvas(port: port, regions: map.regions, highlightId: highlightId)
             .aspectRatio(Self.aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
-            .background(Theme.parchmentDeep)
+            .background(MapPalette.sea)
             .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(MapPalette.frame, lineWidth: 1))
             .onAppear { if displayed == .zero { displayed = settledPort(highlightId) } }
             .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId) }
     }
@@ -87,10 +101,10 @@ private struct MapCanvas: View, Animatable {
                             width: max(newValue.second.first, 1), height: max(newValue.second.second, 1)) }
     }
 
-    private let land = Theme.inkSoft.opacity(0.30)
-    private let border = Theme.parchment.opacity(0.85)
-    private let highlight = Theme.gold300
-    private let highlightStroke = Theme.gold500
+    private let land = MapPalette.land
+    private let border = MapPalette.border
+    private let highlight = MapPalette.highlight
+    private let highlightStroke = MapPalette.highlightStroke
 
     var body: some View {
         Canvas { ctx, size in
