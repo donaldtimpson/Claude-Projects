@@ -66,28 +66,43 @@ struct OptionButtons: View {
         }
     }
 
+    // A leading flag emoji (🇯🇵 Japan) must render in the system emoji font: a custom
+    // text font (our serif) can fail to compose the regional-indicator pair into a flag
+    // glyph, leaving the two boxed letters. So split it out into its own Text run.
+    private func flagSplit(_ s: String) -> (flag: String?, rest: String) {
+        guard let first = s.first, let scalar = first.unicodeScalars.first,
+              (0x1F1E6...0x1F1FF).contains(scalar.value) else { return (nil, s) }
+        return (String(first), String(s.dropFirst().drop(while: { $0 == " " })))
+    }
+
     // Big centered tile — larger tap target, harder to mis-tap.
     private func tile(_ i: Int) -> some View {
-        Button { tap(i) } label: {
-            Text(options[i])
-                .font(.system(size: 24, weight: .semibold, design: .rounded))
-                .foregroundStyle(Theme.ink)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, minHeight: 76)
-                .padding(.horizontal, 8)
-                .background(background(i))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(border(i), lineWidth: 2))
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+        let (flag, rest) = flagSplit(options[i])
+        return Button { tap(i) } label: {
+            HStack(spacing: 6) {
+                if let flag { Text(flag).font(.system(size: 24)) }
+                Text(rest)
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, minHeight: 76)
+            .padding(.horizontal, 8)
+            .background(background(i))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(border(i), lineWidth: 2))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
         .disabled(revealed)
     }
 
     private func row(_ i: Int) -> some View {
-        Button { tap(i) } label: {
-            HStack {
-                Text(options[i])
+        let (flag, rest) = flagSplit(options[i])
+        return Button { tap(i) } label: {
+            HStack(spacing: 8) {
+                if let flag { Text(flag).font(.system(size: 20)) }
+                Text(rest)
                     .font(.serif(17)).foregroundStyle(Theme.ink)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if revealed && i == correctIndex {
