@@ -581,6 +581,11 @@ enum DrillCatalog {
     }
 
     // MARK: - Name the Country (choice; identify the highlighted country on a world map)
+    // Hand-curated tweaks to the Easy tier, since LABELRANK prominence isn't a perfect
+    // "how famous" score. Removed countries still appear on Medium/Hard.
+    private static let easyRemove: Set<String> = ["Kenya", "Democratic Republic of the Congo", "Ethiopia"]
+    private static let easyAdd: Set<String> = ["Iceland", "Ireland", "Greece"]
+
     static let nameCountry = DrillDef(
         slug: "name-country",
         title: "Name the Country",
@@ -588,10 +593,15 @@ enum DrillCatalog {
         icon: "🌍"
     ) { level in
         // Difficulty = how obscure the target can be. L1 sticks to the most famous
-        // countries; L3 opens up the whole askable set (166 countries).
-        let maxRank = level == 1 ? 2 : level == 2 ? 3 : 7
+        // countries (LABELRANK ≤ 2, with hand-curated add/remove); L2 adds rank 3;
+        // L3 opens the whole askable set (166 countries).
         let all = GeoAtlas.world.askable
-        let pool = GeoAtlas.world.askable(maxRank: maxRank)
+        let pool: [GeoRegion]
+        switch level {
+        case 1:  pool = all.filter { ($0.rank <= 2 && !easyRemove.contains($0.name)) || easyAdd.contains($0.name) }
+        case 2:  pool = all.filter { $0.rank <= 3 }
+        default: pool = all
+        }
         // Draw from a shuffle bag (like powers/squares/logs): cycle through the whole
         // pool before any country repeats, so a 10-question quiz can't ask one twice.
         let target = pool.isEmpty ? all.randomElement()!
