@@ -177,9 +177,10 @@ struct DrillRunnerView: View {
                     DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
                 }
 
-                // Short answers (math) tile nicely 2×2; long ones (country names) read
-                // better as a full-width list.
-                let useGrid = options.allSatisfy { $0.count <= 12 }
+                // Layout is fixed per drill so it doesn't flip question to question:
+                // drills that opt into listOptions (country names) always use the list;
+                // the rest (short math answers) tile 2×2.
+                let useGrid = !problem.listOptions && options.allSatisfy { $0.count <= 12 }
                 OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid) { i in
                     guard !revealed else { return }
                     choice = i
