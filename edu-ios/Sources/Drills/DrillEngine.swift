@@ -596,18 +596,22 @@ enum DrillCatalog {
 
         // Distractors: prefer the same continent (plausible), then fill from anywhere.
         let sameContinent = all.filter { $0.continent == target.continent && $0.id != target.id }
-        var distractors: [String] = []
-        var seen: Set<String> = [target.name]
+        var distractors: [GeoRegion] = []
+        var seen: Set<String> = [target.id]
         for r in sameContinent.shuffled() + all.shuffled() {
-            if seen.insert(r.name).inserted { distractors.append(r.name) }
+            if seen.insert(r.id).inserted { distractors.append(r) }
             if distractors.count == 3 { break }
         }
-        let options = ([target.name] + distractors).shuffled()
-        let correctIndex = options.firstIndex(of: target.name) ?? 0
+        // Each option carries the country's flag emoji (🇨🇳 China) — extra recognition
+        // dimension, no bundled images.
+        func label(_ r: GeoRegion) -> String { r.flag.isEmpty ? r.name : "\(r.flag) \(r.name)" }
+        let picks = ([target] + distractors).shuffled()
+        let options = picks.map(label)
+        let correctIndex = picks.firstIndex { $0.id == target.id } ?? 0
         return DrillProblem(
             prompt: "",   // the map IS the question; the nav title already says the drill name
             input: .choice(options: options, correctIndex: correctIndex),
-            explanation: "\(target.name) — \(target.continent).",
+            explanation: "\(label(target)) — \(target.continent).",
             diagram: .geoMap(kind: .world, highlightId: target.id),
             dedupeKey: target.id
         )

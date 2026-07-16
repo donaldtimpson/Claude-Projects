@@ -12,9 +12,21 @@ struct GeoRegion: Identifiable {
     let continent: String
     let rank: Int           // prominence: 2 (most famous) … 7 (obscure)
     let askable: Bool        // false for disputed/dependency territories (still drawn)
+    let iso: String?        // 2-letter ISO code, for the emoji flag
     let path: Path          // in viewBox coordinates
     let focus: CGRect       // bbox of the largest landmass (zoom target; ignores exclaves)
     var bounds: CGRect { path.boundingRect }
+
+    // National flag as an emoji, built from the ISO code's regional-indicator letters
+    // (🇨🇳 from "CN") — native rendering, no bundled flag images. "" if no code.
+    var flag: String {
+        guard let iso, iso.count == 2 else { return "" }
+        let base: UInt32 = 0x1F1E6   // 🇦
+        return iso.uppercased().unicodeScalars.reduce("") { acc, s in
+            guard s.value >= 65, s.value <= 90, let scalar = Unicode.Scalar(base + (s.value - 65)) else { return acc }
+            return acc + String(scalar)
+        }
+    }
 }
 
 struct GeoMap {
@@ -61,6 +73,7 @@ enum GeoAtlas {
                 continent: r["continent"] as? String ?? "",
                 rank: (r["rank"] as? NSNumber)?.intValue ?? 5,
                 askable: r["askable"] as? Bool ?? true,
+                iso: r["iso"] as? String,
                 path: path, focus: focus
             )
         }

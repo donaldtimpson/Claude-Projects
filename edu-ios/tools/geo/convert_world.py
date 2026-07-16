@@ -124,12 +124,19 @@ def main():
         # A dependency (sovereign is a different country) isn't a fair "name this country".
         is_dependency = p.get("SOVEREIGNT") not in (admin, name, None)
         askable = name not in NOT_ASKABLE and not is_dependency
+        # 2-letter ISO for the emoji flag; ISO_A2 is "-99" for a few (Norway, France) whose
+        # real code lives in ISO_A2_EH.
+        iso = None
+        for cand in (p.get("ISO_A2"), p.get("ISO_A2_EH")):
+            if cand and cand != "-99" and len(cand) == 2 and cand.isalpha():
+                iso = cand.upper(); break
         out.append({
             "id": admin,
             "name": name,
             "continent": continent,
             "rank": p.get("LABELRANK"),
             "askable": askable,
+            "iso": iso,         # for the emoji flag
             "focus": focus,     # [x, y, w, h] of the largest landmass
             "path": path,
         })
