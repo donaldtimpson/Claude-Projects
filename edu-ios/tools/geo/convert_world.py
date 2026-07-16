@@ -55,12 +55,26 @@ def dp(pts, eps):
 
 def simplify_ring(coords):
     pts = [project(lon, lat) for lon, lat in coords]
-    if pts and pts[0] == pts[-1]:
+    if len(pts) > 1 and pts[0] == pts[-1]:
         pts = pts[:-1]                # drop closing dup; we re-close with Z
-    pts = dp(pts, EPS)
+    n = len(pts)
+    if n < 3:
+        return []
+    if n <= 4:
+        simp = pts
+    else:
+        # Proper closed-ring Douglas–Peucker: split the ring at the vertex farthest
+        # from pts[0] and simplify each arc. Running DP over the whole ring as one open
+        # polyline degenerates when its endpoints coincide (they do for a closed ring)
+        # and can erase the entire ring — that's what dropped main Alaska.
+        a = pts[0]
+        fi = max(range(1, n), key=lambda i: (pts[i][0] - a[0]) ** 2 + (pts[i][1] - a[1]) ** 2)
+        arc1 = dp(pts[:fi + 1], EPS)
+        arc2 = dp(pts[fi:] + [pts[0]], EPS)
+        simp = arc1[:-1] + arc2[:-1]   # drop the shared/closing endpoints; Z re-closes
     # round + collapse consecutive duplicates
     out = []
-    for x, y in pts:
+    for x, y in simp:
         p = (round(x, 1), round(y, 1))
         if not out or out[-1] != p:
             out.append(p)
