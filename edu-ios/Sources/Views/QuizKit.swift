@@ -75,20 +75,24 @@ struct OptionButtons: View {
         return (String(first), String(s.dropFirst().drop(while: { $0 == " " })))
     }
 
-    // Big centered tile — larger tap target, harder to mis-tap.
+    // Big centered tile — larger tap target, harder to mis-tap. A flag (when present)
+    // sits on its own line above the label, freeing horizontal room so long country
+    // names fit the 2×2 grid without shrinking to nothing.
     private func tile(_ i: Int) -> some View {
         let (flag, rest) = flagSplit(options[i])
         return Button { tap(i) } label: {
-            HStack(spacing: 6) {
-                if let flag { Text(flag).font(.system(size: 24)) }
+            VStack(spacing: 5) {
+                if let flag { Text(flag).font(.system(size: 30)) }
                 Text(rest)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .font(.system(size: flag == nil ? 24 : 18, weight: .semibold, design: .rounded))
                     .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.6)
-                    .lineLimit(1)
+                    .lineLimit(2)
             }
-            .frame(maxWidth: .infinity, minHeight: 76)
+            .frame(maxWidth: .infinity, minHeight: flag == nil ? 76 : 92)
             .padding(.horizontal, 8)
+            .padding(.vertical, 8)
             .background(background(i))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(border(i), lineWidth: 2))
             .clipShape(RoundedRectangle(cornerRadius: 14))

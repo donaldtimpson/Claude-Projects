@@ -178,9 +178,9 @@ struct DrillRunnerView: View {
                 }
 
                 // Layout is fixed per drill so it doesn't flip question to question:
-                // drills that opt into listOptions (country names) always use the list;
-                // the rest (short math answers) tile 2×2.
-                let useGrid = !problem.listOptions && options.allSatisfy { $0.count <= 12 }
+                // forceGrid pins the 2×2 grid (country tiles stack the flag over the
+                // name); otherwise short answers tile 2×2 and long ones fall back to a list.
+                let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
                 OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid) { i in
                     guard !revealed else { return }
                     choice = i

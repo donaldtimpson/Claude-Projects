@@ -32,9 +32,9 @@ struct DrillProblem: Identifiable {
     // prompt when the prompt is constant (e.g. map drills all ask "What country…?").
     var dedupeKey: String? = nil
     var identity: String { dedupeKey ?? prompt }
-    // Force a full-width option list (vs the 2×2 grid). Set for drills whose options
-    // are long/variable (country names) so the layout doesn't flip question to question.
-    var listOptions: Bool = false
+    // Pin the option layout so it doesn't flip question to question. Country names vary
+    // in length; force the 2×2 grid (tiles stack the flag over a wrapping name).
+    var forceGrid: Bool = false
 }
 
 struct DrillDef: Identifiable {
@@ -617,7 +617,7 @@ enum DrillCatalog {
             explanation: "\(label(target)) — \(target.continent).",
             diagram: .geoMap(kind: .world, highlightId: target.id),
             dedupeKey: target.id,
-            listOptions: true   // country names vary in length — keep a stable list layout
+            forceGrid: true     // always the 2×2 grid (flag stacked over the name)
         )
     }
 }
