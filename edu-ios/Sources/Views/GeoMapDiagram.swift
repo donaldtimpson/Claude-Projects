@@ -1,17 +1,24 @@
 import SwiftUI
 
-// Map palette — EXPERIMENT: a traditional-atlas look (navy ocean, green land) with the
-// app's gold kept for the highlight. Swap these values to retheme the whole map in one
-// place. Original app-theme palette kept below for a quick revert.
+// Map palette — EXPERIMENT: "natural Earth" look. Land is tinted by a latitude-driven
+// biome gradient (lush tropics → tan desert belts → temperate green → icy poles), an
+// approximation of real terrain with no elevation data. Ocean blue, gold highlight.
 private enum MapPalette {
-    static let sea = Color(hex: 0x123a4d)              // ocean
-    static let land = Color(hex: 0x4a7856)             // land fill
-    static let border = Color(hex: 0x0c2733)           // country borders
-    static let frame = Color(hex: 0x0c2733)            // card outline
+    static let sea = Color(hex: 0x24506b)              // realistic ocean
+    static let border = Color(hex: 0x2c2416).opacity(0.30)  // faint terrain outlines
+    static let frame = Color(hex: 0x14202b)            // card outline
     static let highlight = Theme.gold300               // the target country
     static let highlightStroke = Theme.gold500
-    // App-theme original: sea=Theme.parchmentDeep, land=Theme.inkSoft.opacity(0.30),
-    // border=Theme.parchment.opacity(0.85), frame=Theme.line, highlight=gold300.
+    static let graticule: Color? = nil
+    // Biome color by latitude (°); land is filled with a vertical gradient of these.
+    // Deserts land ~15–35° N/S; tropics green; poles icy. Mountains/interior deserts
+    // can't be placed without elevation data.
+    static let biome: [(lat: Double, hex: UInt)] = [
+        (90, 0xe9edee), (72, 0x93a074), (52, 0x5d7d46), (37, 0x8f9457),
+        (26, 0xcdb679), (15, 0x9aa653), (2, 0x3c7a3a), (-16, 0x93a24d),
+        (-27, 0xc4af6d), (-45, 0x5d7d46), (-60, 0x828f6d),
+    ]
+    // Deep-ocean (main): sea=0x123a4d, flat land=0x4a7856, border/frame=0x0c2733, gold highlight.
 }
 
 // Renders a bundled vector atlas with one region highlighted, for the map drills.
@@ -39,7 +46,7 @@ struct GeoMapDiagram: View {
 
     var body: some View {
         let port = displayed == .zero ? settledPort(highlightId) : displayed
-        MapCanvas(port: port, regions: map.regions, highlightId: highlightId)
+        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, highlightId: highlightId)
             .aspectRatio(Self.aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
             .background(MapPalette.sea)
@@ -92,6 +99,7 @@ struct GeoMapDiagram: View {
 // keeping the vector map crisp at every zoom level.
 private struct MapCanvas: View, Animatable {
     var port: CGRect
+    let viewBox: CGRect
     let regions: [GeoRegion]
     let highlightId: String
 
@@ -101,7 +109,6 @@ private struct MapCanvas: View, Animatable {
                             width: max(newValue.second.first, 1), height: max(newValue.second.second, 1)) }
     }
 
-    private let land = MapPalette.land
     private let border = MapPalette.border
     private let highlight = MapPalette.highlight
     private let highlightStroke = MapPalette.highlightStroke
@@ -114,9 +121,30 @@ private struct MapCanvas: View, Animatable {
             let ty = (size.height - port.height * scale) / 2 - port.minY * scale
             let t = CGAffineTransform(a: scale, b: 0, c: 0, d: scale, tx: tx, ty: ty)
 
+            // Graticule (lat/long grid) drawn first, so land covers it and it reads only
+            // over the sea — the hallmark of an old chart.
+            if let grid = MapPalette.graticule {
+                var g = Path()
+                var x = viewBox.minX
+                while x <= viewBox.maxX { g.move(to: CGPoint(x: x, y: viewBox.minY)); g.addLine(to: CGPoint(x: x, y: viewBox.maxY)); x += 84 }  // ~30° lon
+                var y = viewBox.minY
+                while y <= viewBox.maxY { g.move(to: CGPoint(x: viewBox.minX, y: y)); g.addLine(to: CGPoint(x: viewBox.maxX, y: y)); y += 56 }  // ~20° lat
+                ctx.stroke(g.applying(t), with: .color(grid), lineWidth: 0.5)
+            }
+
+            // Biome land tint: a vertical gradient keyed to latitude. Path coords are
+            // equirectangular (y 0→500 == lat 90→−90), so map those extremes to screen
+            // via the same transform, and the gradient tracks the current zoom/pan.
+            let stops = MapPalette.biome
+                .map { Gradient.Stop(color: Color(hex: $0.hex), location: (90 - $0.lat) / 180) }
+                .sorted { $0.location < $1.location }
+            let landShading = GraphicsContext.Shading.linearGradient(
+                Gradient(stops: stops),
+                startPoint: CGPoint(x: 0, y: ty),                 // lat 90 (equirect y = 0)
+                endPoint: CGPoint(x: 0, y: 500 * scale + ty))     // lat −90 (equirect y = 500)
             for region in regions where region.id != highlightId {
                 let p = region.path.applying(t)
-                ctx.fill(p, with: .color(land))
+                ctx.fill(p, with: landShading)
                 ctx.stroke(p, with: .color(border), lineWidth: 0.4)
             }
             guard let target = regions.first(where: { $0.id == highlightId }) else { return }
@@ -130,7 +158,7 @@ private struct MapCanvas: View, Animatable {
                 let c = CGPoint(x: b.midX, y: b.midY)
                 let rad = max(b.width, b.height) / 2 + 13
                 let ring = Path(ellipseIn: CGRect(x: c.x - rad, y: c.y - rad, width: rad * 2, height: rad * 2))
-                ctx.stroke(ring, with: .color(highlight), lineWidth: 1.5)
+                ctx.stroke(ring, with: .color(highlightStroke), lineWidth: 1.5)
             }
         }
     }
