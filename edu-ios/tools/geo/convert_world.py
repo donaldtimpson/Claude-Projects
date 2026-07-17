@@ -5,9 +5,11 @@ Equirectangular projection into a 1000 x 500 viewBox (2:1), Douglas-Peucker
 simplified, tiny islands dropped. Output: one record per country with a display
 name, continent, prominence rank (from LABELRANK), and an SVG path string.
 """
-import json, sys
+import json, sys, math
 
-W, H = 1000.0, 500.0
+W = 1000.0
+K = W / (2 * math.pi)   # Web Mercator scale so lon -180..180 spans x 0..W
+LAT_CLAMP = 83.0        # Mercator blows up at the poles; clamp
 EPS = 0.6          # Douglas-Peucker tolerance in viewBox units
 MIN_RING_AREA = 1.5  # drop rings smaller than this (sq units); largest always kept
 
@@ -22,8 +24,10 @@ NOT_ASKABLE = {
 }
 
 def project(lon, lat):
-    x = (lon + 180.0) / 360.0 * W
-    y = (90.0 - lat) / 180.0 * H
+    # Web Mercator (conformal — correct shapes, the familiar map look).
+    lat = max(min(lat, LAT_CLAMP), -LAT_CLAMP)
+    x = (math.radians(lon) + math.pi) * K
+    y = (math.pi - math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))) * K
     return (x, y)
 
 def ring_area(pts):

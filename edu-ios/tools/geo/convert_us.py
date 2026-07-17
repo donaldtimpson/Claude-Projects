@@ -6,15 +6,22 @@ latitude biome gradient and coordinates stay consistent), then cropped to the US
 reuse the country schema (region goes in the `continent` field for same-region
 distractors; `rank` is an area-based difficulty tier). Rivers are open polylines.
 """
-import json
+import json, math
 
-W, H = 1000.0, 500.0
+W = 1000.0
+K = W / (2 * math.pi)   # Web Mercator scale (matches the world atlas)
+LAT_CLAMP = 83.0
 EPS = 0.5
-MIN_RING_AREA = 0.8
+MIN_RING_AREA = 0.4
 RIVERS = {"Mississippi", "Missouri", "Colorado"}
+US_BOX = (-170.0, -66.0, 15.0, 72.0)   # lon_min, lon_max, lat_min, lat_max (drops the Argentine Colorado)
+MIN_RIVER_LEN = 6.0                     # drop river chains shorter than this (projected units)
 
 def project(lon, lat):
-    return ((lon + 180.0) / 360.0 * W, (90.0 - lat) / 180.0 * H)
+    lat = max(min(lat, LAT_CLAMP), -LAT_CLAMP)
+    x = (math.radians(lon) + math.pi) * K
+    y = (math.pi - math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))) * K
+    return (x, y)
 
 def ring_area(pts):
     a = 0.0
@@ -94,13 +101,46 @@ def lines_of(geom):
         return list(geom["coordinates"])
     return []
 
-def river_path(geom):
-    segs = []
-    for line in lines_of(geom):
-        pts = rounddedup(dp([project(lon, lat) for lon, lat in line], EPS))
-        if len(pts) >= 2:
-            segs.append("M{:g} {:g}".format(*pts[0]) + "".join("L{:g} {:g}".format(x, y) for x, y in pts[1:]))
-    return "".join(segs) if segs else None
+def in_us(pt):
+    lon, lat = pt
+    return US_BOX[0] <= lon <= US_BOX[1] and US_BOX[2] <= lat <= US_BOX[3]
+
+def stitch(segments, tol=0.6):
+    """Greedily merge segments that share endpoints into maximal chains (all of them)."""
+    segs = [list(s) for s in segments if len(s) >= 2]
+    def close(a, b): return abs(a[0] - b[0]) <= tol and abs(a[1] - b[1]) <= tol
+    merged = True
+    while merged:
+        merged = False
+        for i in range(len(segs)):
+            if not segs[i]:
+                continue
+            for j in range(len(segs)):
+                if i == j or not segs[j]:
+                    continue
+                a, b = segs[i], segs[j]
+                if close(a[-1], b[0]):   segs[i] = a + b[1:]
+                elif close(a[-1], b[-1]): segs[i] = a + b[-2::-1]
+                elif close(a[0], b[-1]):  segs[i] = b + a[1:]
+                elif close(a[0], b[0]):   segs[i] = a[::-1] + b[1:]
+                else: continue
+                segs[j] = []; merged = True; break
+            if merged:
+                break
+    return [s for s in segs if s]
+
+def plen(pts):
+    return sum(((pts[i][0] - pts[i-1][0])**2 + (pts[i][1] - pts[i-1][1])**2) ** 0.5 for i in range(1, len(pts)))
+
+def river_path(segments):
+    """US-clipped, stitched into continuous chains; keep the major ones (no tiny gaps)."""
+    us = [s for s in segments if s and in_us(s[0]) and in_us(s[-1])]
+    parts = []
+    for chain in stitch(us):
+        pts = rounddedup(dp([project(lon, lat) for lon, lat in chain], EPS))
+        if len(pts) >= 2 and plen(pts) >= MIN_RIVER_LEN:
+            parts.append("M{:g} {:g}".format(*pts[0]) + "".join("L{:g} {:g}".format(x, y) for x, y in pts[1:]))
+    return "".join(parts) if parts else None
 
 def main():
     a1 = json.load(open("admin1.geojson"))
@@ -126,15 +166,19 @@ def main():
     for s in states:
         s.pop("area", None)
 
-    rivers = []
+    from collections import defaultdict
+    segs_by = defaultdict(list)
     rj = json.load(open("rivers.geojson"))
     for f in rj["features"]:
         p = f["properties"]
         name = p.get("name")
         if name in RIVERS and (p.get("featurecla") or "").endswith("River"):
-            path = river_path(f["geometry"])
-            if path:
-                rivers.append({"name": name, "path": path})
+            segs_by[name].extend(lines_of(f["geometry"]))
+    rivers = []
+    for name in sorted(RIVERS):
+        path = river_path(segs_by[name])
+        if path:
+            rivers.append({"name": name, "path": path})
 
     # viewBox over all state geometry (incl. Alaska + Hawaii), padded.
     import re

@@ -134,16 +134,21 @@ private struct MapCanvas: View, Animatable {
                 ctx.stroke(g.applying(t), with: .color(grid), lineWidth: 0.5)
             }
 
-            // Biome land tint: a vertical gradient keyed to latitude. Path coords are
-            // equirectangular (y 0→500 == lat 90→−90), so map those extremes to screen
-            // via the same transform, and the gradient tracks the current zoom/pan.
+            // Biome land tint: a vertical gradient keyed to latitude. Path coords are in
+            // Web Mercator, so convert each biome latitude to its Mercator y and place the
+            // stops accordingly; the gradient tracks the current zoom/pan via the transform.
+            func mercY(_ lat: Double) -> Double {
+                let l = min(max(lat, -83), 83) * Double.pi / 180
+                return (Double.pi - log(tan(Double.pi / 4 + l / 2))) * (1000 / (2 * Double.pi))
+            }
+            let mY0 = mercY(90), mY1 = mercY(-90)
             let stops = MapPalette.biome
-                .map { Gradient.Stop(color: Color(hex: $0.hex), location: (90 - $0.lat) / 180) }
+                .map { Gradient.Stop(color: Color(hex: $0.hex), location: (mercY($0.lat) - mY0) / (mY1 - mY0)) }
                 .sorted { $0.location < $1.location }
             let landShading = GraphicsContext.Shading.linearGradient(
                 Gradient(stops: stops),
-                startPoint: CGPoint(x: 0, y: ty),                 // lat 90 (equirect y = 0)
-                endPoint: CGPoint(x: 0, y: 500 * scale + ty))     // lat −90 (equirect y = 500)
+                startPoint: CGPoint(x: 0, y: mY0 * scale + ty),
+                endPoint: CGPoint(x: 0, y: mY1 * scale + ty))
             for region in regions where region.id != highlightId {
                 let p = region.path.applying(t)
                 ctx.fill(p, with: landShading)
