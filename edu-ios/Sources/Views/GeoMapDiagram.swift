@@ -9,6 +9,7 @@ private enum MapPalette {
     static let frame = Color(hex: 0x14202b)            // card outline
     static let highlight = Theme.gold300               // the target country
     static let highlightStroke = Theme.gold500
+    static let river = Color(hex: 0x2f6fa8)             // river centerlines
     static let graticule: Color? = nil
     // Biome color by latitude (°); land is filled with a vertical gradient of these.
     // Deserts land ~15–35° N/S; tropics green; poles icy. Mountains/interior deserts
@@ -40,13 +41,13 @@ struct GeoMapDiagram: View {
     private var map: GeoMap {
         switch kind {
         case .world: return GeoAtlas.world
-        case .usStates: return GeoAtlas.world   // placeholder until the US atlas ships
+        case .usStates: return GeoAtlas.usStates
         }
     }
 
     var body: some View {
         let port = displayed == .zero ? settledPort(highlightId) : displayed
-        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, highlightId: highlightId)
+        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers, highlightId: highlightId)
             .aspectRatio(Self.aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
             .background(MapPalette.sea)
@@ -101,6 +102,7 @@ private struct MapCanvas: View, Animatable {
     var port: CGRect
     let viewBox: CGRect
     let regions: [GeoRegion]
+    let rivers: [GeoRiver]
     let highlightId: String
 
     var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
@@ -147,6 +149,12 @@ private struct MapCanvas: View, Animatable {
                 ctx.fill(p, with: landShading)
                 ctx.stroke(p, with: .color(border), lineWidth: 0.4)
             }
+
+            // Rivers over the land (context clue), under the highlight.
+            for river in rivers {
+                ctx.stroke(river.path.applying(t), with: .color(MapPalette.river), lineWidth: 1.4)
+            }
+
             guard let target = regions.first(where: { $0.id == highlightId }) else { return }
             let p = target.path.applying(t)
             ctx.fill(p, with: .color(highlight))

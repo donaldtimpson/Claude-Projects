@@ -29,14 +29,23 @@ struct GeoRegion: Identifiable {
     }
 }
 
+// A named river centerline (open polyline), drawn as a blue line for context.
+struct GeoRiver: Identifiable {
+    let id = UUID()
+    let name: String
+    let path: Path
+}
+
 struct GeoMap {
     let viewBox: CGRect
     let regions: [GeoRegion]
+    let rivers: [GeoRiver]
     private let byId: [String: GeoRegion]
 
-    init(viewBox: CGRect, regions: [GeoRegion]) {
+    init(viewBox: CGRect, regions: [GeoRegion], rivers: [GeoRiver] = []) {
         self.viewBox = viewBox
         self.regions = regions
+        self.rivers = rivers
         self.byId = Dictionary(regions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
@@ -47,6 +56,7 @@ struct GeoMap {
 
 enum GeoAtlas {
     static let world: GeoMap = load("world-countries", key: "countries")
+    static let usStates: GeoMap = load("us-states", key: "states")
 
     // Decode the bundled JSON and pre-parse every path. Fails loud in DEBUG (a
     // missing/renamed resource is a build mistake, not a runtime condition).
@@ -77,7 +87,11 @@ enum GeoAtlas {
                 path: path, focus: focus
             )
         }
-        return GeoMap(viewBox: viewBox, regions: regions)
+        let rivers: [GeoRiver] = (root["rivers"] as? [[String: Any]] ?? []).compactMap { r in
+            guard let name = r["name"] as? String, let d = r["path"] as? String else { return nil }
+            return GeoRiver(name: name, path: parsePath(d))
+        }
+        return GeoMap(viewBox: viewBox, regions: regions, rivers: rivers)
     }
 
     // Minimal SVG path parser — absolute M/L with implicit-lineto, and Z. That's the

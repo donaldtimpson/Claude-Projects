@@ -56,7 +56,7 @@ enum DrillCatalog {
         arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
         sequences, logarithms, derivative, integral,
         determinant, solveSystem, matrixVector, dotProduct, unitCircle, vectors,
-        nameCountry,
+        nameCountry, nameState,
     ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
@@ -628,6 +628,41 @@ enum DrillCatalog {
             diagram: .geoMap(kind: .world, highlightId: target.id),
             dedupeKey: target.id,
             forceGrid: true     // always the 2×2 grid (flag stacked over the name)
+        )
+    }
+
+    // MARK: - Name the State (choice; identify the highlighted U.S. state, with rivers)
+    static let nameState = DrillDef(
+        slug: "name-state",
+        title: "Name the State",
+        blurb: "Identify the highlighted U.S. state — major rivers drawn in for context.",
+        icon: "🗺️"
+    ) { level in
+        // Difficulty by size tier (rank 1 = biggest/easiest … 3 = smallest). L1 → tier 1
+        // only, L2 → tiers 1–2, L3 → all 50.
+        let all = GeoAtlas.usStates.askable
+        let pool = all.filter { $0.rank <= level }
+        let target = pool.isEmpty ? all.randomElement()!
+            : pool[draw("name-state-L\(level)") { Array(0..<pool.count) }]
+
+        // Distractors prefer the same U.S. region (stored in `continent`).
+        let sameRegion = all.filter { $0.continent == target.continent && $0.id != target.id }
+        var distractors: [GeoRegion] = []
+        var seen: Set<String> = [target.id]
+        for r in sameRegion.shuffled() + all.shuffled() {
+            if seen.insert(r.id).inserted { distractors.append(r) }
+            if distractors.count == 3 { break }
+        }
+        let picks = ([target] + distractors).shuffled()
+        let options = picks.map(\.name)
+        let correctIndex = picks.firstIndex { $0.id == target.id } ?? 0
+        return DrillProblem(
+            prompt: "",
+            input: .choice(options: options, correctIndex: correctIndex),
+            explanation: "\(target.name) — \(target.continent).",
+            diagram: .geoMap(kind: .usStates, highlightId: target.id),
+            dedupeKey: target.id,
+            forceGrid: true
         )
     }
 }
