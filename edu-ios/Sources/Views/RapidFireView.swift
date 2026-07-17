@@ -79,7 +79,8 @@ struct RapidFireView: View {
                                 DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
                             }
                             OptionButtons(options: options, correctIndex: correctIndex,
-                                          selected: nil, revealed: false, grid: true) { i in
+                                          selected: nil, revealed: false, grid: true,
+                                          optionImages: problem.optionImages) { i in
                                 submit(correct: i == correctIndex)
                             }
                         }
@@ -189,10 +190,14 @@ struct RapidFireView: View {
     }
 
     private func nextProblem() {
+        // De-dupe on identity, not prompt: map drills have an empty prompt, so keying on
+        // prompt made every draw "match" and retry up to 8×, burning the shuffle bag ~9×
+        // per question and reshuffling it constantly (clustered repeats). identity is the
+        // region id, so the bag now advances one per question and cycles through all first.
         var p = def.generate(level)
         var tries = 0
-        while recent.contains(p.prompt) && tries < 8 { p = def.generate(level); tries += 1 }
-        recent.append(p.prompt)
+        while recent.contains(p.identity) && tries < 8 { p = def.generate(level); tries += 1 }
+        recent.append(p.identity)
         if recent.count > 3 { recent.removeFirst() }
         problem = p
         numericEntry = ""
