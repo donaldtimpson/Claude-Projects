@@ -22,8 +22,9 @@ struct DrillRunnerView: View {
     @State private var rapidSeconds = 60
     @State private var rapidLevel: Int?
     @State private var recentPrompts: [String] = []
+    @State private var practiceLen = 10   // 10, 20, or 0 = All (whole pool at that difficulty)
 
-    private let count = 10
+    @State private var count = 10
     private var def: DrillDef? { DrillCatalog.drill(slug: slug) }
 
     var body: some View {
@@ -82,9 +83,18 @@ struct DrillRunnerView: View {
                         Text("120s").tag(120)
                     }
                     .pickerStyle(.segmented)
+                } else {
+                    Picker("Length", selection: $practiceLen) {
+                        Text("10").tag(10)
+                        Text("20").tag(20)
+                        if def.poolSize != nil { Text("All").tag(0) }
+                    }
+                    .pickerStyle(.segmented)
                 }
 
-                Text(rapid ? "Beat the clock — build a combo for a high score." : "Ten problems at your pace.")
+                Text(rapid ? "Beat the clock — build a combo for a high score."
+                           : practiceLen == 0 ? "Every one, once, at your pace."
+                           : "\(practiceLen) problems at your pace.")
                     .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
 
                 Text("Choose a difficulty")
@@ -249,6 +259,10 @@ struct DrillRunnerView: View {
             rapidLevel = value
             return
         }
+        // Resolve the session length: 10/20, or "All" = the whole pool at this difficulty.
+        count = practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen
+        // Fresh shuffle bag so the session (esp. "All") walks every region once, in order.
+        DrillCatalog.resetBag(slug: slug, level: value)
         level = value
         startedAt = Date()
         answered = 0; correctCount = 0; streak = 0; bestStreak = 0

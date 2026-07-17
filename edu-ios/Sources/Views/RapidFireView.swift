@@ -54,7 +54,7 @@ struct RapidFireView: View {
         .navigationTitle("Rapid Fire")
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(tick) { _ in step() }
-        .onAppear { startedAt = Date(); nextProblem() }
+        .onAppear { startedAt = Date(); DrillCatalog.resetBag(slug: def.slug, level: level); nextProblem() }
     }
 
     private var flashColor: Color {
@@ -246,6 +246,7 @@ struct RapidFireView: View {
         score = 0; combo = 0; bestCombo = 0; answered = 0; correctCount = 0
         locked = false; flash = nil
         startedAt = Date()
+        DrillCatalog.resetBag(slug: def.slug, level: level)
         nextProblem()
     }
 }

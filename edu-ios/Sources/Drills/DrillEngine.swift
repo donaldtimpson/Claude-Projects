@@ -46,6 +46,9 @@ struct DrillDef: Identifiable {
     let title: String
     let blurb: String
     let icon: String
+    // Number of distinct questions available at a difficulty, for drills with a finite
+    // pool (map drills). Enables Practice's "All" length; nil ⇒ procedurally endless.
+    var poolSize: ((Int) -> Int)? = nil
     let generate: (Int) -> DrillProblem
 }
 
@@ -72,6 +75,23 @@ enum DrillCatalog {
     private static func draw(_ key: String, _ domain: () -> [Int]) -> Int {
         if bags[key]?.isEmpty ?? true { bags[key] = domain().shuffled() }
         return bags[key]!.removeLast()
+    }
+    // Clear a map drill's bag so a new session starts a fresh full permutation — makes
+    // Practice's "All" cover every region exactly once. Key matches the map drills' bag
+    // key ("<slug>-L<level>"); a no-op for drills that key their bag differently.
+    static func resetBag(slug: String, level: Int) { bags["\(slug)-L\(level)"] = nil }
+
+    // Difficulty pools for the map drills, shared by generate() and poolSize().
+    static func countryPool(_ level: Int) -> [GeoRegion] {
+        let all = GeoAtlas.world.askable
+        switch level {
+        case 1:  return all.filter { ($0.rank <= 2 && !easyRemove.contains($0.name)) || easyAdd.contains($0.name) }
+        case 2:  return all.filter { $0.rank <= 3 }
+        default: return all
+        }
+    }
+    static func statePool(_ level: Int) -> [GeoRegion] {
+        GeoAtlas.usStates.askable.filter { $0.rank <= level }
     }
 
     // Unicode super/subscripts for exponents and bases (x⁴, log₂).
@@ -593,20 +613,15 @@ enum DrillCatalog {
         slug: "name-country",
         title: "Name the Country",
         blurb: "Identify the highlighted country on the world map.",
-        icon: "🌍"
+        icon: "🌍",
+        poolSize: { countryPool($0).count }
     ) { level in
-        // Difficulty = how obscure the target can be. L1 sticks to the most famous
-        // countries (LABELRANK ≤ 2, with hand-curated add/remove); L2 adds rank 3;
-        // L3 opens the whole askable set (166 countries).
+        // Difficulty = how obscure the target can be (see countryPool): L1 famous, L2
+        // adds rank 3, L3 the whole askable set (166).
         let all = GeoAtlas.world.askable
-        let pool: [GeoRegion]
-        switch level {
-        case 1:  pool = all.filter { ($0.rank <= 2 && !easyRemove.contains($0.name)) || easyAdd.contains($0.name) }
-        case 2:  pool = all.filter { $0.rank <= 3 }
-        default: pool = all
-        }
+        let pool = countryPool(level)
         // Draw from a shuffle bag (like powers/squares/logs): cycle through the whole
-        // pool before any country repeats, so a 10-question quiz can't ask one twice.
+        // pool before any country repeats, so a quiz can't ask one twice.
         let target = pool.isEmpty ? all.randomElement()!
             : pool[draw("name-country-L\(level)") { Array(0..<pool.count) }]
 
@@ -639,12 +654,12 @@ enum DrillCatalog {
         slug: "name-state",
         title: "Name the State",
         blurb: "Identify the highlighted U.S. state — major rivers drawn in for context.",
-        icon: "🗺️"
+        icon: "🗺️",
+        poolSize: { statePool($0).count }
     ) { level in
-        // Difficulty by size tier (rank 1 = biggest/easiest … 3 = smallest). L1 → tier 1
-        // only, L2 → tiers 1–2, L3 → all 50.
+        // Difficulty by size tier (rank 1 = biggest/easiest … 3 = smallest, see statePool).
         let all = GeoAtlas.usStates.askable
-        let pool = all.filter { $0.rank <= level }
+        let pool = statePool(level)
         let target = pool.isEmpty ? all.randomElement()!
             : pool[draw("name-state-L\(level)") { Array(0..<pool.count) }]
 
