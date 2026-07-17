@@ -121,70 +121,6 @@ def to_path(rings):
         parts.append(seg)
     return ("".join(parts) if parts else None), focus
 
-# A curated set of iconic, globally-spread rivers (name variants grouped) — enough for
-# context clues without spaghetti. Only the major continuous parts are kept.
-WORLD_RIVERS = [
-    ["Nile"], ["Amazonas"], ["Mississippi"], ["Yangtze", "Chang Jiang"], ["Congo"],
-    ["Niger"], ["Ganges"], ["Danube", "Donau"], ["Volga"], ["Mekong"], ["Paraná"],
-    ["Indus"], ["Zambezi"], ["Murray"], ["Lena"], ["Ob"],
-]
-MIN_RIVER_LEN = 5.0   # drop chains shorter than this (projected units)
-
-def lines_of(geom):
-    t = geom["type"]
-    if t == "LineString": return [geom["coordinates"]]
-    if t == "MultiLineString": return list(geom["coordinates"])
-    return []
-
-def stitch(segments, tol=0.8):
-    """Merge segments sharing endpoints into maximal continuous chains."""
-    segs = [list(s) for s in segments if len(s) >= 2]
-    def close(a, b): return abs(a[0] - b[0]) <= tol and abs(a[1] - b[1]) <= tol
-    merged = True
-    while merged:
-        merged = False
-        for i in range(len(segs)):
-            if not segs[i]: continue
-            for j in range(len(segs)):
-                if i == j or not segs[j]: continue
-                a, b = segs[i], segs[j]
-                if close(a[-1], b[0]):   segs[i] = a + b[1:]
-                elif close(a[-1], b[-1]): segs[i] = a + b[-2::-1]
-                elif close(a[0], b[-1]):  segs[i] = b + a[1:]
-                elif close(a[0], b[0]):   segs[i] = a[::-1] + b[1:]
-                else: continue
-                segs[j] = []; merged = True; break
-            if merged: break
-    return [s for s in segs if s]
-
-def plen(pts):
-    return sum(((pts[i][0] - pts[i-1][0])**2 + (pts[i][1] - pts[i-1][1])**2) ** 0.5 for i in range(1, len(pts)))
-
-def build_rivers(path="rivers.geojson"):
-    by = {}
-    for f in json.load(open(path))["features"]:
-        n = f["properties"].get("name")
-        if n and (f["properties"].get("featurecla") or "").endswith("River"):
-            by.setdefault(n, []).append(f)
-    rivers = []
-    for group in WORLD_RIVERS:
-        segs = []
-        for name in group:
-            for f in by.get(name, []):
-                segs.extend(lines_of(f["geometry"]))
-        parts = []
-        for chain in stitch(segs):
-            proj = dp([project(lon, lat) for lon, lat in chain], EPS)
-            pts = []
-            for x, y in proj:
-                p = (round(x, 1), round(y, 1))
-                if not pts or pts[-1] != p: pts.append(p)
-            if len(pts) >= 2 and plen(pts) >= MIN_RIVER_LEN:
-                parts.append("M{:g} {:g}".format(*pts[0]) + "".join("L{:g} {:g}".format(x, y) for x, y in pts[1:]))
-        if parts:
-            rivers.append({"name": group[0], "path": "".join(parts)})
-    return rivers
-
 def main():
     gj = json.load(open("world.geojson"))
     out = []
@@ -236,9 +172,7 @@ def main():
     miny, maxy = min(ys) - pad, max(ys) + pad
     vb = [round(minx, 1), round(miny, 1), round(maxx - minx, 1), round(maxy - miny, 1)]
     print("viewBox:", vb)
-    rivers = build_rivers()
-    print("rivers:", len(rivers), [r["name"] for r in rivers])
-    json.dump({"viewBox": vb, "countries": out, "rivers": rivers},
+    json.dump({"viewBox": vb, "countries": out},
               open("world-countries.json", "w"), separators=(",", ":"))
     sizes = [len(r["path"]) for r in out]
     print(f"{len(out)} countries, path chars: total={sum(sizes)} max={max(sizes)}")
