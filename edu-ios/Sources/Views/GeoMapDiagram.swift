@@ -10,6 +10,8 @@ private enum MapPalette {
     static let highlight = Theme.gold300               // the target country
     static let highlightStroke = Theme.gold500
     static let river = Color(hex: 0x2f6fa8)             // river centerlines
+    static let neighbor = Color(hex: 0x6f747a)          // context countries (Canada/Mexico)
+    static let neighborBorder = Color(hex: 0x4a4e52)
     static let graticule: Color? = nil
     // Biome color by latitude (°); land is filled with a vertical gradient of these.
     // Deserts land ~15–35° N/S; tropics green; poles icy. Mountains/interior deserts
@@ -47,7 +49,8 @@ struct GeoMapDiagram: View {
 
     var body: some View {
         let port = displayed == .zero ? settledPort(highlightId) : displayed
-        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers, highlightId: highlightId)
+        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
+                  lakes: map.lakes, neighbors: map.neighbors, highlightId: highlightId)
             .aspectRatio(Self.aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
             .background(MapPalette.sea)
@@ -103,6 +106,8 @@ private struct MapCanvas: View, Animatable {
     let viewBox: CGRect
     let regions: [GeoRegion]
     let rivers: [GeoRiver]
+    let lakes: [Path]
+    let neighbors: [Path]
     let highlightId: String
 
     var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
@@ -122,6 +127,13 @@ private struct MapCanvas: View, Animatable {
             let tx = (size.width - port.width * scale) / 2 - port.minX * scale
             let ty = (size.height - port.height * scale) / 2 - port.minY * scale
             let t = CGAffineTransform(a: scale, b: 0, c: 0, d: scale, tx: tx, ty: ty)
+
+            // Context countries (Canada/Mexico) at the bottom, flat gray.
+            for n in neighbors {
+                let p = n.applying(t)
+                ctx.fill(p, with: .color(MapPalette.neighbor))
+                ctx.stroke(p, with: .color(MapPalette.neighborBorder), lineWidth: 0.4)
+            }
 
             // Graticule (lat/long grid) drawn first, so land covers it and it reads only
             // over the sea — the hallmark of an old chart.
@@ -155,17 +167,30 @@ private struct MapCanvas: View, Animatable {
                 ctx.stroke(p, with: .color(border), lineWidth: 0.4)
             }
 
-            // Rivers over the land (context clue), under the highlight.
+            let target = regions.first(where: { $0.id == highlightId })
+            if let target {
+                let p = target.path.applying(t)
+                ctx.fill(p, with: .color(highlight))
+                ctx.stroke(p, with: .color(highlightStroke), lineWidth: 1)
+            }
+
+            // Lakes as water, over land AND the highlight — carves the lake area out of
+            // states whose polygons wrongly include it (fixes Michigan's blob).
+            for lake in lakes {
+                let p = lake.applying(t)
+                ctx.fill(p, with: .color(MapPalette.sea))
+                ctx.stroke(p, with: .color(MapPalette.sea.opacity(0.9)), lineWidth: 0.3)
+            }
+
+            // Rivers over the water/land as a context clue.
             for river in rivers {
                 ctx.stroke(river.path.applying(t), with: .color(MapPalette.river), lineWidth: 1.4)
             }
 
-            guard let target = regions.first(where: { $0.id == highlightId }) else { return }
+            guard let target else { return }
             let p = target.path.applying(t)
-            ctx.fill(p, with: .color(highlight))
-            ctx.stroke(p, with: .color(highlightStroke), lineWidth: 1)
 
-            // A locator ring so a tiny highlighted country is still findable.
+            // A locator ring so a tiny highlighted region is still findable.
             let b = p.boundingRect
             if min(b.width, b.height) < 30 {
                 let c = CGPoint(x: b.midX, y: b.midY)

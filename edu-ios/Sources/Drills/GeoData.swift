@@ -40,12 +40,17 @@ struct GeoMap {
     let viewBox: CGRect
     let regions: [GeoRegion]
     let rivers: [GeoRiver]
+    let lakes: [Path]         // water bodies, drawn over land (carves lake-inclusive states)
+    let neighbors: [Path]     // context countries (e.g. Canada/Mexico), drawn gray
     private let byId: [String: GeoRegion]
 
-    init(viewBox: CGRect, regions: [GeoRegion], rivers: [GeoRiver] = []) {
+    init(viewBox: CGRect, regions: [GeoRegion], rivers: [GeoRiver] = [],
+         lakes: [Path] = [], neighbors: [Path] = []) {
         self.viewBox = viewBox
         self.regions = regions
         self.rivers = rivers
+        self.lakes = lakes
+        self.neighbors = neighbors
         self.byId = Dictionary(regions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
     }
 
@@ -91,7 +96,12 @@ enum GeoAtlas {
             guard let name = r["name"] as? String, let d = r["path"] as? String else { return nil }
             return GeoRiver(name: name, path: parsePath(d))
         }
-        return GeoMap(viewBox: viewBox, regions: regions, rivers: rivers)
+        let pathList: ([[String: Any]]?) -> [Path] = { rows in
+            (rows ?? []).compactMap { ($0["path"] as? String).map(parsePath) }
+        }
+        return GeoMap(viewBox: viewBox, regions: regions, rivers: rivers,
+                      lakes: pathList(root["lakes"] as? [[String: Any]]),
+                      neighbors: pathList(root["neighbors"] as? [[String: Any]]))
     }
 
     // Minimal SVG path parser — absolute M/L with implicit-lineto, and Z. That's the

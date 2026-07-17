@@ -180,6 +180,25 @@ def main():
         if path:
             rivers.append({"name": name, "path": path})
 
+    # Great Lakes (+ a couple notable US lakes) as water — drawn over the states in the
+    # app to carve out the lake area the state polygons wrongly include (Michigan's blob).
+    LAKES = {"Lake Superior", "Lake Michigan", "Lake Huron", "Lake Erie", "Lake Ontario",
+             "Lake Saint Clair", "Great Salt Lake"}
+    lakes = []
+    for f in json.load(open("lakes.geojson"))["features"]:
+        if f["properties"].get("name") in LAKES:
+            path, _, _ = to_path(f["geometry"])
+            if path:
+                lakes.append({"path": path})
+
+    # Canada + Mexico as gray context so borders read and Michigan sits against Canada.
+    neighbors = []
+    for f in json.load(open("world.geojson"))["features"]:
+        if f["properties"].get("ADMIN") in ("Canada", "Mexico"):
+            path, _, _ = to_path(f["geometry"])
+            if path:
+                neighbors.append({"path": path})
+
     # viewBox over all state geometry (incl. Alaska + Hawaii), padded.
     import re
     num = re.compile(r"-?\d+(?:\.\d+)?")
@@ -193,10 +212,10 @@ def main():
           round(max(xs) - min(xs) + 2 * pad, 1), round(max(ys) - min(ys) + 2 * pad, 1)]
 
     states.sort(key=lambda s: s["name"])
-    json.dump({"viewBox": vb, "states": states, "rivers": rivers},
+    json.dump({"viewBox": vb, "states": states, "rivers": rivers, "lakes": lakes, "neighbors": neighbors},
               open("us-states.json", "w"), separators=(",", ":"))
     import os
-    print(f"{len(states)} states, {len(rivers)} river segments, viewBox {vb}")
+    print(f"{len(states)} states, {len(rivers)} rivers, {len(lakes)} lakes, {len(neighbors)} neighbors, viewBox {vb}")
     print(f"file size: {os.path.getsize('us-states.json')} bytes")
     from collections import Counter
     print("by tier:", sorted(Counter(s['rank'] for s in states).items()))
