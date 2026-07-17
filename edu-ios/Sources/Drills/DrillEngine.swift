@@ -35,6 +35,9 @@ struct DrillProblem: Identifiable {
     // Pin the option layout so it doesn't flip question to question. Country names vary
     // in length; force the 2×2 grid (tiles stack the flag over a wrapping name).
     var forceGrid: Bool = false
+    // Per-option flag image resource names (e.g. "us-ca") for drills whose flags are
+    // images not emoji (US states). Parallel to the choice options.
+    var optionImages: [String]? = nil
 }
 
 struct DrillDef: Identifiable {
@@ -662,7 +665,8 @@ enum DrillCatalog {
             explanation: "\(target.name) — \(target.continent).",
             diagram: .geoMap(kind: .usStates, highlightId: target.id),
             dedupeKey: target.id,
-            forceGrid: true
+            forceGrid: true,
+            optionImages: picks.map { "us-\(($0.iso ?? "").lowercased())" }   // state flag PNGs
         )
     }
 }

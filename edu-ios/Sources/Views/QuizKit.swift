@@ -10,6 +10,19 @@ enum Haptics {
     static func tap() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
 }
 
+// Loads a bundled flag PNG by resource name (e.g. "us-ca"), cached. Used for option
+// tiles whose "flag" is an image rather than an emoji (US states have no flag emoji).
+enum FlagImage {
+    private static var cache: [String: UIImage?] = [:]
+    static func load(_ name: String) -> UIImage? {
+        if let hit = cache[name] { return hit }
+        let img = Bundle.main.url(forResource: name, withExtension: "png")
+            .flatMap { UIImage(contentsOfFile: $0.path) }
+        cache[name] = img
+        return img
+    }
+}
+
 // A slim gold progress bar (0...1).
 struct QuizProgressBar: View {
     let fraction: Double
@@ -50,6 +63,7 @@ struct OptionButtons: View {
     let selected: Int?
     let revealed: Bool
     var grid: Bool = false   // 2×2 tiles for short math options (drills); list otherwise
+    var optionImages: [String]? = nil   // per-option flag image resource names (e.g. "us-ca")
     let onSelect: (Int) -> Void
 
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
@@ -80,11 +94,20 @@ struct OptionButtons: View {
     // names fit the 2×2 grid without shrinking to nothing.
     private func tile(_ i: Int) -> some View {
         let (flag, rest) = flagSplit(options[i])
+        let flagImg = optionImages.flatMap { i < $0.count ? FlagImage.load($0[i]) : nil }
+        let hasVisual = flag != nil || flagImg != nil
         return Button { tap(i) } label: {
             VStack(spacing: 5) {
-                if let flag { Text(flag).font(.system(size: 30)) }
+                if let flagImg {
+                    Image(uiImage: flagImg).resizable().aspectRatio(contentMode: .fit)
+                        .frame(height: 26)
+                        .clipShape(RoundedRectangle(cornerRadius: 3))
+                        .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.line, lineWidth: 0.5))
+                } else if let flag {
+                    Text(flag).font(.system(size: 30))
+                }
                 Text(rest)
-                    .font(.system(size: flag == nil ? 24 : 18, weight: .semibold, design: .rounded))
+                    .font(.system(size: hasVisual ? 18 : 24, weight: .semibold, design: .rounded))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.6)

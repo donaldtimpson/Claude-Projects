@@ -156,7 +156,8 @@ def main():
             "id": p.get("name"), "name": p.get("name"),
             "continent": p.get("region"),           # US region -> same-region distractors
             "area": area,                            # projected area (area_sqkm is 0 in NE)
-            "askable": True, "iso": None, "focus": focus, "path": path,
+            "askable": True, "iso": p.get("postal"), # postal code -> flag image name (us-XX)
+            "focus": focus, "path": path,
         })
     # Difficulty tier by area: biggest states easiest. rank 1 (easy) / 2 / 3, thirds.
     order = sorted(states, key=lambda s: -s["area"])

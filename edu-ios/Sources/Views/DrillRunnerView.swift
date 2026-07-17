@@ -181,7 +181,7 @@ struct DrillRunnerView: View {
                 // forceGrid pins the 2×2 grid (country tiles stack the flag over the
                 // name); otherwise short answers tile 2×2 and long ones fall back to a list.
                 let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
-                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid) { i in
+                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
                     guard !revealed else { return }
                     choice = i
                     reveal(correct: i == correctIndex)
