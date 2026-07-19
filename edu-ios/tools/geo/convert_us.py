@@ -17,6 +17,25 @@ RIVERS = {"Mississippi", "Missouri", "Colorado"}
 US_BOX = (-170.0, -66.0, 15.0, 72.0)   # lon_min, lon_max, lat_min, lat_max (drops the Argentine Colorado)
 MIN_RIVER_LEN = 6.0                     # drop river chains shorter than this (projected units)
 
+# Hand-curated difficulty (1 easy … 3 hard), NOT size — the hardest states to identify
+# are the big interior rectangles, the easiest are famous / unmistakable shapes. Blends
+# fame + shape distinctiveness + location salience.
+STATE_TIER = {
+    # 1 — famous and/or unmistakable shape, easy to place
+    "California": 1, "Texas": 1, "Florida": 1, "New York": 1, "Alaska": 1, "Hawaii": 1,
+    "Michigan": 1, "Louisiana": 1, "Washington": 1, "Nevada": 1, "Maine": 1, "Oklahoma": 1,
+    "Utah": 1, "Arizona": 1, "Idaho": 1, "Massachusetts": 1, "New Jersey": 1,
+    # 2 — known, moderately distinctive
+    "Ohio": 2, "Georgia": 2, "Virginia": 2, "Pennsylvania": 2, "Illinois": 2, "Minnesota": 2,
+    "Oregon": 2, "Tennessee": 2, "Kentucky": 2, "Wisconsin": 2, "North Carolina": 2,
+    "South Carolina": 2, "Maryland": 2, "New Mexico": 2, "Vermont": 2, "New Hampshire": 2,
+    "West Virginia": 2,
+    # 3 — interior rectangles, generic blobs, small & confusable
+    "Colorado": 3, "Wyoming": 3, "Kansas": 3, "Nebraska": 3, "North Dakota": 3,
+    "South Dakota": 3, "Montana": 3, "Iowa": 3, "Missouri": 3, "Arkansas": 3, "Alabama": 3,
+    "Mississippi": 3, "Indiana": 3, "Connecticut": 3, "Rhode Island": 3, "Delaware": 3,
+}
+
 def project(lon, lat):
     lat = max(min(lat, LAT_CLAMP), -LAT_CLAMP)
     x = (math.radians(lon) + math.pi) * K
@@ -149,23 +168,20 @@ def main():
         p = f["properties"]
         if p.get("admin") != "United States of America" or p.get("type_en") != "State":
             continue
-        path, focus, area = to_path(f["geometry"])
+        path, focus, _ = to_path(f["geometry"])
         if not path:
             continue
+        name = p.get("name")
         states.append({
-            "id": p.get("name"), "name": p.get("name"),
+            "id": name, "name": name,
             "continent": p.get("region"),           # US region -> same-region distractors
-            "area": area,                            # projected area (area_sqkm is 0 in NE)
+            "rank": STATE_TIER.get(name, 2),         # curated difficulty (see STATE_TIER)
             "askable": True, "iso": p.get("postal"), # postal code -> flag image name (us-XX)
             "focus": focus, "path": path,
         })
-    # Difficulty tier by area: biggest states easiest. rank 1 (easy) / 2 / 3, thirds.
-    order = sorted(states, key=lambda s: -s["area"])
-    n = len(order)
-    for i, s in enumerate(order):
-        s["rank"] = 1 if i < n / 3 else (2 if i < 2 * n / 3 else 3)
-    for s in states:
-        s.pop("area", None)
+    missing = [s["name"] for s in states if s["name"] not in STATE_TIER]
+    if missing:
+        print("WARNING: states missing from STATE_TIER (defaulted to 2):", missing)
 
     from collections import defaultdict
     segs_by = defaultdict(list)
