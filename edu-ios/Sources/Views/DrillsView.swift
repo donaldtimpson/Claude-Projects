@@ -29,18 +29,7 @@ struct DrillsView: View {
 
     var body: some View {
         ScrollView {
-            if query.isEmpty {
-                browse
-            } else {
-                let results = DrillCatalog.all.filter { matches($0, query) }
-                VStack(spacing: 10) {
-                    if results.isEmpty {
-                        Text("No drills match “\(query)”.").foregroundStyle(Theme.inkSoft).padding(.top, 40)
-                    }
-                    ForEach(results) { d in DrillRow(drill: d, userId: userId) { open(d.slug) } }
-                }
-                .padding()
-            }
+            if query.isEmpty { browse } else { searchResults }
         }
         .background(Theme.parchment)
         .navigationTitle("Practice Drills")
@@ -68,12 +57,12 @@ struct DrillsView: View {
             if !recents.isEmpty {
                 sectionHeader("Continue")
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
+                    HStack(alignment: .top, spacing: 12) {
                         ForEach(recents) { d in
                             Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 2)
+                    .padding(.horizontal, 2).padding(.bottom, 4)
                 }
             }
             sectionHeader("Categories")
@@ -86,15 +75,41 @@ struct DrillsView: View {
         .padding()
     }
 
+    // MARK: search results — matching categories first, then drills; matches highlighted
+    @ViewBuilder private var searchResults: some View {
+        let cats = Self.categories.filter { $0.title.range(of: query, options: .caseInsensitive) != nil }
+        let drills = DrillCatalog.all.filter { matches($0, query) }
+        VStack(alignment: .leading, spacing: 22) {
+            if cats.isEmpty && drills.isEmpty {
+                Text("No matches for “\(query)”.").foregroundStyle(Theme.inkSoft).padding(.top, 40)
+            }
+            if !cats.isEmpty {
+                sectionHeader("Categories")
+                VStack(spacing: 10) {
+                    ForEach(cats, id: \.title) { cat in
+                        NavigationLink(value: cat) { categoryRow(cat, query: query) }.buttonStyle(.plain)
+                    }
+                }
+            }
+            if !drills.isEmpty {
+                sectionHeader("Drills")
+                VStack(spacing: 10) {
+                    ForEach(drills) { d in DrillRow(drill: d, userId: userId, query: query) { open(d.slug) } }
+                }
+            }
+        }
+        .padding()
+    }
+
     private func sectionHeader(_ title: String) -> some View {
         Text(title).font(.display(15)).kerning(1).foregroundStyle(Theme.gold400)
     }
 
-    private func categoryRow(_ cat: DrillCategoryRoute) -> some View {
+    private func categoryRow(_ cat: DrillCategoryRoute, query: String = "") -> some View {
         HStack(spacing: 12) {
             Text(cat.icon).font(.system(size: 32))
             VStack(alignment: .leading, spacing: 2) {
-                Text(cat.title).font(.headline).foregroundStyle(Theme.ink)
+                Text(highlighted(cat.title, query)).font(.headline).foregroundStyle(Theme.ink)
                 Text("\(cat.slugs.count) drills").font(.subheadline).foregroundStyle(Theme.inkSoft)
             }
             Spacer(minLength: 0)
@@ -103,17 +118,21 @@ struct DrillsView: View {
         .lyceumCard()
     }
 
+    // Compact recent chip — content hugs the card (no floating in a big fixed box).
     private func recentTile(_ d: DrillDef) -> some View {
         VStack(spacing: 6) {
-            Text(d.icon).font(.system(size: 30))
-            Text(d.title).font(.caption).foregroundStyle(Theme.ink)
+            Text(d.icon).font(.system(size: 42))
+            Text(d.title).font(.caption.weight(.medium)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             if let sub = masterySubtitle(d, userId: userId) {
                 Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
             }
         }
-        .frame(width: 116, height: 96)
-        .lyceumCard()
+        .frame(width: 104)
+        .padding(.vertical, 12).padding(.horizontal, 8)
+        .background(Theme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
     }
 
     // MARK: logic
@@ -126,7 +145,7 @@ struct DrillsView: View {
 
     private func matches(_ d: DrillDef, _ q: String) -> Bool {
         let category = Self.categories.first { $0.slugs.contains(d.slug) }?.title ?? ""
-        return "\(d.title) \(d.blurb) \(category)".lowercased().contains(q.lowercased())
+        return "\(d.title) \(d.blurb) \(category)".range(of: q, options: .caseInsensitive) != nil
     }
 }
 
@@ -151,10 +170,12 @@ struct CategoryDrillsView: View {
     }
 }
 
-// The shared full-width drill row (icon + title + blurb + optional mastery).
+// The shared full-width drill row (icon + title + blurb + optional mastery). Highlights
+// the search match in title/blurb when `query` is set.
 struct DrillRow: View {
     let drill: DrillDef
     let userId: String
+    var query: String = ""
     let onTap: () -> Void
 
     var body: some View {
@@ -162,8 +183,8 @@ struct DrillRow: View {
             HStack(spacing: 12) {
                 Text(drill.icon).font(.system(size: 34))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(drill.title).font(.headline).foregroundStyle(Theme.ink)
-                    Text(drill.blurb).font(.subheadline).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                    Text(highlighted(drill.title, query)).font(.headline).foregroundStyle(Theme.ink)
+                    Text(highlighted(drill.blurb, query)).font(.subheadline).foregroundStyle(Theme.inkSoft).lineLimit(2)
                     if let sub = masterySubtitle(drill, userId: userId) {
                         Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
                     }
@@ -181,6 +202,21 @@ struct DrillRow: View {
     guard let items = d.poolItems?(3) else { return nil }
     let m = DrillMastery.shared.masteredCount(userId: userId, slug: d.slug, items: items)
     return m > 0 ? "\(m)/\(items.count) mastered" : nil
+}
+
+// Bold + gold the case-insensitive matches of `query` within `text`, so the user sees
+// why a result matched.
+func highlighted(_ text: String, _ query: String) -> AttributedString {
+    var attr = AttributedString(text)
+    let q = query.trimmingCharacters(in: .whitespaces)
+    guard !q.isEmpty else { return attr }
+    var start = attr.startIndex
+    while let r = attr[start...].range(of: q, options: .caseInsensitive) {
+        attr[r].foregroundColor = Theme.gold300
+        attr[r].inlinePresentationIntent = .stronglyEmphasized
+        start = r.upperBound
+    }
+    return attr
 }
 
 struct ActiveDrill: Identifiable { let id: String }
