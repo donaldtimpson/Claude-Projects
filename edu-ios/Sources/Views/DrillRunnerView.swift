@@ -18,6 +18,7 @@ struct DrillRunnerView: View {
 
     @State private var numericEntry = ""
     @State private var choice: Int?
+    @State private var tappedRegion: String?   // tap-to-locate: the region the user tapped
     @State private var revealed = false
     @State private var wasCorrect = false
     @State private var finished = false
@@ -138,6 +139,7 @@ struct DrillRunnerView: View {
             switch problem.input {
             case let .numeric(_, unit): numericBody(unit: unit, problem: problem)
             case let .choice(options, correctIndex): choiceBody(options: options, correctIndex: correctIndex, problem: problem)
+            case let .mapTap(kind): mapTapBody(kind: kind, problem: problem)
             }
         }
         // Tap-anywhere-to-advance only exists AFTER answering (options are disabled then).
@@ -213,6 +215,29 @@ struct DrillRunnerView: View {
                     reveal(correct: i == correctIndex)
                 }
 
+                if revealed {
+                    feedback(problem)
+                    tapHint
+                }
+            }
+            .padding()
+        }
+    }
+
+    // Tap-to-locate: prompt + whole map; tap the named region to answer.
+    @ViewBuilder private func mapTapBody(kind: GeoMapKind, problem: DrillProblem) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text("Find \(problem.prompt)")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 8)
+                MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed, tappedId: tappedRegion) { tapped in
+                    guard !revealed else { return }
+                    tappedRegion = tapped
+                    reveal(correct: tapped == problem.dedupeKey)
+                }
                 if revealed {
                     feedback(problem)
                     tapHint
@@ -298,6 +323,7 @@ struct DrillRunnerView: View {
         problem = freshProblem(def, value)
         numericEntry = ""
         choice = nil
+        tappedRegion = nil
         revealed = false
     }
 

@@ -31,14 +31,21 @@ private enum MapPalette {
 // player sees where each country sits relative to the last (spatial context).
 struct GeoMapDiagram: View {
     let kind: GeoMapKind
-    let highlightId: String
+    var highlightId: String = ""
     // Zoom/animate to a window around the target (so small countries are legible).
-    // Off = whole atlas, for the future tap-to-locate mode where finding it is the point.
+    // Off = whole atlas (tap-to-locate, where finding it is the point).
     var focus: Bool = true
+    // Multi-region fills (id → color). When set, overrides the single gold highlight and
+    // suppresses the locator ring/fly — used by tap-to-locate to color target vs. tapped.
+    var highlights: [String: Color]? = nil
+    // When true, taps are hit-tested to a region id and reported (tap-to-locate).
+    var interactive: Bool = false
+    var onTapRegion: ((String?) -> Void)? = nil
 
     private static let aspect: CGFloat = 1.6   // fixed frame aspect: only the map pans, not the layout
 
     @State private var displayed: CGRect = .zero   // the viewport currently drawn (animated)
+    @State private var mapSize: CGSize = .zero     // rendered size, for reverse hit-testing
 
     private var map: GeoMap {
         switch kind {
@@ -47,17 +54,37 @@ struct GeoMapDiagram: View {
         }
     }
 
+    // Effective fills + ring: locate mode passes `highlights`; identify defaults to the
+    // single gold target (with the small-country locator ring).
+    private var fills: [String: Color] { highlights ?? [highlightId: MapPalette.highlight] }
+    private var ringId: String? { highlights == nil ? highlightId : nil }
+
     var body: some View {
         let port = displayed == .zero ? settledPort(highlightId) : displayed
         MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
-                  lakes: map.lakes, neighbors: map.neighbors, highlightId: highlightId)
+                  lakes: map.lakes, neighbors: map.neighbors, fills: fills, ringId: ringId)
             .aspectRatio(Self.aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
             .background(MapPalette.sea)
+            .background(GeometryReader { g in Color.clear.onAppear { mapSize = g.size }
+                .onChange(of: g.size) { _, s in mapSize = s } })
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(MapPalette.frame, lineWidth: 1))
+            .gesture(SpatialTapGesture().onEnded { v in if interactive { handleTap(v.location) } },
+                     including: interactive ? .gesture : .none)
             .onAppear { if displayed == .zero { displayed = settledPort(highlightId) } }
             .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId) }
+    }
+
+    // Reverse the port→screen transform, then point-in-polygon test each region.
+    private func handleTap(_ loc: CGPoint) {
+        let port = displayed == .zero ? settledPort(highlightId) : displayed
+        guard mapSize.width > 0, mapSize.height > 0, port.width > 0, port.height > 0 else { return }
+        let scale = min(mapSize.width / port.width, mapSize.height / port.height)
+        let tx = (mapSize.width - port.width * scale) / 2 - port.minX * scale
+        let ty = (mapSize.height - port.height * scale) / 2 - port.minY * scale
+        let atlas = CGPoint(x: (loc.x - tx) / scale, y: (loc.y - ty) / scale)
+        onTapRegion?(map.regions.first { $0.path.contains(atlas) }?.id)
     }
 
     // MARK: viewports
@@ -108,7 +135,8 @@ private struct MapCanvas: View, Animatable {
     let rivers: [GeoRiver]
     let lakes: [Path]
     let neighbors: [Path]
-    let highlightId: String
+    let fills: [String: Color]     // region id → fill color (target/tapped); others get biome land
+    let ringId: String?            // draw a locator ring around this region (identify mode)
 
     var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
         get { .init(.init(port.origin.x, port.origin.y), .init(port.size.width, port.size.height)) }
@@ -117,7 +145,6 @@ private struct MapCanvas: View, Animatable {
     }
 
     private let border = MapPalette.border
-    private let highlight = MapPalette.highlight
     private let highlightStroke = MapPalette.highlightStroke
 
     var body: some View {
@@ -161,21 +188,22 @@ private struct MapCanvas: View, Animatable {
                 Gradient(stops: stops),
                 startPoint: CGPoint(x: 0, y: mY0 * scale + ty),
                 endPoint: CGPoint(x: 0, y: mY1 * scale + ty))
-            for region in regions where region.id != highlightId {
+            for region in regions where fills[region.id] == nil {
                 let p = region.path.applying(t)
                 ctx.fill(p, with: landShading)
                 ctx.stroke(p, with: .color(border), lineWidth: 0.4)
             }
 
-            let target = regions.first(where: { $0.id == highlightId })
-            if let target {
-                let p = target.path.applying(t)
-                ctx.fill(p, with: .color(highlight))
+            // Filled/highlighted regions (single gold target, or target/tapped in locate).
+            for region in regions {
+                guard let color = fills[region.id] else { continue }
+                let p = region.path.applying(t)
+                ctx.fill(p, with: .color(color))
                 ctx.stroke(p, with: .color(highlightStroke), lineWidth: 1)
             }
 
-            // Lakes as water, over land AND the highlight — carves the lake area out of
-            // states whose polygons wrongly include it (fixes Michigan's blob).
+            // Lakes as water, over land AND fills — carves the lake area out of states
+            // whose polygons wrongly include it (fixes Michigan's blob).
             for lake in lakes {
                 let p = lake.applying(t)
                 ctx.fill(p, with: .color(MapPalette.sea))
@@ -187,11 +215,9 @@ private struct MapCanvas: View, Animatable {
                 ctx.stroke(river.path.applying(t), with: .color(MapPalette.river), lineWidth: 1.4)
             }
 
-            guard let target else { return }
-            let p = target.path.applying(t)
-
-            // A locator ring so a tiny highlighted region is still findable.
-            let b = p.boundingRect
+            // A locator ring so a tiny highlighted region is still findable (identify mode).
+            guard let ringId, let target = regions.first(where: { $0.id == ringId }) else { return }
+            let b = target.path.applying(t).boundingRect
             if min(b.width, b.height) < 30 {
                 let c = CGPoint(x: b.midX, y: b.midY)
                 let rad = max(b.width, b.height) / 2 + 13
@@ -199,5 +225,29 @@ private struct MapCanvas: View, Animatable {
                 ctx.stroke(ring, with: .color(highlightStroke), lineWidth: 1.5)
             }
         }
+    }
+}
+
+// A tap-to-locate card: the whole map, no highlight — the player taps the named region.
+// After answering, the correct region is colored green and a wrong tap red. The enclosing
+// mode view owns `revealed`/`tappedId` and grades inside `onTap`.
+struct MapTapCard: View {
+    let kind: GeoMapKind
+    let targetId: String
+    let revealed: Bool
+    let tappedId: String?
+    let onTap: (String?) -> Void
+
+    private var fills: [String: Color] {
+        guard revealed else { return [:] }
+        var f: [String: Color] = [targetId: Theme.success]          // correct location
+        if let tappedId, tappedId != targetId { f[tappedId] = Theme.danger }  // your wrong tap
+        return f
+    }
+
+    var body: some View {
+        GeoMapDiagram(kind: kind, focus: false, highlights: fills,
+                      interactive: !revealed, onTapRegion: onTap)
+            .frame(maxWidth: .infinity)
     }
 }

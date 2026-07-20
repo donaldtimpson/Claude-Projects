@@ -9,6 +9,7 @@ import Foundation
 enum DrillInput {
     case numeric(answer: Int, unit: String?)   // typed on the keypad (integer, exact)
     case choice(options: [String], correctIndex: Int) // always 4 options
+    case mapTap(kind: GeoMapKind)              // tap the named region on the map (target = dedupeKey)
 }
 
 // Which bundled atlas a map drill draws (resolved to geometry in the SwiftUI layer).
@@ -67,7 +68,7 @@ enum DrillCatalog {
         arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
         sequences, logarithms, derivative, integral,
         determinant, solveSystem, matrixVector, dotProduct, unitCircle, vectors,
-        nameCountry, nameState,
+        nameCountry, nameState, locateCountry, locateState,
     ]
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
@@ -680,5 +681,45 @@ enum DrillCatalog {
         let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
             : pool[draw("name-state-L\(level)") { Array(0..<pool.count) }]
         return stateProblem(target)
+    }
+
+    // MARK: - Locate (tap-to-find; the named region must be tapped on the map)
+    private static func locateProblem(_ target: GeoRegion, kind: GeoMapKind) -> DrillProblem {
+        DrillProblem(
+            prompt: target.name,              // shown as "Find <name>" by the map-tap UI
+            input: .mapTap(kind: kind),
+            explanation: "\(target.name) — \(target.continent).",
+            dedupeKey: target.id              // the region to tap
+        )
+    }
+
+    static let locateCountry = DrillDef(
+        slug: "locate-country",
+        title: "Where's the Country?",
+        blurb: "Find the named country on the world map — tap it.",
+        icon: "🧭",
+        poolSize: { countryPool($0).count },
+        poolItems: { countryPool($0).map(\.id) },
+        problemForItem: { id, _ in locateProblem(GeoAtlas.world.region(id) ?? GeoAtlas.world.askable[0], kind: .world) }
+    ) { level in
+        let pool = countryPool(level)
+        let target = pool.isEmpty ? GeoAtlas.world.askable.randomElement()!
+            : pool[draw("locate-country-L\(level)") { Array(0..<pool.count) }]
+        return locateProblem(target, kind: .world)
+    }
+
+    static let locateState = DrillDef(
+        slug: "locate-state",
+        title: "Where's the State?",
+        blurb: "Find the named U.S. state — tap it.",
+        icon: "🧭",
+        poolSize: { statePool($0).count },
+        poolItems: { statePool($0).map(\.id) },
+        problemForItem: { id, _ in locateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0], kind: .usStates) }
+    ) { level in
+        let pool = statePool(level)
+        let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
+            : pool[draw("locate-state-L\(level)") { Array(0..<pool.count) }]
+        return locateProblem(target, kind: .usStates)
     }
 }

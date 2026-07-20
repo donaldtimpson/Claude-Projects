@@ -4,7 +4,8 @@ import SwiftUI
 // (on-device SRS, prototype v1). New items are introduced gradually (LearnSession:
 // graduated introduction + expanding rehearsal), recently-seen items recur soon even when
 // correct, and each correct answer raises the item's persistent mastery box. The session
-// doesn't stop — you leave with Done; once everything's mastered it keeps cycling.
+// doesn't stop — you leave with Done. Works for both identify (.choice) and locate
+// (.mapTap) drills.
 struct LearnDrillView: View {
     let def: DrillDef
     let level: Int
@@ -17,6 +18,7 @@ struct LearnDrillView: View {
     @State private var session: LearnSession?
     @State private var problem: DrillProblem?
     @State private var choice: Int?
+    @State private var tappedId: String?
     @State private var revealed = false
     @State private var wasCorrect = false
     @State private var masteredNow = 0
@@ -25,47 +27,62 @@ struct LearnDrillView: View {
 
     var body: some View {
         Group {
-            if let problem, case let .choice(options, correctIndex) = problem.input {
-                play(problem: problem, options: options, correctIndex: correctIndex)
+            if let problem {
+                VStack(spacing: 0) {
+                    header
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 22) {
+                            content(problem)
+                            if revealed {
+                                feedback(problem)
+                                Text("Tap to continue").font(.footnote).foregroundStyle(Theme.inkSoft)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                        }
+                        .padding()
+                    }
+                }
+                .overlay {
+                    if revealed {
+                        Color.clear.contentShape(Rectangle()).onTapGesture { present() }
+                    }
+                }
             } else {
                 ProgressView().tint(Theme.gold300)
             }
         }
         .navigationTitle("Learn").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() } .tint(Theme.gold300) } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() }.tint(Theme.gold300) } }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
         .onAppear(perform: setup)
         .onDisappear(perform: recordSession)
     }
 
-    @ViewBuilder private func play(problem: DrillProblem, options: [String], correctIndex: Int) -> some View {
-        VStack(spacing: 0) {
-            header
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    if let diagram = problem.diagram {
-                        DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
-                    }
-                    let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
-                    OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
-                                  revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
-                        guard !revealed else { return }
-                        answer(i, correctIndex: correctIndex)
-                    }
-                    if revealed {
-                        feedback(problem)
-                        Text("Tap to continue").font(.footnote).foregroundStyle(Theme.inkSoft)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                }
-                .padding()
+    @ViewBuilder private func content(_ problem: DrillProblem) -> some View {
+        switch problem.input {
+        case let .choice(options, correctIndex):
+            if let diagram = problem.diagram {
+                DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
             }
-        }
-        .overlay {
-            if revealed {
-                Color.clear.contentShape(Rectangle()).onTapGesture { present() }
+            let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
+            OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
+                          revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
+                guard !revealed else { return }
+                choice = i
+                grade(correct: i == correctIndex)
             }
+        case let .mapTap(kind):
+            Text("Find \(problem.prompt)")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .center)
+            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed, tappedId: tappedId) { tapped in
+                guard !revealed else { return }
+                tappedId = tapped
+                grade(correct: tapped == problem.dedupeKey)
+            }
+        case .numeric:
+            EmptyView()   // Learn is only offered for map drills
         }
     }
 
@@ -106,18 +123,16 @@ struct LearnDrillView: View {
         guard let id = session?.next() else { return }
         problem = def.problemForItem?(id, level)
         choice = nil
+        tappedId = nil
         revealed = false
     }
 
-    private func answer(_ i: Int, correctIndex: Int) {
-        guard !revealed, let session else { return }
-        let correct = i == correctIndex
-        choice = i
+    private func grade(correct: Bool) {
         wasCorrect = correct
         withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         if correct { Haptics.success() } else { Haptics.error() }
-        session.grade(correct: correct)
-        masteredNow = session.masteredCount
+        session?.grade(correct: correct)
+        masteredNow = session?.masteredCount ?? masteredNow
     }
 
     // A Learn session IS practice — record a count-mode session on exit so it feeds the

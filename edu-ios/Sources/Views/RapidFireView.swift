@@ -20,6 +20,7 @@ struct RapidFireView: View {
     @State private var answered = 0
     @State private var correctCount = 0
     @State private var numericEntry = ""
+    @State private var tappedRegion: String?   // tap-to-locate: last tapped region
     @State private var flash: Bool?          // true = correct, false = wrong, nil = none
     @State private var locked = false
     @State private var finished = false
@@ -82,6 +83,20 @@ struct RapidFireView: View {
                                           selected: nil, revealed: false, grid: true,
                                           optionImages: problem.optionImages) { i in
                                 submit(correct: i == correctIndex)
+                            }
+                        }
+                        .padding()
+                    }
+                case let .mapTap(kind):
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            Text("Find \(problem.prompt)")
+                                .font(.system(size: 26, weight: .bold, design: .rounded))
+                                .foregroundStyle(Theme.ink).frame(maxWidth: .infinity).padding(.top, 12)
+                            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: locked, tappedId: tappedRegion) { tapped in
+                                guard !locked else { return }
+                                tappedRegion = tapped
+                                submit(correct: tapped == problem.dedupeKey)
                             }
                         }
                         .padding()
@@ -201,6 +216,7 @@ struct RapidFireView: View {
         if recent.count > 3 { recent.removeFirst() }
         problem = p
         numericEntry = ""
+        tappedRegion = nil
     }
 
     private func submit(correct: Bool) {
