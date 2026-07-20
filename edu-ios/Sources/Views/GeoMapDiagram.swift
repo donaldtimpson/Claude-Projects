@@ -45,12 +45,24 @@ struct GeoMapDiagram: View {
     // fly). The target is placed OFF-center (deterministically) so it's tappable-large but
     // not given away by being centered.
     var locateTargetId: String? = nil
-    // Frame aspect (width : height). Identify keeps the portrait-friendly 1.6; the
-    // landscape tap-to-locate screen passes a wide value so the map fills the rotated frame.
+    // Frame aspect (width : height) for the card layout. Identify keeps the portrait-friendly
+    // 1.6; unused when `fillFrame` is set (the port then matches the measured frame exactly).
     var aspect: CGFloat = 1.6
+    // Fill the given frame edge-to-edge (the port matches the measured frame aspect, so there
+    // is no letterbox / flat sea-colored margin) and enable pan + pinch. For the full-screen
+    // landscape tap-to-locate map. Off = the bordered fixed-aspect card used by identify.
+    var fillFrame: Bool = false
 
     @State private var displayed: CGRect = .zero   // the viewport currently drawn (animated)
     @State private var mapSize: CGSize = .zero     // rendered size, for reverse hit-testing
+    @State private var frameAspect: CGFloat = 0    // measured w/h in fill mode
+    @State private var gestureBase: CGRect?        // viewport at the start of a pan/pinch
+
+    // Aspect actually used to build the viewport: the measured frame in fill mode, else the
+    // fixed card aspect. Keeps the port's shape identical to the frame → no letterbox.
+    private var aspectE: CGFloat { fillFrame && frameAspect > 0 ? frameAspect : aspect }
+    // The target this map is framed on (locate passes locateTargetId; identify uses highlightId).
+    private var targetId: String { locateTargetId ?? highlightId }
 
     private var map: GeoMap {
         switch kind {
@@ -73,18 +85,21 @@ struct GeoMapDiagram: View {
     }
 
     var body: some View {
-        let port = currentPort
-        MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
-                  lakes: map.lakes, neighbors: map.neighbors, fills: fills, ringId: ringId)
-            .aspectRatio(aspect, contentMode: .fit)
-            .frame(maxWidth: .infinity)
+        canvas
             .background(MapPalette.sea)
-            .background(GeometryReader { g in Color.clear.onAppear { mapSize = g.size }
-                .onChange(of: g.size) { _, s in mapSize = s } })
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(MapPalette.frame, lineWidth: 1))
-            .gesture(SpatialTapGesture().onEnded { v in if interactive { handleTap(v.location) } },
-                     including: interactive ? .gesture : .none)
+            .background(GeometryReader { g in Color.clear
+                .onAppear { measure(g.size) }
+                .onChange(of: g.size) { _, s in measure(s) } })
+            .clipShape(RoundedRectangle(cornerRadius: fillFrame ? 0 : 10))
+            .overlay {
+                if !fillFrame {
+                    RoundedRectangle(cornerRadius: 10).stroke(MapPalette.frame, lineWidth: 1)
+                }
+            }
+            .contentShape(Rectangle())
+            .gesture(interactive ? panZoom : nil)
+            .simultaneousGesture(SpatialTapGesture().onEnded { v in if interactive { handleTap(v.location) } },
+                                 including: interactive ? .gesture : .none)
             .onAppear { if displayed == .zero { displayed = currentPort } }
             .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId, settle: settledPort) }
             // Locate mode: fly between the off-center regional windows so the player keeps
@@ -92,6 +107,30 @@ struct GeoMapDiagram: View {
             .onChange(of: locateTargetId) { oldId, newId in
                 if let newId { flyBetween(oldId ?? "", newId, settle: locatePort) }
             }
+    }
+
+    @ViewBuilder private var canvas: some View {
+        let c = MapCanvas(port: currentPort, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
+                          lakes: map.lakes, neighbors: map.neighbors, fills: fills, ringId: ringId)
+        if fillFrame {
+            c.frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+            c.aspectRatio(aspect, contentMode: .fit).frame(maxWidth: .infinity)
+        }
+    }
+
+    // Record the rendered size (for hit-testing) and, in fill mode, the frame aspect. When the
+    // measured aspect first arrives (or changes), re-seat the viewport on the target so the port
+    // shape matches the frame exactly — otherwise the initial displayed rect (built with the
+    // fallback aspect) would letterbox.
+    private func measure(_ s: CGSize) {
+        mapSize = s
+        guard fillFrame, s.height > 0 else { return }
+        let a = s.width / s.height
+        if abs(a - frameAspect) > 0.001 {
+            frameAspect = a
+            if gestureBase == nil { displayed = portFor(targetId) }
+        }
     }
 
     // Reverse the port→screen transform, then point-in-polygon test each region.
@@ -103,6 +142,49 @@ struct GeoMapDiagram: View {
         let ty = (mapSize.height - port.height * scale) / 2 - port.minY * scale
         let atlas = CGPoint(x: (loc.x - tx) / scale, y: (loc.y - ty) / scale)
         onTapRegion?(map.regions.first { $0.path.contains(atlas) }?.id)
+    }
+
+    // Drag to pan, pinch to zoom — so the map never feels frozen and you can look around
+    // beyond the auto-framed window. Both work off the viewport captured when the gesture
+    // began (`gestureBase`) and stay clamped to the atlas.
+    private var panZoom: some Gesture {
+        let pan = DragGesture(minimumDistance: 8)
+            .onChanged { v in
+                let base = gestureBase ?? displayed
+                if gestureBase == nil { gestureBase = base }
+                guard mapSize.width > 0 else { return }
+                let scale = min(mapSize.width / base.width, mapSize.height / base.height)
+                let r = base.offsetBy(dx: -v.translation.width / scale, dy: -v.translation.height / scale)
+                displayed = clampToAtlas(r)
+            }
+            .onEnded { _ in gestureBase = nil }
+        let zoom = MagnificationGesture()
+            .onChanged { m in
+                let base = gestureBase ?? displayed
+                if gestureBase == nil { gestureBase = base }
+                let k = (1 / max(m, 0.2))
+                var w = (base.width * k).clamped(map.viewBox.width * 0.05, map.viewBox.width)
+                var h = w / aspectE
+                if h > map.viewBox.height { h = map.viewBox.height; w = h * aspectE }
+                let cx = base.midX, cy = base.midY
+                displayed = clampToAtlas(CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h))
+            }
+            .onEnded { _ in gestureBase = nil }
+        return pan.simultaneously(with: zoom)
+    }
+
+    // Keep a viewport within the atlas: shrink to fit if larger, then slide inside the bounds.
+    private func clampToAtlas(_ r: CGRect) -> CGRect {
+        let vb = map.viewBox
+        let w = min(r.width, vb.width), h = min(r.height, vb.height)
+        let x = w >= vb.width ? vb.minX : min(max(r.minX, vb.minX), vb.maxX - w)
+        let y = h >= vb.height ? vb.minY : min(max(r.minY, vb.minY), vb.maxY - h)
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+
+    // The framed viewport for a target, per mode (locate = off-center window, identify = settled).
+    private func portFor(_ id: String) -> CGRect {
+        locateTargetId != nil ? locatePort(id) : settledPort(id)
     }
 
     // MARK: viewports
@@ -124,10 +206,10 @@ struct GeoMapDiagram: View {
         let vb = map.viewBox
         guard let f = map.region(id)?.focus else { return vb }
         let z = Self.locateZoom[kind] ?? (min: vb.width * 0.18, max: vb.width, mult: 6)
-        var w = (max(f.width, f.height * aspect) * z.mult).clamped(z.min, z.max)
+        var w = (max(f.width, f.height * aspectE) * z.mult).clamped(z.min, z.max)
         w = min(w, vb.width)
-        var h = w / aspect
-        if h > vb.height { h = vb.height; w = min(h * aspect, vb.width) }
+        var h = w / aspectE
+        if h > vb.height { h = vb.height; w = min(h * aspectE, vb.width) }
         let px = 0.30 + 0.40 * seededFrac(id, 1)
         let py = 0.30 + 0.40 * seededFrac(id, 2)
         let x = w >= vb.width ? vb.minX : min(max(f.midX - px * w, vb.minX), vb.maxX - w)
@@ -153,10 +235,10 @@ struct GeoMapDiagram: View {
     // A window of the frame aspect around `rect`, scaled by `pad`, centered and clamped.
     private func window(around rect: CGRect, pad: CGFloat) -> CGRect {
         let vb = map.viewBox
-        var w = max(rect.width, rect.height * aspect) * pad
+        var w = max(rect.width, rect.height * aspectE) * pad
         w = min(max(w, vb.width * 0.16), vb.width)
-        let h = min(w / aspect, vb.height)
-        let w2 = min(w, h * aspect)   // keep aspect if height was capped
+        let h = min(w / aspectE, vb.height)
+        let w2 = min(w, h * aspectE)   // keep aspect if height was capped
         let cx = rect.midX, cy = rect.midY
         let x = w2 >= vb.width ? vb.minX : min(max(cx - w2 / 2, vb.minX), vb.maxX - w2)
         let y = h >= vb.height ? vb.minY : min(max(cy - h / 2, vb.minY), vb.maxY - h)
@@ -291,6 +373,7 @@ struct MapTapCard: View {
     let revealed: Bool
     let tappedId: String?
     var aspect: CGFloat = 1.6
+    var fillFrame: Bool = false
     let onTap: (String?) -> Void
 
     private var fills: [String: Color] {
@@ -303,8 +386,8 @@ struct MapTapCard: View {
     var body: some View {
         GeoMapDiagram(kind: kind, focus: false, highlights: fills,
                       interactive: !revealed, onTapRegion: onTap, locateTargetId: targetId,
-                      aspect: aspect)
-            .frame(maxWidth: .infinity)
+                      aspect: aspect, fillFrame: fillFrame)
+            .frame(maxWidth: .infinity, maxHeight: fillFrame ? .infinity : nil)
     }
 }
 

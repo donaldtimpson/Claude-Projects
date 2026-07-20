@@ -42,7 +42,11 @@ struct DrillRunnerView: View {
                 } else if let lvl = launchedLevel, mode == .learn {
                     LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
                 } else if let level, let problem {
-                    landscaped(def.landscape) { runner(def: def, level: level, problem: problem) }
+                    if def.landscape {
+                        locateRunner(def: def, level: level, problem: problem)
+                    } else {
+                        runner(def: def, level: level, problem: problem)
+                    }
                 } else {
                     setup(def)
                 }
@@ -133,25 +137,53 @@ struct DrillRunnerView: View {
         }
     }
 
-    // Wrap the play screen in landscape for map-tap drills (wide maps); pass through
-    // otherwise. In landscape we hide the (portrait) nav bar to give the map the whole
-    // screen and supply our own corner close button, since the nav bar's X goes with it.
-    @ViewBuilder private func landscaped<V: View>(_ on: Bool, @ViewBuilder _ content: () -> V) -> some View {
-        if on {
-            ForcedLandscape { content() }
-                .ignoresSafeArea()
-                .toolbar(.hidden, for: .navigationBar)
-                .overlay(alignment: .topLeading) {
+    // MARK: locate runner (landscape, full-screen pannable map)
+    // Tap-to-locate plays in landscape (the maps are far wider than tall). Own top bar
+    // (close + progress + streak) since the nav bar and status bar are hidden for a clean
+    // full-screen map that stays within the safe area. The map fills the frame and pans.
+    @ViewBuilder private func locateRunner(def: DrillDef, level: Int, problem: DrillProblem) -> some View {
+        ForcedLandscape {
+            VStack(spacing: 6) {
+                HStack(spacing: 12) {
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Theme.inkSoft.opacity(0.9))
-                            .padding(10)
+                        Image(systemName: "xmark").font(.body.weight(.semibold)).foregroundStyle(Theme.inkSoft)
+                    }
+                    QuizProgressBar(fraction: Double(answered) / Double(count))
+                    Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
+                    StreakPill(streak: streak)
+                }
+                Text("Find \(problem.prompt)")
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                if case let .mapTap(kind) = problem.input {
+                    MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
+                               tappedId: tappedRegion, fillFrame: true) { tapped in
+                        guard !revealed else { return }
+                        tappedRegion = tapped
+                        reveal(correct: tapped == problem.dedupeKey)
+                    }
+                    .frame(maxHeight: .infinity)
+                    // Tap the map to advance only after answering (options/selection are off then).
+                    .overlay {
+                        if revealed {
+                            Color.clear.contentShape(Rectangle())
+                                .onTapGesture { next(def: def, level: level) }
+                        }
+                    }
+                    .overlay(alignment: .bottom) {
+                        if revealed {
+                            VStack(spacing: 4) { feedback(problem); tapHint }
+                                .padding(.horizontal, 12).padding(.bottom, 6)
+                        }
                     }
                 }
-        } else {
-            content()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
         }
+        .background(Theme.parchment)
+        .statusBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     // MARK: runner
