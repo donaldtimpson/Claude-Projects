@@ -57,6 +57,7 @@ struct GeoMapDiagram: View {
     @State private var mapSize: CGSize = .zero     // rendered size, for reverse hit-testing
     @State private var frameAspect: CGFloat = 0    // measured w/h in fill mode
     @State private var gestureBase: CGRect?        // viewport at the start of a pan/pinch
+    @State private var introDone = false           // played the open-wide-then-zoom-in intro
 
     // Aspect actually used to build the viewport: the measured frame in fill mode, else the
     // fixed card aspect. Keeps the port's shape identical to the frame → no letterbox.
@@ -100,7 +101,7 @@ struct GeoMapDiagram: View {
             .gesture(interactive ? panZoom : nil)
             .simultaneousGesture(SpatialTapGesture().onEnded { v in if interactive { handleTap(v.location) } },
                                  including: interactive ? .gesture : .none)
-            .onAppear { if displayed == .zero { displayed = currentPort } }
+            .onAppear { if displayed == .zero { displayed = fillFrame ? map.viewBox : currentPort } }
             .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId, settle: settledPort) }
             // Locate mode: fly between the off-center regional windows so the player keeps
             // spatial context across questions instead of jump-cutting to a new region.
@@ -127,9 +128,18 @@ struct GeoMapDiagram: View {
         mapSize = s
         guard fillFrame, s.height > 0 else { return }
         let a = s.width / s.height
-        if abs(a - frameAspect) > 0.001 {
-            frameAspect = a
-            if gestureBase == nil { displayed = portFor(targetId) }
+        guard abs(a - frameAspect) > 0.001 else { return }
+        frameAspect = a
+        guard gestureBase == nil else { return }
+        if introDone {
+            displayed = portFor(targetId)
+        } else {
+            // First open: show the whole atlas, then glide in to the target for context.
+            introDone = true
+            if displayed == .zero { displayed = map.viewBox }
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.85)) { displayed = portFor(targetId) }
+            }
         }
     }
 
@@ -220,9 +230,11 @@ struct GeoMapDiagram: View {
     // Locate zoom knobs per atlas, in viewBox units (see locatePort). `mult` scales the
     // target span into a window; min/max clamp it. Tuned so a mid region shows a few
     // neighbors, tiny ones stay tappable, and outliers (Alaska/Russia) still fit.
+    // Less aggressive now that you can pan/zoom: a wider default window shows more neighbors
+    // so the answer isn't obvious, and you scroll in for a closer look if you want one.
     private static let locateZoom: [GeoMapKind: (min: CGFloat, max: CGFloat, mult: CGFloat)] = [
-        .world: (min: 120, max: 520, mult: 2.5),      // viewBox ~1012 wide
-        .usStates: (min: 42, max: 210, mult: 2.5),    // viewBox ~317 wide; Lower 48 ~148
+        .world: (min: 260, max: 680, mult: 4.0),      // viewBox ~1012 wide
+        .usStates: (min: 60, max: 240, mult: 3.0),    // viewBox ~317 wide; Lower 48 ~148
     ]
 
     // Deterministic 0..1 from a string (FNV-1a) — stable across launches, unlike hashValue.

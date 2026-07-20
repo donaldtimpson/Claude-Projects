@@ -145,9 +145,12 @@ struct DrillRunnerView: View {
         ForcedLandscape {
             VStack(spacing: 6) {
                 HStack(spacing: 12) {
+                    // Match the app's nav-bar close (gold semibold xmark); approximated here
+                    // since this screen hides the nav bar for a full-screen map.
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark").font(.body.weight(.semibold)).foregroundStyle(Theme.inkSoft)
+                        Image(systemName: "xmark").font(.body.weight(.semibold))
                     }
+                    .tint(Theme.gold300)
                     QuizProgressBar(fraction: Double(answered) / Double(count))
                     Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
                     StreakPill(streak: streak)
