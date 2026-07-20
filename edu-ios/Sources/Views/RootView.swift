@@ -37,6 +37,7 @@ struct SplashView: View {
             Text("The Timpson Lyceum")
                 .font(.display(38))
                 .kerning(2)
+                .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.gold300)
             ProgressView().tint(Theme.gold300)
         }

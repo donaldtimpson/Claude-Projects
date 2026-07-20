@@ -27,6 +27,7 @@ struct AuthView: View {
                     Text("The Timpson Lyceum")
                         .font(.display(38))
                         .kerning(2)
+                        .multilineTextAlignment(.center)
                         .foregroundStyle(Theme.gold300)
                     Text(mode == .signIn ? "Sign in to continue" : "Create your account")
                         .font(.serif(17))
