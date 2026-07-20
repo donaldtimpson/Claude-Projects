@@ -145,12 +145,18 @@ struct DrillRunnerView: View {
         ForcedLandscape {
             VStack(spacing: 6) {
                 HStack(spacing: 12) {
-                    // Match the app's nav-bar close (gold semibold xmark); approximated here
-                    // since this screen hides the nav bar for a full-screen map.
+                    // Big liquid-glass close button — generous hit target, matches the glass
+                    // result card. (The nav bar is hidden on this full-screen map.)
                     Button { dismiss() } label: {
-                        Image(systemName: "xmark").font(.body.weight(.semibold))
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Theme.ink)
+                            .frame(width: 42, height: 42)
+                            .background(.ultraThinMaterial, in: Circle())
+                            .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 0.5))
+                            .shadow(color: .black.opacity(0.2), radius: 6, y: 2)
                     }
-                    .tint(Theme.gold300)
+                    .contentShape(Circle())
                     QuizProgressBar(fraction: Double(answered) / Double(count))
                     Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
                     StreakPill(streak: streak)

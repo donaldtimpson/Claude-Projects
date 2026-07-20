@@ -286,15 +286,20 @@ struct GeoMapDiagram: View {
         return CGRect(x: x, y: y, width: w2, height: h)
     }
 
-    // Fly old → (zoom out over both) → new. `settle` gives the final resting window for a
-    // target: identify uses `settledPort` (centered), locate uses `locatePort` (off-center).
+    // Fly to the next target. When the two are far apart we zoom OUT to a bridge that frames
+    // both, then zoom in — never the reverse. The bridge is built from the union of the two
+    // *viewports* (not the focus points), so it's always at least as large as both endpoints;
+    // that guarantees zoom-out-then-in and kills the awkward zoom-in-then-out (e.g. Italy→Iran,
+    // where the focus-point bridge was smaller than either window). When the target already
+    // sits inside the current view (or vice-versa) no zoom-out is needed, so glide straight.
     private func flyBetween(_ oldId: String, _ newId: String, settle: (String) -> CGRect) {
         let target = settle(newId)
-        guard let a = map.region(oldId)?.focus, let b = map.region(newId)?.focus else {
-            withAnimation(.easeInOut(duration: 0.4)) { displayed = target }
+        let current = displayed == .zero ? target : displayed
+        let bridge = window(around: current.union(target), pad: 1.05)
+        if bridge.width <= max(current.width, target.width) * 1.15 {
+            withAnimation(.easeInOut(duration: 0.5)) { displayed = target }
             return
         }
-        let bridge = window(around: a.union(b), pad: 1.25)   // shows both locations
         withAnimation(.easeIn(duration: 0.42)) { displayed = bridge }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.42) {
             withAnimation(.easeOut(duration: 0.46)) { displayed = target }
