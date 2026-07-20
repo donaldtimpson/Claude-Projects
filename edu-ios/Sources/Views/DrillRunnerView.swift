@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum DrillMode: Hashable { case practice, learn, rapidFire }
+enum DrillMode: String { case practice, learn, rapidFire }
 
 struct DrillRunnerView: View {
     let slug: String
@@ -23,11 +23,13 @@ struct DrillRunnerView: View {
     @State private var revealed = false
     @State private var wasCorrect = false
     @State private var finished = false
-    @State private var mode: DrillMode = .practice
-    @State private var rapidSeconds = 60
+    // Remembered across launches (global last-used config) so you don't reconfigure every
+    // time; sanitized per-drill in setup() when a stored choice isn't available for a drill.
+    @AppStorage("drill_last_mode") private var mode: DrillMode = .practice
+    @AppStorage("drill_last_rapidSeconds") private var rapidSeconds = 60
+    @AppStorage("drill_last_practiceLen") private var practiceLen = 10   // 10, 20, or 0 = All
     @State private var launchedLevel: Int?   // rapid/learn present at this difficulty
     @State private var recentPrompts: [String] = []
-    @State private var practiceLen = 10   // 10, 20, or 0 = All (whole pool at that difficulty)
 
     @State private var count = 10
     private var def: DrillDef? { DrillCatalog.drill(slug: slug) }
@@ -76,6 +78,13 @@ struct DrillRunnerView: View {
     }
 
     // MARK: setup
+    // Drop a remembered choice that this particular drill can't offer (Learn needs a pool;
+    // "All" length needs a finite pool), so the picker never sits on an unavailable value.
+    private func sanitizeConfig(_ def: DrillDef) {
+        if mode == .learn && def.poolItems == nil { mode = .practice }
+        if practiceLen == 0 && def.poolSize == nil { practiceLen = 10 }
+    }
+
     @ViewBuilder private func setup(_ def: DrillDef) -> some View {
         ScrollView {
             VStack(spacing: 18) {
@@ -135,6 +144,7 @@ struct DrillRunnerView: View {
             }
             .padding()
         }
+        .onAppear { sanitizeConfig(def) }
     }
 
     // MARK: locate runner (landscape, full-screen pannable map)
