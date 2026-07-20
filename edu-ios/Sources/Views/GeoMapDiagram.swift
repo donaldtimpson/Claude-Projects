@@ -45,8 +45,9 @@ struct GeoMapDiagram: View {
     // fly). The target is placed OFF-center (deterministically) so it's tappable-large but
     // not given away by being centered.
     var locateTargetId: String? = nil
-
-    private static let aspect: CGFloat = 1.6   // fixed frame aspect: only the map pans, not the layout
+    // Frame aspect (width : height). Identify keeps the portrait-friendly 1.6; the
+    // landscape tap-to-locate screen passes a wide value so the map fills the rotated frame.
+    var aspect: CGFloat = 1.6
 
     @State private var displayed: CGRect = .zero   // the viewport currently drawn (animated)
     @State private var mapSize: CGSize = .zero     // rendered size, for reverse hit-testing
@@ -75,7 +76,7 @@ struct GeoMapDiagram: View {
         let port = currentPort
         MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
                   lakes: map.lakes, neighbors: map.neighbors, fills: fills, ringId: ringId)
-            .aspectRatio(Self.aspect, contentMode: .fit)
+            .aspectRatio(aspect, contentMode: .fit)
             .frame(maxWidth: .infinity)
             .background(MapPalette.sea)
             .background(GeometryReader { g in Color.clear.onAppear { mapSize = g.size }
@@ -113,24 +114,34 @@ struct GeoMapDiagram: View {
         return window(around: target.focus, pad: 3.5)
     }
 
-    // Tap-to-locate viewport: a regional window (bigger than identify's tight zoom, so
-    // there are neighbors and it's not a giveaway) with the target placed OFF-center at a
-    // deterministic spot in [0.3, 0.7] of the frame — always visible with margin, never
-    // obviously centered. Comfortable tap scale; static per target.
+    // Tap-to-locate viewport: a regional window around the target, big enough to give
+    // orienting neighbors without being a giveaway. The window is sized from the TARGET's
+    // own span (not a fraction of the whole atlas) so far-flung insets — Alaska, Hawaii —
+    // no longer inflate every other state's zoom. Per-map min/max keep tiny regions
+    // tappable and huge ones (Russia, Alaska) framed with margin. Target placed OFF-center
+    // at a deterministic spot in [0.3, 0.7] so it's never given away by being centered.
     private func locatePort(_ id: String) -> CGRect {
         let vb = map.viewBox
         guard let f = map.region(id)?.focus else { return vb }
-        let a = Self.aspect
-        var w = max(f.width, f.height * a) * 6
-        w = min(max(w, vb.width * 0.18), vb.width)
-        var h = w / a
-        if h > vb.height { h = vb.height; w = min(h * a, vb.width) }
+        let z = Self.locateZoom[kind] ?? (min: vb.width * 0.18, max: vb.width, mult: 6)
+        var w = (max(f.width, f.height * aspect) * z.mult).clamped(z.min, z.max)
+        w = min(w, vb.width)
+        var h = w / aspect
+        if h > vb.height { h = vb.height; w = min(h * aspect, vb.width) }
         let px = 0.30 + 0.40 * seededFrac(id, 1)
         let py = 0.30 + 0.40 * seededFrac(id, 2)
         let x = w >= vb.width ? vb.minX : min(max(f.midX - px * w, vb.minX), vb.maxX - w)
         let y = h >= vb.height ? vb.minY : min(max(f.midY - py * h, vb.minY), vb.maxY - h)
         return CGRect(x: x, y: y, width: w, height: h)
     }
+
+    // Locate zoom knobs per atlas, in viewBox units (see locatePort). `mult` scales the
+    // target span into a window; min/max clamp it. Tuned so a mid region shows a few
+    // neighbors, tiny ones stay tappable, and outliers (Alaska/Russia) still fit.
+    private static let locateZoom: [GeoMapKind: (min: CGFloat, max: CGFloat, mult: CGFloat)] = [
+        .world: (min: 120, max: 520, mult: 2.5),      // viewBox ~1012 wide
+        .usStates: (min: 42, max: 210, mult: 2.5),    // viewBox ~317 wide; Lower 48 ~148
+    ]
 
     // Deterministic 0..1 from a string (FNV-1a) — stable across launches, unlike hashValue.
     private func seededFrac(_ s: String, _ salt: Int) -> Double {
@@ -139,13 +150,13 @@ struct GeoMapDiagram: View {
         return Double(h % 1000) / 1000.0
     }
 
-    // A window of the fixed aspect around `rect`, scaled by `pad`, centered and clamped.
+    // A window of the frame aspect around `rect`, scaled by `pad`, centered and clamped.
     private func window(around rect: CGRect, pad: CGFloat) -> CGRect {
         let vb = map.viewBox
-        var w = max(rect.width, rect.height * Self.aspect) * pad
+        var w = max(rect.width, rect.height * aspect) * pad
         w = min(max(w, vb.width * 0.16), vb.width)
-        let h = min(w / Self.aspect, vb.height)
-        let w2 = min(w, h * Self.aspect)   // keep aspect if height was capped
+        let h = min(w / aspect, vb.height)
+        let w2 = min(w, h * aspect)   // keep aspect if height was capped
         let cx = rect.midX, cy = rect.midY
         let x = w2 >= vb.width ? vb.minX : min(max(cx - w2 / 2, vb.minX), vb.maxX - w2)
         let y = h >= vb.height ? vb.minY : min(max(cy - h / 2, vb.minY), vb.maxY - h)
@@ -279,6 +290,7 @@ struct MapTapCard: View {
     let targetId: String
     let revealed: Bool
     let tappedId: String?
+    var aspect: CGFloat = 1.6
     let onTap: (String?) -> Void
 
     private var fills: [String: Color] {
@@ -290,7 +302,12 @@ struct MapTapCard: View {
 
     var body: some View {
         GeoMapDiagram(kind: kind, focus: false, highlights: fills,
-                      interactive: !revealed, onTapRegion: onTap, locateTargetId: targetId)
+                      interactive: !revealed, onTapRegion: onTap, locateTargetId: targetId,
+                      aspect: aspect)
             .frame(maxWidth: .infinity)
     }
+}
+
+private extension CGFloat {
+    func clamped(_ lo: CGFloat, _ hi: CGFloat) -> CGFloat { Swift.min(Swift.max(self, lo), hi) }
 }

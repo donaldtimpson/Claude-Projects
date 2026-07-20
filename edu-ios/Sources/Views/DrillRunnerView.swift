@@ -6,6 +6,7 @@ struct DrillRunnerView: View {
     let slug: String
     @EnvironmentObject private var auth: AuthViewModel
     @EnvironmentObject private var queue: WriteQueueManager
+    @Environment(\.dismiss) private var dismiss
     private var userId: String { auth.user?.id ?? "guest" }
 
     @State private var level: Int?
@@ -41,7 +42,7 @@ struct DrillRunnerView: View {
                 } else if let lvl = launchedLevel, mode == .learn {
                     LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
                 } else if let level, let problem {
-                    runner(def: def, level: level, problem: problem)
+                    landscaped(def.landscape) { runner(def: def, level: level, problem: problem) }
                 } else {
                     setup(def)
                 }
@@ -129,6 +130,27 @@ struct DrillRunnerView: View {
                 }
             }
             .padding()
+        }
+    }
+
+    // Wrap the play screen in landscape for map-tap drills (wide maps); pass through
+    // otherwise. In landscape we hide the (portrait) nav bar to give the map the whole
+    // screen and supply our own corner close button, since the nav bar's X goes with it.
+    @ViewBuilder private func landscaped<V: View>(_ on: Bool, @ViewBuilder _ content: () -> V) -> some View {
+        if on {
+            ForcedLandscape { content() }
+                .ignoresSafeArea()
+                .toolbar(.hidden, for: .navigationBar)
+                .overlay(alignment: .topLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(Theme.inkSoft.opacity(0.9))
+                            .padding(10)
+                    }
+                }
+        } else {
+            content()
         }
     }
 
@@ -224,27 +246,31 @@ struct DrillRunnerView: View {
         }
     }
 
-    // Tap-to-locate: prompt + whole map; tap the named region to answer.
+    // Tap-to-locate (landscape): prompt on top, the wide map filling the rest; tap the
+    // named region to answer. No scroll — everything fits the rotated frame. Feedback
+    // overlays the map so it never squeezes the map out.
     @ViewBuilder private func mapTapBody(kind: GeoMapKind, problem: DrillProblem) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                Text("Find \(problem.prompt)")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 8)
-                MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed, tappedId: tappedRegion) { tapped in
-                    guard !revealed else { return }
-                    tappedRegion = tapped
-                    reveal(correct: tapped == problem.dedupeKey)
-                }
+        VStack(spacing: 8) {
+            Text("Find \(problem.prompt)")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(Theme.ink)
+                .frame(maxWidth: .infinity, alignment: .center)
+            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
+                       tappedId: tappedRegion, aspect: 2.1) { tapped in
+                guard !revealed else { return }
+                tappedRegion = tapped
+                reveal(correct: tapped == problem.dedupeKey)
+            }
+            .frame(maxHeight: .infinity)
+            .overlay(alignment: .bottom) {
                 if revealed {
-                    feedback(problem)
-                    tapHint
+                    VStack(spacing: 4) { feedback(problem); tapHint }
+                        .padding(.horizontal, 12).padding(.bottom, 8)
                 }
             }
-            .padding()
         }
+        .padding(.horizontal, 24)
+        .padding(.bottom, 12)
     }
 
     private var tapHint: some View {

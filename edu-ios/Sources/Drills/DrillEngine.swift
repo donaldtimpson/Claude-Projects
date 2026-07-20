@@ -55,6 +55,9 @@ struct DrillDef: Identifiable {
     // the drill can't be Learned (procedural drills with no per-item identity).
     var poolItems: ((Int) -> [String])? = nil
     var problemForItem: ((String, Int) -> DrillProblem)? = nil
+    // Present this drill's play screens in landscape (tap-to-locate maps are far wider
+    // than tall; the rotated screen gives the map its long dimension as width).
+    var landscape: Bool = false
     let generate: (Int) -> DrillProblem
 }
 
@@ -700,7 +703,8 @@ enum DrillCatalog {
         icon: "🧭",
         poolSize: { countryPool($0).count },
         poolItems: { countryPool($0).map(\.id) },
-        problemForItem: { id, _ in locateProblem(GeoAtlas.world.region(id) ?? GeoAtlas.world.askable[0], kind: .world) }
+        problemForItem: { id, _ in locateProblem(GeoAtlas.world.region(id) ?? GeoAtlas.world.askable[0], kind: .world) },
+        landscape: true
     ) { level in
         let pool = countryPool(level)
         let target = pool.isEmpty ? GeoAtlas.world.askable.randomElement()!
@@ -715,7 +719,8 @@ enum DrillCatalog {
         icon: "📍",
         poolSize: { statePool($0).count },
         poolItems: { statePool($0).map(\.id) },
-        problemForItem: { id, _ in locateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0], kind: .usStates) }
+        problemForItem: { id, _ in locateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0], kind: .usStates) },
+        landscape: true
     ) { level in
         let pool = statePool(level)
         let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
