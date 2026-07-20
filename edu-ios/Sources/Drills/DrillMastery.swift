@@ -68,23 +68,99 @@ final class DrillMastery {
         items.reduce(0) { $0 + (box(userId: userId, slug: slug, item: $1) >= Self.masteredBox ? 1 : 0) }
     }
 
-    /// Build a session deck: weakest/newest items first (by box, shuffled within a tier),
-    /// plus a small maintenance sample of already-mastered items so they still surface
-    /// occasionally. If everything is mastered, returns a shuffled review of all items.
-    func buildDeck(userId: String, slug: String, items: [String], maintenance: Int = 4) -> [String] {
-        let b = boxes(userId: userId, slug: slug, items: items)
-        let weak = items.filter { (b[$0] ?? 0) < Self.masteredBox }
-        let mastered = items.filter { (b[$0] ?? 0) >= Self.masteredBox }
-        if weak.isEmpty { return mastered.shuffled() }
-        let weakSorted = Dictionary(grouping: weak) { b[$0] ?? 0 }
-            .sorted { $0.key < $1.key }
-            .flatMap { $0.value.shuffled() }
-        return weakSorted + Array(mastered.shuffled().prefix(maintenance))
+}
+
+// A never-ending Learn session using graduated introduction + expanding rehearsal
+// (Anki-style "learning steps" + a new-item cap). New items are introduced only a few at
+// a time (due reviews take priority), a freshly-seen item recurs soon and then at widening
+// gaps as it sticks, and a miss resets it to the short interval. Scheduling is by "card
+// position from now"; the session never ends — once everything is mastered it keeps
+// cycling all items at long, jittered intervals. Persistent mastery lives in DrillMastery.
+@MainActor
+final class LearnSession {
+    private let userId: String
+    private let slug: String
+    private let store = DrillMastery.shared
+    let items: [String]
+
+    // Reappearance gaps (cards ahead) for successive correct reps; after the last the card
+    // "graduates" (long review interval). A miss sends it back to steps[0].
+    private let steps = [3, 4, 6, 10]
+    private let reviewInterval = 16
+    private let maxLearning = 4          // cap on items still in the learning stage → gentle intro
+
+    private struct Card { var id: String; var due: Int; var step: Int }  // step >= steps.count ⇒ graduated
+    private var scheduled: [Card] = []
+    private var newQueue: [String] = []
+    private var t = 0
+    private var currentId: String?
+
+    private(set) var answered = 0
+    private(set) var correctCount = 0
+
+    init(userId: String, slug: String, items: [String]) {
+        self.userId = userId; self.slug = slug; self.items = items
+        for id in items.shuffled() {
+            let box = store.box(userId: userId, slug: slug, item: id)
+            if box == 0 {
+                newQueue.append(id)                                   // not yet introduced
+            } else if box >= DrillMastery.masteredBox {
+                scheduled.append(Card(id: id, due: Int.random(in: 1...reviewInterval), step: steps.count))
+            } else {
+                scheduled.append(Card(id: id, due: Int.random(in: 1...6), step: min(box, steps.count - 1)))
+            }
+        }
     }
 
-    private func boxes(userId: String, slug: String, items: [String]) -> [String: Int] {
-        var out: [String: Int] = [:]
-        for it in items { out[it] = box(userId: userId, slug: slug, item: it) }
-        return out
+    var masteredCount: Int { store.masteredCount(userId: userId, slug: slug, items: items) }
+    private var learningCount: Int { scheduled.filter { $0.step < steps.count }.count }
+
+    /// The next item to show (nil only if the pool is empty). Never terminates otherwise.
+    func next() -> String? {
+        guard !items.isEmpty else { return nil }
+        t += 1
+        if let i = dueIndex() {                                       // a review is due — highest priority
+            currentId = scheduled[i].id
+        } else if !newQueue.isEmpty && learningCount < maxLearning {  // room to introduce a new one
+            let id = newQueue.removeFirst()
+            scheduled.append(Card(id: id, due: t, step: 0))
+            currentId = id
+        } else if let i = soonestIndex() {                            // nothing due — bring the next one forward
+            currentId = scheduled[i].id
+        }
+        return currentId
+    }
+
+    func grade(correct: Bool) {
+        answered += 1
+        if correct { correctCount += 1 }
+        guard let id = currentId, let i = scheduled.firstIndex(where: { $0.id == id }) else { return }
+        store.grade(userId: userId, slug: slug, item: id, correct: correct)   // persistent mastery
+        if correct {
+            let s = scheduled[i].step
+            if s < steps.count {
+                scheduled[i].due = t + steps[s]
+                scheduled[i].step = s + 1
+            } else {
+                scheduled[i].due = t + reviewInterval + Int.random(in: 0...6)
+            }
+        } else {
+            scheduled[i].step = 0
+            scheduled[i].due = t + steps[0]
+        }
+    }
+
+    private func dueIndex() -> Int? {
+        var best: Int?
+        for (i, c) in scheduled.enumerated() where c.due <= t {
+            if best == nil || c.due < scheduled[best!].due { best = i }
+        }
+        return best
+    }
+    private func soonestIndex() -> Int? {
+        guard !scheduled.isEmpty else { return nil }
+        var best = 0
+        for (i, c) in scheduled.enumerated() where c.due < scheduled[best].due { best = i }
+        return best
     }
 }

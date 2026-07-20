@@ -1,9 +1,10 @@
 import SwiftUI
 
-// Learn mode — adaptive practice-to-mastery over a finite drill's items (on-device SRS,
-// prototype v1). Weakest/newest items come up first; a miss re-queues the item to
-// reappear a few cards later; a correct answer retires it for this session and raises its
-// mastery box (DrillMastery). Mastery persists on-device across sessions.
+// Learn mode — a never-ending, adaptive practice session over a finite drill's items
+// (on-device SRS, prototype v1). New items are introduced gradually (LearnSession:
+// graduated introduction + expanding rehearsal), recently-seen items recur soon even when
+// correct, and each correct answer raises the item's persistent mastery box. The session
+// doesn't stop — you leave with Done; once everything's mastered it keeps cycling.
 struct LearnDrillView: View {
     let def: DrillDef
     let level: Int
@@ -13,38 +14,31 @@ struct LearnDrillView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @EnvironmentObject private var queue: WriteQueueManager
 
-    @State private var items: [String] = []       // full pool at this difficulty
-    @State private var queueIds: [String] = []     // working in-session queue
-    @State private var currentId: String?
+    @State private var session: LearnSession?
     @State private var problem: DrillProblem?
     @State private var choice: Int?
     @State private var revealed = false
     @State private var wasCorrect = false
-    @State private var answered = 0
-    @State private var correctCount = 0
     @State private var masteredNow = 0
+    @State private var total = 0
     @State private var startedAt = Date()
-    @State private var finished = false
-
-    private let store = DrillMastery.shared
 
     var body: some View {
         Group {
-            if finished {
-                summary
-            } else if let problem, case let .choice(options, correctIndex) = problem.input {
+            if let problem, case let .choice(options, correctIndex) = problem.input {
                 play(problem: problem, options: options, correctIndex: correctIndex)
             } else {
                 ProgressView().tint(Theme.gold300)
             }
         }
         .navigationTitle("Learn").navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() } .tint(Theme.gold300) } }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
         .onAppear(perform: setup)
+        .onDisappear(perform: recordSession)
     }
 
-    // MARK: play
     @ViewBuilder private func play(problem: DrillProblem, options: [String], correctIndex: Int) -> some View {
         VStack(spacing: 0) {
             header
@@ -70,20 +64,17 @@ struct LearnDrillView: View {
         }
         .overlay {
             if revealed {
-                Color.clear.contentShape(Rectangle()).onTapGesture { advance() }
+                Color.clear.contentShape(Rectangle()).onTapGesture { present() }
             }
         }
     }
 
     private var header: some View {
         VStack(spacing: 8) {
-            QuizProgressBar(fraction: items.isEmpty ? 0 : Double(masteredNow) / Double(items.count))
-            HStack {
-                Text("Mastered \(masteredNow) / \(items.count)")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
-                Spacer()
-                Text("\(queueIds.count) left").font(.footnote).foregroundStyle(Theme.inkSoft)
-            }
+            QuizProgressBar(fraction: total > 0 ? Double(masteredNow) / Double(total) : 0)
+            Text("Mastered \(masteredNow) / \(total)")
+                .font(.footnote).foregroundStyle(Theme.inkSoft)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()
     }
@@ -101,76 +92,40 @@ struct LearnDrillView: View {
         .transition(.opacity)
     }
 
-    // MARK: summary
-    @ViewBuilder private var summary: some View {
-        VStack(spacing: 18) {
-            Text(masteredNow == items.count && !items.isEmpty ? "✦" : "✓")
-                .font(.system(size: 52)).foregroundStyle(Theme.gold400)
-            Text(masteredNow == items.count && !items.isEmpty ? "All mastered!" : "Session complete")
-                .font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
-            Text("Mastered \(masteredNow) / \(items.count)").foregroundStyle(Theme.ink)
-            Text("\(correctCount) / \(answered) correct this session")
-                .font(.footnote).foregroundStyle(Theme.inkSoft)
-            if !auth.isSignedIn {
-                Text("Sign in to save drill progress and earn badges.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
-            }
-            PrimaryButton(title: "Keep going") { finished = false; setup() }
-            SecondaryButton(title: "Done") { onExit() }
-        }
-        .padding(32)
-    }
-
     // MARK: logic
     private func setup() {
-        items = def.poolItems?(level) ?? []
-        masteredNow = store.masteredCount(userId: userId, slug: def.slug, items: items)
-        queueIds = store.buildDeck(userId: userId, slug: def.slug, items: items)
-        answered = 0; correctCount = 0
+        let s = LearnSession(userId: userId, slug: def.slug, items: def.poolItems?(level) ?? [])
+        session = s
+        total = s.items.count
+        masteredNow = s.masteredCount
         startedAt = Date()
         present()
     }
 
     private func present() {
-        guard let id = queueIds.first else { finish(); return }
-        currentId = id
+        guard let id = session?.next() else { return }
         problem = def.problemForItem?(id, level)
         choice = nil
         revealed = false
     }
 
     private func answer(_ i: Int, correctIndex: Int) {
-        guard !revealed, let id = currentId else { return }
+        guard !revealed, let session else { return }
         let correct = i == correctIndex
         choice = i
         wasCorrect = correct
         withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
-        answered += 1
-        if correct { correctCount += 1; Haptics.success() } else { Haptics.error() }
-        store.grade(userId: userId, slug: def.slug, item: id, correct: correct)
-        masteredNow = store.masteredCount(userId: userId, slug: def.slug, items: items)
+        if correct { Haptics.success() } else { Haptics.error() }
+        session.grade(correct: correct)
+        masteredNow = session.masteredCount
     }
 
-    private func advance() {
-        guard !queueIds.isEmpty else { finish(); return }
-        let id = queueIds.removeFirst()
-        if !wasCorrect {
-            queueIds.insert(id, at: min(4, queueIds.count))   // resurface soon
-        }
-        present()
-    }
-
-    private func finish() {
-        finished = true
-        recordSession()
-    }
-
-    // A Learn session IS practice — record a count-mode session so it feeds the streak
-    // and existing drill badges. Per-item mastery stays on-device.
+    // A Learn session IS practice — record a count-mode session on exit so it feeds the
+    // streak and existing drill badges. Per-item mastery stays on-device.
     private func recordSession() {
-        guard auth.isSignedIn, answered > 0 else { return }
+        guard auth.isSignedIn, let session, session.answered > 0 else { return }
         let body = DrillSessionBody(
-            slug: def.slug, level: level, total: answered, correct: correctCount,
+            slug: def.slug, level: level, total: session.answered, correct: session.correctCount,
             bestStreak: 0, mode: "count",
             durationSec: Int(Date().timeIntervalSince(startedAt)), clientId: makeClientId()
         )
