@@ -173,10 +173,14 @@ struct DrillRunnerView: View {
                                 .onTapGesture { next(def: def, level: level) }
                         }
                     }
-                    .overlay(alignment: .bottom) {
+                    // Compact glass card in the bottom-left so it hugs its text instead of
+                    // spanning the map and hiding the region you tapped. Non-interactive so a
+                    // tap on it still advances via the overlay above.
+                    .overlay(alignment: .bottomLeading) {
                         if revealed {
-                            VStack(spacing: 4) { feedback(problem); tapHint }
-                                .padding(.horizontal, 12).padding(.bottom, 6)
+                            locateFeedback(problem)
+                                .padding(10)
+                                .allowsHitTesting(false)
                         }
                     }
                 }
@@ -187,6 +191,26 @@ struct DrillRunnerView: View {
         .background(Theme.parchment)
         .statusBarHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    // Compact, translucent (liquid-glass) result card for the full-screen locate map — sized
+    // to its text so it doesn't curtain off the map / the region you tapped.
+    @ViewBuilder private func locateFeedback(_ problem: DrillProblem) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(wasCorrect ? "Correct ✓" : "Not quite ✗")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(wasCorrect ? Theme.success : Theme.danger)
+            if let explanation = problem.explanation {
+                Text(explanation).font(.caption).foregroundStyle(Theme.ink)
+            }
+            Text(answered >= count ? "Tap to finish" : "Tap to continue")
+                .font(.caption2).foregroundStyle(Theme.inkSoft)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 9)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.18), lineWidth: 0.5))
+        .frame(maxWidth: 260, alignment: .leading)
+        .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
     }
 
     // MARK: runner

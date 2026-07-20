@@ -57,7 +57,8 @@ struct GeoMapDiagram: View {
     @State private var mapSize: CGSize = .zero     // rendered size, for reverse hit-testing
     @State private var frameAspect: CGFloat = 0    // measured w/h in fill mode
     @State private var gestureBase: CGRect?        // viewport at the start of a pan/pinch
-    @State private var introDone = false           // played the open-wide-then-zoom-in intro
+    @State private var introStarted = false        // kicked off the open-wide-then-zoom-in intro
+    @State private var introDone = false            // …and it has finished settling
 
     // Aspect actually used to build the viewport: the measured frame in fill mode, else the
     // fixed card aspect. Keeps the port's shape identical to the frame → no letterbox.
@@ -81,6 +82,7 @@ struct GeoMapDiagram: View {
     // before the first layout it's the settled/locate window for the starting target.
     private var currentPort: CGRect {
         if displayed != .zero { return displayed }
+        if fillFrame { return map.viewBox }   // start on the whole atlas; the intro zooms in
         if let id = locateTargetId { return locatePort(id) }
         return settledPort(highlightId)
     }
@@ -131,15 +133,19 @@ struct GeoMapDiagram: View {
         guard abs(a - frameAspect) > 0.001 else { return }
         frameAspect = a
         guard gestureBase == nil else { return }
-        if introDone {
-            displayed = portFor(targetId)
-        } else {
-            // First open: show the whole atlas, then glide in to the target for context.
-            introDone = true
-            if displayed == .zero { displayed = map.viewBox }
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.85)) { displayed = portFor(targetId) }
+        if !introStarted {
+            // First open: hold on the whole atlas a beat, then glide in to the target so the
+            // player gets global context before the close-up. GeometryReader reports size a
+            // few times as layout settles; the introStarted/introDone flags keep those extra
+            // callbacks from snapping straight to the target and skipping the animation.
+            introStarted = true
+            displayed = map.viewBox
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                withAnimation(.easeInOut(duration: 1.0)) { displayed = portFor(targetId) }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { introDone = true }
             }
+        } else if introDone {
+            displayed = portFor(targetId)   // aspect changed after settle → re-frame
         }
     }
 
@@ -151,7 +157,30 @@ struct GeoMapDiagram: View {
         let tx = (mapSize.width - port.width * scale) / 2 - port.minX * scale
         let ty = (mapSize.height - port.height * scale) / 2 - port.minY * scale
         let atlas = CGPoint(x: (loc.x - tx) / scale, y: (loc.y - ty) / scale)
-        onTapRegion?(map.regions.first { $0.path.contains(atlas) }?.id)
+        onTapRegion?(regionAt(atlas))
+    }
+
+    // Which region a tap belongs to. Point-in-polygon first; if the tap landed just off a
+    // shape (common on thin/coastal targets like Italy, or a small state), snap to the
+    // nearest region within a tolerance so a near-miss still counts. Beyond that → nil (a
+    // clear miss into open sea).
+    private func regionAt(_ atlas: CGPoint) -> String? {
+        if let hit = map.regions.first(where: { $0.path.contains(atlas) }) { return hit.id }
+        let tol = currentPort.width * 0.055
+        var best: (id: String, d: CGFloat)?
+        for r in map.regions {
+            let d = distance(atlas, to: r.focus)
+            if best == nil || d < best!.d { best = (r.id, d) }
+        }
+        if let best, best.d <= tol { return best.id }
+        return nil
+    }
+
+    // Distance from a point to a rect (0 if inside).
+    private func distance(_ p: CGPoint, to r: CGRect) -> CGFloat {
+        let dx = max(r.minX - p.x, 0, p.x - r.maxX)
+        let dy = max(r.minY - p.y, 0, p.y - r.maxY)
+        return (dx * dx + dy * dy).squareRoot()
     }
 
     // Drag to pan, pinch to zoom — so the map never feels frozen and you can look around
