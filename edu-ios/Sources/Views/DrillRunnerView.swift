@@ -1,9 +1,12 @@
 import SwiftUI
 
+enum DrillMode: Hashable { case practice, learn, rapidFire }
+
 struct DrillRunnerView: View {
     let slug: String
     @EnvironmentObject private var auth: AuthViewModel
     @EnvironmentObject private var queue: WriteQueueManager
+    private var userId: String { auth.user?.id ?? "guest" }
 
     @State private var level: Int?
     @State private var problem: DrillProblem?
@@ -18,9 +21,9 @@ struct DrillRunnerView: View {
     @State private var revealed = false
     @State private var wasCorrect = false
     @State private var finished = false
-    @State private var rapid = false
+    @State private var mode: DrillMode = .practice
     @State private var rapidSeconds = 60
-    @State private var rapidLevel: Int?
+    @State private var launchedLevel: Int?   // rapid/learn present at this difficulty
     @State private var recentPrompts: [String] = []
     @State private var practiceLen = 10   // 10, 20, or 0 = All (whole pool at that difficulty)
 
@@ -32,8 +35,10 @@ struct DrillRunnerView: View {
             if let def {
                 if finished {
                     summaryView
-                } else if let rapidLevel {
-                    RapidFireView(def: def, level: rapidLevel, seconds: rapidSeconds) { self.rapidLevel = nil }
+                } else if let lvl = launchedLevel, mode == .rapidFire {
+                    RapidFireView(def: def, level: lvl, seconds: rapidSeconds) { launchedLevel = nil }
+                } else if let lvl = launchedLevel, mode == .learn {
+                    LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
                 } else if let level, let problem {
                     runner(def: def, level: level, problem: problem)
                 } else {
@@ -71,30 +76,32 @@ struct DrillRunnerView: View {
                 Text(def.icon).font(.system(size: 64))
                 Text(def.blurb).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
 
-                Picker("Mode", selection: $rapid) {
-                    Text("Practice").tag(false)
-                    Text("Rapid Fire").tag(true)
+                Picker("Mode", selection: $mode) {
+                    Text("Practice").tag(DrillMode.practice)
+                    if def.poolItems != nil { Text("Learn").tag(DrillMode.learn) }
+                    Text("Rapid Fire").tag(DrillMode.rapidFire)
                 }
                 .pickerStyle(.segmented)
 
-                if rapid {
+                switch mode {
+                case .rapidFire:
                     Picker("Length", selection: $rapidSeconds) {
                         Text("60s").tag(60)
                         Text("120s").tag(120)
                     }
                     .pickerStyle(.segmented)
-                } else {
+                case .practice:
                     Picker("Length", selection: $practiceLen) {
                         Text("10").tag(10)
                         Text("20").tag(20)
                         if def.poolSize != nil { Text("All").tag(0) }
                     }
                     .pickerStyle(.segmented)
+                case .learn:
+                    EmptyView()
                 }
 
-                Text(rapid ? "Beat the clock — build a combo for a high score."
-                           : practiceLen == 0 ? "Every one, once, at your pace."
-                           : "\(practiceLen) problems at your pace.")
+                Text(modeBlurb)
                     .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
 
                 Text("Choose a difficulty")
@@ -102,11 +109,20 @@ struct DrillRunnerView: View {
                 ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
                     VStack(spacing: 4) {
                         SecondaryButton(title: label) { start(def: def, level: value) }
-                        if rapid {
+                        switch mode {
+                        case .rapidFire:
                             let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
                             Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
                                 .font(.caption2)
                                 .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
+                        case .learn:
+                            let items = def.poolItems?(value) ?? []
+                            let m = DrillMastery.shared.masteredCount(userId: userId, slug: slug, items: items)
+                            Text("\(m) / \(items.count) mastered")
+                                .font(.caption2)
+                                .foregroundStyle(m > 0 ? Theme.gold400 : Theme.inkSoft)
+                        case .practice:
+                            EmptyView()
                         }
                     }
                 }
@@ -254,19 +270,28 @@ struct DrillRunnerView: View {
     // Rapid Fire best-score key (per drill, difficulty, sprint length) — matches RapidFireView.
     private func rapidBestKey(_ level: Int, _ seconds: Int) -> String { "rapidbest_\(slug)_L\(level)_\(seconds)" }
 
-    private func start(def: DrillDef, level value: Int) {
-        if rapid {
-            rapidLevel = value
-            return
+    private var modeBlurb: String {
+        switch mode {
+        case .rapidFire: return "Beat the clock — build a combo for a high score."
+        case .learn: return "Practice until you've mastered them all — weak ones come back more."
+        case .practice: return practiceLen == 0 ? "Every one, once, at your pace." : "\(practiceLen) problems at your pace."
         }
-        // Resolve the session length: 10/20, or "All" = the whole pool at this difficulty.
-        count = practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen
-        // Fresh shuffle bag so the session (esp. "All") walks every region once, in order.
-        DrillCatalog.resetBag(slug: slug, level: value)
-        level = value
-        startedAt = Date()
-        answered = 0; correctCount = 0; streak = 0; bestStreak = 0
-        generate(def: def, level: value)
+    }
+
+    private func start(def: DrillDef, level value: Int) {
+        switch mode {
+        case .rapidFire, .learn:
+            launchedLevel = value   // presented by RapidFireView / LearnDrillView
+        case .practice:
+            // Resolve the session length: 10/20, or "All" = the whole pool at this difficulty.
+            count = practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen
+            // Fresh shuffle bag so the session (esp. "All") walks every region once, in order.
+            DrillCatalog.resetBag(slug: slug, level: value)
+            level = value
+            startedAt = Date()
+            answered = 0; correctCount = 0; streak = 0; bestStreak = 0
+            generate(def: def, level: value)
+        }
     }
 
     private func generate(def: DrillDef, level value: Int) {

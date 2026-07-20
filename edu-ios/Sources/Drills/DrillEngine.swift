@@ -49,6 +49,11 @@ struct DrillDef: Identifiable {
     // Number of distinct questions available at a difficulty, for drills with a finite
     // pool (map drills). Enables Practice's "All" length; nil ⇒ procedurally endless.
     var poolSize: ((Int) -> Int)? = nil
+    // Learn mode (spaced-repetition) support. `poolItems` lists the stable item ids at a
+    // difficulty; `problemForItem` builds the problem for a specific item id. Both nil ⇒
+    // the drill can't be Learned (procedural drills with no per-item identity).
+    var poolItems: ((Int) -> [String])? = nil
+    var problemForItem: ((String, Int) -> DrillProblem)? = nil
     let generate: (Int) -> DrillProblem
 }
 
@@ -609,44 +614,55 @@ enum DrillCatalog {
     private static let easyRemove: Set<String> = ["Kenya", "Democratic Republic of the Congo", "Ethiopia"]
     private static let easyAdd: Set<String> = ["Iceland", "Ireland", "Greece"]
 
+    // Build a map-drill problem for a specific target region: 3 same-group distractors
+    // (continent for countries, US region for states), shuffled options, flag on each.
+    // `flags` = emoji flag baked into the label (countries) or image names (states).
+    private static func mapProblem(target: GeoRegion, pool all: [GeoRegion], kind: GeoMapKind,
+                                   emojiFlag: Bool, imageFlag: Bool) -> DrillProblem {
+        let sameGroup = all.filter { $0.continent == target.continent && $0.id != target.id }
+        var distractors: [GeoRegion] = []
+        var seen: Set<String> = [target.id]
+        for r in sameGroup.shuffled() + all.shuffled() {
+            if seen.insert(r.id).inserted { distractors.append(r) }
+            if distractors.count == 3 { break }
+        }
+        func label(_ r: GeoRegion) -> String {
+            emojiFlag && !r.flag.isEmpty ? "\(r.flag) \(r.name)" : r.name
+        }
+        let picks = ([target] + distractors).shuffled()
+        return DrillProblem(
+            prompt: "",   // the map IS the question; the nav title names the drill
+            input: .choice(options: picks.map(label), correctIndex: picks.firstIndex { $0.id == target.id } ?? 0),
+            explanation: "\(label(target)) — \(target.continent).",
+            diagram: .geoMap(kind: kind, highlightId: target.id),
+            dedupeKey: target.id,
+            forceGrid: true,
+            optionImages: imageFlag ? picks.map { "us-\(($0.iso ?? "").lowercased())" } : nil
+        )
+    }
+
+    private static func countryProblem(_ target: GeoRegion) -> DrillProblem {
+        mapProblem(target: target, pool: GeoAtlas.world.askable, kind: .world, emojiFlag: true, imageFlag: false)
+    }
+    private static func stateProblem(_ target: GeoRegion) -> DrillProblem {
+        mapProblem(target: target, pool: GeoAtlas.usStates.askable, kind: .usStates, emojiFlag: false, imageFlag: true)
+    }
+
     static let nameCountry = DrillDef(
         slug: "name-country",
         title: "Name the Country",
         blurb: "Identify the highlighted country on the world map.",
         icon: "🌍",
-        poolSize: { countryPool($0).count }
+        poolSize: { countryPool($0).count },
+        poolItems: { countryPool($0).map(\.id) },
+        problemForItem: { id, _ in countryProblem(GeoAtlas.world.region(id) ?? GeoAtlas.world.askable[0]) }
     ) { level in
-        // Difficulty = how obscure the target can be (see countryPool): L1 famous, L2
-        // adds rank 3, L3 the whole askable set (166).
-        let all = GeoAtlas.world.askable
+        // Difficulty = how obscure the target can be (see countryPool). Draw from a
+        // shuffle bag so a quiz cycles the whole pool before repeating.
         let pool = countryPool(level)
-        // Draw from a shuffle bag (like powers/squares/logs): cycle through the whole
-        // pool before any country repeats, so a quiz can't ask one twice.
-        let target = pool.isEmpty ? all.randomElement()!
+        let target = pool.isEmpty ? GeoAtlas.world.askable.randomElement()!
             : pool[draw("name-country-L\(level)") { Array(0..<pool.count) }]
-
-        // Distractors: prefer the same continent (plausible), then fill from anywhere.
-        let sameContinent = all.filter { $0.continent == target.continent && $0.id != target.id }
-        var distractors: [GeoRegion] = []
-        var seen: Set<String> = [target.id]
-        for r in sameContinent.shuffled() + all.shuffled() {
-            if seen.insert(r.id).inserted { distractors.append(r) }
-            if distractors.count == 3 { break }
-        }
-        // Each option carries the country's flag emoji (🇨🇳 China) — extra recognition
-        // dimension, no bundled images.
-        func label(_ r: GeoRegion) -> String { r.flag.isEmpty ? r.name : "\(r.flag) \(r.name)" }
-        let picks = ([target] + distractors).shuffled()
-        let options = picks.map(label)
-        let correctIndex = picks.firstIndex { $0.id == target.id } ?? 0
-        return DrillProblem(
-            prompt: "",   // the map IS the question; the nav title already says the drill name
-            input: .choice(options: options, correctIndex: correctIndex),
-            explanation: "\(label(target)) — \(target.continent).",
-            diagram: .geoMap(kind: .world, highlightId: target.id),
-            dedupeKey: target.id,
-            forceGrid: true     // always the 2×2 grid (flag stacked over the name)
-        )
+        return countryProblem(target)
     }
 
     // MARK: - Name the State (choice; identify the highlighted U.S. state, with rivers)
@@ -655,33 +671,14 @@ enum DrillCatalog {
         title: "Name the State",
         blurb: "Identify the highlighted U.S. state — major rivers drawn in for context.",
         icon: "🗺️",
-        poolSize: { statePool($0).count }
+        poolSize: { statePool($0).count },
+        poolItems: { statePool($0).map(\.id) },
+        problemForItem: { id, _ in stateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0]) }
     ) { level in
-        // Difficulty by size tier (rank 1 = biggest/easiest … 3 = smallest, see statePool).
-        let all = GeoAtlas.usStates.askable
+        // Difficulty by size tier (see statePool).
         let pool = statePool(level)
-        let target = pool.isEmpty ? all.randomElement()!
+        let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
             : pool[draw("name-state-L\(level)") { Array(0..<pool.count) }]
-
-        // Distractors prefer the same U.S. region (stored in `continent`).
-        let sameRegion = all.filter { $0.continent == target.continent && $0.id != target.id }
-        var distractors: [GeoRegion] = []
-        var seen: Set<String> = [target.id]
-        for r in sameRegion.shuffled() + all.shuffled() {
-            if seen.insert(r.id).inserted { distractors.append(r) }
-            if distractors.count == 3 { break }
-        }
-        let picks = ([target] + distractors).shuffled()
-        let options = picks.map(\.name)
-        let correctIndex = picks.firstIndex { $0.id == target.id } ?? 0
-        return DrillProblem(
-            prompt: "",
-            input: .choice(options: options, correctIndex: correctIndex),
-            explanation: "\(target.name) — \(target.continent).",
-            diagram: .geoMap(kind: .usStates, highlightId: target.id),
-            dedupeKey: target.id,
-            forceGrid: true,
-            optionImages: picks.map { "us-\(($0.iso ?? "").lowercased())" }   // state flag PNGs
-        )
+        return stateProblem(target)
     }
 }
