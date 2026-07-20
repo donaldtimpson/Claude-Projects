@@ -34,7 +34,7 @@ struct RootView: View {
 struct SplashView: View {
     var body: some View {
         VStack(spacing: 16) {
-            Text("The Lyceum")
+            Text("The Timpson Lyceum")
                 .font(.display(38))
                 .kerning(2)
                 .foregroundStyle(Theme.gold300)

@@ -24,7 +24,7 @@ struct AuthView: View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(spacing: 8) {
-                    Text("The Lyceum")
+                    Text("The Timpson Lyceum")
                         .font(.display(38))
                         .kerning(2)
                         .foregroundStyle(Theme.gold300)

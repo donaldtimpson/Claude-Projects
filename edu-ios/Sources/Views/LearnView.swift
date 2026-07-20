@@ -13,7 +13,7 @@ struct LearnView: View {
 
     var body: some View {
         content
-            .navigationTitle("The Lyceum")
+            .navigationTitle("Timpson Lyceum")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
