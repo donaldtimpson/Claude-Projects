@@ -41,6 +41,10 @@ struct GeoMapDiagram: View {
     // When true, taps are hit-tested to a region id and reported (tap-to-locate).
     var interactive: Bool = false
     var onTapRegion: ((String?) -> Void)? = nil
+    // Tap-to-locate: zoom to an approximate regional window around this target (static, no
+    // fly). The target is placed OFF-center (deterministically) so it's tappable-large but
+    // not given away by being centered.
+    var locateTargetId: String? = nil
 
     private static let aspect: CGFloat = 1.6   // fixed frame aspect: only the map pans, not the layout
 
@@ -59,8 +63,15 @@ struct GeoMapDiagram: View {
     private var fills: [String: Color] { highlights ?? [highlightId: MapPalette.highlight] }
     private var ringId: String? { highlights == nil ? highlightId : nil }
 
+    // The viewport actually drawn: locate uses a static off-center regional window;
+    // identify uses the animated fly viewport.
+    private var currentPort: CGRect {
+        if let id = locateTargetId { return locatePort(id) }
+        return displayed == .zero ? settledPort(highlightId) : displayed
+    }
+
     var body: some View {
-        let port = displayed == .zero ? settledPort(highlightId) : displayed
+        let port = currentPort
         MapCanvas(port: port, viewBox: map.viewBox, regions: map.regions, rivers: map.rivers,
                   lakes: map.lakes, neighbors: map.neighbors, fills: fills, ringId: ringId)
             .aspectRatio(Self.aspect, contentMode: .fit)
@@ -78,7 +89,7 @@ struct GeoMapDiagram: View {
 
     // Reverse the port→screen transform, then point-in-polygon test each region.
     private func handleTap(_ loc: CGPoint) {
-        let port = displayed == .zero ? settledPort(highlightId) : displayed
+        let port = currentPort
         guard mapSize.width > 0, mapSize.height > 0, port.width > 0, port.height > 0 else { return }
         let scale = min(mapSize.width / port.width, mapSize.height / port.height)
         let tx = (mapSize.width - port.width * scale) / 2 - port.minX * scale
@@ -94,6 +105,32 @@ struct GeoMapDiagram: View {
     private func settledPort(_ id: String) -> CGRect {
         guard focus, let target = map.region(id) else { return map.viewBox }
         return window(around: target.focus, pad: 3.5)
+    }
+
+    // Tap-to-locate viewport: a regional window (bigger than identify's tight zoom, so
+    // there are neighbors and it's not a giveaway) with the target placed OFF-center at a
+    // deterministic spot in [0.3, 0.7] of the frame — always visible with margin, never
+    // obviously centered. Comfortable tap scale; static per target.
+    private func locatePort(_ id: String) -> CGRect {
+        let vb = map.viewBox
+        guard let f = map.region(id)?.focus else { return vb }
+        let a = Self.aspect
+        var w = max(f.width, f.height * a) * 6
+        w = min(max(w, vb.width * 0.18), vb.width)
+        var h = w / a
+        if h > vb.height { h = vb.height; w = min(h * a, vb.width) }
+        let px = 0.30 + 0.40 * seededFrac(id, 1)
+        let py = 0.30 + 0.40 * seededFrac(id, 2)
+        let x = w >= vb.width ? vb.minX : min(max(f.midX - px * w, vb.minX), vb.maxX - w)
+        let y = h >= vb.height ? vb.minY : min(max(f.midY - py * h, vb.minY), vb.maxY - h)
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+
+    // Deterministic 0..1 from a string (FNV-1a) — stable across launches, unlike hashValue.
+    private func seededFrac(_ s: String, _ salt: Int) -> Double {
+        var h: UInt64 = 1469598103934665603 &+ UInt64(salt) &* 1099511628211
+        for b in s.utf8 { h = (h ^ UInt64(b)) &* 1099511628211 }
+        return Double(h % 1000) / 1000.0
     }
 
     // A window of the fixed aspect around `rect`, scaled by `pad`, centered and clamped.
@@ -247,7 +284,7 @@ struct MapTapCard: View {
 
     var body: some View {
         GeoMapDiagram(kind: kind, focus: false, highlights: fills,
-                      interactive: !revealed, onTapRegion: onTap)
+                      interactive: !revealed, onTapRegion: onTap, locateTargetId: targetId)
             .frame(maxWidth: .infinity)
     }
 }
