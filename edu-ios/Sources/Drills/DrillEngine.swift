@@ -712,7 +712,7 @@ enum DrillCatalog {
         slug: "locate-state",
         title: "Where's the State?",
         blurb: "Find the named U.S. state — tap it.",
-        icon: "🧭",
+        icon: "📍",
         poolSize: { statePool($0).count },
         poolItems: { statePool($0).map(\.id) },
         problemForItem: { id, _ in locateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0], kind: .usStates) }

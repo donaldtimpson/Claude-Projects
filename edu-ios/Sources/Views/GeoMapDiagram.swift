@@ -63,11 +63,12 @@ struct GeoMapDiagram: View {
     private var fills: [String: Color] { highlights ?? [highlightId: MapPalette.highlight] }
     private var ringId: String? { highlights == nil ? highlightId : nil }
 
-    // The viewport actually drawn: locate uses a static off-center regional window;
-    // identify uses the animated fly viewport.
+    // The viewport actually drawn. Both modes fly between questions via `displayed`;
+    // before the first layout it's the settled/locate window for the starting target.
     private var currentPort: CGRect {
+        if displayed != .zero { return displayed }
         if let id = locateTargetId { return locatePort(id) }
-        return displayed == .zero ? settledPort(highlightId) : displayed
+        return settledPort(highlightId)
     }
 
     var body: some View {
@@ -83,8 +84,13 @@ struct GeoMapDiagram: View {
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(MapPalette.frame, lineWidth: 1))
             .gesture(SpatialTapGesture().onEnded { v in if interactive { handleTap(v.location) } },
                      including: interactive ? .gesture : .none)
-            .onAppear { if displayed == .zero { displayed = settledPort(highlightId) } }
-            .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId) }
+            .onAppear { if displayed == .zero { displayed = currentPort } }
+            .onChange(of: highlightId) { oldId, newId in flyBetween(oldId, newId, settle: settledPort) }
+            // Locate mode: fly between the off-center regional windows so the player keeps
+            // spatial context across questions instead of jump-cutting to a new region.
+            .onChange(of: locateTargetId) { oldId, newId in
+                if let newId { flyBetween(oldId ?? "", newId, settle: locatePort) }
+            }
     }
 
     // Reverse the port→screen transform, then point-in-polygon test each region.
@@ -146,10 +152,10 @@ struct GeoMapDiagram: View {
         return CGRect(x: x, y: y, width: w2, height: h)
     }
 
-    // Fly old → (zoom out over both) → new.
-    private func flyBetween(_ oldId: String, _ newId: String) {
-        guard focus else { displayed = map.viewBox; return }
-        let target = settledPort(newId)
+    // Fly old → (zoom out over both) → new. `settle` gives the final resting window for a
+    // target: identify uses `settledPort` (centered), locate uses `locatePort` (off-center).
+    private func flyBetween(_ oldId: String, _ newId: String, settle: (String) -> CGRect) {
+        let target = settle(newId)
         guard let a = map.region(oldId)?.focus, let b = map.region(newId)?.focus else {
             withAnimation(.easeInOut(duration: 0.4)) { displayed = target }
             return
