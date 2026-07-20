@@ -150,7 +150,7 @@ struct DrillRunnerView: View {
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Theme.ink)
+                            .foregroundStyle(Theme.gold300)
                             .frame(width: 42, height: 42)
                             .background(.ultraThinMaterial, in: Circle())
                             .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 0.5))
