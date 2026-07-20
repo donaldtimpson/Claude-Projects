@@ -262,7 +262,7 @@ struct GeoMapDiagram: View {
     // Less aggressive now that you can pan/zoom: a wider default window shows more neighbors
     // so the answer isn't obvious, and you scroll in for a closer look if you want one.
     private static let locateZoom: [GeoMapKind: (min: CGFloat, max: CGFloat, mult: CGFloat)] = [
-        .world: (min: 260, max: 680, mult: 4.0),      // viewBox ~1012 wide
+        .world: (min: 380, max: 700, mult: 4.0),      // viewBox ~1012 wide
         .usStates: (min: 60, max: 240, mult: 3.0),    // viewBox ~317 wide; Lower 48 ~148
     ]
 
