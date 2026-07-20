@@ -118,18 +118,18 @@ struct DrillsView: View {
         .lyceumCard()
     }
 
-    // Compact recent chip — content hugs the card (no floating in a big fixed box).
+    // Recent chip — a fixed, uniform card (content centered) so the strip reads evenly.
     private func recentTile(_ d: DrillDef) -> some View {
         VStack(spacing: 6) {
-            Text(d.icon).font(.system(size: 42))
-            Text(d.title).font(.caption.weight(.medium)).foregroundStyle(Theme.ink)
-                .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
+            Text(d.icon).font(.system(size: 40))
+            Text(d.title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.75)
             if let sub = masterySubtitle(d, userId: userId) {
-                Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
+                Text(sub).font(.caption).foregroundStyle(Theme.gold400)
             }
         }
-        .frame(width: 104)
-        .padding(.vertical, 12).padding(.horizontal, 8)
+        .padding(8)
+        .frame(width: 128, height: 124)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
