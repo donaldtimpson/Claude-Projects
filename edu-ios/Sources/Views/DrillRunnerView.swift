@@ -149,7 +149,7 @@ struct DrillRunnerView: View {
                     // result card. (The nav bar is hidden on this full-screen map.)
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.body.weight(.semibold))
                             .foregroundStyle(Theme.gold300)
                             .frame(width: 42, height: 42)
                             .background(.ultraThinMaterial, in: Circle())
