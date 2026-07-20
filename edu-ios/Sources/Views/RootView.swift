@@ -34,7 +34,7 @@ struct RootView: View {
 struct SplashView: View {
     var body: some View {
         VStack(spacing: 16) {
-            Text("The Timpson Lyceum")
+            Text("The Timpson\nLyceum")
                 .font(.display(38))
                 .kerning(2)
                 .multilineTextAlignment(.center)
