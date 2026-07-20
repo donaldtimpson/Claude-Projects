@@ -1,5 +1,12 @@
 import SwiftUI
 
+// A drill category you can drill into (top-level row → pushed list of drills).
+struct DrillCategoryRoute: Hashable {
+    let title: String
+    let icon: String
+    let slugs: [String]
+}
+
 struct DrillsView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var active: ActiveDrill?
@@ -11,17 +18,14 @@ struct DrillsView: View {
         recentsCSV.split(separator: ",").compactMap { DrillCatalog.drill(slug: String($0)) }
     }
 
-    // Browse sections — a presentation grouping kept view-side so DrillEngine stays lean.
-    // A drill not listed here still appears under "More" (defensive).
-    private static let sections: [(title: String, slugs: [String])] = [
-        ("Mental Math", ["arithmetic", "percentages", "order-of-operations", "powers-of-two",
-                         "squares", "gcd", "primes", "sequences", "logarithms"]),
-        ("Trigonometry", ["unit-circle", "vectors"]),
-        ("Calculus", ["derivative", "integral"]),
-        ("Linear Algebra", ["determinant", "solve-system", "matrix-vector", "dot-product"]),
-        ("Geography", ["name-country", "name-state", "locate-country", "locate-state"]),
+    private static let categories: [DrillCategoryRoute] = [
+        .init(title: "Mental Math", icon: "🧮", slugs: ["arithmetic", "percentages", "order-of-operations",
+              "powers-of-two", "squares", "gcd", "primes", "sequences", "logarithms"]),
+        .init(title: "Trigonometry", icon: "📐", slugs: ["unit-circle", "vectors"]),
+        .init(title: "Calculus", icon: "∫", slugs: ["derivative", "integral"]),
+        .init(title: "Linear Algebra", icon: "▦", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"]),
+        .init(title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state"]),
     ]
-    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         ScrollView {
@@ -29,11 +33,11 @@ struct DrillsView: View {
                 browse
             } else {
                 let results = DrillCatalog.all.filter { matches($0, query) }
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(spacing: 10) {
                     if results.isEmpty {
                         Text("No drills match “\(query)”.").foregroundStyle(Theme.inkSoft).padding(.top, 40)
                     }
-                    grid(results)
+                    ForEach(results) { d in DrillRow(drill: d, userId: userId) { open(d.slug) } }
                 }
                 .padding()
             }
@@ -42,6 +46,9 @@ struct DrillsView: View {
         .navigationTitle("Practice Drills")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "Search drills")
+        .navigationDestination(for: DrillCategoryRoute.self) { route in
+            CategoryDrillsView(route: route, userId: userId, open: open)
+        }
         .fullScreenCover(item: $active) { drill in
             NavigationStack {
                 DrillRunnerView(slug: drill.id)
@@ -55,28 +62,25 @@ struct DrillsView: View {
         }
     }
 
-    // MARK: browse (search empty)
+    // MARK: browse (search empty) — Continue strip + category rows to drill into
     @ViewBuilder private var browse: some View {
         VStack(alignment: .leading, spacing: 22) {
             if !recents.isEmpty {
                 sectionHeader("Continue")
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) { ForEach(recents) { recentTile($0) } }
-                        .padding(.horizontal, 2)
+                    HStack(spacing: 12) {
+                        ForEach(recents) { d in
+                            Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 2)
                 }
             }
-            ForEach(Self.sections, id: \.title) { section in
-                let drills = section.slugs.compactMap { DrillCatalog.drill(slug: $0) }
-                if !drills.isEmpty {
-                    sectionHeader(section.title)
-                    grid(drills)
+            sectionHeader("Categories")
+            VStack(spacing: 10) {
+                ForEach(Self.categories, id: \.title) { cat in
+                    NavigationLink(value: cat) { categoryRow(cat) }.buttonStyle(.plain)
                 }
-            }
-            let categorized = Set(Self.sections.flatMap(\.slugs))
-            let extras = DrillCatalog.all.filter { !categorized.contains($0.slug) }
-            if !extras.isEmpty {
-                sectionHeader("More")
-                grid(extras)
             }
         }
         .padding()
@@ -86,48 +90,30 @@ struct DrillsView: View {
         Text(title).font(.display(15)).kerning(1).foregroundStyle(Theme.gold400)
     }
 
-    private func grid(_ drills: [DrillDef]) -> some View {
-        LazyVGrid(columns: cols, spacing: 12) { ForEach(drills) { tile($0) } }
-    }
-
-    // MARK: tiles
-    private func tile(_ d: DrillDef) -> some View {
-        Button { open(d.slug) } label: {
-            VStack(spacing: 8) {
-                Text(d.icon).font(.system(size: 34))
-                Text(d.title).font(.subheadline).foregroundStyle(Theme.ink)
-                    .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
-                if let sub = masterySubtitle(d) {
-                    Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
-                }
+    private func categoryRow(_ cat: DrillCategoryRoute) -> some View {
+        HStack(spacing: 12) {
+            Text(cat.icon).font(.system(size: 32))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(cat.title).font(.headline).foregroundStyle(Theme.ink)
+                Text("\(cat.slugs.count) drills").font(.subheadline).foregroundStyle(Theme.inkSoft)
             }
-            .frame(maxWidth: .infinity, minHeight: 92)
-            .lyceumCard()
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(Theme.inkSoft)
         }
-        .buttonStyle(.plain)
+        .lyceumCard()
     }
 
     private func recentTile(_ d: DrillDef) -> some View {
-        Button { open(d.slug) } label: {
-            VStack(spacing: 6) {
-                Text(d.icon).font(.system(size: 30))
-                Text(d.title).font(.caption).foregroundStyle(Theme.ink)
-                    .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
-                if let sub = masterySubtitle(d) {
-                    Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
-                }
+        VStack(spacing: 6) {
+            Text(d.icon).font(.system(size: 30))
+            Text(d.title).font(.caption).foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
+            if let sub = masterySubtitle(d, userId: userId) {
+                Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
             }
-            .frame(width: 116, height: 96)
-            .lyceumCard()
         }
-        .buttonStyle(.plain)
-    }
-
-    // "N/total mastered" for Learn-capable drills (their whole pool), else nil.
-    private func masterySubtitle(_ d: DrillDef) -> String? {
-        guard let items = d.poolItems?(3) else { return nil }
-        let m = DrillMastery.shared.masteredCount(userId: userId, slug: d.slug, items: items)
-        return m > 0 ? "\(m)/\(items.count) mastered" : nil
+        .frame(width: 116, height: 96)
+        .lyceumCard()
     }
 
     // MARK: logic
@@ -139,9 +125,62 @@ struct DrillsView: View {
     }
 
     private func matches(_ d: DrillDef, _ q: String) -> Bool {
-        let category = Self.sections.first { $0.slugs.contains(d.slug) }?.title ?? ""
+        let category = Self.categories.first { $0.slugs.contains(d.slug) }?.title ?? ""
         return "\(d.title) \(d.blurb) \(category)".lowercased().contains(q.lowercased())
     }
+}
+
+// A pushed screen listing one category's drills as full-width rows.
+struct CategoryDrillsView: View {
+    let route: DrillCategoryRoute
+    let userId: String
+    let open: (String) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                ForEach(route.slugs.compactMap { DrillCatalog.drill(slug: $0) }) { d in
+                    DrillRow(drill: d, userId: userId) { open(d.slug) }
+                }
+            }
+            .padding()
+        }
+        .background(Theme.parchment)
+        .navigationTitle(route.title)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// The shared full-width drill row (icon + title + blurb + optional mastery).
+struct DrillRow: View {
+    let drill: DrillDef
+    let userId: String
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                Text(drill.icon).font(.system(size: 34))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(drill.title).font(.headline).foregroundStyle(Theme.ink)
+                    Text(drill.blurb).font(.subheadline).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                    if let sub = masterySubtitle(drill, userId: userId) {
+                        Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .lyceumCard()
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// "N/total mastered" for Learn-capable drills (their whole pool), else nil.
+@MainActor func masterySubtitle(_ d: DrillDef, userId: String) -> String? {
+    guard let items = d.poolItems?(3) else { return nil }
+    let m = DrillMastery.shared.masteredCount(userId: userId, slug: d.slug, items: items)
+    return m > 0 ? "\(m)/\(items.count) mastered" : nil
 }
 
 struct ActiveDrill: Identifiable { let id: String }
