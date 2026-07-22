@@ -173,10 +173,10 @@ struct DrillRunnerView: View {
                 }
                 if case let .mapTap(kind) = problem.input {
                     HStack(spacing: 8) {
-                        locateFlag(kind: kind, id: problem.dedupeKey ?? "")
                         Text("Find \(problem.prompt)")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(Theme.ink)
+                        locateFlag(kind: kind, id: problem.dedupeKey ?? "")
                     }
                     MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
                                tappedId: tappedRegion, fillFrame: true) { tapped in
