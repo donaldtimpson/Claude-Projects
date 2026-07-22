@@ -103,7 +103,12 @@ export async function recordDrillSessionFor(userId: string, s: DrillSummary): Pr
   const sessionCount = await db.drillAttempt.count({ where: { userId } });
   if (sessionCount >= 25) keys.push("drill-sessions-25");
 
-  return grantFreshBadges(userId, keys);
+  const drillBadges = await grantFreshBadges(userId, keys);
+  // Drills now count toward the learning streak, so re-evaluate rule badges too — a day
+  // kept alive by a drill can be what earns a streak badge (streak-7/30/100).
+  const streakBadges = await syncAchievements(userId);
+  const seen = new Set(drillBadges.map((b) => b.key));
+  return [...drillBadges, ...streakBadges.filter((b) => !seen.has(b.key))];
 }
 
 // Called when a daily-review session ends. Direct-grants the SRS badges: Clean
