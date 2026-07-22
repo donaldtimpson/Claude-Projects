@@ -171,10 +171,13 @@ struct DrillRunnerView: View {
                     Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
                     StreakPill(streak: streak)
                 }
-                Text("Find \(problem.prompt)")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
                 if case let .mapTap(kind) = problem.input {
+                    HStack(spacing: 8) {
+                        locateFlag(kind: kind, id: problem.dedupeKey ?? "")
+                        Text("Find \(problem.prompt)")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.ink)
+                    }
                     MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
                                tappedId: tappedRegion, fillFrame: true) { tapped in
                         guard !revealed else { return }
@@ -207,6 +210,25 @@ struct DrillRunnerView: View {
         .background(Theme.parchment)
         .statusBarHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+    }
+
+    // Flag beside the "Find X" prompt: an emoji flag for countries (rendered in a system
+    // font so it composes), a bundled PNG for U.S. states (whose iso is a postal code, not a
+    // country code — the emoji path would show the wrong flag).
+    @ViewBuilder private func locateFlag(kind: GeoMapKind, id: String) -> some View {
+        switch kind {
+        case .world:
+            let flag = GeoAtlas.world.region(id)?.flag ?? ""
+            if !flag.isEmpty { Text(flag).font(.system(size: 26)) }
+        case .usStates:
+            if let iso = GeoAtlas.usStates.region(id)?.iso,
+               let img = FlagImage.load("us-\(iso.lowercased())") {
+                Image(uiImage: img).resizable().scaledToFit()
+                    .frame(height: 22)
+                    .clipShape(RoundedRectangle(cornerRadius: 3))
+                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.line, lineWidth: 0.5))
+            }
+        }
     }
 
     // Compact, translucent (liquid-glass) result card for the full-screen locate map — sized
