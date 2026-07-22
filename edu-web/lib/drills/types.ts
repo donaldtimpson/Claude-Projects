@@ -25,10 +25,21 @@ export type NumericInput = {
 };
 
 // Multiple choice (unit circle — pick the exact value). Options render as Renderables.
+// `optionImages` (parallel to options) shows a flag/image above each label — e.g. US state
+// flags in "Name the State", which have no emoji. null = no image for that option.
 export type ChoiceInput = {
   kind: "choice";
   options: Renderable[];
   correctIndex: number;
+  optionImages?: (string | null)[];
+};
+
+// Tap-to-locate: the map IS the input. The player renders an interactive map (geography
+// drills) and grades a click — correct when the clicked region id === targetId.
+export type MapTapInput = {
+  kind: "mapTap";
+  map: "world" | "us";
+  targetId: string;
 };
 
 // Several typed numeric fields (vectors — vₓ and v_y). Each graded independently;
@@ -38,12 +49,14 @@ export type FieldsInput = {
   fields: { label: Renderable; answer: number; tolerance?: number; unit?: string }[];
 };
 
-export type DrillInput = NumericInput | ChoiceInput | FieldsInput;
+export type DrillInput = NumericInput | ChoiceInput | FieldsInput | MapTapInput;
 
 // ---- Optional diagram (pure data; DrillDiagram renders inline SVG) ----------
 export type DiagramSpec =
   | { kind: "vector"; magnitude: number; angleDeg: number; component?: "x" | "y" }
-  | { kind: "unit-circle"; angleRad: number; fn: "sin" | "cos" | "tan" };
+  | { kind: "unit-circle"; angleRad: number; fn: "sin" | "cos" | "tan" }
+  // Identify drills ("Name the Country/State"): the map with one region highlighted.
+  | { kind: "geoMap"; map: "world" | "us"; highlightId: string };
 
 // ---- A generated problem ----------------------------------------------------
 export type Problem = {

@@ -35,6 +35,8 @@ export default function DrillDiagram({
   spec: DiagramSpec;
   className?: string;
 }) {
+  // Geography maps render via GeoMap, not this fixed-size math-diagram SVG.
+  if (spec.kind === "geoMap") return null;
   return (
     <svg
       viewBox={`0 0 ${SIZE} ${SIZE}`}

@@ -14,12 +14,16 @@ import { derivativeDrill, integralDrill } from "./generators/calculus";
 import {
   determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
 } from "./generators/linear-algebra";
+import {
+  nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
+} from "./generators/geography";
 
 export const DRILLS: DrillDef[] = [
   arithmeticDrill, percentagesDrill, orderOfOpsDrill, powersOfTwoDrill, squaresDrill,
   gcdDrill, primesDrill, sequencesDrill, logarithmsDrill, derivativeDrill, integralDrill,
   determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
   unitCircleDrill, vectorsDrill,
+  nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
 ];
 
 export function drillBySlug(slug: string): DrillDef | undefined {
