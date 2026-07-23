@@ -47,10 +47,27 @@ struct RapidFireView: View {
     }
 
     var body: some View {
-        ZStack {
-            Theme.parchment.ignoresSafeArea()
-            flashColor.ignoresSafeArea().animation(.easeOut(duration: 0.15), value: flash)
-            if finished { results } else { play }
+        Group {
+            if !finished, let p = problem, case let .mapTap(kind) = p.input {
+                // Locate: the shared full-screen landscape map (same as Practice / Learn), with
+                // Rapid Fire's own top bar + flash/timing. No result card — the green/red map
+                // reveal (revealed: locked) is the feedback, exactly as before.
+                LocateScreen(
+                    kind: kind, targetId: p.dedupeKey ?? "", prompt: p.prompt,
+                    revealed: locked, tappedId: tappedRegion, flash: flash, showCard: false,
+                    onTap: { tapped in
+                        guard !locked else { return }
+                        tappedRegion = tapped
+                        submit(correct: tapped == p.dedupeKey)
+                    }
+                ) { topBar }
+            } else {
+                ZStack {
+                    Theme.parchment.ignoresSafeArea()
+                    flashColor.ignoresSafeArea().animation(.easeOut(duration: 0.15), value: flash)
+                    if finished { results } else { play }
+                }
+            }
         }
         .navigationTitle("Rapid Fire")
         .navigationBarTitleDisplayMode(.inline)
@@ -87,20 +104,8 @@ struct RapidFireView: View {
                         }
                         .padding()
                     }
-                case let .mapTap(kind):
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            Text("Find \(problem.prompt)")
-                                .font(.system(size: 26, weight: .bold, design: .rounded))
-                                .foregroundStyle(Theme.ink).frame(maxWidth: .infinity).padding(.top, 12)
-                            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: locked, tappedId: tappedRegion) { tapped in
-                                guard !locked else { return }
-                                tappedRegion = tapped
-                                submit(correct: tapped == problem.dedupeKey)
-                            }
-                        }
-                        .padding()
-                    }
+                case .mapTap:
+                    EmptyView()   // locate is handled full-screen (landscape) in `body`
                 case let .numeric(_, unit):
                     VStack(spacing: 16) {
                         Spacer(minLength: 0)

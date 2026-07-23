@@ -4,6 +4,9 @@ import UIKit
 
 @main
 struct LyceumApp: App {
+    // Lets the tap-to-locate map allow landscape rotation while the rest of the app stays
+    // portrait (the delegate reports OrientationGate.mask).
+    @UIApplicationDelegateAdaptor(OrientationAppDelegate.self) private var orientationDelegate
     @StateObject private var auth = AuthViewModel()
     @StateObject private var queue = WriteQueueManager.shared
     private let monitor = NWPathMonitor()

@@ -191,16 +191,21 @@ struct DrillRunnerView: View {
         .onAppear { sanitizeConfig(def) }
     }
 
-    // MARK: locate runner (landscape, full-screen pannable map)
-    // Tap-to-locate plays in landscape (the maps are far wider than tall). Own top bar
-    // (close + progress + streak) since the nav bar and status bar are hidden for a clean
-    // full-screen map that stays within the safe area. The map fills the frame and pans.
+    // MARK: locate runner — the shared full-screen landscape map (same as Learn / Rapid Fire).
     @ViewBuilder private func locateRunner(def: DrillDef, level: Int, problem: DrillProblem) -> some View {
-        ForcedLandscape {
-            VStack(spacing: 6) {
+        if case let .mapTap(kind) = problem.input {
+            LocateScreen(
+                kind: kind, targetId: problem.dedupeKey ?? "", prompt: problem.prompt,
+                revealed: revealed, tappedId: tappedRegion, flash: flash,
+                resultOK: wasCorrect, resultDetail: wasCorrect ? nil : problem.explanation,
+                onAdvanceTap: { next(def: def, level: level) },
+                onTap: { tapped in
+                    guard !revealed else { return }
+                    tappedRegion = tapped
+                    reveal(correct: tapped == problem.dedupeKey)
+                }
+            ) {
                 HStack(spacing: 12) {
-                    // Big liquid-glass close button — generous hit target, matches the glass
-                    // result card. (The nav bar is hidden on this full-screen map.)
                     Button { dismiss() } label: {
                         Image(systemName: "xmark")
                             .font(.body.weight(.semibold))
@@ -215,61 +220,6 @@ struct DrillRunnerView: View {
                     Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
                     StreakPill(streak: streak)
                 }
-                if case let .mapTap(kind) = problem.input {
-                    HStack(spacing: 8) {
-                        Text("Find \(problem.prompt)")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
-                            .foregroundStyle(Theme.ink)
-                        locateFlag(kind: kind, id: problem.dedupeKey ?? "")
-                    }
-                    MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
-                               tappedId: tappedRegion, fillFrame: true) { tapped in
-                        guard !revealed else { return }
-                        tappedRegion = tapped
-                        reveal(correct: tapped == problem.dedupeKey)
-                    }
-                    .frame(maxHeight: .infinity)
-                    // After answering, tap anywhere on the map to skip ahead early (it also
-                    // auto-advances); the green target / red wrong-tap stays visible until then.
-                    .overlay {
-                        if revealed {
-                            Color.clear.contentShape(Rectangle())
-                                .onTapGesture { next(def: def, level: level) }
-                        }
-                    }
-                    // Compact result card in the bottom-left — the map shows WHERE it was.
-                    .overlay(alignment: .bottomLeading) {
-                        if revealed {
-                            DrillResultCard(ok: wasCorrect, detail: wasCorrect ? nil : problem.explanation)
-                                .padding(10)
-                                .allowsHitTesting(false)
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-        }
-        .background(Theme.parchment)
-        .statusBarHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    // Flag beside the "Find X" prompt: an emoji flag for countries (rendered in a system
-    // font so it composes), a bundled PNG for U.S. states (whose iso is a postal code, not a
-    // country code — the emoji path would show the wrong flag).
-    @ViewBuilder private func locateFlag(kind: GeoMapKind, id: String) -> some View {
-        switch kind {
-        case .world:
-            let flag = GeoAtlas.world.region(id)?.flag ?? ""
-            if !flag.isEmpty { Text(flag).font(.system(size: 26)) }
-        case .usStates:
-            if let iso = GeoAtlas.usStates.region(id)?.iso,
-               let img = FlagImage.load("us-\(iso.lowercased())") {
-                Image(uiImage: img).resizable().scaledToFit()
-                    .frame(height: 22)
-                    .clipShape(RoundedRectangle(cornerRadius: 3))
-                    .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.line, lineWidth: 0.5))
             }
         }
     }

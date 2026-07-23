@@ -31,32 +31,40 @@ struct LearnDrillView: View {
     private var isLocate: Bool { if case .mapTap = problem?.input { return true }; return false }
 
     var body: some View {
-        ZStack {
-            Theme.parchment.ignoresSafeArea()
-            DrillFlash(correct: flash)   // behind the content, like Rapid Fire
-            Group {
-                if let problem {
-                    VStack(spacing: 0) {
-                        header
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 22) {
-                                content(problem)
-                                if revealed {
-                                    DrillResultCard(ok: wasCorrect, detail: wasCorrect ? nil : problem.explanation)
-                                }
-                            }
-                            .padding()
+        Group {
+            if let problem {
+                if case let .mapTap(kind) = problem.input {
+                    // Locate: the shared full-screen landscape map (same as Practice / Rapid Fire).
+                    LocateScreen(
+                        kind: kind, targetId: problem.dedupeKey ?? "", prompt: problem.prompt,
+                        revealed: revealed, tappedId: tappedId, flash: flash,
+                        resultOK: wasCorrect, resultDetail: wasCorrect ? nil : problem.explanation,
+                        onAdvanceTap: { present() },
+                        onTap: { tapped in
+                            guard !revealed else { return }
+                            tappedId = tapped
+                            grade(correct: tapped == problem.dedupeKey)
                         }
-                    }
-                    // Locate holds the reveal — tap anywhere to skip ahead early.
-                    .overlay {
-                        if revealed {
-                            Color.clear.contentShape(Rectangle()).onTapGesture { present() }
+                    ) {
+                        HStack(spacing: 12) {
+                            Button { onExit() } label: {
+                                Image(systemName: "xmark")
+                                    .font(.body.weight(.semibold)).foregroundStyle(Theme.gold300)
+                                    .frame(width: 42, height: 42)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 0.5))
+                                    .shadow(color: .black.opacity(0.2), radius: 6, y: 2)
+                            }
+                            .contentShape(Circle())
+                            QuizProgressBar(fraction: total > 0 ? Double(masteredNow) / Double(total) : 0)
+                            Text("Mastered \(masteredNow) / \(total)").font(.caption).foregroundStyle(Theme.inkSoft)
                         }
                     }
                 } else {
-                    ProgressView().tint(Theme.gold300)
+                    identifyBody(problem)
                 }
+            } else {
+                ProgressView().tint(Theme.gold300)
             }
         }
         .navigationTitle("Learn").navigationBarTitleDisplayMode(.inline)
@@ -66,30 +74,31 @@ struct LearnDrillView: View {
         .onDisappear(perform: recordSession)
     }
 
-    @ViewBuilder private func content(_ problem: DrillProblem) -> some View {
-        switch problem.input {
-        case let .choice(options, correctIndex):
-            if let diagram = problem.diagram {
-                DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
+    // Identify ("Name the…") stays portrait: highlighted map + flag options, Rapid-Fire blink.
+    @ViewBuilder private func identifyBody(_ problem: DrillProblem) -> some View {
+        ZStack {
+            Theme.parchment.ignoresSafeArea()
+            DrillFlash(correct: flash)
+            VStack(spacing: 0) {
+                header
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        if let diagram = problem.diagram {
+                            DrillDiagram(spec: diagram).frame(maxWidth: .infinity)
+                        }
+                        if case let .choice(options, correctIndex) = problem.input {
+                            let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
+                            OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
+                                          revealed: false, grid: useGrid, optionImages: problem.optionImages) { i in
+                                guard !locked else { return }
+                                choice = i
+                                grade(correct: i == correctIndex)
+                            }
+                        }
+                    }
+                    .padding()
+                }
             }
-            let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
-            OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
-                          revealed: false, grid: useGrid, optionImages: problem.optionImages) { i in
-                guard !locked else { return }
-                choice = i
-                grade(correct: i == correctIndex)
-            }
-        case let .mapTap(kind):
-            Text("Find \(problem.prompt)")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .center)
-            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed, tappedId: tappedId) { tapped in
-                guard !revealed else { return }
-                tappedId = tapped
-                grade(correct: tapped == problem.dedupeKey)
-            }
-        case .numeric:
-            EmptyView()   // Learn is only offered for map drills
         }
     }
 
