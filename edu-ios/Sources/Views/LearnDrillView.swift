@@ -19,9 +19,9 @@ struct LearnDrillView: View {
     @State private var problem: DrillProblem?
     @State private var choice: Int?
     @State private var tappedId: String?
-    @State private var toast: DrillResultToast?   // instant-advance result popover (web-style)
-    @State private var toastSeq = 0
-    @State private var locked = false              // guard so a fast double-tap can't skip an item
+    @State private var revealed = false
+    @State private var wasCorrect = false
+    @State private var flash: Bool?                // green/red background blink on an answer
     @State private var masteredNow = 0
     @State private var total = 0
     @State private var startedAt = Date()
@@ -34,9 +34,17 @@ struct LearnDrillView: View {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 22) {
                             content(problem)
-                            if let toast { DrillToastCard(toast: toast) }
+                            if revealed {
+                                DrillResultCard(ok: wasCorrect, detail: wasCorrect ? nil : problem.explanation)
+                            }
                         }
                         .padding()
+                    }
+                }
+                // Tap anywhere after answering to skip ahead early (it also auto-advances).
+                .overlay {
+                    if revealed {
+                        Color.clear.contentShape(Rectangle()).onTapGesture { present() }
                     }
                 }
             } else {
@@ -47,13 +55,9 @@ struct LearnDrillView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() }.tint(Theme.gold300) } }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
+        .overlay { DrillFlash(correct: flash).animation(.easeOut(duration: 0.18), value: flash) }
         .onAppear(perform: setup)
         .onDisappear(perform: recordSession)
-        .task(id: toast?.seq) {
-            guard let t = toast else { return }
-            try? await Task.sleep(nanoseconds: t.ok ? 900_000_000 : 1_800_000_000)
-            if toast?.seq == t.seq { withAnimation { toast = nil } }
-        }
     }
 
     @ViewBuilder private func content(_ problem: DrillProblem) -> some View {
@@ -64,8 +68,8 @@ struct LearnDrillView: View {
             }
             let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
             OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
-                          revealed: false, grid: useGrid, optionImages: problem.optionImages) { i in
-                guard !locked else { return }
+                          revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
+                guard !revealed else { return }
                 choice = i
                 grade(correct: i == correctIndex)
             }
@@ -73,8 +77,8 @@ struct LearnDrillView: View {
             Text("Find \(problem.prompt)")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(Theme.ink).frame(maxWidth: .infinity, alignment: .center)
-            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: false, tappedId: tappedId) { tapped in
-                guard !locked else { return }
+            MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed, tappedId: tappedId) { tapped in
+                guard !revealed else { return }
                 tappedId = tapped
                 grade(correct: tapped == problem.dedupeKey)
             }
@@ -108,18 +112,27 @@ struct LearnDrillView: View {
         problem = def.problemForItem?(id, level)
         choice = nil
         tappedId = nil
+        revealed = false
+        flash = nil
     }
 
     private func grade(correct: Bool) {
+        wasCorrect = correct
+        withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         if correct { Haptics.success() } else { Haptics.error() }
         session?.grade(correct: correct)
         masteredNow = session?.masteredCount ?? masteredNow
-        // Web parity: pop the result as a transient toast and advance instantly. Advancing
-        // one runloop later keeps `locked` true through this touch batch (no double-answer).
-        toastSeq += 1
-        toast = DrillResultToast(seq: toastSeq, ok: correct, detail: correct ? nil : problem?.explanation)
-        locked = true
-        DispatchQueue.main.async { present(); locked = false }
+        // Blink the background, keep the green/red reveal up for a beat, then auto-advance.
+        // `revealed` guards a double-answer; an early tap skips; the token guards a stale advance.
+        withAnimation(.easeOut(duration: 0.12)) { flash = correct }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+            withAnimation(.easeOut(duration: 0.3)) { if revealed { flash = nil } }
+        }
+        let token = problem?.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.7 : 1.4)) {
+            guard revealed, problem?.id == token else { return }
+            present()
+        }
     }
 
     // A Learn session IS practice — record a count-mode session on exit so it feeds the
