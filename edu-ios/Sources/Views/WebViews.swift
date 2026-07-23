@@ -78,6 +78,41 @@ struct YouTubePlayer: UIViewRepresentable {
     }
 }
 
+// Shared Markdown + KaTeX rendering for lecture notes, used by BOTH the in-app note view
+// and the PDF export so they can't drift.
+//
+// Uses `marked-katex-extension`, which tokenizes `$…$`/`$$…$$` as math BEFORE markdown
+// escaping runs. Plain `marked` (what we used before) CommonMark-escapes ASCII punctuation
+// inside math — turning `\,` into a literal comma, `\\` line breaks into a single `\`, and
+// `\%` into a KaTeX comment — because it doesn't know about math delimiters. The extension
+// hands KaTeX the RAW math source instead, mirroring the web app's remark-math pipeline for
+// exact parity. Scripts load synchronously in order (marked, then katex, then the extension,
+// which reads `window.katex` at load); no auto-render pass is needed.
+enum NoteWeb {
+    static let head = """
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'>
+    <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/marked-katex-extension@5/lib/index.umd.js'></script>
+    """
+
+    // Renders the JSON-encoded markdown `payload` into #c with math-aware marked, then posts
+    // the content height to the named WKScriptMessageHandler once fonts have settled. `pre`
+    // runs before parsing (e.g. the PDF sets its title). `throwOnError:false` keeps a bad
+    // equation from blanking the whole note.
+    static func script(payload: String, handler: String, delayMs: Int, pre: String = "") -> String {
+        """
+        <script>
+        var md=\(payload);
+        \(pre)
+        try{marked.use(markedKatex({throwOnError:false}));document.getElementById('c').innerHTML=marked.parse(md);}
+        catch(e){document.getElementById('c').textContent=md;}
+        window.addEventListener('load',function(){setTimeout(function(){window.webkit.messageHandlers.\(handler).postMessage(document.body.scrollHeight);},\(delayMs));});
+        </script>
+        """
+    }
+}
+
 // Renders Markdown + KaTeX math (same $…$ / $$…$$ content as the web app) and
 // reports its content height back so it can size itself in a ScrollView.
 struct MathWebView: UIViewRepresentable {
@@ -104,10 +139,7 @@ struct MathWebView: UIViewRepresentable {
         return """
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'>
-        <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
-        <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>
-        <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js'></script>
+        \(NoteWeb.head)
         <style>html,body{margin:0;background:transparent;color:#f5ecd8;
         font:16px/1.6 Georgia,'EB Garamond',serif;padding:2px}
         h1,h2,h3{color:#cfa135;font-family:Georgia,serif}
@@ -118,13 +150,8 @@ struct MathWebView: UIViewRepresentable {
         .katex{color:#f5ecd8}
         .katex-display{overflow-x:auto;overflow-y:hidden}</style></head>
         <body><div id='c'></div>
-        <script>
-        var md=\(payload);
-        try{document.getElementById('c').innerHTML=window.marked?marked.parse(md):md}catch(e){document.getElementById('c').textContent=md}
-        function done(){try{if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})}catch(e){}
-        window.webkit.messageHandlers.h.postMessage(document.body.scrollHeight)}
-        window.addEventListener('load',function(){setTimeout(done,250)});
-        </script></body></html>
+        \(NoteWeb.script(payload: payload, handler: "h", delayMs: 250))
+        </body></html>
         """
     }
 

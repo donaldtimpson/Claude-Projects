@@ -86,10 +86,7 @@ final class NotesPDFExporter: NSObject, WKScriptMessageHandler {
         return """
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'>
-        <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
-        <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>
-        <script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js'></script>
+        \(NoteWeb.head)
         <style>
           html,body{margin:0;background:#ffffff;color:#1a1512;
             font:16px/1.65 Georgia,'Times New Roman',serif;padding:36px}
@@ -106,18 +103,9 @@ final class NotesPDFExporter: NSObject, WKScriptMessageHandler {
         <body>
         <h1 class='doc-title' id='t'></h1>
         <div id='c'></div>
-        <script>
-        var md=\(mdPayload), title=\(titlePayload);
-        document.getElementById('t').textContent=title;
-        try{document.getElementById('c').innerHTML=window.marked?marked.parse(md):md}
-        catch(e){document.getElementById('c').textContent=md}
-        function done(){
-          try{if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[
-            {left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})}catch(e){}
-          window.webkit.messageHandlers.rendered.postMessage(document.body.scrollHeight);
-        }
-        window.addEventListener('load',function(){setTimeout(done,300)});
-        </script></body></html>
+        \(NoteWeb.script(payload: mdPayload, handler: "rendered", delayMs: 300,
+                          pre: "document.getElementById('t').textContent=\(titlePayload);"))
+        </body></html>
         """
     }
 }
