@@ -50,9 +50,6 @@ export default function DrillPlayer({
   const [done, setDone] = useState(false);
   const [remaining, setRemaining] = useState(mode.type === "timed" ? mode.seconds : 0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  // Tap-to-locate reveal: after a click, briefly color the correct region (green) and any
-  // wrong click (red) before advancing — you need to SEE where it was to learn it.
-  const [mapReveal, setMapReveal] = useState<{ picked: string; target: string } | null>(null);
 
   const startedAt = useRef(Date.now());
   const savedRef = useRef(false);
@@ -148,31 +145,11 @@ export default function DrillPlayer({
     commit(idx === current.input.correctIndex, current.explanation ?? null);
   }
 
-  // Tap-to-locate: record the click, reveal correct/wrong on the map for a beat, then
-  // advance. Unlike typed/choice drills (which jump immediately) the map holds so you can
-  // see the answer's location — a deliberate platform difference for the geography drills.
+  // Tap-to-locate: grade the click and advance immediately, same as choice — the
+  // correctness toast lingers as an overlay while the next question's map flies in.
   function pickRegion(id: string) {
-    if (lockRef.current || current.input.kind !== "mapTap") return;
-    lockRef.current = true;
-    const target = current.input.targetId;
-    const correct = id === target;
-    setMapReveal({ picked: id, target });
-    const newResults = [...results, correct];
-    setResults(newResults);
-    const ns = correct ? streak + 1 : 0;
-    setStreak(ns);
-    setBestStreak((b) => Math.max(b, ns));
-    if (mode.type === "timed" && correct) setScore((sc) => sc + 10 + (ns - 1) * 2);
-    setFeedback({ correct, answer: correct ? null : current.explanation ?? null, seq: ++seqRef.current });
-    const reachedCount = mode.type === "count" && newResults.length >= mode.n;
-    setTimeout(
-      () => {
-        setMapReveal(null);
-        if (reachedCount) setDone(true);
-        else loadNext(); // current.id changes → the effect clears lockRef
-      },
-      correct ? 750 : 1600,
-    );
+    if (current.input.kind !== "mapTap") return;
+    commit(id === current.input.targetId, current.explanation ?? null);
   }
 
   function submitTyped(e: React.FormEvent) {
@@ -194,7 +171,6 @@ export default function DrillPlayer({
     setBestStreak(0);
     setScore(0);
     setFeedback(null);
-    setMapReveal(null);
     setRemaining(mode.type === "timed" ? mode.seconds : 0);
     startedAt.current = Date.now();
     loadNext();
@@ -380,8 +356,6 @@ export default function DrillPlayer({
               map={input.map}
               interactive
               targetId={input.targetId}
-              revealed={!!mapReveal}
-              pickedId={mapReveal?.picked ?? null}
               onPick={pickRegion}
               className="w-full max-w-3xl mx-auto"
             />
