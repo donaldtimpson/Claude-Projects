@@ -2,6 +2,32 @@ import SwiftUI
 
 enum DrillMode: String { case practice, learn, rapidFire }
 
+// A transient "Correct / Not quite" result popover for the geography drills, which advance
+// instantly (like the web version). `seq` bumps per answer so the auto-dismiss timer restarts.
+struct DrillResultToast: Equatable { let seq: Int; let ok: Bool; let detail: String? }
+
+// Compact, translucent (liquid-glass) result toast — correct/not-quite plus the answer,
+// sized to its text, fading on its own as the quiz moves to the next question.
+struct DrillToastCard: View {
+    let toast: DrillResultToast
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(toast.ok ? "Correct ✓" : "Not quite ✗")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(toast.ok ? Theme.success : Theme.danger)
+            if let detail = toast.detail {
+                Text(detail).font(.caption).foregroundStyle(Theme.ink)
+            }
+        }
+        .padding(.horizontal, 12).padding(.vertical, 9)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.18), lineWidth: 0.5))
+        .frame(maxWidth: 260, alignment: .leading)
+        .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
+        .transition(.opacity)
+    }
+}
+
 struct DrillRunnerView: View {
     let slug: String
     @EnvironmentObject private var auth: AuthViewModel
@@ -20,9 +46,13 @@ struct DrillRunnerView: View {
     @State private var numericEntry = ""
     @State private var choice: Int?
     @State private var tappedRegion: String?   // tap-to-locate: the region the user tapped
-    @State private var revealed = false
+    @State private var revealed = false   // math drills: hold the result until "tap to continue"
     @State private var wasCorrect = false
     @State private var finished = false
+    // Geography drills advance instantly and pop the result as a transient toast instead.
+    @State private var toast: DrillResultToast?
+    @State private var toastSeq = 0
+    @State private var locked = false     // one-shot guard so an instant-advance can't double-fire
     // Remembered across launches (global last-used config) so you don't reconfigure every
     // time; sanitized per-drill in setup() when a stored choice isn't available for a drill.
     @AppStorage("drill_last_mode") private var mode: DrillMode = .practice
@@ -61,6 +91,13 @@ struct DrillRunnerView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
         .task { await syncBests() }
+        // Auto-dismiss the geography result toast a beat after it appears (correct fades
+        // fast; a miss lingers a little longer so you can read the answer).
+        .task(id: toast?.seq) {
+            guard let t = toast else { return }
+            try? await Task.sleep(nanoseconds: t.ok ? 900_000_000 : 1_800_000_000)
+            if toast?.seq == t.seq { withAnimation { toast = nil } }
+        }
     }
 
     // Pull the server's synced Rapid Fire bests into local storage (merge by max),
@@ -178,26 +215,18 @@ struct DrillRunnerView: View {
                             .foregroundStyle(Theme.ink)
                         locateFlag(kind: kind, id: problem.dedupeKey ?? "")
                     }
-                    MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
+                    MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: false,
                                tappedId: tappedRegion, fillFrame: true) { tapped in
-                        guard !revealed else { return }
+                        guard !locked else { return }
                         tappedRegion = tapped
                         reveal(correct: tapped == problem.dedupeKey)
                     }
                     .frame(maxHeight: .infinity)
-                    // Tap the map to advance only after answering (options/selection are off then).
-                    .overlay {
-                        if revealed {
-                            Color.clear.contentShape(Rectangle())
-                                .onTapGesture { next(def: def, level: level) }
-                        }
-                    }
-                    // Compact glass card in the bottom-left so it hugs its text instead of
-                    // spanning the map and hiding the region you tapped. Non-interactive so a
-                    // tap on it still advances via the overlay above.
+                    // Result toast: a compact glass card in the bottom-left that fades on its
+                    // own while the next question's map is already flying in underneath.
                     .overlay(alignment: .bottomLeading) {
-                        if revealed {
-                            locateFeedback(problem)
+                        if let toast {
+                            DrillToastCard(toast: toast)
                                 .padding(10)
                                 .allowsHitTesting(false)
                         }
@@ -229,24 +258,6 @@ struct DrillRunnerView: View {
                     .overlay(RoundedRectangle(cornerRadius: 3).stroke(Theme.line, lineWidth: 0.5))
             }
         }
-    }
-
-    // Compact, translucent (liquid-glass) result card for the full-screen locate map — sized
-    // to its text so it doesn't curtain off the map / the region you tapped.
-    @ViewBuilder private func locateFeedback(_ problem: DrillProblem) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(wasCorrect ? "Correct ✓" : "Not quite ✗")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(wasCorrect ? Theme.success : Theme.danger)
-            if let explanation = problem.explanation {
-                Text(explanation).font(.caption).foregroundStyle(Theme.ink)
-            }
-        }
-        .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.18), lineWidth: 0.5))
-        .frame(maxWidth: 260, alignment: .leading)
-        .shadow(color: .black.opacity(0.25), radius: 8, y: 2)
     }
 
     // MARK: runner
@@ -327,14 +338,17 @@ struct DrillRunnerView: View {
                 // name); otherwise short answers tile 2×2 and long ones fall back to a list.
                 let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
                 OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
-                    guard !revealed else { return }
+                    guard !revealed, !locked else { return }
                     choice = i
                     reveal(correct: i == correctIndex)
                 }
 
-                if revealed {
+                if isGeo {
+                    // Instant-advance drills: the correct/not-quite card is a transient toast.
+                    if let toast { DrillToastCard(toast: toast) }
+                } else if revealed {
                     feedback(problem)
-                    if !isGeo { tapHint }
+                    tapHint
                 }
             }
             .padding()
@@ -475,7 +489,6 @@ struct DrillRunnerView: View {
 
     private func reveal(correct: Bool) {
         wasCorrect = correct
-        withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         answered += 1
         if correct {
             correctCount += 1; streak += 1; bestStreak = max(bestStreak, streak)
@@ -484,13 +497,20 @@ struct DrillRunnerView: View {
             streak = 0
             Haptics.error()
         }
-        // Geography: show the result for a beat, then move on automatically (no second tap).
-        // An early tap still skips ahead; the token guards against advancing a stale problem.
-        if isGeo, let def, let lvl = level {
-            let token = problem?.id
-            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.6 : 1.3)) {
-                if revealed, problem?.id == token { next(def: def, level: lvl) }
+        if isGeo {
+            // Web parity: pop the result as a transient toast and move to the next question
+            // right away. Advancing one runloop later keeps `locked` true through this touch
+            // batch so a fast double-tap can't answer twice.
+            toastSeq += 1
+            toast = DrillResultToast(seq: toastSeq, ok: correct, detail: correct ? nil : problem?.explanation)
+            locked = true
+            if let def, let lvl = level {
+                DispatchQueue.main.async { next(def: def, level: lvl); locked = false }
+            } else {
+                locked = false
             }
+        } else {
+            withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         }
     }
 
