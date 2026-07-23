@@ -19,43 +19,49 @@ struct LearnDrillView: View {
     @State private var problem: DrillProblem?
     @State private var choice: Int?
     @State private var tappedId: String?
-    @State private var revealed = false
+    @State private var revealed = false            // locate: hold the green/red map reveal
     @State private var wasCorrect = false
     @State private var flash: Bool?                // green/red background blink on an answer
+    @State private var locked = false              // identify (Rapid-Fire-style) double-tap guard
     @State private var masteredNow = 0
     @State private var total = 0
     @State private var startedAt = Date()
 
+    private var isIdentify: Bool { if case .geoMap? = problem?.diagram { return true }; return false }
+    private var isLocate: Bool { if case .mapTap = problem?.input { return true }; return false }
+
     var body: some View {
-        Group {
-            if let problem {
-                VStack(spacing: 0) {
-                    header
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 22) {
-                            content(problem)
-                            if revealed {
-                                DrillResultCard(ok: wasCorrect, detail: wasCorrect ? nil : problem.explanation)
+        ZStack {
+            Theme.parchment.ignoresSafeArea()
+            DrillFlash(correct: flash)   // behind the content, like Rapid Fire
+            Group {
+                if let problem {
+                    VStack(spacing: 0) {
+                        header
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 22) {
+                                content(problem)
+                                if revealed {
+                                    DrillResultCard(ok: wasCorrect, detail: wasCorrect ? nil : problem.explanation)
+                                }
                             }
+                            .padding()
                         }
-                        .padding()
                     }
-                }
-                // Tap anywhere after answering to skip ahead early (it also auto-advances).
-                .overlay {
-                    if revealed {
-                        Color.clear.contentShape(Rectangle()).onTapGesture { present() }
+                    // Locate holds the reveal — tap anywhere to skip ahead early.
+                    .overlay {
+                        if revealed {
+                            Color.clear.contentShape(Rectangle()).onTapGesture { present() }
+                        }
                     }
+                } else {
+                    ProgressView().tint(Theme.gold300)
                 }
-            } else {
-                ProgressView().tint(Theme.gold300)
             }
         }
         .navigationTitle("Learn").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() }.tint(Theme.gold300) } }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
-        .overlay { DrillFlash(correct: flash).animation(.easeOut(duration: 0.18), value: flash) }
         .onAppear(perform: setup)
         .onDisappear(perform: recordSession)
     }
@@ -68,8 +74,8 @@ struct LearnDrillView: View {
             }
             let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
             OptionButtons(options: options, correctIndex: correctIndex, selected: choice,
-                          revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
-                guard !revealed else { return }
+                          revealed: false, grid: useGrid, optionImages: problem.optionImages) { i in
+                guard !locked else { return }
                 choice = i
                 grade(correct: i == correctIndex)
             }
@@ -114,24 +120,33 @@ struct LearnDrillView: View {
         tappedId = nil
         revealed = false
         flash = nil
+        locked = false
     }
 
     private func grade(correct: Bool) {
         wasCorrect = correct
-        withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
         if correct { Haptics.success() } else { Haptics.error() }
         session?.grade(correct: correct)
         masteredNow = session?.masteredCount ?? masteredNow
-        // Blink the background, keep the green/red reveal up for a beat, then auto-advance.
-        // `revealed` guards a double-answer; an early tap skips; the token guards a stale advance.
-        withAnimation(.easeOut(duration: 0.12)) { flash = correct }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-            withAnimation(.easeOut(duration: 0.3)) { if revealed { flash = nil } }
-        }
         let token = problem?.id
-        DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.7 : 1.4)) {
-            guard revealed, problem?.id == token else { return }
-            present()
+        if isIdentify {
+            // EXACTLY like Rapid Fire: blink, brief hold (no option reveal / card), advance.
+            locked = true
+            flash = correct
+            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.14 : 0.42)) {
+                flash = nil
+                locked = false
+                if problem?.id == token { present() }
+            }
+        } else {
+            // Locate: green/red map reveal held a beat, then advance (an early tap skips).
+            withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
+            flash = correct
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { if revealed { flash = nil } }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.7 : 1.4)) {
+                guard revealed, problem?.id == token else { return }
+                present()
+            }
         }
     }
 

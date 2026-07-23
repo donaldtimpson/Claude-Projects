@@ -26,18 +26,16 @@ struct DrillResultCard: View {
 }
 
 // Full-screen tint that blinks green/red on a geography answer — hard-to-miss feedback
-// (paired with the success/error haptics), like the Rapid Fire flash.
+// (paired with the success/error haptics). Matches RapidFireView's flash exactly: a
+// persistent layer that animates its color (0.22 opacity, ease-out 0.15s), sitting BEHIND
+// the content so it washes the margins rather than tinting the map itself.
 struct DrillFlash: View {
     let correct: Bool?
     var body: some View {
-        Group {
-            if let correct {
-                (correct ? Theme.success : Theme.danger).opacity(0.28)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-                    .transition(.opacity)
-            }
-        }
+        (correct == nil ? Color.clear : (correct! ? Theme.success : Theme.danger).opacity(0.22))
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .animation(.easeOut(duration: 0.15), value: correct)
     }
 }
 
@@ -64,6 +62,7 @@ struct DrillRunnerView: View {
     @State private var finished = false
     // Geography drills auto-advance after a brief reveal; `flash` blinks the background.
     @State private var flash: Bool?
+    @State private var locked = false     // Rapid-Fire-style guard for the instant-advance drills
     // Remembered across launches (global last-used config) so you don't reconfigure every
     // time; sanitized per-drill in setup() when a stored choice isn't available for a drill.
     @AppStorage("drill_last_mode") private var mode: DrillMode = .practice
@@ -76,33 +75,36 @@ struct DrillRunnerView: View {
     private var def: DrillDef? { DrillCatalog.drill(slug: slug) }
 
     var body: some View {
-        Group {
-            if let def {
-                if finished {
-                    summaryView
-                } else if let lvl = launchedLevel, mode == .rapidFire {
-                    RapidFireView(def: def, level: lvl, seconds: rapidSeconds) { launchedLevel = nil }
-                } else if let lvl = launchedLevel, mode == .learn {
-                    LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
-                } else if let level, let problem {
-                    if def.landscape {
-                        locateRunner(def: def, level: level, problem: problem)
-                    } else {
-                        runner(def: def, level: level, problem: problem)
-                    }
-                } else {
-                    setup(def)
-                }
-            } else {
-                Text("Unknown drill.").foregroundStyle(Theme.inkSoft)
-            }
+        ZStack {
+            Theme.parchment.ignoresSafeArea()
+            DrillFlash(correct: flash)   // behind the content, like Rapid Fire
+            content.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .navigationTitle(def?.title ?? "Drill")
         .navigationBarTitleDisplayMode(.inline)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
-        .overlay { DrillFlash(correct: flash).animation(.easeOut(duration: 0.18), value: flash) }
         .task { await syncBests() }
+    }
+
+    @ViewBuilder private var content: some View {
+        if let def {
+            if finished {
+                summaryView
+            } else if let lvl = launchedLevel, mode == .rapidFire {
+                RapidFireView(def: def, level: lvl, seconds: rapidSeconds) { launchedLevel = nil }
+            } else if let lvl = launchedLevel, mode == .learn {
+                LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
+            } else if let level, let problem {
+                if def.landscape {
+                    locateRunner(def: def, level: level, problem: problem)
+                } else {
+                    runner(def: def, level: level, problem: problem)
+                }
+            } else {
+                setup(def)
+            }
+        } else {
+            Text("Unknown drill.").foregroundStyle(Theme.inkSoft)
+        }
     }
 
     // Pull the server's synced Rapid Fire bests into local storage (merge by max),
@@ -349,15 +351,17 @@ struct DrillRunnerView: View {
                 // forceGrid pins the 2×2 grid (country tiles stack the flag over the
                 // name); otherwise short answers tile 2×2 and long ones fall back to a list.
                 let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
-                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: revealed, grid: useGrid, optionImages: problem.optionImages) { i in
-                    guard !revealed else { return }
+                // Identify ("Name the…") matches Rapid Fire: no option-color reveal, just the
+                // background blink + advance. Math choice drills still reveal + wait for a tap.
+                OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: isIdentify ? false : revealed, grid: useGrid, optionImages: problem.optionImages) { i in
+                    guard !revealed, !locked else { return }
                     choice = i
                     reveal(correct: i == correctIndex)
                 }
 
-                if revealed {
+                if revealed {   // only the math choice drills set `revealed`
                     feedback(problem)
-                    if !isGeo { tapHint }   // geography auto-advances (with a blink); no second tap
+                    tapHint
                 }
             }
             .padding()
@@ -470,6 +474,7 @@ struct DrillRunnerView: View {
         tappedRegion = nil
         revealed = false
         flash = nil
+        locked = false
     }
 
     // Avoid asking a question we just asked: retry a few times if the prompt
@@ -490,10 +495,14 @@ struct DrillRunnerView: View {
 
     // Geography drills (identify + locate) — the map IS the question, so we auto-advance
     // like the web version instead of demanding a "tap to continue" second tap.
-    private var isGeo: Bool {
-        guard let p = problem else { return false }
-        if case .mapTap = p.input { return true }
-        if case .geoMap? = p.diagram { return true }
+    // Identify ("Name the Country / State") — choice + highlighted-map diagram.
+    private var isIdentify: Bool {
+        if case .geoMap? = problem?.diagram { return true }
+        return false
+    }
+    // Locate ("Where's the Country / State") — tap the region on the map.
+    private var isLocate: Bool {
+        if case .mapTap = problem?.input { return true }
         return false
     }
 
@@ -507,19 +516,32 @@ struct DrillRunnerView: View {
             streak = 0
             Haptics.error()
         }
-        withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
-        guard isGeo, let def, let lvl = level else { return }
-        // Geography: blink the background (hard-to-miss feedback), keep the green/red map /
-        // option reveal up for a beat, then auto-advance — no second tap. `revealed` guards a
-        // double-answer; an early tap skips ahead; the token guards a stale advance.
-        withAnimation(.easeOut(duration: 0.12)) { flash = correct }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-            withAnimation(.easeOut(duration: 0.3)) { if revealed { flash = nil } }
+        guard let def, let lvl = level else {
+            withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
+            return
         }
         let token = problem?.id
-        DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.7 : 1.4)) {
-            guard revealed, problem?.id == token else { return }
-            next(def: def, level: lvl)
+        if isIdentify {
+            // EXACTLY like Rapid Fire: blink the background, hold briefly (no option reveal,
+            // no card), then advance. `locked` guards a double-answer for this touch batch.
+            locked = true
+            flash = correct
+            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.14 : 0.42)) {
+                flash = nil
+                locked = false
+                if problem?.id == token { next(def: def, level: lvl) }
+            }
+        } else if isLocate {
+            // Locate needs the green/red map reveal (no hover on iOS), held a beat, then advance.
+            withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
+            flash = correct
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { if revealed { flash = nil } }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.7 : 1.4)) {
+                guard revealed, problem?.id == token else { return }
+                next(def: def, level: lvl)
+            }
+        } else {
+            withAnimation(.easeInOut(duration: 0.2)) { revealed = true }   // math: tap to continue
         }
     }
 
