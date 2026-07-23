@@ -44,13 +44,16 @@ An importer validates their presence, so use them verbatim:
   ```
   $$
   \begin{aligned}
-  a &= b \\[4pt]
+  a &= b \\
   c &= d
   \end{aligned}
   $$
   ```
   If the equation belongs to a bullet, leave a blank line before the `$$` and keep the fence at column 0
   (an indented `  $$` is not recognized as a display fence and corrupts everything after it).
+- **Line breaks: use a bare `\\` — never the `\\[4pt]` (`\\[<dimen>]`) optional-spacing form.** The
+  site's KaTeX (0.17) does not support the optional length after `\\`; it renders the `[4pt]` as literal
+  text in the output. Same for `\\[6pt]`, `\\[10pt]`, etc. Just `\\`.
 - NEVER stack multiple consecutive `$$...$$` blocks — they render run-together with no visible break.
   Put any set of related equations/steps in ONE `aligned` display block, aligned on `=` (or another relation).
 - **Never write a literal `$` next to math delimiters** (e.g. a stack-bottom marker as `$\$$`, or currency
