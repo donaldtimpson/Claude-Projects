@@ -53,7 +53,7 @@ struct CourseDetailView: View {
                             NavigationLink(value: LectureRoute(courseId: courseId, videoId: video.id, title: video.title)) {
                                 LectureRow(video: video, highlight: query)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lyceumPress)
                         }
                     }
 
@@ -61,7 +61,7 @@ struct CourseDetailView: View {
                         SectionHeader(title: "Other Offerings")
                         ForEach(offerings) { offering in
                             NavigationLink(value: offering) { offeringRow(offering) }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.lyceumPress)
                         }
                     }
                 }

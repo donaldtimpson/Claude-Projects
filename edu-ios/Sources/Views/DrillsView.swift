@@ -59,7 +59,7 @@ struct DrillsView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(alignment: .top, spacing: 12) {
                         ForEach(recents) { d in
-                            Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.plain)
+                            Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.lyceumPress)
                         }
                     }
                     .padding(.horizontal, 2).padding(.bottom, 4)
@@ -68,7 +68,7 @@ struct DrillsView: View {
             sectionHeader("Categories")
             VStack(spacing: 10) {
                 ForEach(Self.categories, id: \.title) { cat in
-                    NavigationLink(value: cat) { categoryRow(cat) }.buttonStyle(.plain)
+                    NavigationLink(value: cat) { categoryRow(cat) }.buttonStyle(.lyceumPress)
                 }
             }
         }
@@ -87,7 +87,7 @@ struct DrillsView: View {
                 sectionHeader("Categories")
                 VStack(spacing: 10) {
                     ForEach(cats, id: \.title) { cat in
-                        NavigationLink(value: cat) { categoryRow(cat, query: query) }.buttonStyle(.plain)
+                        NavigationLink(value: cat) { categoryRow(cat, query: query) }.buttonStyle(.lyceumPress)
                     }
                 }
             }
@@ -193,7 +193,7 @@ struct DrillRow: View {
             }
             .lyceumCard()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.lyceumPress)
     }
 }
 

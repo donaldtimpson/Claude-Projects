@@ -55,3 +55,25 @@ extension View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
     }
 }
+
+// Press feedback for tappable cells/rows: a warm gold glow — a gold border, a faint gold
+// wash, a soft outer glow, and a tiny press-in — so a selection reads clearly. Identical to
+// `.plain` at rest (no chrome), lit only while the finger is down.
+struct LyceumPressStyle: ButtonStyle {
+    var cornerRadius: CGFloat = 12
+    func makeBody(configuration: Configuration) -> some View {
+        let down = configuration.isPressed
+        return configuration.label
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius).fill(Theme.gold300.opacity(down ? 0.07 : 0)))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(Theme.gold300, lineWidth: 1.5).opacity(down ? 1 : 0))
+            .scaleEffect(down ? 0.985 : 1)
+            .shadow(color: Theme.gold300.opacity(down ? 0.5 : 0), radius: down ? 12 : 0)
+            .animation(.easeOut(duration: 0.16), value: down)
+    }
+}
+
+extension ButtonStyle where Self == LyceumPressStyle {
+    /// Gold press-glow for tappable cards/rows (drop-in replacement for `.plain`).
+    static var lyceumPress: LyceumPressStyle { LyceumPressStyle() }
+    static func lyceumPress(cornerRadius: CGFloat) -> LyceumPressStyle { LyceumPressStyle(cornerRadius: cornerRadius) }
+}

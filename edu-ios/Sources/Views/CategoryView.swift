@@ -27,7 +27,7 @@ struct CategoryView: View {
                 VStack(spacing: 10) {
                     ForEach(courses) { course in
                         NavigationLink(value: course) { CourseRow(course: course) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lyceumPress)
                     }
                 }
                 .padding()

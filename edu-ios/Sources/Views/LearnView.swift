@@ -53,7 +53,7 @@ struct LearnView: View {
                     SectionHeader(title: "Browse by Category")
                     ForEach(categories) { category in
                         NavigationLink(value: category) { CategoryRow(category: category) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lyceumPress)
                     }
                 }
 
@@ -67,7 +67,7 @@ struct LearnView: View {
     }
 
     private func courseLink(_ course: CourseListItem) -> some View {
-        NavigationLink(value: course) { CourseRow(course: course) }.buttonStyle(.plain)
+        NavigationLink(value: course) { CourseRow(course: course) }.buttonStyle(.lyceumPress)
     }
 
     // MARK: search (hybrid: instant local filter + server-backed lecture search)
@@ -94,7 +94,7 @@ struct LearnView: View {
                     SectionHeader(title: "Courses")
                     ForEach(courseHits) { course in
                         NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lyceumPress)
                     }
                 }
 
@@ -102,7 +102,7 @@ struct LearnView: View {
                     SectionHeader(title: "Categories")
                     ForEach(categoryHits) { category in
                         NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.lyceumPress)
                     }
                 }
 
@@ -119,7 +119,7 @@ struct LearnView: View {
                         .padding(.vertical, 8)
                     } else {
                         ForEach(lectureHits) { hit in
-                            NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.plain)
+                            NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.lyceumPress)
                         }
                     }
                 }
