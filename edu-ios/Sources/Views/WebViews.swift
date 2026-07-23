@@ -105,7 +105,7 @@ enum NoteWeb {
         <script>
         var md=\(payload);
         \(pre)
-        try{marked.use(markedKatex({throwOnError:false}));document.getElementById('c').innerHTML=marked.parse(md);}
+        try{marked.use(markedKatex({throwOnError:false,nonStandard:true}));document.getElementById('c').innerHTML=marked.parse(md);}
         catch(e){document.getElementById('c').textContent=md;}
         window.addEventListener('load',function(){setTimeout(function(){window.webkit.messageHandlers.\(handler).postMessage(document.body.scrollHeight);},\(delayMs));});
         </script>
