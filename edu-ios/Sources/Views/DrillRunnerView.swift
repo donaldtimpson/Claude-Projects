@@ -241,8 +241,6 @@ struct DrillRunnerView: View {
             if let explanation = problem.explanation {
                 Text(explanation).font(.caption).foregroundStyle(Theme.ink)
             }
-            Text(answered >= count ? "Tap to finish" : "Tap to continue")
-                .font(.caption2).foregroundStyle(Theme.inkSoft)
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
@@ -336,7 +334,7 @@ struct DrillRunnerView: View {
 
                 if revealed {
                     feedback(problem)
-                    tapHint
+                    if !isGeo { tapHint }
                 }
             }
             .padding()
@@ -466,6 +464,15 @@ struct DrillRunnerView: View {
         reveal(correct: Int(numericEntry) == answer)
     }
 
+    // Geography drills (identify + locate) — the map IS the question, so we auto-advance
+    // like the web version instead of demanding a "tap to continue" second tap.
+    private var isGeo: Bool {
+        guard let p = problem else { return false }
+        if case .mapTap = p.input { return true }
+        if case .geoMap? = p.diagram { return true }
+        return false
+    }
+
     private func reveal(correct: Bool) {
         wasCorrect = correct
         withAnimation(.easeInOut(duration: 0.2)) { revealed = true }
@@ -476,6 +483,14 @@ struct DrillRunnerView: View {
         } else {
             streak = 0
             Haptics.error()
+        }
+        // Geography: show the result for a beat, then move on automatically (no second tap).
+        // An early tap still skips ahead; the token guards against advancing a stale problem.
+        if isGeo, let def, let lvl = level {
+            let token = problem?.id
+            DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.6 : 1.3)) {
+                if revealed, problem?.id == token { next(def: def, level: lvl) }
+            }
         }
     }
 

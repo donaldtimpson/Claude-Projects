@@ -35,8 +35,6 @@ struct LearnDrillView: View {
                             content(problem)
                             if revealed {
                                 feedback(problem)
-                                Text("Tap to continue").font(.footnote).foregroundStyle(Theme.inkSoft)
-                                    .frame(maxWidth: .infinity, alignment: .center)
                             }
                         }
                         .padding()
@@ -133,6 +131,11 @@ struct LearnDrillView: View {
         if correct { Haptics.success() } else { Haptics.error() }
         session?.grade(correct: correct)
         masteredNow = session?.masteredCount ?? masteredNow
+        // Auto-advance (web parity) — no required "tap to continue"; an early tap still skips.
+        let token = problem?.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + (correct ? 0.6 : 1.3)) {
+            if revealed, problem?.id == token { present() }
+        }
     }
 
     // A Learn session IS practice — record a count-mode session on exit so it feeds the
