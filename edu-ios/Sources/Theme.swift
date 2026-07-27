@@ -68,9 +68,9 @@ struct LyceumPressStyle: ButtonStyle {
             .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(Theme.gold300, lineWidth: 1.5).opacity(down ? 1 : 0))
             .scaleEffect(down ? 0.985 : 1)
             .shadow(color: Theme.gold300.opacity(down ? 0.5 : 0), radius: down ? 12 : 0)
-            // Snap to lit almost instantly on touch-down so the glow registers before a
-            // quick tap triggers navigation; ease the fade-out a touch longer on release.
-            .animation(down ? .easeOut(duration: 0.05) : .easeOut(duration: 0.22), value: down)
+            // Light instantly on touch-down so the glow registers before a quick tap triggers
+            // navigation; ease the fade-out on release.
+            .animation(down ? nil : .easeOut(duration: 0.22), value: down)
     }
 }
 
