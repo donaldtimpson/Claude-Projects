@@ -58,9 +58,13 @@ An importer validates their presence, so use them verbatim:
   Put any set of related equations/steps in ONE `aligned` display block, aligned on `=` (or another relation).
 - **Never write a literal `$` next to math delimiters** (e.g. a stack-bottom marker as `$\$$`, or currency
   as `... = \$5$` inside `$...$`). The stray `$` breaks delimiter pairing and renders red. For a dollar
-  sign INSIDE math use `\mathdollar` (e.g. `$S\mathdollar$`); for currency in prose, write `\$5` OUTSIDE
-  any `$...$`.
+  sign INSIDE math use `\text{\$}` (e.g. `$S\text{\$}$`); for currency in prose, write `\$5` OUTSIDE
+  any `$...$`. **Do NOT use `\mathdollar`** — it is not a KaTeX command in any version and renders red.
 - Inverse trig functions: always write `\tan^{-1}`, `\sin^{-1}`, `\cos^{-1}` — never `\arctan` etc.
+- **Units with a middle dot: never put a literal `·` inside `\text{}`** — KaTeX treats it as math-mode-only
+  and renders red. Write `\text{N}\cdot\text{m}^2` (not `\text{N·m}^2`, which also squares the whole
+  group). Parenthesize a compound denominator: `\text{C}^2/(\text{N}\cdot\text{m}^2)`.
+- **A degree sign needs a base:** write `\,{}^\circ\text{C}`, not `\,^\circ\text{C}`.
 - Use standard notation for the subject (e.g. `\lim_{x \to a}`, `\frac{d}{dx}`, `\int_a^b`, `\sum`, set
   and logic symbols, etc.).
 

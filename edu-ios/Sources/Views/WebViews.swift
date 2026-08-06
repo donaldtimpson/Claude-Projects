@@ -89,10 +89,15 @@ struct YouTubePlayer: UIViewRepresentable {
 // exact parity. Scripts load synchronously in order (marked, then katex, then the extension,
 // which reads `window.katex` at load); no auto-render pass is needed.
 enum NoteWeb {
+    // Keep this KaTeX version in step with the web app's (package.json). When the
+    // app trailed at 0.16.11 the same markdown rendered clean on the site and red
+    // in the app: 0.16 rejects a literal `·` inside \text{} and a superscript
+    // with no base, both of which 0.17 accepts.
+
     static let head = """
-    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'>
+    <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css'>
     <script src='https://cdn.jsdelivr.net/npm/marked/marked.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/marked-katex-extension@5/lib/index.umd.js'></script>
     """
 
