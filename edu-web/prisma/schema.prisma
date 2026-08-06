@@ -105,6 +105,7 @@ model Video {
   lectureNote     LectureNote?
   transcript      Transcript?
   assignments     Assignment[]
+  problemSets     ProblemSetVideo[]
 }
 
 model LectureNote {
@@ -254,7 +255,11 @@ model ProblemSet {
   courseId      String
   title         String
   body          String       @default("") // Markdown + KaTeX (the public problems)
-  solution      String       @default("") // Markdown + KaTeX worked solutions (admin; released per-assignment)
+  solution      String       @default("") // Markdown + KaTeX worked solutions, shown inline with the problems
+  // "Public unless withheld": solutions ship visible to everyone alongside the
+  // problems. Uncheck to hold a set's answers back (e.g. while a class works on
+  // it). This is the SINGLE source of truth for solution visibility.
+  solutionsPublic Boolean    @default(true)
   isDraft       Boolean      @default(true) // hidden from public until published (like quizzes/notes)
   points        Int          @default(0) // core graded total (becomes the assignment denominator)
   extraCreditPoints Int      @default(0) // bonus beyond the core total (not in the denominator)
@@ -264,8 +269,24 @@ model ProblemSet {
 
   course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   assignments   Assignment[]
+  videos        ProblemSetVideo[]
 
   @@index([courseId])
+}
+
+// Which lectures a problem set covers. Many-to-many on purpose: a set usually
+// spans several lectures (it follows a textbook chapter, not a class session),
+// and a lecture can be covered by more than one set. Lets the lecture page
+// surface "practice for this lecture" without forcing a 1-1 pairing.
+model ProblemSetVideo {
+  problemSetId String
+  videoId      String
+
+  problemSet   ProblemSet @relation(fields: [problemSetId], references: [id], onDelete: Cascade)
+  video        Video      @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([problemSetId, videoId])
+  @@index([videoId])
 }
 
 // A ProblemSet assigned to one Section with a due date + point value. Only the
@@ -278,7 +299,10 @@ model Assignment {
   title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's title
   points       Int          @default(100)
   dueAt        DateTime?
-  solutionsReleased Boolean  @default(false) // instructor-controlled: reveal the solution to this section
+  // RETIRED — solution visibility now lives solely on ProblemSet.solutionsPublic.
+  // Nothing reads this; kept so retiring the feature didn't also destroy its data.
+  // Safe to drop in a later migration.
+  solutionsReleased Boolean  @default(false)
   createdAt    DateTime     @default(now())
 
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)

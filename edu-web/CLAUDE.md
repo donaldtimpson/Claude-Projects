@@ -69,7 +69,8 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 - `Transcript` — plaintext + timed segments per `Video`, powers catalog search (see that section).
 - `Comment` — per-`Video` discussion, single-level threaded (`parentId` self-relation; soft-delete via `deletedAt` when a comment has replies).
 - **Student accounts & gamification:** `User`/`Session` (NextAuth credentials), `QuizAttempt` (persisted scores), `VideoProgress` (watched state), `UserAchievement` (badges), `QuestionReview` (spaced repetition), `DrillAttempt` (practice drills). See the drills / spaced-repetition sections and `lib/gamification/`.
-- **Classroom layer:** `Section`, `Enrollment`, `Assignment`, `ProblemSet`, `Submission` — live-class registration, rostering, homework, and the weighted gradebook.
+- **Classroom layer:** `Section`, `Enrollment`, `Assignment`, `ProblemSet`, `Submission` — live-class registration, rostering, homework, and the weighted gradebook. See "Problem sets & solutions" below.
+- `ProblemSetVideo` — many-to-many join marking which lectures a problem set covers.
 - **Catalog structure:** `Category`/`CourseCategory` (subject grouping), `CourseLink` (course dependency graph / `/map`), `Resource`/`CourseResource`, `Announcement`.
 
 **Key lib files:**
@@ -287,6 +288,46 @@ Enter / "see all" goes to the full `/search?q=` page (`app/(site)/search/page.ts
 Snippets come from rough auto-captions, so results lean on the lecture title + timestamp with the
 snippet as supporting context. Search currently includes sibling offerings (not just canonical) —
 filter to canonical later if duplicates feel noisy.
+
+## Problem sets & solutions
+
+A `ProblemSet` holds `body` (the problems) and `solution` (worked answers), both Markdown + KaTeX,
+authored per `scripts/problem-sets-style.md`. Published sets render at
+`/courses/[courseId]/problems/[problemSetId]`.
+
+**Solutions are public by default.** `ProblemSet.solutionsPublic` (default `true`) is the *single*
+source of truth for solution visibility — uncheck it in the set's admin editor to withhold a set's
+answers. There is deliberately no per-class override: `Assignment.solutionsReleased` is **retired**
+(nothing reads it; the column is kept only so retiring the feature didn't destroy its data, and is
+safe to drop). Two writable switches for one visible outcome meant the admin UI could disagree with
+what students actually saw.
+
+**Solutions render inline with the problems they answer**, not as a blob at the bottom.
+`lib/problem-sets.ts` splits both halves into *numbered items* (`**1.**`, `**1. (2 pts ••)**`) and
+*named sections* (`### Extra Credit`), matching each problem to its answer by number or by heading
+(the trailing points tag is normalized away, since the body writes `### Extra Credit (3 pts •••)`
+where the solution writes `### Extra Credit`). A heading only opens a section *after* the first
+numbered item — before that it's still the document's own title. If the two sides don't line up, it
+falls back to rendering solutions as one appended block rather than mis-attaching them; an
+*orphaned solution* (no matching problem) forces that fallback so authored work is never dropped.
+`components/ProblemSetView.tsx` renders per-problem reveal toggles plus a master "reveal all".
+
+**Lecture links.** `ProblemSetVideo` is many-to-many on purpose — a set follows a textbook chapter,
+so it usually spans several lectures, and a lecture can be covered by more than one set. Tag them
+from the set's admin editor. Lecture pages then show a **Practice** section; set pages show
+**Covers** chips.
+
+**Print/PDF.** `/courses/[courseId]/problems/[problemSetId]/print` (add `?solutions=1` for an answer
+key) — same `(print)` route-group pattern as the lecture-notes print page, sharing
+`components/PrintControls.tsx`.
+
+**Point-tag gotcha:** the two courses use the same glyph differently. Physics encodes the point
+value redundantly as bullets (`1 pt •`, `2 pts ••`, `3 pts •••`) with extra credit in a separate
+`### Extra Credit` section; Linear Algebra uses bullets to mark extra credit inline. Physics bodies
+also repeat the totals in a prose line (`*Core: N points · Extra credit: M points*`), so a set's
+totals live in three places (per-problem tags, that prose line, and the `points`/`extraCreditPoints`
+columns) — plus `Assignment.points`, which is **copied** from the set at assign time and does NOT
+follow later edits (the gradebook divides by the assignment's own value).
 
 ## Practice drills (`/drills`)
 

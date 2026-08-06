@@ -16,9 +16,19 @@ export default async function EditProblemSetPage({
   const initialMode = (await searchParams).mode === "edit" ? "edit" : "preview";
   const ps = await db.problemSet.findUnique({
     where: { id },
-    include: { course: { select: { id: true, title: true } } },
+    include: {
+      course: { select: { id: true, title: true } },
+      videos: { select: { videoId: true } },
+    },
   });
   if (!ps) notFound();
+
+  // Every lecture in this set's course, for the "covers lectures" tagger.
+  const lectures = await db.video.findMany({
+    where: { courseId: ps.course.id },
+    orderBy: [{ position: "asc" }],
+    select: { id: true, title: true, position: true },
+  });
 
   return (
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-6">
@@ -41,8 +51,11 @@ export default async function EditProblemSetPage({
           isDraft: ps.isDraft,
           points: ps.points,
           extraCreditPoints: ps.extraCreditPoints,
+          solutionsPublic: ps.solutionsPublic,
+          videoIds: ps.videos.map((v) => v.videoId),
         }}
         courseId={ps.course.id}
+        lectures={lectures}
         initialMode={initialMode}
       />
     </main>

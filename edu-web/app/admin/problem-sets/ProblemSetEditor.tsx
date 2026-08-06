@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import MarkdownNotes from "@/components/MarkdownNotes";
-import { updateProblemSet, setProblemSetDraft, deleteProblemSet } from "@/lib/assignments";
+import {
+  updateProblemSet,
+  setProblemSetDraft,
+  deleteProblemSet,
+  toggleSolutionsPublic,
+  setProblemSetVideos,
+} from "@/lib/assignments";
 
 type PS = {
   id: string;
@@ -14,7 +20,11 @@ type PS = {
   isDraft: boolean;
   points: number;
   extraCreditPoints: number;
+  solutionsPublic: boolean;
+  videoIds: string[];
 };
+
+export type LectureOption = { id: string; title: string; position: number };
 
 function Pane({
   label,
@@ -69,10 +79,12 @@ function Pane({
 export default function ProblemSetEditor({
   ps,
   courseId,
+  lectures,
   initialMode = "edit",
 }: {
   ps: PS;
   courseId: string;
+  lectures: LectureOption[];
   initialMode?: "edit" | "preview";
 }) {
   const router = useRouter();
@@ -83,8 +95,31 @@ export default function ProblemSetEditor({
   const [points, setPoints] = useState(ps.points);
   const [extraCredit, setExtraCredit] = useState(ps.extraCreditPoints);
   const [isDraft, setIsDraft] = useState(ps.isDraft);
+  const [solutionsPublic, setSolutionsPublic] = useState(ps.solutionsPublic);
+  const [videoIds, setVideoIds] = useState<string[]>(ps.videoIds);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  async function toggleSolutions() {
+    const next = !solutionsPublic;
+    setSolutionsPublic(next);
+    const fd = new FormData();
+    fd.set("id", ps.id);
+    await toggleSolutionsPublic(fd);
+    router.refresh();
+  }
+
+  async function toggleLecture(videoId: string) {
+    const next = videoIds.includes(videoId)
+      ? videoIds.filter((v) => v !== videoId)
+      : [...videoIds, videoId];
+    setVideoIds(next);
+    const fd = new FormData();
+    fd.set("id", ps.id);
+    for (const v of next) fd.append("videoId", v);
+    await setProblemSetVideos(fd);
+    router.refresh();
+  }
 
   async function save() {
     setSaving(true);
@@ -173,12 +208,60 @@ export default function ProblemSetEditor({
       />
 
       <Pane
-        label="Solutions (instructor / released per assignment)"
+        label="Solutions (public — shown inline with each problem)"
         value={solution}
         onChange={setSolution}
         initialMode={initialMode}
-        placeholder="Worked solutions — Markdown + math. Students see these only when you release them for their class."
+        placeholder="Worked solutions — Markdown + math. Number them **1.**, **2.** … to match the problems and each one attaches to its problem."
       />
+
+      <label className="flex items-start gap-3 text-sm text-parchment-dim cursor-pointer">
+        <input
+          type="checkbox"
+          checked={solutionsPublic}
+          onChange={toggleSolutions}
+          className="mt-0.5 accent-gold-500"
+        />
+        <span>
+          Solutions public
+          <span className="block text-xs text-parchment-dim/70">
+            On by default. Turn off to withhold this set&apos;s answers — a class can still be given
+            them from its assignment.
+          </span>
+        </span>
+      </label>
+
+      {/* Many-to-many: a set usually spans several lectures. Tagging makes it
+          show up under "Practice" on each of those lecture pages. */}
+      <div className="space-y-2">
+        <span className="font-display text-xs tracking-[0.15em] uppercase text-gold-400">
+          Covers lectures
+        </span>
+        {lectures.length === 0 ? (
+          <p className="text-xs text-parchment-dim">This course has no lectures synced yet.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {lectures.map((v) => {
+              const on = videoIds.includes(v.id);
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => toggleLecture(v.id)}
+                  className={`text-xs rounded-full px-3 py-1.5 border transition-colors ${
+                    on
+                      ? "border-gold-500 text-gold-300 bg-gold-500/10"
+                      : "border-crimson-700 text-parchment-dim hover:border-gold-500 hover:text-parchment"
+                  }`}
+                >
+                  {on ? "✓ " : ""}
+                  {v.title}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <input
         value={attachmentUrl}

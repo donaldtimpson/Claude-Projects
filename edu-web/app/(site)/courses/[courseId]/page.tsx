@@ -141,7 +141,14 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
   const problemSets = await db.problemSet.findMany({
     where: { courseId: course.id, isDraft: false },
     orderBy: { createdAt: "asc" },
-    select: { id: true, title: true },
+    select: {
+      id: true,
+      title: true,
+      points: true,
+      solution: true,
+      solutionsPublic: true,
+      videos: { select: { video: { select: { title: true, position: true } } } },
+    },
   });
 
   // (Homework moved to the student's class hub: /dashboard/class/[sectionId].)
@@ -337,18 +344,41 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           <section className="mb-8">
             <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Problem Sets</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {problemSets.map((ps) => (
-                <li key={ps.id}>
-                  <Link
-                    href={`/courses/${course.id}/problems/${ps.id}`}
-                    className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group"
-                  >
-                    <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
-                      {ps.title}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+              {problemSets.map((ps) => {
+                const hasSolutions = ps.solutionsPublic && ps.solution.trim().length > 0;
+                const lectures = ps.videos
+                  .map((v) => v.video)
+                  .sort((a, b) => a.position - b.position);
+                // "Lectures 4–5" reads better than listing full lecture titles
+                // on a compact card.
+                const span =
+                  lectures.length === 0
+                    ? null
+                    : lectures.length === 1
+                      ? `Lecture ${lectures[0].position}`
+                      : `Lectures ${lectures[0].position}–${lectures[lectures.length - 1].position}`;
+                return (
+                  <li key={ps.id}>
+                    <Link
+                      href={`/courses/${course.id}/problems/${ps.id}`}
+                      className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group"
+                    >
+                      <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                        {ps.title}
+                      </span>
+                      <span className="block text-xs text-parchment-dim mt-1">
+                        {[
+                          span,
+                          hasSolutions ? "worked solutions" : null,
+                          ps.points > 0 ? `${ps.points} pts` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}

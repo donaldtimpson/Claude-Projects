@@ -45,9 +45,9 @@ export default async function CourseProblemSetsPage({
           )}
         </div>
         <p className="text-sm text-parchment-dim mt-1">
-          {problemSets.length} problem set{problemSets.length === 1 ? "" : "s"}. Problems are{" "}
-          <strong>public once published</strong>; solutions are revealed to students per class when you
-          release them.
+          {problemSets.length} problem set{problemSets.length === 1 ? "" : "s"}. Once published,
+          problems and worked solutions are <strong>public together</strong>, rendered inline with
+          each other. Withhold a set&apos;s answers from its own editor.
         </p>
       </div>
 

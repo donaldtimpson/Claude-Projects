@@ -37,9 +37,11 @@ export default async function AdminProblemSetsPage() {
       <div>
         <h1 className="text-2xl font-bold text-parchment">Problem Sets</h1>
         <p className="text-sm text-parchment-dim mt-1">
-          Course-level homework (problems + solutions, Markdown + math). Problems are{" "}
-          <strong>public once published</strong>; solutions are revealed to students per class when you
-          release them. Choose a course to see and manage its problem sets.
+          Course-level homework (problems + solutions, Markdown + math). Once published, the
+          problems and their worked solutions are{" "}
+          <strong>public together</strong> — solutions render inline with the problem each one
+          answers. Withhold a set&apos;s answers from its own editor. Choose a course to see and
+          manage its problem sets.
         </p>
       </div>
 

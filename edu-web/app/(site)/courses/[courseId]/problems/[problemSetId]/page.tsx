@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import MarkdownNotes from "@/components/MarkdownNotes";
+import ProblemSetView from "@/components/ProblemSetView";
+import { pairProblemSet, canSeeSolutions } from "@/lib/problem-sets";
 
 export const dynamic = "force-dynamic";
 
-// Public problem-set page. Anyone can read the problems; only enrolled students
-// (on the course page) get a submit box for the corresponding assignment.
+// Public problem-set page. Anyone can read the problems, and the worked
+// solutions render inline with them (collapsed per problem) unless the set has
+// been explicitly withheld. Only enrolled students (on the course page) get a
+// submit box for the corresponding assignment.
 export default async function ProblemSetPage({
   params,
 }: {
@@ -15,9 +18,23 @@ export default async function ProblemSetPage({
   const { courseId, problemSetId } = await params;
   const ps = await db.problemSet.findUnique({
     where: { id: problemSetId },
-    include: { course: { select: { id: true, title: true } } },
+    include: {
+      course: { select: { id: true, title: true } },
+      videos: {
+        include: { video: { select: { id: true, title: true, position: true } } },
+      },
+    },
   });
   if (!ps || ps.courseId !== courseId || ps.isDraft) notFound();
+
+  const showSolutions =
+    canSeeSolutions({ solutionsPublic: ps.solutionsPublic }) &&
+    ps.solution.trim().length > 0;
+  const paired = pairProblemSet(ps.body, ps.solution, showSolutions);
+
+  const lectures = ps.videos
+    .map((v) => v.video)
+    .sort((a, b) => a.position - b.position);
 
   // Sibling problem sets (published only) for prev/next nav — same order as the
   // course page lists them (oldest first).
@@ -45,24 +62,69 @@ export default async function ProblemSetPage({
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-        <h1 className="text-3xl font-bold text-parchment">{ps.title}</h1>
+        <div className="space-y-3">
+          <h1 className="text-3xl font-bold text-parchment">{ps.title}</h1>
+          {(ps.points > 0 || ps.extraCreditPoints > 0) && (
+            <p className="text-xs text-parchment-dim">
+              {ps.points} points
+              {ps.extraCreditPoints > 0 && ` · ${ps.extraCreditPoints} extra credit`}
+            </p>
+          )}
+        </div>
 
-        {ps.attachmentUrl && (
+        {/* Which lectures this set practices — a set follows a chapter, so this
+            is usually a span rather than a single lecture. */}
+        {lectures.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display text-[0.65rem] tracking-[0.2em] uppercase text-gold-400">
+              Covers
+            </span>
+            {lectures.map((v) => (
+              <Link
+                key={v.id}
+                href={`/courses/${courseId}/${v.id}`}
+                className="text-xs text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-full px-3 py-1 transition-colors"
+              >
+                {v.title}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {ps.attachmentUrl && (
+            <a
+              href={ps.attachmentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+            >
+              Open attachment ↗
+            </a>
+          )}
+          {/* Homework gets done on paper — offer a clean sheet to work from and,
+              separately, an answer key. */}
           <a
-            href={ps.attachmentUrl}
+            href={`/courses/${courseId}/problems/${ps.id}/print`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+            className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-2 transition-colors"
           >
-            Open attachment ↗
+            Print problems
           </a>
-        )}
+          {showSolutions && (
+            <a
+              href={`/courses/${courseId}/problems/${ps.id}/print?solutions=1`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-2 transition-colors"
+            >
+              Print with solutions
+            </a>
+          )}
+        </div>
 
-        {ps.body.trim() ? (
-          <MarkdownNotes content={ps.body} />
-        ) : (
-          <p className="text-parchment-dim">See the attachment above for the problems.</p>
-        )}
+        <ProblemSetView data={paired} />
 
         {/* Prev / Next navigation — matches the lecture page's quick nav buttons */}
         {(prevSet || nextSet) && (

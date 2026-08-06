@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
-import { deleteAssignment, toggleSolutionsReleased, updateAssignment } from "@/lib/assignments";
+import { deleteAssignment, updateAssignment } from "@/lib/assignments";
 import { setGradeWeights, setManualMarks } from "@/lib/grades";
 import AssignForm from "./AssignForm";
 
@@ -48,7 +48,7 @@ export default async function GradebookPage({
       where: { sectionId },
       orderBy: { createdAt: "asc" },
       include: {
-        problemSet: { select: { title: true } },
+        problemSet: { select: { id: true, title: true, solutionsPublic: true } },
         _count: { select: { submissions: true } },
       },
     }),
@@ -273,20 +273,20 @@ export default async function GradebookPage({
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0 text-sm">
-                    <form action={toggleSolutionsReleased}>
-                      <input type="hidden" name="assignmentId" value={a.id} />
-                      <button
-                        type="submit"
-                        className={
-                          a.solutionsReleased
-                            ? "text-green-400 hover:text-green-300 transition-colors"
-                            : "text-parchment-dim hover:text-gold-300 transition-colors"
-                        }
-                        title="Toggle whether students in this class can see the solution"
-                      >
-                        {a.solutionsReleased ? "solutions: shown" : "solutions: hidden"}
-                      </button>
-                    </form>
+                    {/* Visibility belongs to the problem set, not to this
+                        assignment — report it and link to the one real toggle
+                        rather than owning a second copy of the state. */}
+                    <Link
+                      href={`/admin/problem-sets/${a.problemSet.id}`}
+                      className={
+                        a.problemSet.solutionsPublic
+                          ? "text-green-400 hover:text-green-300 transition-colors"
+                          : "text-amber-400 hover:text-amber-300 transition-colors"
+                      }
+                      title="Solution visibility is set on the problem set — click to change it"
+                    >
+                      {a.problemSet.solutionsPublic ? "solutions: public ↗" : "solutions: withheld ↗"}
+                    </Link>
                     <Link
                       href={`/admin/classes/${sectionId}/assignments/${a.id}`}
                       className="text-gold-400 hover:text-gold-300 transition-colors"

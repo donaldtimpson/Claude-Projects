@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
 import SubmitForm from "@/components/SubmitForm";
-import MarkdownNotes from "@/components/MarkdownNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +46,9 @@ export default async function ClassHubPage({
       where: { sectionId },
       orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }],
       include: {
-        problemSet: { select: { id: true, title: true, solution: true } },
+        problemSet: {
+          select: { id: true, title: true, solution: true, solutionsPublic: true },
+        },
         submissions: { where: { userId }, select: { url: true, score: true, feedback: true } },
       },
     })
@@ -187,16 +188,16 @@ export default async function ClassHubPage({
                       <p className="text-sm text-parchment-dim border-l-2 border-crimson-700 pl-3">{a.sub!.feedback}</p>
                     )}
                     <SubmitForm assignmentId={a.id} currentUrl={a.sub?.url ?? null} />
-                    {a.solutionsReleased && a.problemSet.solution.trim() && (
-                      <details className="pt-1">
-                        <summary className="cursor-pointer text-sm text-gold-400 hover:text-gold-300 transition-colors">
-                          View solutions
-                        </summary>
-                        <div className="mt-3 border-t border-crimson-800 pt-3">
-                          <MarkdownNotes content={a.problemSet.solution} />
-                        </div>
-                      </details>
-                    )}
+                    {/* Solutions live inline with the problems they answer, so
+                        point there rather than duplicating them here. */}
+                    {a.problemSet.solutionsPublic && a.problemSet.solution.trim() && (
+                        <Link
+                          href={`/courses/${courseId}/problems/${a.problemSet.id}`}
+                          className="inline-block text-sm text-gold-400 hover:text-gold-300 transition-colors"
+                        >
+                          View problems &amp; worked solutions →
+                        </Link>
+                      )}
                   </li>
                 );
               })}

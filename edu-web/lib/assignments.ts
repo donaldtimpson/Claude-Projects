@@ -76,22 +76,54 @@ export async function setProblemSetDraft(formData: FormData) {
   revalidatePath(`/courses/${ps.courseId}`);
 }
 
-// Instructor-controlled per-assignment toggle to reveal the solution to a section.
-export async function toggleSolutionsReleased(formData: FormData) {
+// "Public unless withheld": solutions ship with the problems by default. This
+// flips a single set's answers back to hidden (a section can still get them via
+// toggleSolutionsReleased).
+export async function toggleSolutionsPublic(formData: FormData) {
   await assertAdmin();
-  const assignmentId = String(formData.get("assignmentId") ?? "");
-  if (!assignmentId) throw new Error("Missing assignment");
-  const a = await db.assignment.findUnique({
-    where: { id: assignmentId },
-    select: { sectionId: true, solutionsReleased: true },
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing id");
+  const current = await db.problemSet.findUnique({
+    where: { id },
+    select: { solutionsPublic: true },
   });
-  if (!a) throw new Error("Assignment not found");
-  await db.assignment.update({
-    where: { id: assignmentId },
-    data: { solutionsReleased: !a.solutionsReleased },
+  if (!current) throw new Error("Problem set not found");
+  const ps = await db.problemSet.update({
+    where: { id },
+    data: { solutionsPublic: !current.solutionsPublic },
+    select: { courseId: true },
   });
-  revalidatePath(`/admin/classes/${a.sectionId}`);
-  revalidatePath("/dashboard");
+  revalidatePath(`/admin/problem-sets/${id}`);
+  revalidatePath(`/courses/${ps.courseId}/problems/${id}`);
+}
+
+// Replace the set of lectures a problem set covers (many-to-many). Sent as a
+// repeated "videoId" field; an empty list clears every tag.
+export async function setProblemSetVideos(formData: FormData) {
+  await assertAdmin();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing id");
+  const videoIds = formData.getAll("videoId").map(String).filter(Boolean);
+
+  const ps = await db.problemSet.findUnique({ where: { id }, select: { courseId: true } });
+  if (!ps) throw new Error("Problem set not found");
+
+  // Only lectures from this set's own course may be tagged.
+  const valid = await db.video.findMany({
+    where: { id: { in: videoIds }, courseId: ps.courseId },
+    select: { id: true },
+  });
+
+  await db.$transaction([
+    db.problemSetVideo.deleteMany({ where: { problemSetId: id } }),
+    db.problemSetVideo.createMany({
+      data: valid.map((v) => ({ problemSetId: id, videoId: v.id })),
+    }),
+  ]);
+
+  revalidatePath(`/admin/problem-sets/${id}`);
+  revalidatePath(`/courses/${ps.courseId}/problems/${id}`);
+  for (const v of valid) revalidatePath(`/courses/${ps.courseId}/${v.id}`);
 }
 
 export async function deleteProblemSet(formData: FormData) {

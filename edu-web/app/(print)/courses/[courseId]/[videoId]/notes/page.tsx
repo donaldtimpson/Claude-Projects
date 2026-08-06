@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import MarkdownNotes from "@/components/MarkdownNotes";
-import PrintControls from "./PrintControls";
+import PrintControls from "@/components/PrintControls";
 
 export const dynamic = "force-dynamic";
 

@@ -99,6 +99,15 @@ export default async function VideoPage({
     db.lectureNote.findUnique({ where: { videoId: video.id } }),
   ]);
 
+  // Problem sets tagged as covering this lecture. Many-to-many, so a lecture can
+  // show more than one set and a set can appear on several lectures.
+  const problemSets = (
+    await db.problemSetVideo.findMany({
+      where: { videoId: video.id, problemSet: { isDraft: false } },
+      include: { problemSet: { select: { id: true, title: true, points: true } } },
+    })
+  ).map((link) => link.problemSet);
+
   // Manual-order courses: prev/next nav follows the hand-arranged position.
   if (video.course.manualOrder) {
     siblings.sort((a, b) => a.position - b.position);
@@ -213,6 +222,14 @@ export default async function VideoPage({
                 Quiz
               </a>
             )}
+            {problemSets.length > 0 && (
+              <a
+                href="#practice"
+                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+              >
+                Practice
+              </a>
+            )}
             <a
               href="#discussion"
               className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
@@ -220,6 +237,38 @@ export default async function VideoPage({
               Discussion
             </a>
           </nav>
+        )}
+
+        {/* Problem sets covering this lecture, with their worked solutions. */}
+        {problemSets.length > 0 && (
+          <section id="practice" className="scroll-mt-24 space-y-4">
+            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+              Practice
+            </h2>
+            <ul className="space-y-2">
+              {problemSets.map((ps) => (
+                <li key={ps.id}>
+                  <Link
+                    href={`/courses/${courseId}/problems/${ps.id}`}
+                    className="flex items-center justify-between gap-4 bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl px-5 py-3 transition-colors group"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                        {ps.title}
+                      </span>
+                      <span className="block text-xs text-parchment-dim mt-0.5">
+                        Problems with worked solutions
+                        {ps.points > 0 && ` · ${ps.points} pts`}
+                      </span>
+                    </span>
+                    <span className="text-parchment-dim group-hover:text-gold-300 transition-colors shrink-0">
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* Lecture notes (only when published) */}
