@@ -116,14 +116,6 @@ export default function ProblemSetView({ data }: { data: PairedProblemSet }) {
         </div>
       )}
 
-      {/* The solutions' own lead-in (constants to use, etc.) only matters once
-          something is actually revealed. */}
-      {data.solutionPreamble && openIds.size > 0 && (
-        <div className="rounded-lg border border-gold-500/30 bg-crimson-950/40 px-4 py-1">
-          <MarkdownNotes content={data.solutionPreamble} />
-        </div>
-      )}
-
       <ol className="space-y-5 list-none p-0 m-0">
         {data.parts.map((p) => {
           const open = openIds.has(p.key);

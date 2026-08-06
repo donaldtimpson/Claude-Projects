@@ -15,7 +15,6 @@ import WebKit
 struct ProblemSetWebView: UIViewRepresentable {
     let parts: [ProblemPart]
     let problemsPreamble: String?
-    let solutionPreamble: String?
     /// Flipped by the toolbar button; opens or closes every <details> at once.
     let revealAll: Bool
     @Binding var height: CGFloat
@@ -70,12 +69,9 @@ struct ProblemSetWebView: UIViewRepresentable {
             if let s = part.solution { payloads.append("s\(idx):\(json(s))") }
         }
         if let pre = problemsPreamble, !pre.isEmpty { payloads.append("pre:\(json(pre))") }
-        if let pre = solutionPreamble, !pre.isEmpty { payloads.append("solpre:\(json(pre))") }
 
         let preambleDiv = (problemsPreamble?.isEmpty == false)
             ? "<div class='preamble' data-md='pre'></div>" : ""
-        let solPreambleDiv = (solutionPreamble?.isEmpty == false)
-            ? "<div class='preamble solpre' data-md='solpre'></div>" : ""
 
         return """
         <!doctype html><html><head>
@@ -92,8 +88,6 @@ struct ProblemSetWebView: UIViewRepresentable {
         .katex{color:#f5ecd8}
         .katex-display{overflow-x:auto;overflow-y:hidden}
         .preamble{margin-bottom:14px}
-        .solpre{border:1px solid rgba(207,161,53,.3);background:rgba(15,4,4,.5);
-          border-radius:10px;padding:2px 14px;margin-bottom:14px}
         .part{border:1px solid #4a1a1a;background:rgba(25,8,8,.5);
           border-radius:12px;padding:2px 16px 14px;margin:0 0 18px}
         /* Extra Credit is its own block of work, not another item in the run. */
@@ -107,7 +101,7 @@ struct ProblemSetWebView: UIViewRepresentable {
         .solbody{border:1px solid rgba(207,161,53,.3);background:rgba(15,4,4,.5);
           border-radius:10px;padding:2px 14px;margin-top:10px}
         </style></head>
-        <body><div id='c'>\(preambleDiv)\(solPreambleDiv)\(blocks)</div>
+        <body><div id='c'>\(preambleDiv)\(blocks)</div>
         <script>
         var MD={\(payloads.joined(separator: ","))};
         try{

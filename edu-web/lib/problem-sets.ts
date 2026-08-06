@@ -105,6 +105,11 @@ export type PairedProblemSet =
       /** Structure lined up: render each solution inline under its own part. */
       mode: "paired";
       problemsPreamble: string;
+      /**
+       * The solutions document's own lead-in. Parsed for fidelity but NOT
+       * rendered anywhere: in practice it's just "## Answer Key — Chapter N",
+       * which the reveal buttons already imply.
+       */
       solutionPreamble: string;
       parts: PairedPart[];
     }

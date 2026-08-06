@@ -65,7 +65,6 @@ struct ProblemSetView: View {
                         ProblemSetWebView(
                             parts: parts,
                             problemsPreamble: detail.content.problemsPreamble,
-                            solutionPreamble: detail.content.solutionPreamble,
                             revealAll: revealAll,
                             height: $webHeight
                         )
@@ -167,7 +166,6 @@ struct ProblemSetView: View {
         var md = ""
         if detail.content.isPaired, let parts = detail.content.parts {
             if let pre = detail.content.problemsPreamble, !pre.isEmpty { md += pre + "\n\n" }
-            if let pre = detail.content.solutionPreamble, !pre.isEmpty { md += pre + "\n\n" }
             for part in parts {
                 md += part.problem + "\n\n"
                 if let s = part.solution { md += "**Solution.** " + s + "\n\n" }

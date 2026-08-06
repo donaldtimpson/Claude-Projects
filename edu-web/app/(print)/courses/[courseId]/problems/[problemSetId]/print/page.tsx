@@ -98,9 +98,6 @@ export default async function PrintProblemSetPage({
           {paired.problemsPreamble && (
             <MarkdownNotes content={paired.problemsPreamble} variant="print" />
           )}
-          {paired.solutionPreamble && showSolutions && (
-            <MarkdownNotes content={paired.solutionPreamble} variant="print" />
-          )}
           <ol className="list-none p-0 m-0">
             {paired.parts.map((p) => (
               // break-inside-avoid keeps a problem and its answer on one page
