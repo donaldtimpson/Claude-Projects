@@ -85,6 +85,12 @@ struct LectureView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
+                    // Practice sits above the tabs rather than becoming a fourth
+                    // segment: it's navigation to another screen, not another tab
+                    // of this lecture's content, and the segmented control is
+                    // already carrying long labels.
+                    practiceSection(detail)
+
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)
                         Text("Quiz (\(detail.quiz.count))").tag(1)
@@ -101,6 +107,35 @@ struct LectureView: View {
                 .padding()
             }
             .background(Theme.parchment)
+        }
+    }
+
+    @ViewBuilder private func practiceSection(_ detail: VideoDetailResponse) -> some View {
+        if let sets = detail.problemSets, !sets.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("PRACTICE")
+                    .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+                ForEach(sets) { ps in
+                    NavigationLink(value: ProblemSetRoute(
+                        courseId: route.courseId, problemSetId: ps.id, title: ps.title)
+                    ) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(ps.title)
+                                    .font(.display(14)).foregroundStyle(Theme.ink)
+                                    .multilineTextAlignment(.leading).lineLimit(2)
+                                Text((ps.hasSolutions ?? false)
+                                     ? "Problems with worked solutions" : "Problems")
+                                    .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+                        }
+                        .lyceumCard()
+                    }
+                    .buttonStyle(.lyceumPress)
+                }
+            }
         }
     }
 

@@ -23,6 +23,11 @@ struct LearnView: View {
             .navigationDestination(for: LectureHit.self) { hit in
                 LectureView(route: LectureRoute(courseId: hit.courseId, videoId: hit.videoId, title: hit.title))
             }
+            // A search hit pushes a lecture straight onto THIS stack, so the routes
+            // reachable from there (Practice -> problem set -> its Covers lectures)
+            // must be registered here too, not only on CourseDetailView.
+            .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
+            .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
             .task { if courses.isEmpty { await loadCatalog() } }
     }
 

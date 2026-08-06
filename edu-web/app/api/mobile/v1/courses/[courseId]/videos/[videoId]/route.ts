@@ -45,5 +45,23 @@ export async function GET(
   // Hall of Aces — everyone who scored 100% on this lecture's quiz (empty if no quiz).
   const aces = quiz.length > 0 ? await getQuizAces(videoId) : [];
 
-  return ok({ video, note, quiz, aces });
+  // Problem sets tagged as covering this lecture (many-to-many, so there may be
+  // several) — the app's Practice section.
+  const problemSets = (
+    await db.problemSetVideo.findMany({
+      where: { videoId, problemSet: { isDraft: false } },
+      include: {
+        problemSet: {
+          select: { id: true, title: true, points: true, solution: true, solutionsPublic: true },
+        },
+      },
+    })
+  ).map(({ problemSet: ps }) => ({
+    id: ps.id,
+    title: ps.title,
+    points: ps.points,
+    hasSolutions: ps.solutionsPublic && ps.solution.trim().length > 0,
+  }));
+
+  return ok({ video, note, quiz, aces, problemSets });
 }

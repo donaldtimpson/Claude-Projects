@@ -33,7 +33,17 @@ export async function GET(
       problemSets: {
         where: { isDraft: false },
         orderBy: { createdAt: "asc" },
-        select: { id: true, title: true, points: true, attachmentUrl: true },
+        select: {
+          id: true,
+          title: true,
+          points: true,
+          attachmentUrl: true,
+          // `solution` is selected only to derive hasSolutions below — the text
+          // itself is never sent in the list payload.
+          solution: true,
+          solutionsPublic: true,
+          videos: { select: { video: { select: { position: true } } } },
+        },
       },
       resources: {
         orderBy: { position: "asc" },
@@ -60,10 +70,22 @@ export async function GET(
     year: c.publishedAt ? c.publishedAt.getUTCFullYear() : null,
   }));
 
-  const { resources, canonicalCourseId: _canon, ...rest } = course;
+  const { resources, problemSets, canonicalCourseId: _canon, ...rest } = course;
   return ok({
     course: {
       ...rest,
+      problemSets: problemSets.map((ps) => {
+        const positions = ps.videos.map((v) => v.video.position).sort((a, b) => a - b);
+        return {
+          id: ps.id,
+          title: ps.title,
+          points: ps.points,
+          attachmentUrl: ps.attachmentUrl,
+          hasSolutions: ps.solutionsPublic && ps.solution.trim().length > 0,
+          // Lecture positions this set covers, for a "Lectures 4–5" subtitle.
+          lecturePositions: positions,
+        };
+      }),
       resources: resources.map((r) => ({ position: r.position, ...r.resource })),
       offerings,
     },

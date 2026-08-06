@@ -119,7 +119,65 @@ struct ProblemSetItem: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let points: Int
-    let attachmentUrl: String?
+    var attachmentUrl: String?
+    // Optional for resilience against older server builds that predate solutions.
+    var hasSolutions: Bool?
+    /// Lecture positions this set covers, ascending — renders as "Lectures 4–5".
+    var lecturePositions: [Int]?
+
+    var lectureSpan: String? {
+        guard let p = lecturePositions, let first = p.first, let last = p.last else { return nil }
+        return first == last ? "Lecture \(first)" : "Lectures \(first)–\(last)"
+    }
+}
+
+/// One problem paired with the worked solution that answers it. The server does
+/// the pairing (see app/api/mobile/v1/.../problems/[problemSetId]) so the split
+/// rules live in exactly one place; `solution` is nil when withheld.
+struct ProblemPart: Codable, Identifiable, Hashable {
+    let key: String
+    let label: String
+    let problem: String
+    let solution: String?
+
+    var id: String { key }
+    /// Named sections (Extra Credit) are set apart from the numbered problems.
+    var isSection: Bool { key.hasPrefix("section:") }
+}
+
+/// Mirrors the server's PairedProblemSet union: "paired" carries per-problem
+/// parts; "blocks" means the two halves didn't line up and the solutions come
+/// as one appended lump.
+struct ProblemSetContent: Codable, Hashable {
+    let mode: String
+    var problemsPreamble: String?
+    var solutionPreamble: String?
+    var parts: [ProblemPart]?
+    var body: String?
+    var solution: String?
+
+    var isPaired: Bool { mode == "paired" }
+}
+
+struct ProblemSetLecture: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let position: Int
+}
+
+struct ProblemSetDetail: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let points: Int
+    let extraCreditPoints: Int
+    var attachmentUrl: String?
+    let solutionsAvailable: Bool
+    var lectures: [ProblemSetLecture]?
+    let content: ProblemSetContent
+}
+
+struct ProblemSetDetailResponse: Codable {
+    let problemSet: ProblemSetDetail
 }
 
 struct CourseResourceItem: Codable, Identifiable, Hashable {
@@ -189,6 +247,8 @@ struct VideoDetailResponse: Codable {
     let note: LectureNote?
     let quiz: [QuizQuestion]
     let aces: [QuizAce]?  // optional for resilience against pre-aces server builds
+    // Problem sets tagged as covering this lecture; optional for the same reason.
+    var problemSets: [ProblemSetItem]?
 }
 
 struct DueCard: Codable, Identifiable, Hashable {

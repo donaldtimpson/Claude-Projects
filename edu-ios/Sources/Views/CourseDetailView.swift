@@ -19,6 +19,7 @@ struct CourseDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Filter lectures")
             .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
+            .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
             .navigationDestination(for: CourseOffering.self) { CourseDetailView(courseId: $0.id) }
             .task { if course == nil { await load() } }
     }
@@ -57,6 +58,19 @@ struct CourseDetailView: View {
                         }
                     }
 
+                    // Problem sets sit below the lectures, like the web course page.
+                    if query.isEmpty, !course.problemSets.isEmpty {
+                        SectionHeader(title: "Problem Sets")
+                        ForEach(course.problemSets) { ps in
+                            NavigationLink(value: ProblemSetRoute(
+                                courseId: courseId, problemSetId: ps.id, title: ps.title)
+                            ) {
+                                problemSetRow(ps)
+                            }
+                            .buttonStyle(.lyceumPress)
+                        }
+                    }
+
                     if query.isEmpty, let offerings = course.offerings, !offerings.isEmpty {
                         SectionHeader(title: "Other Offerings")
                         ForEach(offerings) { offering in
@@ -69,6 +83,27 @@ struct CourseDetailView: View {
             }
             .background(Theme.parchment)
         }
+    }
+
+    private func problemSetRow(_ ps: ProblemSetItem) -> some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(ps.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
+                // Same subtitle as the web card: lecture span · solutions · points.
+                let bits = [
+                    ps.lectureSpan,
+                    (ps.hasSolutions ?? false) ? "worked solutions" : nil,
+                    ps.points > 0 ? "\(ps.points) pts" : nil,
+                ].compactMap { $0 }
+                if !bits.isEmpty {
+                    Text(bits.joined(separator: " · "))
+                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+        }
+        .lyceumCard()
     }
 
     private func offeringRow(_ offering: CourseOffering) -> some View {
