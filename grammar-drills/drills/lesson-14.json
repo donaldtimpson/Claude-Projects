@@ -46,5 +46,14 @@
     { "id": "l14-fix-04", "level": 1, "prompt": "Choose the correct verb:\n\n“The bells ___ loudly.”", "options": ["ringed", "rang"], "answer": 1, "explain": "“ring” is irregular: the past is “rang,” never “ringed.”" },
     { "id": "l14-fix-05", "level": 1, "prompt": "Choose the correct verb:\n\n“He has ___ home.”", "options": ["went", "gone"], "answer": 1, "explain": "With the helper “has,” use the participle: has gone." },
     { "id": "l14-fix-06", "level": 1, "prompt": "Choose the correct verb:\n\n“She ___ the milk.”", "options": ["drinked", "drank"], "answer": 1, "explain": "“drink” is irregular: the past is “drank,” never “drinked.”" }
+,
+    { "id": "l14-ri-09", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“talk”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "talk → talked → talked; adds -ed — regular." },
+    { "id": "l14-ri-10", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“eat”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "eat → ate → eaten; the word changes — irregular." },
+    { "id": "l14-ri-11", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“call”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "call → called → called; adds -ed — regular." },
+    { "id": "l14-ri-12", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“take”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "take → took → taken; the word changes — irregular." },
+    { "id": "l14-pp-07", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“eat”", "options": ["eated, eaten", "ate, eaten", "ate, ate"], "answer": 1, "explain": "eat → past “ate” → participle “eaten.”" },
+    { "id": "l14-pp-08", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“sing”", "options": ["singed, sung", "sang, sung", "sung, sang"], "answer": 1, "explain": "sing → past “sang” → participle “sung.”" },
+    { "id": "l14-pp-09", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“come”", "options": ["comed, come", "came, come", "came, came"], "answer": 1, "explain": "come → past “came” → participle “come.”" },
+    { "id": "l14-pp-10", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“know”", "options": ["knowed, known", "knew, known", "known, knew"], "answer": 1, "explain": "know → past “knew” → participle “known.”" }
   ]
 }

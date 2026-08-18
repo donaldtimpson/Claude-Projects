@@ -1426,6 +1426,123 @@
      ],
      "answer": 1,
      "explain": "With “you,” always use were."
+    },
+    {
+     "id": "l03-find-09",
+     "level": 1,
+     "prompt": "Which word is the verb?\n\n“Rivers flow to the sea.”",
+     "options": [
+      "Rivers",
+      "flow",
+      "sea"
+     ],
+     "answer": 1,
+     "explain": "“flow” tells what the rivers do — the verb."
+    },
+    {
+     "id": "l03-find-10",
+     "level": 1,
+     "prompt": "Which word is the verb?\n\n“The clock ticks.”",
+     "options": [
+      "The",
+      "clock",
+      "ticks"
+     ],
+     "answer": 2,
+     "explain": "“ticks” tells what the clock does — the verb."
+    },
+    {
+     "id": "l03-find-11",
+     "level": 1,
+     "prompt": "Which word is the verb?\n\n“Lightning flashed brightly.”",
+     "options": [
+      "Lightning",
+      "flashed",
+      "brightly"
+     ],
+     "answer": 1,
+     "explain": "“flashed” tells the action — the verb."
+    },
+    {
+     "id": "l03-find-12",
+     "level": 1,
+     "prompt": "Which word is the verb?\n\n“Bees buzz softly.”",
+     "options": [
+      "Bees",
+      "buzz",
+      "softly"
+     ],
+     "answer": 1,
+     "explain": "“buzz” tells what the bees do — the verb."
+    },
+    {
+     "id": "l03-abs-07",
+     "level": 1,
+     "prompt": "Does this verb express action, being, or state?\n\n“Snow falls.”",
+     "options": [
+      "Action",
+      "Being",
+      "State"
+     ],
+     "answer": 0,
+     "explain": "“falls” is something done — action."
+    },
+    {
+     "id": "l03-abs-08",
+     "level": 1,
+     "prompt": "Does this verb express action, being, or state?\n\n“They are ready.”",
+     "options": [
+      "Action",
+      "Being",
+      "State"
+     ],
+     "answer": 1,
+     "explain": "“are” expresses being."
+    },
+    {
+     "id": "l03-abs-09",
+     "level": 1,
+     "prompt": "Does this verb express action, being, or state?\n\n“The gate remains open.”",
+     "options": [
+      "Action",
+      "Being",
+      "State"
+     ],
+     "answer": 2,
+     "explain": "“remains” names a condition, not a deed — state."
+    },
+    {
+     "id": "l03-fix-09",
+     "level": 1,
+     "prompt": "Choose the correct verb:\n\n“The sun has ___.”",
+     "options": [
+      "rose",
+      "risen"
+     ],
+     "answer": 1,
+     "explain": "With the helper “has,” use the participle: has risen."
+    },
+    {
+     "id": "l03-fix-10",
+     "level": 1,
+     "prompt": "Choose the correct verb:\n\n“They have ___ the song.”",
+     "options": [
+      "sang",
+      "sung"
+     ],
+     "answer": 1,
+     "explain": "With the helper “have,” use the participle: have sung."
+    },
+    {
+     "id": "l03-fix-11",
+     "level": 1,
+     "prompt": "Choose the correct verb:\n\n“I have ___ a letter.”",
+     "options": [
+      "wrote",
+      "written"
+     ],
+     "answer": 1,
+     "explain": "With the helper “have,” use the participle: have written."
     }
    ]
   },
@@ -2376,6 +2493,54 @@
      ],
      "answer": 1,
      "explain": "“a doctor” names the same person as “my brother” — the appositive."
+    },
+    {
+     "id": "l05-find-09",
+     "level": 1,
+     "prompt": "Which word is the pronoun?\n\n“We sang together.”",
+     "options": [
+      "We",
+      "sang",
+      "together"
+     ],
+     "answer": 0,
+     "explain": "“We” stands in place of a noun — the pronoun."
+    },
+    {
+     "id": "l05-find-10",
+     "level": 1,
+     "prompt": "Which word is the pronoun?\n\n“The gift is for you.”",
+     "options": [
+      "gift",
+      "for",
+      "you"
+     ],
+     "answer": 2,
+     "explain": "“you” stands for the person spoken to — the pronoun."
+    },
+    {
+     "id": "l05-pos-09",
+     "level": 1,
+     "prompt": "Which is the correct possessive?\n\nthe toys of the baby",
+     "options": [
+      "the babys’ toys",
+      "the baby’s toys",
+      "the babies toys"
+     ],
+     "answer": 1,
+     "explain": "One owner — add ’s: the baby’s toys."
+    },
+    {
+     "id": "l05-pos-10",
+     "level": 1,
+     "prompt": "Which is the correct possessive?\n\nthe hats of the girls",
+     "options": [
+      "the girl’s hats",
+      "the girls’ hats",
+      "the girls’s hats"
+     ],
+     "answer": 1,
+     "explain": "More than one, ending in s — add just the apostrophe: the girls’ hats."
     }
    ]
   },
@@ -2830,6 +2995,54 @@
      ],
      "answer": 1,
      "explain": "Use the subject form and name yourself last: The doctor and I."
+    },
+    {
+     "id": "l06-int-05",
+     "level": 1,
+     "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“Whose is this?”",
+     "options": [
+      "Whose",
+      "is",
+      "this"
+     ],
+     "answer": 0,
+     "explain": "“Whose” asks the question and stands alone — the interrogative pronoun."
+    },
+    {
+     "id": "l06-int-06",
+     "level": 1,
+     "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“What fell down?”",
+     "options": [
+      "What",
+      "fell",
+      "down"
+     ],
+     "answer": 0,
+     "explain": "“What” asks the question and stands alone — the interrogative pronoun."
+    },
+    {
+     "id": "l06-ant-07",
+     "level": 1,
+     "prompt": "What is the antecedent (the word the relative stands for)?\n\n“The dog which barked ran off.”",
+     "options": [
+      "dog",
+      "barked",
+      "off"
+     ],
+     "answer": 0,
+     "explain": "“which” stands for “dog” — the antecedent."
+    },
+    {
+     "id": "l06-ant-08",
+     "level": 1,
+     "prompt": "What is the antecedent (the word the relative stands for)?\n\n“People who work hard succeed.”",
+     "options": [
+      "People",
+      "work",
+      "succeed"
+     ],
+     "answer": 0,
+     "explain": "“who” stands for “People” — the antecedent."
     }
    ]
   },
@@ -3274,6 +3487,81 @@
      ],
      "answer": 1,
      "explain": "Use an -ly adverb to tell how to drive: safely."
+    },
+    {
+     "id": "l07-find-09",
+     "level": 1,
+     "prompt": "Which word is the adverb?\n\n“He spoke loudly.”",
+     "options": [
+      "He",
+      "spoke",
+      "loudly"
+     ],
+     "answer": 2,
+     "explain": "“loudly” tells how he spoke — the adverb."
+    },
+    {
+     "id": "l07-find-10",
+     "level": 1,
+     "prompt": "Which word is the adverb?\n\n“She arrived early.”",
+     "options": [
+      "She",
+      "arrived",
+      "early"
+     ],
+     "answer": 2,
+     "explain": "“early” tells when she arrived — the adverb."
+    },
+    {
+     "id": "l07-find-11",
+     "level": 1,
+     "prompt": "Which word is the adverb?\n\n“They rarely complain.”",
+     "options": [
+      "They",
+      "rarely",
+      "complain"
+     ],
+     "answer": 1,
+     "explain": "“rarely” tells how often — the adverb."
+    },
+    {
+     "id": "l07-tell-09",
+     "level": 1,
+     "prompt": "Does this adverb tell how, when, where, or how much?\n\n“loudly”",
+     "options": [
+      "How",
+      "When",
+      "Where",
+      "How much"
+     ],
+     "answer": 0,
+     "explain": "“loudly” tells how — the manner."
+    },
+    {
+     "id": "l07-tell-10",
+     "level": 1,
+     "prompt": "Does this adverb tell how, when, where, or how much?\n\n“always”",
+     "options": [
+      "How",
+      "When",
+      "Where",
+      "How much"
+     ],
+     "answer": 1,
+     "explain": "“always” tells when — the time."
+    },
+    {
+     "id": "l07-tell-11",
+     "level": 1,
+     "prompt": "Does this adverb tell how, when, where, or how much?\n\n“everywhere”",
+     "options": [
+      "How",
+      "When",
+      "Where",
+      "How much"
+     ],
+     "answer": 2,
+     "explain": "“everywhere” tells where — the place."
     }
    ]
   },
@@ -3731,6 +4019,54 @@
      ],
      "answer": 1,
      "explain": "“walking to school” sits next to “wallet,” so it seems the wallet was walking."
+    },
+    {
+     "id": "l08-prep-09",
+     "level": 1,
+     "prompt": "Which word is the preposition?\n\n“The cat hid behind the door.”",
+     "options": [
+      "hid",
+      "behind",
+      "door"
+     ],
+     "answer": 1,
+     "explain": "“behind” shows where the cat hid in relation to the door — the preposition."
+    },
+    {
+     "id": "l08-prep-10",
+     "level": 1,
+     "prompt": "Which word is the preposition?\n\n“She sat near the window.”",
+     "options": [
+      "sat",
+      "near",
+      "window"
+     ],
+     "answer": 1,
+     "explain": "“near” shows where she sat in relation to the window — the preposition."
+    },
+    {
+     "id": "l08-inf-07",
+     "level": 1,
+     "prompt": "Which words make the infinitive?\n\n“They hope to travel.”",
+     "options": [
+      "They",
+      "hope",
+      "to travel"
+     ],
+     "answer": 2,
+     "explain": "“to travel” is “to” plus the verb — the infinitive."
+    },
+    {
+     "id": "l08-inf-08",
+     "level": 1,
+     "prompt": "Which words make the infinitive?\n\n“It is time to sleep.”",
+     "options": [
+      "is",
+      "time",
+      "to sleep"
+     ],
+     "answer": 2,
+     "explain": "“to sleep” is “to” plus the verb — the infinitive."
     }
    ]
   },
@@ -4143,6 +4479,98 @@
      ],
      "answer": 1,
      "explain": "“if” joins the two clauses — the conjunction."
+    },
+    {
+     "id": "l09-cp-09",
+     "level": 1,
+     "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“nor”",
+     "options": [
+      "Conjunction",
+      "Preposition"
+     ],
+     "answer": 0,
+     "explain": "“nor” merely joins — a conjunction."
+    },
+    {
+     "id": "l09-cp-10",
+     "level": 1,
+     "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“at”",
+     "options": [
+      "Conjunction",
+      "Preposition"
+     ],
+     "answer": 1,
+     "explain": "“at” takes an object and shows a relation — a preposition."
+    },
+    {
+     "id": "l09-cp-11",
+     "level": 1,
+     "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“so”",
+     "options": [
+      "Conjunction",
+      "Preposition"
+     ],
+     "answer": 0,
+     "explain": "“so” joins two clauses and needs no object — a conjunction."
+    },
+    {
+     "id": "l09-cp-12",
+     "level": 1,
+     "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“from”",
+     "options": [
+      "Conjunction",
+      "Preposition"
+     ],
+     "answer": 1,
+     "explain": "“from” takes an object and shows a relation — a preposition."
+    },
+    {
+     "id": "l09-cmp-07",
+     "level": 1,
+     "prompt": "Which part is compound (joined by a conjunction)?\n\n“Birds and bees fly.”",
+     "options": [
+      "Subject",
+      "Predicate",
+      "Object"
+     ],
+     "answer": 0,
+     "explain": "“Birds and bees” are two joined subjects — a compound subject."
+    },
+    {
+     "id": "l09-cmp-08",
+     "level": 1,
+     "prompt": "Which part is compound (joined by a conjunction)?\n\n“We laughed and cheered.”",
+     "options": [
+      "Subject",
+      "Predicate",
+      "Object"
+     ],
+     "answer": 1,
+     "explain": "“laughed and cheered” are joined verbs — a compound predicate."
+    },
+    {
+     "id": "l09-cmp-09",
+     "level": 1,
+     "prompt": "Which part is compound (joined by a conjunction)?\n\n“She likes tea and coffee.”",
+     "options": [
+      "Subject",
+      "Predicate",
+      "Object"
+     ],
+     "answer": 2,
+     "explain": "“tea and coffee” are two joined objects — a compound object."
+    },
+    {
+     "id": "l09-cmp-10",
+     "level": 1,
+     "prompt": "Which part is compound (joined by a conjunction)?\n\n“Rain and snow fell.”",
+     "options": [
+      "Subject",
+      "Predicate",
+      "Object"
+     ],
+     "answer": 0,
+     "explain": "“Rain and snow” are two joined subjects — a compound subject."
     }
    ]
   },
@@ -4581,6 +5009,78 @@
      ],
      "answer": 0,
      "explain": "An interjection exclaims sudden feeling."
+    },
+    {
+     "id": "l10-scx-09",
+     "level": 1,
+     "prompt": "Simple, compound, or complex?\n\n“The sun set.”",
+     "options": [
+      "Simple",
+      "Compound",
+      "Complex"
+     ],
+     "answer": 0,
+     "explain": "One statement — a simple sentence."
+    },
+    {
+     "id": "l10-scx-10",
+     "level": 1,
+     "prompt": "Simple, compound, or complex?\n\n“I ran because I was late.”",
+     "options": [
+      "Simple",
+      "Compound",
+      "Complex"
+     ],
+     "answer": 2,
+     "explain": "A subordinate clause (“because I was late”) is built in — a complex sentence."
+    },
+    {
+     "id": "l10-scx-11",
+     "level": 1,
+     "prompt": "Simple, compound, or complex?\n\n“She sang, and we danced.”",
+     "options": [
+      "Simple",
+      "Compound",
+      "Complex"
+     ],
+     "answer": 1,
+     "explain": "Two complete statements joined as equals — a compound sentence."
+    },
+    {
+     "id": "l10-int-07",
+     "level": 1,
+     "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Bravo! Well done.”",
+     "options": [
+      "Bravo",
+      "Well",
+      "done"
+     ],
+     "answer": 0,
+     "explain": "“Bravo” is thrown in to show feeling — the interjection."
+    },
+    {
+     "id": "l10-int-08",
+     "level": 1,
+     "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Yikes, a spider!”",
+     "options": [
+      "Yikes",
+      "spider",
+      "a"
+     ],
+     "answer": 0,
+     "explain": "“Yikes” is thrown in to show feeling — the interjection."
+    },
+    {
+     "id": "l10-int-09",
+     "level": 1,
+     "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Phew, we made it.”",
+     "options": [
+      "Phew",
+      "made",
+      "it"
+     ],
+     "answer": 0,
+     "explain": "“Phew” is thrown in to show feeling — the interjection."
     }
    ]
   },
@@ -5041,6 +5541,81 @@
      ],
      "answer": 0,
      "explain": "Declension names a noun’s forms for number and case."
+    },
+    {
+     "id": "l11-gen-09",
+     "level": 1,
+     "prompt": "What gender is this noun?\n\n“queen”",
+     "options": [
+      "Masculine",
+      "Feminine",
+      "Common",
+      "Neuter"
+     ],
+     "answer": 1,
+     "explain": "“queen” names a female — feminine."
+    },
+    {
+     "id": "l11-gen-10",
+     "level": 1,
+     "prompt": "What gender is this noun?\n\n“cousin”",
+     "options": [
+      "Masculine",
+      "Feminine",
+      "Common",
+      "Neuter"
+     ],
+     "answer": 2,
+     "explain": "“cousin” may be male or female — common."
+    },
+    {
+     "id": "l11-gen-11",
+     "level": 1,
+     "prompt": "What gender is this noun?\n\n“stone”",
+     "options": [
+      "Masculine",
+      "Feminine",
+      "Common",
+      "Neuter"
+     ],
+     "answer": 3,
+     "explain": "“stone” has no sex — neuter."
+    },
+    {
+     "id": "l11-pl-09",
+     "level": 1,
+     "prompt": "Which is the correct plural of “half”?",
+     "options": [
+      "halfs",
+      "halves",
+      "halfes"
+     ],
+     "answer": 1,
+     "explain": "f → ves: half → halves."
+    },
+    {
+     "id": "l11-pl-10",
+     "level": 1,
+     "prompt": "Which is the correct plural of “lady”?",
+     "options": [
+      "ladys",
+      "ladies",
+      "ladyes"
+     ],
+     "answer": 1,
+     "explain": "y after a consonant → ies: lady → ladies."
+    },
+    {
+     "id": "l11-pl-11",
+     "level": 1,
+     "prompt": "Which is the correct plural of “deer”?",
+     "options": [
+      "deers",
+      "deer",
+      "deeres"
+     ],
+     "answer": 1,
+     "explain": "“deer” is the same in singular and plural: deer."
     }
    ]
   },
@@ -6025,6 +6600,110 @@
      ],
      "answer": 0,
      "explain": "A verb agrees with its subject in person and number."
+    },
+    {
+     "id": "l13-ag-07",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“The birds ___ south.”",
+     "options": [
+      "flies",
+      "fly"
+     ],
+     "answer": 1,
+     "explain": "A plural subject takes a plural verb: the birds fly."
+    },
+    {
+     "id": "l13-ag-08",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“My friend ___ here.”",
+     "options": [
+      "live",
+      "lives"
+     ],
+     "answer": 1,
+     "explain": "A singular subject takes a singular verb: my friend lives."
+    },
+    {
+     "id": "l13-ag-09",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“I ___ ready.”",
+     "options": [
+      "is",
+      "am"
+     ],
+     "answer": 1,
+     "explain": "“I” takes “am”: I am ready."
+    },
+    {
+     "id": "l13-ag-10",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“The children ___ playing.”",
+     "options": [
+      "is",
+      "are"
+     ],
+     "answer": 1,
+     "explain": "A plural subject takes a plural verb: the children are."
+    },
+    {
+     "id": "l13-tn-09",
+     "level": 1,
+     "prompt": "What tense is the verb?\n\n“She sings.”",
+     "options": [
+      "Present",
+      "Past",
+      "Future",
+      "Present perfect",
+      "Past perfect",
+      "Future perfect"
+     ],
+     "answer": 0,
+     "explain": "The action is now — present tense."
+    },
+    {
+     "id": "l13-tn-10",
+     "level": 1,
+     "prompt": "What tense is the verb?\n\n“They will arrive.”",
+     "options": [
+      "Present",
+      "Past",
+      "Future",
+      "Present perfect",
+      "Past perfect",
+      "Future perfect"
+     ],
+     "answer": 2,
+     "explain": "The action is to come — future tense."
+    },
+    {
+     "id": "l13-tn-11",
+     "level": 1,
+     "prompt": "What tense is the verb?\n\n“He has finished.”",
+     "options": [
+      "Present",
+      "Past",
+      "Future",
+      "Present perfect",
+      "Past perfect",
+      "Future perfect"
+     ],
+     "answer": 3,
+     "explain": "Past action linked to now — present perfect tense."
+    },
+    {
+     "id": "l13-tn-12",
+     "level": 1,
+     "prompt": "What tense is the verb?\n\n“We had left.”",
+     "options": [
+      "Present",
+      "Past",
+      "Future",
+      "Present perfect",
+      "Past perfect",
+      "Future perfect"
+     ],
+     "answer": 4,
+     "explain": "Action before another past time — past perfect tense."
     }
    ]
   },
@@ -6431,6 +7110,98 @@
      ],
      "answer": 1,
      "explain": "“drink” is irregular: the past is “drank,” never “drinked.”"
+    },
+    {
+     "id": "l14-ri-09",
+     "level": 1,
+     "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“talk”",
+     "options": [
+      "Regular",
+      "Irregular"
+     ],
+     "answer": 0,
+     "explain": "talk → talked → talked; adds -ed — regular."
+    },
+    {
+     "id": "l14-ri-10",
+     "level": 1,
+     "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“eat”",
+     "options": [
+      "Regular",
+      "Irregular"
+     ],
+     "answer": 1,
+     "explain": "eat → ate → eaten; the word changes — irregular."
+    },
+    {
+     "id": "l14-ri-11",
+     "level": 1,
+     "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“call”",
+     "options": [
+      "Regular",
+      "Irregular"
+     ],
+     "answer": 0,
+     "explain": "call → called → called; adds -ed — regular."
+    },
+    {
+     "id": "l14-ri-12",
+     "level": 1,
+     "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“take”",
+     "options": [
+      "Regular",
+      "Irregular"
+     ],
+     "answer": 1,
+     "explain": "take → took → taken; the word changes — irregular."
+    },
+    {
+     "id": "l14-pp-07",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“eat”",
+     "options": [
+      "eated, eaten",
+      "ate, eaten",
+      "ate, ate"
+     ],
+     "answer": 1,
+     "explain": "eat → past “ate” → participle “eaten.”"
+    },
+    {
+     "id": "l14-pp-08",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“sing”",
+     "options": [
+      "singed, sung",
+      "sang, sung",
+      "sung, sang"
+     ],
+     "answer": 1,
+     "explain": "sing → past “sang” → participle “sung.”"
+    },
+    {
+     "id": "l14-pp-09",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“come”",
+     "options": [
+      "comed, come",
+      "came, come",
+      "came, came"
+     ],
+     "answer": 1,
+     "explain": "come → past “came” → participle “come.”"
+    },
+    {
+     "id": "l14-pp-10",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“know”",
+     "options": [
+      "knowed, known",
+      "knew, known",
+      "known, knew"
+     ],
+     "answer": 1,
+     "explain": "know → past “knew” → participle “known.”"
     }
    ]
   },
@@ -6837,6 +7608,131 @@
      ],
      "answer": 0,
      "explain": "“Hurrah” bursts out with feeling — the interjection."
+    },
+    {
+     "id": "l15-cls-09",
+     "level": 1,
+     "prompt": "Which class of adverb is this?\n\n“always”",
+     "options": [
+      "Time",
+      "Place",
+      "Cause",
+      "Manner",
+      "Degree"
+     ],
+     "answer": 0,
+     "explain": "“always” answers “when?” — an adverb of time."
+    },
+    {
+     "id": "l15-cls-10",
+     "level": 1,
+     "prompt": "Which class of adverb is this?\n\n“away”",
+     "options": [
+      "Time",
+      "Place",
+      "Cause",
+      "Manner",
+      "Degree"
+     ],
+     "answer": 1,
+     "explain": "“away” answers “where?” — an adverb of place."
+    },
+    {
+     "id": "l15-cls-11",
+     "level": 1,
+     "prompt": "Which class of adverb is this?\n\n“well”",
+     "options": [
+      "Time",
+      "Place",
+      "Cause",
+      "Manner",
+      "Degree"
+     ],
+     "answer": 3,
+     "explain": "“well” answers “how?” — an adverb of manner."
+    },
+    {
+     "id": "l15-cls-12",
+     "level": 1,
+     "prompt": "Which class of adverb is this?\n\n“too”",
+     "options": [
+      "Time",
+      "Place",
+      "Cause",
+      "Manner",
+      "Degree"
+     ],
+     "answer": 4,
+     "explain": "“too” answers “how much?” — an adverb of degree."
+    },
+    {
+     "id": "l15-cj-09",
+     "level": 1,
+     "prompt": "Which kind of conjunction is this?\n\n“nor”",
+     "options": [
+      "Coordinate",
+      "Subordinate",
+      "Correlative"
+     ],
+     "answer": 0,
+     "explain": "“nor” joins equal parts — coordinate."
+    },
+    {
+     "id": "l15-cj-10",
+     "level": 1,
+     "prompt": "Which kind of conjunction is this?\n\n“when”",
+     "options": [
+      "Coordinate",
+      "Subordinate",
+      "Correlative"
+     ],
+     "answer": 1,
+     "explain": "“when” joins unequal parts (a clause to a main clause) — subordinate."
+    },
+    {
+     "id": "l15-cj-11",
+     "level": 1,
+     "prompt": "Which kind of conjunction is this?\n\n“both…and”",
+     "options": [
+      "Coordinate",
+      "Subordinate",
+      "Correlative"
+     ],
+     "answer": 2,
+     "explain": "“both…and” works in a pair — correlative."
+    },
+    {
+     "id": "l15-fix-07",
+     "level": 1,
+     "prompt": "Choose the correct word(s):\n\n“I haven’t got ___ money.”",
+     "options": [
+      "no",
+      "any"
+     ],
+     "answer": 1,
+     "explain": "Avoid two negatives: haven’t got any money."
+    },
+    {
+     "id": "l15-fix-08",
+     "level": 1,
+     "prompt": "Choose the correct word(s):\n\n“He ___ fast.”",
+     "options": [
+      "run",
+      "runs"
+     ],
+     "answer": 1,
+     "explain": "A singular subject takes a singular verb: he runs."
+    },
+    {
+     "id": "l15-fix-09",
+     "level": 1,
+     "prompt": "Choose the correct word(s):\n\n“The news ___ good.”",
+     "options": [
+      "are",
+      "is"
+     ],
+     "answer": 1,
+     "explain": "“news” takes a singular verb: the news is good."
     }
    ]
   },
@@ -7252,6 +8148,114 @@
      ],
      "answer": 0,
      "explain": "Abridgment turns a subordinate clause into a phrase or a single word."
+    },
+    {
+     "id": "l16-ss-09",
+     "level": 1,
+     "prompt": "What is the simple subject (the bare subject word)?\n\n“A loud noise startled us.”",
+     "options": [
+      "loud",
+      "noise",
+      "startled"
+     ],
+     "answer": 1,
+     "explain": "The bare subject is “noise.”"
+    },
+    {
+     "id": "l16-ss-10",
+     "level": 1,
+     "prompt": "What is the simple subject (the bare subject word)?\n\n“The busy bees worked.”",
+     "options": [
+      "busy",
+      "bees",
+      "worked"
+     ],
+     "answer": 1,
+     "explain": "The bare subject is “bees.”"
+    },
+    {
+     "id": "l16-ss-11",
+     "level": 1,
+     "prompt": "What is the simple subject (the bare subject word)?\n\n“My kind teacher smiled.”",
+     "options": [
+      "kind",
+      "teacher",
+      "smiled"
+     ],
+     "answer": 1,
+     "explain": "The bare subject is “teacher.”"
+    },
+    {
+     "id": "l16-sp-09",
+     "level": 1,
+     "prompt": "What is the simple predicate (the bare verb)?\n\n“The wind blew hard.”",
+     "options": [
+      "wind",
+      "blew",
+      "hard"
+     ],
+     "answer": 1,
+     "explain": "The bare verb is “blew.”"
+    },
+    {
+     "id": "l16-sp-10",
+     "level": 1,
+     "prompt": "What is the simple predicate (the bare verb)?\n\n“The stars shone brightly.”",
+     "options": [
+      "stars",
+      "shone",
+      "brightly"
+     ],
+     "answer": 1,
+     "explain": "The bare verb is “shone.”"
+    },
+    {
+     "id": "l16-sp-11",
+     "level": 1,
+     "prompt": "What is the simple predicate (the bare verb)?\n\n“The train stopped suddenly.”",
+     "options": [
+      "train",
+      "stopped",
+      "suddenly"
+     ],
+     "answer": 1,
+     "explain": "The bare verb is “stopped.”"
+    },
+    {
+     "id": "l16-el-07",
+     "level": 1,
+     "prompt": "Which word is understood (left out)?\n\n“Close the window.”",
+     "options": [
+      "you",
+      "I",
+      "he"
+     ],
+     "answer": 0,
+     "explain": "A command has the understood subject “you”: [You] close the window."
+    },
+    {
+     "id": "l16-el-08",
+     "level": 1,
+     "prompt": "Which word is understood (left out)?\n\n“She runs faster than I ___.”",
+     "options": [
+      "run",
+      "runs",
+      "ran"
+     ],
+     "answer": 0,
+     "explain": "The comparison drops the verb: faster than I [run]."
+    },
+    {
+     "id": "l16-el-09",
+     "level": 1,
+     "prompt": "Which word is understood (left out)?\n\n“Sit down.”",
+     "options": [
+      "you",
+      "we",
+      "they"
+     ],
+     "answer": 0,
+     "explain": "A command has the understood subject “you”: [You] sit down."
     }
    ]
   },
@@ -7618,6 +8622,183 @@
      ],
      "answer": 0,
      "explain": "The date goes in the heading, at the top."
+    },
+    {
+     "id": "l17-case-09",
+     "level": 1,
+     "prompt": "What case is the noun or pronoun in ( )?\n\n“The queen rules.” (queen)",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "“queen” is the subject — nominative case."
+    },
+    {
+     "id": "l17-case-10",
+     "level": 1,
+     "prompt": "What case is the noun or pronoun in ( )?\n\n“They praised her.” (her)",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 1,
+     "explain": "“her” is the object of “praised” — objective case."
+    },
+    {
+     "id": "l17-case-11",
+     "level": 1,
+     "prompt": "What case is the noun or pronoun in ( )?\n\n“The child’s toy broke.” (child’s)",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 2,
+     "explain": "“child’s” shows ownership — possessive case."
+    },
+    {
+     "id": "l17-case-12",
+     "level": 1,
+     "prompt": "What case is the noun or pronoun in ( )?\n\n“Ships sail the sea.” (Ships)",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "“Ships” is the subject — nominative case."
+    },
+    {
+     "id": "l17-ag-09",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“Books ___ on the shelf.”",
+     "options": [
+      "is",
+      "are"
+     ],
+     "answer": 1,
+     "explain": "A plural subject takes a plural verb: books are."
+    },
+    {
+     "id": "l17-ag-10",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“Each boy ___ a seat.”",
+     "options": [
+      "have",
+      "has"
+     ],
+     "answer": 1,
+     "explain": "“Each” is singular: each boy has a seat."
+    },
+    {
+     "id": "l17-ag-11",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“My parents ___ home.”",
+     "options": [
+      "is",
+      "are"
+     ],
+     "answer": 1,
+     "explain": "A plural subject takes a plural verb: my parents are."
+    },
+    {
+     "id": "l17-ag-12",
+     "level": 1,
+     "prompt": "Choose the verb that agrees with the subject:\n\n“The baby ___ asleep.”",
+     "options": [
+      "are",
+      "is"
+     ],
+     "answer": 1,
+     "explain": "A singular subject takes a singular verb: the baby is."
+    },
+    {
+     "id": "l17-let-07",
+     "level": 1,
+     "prompt": "Which part of a letter is this?\n\n“Sincerely,”",
+     "options": [
+      "Heading",
+      "Greeting",
+      "Body",
+      "Closing",
+      "Signature"
+     ],
+     "answer": 3,
+     "explain": "It ends the letter politely — the closing."
+    },
+    {
+     "id": "l17-let-08",
+     "level": 1,
+     "prompt": "Which part of a letter is this?\n\n“Please write back soon.”",
+     "options": [
+      "Heading",
+      "Greeting",
+      "Body",
+      "Closing",
+      "Signature"
+     ],
+     "answer": 2,
+     "explain": "It is part of the message — the body."
+    },
+    {
+     "id": "l17-let-09",
+     "level": 1,
+     "prompt": "Which part of a letter is this?\n\n“Ann” (signed at the end)",
+     "options": [
+      "Heading",
+      "Greeting",
+      "Body",
+      "Closing",
+      "Signature"
+     ],
+     "answer": 4,
+     "explain": "The writer’s name at the end is the signature."
+    },
+    {
+     "id": "l17-fact-07",
+     "level": 1,
+     "prompt": "A noun showing ownership is in which case?",
+     "options": [
+      "Possessive",
+      "Nominative",
+      "Objective",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "Ownership is shown by the possessive case."
+    },
+    {
+     "id": "l17-fact-08",
+     "level": 1,
+     "prompt": "An adjective belongs to (modifies) what?",
+     "options": [
+      "A noun or pronoun",
+      "A verb",
+      "An adverb",
+      "A preposition"
+     ],
+     "answer": 0,
+     "explain": "An adjective belongs to some noun or pronoun."
+    },
+    {
+     "id": "l17-fact-09",
+     "level": 1,
+     "prompt": "Which part of a letter comes first?",
+     "options": [
+      "Heading",
+      "Signature",
+      "Closing",
+      "Body"
+     ],
+     "answer": 0,
+     "explain": "The heading (town and date) comes first, at the top."
     }
    ]
   },
@@ -8006,6 +9187,154 @@
      ],
      "answer": 0,
      "explain": "A question ends with a question mark."
+    },
+    {
+     "id": "l18-end-09",
+     "level": 1,
+     "prompt": "Which end mark belongs here?\n\n“Please close the gate ___”",
+     "options": [
+      ".",
+      "?",
+      "!"
+     ],
+     "answer": 0,
+     "explain": "A calm request ends with a period."
+    },
+    {
+     "id": "l18-end-10",
+     "level": 1,
+     "prompt": "Which end mark belongs here?\n\n“Are you ready ___”",
+     "options": [
+      ".",
+      "?",
+      "!"
+     ],
+     "answer": 1,
+     "explain": "A question ends with a question mark."
+    },
+    {
+     "id": "l18-end-11",
+     "level": 1,
+     "prompt": "Which end mark belongs here?\n\n“What a mess ___”",
+     "options": [
+      ".",
+      "?",
+      "!"
+     ],
+     "answer": 2,
+     "explain": "An exclamatory “What a …” ends with an exclamation point."
+    },
+    {
+     "id": "l18-end-12",
+     "level": 1,
+     "prompt": "Which end mark belongs here?\n\n“The bell rang ___”",
+     "options": [
+      ".",
+      "?",
+      "!"
+     ],
+     "answer": 0,
+     "explain": "A statement ends with a period."
+    },
+    {
+     "id": "l18-com-07",
+     "level": 1,
+     "prompt": "Which is correctly punctuated?\n\napples oranges and pears",
+     "options": [
+      "apples oranges and pears",
+      "apples, oranges, and pears",
+      "apples and oranges and pears"
+     ],
+     "answer": 1,
+     "explain": "A series of three uses commas: apples, oranges, and pears."
+    },
+    {
+     "id": "l18-com-08",
+     "level": 1,
+     "prompt": "Which is correctly punctuated?\n\nNo I can’t",
+     "options": [
+      "No I can’t",
+      "No, I can’t",
+      "No I, can’t"
+     ],
+     "answer": 1,
+     "explain": "Use a comma after the opening word: No, I can’t."
+    },
+    {
+     "id": "l18-com-09",
+     "level": 1,
+     "prompt": "Which is correctly punctuated?\n\none two and three",
+     "options": [
+      "one two and three",
+      "one, two, and three",
+      "one and two and three"
+     ],
+     "answer": 1,
+     "explain": "A series of three uses commas: one, two, and three."
+    },
+    {
+     "id": "l18-com-10",
+     "level": 1,
+     "prompt": "Which is correctly punctuated?\n\nOh what a day",
+     "options": [
+      "Oh what a day",
+      "Oh, what a day",
+      "Oh what, a day"
+     ],
+     "answer": 1,
+     "explain": "Use a comma after the opening word: Oh, what a day."
+    },
+    {
+     "id": "l18-name-07",
+     "level": 1,
+     "prompt": "Which mark completes this?\n\n“How lovely ___”",
+     "options": [
+      "Exclamation point",
+      "Period",
+      "Question mark",
+      "Comma"
+     ],
+     "answer": 0,
+     "explain": "Strong feeling takes an exclamation point."
+    },
+    {
+     "id": "l18-name-08",
+     "level": 1,
+     "prompt": "Which mark completes this?\n\n“Do you agree ___”",
+     "options": [
+      "Question mark",
+      "Period",
+      "Exclamation point",
+      "Comma"
+     ],
+     "answer": 0,
+     "explain": "A question takes a question mark."
+    },
+    {
+     "id": "l18-name-09",
+     "level": 1,
+     "prompt": "Which mark belongs between the items?\n\nmilk ___ eggs ___ bread",
+     "options": [
+      "Comma",
+      "Colon",
+      "Dash",
+      "Period"
+     ],
+     "answer": 0,
+     "explain": "Items in a series are separated by commas."
+    },
+    {
+     "id": "l18-name-10",
+     "level": 1,
+     "prompt": "Which mark is used in the contraction “can’t”?",
+     "options": [
+      "Apostrophe",
+      "Comma",
+      "Colon",
+      "Dash"
+     ],
+     "answer": 0,
+     "explain": "A contraction uses an apostrophe."
     }
    ]
   },
@@ -8448,6 +9777,76 @@
      ],
      "answer": 0,
      "explain": "Words made from proper names take a capital letter."
+    },
+    {
+     "id": "l19-c-01",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“fly”",
+     "options": [
+      "flied, flown",
+      "flew, flown",
+      "flew, flew"
+     ],
+     "answer": 1,
+     "explain": "fly → flew → flown."
+    },
+    {
+     "id": "l19-c-02",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“grow”",
+     "options": [
+      "growed, grown",
+      "grew, grown",
+      "grew, grew"
+     ],
+     "answer": 1,
+     "explain": "grow → grew → grown."
+    },
+    {
+     "id": "l19-c-03",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“swim”",
+     "options": [
+      "swimmed, swum",
+      "swam, swum",
+      "swum, swam"
+     ],
+     "answer": 1,
+     "explain": "swim → swam → swum."
+    },
+    {
+     "id": "l19-c-04",
+     "level": 1,
+     "prompt": "Which gives the correct past and perfect participle?\n\n“steal”",
+     "options": [
+      "stealed, stolen",
+      "stole, stolen",
+      "stole, stole"
+     ],
+     "answer": 1,
+     "explain": "steal → stole → stolen."
+    },
+    {
+     "id": "l19-cap-09",
+     "level": 1,
+     "prompt": "Should this word begin with a capital or a small letter?\n\n“france”",
+     "options": [
+      "Capital",
+      "Small"
+     ],
+     "answer": 0,
+     "explain": "A country name is a proper name — capital."
+    },
+    {
+     "id": "l19-cap-10",
+     "level": 1,
+     "prompt": "Should this word begin with a capital or a small letter?\n\n“book”",
+     "options": [
+      "Capital",
+      "Small"
+     ],
+     "answer": 1,
+     "explain": "A common noun takes a small letter."
     }
    ]
   }

@@ -48,5 +48,12 @@
     { "id": "l19-rule-04", "level": 1, "prompt": "In “It rains,” what kind of verb is “rains”?", "options": ["Unipersonal", "Transitive", "Passive", "Copulative"], "answer": 0, "explain": "It asserts an act with no real subject — a unipersonal verb." },
     { "id": "l19-rule-05", "level": 1, "prompt": "An irregular verb does NOT form its past by doing what?", "options": ["Adding -ed", "Changing the word", "Staying the same", "Using a helper"], "answer": 0, "explain": "Irregular verbs never add -ed; they change or stay the same instead." },
     { "id": "l19-rule-06", "level": 1, "prompt": "Words made from proper names (American, French) take a ___.", "options": ["Capital", "Small letter", "Comma", "Hyphen"], "answer": 0, "explain": "Words made from proper names take a capital letter." }
+,
+    { "id": "l19-c-01", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“fly”", "options": ["flied, flown", "flew, flown", "flew, flew"], "answer": 1, "explain": "fly → flew → flown." },
+    { "id": "l19-c-02", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“grow”", "options": ["growed, grown", "grew, grown", "grew, grew"], "answer": 1, "explain": "grow → grew → grown." },
+    { "id": "l19-c-03", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“swim”", "options": ["swimmed, swum", "swam, swum", "swum, swam"], "answer": 1, "explain": "swim → swam → swum." },
+    { "id": "l19-c-04", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“steal”", "options": ["stealed, stolen", "stole, stolen", "stole, stole"], "answer": 1, "explain": "steal → stole → stolen." },
+    { "id": "l19-cap-09", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“france”", "options": ["Capital", "Small"], "answer": 0, "explain": "A country name is a proper name — capital." },
+    { "id": "l19-cap-10", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“book”", "options": ["Capital", "Small"], "answer": 1, "explain": "A common noun takes a small letter." }
   ]
 }

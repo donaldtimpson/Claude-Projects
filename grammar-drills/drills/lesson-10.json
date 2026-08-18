@@ -48,5 +48,12 @@
     { "id": "l10-pos-06", "level": 1, "prompt": "Which part of speech shows relation and takes an object?", "options": ["Preposition", "Conjunction", "Verb", "Interjection"], "answer": 0, "explain": "A preposition shows relation and takes an object." },
     { "id": "l10-pos-07", "level": 1, "prompt": "Which part of speech only joins words or groups?", "options": ["Conjunction", "Preposition", "Adverb", "Pronoun"], "answer": 0, "explain": "A conjunction only joins words or groups." },
     { "id": "l10-pos-08", "level": 1, "prompt": "Which part of speech exclaims sudden feeling?", "options": ["Interjection", "Adverb", "Verb", "Noun"], "answer": 0, "explain": "An interjection exclaims sudden feeling." }
+,
+    { "id": "l10-scx-09", "level": 1, "prompt": "Simple, compound, or complex?\n\n“The sun set.”", "options": ["Simple", "Compound", "Complex"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-scx-10", "level": 1, "prompt": "Simple, compound, or complex?\n\n“I ran because I was late.”", "options": ["Simple", "Compound", "Complex"], "answer": 2, "explain": "A subordinate clause (“because I was late”) is built in — a complex sentence." },
+    { "id": "l10-scx-11", "level": 1, "prompt": "Simple, compound, or complex?\n\n“She sang, and we danced.”", "options": ["Simple", "Compound", "Complex"], "answer": 1, "explain": "Two complete statements joined as equals — a compound sentence." },
+    { "id": "l10-int-07", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Bravo! Well done.”", "options": ["Bravo", "Well", "done"], "answer": 0, "explain": "“Bravo” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-08", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Yikes, a spider!”", "options": ["Yikes", "spider", "a"], "answer": 0, "explain": "“Yikes” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-09", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Phew, we made it.”", "options": ["Phew", "made", "it"], "answer": 0, "explain": "“Phew” is thrown in to show feeling — the interjection." }
   ]
 }

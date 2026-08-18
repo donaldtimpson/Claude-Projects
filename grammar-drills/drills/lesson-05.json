@@ -50,5 +50,10 @@
     { "id": "l05-app-04", "level": 1, "prompt": "Which words are the appositive (they rename the noun)?\n\n“Washington, the capital, is on the Potomac.”", "options": ["Washington", "the capital", "the Potomac"], "answer": 1, "explain": "“the capital” renames Washington — the appositive." },
     { "id": "l05-app-05", "level": 1, "prompt": "Which words are the appositive (they rename the noun)?\n\n“Stephenson, the engineer, lived in England.”", "options": ["Stephenson", "the engineer", "in England"], "answer": 1, "explain": "“the engineer” renames Stephenson — the appositive." },
     { "id": "l05-app-06", "level": 1, "prompt": "Which words are the appositive (they rename the noun)?\n\n“My brother, a doctor, arrived.”", "options": ["My brother", "a doctor", "arrived"], "answer": 1, "explain": "“a doctor” names the same person as “my brother” — the appositive." }
+,
+    { "id": "l05-find-09", "level": 1, "prompt": "Which word is the pronoun?\n\n“We sang together.”", "options": ["We", "sang", "together"], "answer": 0, "explain": "“We” stands in place of a noun — the pronoun." },
+    { "id": "l05-find-10", "level": 1, "prompt": "Which word is the pronoun?\n\n“The gift is for you.”", "options": ["gift", "for", "you"], "answer": 2, "explain": "“you” stands for the person spoken to — the pronoun." },
+    { "id": "l05-pos-09", "level": 1, "prompt": "Which is the correct possessive?\n\nthe toys of the baby", "options": ["the babys’ toys", "the baby’s toys", "the babies toys"], "answer": 1, "explain": "One owner — add ’s: the baby’s toys." },
+    { "id": "l05-pos-10", "level": 1, "prompt": "Which is the correct possessive?\n\nthe hats of the girls", "options": ["the girl’s hats", "the girls’ hats", "the girls’s hats"], "answer": 1, "explain": "More than one, ending in s — add just the apostrophe: the girls’ hats." }
   ]
 }

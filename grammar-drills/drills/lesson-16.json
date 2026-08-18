@@ -45,5 +45,15 @@
     { "id": "l16-cx-03", "level": 1, "prompt": "What is the complete subject?\n\n“My old friend writes letters.”", "options": ["My old friend", "writes letters", "friend"], "answer": 0, "explain": "The subject with its modifiers is “My old friend.”" },
     { "id": "l16-cx-04", "level": 1, "prompt": "What is the complete predicate?\n\n“The tired soldiers marched slowly.”", "options": ["The tired soldiers", "marched slowly", "marched"], "answer": 1, "explain": "The verb with its modifiers is “marched slowly.”" },
     { "id": "l16-cx-05", "level": 1, "prompt": "Abridgment shortens a complex sentence by turning a clause into a ___.", "options": ["phrase or single word", "new sentence", "question", "command"], "answer": 0, "explain": "Abridgment turns a subordinate clause into a phrase or a single word." }
+,
+    { "id": "l16-ss-09", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“A loud noise startled us.”", "options": ["loud", "noise", "startled"], "answer": 1, "explain": "The bare subject is “noise.”" },
+    { "id": "l16-ss-10", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“The busy bees worked.”", "options": ["busy", "bees", "worked"], "answer": 1, "explain": "The bare subject is “bees.”" },
+    { "id": "l16-ss-11", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“My kind teacher smiled.”", "options": ["kind", "teacher", "smiled"], "answer": 1, "explain": "The bare subject is “teacher.”" },
+    { "id": "l16-sp-09", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The wind blew hard.”", "options": ["wind", "blew", "hard"], "answer": 1, "explain": "The bare verb is “blew.”" },
+    { "id": "l16-sp-10", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The stars shone brightly.”", "options": ["stars", "shone", "brightly"], "answer": 1, "explain": "The bare verb is “shone.”" },
+    { "id": "l16-sp-11", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The train stopped suddenly.”", "options": ["train", "stopped", "suddenly"], "answer": 1, "explain": "The bare verb is “stopped.”" },
+    { "id": "l16-el-07", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Close the window.”", "options": ["you", "I", "he"], "answer": 0, "explain": "A command has the understood subject “you”: [You] close the window." },
+    { "id": "l16-el-08", "level": 1, "prompt": "Which word is understood (left out)?\n\n“She runs faster than I ___.”", "options": ["run", "runs", "ran"], "answer": 0, "explain": "The comparison drops the verb: faster than I [run]." },
+    { "id": "l16-el-09", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Sit down.”", "options": ["you", "we", "they"], "answer": 0, "explain": "A command has the understood subject “you”: [You] sit down." }
   ]
 }

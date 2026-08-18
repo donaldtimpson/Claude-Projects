@@ -43,5 +43,16 @@
     { "id": "l03-fix-06", "level": 1, "prompt": "Choose the correct verb:\n\n“The bell has ___.”", "options": ["rang", "rung"], "answer": 1, "explain": "With the helper “has,” use the participle: has rung." },
     { "id": "l03-fix-07", "level": 1, "prompt": "Choose the correct verb:\n\n“He ___ his work well yesterday.”", "options": ["did", "done"], "answer": 0, "explain": "Past time, no helper: did (never “done” alone)." },
     { "id": "l03-fix-08", "level": 1, "prompt": "Choose the correct verb:\n\n“You ___ there when it happened.”", "options": ["was", "were"], "answer": 1, "explain": "With “you,” always use were." }
+,
+    { "id": "l03-find-09", "level": 1, "prompt": "Which word is the verb?\n\n“Rivers flow to the sea.”", "options": ["Rivers", "flow", "sea"], "answer": 1, "explain": "“flow” tells what the rivers do — the verb." },
+    { "id": "l03-find-10", "level": 1, "prompt": "Which word is the verb?\n\n“The clock ticks.”", "options": ["The", "clock", "ticks"], "answer": 2, "explain": "“ticks” tells what the clock does — the verb." },
+    { "id": "l03-find-11", "level": 1, "prompt": "Which word is the verb?\n\n“Lightning flashed brightly.”", "options": ["Lightning", "flashed", "brightly"], "answer": 1, "explain": "“flashed” tells the action — the verb." },
+    { "id": "l03-find-12", "level": 1, "prompt": "Which word is the verb?\n\n“Bees buzz softly.”", "options": ["Bees", "buzz", "softly"], "answer": 1, "explain": "“buzz” tells what the bees do — the verb." },
+    { "id": "l03-abs-07", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“Snow falls.”", "options": ["Action", "Being", "State"], "answer": 0, "explain": "“falls” is something done — action." },
+    { "id": "l03-abs-08", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“They are ready.”", "options": ["Action", "Being", "State"], "answer": 1, "explain": "“are” expresses being." },
+    { "id": "l03-abs-09", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“The gate remains open.”", "options": ["Action", "Being", "State"], "answer": 2, "explain": "“remains” names a condition, not a deed — state." },
+    { "id": "l03-fix-09", "level": 1, "prompt": "Choose the correct verb:\n\n“The sun has ___.”", "options": ["rose", "risen"], "answer": 1, "explain": "With the helper “has,” use the participle: has risen." },
+    { "id": "l03-fix-10", "level": 1, "prompt": "Choose the correct verb:\n\n“They have ___ the song.”", "options": ["sang", "sung"], "answer": 1, "explain": "With the helper “have,” use the participle: have sung." },
+    { "id": "l03-fix-11", "level": 1, "prompt": "Choose the correct verb:\n\n“I have ___ a letter.”", "options": ["wrote", "written"], "answer": 1, "explain": "With the helper “have,” use the participle: have written." }
   ]
 }

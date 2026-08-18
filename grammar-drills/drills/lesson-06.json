@@ -51,5 +51,10 @@
     { "id": "l06-fix-06", "level": 1, "prompt": "Choose the correct form:\n\n“This house is ___.”", "options": ["our’s", "ours"], "answer": 1, "explain": "Possessive pronouns take no apostrophe: ours." },
     { "id": "l06-fix-07", "level": 1, "prompt": "Choose the correct form:\n\n“___ were tardy.”", "options": ["I and he", "He and I"], "answer": 1, "explain": "Name yourself last: He and I were tardy." },
     { "id": "l06-fix-08", "level": 1, "prompt": "Choose the correct form:\n\n“___ were there.”", "options": ["Me and the doctor", "The doctor and I"], "answer": 1, "explain": "Use the subject form and name yourself last: The doctor and I." }
+,
+    { "id": "l06-int-05", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“Whose is this?”", "options": ["Whose", "is", "this"], "answer": 0, "explain": "“Whose” asks the question and stands alone — the interrogative pronoun." },
+    { "id": "l06-int-06", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“What fell down?”", "options": ["What", "fell", "down"], "answer": 0, "explain": "“What” asks the question and stands alone — the interrogative pronoun." },
+    { "id": "l06-ant-07", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“The dog which barked ran off.”", "options": ["dog", "barked", "off"], "answer": 0, "explain": "“which” stands for “dog” — the antecedent." },
+    { "id": "l06-ant-08", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“People who work hard succeed.”", "options": ["People", "work", "succeed"], "answer": 0, "explain": "“who” stands for “People” — the antecedent." }
   ]
 }

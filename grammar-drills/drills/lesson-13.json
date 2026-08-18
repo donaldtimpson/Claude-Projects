@@ -46,5 +46,14 @@
     { "id": "l13-pr-02", "level": 1, "prompt": "How many tenses are there?", "options": ["Three", "Four", "Five", "Six"], "answer": 3, "explain": "There are six tenses." },
     { "id": "l13-pr-03", "level": 1, "prompt": "How many modes are there?", "options": ["Three", "Four", "Five", "Six"], "answer": 2, "explain": "There are five modes: indicative, potential, subjunctive, imperative, infinitive." },
     { "id": "l13-pr-04", "level": 1, "prompt": "A verb must agree with its subject in what?", "options": ["Person and number", "Gender and case", "Voice and mode", "Tense only"], "answer": 0, "explain": "A verb agrees with its subject in person and number." }
+,
+    { "id": "l13-ag-07", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The birds ___ south.”", "options": ["flies", "fly"], "answer": 1, "explain": "A plural subject takes a plural verb: the birds fly." },
+    { "id": "l13-ag-08", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“My friend ___ here.”", "options": ["live", "lives"], "answer": 1, "explain": "A singular subject takes a singular verb: my friend lives." },
+    { "id": "l13-ag-09", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“I ___ ready.”", "options": ["is", "am"], "answer": 1, "explain": "“I” takes “am”: I am ready." },
+    { "id": "l13-ag-10", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The children ___ playing.”", "options": ["is", "are"], "answer": 1, "explain": "A plural subject takes a plural verb: the children are." },
+    { "id": "l13-tn-09", "level": 1, "prompt": "What tense is the verb?\n\n“She sings.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 0, "explain": "The action is now — present tense." },
+    { "id": "l13-tn-10", "level": 1, "prompt": "What tense is the verb?\n\n“They will arrive.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 2, "explain": "The action is to come — future tense." },
+    { "id": "l13-tn-11", "level": 1, "prompt": "What tense is the verb?\n\n“He has finished.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 3, "explain": "Past action linked to now — present perfect tense." },
+    { "id": "l13-tn-12", "level": 1, "prompt": "What tense is the verb?\n\n“We had left.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 4, "explain": "Action before another past time — past perfect tense." }
   ]
 }

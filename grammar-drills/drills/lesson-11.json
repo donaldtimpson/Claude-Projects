@@ -48,5 +48,12 @@
     { "id": "l11-prop-04", "level": 1, "prompt": "How many properties does a noun have (gender, person, number, case)?", "options": ["Two", "Three", "Four", "Five"], "answer": 2, "explain": "A noun has four properties: gender, person, number, and case." },
     { "id": "l11-prop-05", "level": 1, "prompt": "What does the property “number” tell?", "options": ["One or more than one", "Who owns it", "The action done", "The relation shown"], "answer": 0, "explain": "Number tells one (singular) or more than one (plural)." },
     { "id": "l11-prop-06", "level": 1, "prompt": "Declension names a noun’s forms for what?", "options": ["Number and case", "Gender and person", "Tense", "Mood"], "answer": 0, "explain": "Declension names a noun’s forms for number and case." }
+,
+    { "id": "l11-gen-09", "level": 1, "prompt": "What gender is this noun?\n\n“queen”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 1, "explain": "“queen” names a female — feminine." },
+    { "id": "l11-gen-10", "level": 1, "prompt": "What gender is this noun?\n\n“cousin”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 2, "explain": "“cousin” may be male or female — common." },
+    { "id": "l11-gen-11", "level": 1, "prompt": "What gender is this noun?\n\n“stone”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 3, "explain": "“stone” has no sex — neuter." },
+    { "id": "l11-pl-09", "level": 1, "prompt": "Which is the correct plural of “half”?", "options": ["halfs", "halves", "halfes"], "answer": 1, "explain": "f → ves: half → halves." },
+    { "id": "l11-pl-10", "level": 1, "prompt": "Which is the correct plural of “lady”?", "options": ["ladys", "ladies", "ladyes"], "answer": 1, "explain": "y after a consonant → ies: lady → ladies." },
+    { "id": "l11-pl-11", "level": 1, "prompt": "Which is the correct plural of “deer”?", "options": ["deers", "deer", "deeres"], "answer": 1, "explain": "“deer” is the same in singular and plural: deer." }
   ]
 }

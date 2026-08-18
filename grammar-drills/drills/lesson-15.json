@@ -44,5 +44,16 @@
     { "id": "l15-int-02", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Ouch! I fell.”", "options": ["Ouch", "I", "fell"], "answer": 0, "explain": "“Ouch” bursts out with feeling — the interjection." },
     { "id": "l15-int-03", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Alas, he failed.”", "options": ["Alas", "he", "failed"], "answer": 0, "explain": "“Alas” bursts out with feeling — the interjection." },
     { "id": "l15-int-04", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Hurrah, we won!”", "options": ["Hurrah", "we", "won"], "answer": 0, "explain": "“Hurrah” bursts out with feeling — the interjection." }
+,
+    { "id": "l15-cls-09", "level": 1, "prompt": "Which class of adverb is this?\n\n“always”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 0, "explain": "“always” answers “when?” — an adverb of time." },
+    { "id": "l15-cls-10", "level": 1, "prompt": "Which class of adverb is this?\n\n“away”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 1, "explain": "“away” answers “where?” — an adverb of place." },
+    { "id": "l15-cls-11", "level": 1, "prompt": "Which class of adverb is this?\n\n“well”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 3, "explain": "“well” answers “how?” — an adverb of manner." },
+    { "id": "l15-cls-12", "level": 1, "prompt": "Which class of adverb is this?\n\n“too”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 4, "explain": "“too” answers “how much?” — an adverb of degree." },
+    { "id": "l15-cj-09", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“nor”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 0, "explain": "“nor” joins equal parts — coordinate." },
+    { "id": "l15-cj-10", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“when”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 1, "explain": "“when” joins unequal parts (a clause to a main clause) — subordinate." },
+    { "id": "l15-cj-11", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“both…and”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 2, "explain": "“both…and” works in a pair — correlative." },
+    { "id": "l15-fix-07", "level": 1, "prompt": "Choose the correct word(s):\n\n“I haven’t got ___ money.”", "options": ["no", "any"], "answer": 1, "explain": "Avoid two negatives: haven’t got any money." },
+    { "id": "l15-fix-08", "level": 1, "prompt": "Choose the correct word(s):\n\n“He ___ fast.”", "options": ["run", "runs"], "answer": 1, "explain": "A singular subject takes a singular verb: he runs." },
+    { "id": "l15-fix-09", "level": 1, "prompt": "Choose the correct word(s):\n\n“The news ___ good.”", "options": ["are", "is"], "answer": 1, "explain": "“news” takes a singular verb: the news is good." }
   ]
 }

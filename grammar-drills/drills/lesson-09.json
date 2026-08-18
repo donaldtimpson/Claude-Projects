@@ -46,5 +46,14 @@
     { "id": "l09-fnd2-04", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“I waited, since you asked.”", "options": ["waited", "since", "asked"], "answer": 1, "explain": "“since” joins the two clauses — the conjunction." },
     { "id": "l09-fnd2-05", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“We rest because we are tired.”", "options": ["rest", "because", "tired"], "answer": 1, "explain": "“because” joins the two clauses — the conjunction." },
     { "id": "l09-fnd2-06", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Call me if you can.”", "options": ["Call", "if", "can"], "answer": 1, "explain": "“if” joins the two clauses — the conjunction." }
+,
+    { "id": "l09-cp-09", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“nor”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“nor” merely joins — a conjunction." },
+    { "id": "l09-cp-10", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“at”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“at” takes an object and shows a relation — a preposition." },
+    { "id": "l09-cp-11", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“so”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“so” joins two clauses and needs no object — a conjunction." },
+    { "id": "l09-cp-12", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“from”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“from” takes an object and shows a relation — a preposition." },
+    { "id": "l09-cmp-07", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“Birds and bees fly.”", "options": ["Subject", "Predicate", "Object"], "answer": 0, "explain": "“Birds and bees” are two joined subjects — a compound subject." },
+    { "id": "l09-cmp-08", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“We laughed and cheered.”", "options": ["Subject", "Predicate", "Object"], "answer": 1, "explain": "“laughed and cheered” are joined verbs — a compound predicate." },
+    { "id": "l09-cmp-09", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“She likes tea and coffee.”", "options": ["Subject", "Predicate", "Object"], "answer": 2, "explain": "“tea and coffee” are two joined objects — a compound object." },
+    { "id": "l09-cmp-10", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“Rain and snow fell.”", "options": ["Subject", "Predicate", "Object"], "answer": 0, "explain": "“Rain and snow” are two joined subjects — a compound subject." }
   ]
 }

@@ -42,5 +42,18 @@
     { "id": "l18-job-02", "level": 1, "prompt": "Which mark ends the sentence “Shut the door”?", "options": ["Period", "Question mark", "Exclamation point", "Comma"], "answer": 0, "explain": "A command ends with a period." },
     { "id": "l18-job-03", "level": 1, "prompt": "Which mark is used in “don’t” and “John’s”?", "options": ["Apostrophe", "Comma", "Dash", "Colon"], "answer": 0, "explain": "Contractions and possessives use an apostrophe." },
     { "id": "l18-job-04", "level": 1, "prompt": "Which mark ends the question “Where are you?”", "options": ["Question mark", "Period", "Comma", "Colon"], "answer": 0, "explain": "A question ends with a question mark." }
+,
+    { "id": "l18-end-09", "level": 1, "prompt": "Which end mark belongs here?\n\n“Please close the gate ___”", "options": [".", "?", "!"], "answer": 0, "explain": "A calm request ends with a period." },
+    { "id": "l18-end-10", "level": 1, "prompt": "Which end mark belongs here?\n\n“Are you ready ___”", "options": [".", "?", "!"], "answer": 1, "explain": "A question ends with a question mark." },
+    { "id": "l18-end-11", "level": 1, "prompt": "Which end mark belongs here?\n\n“What a mess ___”", "options": [".", "?", "!"], "answer": 2, "explain": "An exclamatory “What a …” ends with an exclamation point." },
+    { "id": "l18-end-12", "level": 1, "prompt": "Which end mark belongs here?\n\n“The bell rang ___”", "options": [".", "?", "!"], "answer": 0, "explain": "A statement ends with a period." },
+    { "id": "l18-com-07", "level": 1, "prompt": "Which is correctly punctuated?\n\napples oranges and pears", "options": ["apples oranges and pears", "apples, oranges, and pears", "apples and oranges and pears"], "answer": 1, "explain": "A series of three uses commas: apples, oranges, and pears." },
+    { "id": "l18-com-08", "level": 1, "prompt": "Which is correctly punctuated?\n\nNo I can’t", "options": ["No I can’t", "No, I can’t", "No I, can’t"], "answer": 1, "explain": "Use a comma after the opening word: No, I can’t." },
+    { "id": "l18-com-09", "level": 1, "prompt": "Which is correctly punctuated?\n\none two and three", "options": ["one two and three", "one, two, and three", "one and two and three"], "answer": 1, "explain": "A series of three uses commas: one, two, and three." },
+    { "id": "l18-com-10", "level": 1, "prompt": "Which is correctly punctuated?\n\nOh what a day", "options": ["Oh what a day", "Oh, what a day", "Oh what, a day"], "answer": 1, "explain": "Use a comma after the opening word: Oh, what a day." },
+    { "id": "l18-name-07", "level": 1, "prompt": "Which mark completes this?\n\n“How lovely ___”", "options": ["Exclamation point", "Period", "Question mark", "Comma"], "answer": 0, "explain": "Strong feeling takes an exclamation point." },
+    { "id": "l18-name-08", "level": 1, "prompt": "Which mark completes this?\n\n“Do you agree ___”", "options": ["Question mark", "Period", "Exclamation point", "Comma"], "answer": 0, "explain": "A question takes a question mark." },
+    { "id": "l18-name-09", "level": 1, "prompt": "Which mark belongs between the items?\n\nmilk ___ eggs ___ bread", "options": ["Comma", "Colon", "Dash", "Period"], "answer": 0, "explain": "Items in a series are separated by commas." },
+    { "id": "l18-name-10", "level": 1, "prompt": "Which mark is used in the contraction “can’t”?", "options": ["Apostrophe", "Comma", "Colon", "Dash"], "answer": 0, "explain": "A contraction uses an apostrophe." }
   ]
 }

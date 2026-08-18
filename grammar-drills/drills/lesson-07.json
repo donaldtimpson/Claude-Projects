@@ -48,5 +48,12 @@
     { "id": "l07-fix-06", "level": 1, "prompt": "Choose the correct word:\n\n“Don’t tell ___.”", "options": ["nobody", "anybody"], "answer": 1, "explain": "Avoid two negatives: “Don’t tell anybody.”" },
     { "id": "l07-fix-07", "level": 1, "prompt": "Choose the correct word:\n\n“The country looks ___.”", "options": ["beautifully", "beautiful"], "answer": 1, "explain": "After “looks,” use an adjective: looks beautiful." },
     { "id": "l07-fix-08", "level": 1, "prompt": "Choose the correct word:\n\n“Drive ___ on the ice.”", "options": ["safe", "safely"], "answer": 1, "explain": "Use an -ly adverb to tell how to drive: safely." }
+,
+    { "id": "l07-find-09", "level": 1, "prompt": "Which word is the adverb?\n\n“He spoke loudly.”", "options": ["He", "spoke", "loudly"], "answer": 2, "explain": "“loudly” tells how he spoke — the adverb." },
+    { "id": "l07-find-10", "level": 1, "prompt": "Which word is the adverb?\n\n“She arrived early.”", "options": ["She", "arrived", "early"], "answer": 2, "explain": "“early” tells when she arrived — the adverb." },
+    { "id": "l07-find-11", "level": 1, "prompt": "Which word is the adverb?\n\n“They rarely complain.”", "options": ["They", "rarely", "complain"], "answer": 1, "explain": "“rarely” tells how often — the adverb." },
+    { "id": "l07-tell-09", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“loudly”", "options": ["How", "When", "Where", "How much"], "answer": 0, "explain": "“loudly” tells how — the manner." },
+    { "id": "l07-tell-10", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“always”", "options": ["How", "When", "Where", "How much"], "answer": 1, "explain": "“always” tells when — the time." },
+    { "id": "l07-tell-11", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“everywhere”", "options": ["How", "When", "Where", "How much"], "answer": 2, "explain": "“everywhere” tells where — the place." }
   ]
 }

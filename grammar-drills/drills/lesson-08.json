@@ -51,5 +51,10 @@
     { "id": "l08-mis-04", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“The tourists watched the parade on the roof.”", "options": ["the tourists", "the parade"], "answer": 1, "explain": "“on the roof” sits next to “parade,” so it seems the parade was on the roof." },
     { "id": "l08-mis-05", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“He handed tests to the kids with no names.”", "options": ["the tests", "the kids"], "answer": 1, "explain": "“with no names” sits next to “kids,” so it seems the kids had no names." },
     { "id": "l08-mis-06", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“The boy found a wallet walking to school.”", "options": ["the boy", "the wallet"], "answer": 1, "explain": "“walking to school” sits next to “wallet,” so it seems the wallet was walking." }
+,
+    { "id": "l08-prep-09", "level": 1, "prompt": "Which word is the preposition?\n\n“The cat hid behind the door.”", "options": ["hid", "behind", "door"], "answer": 1, "explain": "“behind” shows where the cat hid in relation to the door — the preposition." },
+    { "id": "l08-prep-10", "level": 1, "prompt": "Which word is the preposition?\n\n“She sat near the window.”", "options": ["sat", "near", "window"], "answer": 1, "explain": "“near” shows where she sat in relation to the window — the preposition." },
+    { "id": "l08-inf-07", "level": 1, "prompt": "Which words make the infinitive?\n\n“They hope to travel.”", "options": ["They", "hope", "to travel"], "answer": 2, "explain": "“to travel” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-08", "level": 1, "prompt": "Which words make the infinitive?\n\n“It is time to sleep.”", "options": ["is", "time", "to sleep"], "answer": 2, "explain": "“to sleep” is “to” plus the verb — the infinitive." }
   ]
 }
