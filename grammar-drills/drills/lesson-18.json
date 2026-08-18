@@ -1,0 +1,46 @@
+{
+  "slug": "lesson-18",
+  "lesson": 18,
+  "title": "Lesson 18 · Punctuation",
+  "blurb": "End marks, the comma, and naming the marks — period, question mark, exclamation point, comma, colon, semicolon, apostrophe, dash, and more.",
+  "icon": "❔",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l18-end-01", "level": 1, "prompt": "Which end mark belongs here?\n\n“The sky is blue ___”", "options": [".", "?", "!"], "answer": 0, "explain": "A statement ends with a period." },
+    { "id": "l18-end-02", "level": 1, "prompt": "Which end mark belongs here?\n\n“Where are you going ___”", "options": [".", "?", "!"], "answer": 1, "explain": "A question ends with a question mark." },
+    { "id": "l18-end-03", "level": 1, "prompt": "Which end mark belongs here?\n\n“Watch out ___”", "options": [".", "?", "!"], "answer": 2, "explain": "Strong feeling ends with an exclamation point." },
+    { "id": "l18-end-04", "level": 1, "prompt": "Which end mark belongs here?\n\n“Please sit down ___”", "options": [".", "?", "!"], "answer": 0, "explain": "A command ends with a period." },
+    { "id": "l18-end-05", "level": 1, "prompt": "Which end mark belongs here?\n\n“Do you like pizza ___”", "options": [".", "?", "!"], "answer": 1, "explain": "A question ends with a question mark." },
+    { "id": "l18-end-06", "level": 1, "prompt": "Which end mark belongs here?\n\n“What a game ___”", "options": [".", "?", "!"], "answer": 2, "explain": "Strong feeling ends with an exclamation point." },
+    { "id": "l18-end-07", "level": 1, "prompt": "Which end mark belongs here?\n\n“Hooray, we won ___”", "options": [".", "?", "!"], "answer": 2, "explain": "Strong feeling ends with an exclamation point." },
+    { "id": "l18-end-08", "level": 1, "prompt": "Which end mark belongs here?\n\n“The dog ran home ___”", "options": [".", "?", "!"], "answer": 0, "explain": "A statement ends with a period." },
+
+    { "id": "l18-com-01", "level": 1, "prompt": "Which is correctly punctuated?\n\nred white and blue", "options": ["red white and blue", "red, white, and blue", "red and white and blue"], "answer": 1, "explain": "A series of three uses commas: red, white, and blue." },
+    { "id": "l18-com-02", "level": 1, "prompt": "Which is correctly punctuated?\n\nHi Mom", "options": ["Hi Mom", "Hi, Mom", "Hi Mom,"], "answer": 1, "explain": "Use a comma after the opening word: Hi, Mom." },
+    { "id": "l18-com-03", "level": 1, "prompt": "Which is correctly punctuated?\n\ncats dogs and birds", "options": ["cats dogs and birds", "cats, dogs, and birds", "cats and dogs and birds"], "answer": 1, "explain": "A series of three uses commas: cats, dogs, and birds." },
+    { "id": "l18-com-04", "level": 1, "prompt": "Which is correctly punctuated?\n\nYes I agree", "options": ["Yes I agree", "Yes, I agree", "Yes I, agree"], "answer": 1, "explain": "Use a comma after the opening word: Yes, I agree." },
+    { "id": "l18-com-05", "level": 1, "prompt": "Which is correctly punctuated?\n\nTom Sue and Ann", "options": ["Tom Sue and Ann", "Tom, Sue, and Ann", "Tom and Sue and Ann"], "answer": 1, "explain": "A series of three uses commas: Tom, Sue, and Ann." },
+    { "id": "l18-com-06", "level": 1, "prompt": "Which is correctly punctuated?\n\nWell let’s go", "options": ["Well let’s go", "Well, let’s go", "Well let’s, go"], "answer": 1, "explain": "Use a comma after the opening word: Well, let’s go." },
+
+    { "id": "l18-name-01", "level": 1, "prompt": "Which mark does this job?\n\nEnds a question", "options": ["Period", "Question mark", "Exclamation point", "Comma"], "answer": 1, "explain": "A question ends with a question mark." },
+    { "id": "l18-name-02", "level": 1, "prompt": "Which mark does this job?\n\nShows strong feeling", "options": ["Exclamation point", "Period", "Comma", "Colon"], "answer": 0, "explain": "Strong feeling takes an exclamation point." },
+    { "id": "l18-name-03", "level": 1, "prompt": "Which mark does this job?\n\nSeparates items in a series", "options": ["Comma", "Colon", "Dash", "Apostrophe"], "answer": 0, "explain": "A series is separated by commas." },
+    { "id": "l18-name-04", "level": 1, "prompt": "Which mark does this job?\n\nFrames someone’s exact words", "options": ["Quotation marks", "Parentheses", "Apostrophe", "Comma"], "answer": 0, "explain": "Exact words are framed by quotation marks." },
+    { "id": "l18-name-05", "level": 1, "prompt": "Which mark does this job?\n\nShows ownership or a contraction", "options": ["Apostrophe", "Comma", "Colon", "Dash"], "answer": 0, "explain": "Ownership or a contraction is shown by an apostrophe." },
+    { "id": "l18-name-06", "level": 1, "prompt": "Which mark does this job?\n\nIntroduces a list", "options": ["Colon", "Semicolon", "Comma", "Period"], "answer": 0, "explain": "A list is introduced by a colon." },
+
+    { "id": "l18-more-01", "level": 1, "prompt": "Which mark does this job?\n\nEnds a statement or command", "options": ["Period", "Question mark", "Comma", "Colon"], "answer": 0, "explain": "A statement or command ends with a period." },
+    { "id": "l18-more-02", "level": 1, "prompt": "Which mark does this job?\n\nA bigger pause than a comma, joining two related sentences", "options": ["Semicolon", "Colon", "Comma", "Dash"], "answer": 0, "explain": "Two related sentences may be joined by a semicolon." },
+    { "id": "l18-more-03", "level": 1, "prompt": "Which mark does this job?\n\nMarks a sudden break or change of thought", "options": ["Dash", "Colon", "Apostrophe", "Period"], "answer": 0, "explain": "A sudden break is marked by a dash." },
+    { "id": "l18-more-04", "level": 1, "prompt": "Which mark does this job?\n\nEncloses an extra remark that could be left out", "options": ["Parentheses", "Quotation marks", "Comma", "Dash"], "answer": 0, "explain": "An extra remark is enclosed in parentheses." },
+    { "id": "l18-more-05", "level": 1, "prompt": "Every sentence ends with one of these three marks: period, question mark, and ___.", "options": ["Exclamation point", "Comma", "Colon", "Semicolon"], "answer": 0, "explain": "The three end marks are the period, question mark, and exclamation point." },
+    { "id": "l18-more-06", "level": 1, "prompt": "Punctuation divides writing into sentences and parts by using ___.", "options": ["Points and marks", "Letters", "Sounds", "Paragraphs"], "answer": 0, "explain": "Punctuation uses points and marks to divide writing." },
+
+    { "id": "l18-job-01", "level": 1, "prompt": "Which mark shows the slightest pause between parts of a sentence?", "options": ["Comma", "Period", "Dash", "Colon"], "answer": 0, "explain": "The comma shows the slightest pause." },
+    { "id": "l18-job-02", "level": 1, "prompt": "Which mark ends the sentence “Shut the door”?", "options": ["Period", "Question mark", "Exclamation point", "Comma"], "answer": 0, "explain": "A command ends with a period." },
+    { "id": "l18-job-03", "level": 1, "prompt": "Which mark is used in “don’t” and “John’s”?", "options": ["Apostrophe", "Comma", "Dash", "Colon"], "answer": 0, "explain": "Contractions and possessives use an apostrophe." },
+    { "id": "l18-job-04", "level": 1, "prompt": "Which mark ends the question “Where are you?”", "options": ["Question mark", "Period", "Comma", "Colon"], "answer": 0, "explain": "A question ends with a question mark." }
+  ]
+}

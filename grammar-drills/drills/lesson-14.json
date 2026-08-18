@@ -1,0 +1,50 @@
+{
+  "slug": "lesson-14",
+  "lesson": 14,
+  "title": "Lesson 14 · The Verb in Depth II",
+  "blurb": "Helping verbs, regular vs irregular, principal parts, progressive/emphatic/interrogative forms, and verb mistakes.",
+  "icon": "⏳",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l14-aux-01", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“I have gone home.”", "options": ["have", "gone", "home"], "answer": 0, "explain": "“have” helps form the tense — the auxiliary verb." },
+    { "id": "l14-aux-02", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“She will sing tonight.”", "options": ["will", "sing", "tonight"], "answer": 0, "explain": "“will” helps form the future — the auxiliary verb." },
+    { "id": "l14-aux-03", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“You must go now.”", "options": ["must", "go", "now"], "answer": 0, "explain": "“must” helps the main verb “go” — the auxiliary verb." },
+    { "id": "l14-aux-04", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“He is running fast.”", "options": ["is", "running", "fast"], "answer": 0, "explain": "“is” helps form the progressive — the auxiliary verb." },
+    { "id": "l14-aux-05", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“They do work hard.”", "options": ["do", "work", "hard"], "answer": 0, "explain": "“do” helps the main verb “work” — the auxiliary verb." },
+    { "id": "l14-aux-06", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“I can swim well.”", "options": ["can", "swim", "well"], "answer": 0, "explain": "“can” helps the main verb “swim” — the auxiliary verb." },
+    { "id": "l14-aux-07", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“We shall win.”", "options": ["We", "shall", "win"], "answer": 1, "explain": "“shall” helps form the future — the auxiliary verb." },
+    { "id": "l14-aux-08", "level": 1, "prompt": "Which word is the helping (auxiliary) verb?\n\n“It may rain soon.”", "options": ["may", "rain", "soon"], "answer": 0, "explain": "“may” helps the main verb “rain” — the auxiliary verb." },
+
+    { "id": "l14-ri-01", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“walk”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "walk → walked → walked; adds -ed — regular." },
+    { "id": "l14-ri-02", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“go”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "go → went → gone; the word changes — irregular." },
+    { "id": "l14-ri-03", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“love”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "love → loved → loved; adds -d — regular." },
+    { "id": "l14-ri-04", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“see”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "see → saw → seen; the word changes — irregular." },
+    { "id": "l14-ri-05", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“jump”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "jump → jumped → jumped; adds -ed — regular." },
+    { "id": "l14-ri-06", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“write”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "write → wrote → written; the word changes — irregular." },
+    { "id": "l14-ri-07", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“play”", "options": ["Regular", "Irregular"], "answer": 0, "explain": "play → played → played; adds -ed — regular." },
+    { "id": "l14-ri-08", "level": 1, "prompt": "Is this verb regular (adds -ed) or irregular (changes form)?\n\n“run”", "options": ["Regular", "Irregular"], "answer": 1, "explain": "run → ran → run; the word changes — irregular." },
+
+    { "id": "l14-pp-01", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“go”", "options": ["goed, gone", "went, gone", "went, went"], "answer": 1, "explain": "go → past “went” → participle “gone.”" },
+    { "id": "l14-pp-02", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“see”", "options": ["seen, saw", "saw, seen", "saw, saw"], "answer": 1, "explain": "see → past “saw” → participle “seen.”" },
+    { "id": "l14-pp-03", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“write”", "options": ["wrote, wrote", "writed, written", "wrote, written"], "answer": 2, "explain": "write → past “wrote” → participle “written.”" },
+    { "id": "l14-pp-04", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“walk”", "options": ["walked, walked", "walk, walked", "walked, walken"], "answer": 0, "explain": "walk → past “walked” → participle “walked.”" },
+    { "id": "l14-pp-05", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“ring”", "options": ["ringed, rung", "rang, rung", "rung, rang"], "answer": 1, "explain": "ring → past “rang” → participle “rung.”" },
+    { "id": "l14-pp-06", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“throw”", "options": ["throwed, thrown", "threw, throwed", "threw, thrown"], "answer": 2, "explain": "throw → past “threw” → participle “thrown.”" },
+
+    { "id": "l14-cf-01", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“I am writing.”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 0, "explain": "“am writing” shows action going on — progressive form." },
+    { "id": "l14-cf-02", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“I do love reading.”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 1, "explain": "“do love” adds emphasis — emphatic form." },
+    { "id": "l14-cf-03", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“Do you write?”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 2, "explain": "“Do you write” asks a question — interrogative form." },
+    { "id": "l14-cf-04", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“She was singing.”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 0, "explain": "“was singing” shows action going on — progressive form." },
+    { "id": "l14-cf-05", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“He did go.”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 1, "explain": "“did go” adds emphasis — emphatic form." },
+    { "id": "l14-cf-06", "level": 1, "prompt": "Which coordinate form is this — progressive, emphatic, or interrogative?\n\n“Did they win?”", "options": ["Progressive", "Emphatic", "Interrogative"], "answer": 2, "explain": "“Did they win” asks a question — interrogative form." },
+
+    { "id": "l14-fix-01", "level": 1, "prompt": "Choose the correct verb:\n\n“The man ___ a stone.”", "options": ["throwed", "threw"], "answer": 1, "explain": "“throw” is irregular: the past is “threw,” never “throwed.”" },
+    { "id": "l14-fix-02", "level": 1, "prompt": "Choose the correct verb:\n\n“I have ___ fine cattle.”", "options": ["saw", "seen"], "answer": 1, "explain": "With the helper “have,” use the participle: have seen." },
+    { "id": "l14-fix-03", "level": 1, "prompt": "Choose the correct verb:\n\n“This coat has ___ well.”", "options": ["wore", "worn"], "answer": 1, "explain": "With the helper “has,” use the participle: has worn." },
+    { "id": "l14-fix-04", "level": 1, "prompt": "Choose the correct verb:\n\n“The bells ___ loudly.”", "options": ["ringed", "rang"], "answer": 1, "explain": "“ring” is irregular: the past is “rang,” never “ringed.”" },
+    { "id": "l14-fix-05", "level": 1, "prompt": "Choose the correct verb:\n\n“He has ___ home.”", "options": ["went", "gone"], "answer": 1, "explain": "With the helper “has,” use the participle: has gone." },
+    { "id": "l14-fix-06", "level": 1, "prompt": "Choose the correct verb:\n\n“She ___ the milk.”", "options": ["drinked", "drank"], "answer": 1, "explain": "“drink” is irregular: the past is “drank,” never “drinked.”" }
+  ]
+}

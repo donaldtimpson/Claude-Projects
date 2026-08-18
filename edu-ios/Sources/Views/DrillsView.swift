@@ -19,12 +19,15 @@ struct DrillsView: View {
     }
 
     private static let categories: [DrillCategoryRoute] = [
+        .init(title: "Lessons", icon: "🎓", slugs: DrillCatalog.lessonSlugs),
         .init(title: "Mental Math", icon: "🧮", slugs: ["arithmetic", "percentages", "order-of-operations",
               "powers-of-two", "squares", "gcd", "primes", "sequences", "logarithms"]),
         .init(title: "Trigonometry", icon: "📐", slugs: ["unit-circle", "vectors"]),
         .init(title: "Calculus", icon: "∫", slugs: ["derivative", "integral"]),
         .init(title: "Linear Algebra", icon: "▦", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"]),
-        .init(title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state"]),
+        .init(title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state",
+              "capital-country", "capital-state"]),
+        .init(title: "Grammar", icon: "✒️", slugs: DrillCatalog.grammarSlugs),
     ]
 
     var body: some View {
@@ -110,7 +113,13 @@ struct DrillsView: View {
             Text(cat.icon).font(.system(size: 32))
             VStack(alignment: .leading, spacing: 2) {
                 Text(highlighted(cat.title, query)).font(.headline).foregroundStyle(Theme.ink)
-                Text("\(cat.slugs.count) drills").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                if cat.title == "Lessons" {
+                    let aced = LessonProgress.shared.acedCount(userId: userId, slugs: cat.slugs)
+                    Text(aced > 0 ? "✦ \(aced)/\(cat.slugs.count) aced" : "\(cat.slugs.count) lessons")
+                        .font(.subheadline).foregroundStyle(aced > 0 ? Theme.gold400 : Theme.inkSoft)
+                } else {
+                    Text("\(cat.slugs.count) drills").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                }
             }
             Spacer(minLength: 0)
             Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(Theme.inkSoft)
@@ -124,7 +133,9 @@ struct DrillsView: View {
             Text(d.icon).font(.system(size: 40))
             Text(d.title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.75)
-            if let sub = masterySubtitle(d, userId: userId) {
+            if LessonProgress.shared.isAced(userId: userId, slug: d.slug) {
+                Text("✦ Aced").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold300)
+            } else if let sub = masterySubtitle(d, userId: userId) {
                 Text(sub).font(.caption).foregroundStyle(Theme.gold400)
             }
         }
@@ -185,7 +196,9 @@ struct DrillRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(highlighted(drill.title, query)).font(.headline).foregroundStyle(Theme.ink)
                     Text(highlighted(drill.blurb, query)).font(.subheadline).foregroundStyle(Theme.inkSoft).lineLimit(2)
-                    if let sub = masterySubtitle(drill, userId: userId) {
+                    if LessonProgress.shared.isAced(userId: userId, slug: drill.slug) {
+                        Text("✦ Aced").font(.caption2.weight(.semibold)).foregroundStyle(Theme.gold300)
+                    } else if let sub = masterySubtitle(drill, userId: userId) {
                         Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
                     }
                 }

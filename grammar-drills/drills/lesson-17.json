@@ -1,0 +1,43 @@
+{
+  "slug": "lesson-17",
+  "lesson": 17,
+  "title": "Lesson 17 · Syntax & Letter-Writing",
+  "blurb": "The case rules, the agreement rules, and the parts of a friendly letter.",
+  "icon": "✉️",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l17-case-01", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“Boys skate.” (boys)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 0, "explain": "“boys” is the subject — nominative case." },
+    { "id": "l17-case-02", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“We ran over the bridge.” (bridge)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 1, "explain": "“bridge” is the object of the preposition “over” — objective case." },
+    { "id": "l17-case-03", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“John’s hat is new.” (John’s)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 2, "explain": "“John’s” shows ownership — possessive case." },
+    { "id": "l17-case-04", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“They saw us.” (us)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 1, "explain": "“us” is the object of “saw” — objective case." },
+    { "id": "l17-case-05", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“Horses are animals.” (animals)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 0, "explain": "“animals” is a predicate noun after “are” — nominative case." },
+    { "id": "l17-case-06", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“The dog’s bone is buried.” (dog’s)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 2, "explain": "“dog’s” shows ownership — possessive case." },
+    { "id": "l17-case-07", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“Farmers plant corn.” (corn)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 1, "explain": "“corn” is the object of “plant” — objective case." },
+    { "id": "l17-case-08", "level": 1, "prompt": "What case is the noun or pronoun in ( )?\n\n“Birds fly south.” (Birds)", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 0, "explain": "“Birds” is the subject — nominative case." },
+
+    { "id": "l17-ag-01", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“He ___ fast.”", "options": ["run", "runs"], "answer": 1, "explain": "A singular subject takes a singular verb: he runs." },
+    { "id": "l17-ag-02", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“Tom and Sue ___ here.”", "options": ["is", "are"], "answer": 1, "explain": "Two subjects joined by “and” take a plural verb: are." },
+    { "id": "l17-ag-03", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The dogs ___.”", "options": ["barks", "bark"], "answer": 1, "explain": "A plural subject takes a plural verb: the dogs bark." },
+    { "id": "l17-ag-04", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“She ___ letters.”", "options": ["write", "writes"], "answer": 1, "explain": "A singular subject takes a singular verb: she writes." },
+    { "id": "l17-ag-05", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The boys ___ late.”", "options": ["was", "were"], "answer": 1, "explain": "A plural subject takes a plural verb: the boys were." },
+    { "id": "l17-ag-06", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“Neither book ___ mine.”", "options": ["are", "is"], "answer": 1, "explain": "“Neither” is singular: neither book is mine." },
+    { "id": "l17-ag-07", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“You ___ right.”", "options": ["is", "are"], "answer": 1, "explain": "“You” takes “are”: you are right." },
+    { "id": "l17-ag-08", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The cat ___ milk.”", "options": ["drink", "drinks"], "answer": 1, "explain": "A singular subject takes a singular verb: the cat drinks." },
+
+    { "id": "l17-let-01", "level": 1, "prompt": "Which part of a letter is this?\n\n“May 1, 2026”", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 0, "explain": "The date belongs in the heading, at the top." },
+    { "id": "l17-let-02", "level": 1, "prompt": "Which part of a letter is this?\n\n“Dear Grandma,”", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 1, "explain": "It names whom you write to — the greeting." },
+    { "id": "l17-let-03", "level": 1, "prompt": "Which part of a letter is this?\n\n“I hope you are well and happy.”", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 2, "explain": "It is the message itself — the body." },
+    { "id": "l17-let-04", "level": 1, "prompt": "Which part of a letter is this?\n\n“Yours truly,”", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 3, "explain": "It ends the letter politely — the closing." },
+    { "id": "l17-let-05", "level": 1, "prompt": "Which part of a letter is this?\n\n“Henry” (at the bottom)", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 4, "explain": "The writer’s name at the bottom is the signature." },
+    { "id": "l17-let-06", "level": 1, "prompt": "Which part of a letter is this?\n\n“Boston, Massachusetts” (at the top)", "options": ["Heading", "Greeting", "Body", "Closing", "Signature"], "answer": 0, "explain": "The town at the top belongs in the heading." },
+
+    { "id": "l17-fact-01", "level": 1, "prompt": "Syntax is the part of grammar that treats what?", "options": ["The construction of sentences", "Spelling", "Pronunciation", "Handwriting"], "answer": 0, "explain": "Syntax treats the construction of sentences." },
+    { "id": "l17-fact-02", "level": 1, "prompt": "A subject is in which case?", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 0, "explain": "A subject is in the nominative case." },
+    { "id": "l17-fact-03", "level": 1, "prompt": "The object of a verb or preposition is in which case?", "options": ["Objective", "Nominative", "Possessive", "Absolute"], "answer": 0, "explain": "An object is in the objective case." },
+    { "id": "l17-fact-04", "level": 1, "prompt": "Two singular subjects joined by “and” take which verb?", "options": ["A plural verb", "A singular verb", "No verb", "A past verb"], "answer": 0, "explain": "Two subjects joined by “and” take a plural verb." },
+    { "id": "l17-fact-05", "level": 1, "prompt": "A pronoun agrees with its antecedent in what?", "options": ["Gender, person, and number", "Case only", "Tense", "Voice"], "answer": 0, "explain": "A pronoun agrees with its antecedent in gender, person, and number." },
+    { "id": "l17-fact-06", "level": 1, "prompt": "Where does the date go in a letter?", "options": ["In the heading, at the top", "In the body", "In the closing", "In the signature"], "answer": 0, "explain": "The date goes in the heading, at the top." }
+  ]
+}

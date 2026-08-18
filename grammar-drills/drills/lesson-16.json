@@ -1,0 +1,49 @@
+{
+  "slug": "lesson-16",
+  "lesson": 16,
+  "title": "Lesson 16 · Advanced Analysis",
+  "blurb": "Ellipsis, simple vs complete subject, simple vs complete predicate, and sentence analysis.",
+  "icon": "🌳",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l16-el-01", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Shut the door.”", "options": ["you", "I", "he"], "answer": 0, "explain": "A command has the understood subject “you”: [You] shut the door." },
+    { "id": "l16-el-02", "level": 1, "prompt": "Which word is understood (left out)?\n\n“He is older than I ___.”", "options": ["am", "is", "was"], "answer": 0, "explain": "The comparison drops the verb: older than I [am]." },
+    { "id": "l16-el-03", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Run home!”", "options": ["you", "we", "they"], "answer": 0, "explain": "A command has the understood subject “you”: [You] run home." },
+    { "id": "l16-el-04", "level": 1, "prompt": "Which word is understood (left out)?\n\n“She is taller than he ___.”", "options": ["am", "is", "are"], "answer": 1, "explain": "The comparison drops the verb: taller than he [is]." },
+    { "id": "l16-el-05", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Wait here.”", "options": ["you", "I", "we"], "answer": 0, "explain": "A command has the understood subject “you”: [You] wait here." },
+    { "id": "l16-el-06", "level": 1, "prompt": "Which word is understood (left out)?\n\n“They are richer than we ___.”", "options": ["am", "is", "are"], "answer": 2, "explain": "The comparison drops the verb: richer than we [are]." },
+
+    { "id": "l16-ss-01", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“A great storm is raging.”", "options": ["storm", "great", "raging"], "answer": 0, "explain": "The bare subject is “storm” (drop the modifiers “A great”)." },
+    { "id": "l16-ss-02", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“The tall green trees swayed.”", "options": ["tall", "trees", "swayed"], "answer": 1, "explain": "The bare subject is “trees.”" },
+    { "id": "l16-ss-03", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“My little brother cried.”", "options": ["little", "brother", "cried"], "answer": 1, "explain": "The bare subject is “brother.”" },
+    { "id": "l16-ss-04", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“He who runs may read.”", "options": ["He", "runs", "read"], "answer": 0, "explain": "The bare subject is “He.”" },
+    { "id": "l16-ss-05", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“The old brown dog slept.”", "options": ["old", "dog", "slept"], "answer": 1, "explain": "The bare subject is “dog.”" },
+    { "id": "l16-ss-06", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“Three hungry boys ate lunch.”", "options": ["Three", "boys", "lunch"], "answer": 1, "explain": "The bare subject is “boys.”" },
+    { "id": "l16-ss-07", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“The bright sun rose.”", "options": ["bright", "sun", "rose"], "answer": 1, "explain": "The bare subject is “sun.”" },
+    { "id": "l16-ss-08", "level": 1, "prompt": "What is the simple subject (the bare subject word)?\n\n“Two small kittens slept.”", "options": ["Two", "kittens", "slept"], "answer": 1, "explain": "The bare subject is “kittens.”" },
+
+    { "id": "l16-sp-01", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The storm rages furiously.”", "options": ["storm", "rages", "furiously"], "answer": 1, "explain": "The bare verb is “rages” (drop the modifier “furiously”)." },
+    { "id": "l16-sp-02", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The boy ran quickly home.”", "options": ["boy", "ran", "home"], "answer": 1, "explain": "The bare verb is “ran.”" },
+    { "id": "l16-sp-03", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“Birds sing in the morning.”", "options": ["Birds", "sing", "morning"], "answer": 1, "explain": "The bare verb is “sing.”" },
+    { "id": "l16-sp-04", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“She writes long letters.”", "options": ["She", "writes", "letters"], "answer": 1, "explain": "The bare verb is “writes.”" },
+    { "id": "l16-sp-05", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The dog barked at night.”", "options": ["dog", "barked", "night"], "answer": 1, "explain": "The bare verb is “barked.”" },
+    { "id": "l16-sp-06", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“Children play in the yard.”", "options": ["Children", "play", "yard"], "answer": 1, "explain": "The bare verb is “play.”" },
+    { "id": "l16-sp-07", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The river flows to the sea.”", "options": ["river", "flows", "sea"], "answer": 1, "explain": "The bare verb is “flows.”" },
+    { "id": "l16-sp-08", "level": 1, "prompt": "What is the simple predicate (the bare verb)?\n\n“The baby laughed happily.”", "options": ["baby", "laughed", "happily"], "answer": 1, "explain": "The bare verb is “laughed.”" },
+
+    { "id": "l16-cn-01", "level": 1, "prompt": "The bare subject word, without modifiers, is called the ___.", "options": ["simple subject", "complete subject", "simple predicate", "complete predicate"], "answer": 0, "explain": "The bare subject word is the simple (grammatical) subject." },
+    { "id": "l16-cn-02", "level": 1, "prompt": "The subject with all its modifiers is called the ___.", "options": ["simple subject", "complete subject", "simple predicate", "complete predicate"], "answer": 1, "explain": "The subject plus its modifiers is the complete (logical) subject." },
+    { "id": "l16-cn-03", "level": 1, "prompt": "The bare verb, without modifiers, is called the ___.", "options": ["simple subject", "complete subject", "simple predicate", "complete predicate"], "answer": 2, "explain": "The bare verb is the simple (grammatical) predicate." },
+    { "id": "l16-cn-04", "level": 1, "prompt": "What is the complete subject?\n\n“A great storm is raging.”", "options": ["storm", "a great storm", "is raging", "raging"], "answer": 1, "explain": "The subject with its modifiers is “a great storm.”" },
+    { "id": "l16-cn-05", "level": 1, "prompt": "What is the complete predicate?\n\n“The storm rages furiously.”", "options": ["the storm", "rages", "rages furiously", "furiously"], "answer": 2, "explain": "The verb with its modifiers is “rages furiously.”" },
+    { "id": "l16-cn-06", "level": 1, "prompt": "What is ellipsis?", "options": ["leaving out understood words", "joining two clauses", "comparing adjectives", "naming an action"], "answer": 0, "explain": "Ellipsis is the leaving out of words that are understood." },
+
+    { "id": "l16-cx-01", "level": 1, "prompt": "What is the complete subject?\n\n“The little boy ran home.”", "options": ["The little boy", "ran home", "boy"], "answer": 0, "explain": "The subject with its modifiers is “The little boy.”" },
+    { "id": "l16-cx-02", "level": 1, "prompt": "What is the complete predicate?\n\n“Birds sing sweetly.”", "options": ["Birds", "sing sweetly", "sing"], "answer": 1, "explain": "The verb with its modifiers is “sing sweetly.”" },
+    { "id": "l16-cx-03", "level": 1, "prompt": "What is the complete subject?\n\n“My old friend writes letters.”", "options": ["My old friend", "writes letters", "friend"], "answer": 0, "explain": "The subject with its modifiers is “My old friend.”" },
+    { "id": "l16-cx-04", "level": 1, "prompt": "What is the complete predicate?\n\n“The tired soldiers marched slowly.”", "options": ["The tired soldiers", "marched slowly", "marched"], "answer": 1, "explain": "The verb with its modifiers is “marched slowly.”" },
+    { "id": "l16-cx-05", "level": 1, "prompt": "Abridgment shortens a complex sentence by turning a clause into a ___.", "options": ["phrase or single word", "new sentence", "question", "command"], "answer": 0, "explain": "Abridgment turns a subordinate clause into a phrase or a single word." }
+  ]
+}

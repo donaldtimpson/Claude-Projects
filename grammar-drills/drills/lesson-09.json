@@ -1,0 +1,50 @@
+{
+  "slug": "lesson-09",
+  "lesson": 9,
+  "title": "Lesson 9 · Conjunctions",
+  "blurb": "Finding conjunctions, conjunction vs preposition, compound subjects/predicates/objects, and the series comma.",
+  "icon": "9️⃣",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l09-find-01", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“We moved silently and cautiously.”", "options": ["moved", "and", "cautiously"], "answer": 1, "explain": "“and” joins the two adverbs — the conjunction." },
+    { "id": "l09-find-02", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“He worked hard, but earned little.”", "options": ["worked", "but", "earned"], "answer": 1, "explain": "“but” joins the two statements — the conjunction." },
+    { "id": "l09-find-03", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“I shall not go, if it rains.”", "options": ["go", "if", "rains"], "answer": 1, "explain": "“if” joins the two clauses — the conjunction." },
+    { "id": "l09-find-04", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Emma or Susan will stay home.”", "options": ["Emma", "or", "stay"], "answer": 1, "explain": "“or” joins the two subjects — the conjunction." },
+    { "id": "l09-find-05", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“They submit, since they cannot win.”", "options": ["submit", "since", "win"], "answer": 1, "explain": "“since” joins the two clauses — the conjunction." },
+    { "id": "l09-find-06", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“I stayed, because I was tired.”", "options": ["stayed", "because", "tired"], "answer": 1, "explain": "“because” joins the two clauses — the conjunction." },
+    { "id": "l09-find-07", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Study hard, or you will fail.”", "options": ["Study", "or", "fail"], "answer": 1, "explain": "“or” joins the two clauses — the conjunction." },
+    { "id": "l09-find-08", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Salt and pepper spilled.”", "options": ["Salt", "and", "spilled"], "answer": 1, "explain": "“and” joins the two subjects — the conjunction." },
+
+    { "id": "l09-cp-01", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“and”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“and” merely joins and needs no object — a conjunction." },
+    { "id": "l09-cp-02", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“of”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“of” takes an object and shows a relation — a preposition." },
+    { "id": "l09-cp-03", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“but”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“but” merely joins — a conjunction." },
+    { "id": "l09-cp-04", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“with”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“with” takes an object and shows a relation — a preposition." },
+    { "id": "l09-cp-05", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“if”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“if” joins clauses and needs no object — a conjunction." },
+    { "id": "l09-cp-06", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“under”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“under” takes an object and shows a relation — a preposition." },
+    { "id": "l09-cp-07", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“because”", "options": ["Conjunction", "Preposition"], "answer": 0, "explain": "“because” joins clauses and needs no object — a conjunction." },
+    { "id": "l09-cp-08", "level": 1, "prompt": "Is this word a conjunction (only joins) or a preposition (shows relation, has an object)?\n\n“through”", "options": ["Conjunction", "Preposition"], "answer": 1, "explain": "“through” takes an object and shows a relation — a preposition." },
+
+    { "id": "l09-cmp-01", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“Ellen and Lucy are sisters.”", "options": ["Subject", "Predicate", "Object"], "answer": 0, "explain": "“Ellen and Lucy” are two joined subjects — a compound subject." },
+    { "id": "l09-cmp-02", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“We run, jump, and play.”", "options": ["Subject", "Predicate", "Object"], "answer": 1, "explain": "“run, jump, and play” are joined verbs — a compound predicate." },
+    { "id": "l09-cmp-03", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“Dad owns a farm and a factory.”", "options": ["Subject", "Predicate", "Object"], "answer": 2, "explain": "“a farm and a factory” are two joined objects — a compound object." },
+    { "id": "l09-cmp-04", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“Cats and dogs are pets.”", "options": ["Subject", "Predicate", "Object"], "answer": 0, "explain": "“Cats and dogs” are two joined subjects — a compound subject." },
+    { "id": "l09-cmp-05", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“She reads and writes well.”", "options": ["Subject", "Predicate", "Object"], "answer": 1, "explain": "“reads and writes” are joined verbs — a compound predicate." },
+    { "id": "l09-cmp-06", "level": 1, "prompt": "Which part is compound (joined by a conjunction)?\n\n“He bought apples and pears.”", "options": ["Subject", "Predicate", "Object"], "answer": 2, "explain": "“apples and pears” are two joined objects — a compound object." },
+
+    { "id": "l09-ser-01", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\ndogs cats birds", "options": ["dogs cats birds", "dogs, cats, and birds", "dogs and cats and birds"], "answer": 1, "explain": "Commas after each part, and “and” before the last: dogs, cats, and birds." },
+    { "id": "l09-ser-02", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\nred white blue", "options": ["red white blue", "red, white, and blue", "red and white and blue"], "answer": 1, "explain": "Commas after each part, and “and” before the last: red, white, and blue." },
+    { "id": "l09-ser-03", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\nrun jump play", "options": ["run jump play", "run, jump, and play", "run and jump and play"], "answer": 1, "explain": "Commas after each part, and “and” before the last: run, jump, and play." },
+    { "id": "l09-ser-04", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\nmilk eggs bread", "options": ["milk eggs bread", "milk, eggs, and bread", "milk and eggs and bread"], "answer": 1, "explain": "Commas after each part, and “and” before the last: milk, eggs, and bread." },
+    { "id": "l09-ser-05", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\nTom Sue Ann", "options": ["Tom Sue Ann", "Tom, Sue, and Ann", "Tom and Sue and Ann"], "answer": 1, "explain": "Commas after each part, and “and” before the last: Tom, Sue, and Ann." },
+    { "id": "l09-ser-06", "level": 1, "prompt": "Which is punctuated correctly as a series?\n\nnorth south east", "options": ["north south east", "north, south, and east", "north and south and east"], "answer": 1, "explain": "Commas after each part, and “and” before the last: north, south, and east." },
+
+    { "id": "l09-fnd2-01", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Birds sing and bees hum.”", "options": ["sing", "and", "hum"], "answer": 1, "explain": "“and” joins the two statements — the conjunction." },
+    { "id": "l09-fnd2-02", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“He is tall but thin.”", "options": ["tall", "but", "thin"], "answer": 1, "explain": "“but” joins the two adjectives — the conjunction." },
+    { "id": "l09-fnd2-03", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Hurry, or we are late.”", "options": ["Hurry", "or", "late"], "answer": 1, "explain": "“or” joins the two clauses — the conjunction." },
+    { "id": "l09-fnd2-04", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“I waited, since you asked.”", "options": ["waited", "since", "asked"], "answer": 1, "explain": "“since” joins the two clauses — the conjunction." },
+    { "id": "l09-fnd2-05", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“We rest because we are tired.”", "options": ["rest", "because", "tired"], "answer": 1, "explain": "“because” joins the two clauses — the conjunction." },
+    { "id": "l09-fnd2-06", "level": 1, "prompt": "Which word is the conjunction (the joining word)?\n\n“Call me if you can.”", "options": ["Call", "if", "can"], "answer": 1, "explain": "“if” joins the two clauses — the conjunction." }
+  ]
+}

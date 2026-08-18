@@ -1,0 +1,52 @@
+{
+  "slug": "lesson-07",
+  "lesson": 7,
+  "title": "Lesson 7 · The Adverb",
+  "blurb": "Finding adverbs; how/when/where/how much; what they modify; adverbial clauses; adverb mistakes.",
+  "icon": "7️⃣",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l07-find-01", "level": 1, "prompt": "Which word is the adverb?\n\n“That vessel sails slowly.”", "options": ["vessel", "sails", "slowly"], "answer": 2, "explain": "“slowly” tells how it sails — it modifies the verb, so it is the adverb." },
+    { "id": "l07-find-02", "level": 1, "prompt": "Which word is the adverb?\n\n“He built a house there.”", "options": ["built", "house", "there"], "answer": 2, "explain": "“there” tells where — the adverb." },
+    { "id": "l07-find-03", "level": 1, "prompt": "Which word is the adverb?\n\n“Emma is quite late.”", "options": ["Emma", "quite", "late"], "answer": 1, "explain": "“quite” tells how much — it modifies “late,” so it is the adverb." },
+    { "id": "l07-find-04", "level": 1, "prompt": "Which word is the adverb?\n\n“Those mountains are very high.”", "options": ["mountains", "very", "high"], "answer": 1, "explain": "“very” tells how much — it modifies “high,” so it is the adverb." },
+    { "id": "l07-find-05", "level": 1, "prompt": "Which word is the adverb?\n\n“I will shortly return.”", "options": ["I", "shortly", "return"], "answer": 1, "explain": "“shortly” tells when — the adverb." },
+    { "id": "l07-find-06", "level": 1, "prompt": "Which word is the adverb?\n\n“You will never see him.”", "options": ["never", "see", "him"], "answer": 0, "explain": "“never” tells when (not at any time) — the adverb." },
+    { "id": "l07-find-07", "level": 1, "prompt": "Which word is the adverb?\n\n“She sang here.”", "options": ["She", "sang", "here"], "answer": 2, "explain": "“here” tells where — the adverb." },
+    { "id": "l07-find-08", "level": 1, "prompt": "Which word is the adverb?\n\n“He afterwards escaped.”", "options": ["He", "afterwards", "escaped"], "answer": 1, "explain": "“afterwards” tells when — the adverb." },
+
+    { "id": "l07-tell-01", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“slowly”", "options": ["How", "When", "Where", "How much"], "answer": 0, "explain": "“slowly” tells how — the manner." },
+    { "id": "l07-tell-02", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“yesterday”", "options": ["How", "When", "Where", "How much"], "answer": 1, "explain": "“yesterday” tells when — the time." },
+    { "id": "l07-tell-03", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“there”", "options": ["How", "When", "Where", "How much"], "answer": 2, "explain": "“there” tells where — the place." },
+    { "id": "l07-tell-04", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“very”", "options": ["How", "When", "Where", "How much"], "answer": 3, "explain": "“very” tells how much — the degree." },
+    { "id": "l07-tell-05", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“gently”", "options": ["How", "When", "Where", "How much"], "answer": 0, "explain": "“gently” tells how — the manner." },
+    { "id": "l07-tell-06", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“soon”", "options": ["How", "When", "Where", "How much"], "answer": 1, "explain": "“soon” tells when — the time." },
+    { "id": "l07-tell-07", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“here”", "options": ["How", "When", "Where", "How much"], "answer": 2, "explain": "“here” tells where — the place." },
+    { "id": "l07-tell-08", "level": 1, "prompt": "Does this adverb tell how, when, where, or how much?\n\n“quite”", "options": ["How", "When", "Where", "How much"], "answer": 3, "explain": "“quite” tells how much — the degree." },
+
+    { "id": "l07-mod-01", "level": 1, "prompt": "What does the adverb “sweetly” modify?\n\n“Birds sing sweetly.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 0, "explain": "“sweetly” tells how the birds sing — it modifies the verb “sing.”" },
+    { "id": "l07-mod-02", "level": 1, "prompt": "What does the adverb “very” modify?\n\n“Very large vessels sailed.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 1, "explain": "“very” modifies the adjective “large.”" },
+    { "id": "l07-mod-03", "level": 1, "prompt": "What does the adverb “quite” modify?\n\n“He rode quite fast.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 2, "explain": "“quite” modifies the adverb “fast.”" },
+    { "id": "l07-mod-04", "level": 1, "prompt": "What does the adverb “softly” modify?\n\n“She spoke softly.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 0, "explain": "“softly” tells how she spoke — it modifies the verb “spoke.”" },
+    { "id": "l07-mod-05", "level": 1, "prompt": "What does the adverb “too” modify?\n\n“The soup is too hot.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 1, "explain": "“too” modifies the adjective “hot.”" },
+    { "id": "l07-mod-06", "level": 1, "prompt": "What does the adverb “very” modify?\n\n“They left very quickly.”", "options": ["Verb", "Adjective", "Adverb"], "answer": 2, "explain": "“very” modifies the adverb “quickly.”" },
+
+    { "id": "l07-cls-01", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“Birds sing when day breaks.”", "options": ["Birds sing", "when day breaks", "sing"], "answer": 1, "explain": "“when day breaks” tells when they sing — the adverbial clause." },
+    { "id": "l07-cls-02", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“Stay here until I return.”", "options": ["Stay here", "until I return", "here"], "answer": 1, "explain": "“until I return” tells when to stay — the adverbial clause." },
+    { "id": "l07-cls-03", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“We rested because we were tired.”", "options": ["We rested", "because we were tired", "rested"], "answer": 1, "explain": "“because we were tired” tells why we rested — the adverbial clause." },
+    { "id": "l07-cls-04", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“Call me if you need help.”", "options": ["Call me", "if you need help", "me"], "answer": 1, "explain": "“if you need help” tells the condition — the adverbial clause." },
+    { "id": "l07-cls-05", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“He smiled while she spoke.”", "options": ["He smiled", "while she spoke", "smiled"], "answer": 1, "explain": "“while she spoke” tells when he smiled — the adverbial clause." },
+    { "id": "l07-cls-06", "level": 1, "prompt": "Which words are the adverbial clause (they tell how, when, where, or why)?\n\n“Plants grow where it is warm.”", "options": ["Plants grow", "where it is warm", "grow"], "answer": 1, "explain": "“where it is warm” tells where they grow — the adverbial clause." },
+
+    { "id": "l07-fix-01", "level": 1, "prompt": "Choose the correct word:\n\n“I don’t want ___ today.”", "options": ["nothing", "anything"], "answer": 1, "explain": "Avoid two negatives: “don’t want anything.”" },
+    { "id": "l07-fix-02", "level": 1, "prompt": "Choose the correct word:\n\n“Samuel speaks very ___.”", "options": ["distinct", "distinctly"], "answer": 1, "explain": "Use an -ly adverb to tell how he speaks: distinctly." },
+    { "id": "l07-fix-03", "level": 1, "prompt": "Choose the correct word:\n\n“This flower smells ___.”", "options": ["sweetly", "sweet"], "answer": 1, "explain": "After “smells,” use an adjective: smells sweet." },
+    { "id": "l07-fix-04", "level": 1, "prompt": "Choose the correct word:\n\n“You ought to read ___.”", "options": ["slower", "more slowly"], "answer": 1, "explain": "Use an adverb to tell how to read: more slowly." },
+    { "id": "l07-fix-05", "level": 1, "prompt": "Choose the correct word:\n\n“The team played ___.”", "options": ["good", "well"], "answer": 1, "explain": "Use “well,” the adverb, to tell how they played." },
+    { "id": "l07-fix-06", "level": 1, "prompt": "Choose the correct word:\n\n“Don’t tell ___.”", "options": ["nobody", "anybody"], "answer": 1, "explain": "Avoid two negatives: “Don’t tell anybody.”" },
+    { "id": "l07-fix-07", "level": 1, "prompt": "Choose the correct word:\n\n“The country looks ___.”", "options": ["beautifully", "beautiful"], "answer": 1, "explain": "After “looks,” use an adjective: looks beautiful." },
+    { "id": "l07-fix-08", "level": 1, "prompt": "Choose the correct word:\n\n“Drive ___ on the ice.”", "options": ["safe", "safely"], "answer": 1, "explain": "Use an -ly adverb to tell how to drive: safely." }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "slug": "lesson-03",
+  "lesson": 3,
+  "title": "Lesson 3 · The Verb",
+  "blurb": "Finding verbs; action/being/state; transitive, intransitive & copulative; verb mistakes.",
+  "icon": "3️⃣",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l03-find-01", "level": 1, "prompt": "Which word is the verb?\n\n“Birds fly south.”", "options": ["Birds", "fly", "south"], "answer": 1, "explain": "“fly” tells what the birds do — it is the verb." },
+    { "id": "l03-find-02", "level": 1, "prompt": "Which word is the verb?\n\n“The baby sleeps.”", "options": ["The", "baby", "sleeps"], "answer": 2, "explain": "“sleeps” is the verb — it tells what the baby does." },
+    { "id": "l03-find-03", "level": 1, "prompt": "Which word is the verb?\n\n“Farmers grow wheat.”", "options": ["Farmers", "grow", "wheat"], "answer": 1, "explain": "“grow” tells what the farmers do." },
+    { "id": "l03-find-04", "level": 1, "prompt": "Which word is the verb?\n\n“She sings sweetly.”", "options": ["She", "sings", "sweetly"], "answer": 1, "explain": "“sings” is the action word — the verb." },
+    { "id": "l03-find-05", "level": 1, "prompt": "Which word is the verb?\n\n“We are happy.”", "options": ["We", "are", "happy"], "answer": 1, "explain": "“are” is the verb (a being verb)." },
+    { "id": "l03-find-06", "level": 1, "prompt": "Which word is the verb?\n\n“The dog chased the cat.”", "options": ["dog", "chased", "cat"], "answer": 1, "explain": "“chased” tells the action — the verb." },
+    { "id": "l03-find-07", "level": 1, "prompt": "Which word is the verb?\n\n“Snow melts in spring.”", "options": ["Snow", "melts", "spring"], "answer": 1, "explain": "“melts” is the verb." },
+    { "id": "l03-find-08", "level": 1, "prompt": "Which word is the verb?\n\n“They built a treehouse.”", "options": ["They", "built", "treehouse"], "answer": 1, "explain": "“built” tells what they did — the verb." },
+
+    { "id": "l03-abs-01", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“George runs.”", "options": ["Action", "Being", "State"], "answer": 0, "explain": "“runs” is something done — action." },
+    { "id": "l03-abs-02", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“I am.”", "options": ["Action", "Being", "State"], "answer": 1, "explain": "“am” expresses being." },
+    { "id": "l03-abs-03", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“The rocket launched.”", "options": ["Action", "Being", "State"], "answer": 0, "explain": "“launched” is an action." },
+    { "id": "l03-abs-04", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“They are students.”", "options": ["Action", "Being", "State"], "answer": 1, "explain": "“are” expresses being." },
+    { "id": "l03-abs-05", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“The house belongs to us.”", "options": ["Action", "Being", "State"], "answer": 2, "explain": "“belongs” names a condition, not a deed — state." },
+    { "id": "l03-abs-06", "level": 1, "prompt": "Does this verb express action, being, or state?\n\n“Water freezes.”", "options": ["Action", "Being", "State"], "answer": 0, "explain": "“freezes” is a change that happens — action." },
+
+    { "id": "l03-cls-01", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“Columbus discovered America.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 0, "explain": "“discovered” takes an object (America), so it is transitive." },
+    { "id": "l03-cls-02", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“Horses run.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 1, "explain": "“run” needs no object, so it is intransitive." },
+    { "id": "l03-cls-03", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“The soup tastes good.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 2, "explain": "“tastes” links “soup” to “good” — copulative." },
+    { "id": "l03-cls-04", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“She wrote a letter.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 0, "explain": "“wrote” takes an object (a letter) — transitive." },
+    { "id": "l03-cls-05", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“The baby smiled.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 1, "explain": "“smiled” needs no object — intransitive." },
+    { "id": "l03-cls-06", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“He is a doctor.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 2, "explain": "“is” links “He” to “doctor” — copulative." },
+    { "id": "l03-cls-07", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“Farmers plant corn.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 0, "explain": "“plant” takes an object (corn) — transitive." },
+    { "id": "l03-cls-08", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“The sun shines.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 1, "explain": "“shines” needs no object — intransitive." },
+    { "id": "l03-cls-09", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“The weather grew cold.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 2, "explain": "“grew” links “weather” to “cold” — copulative." },
+    { "id": "l03-cls-10", "level": 1, "prompt": "Is the verb transitive, intransitive, or copulative?\n\n“Dogs chase cars.”", "options": ["Transitive", "Intransitive", "Copulative"], "answer": 0, "explain": "“chase” takes an object (cars) — transitive." },
+
+    { "id": "l03-fix-01", "level": 1, "prompt": "Choose the correct verb:\n\n“I have ___ that movie.”", "options": ["saw", "seen"], "answer": 1, "explain": "With the helper “have,” use the participle: have seen." },
+    { "id": "l03-fix-02", "level": 1, "prompt": "Choose the correct verb:\n\n“She ___ to the store yesterday.”", "options": ["went", "gone"], "answer": 0, "explain": "Past time, no helper: went." },
+    { "id": "l03-fix-03", "level": 1, "prompt": "Choose the correct verb:\n\n“He has ___ home.”", "options": ["went", "gone"], "answer": 1, "explain": "With the helper “has,” use the participle: has gone." },
+    { "id": "l03-fix-04", "level": 1, "prompt": "Choose the correct verb:\n\n“They ___ the ball over the fence.”", "options": ["throwed", "threw"], "answer": 1, "explain": "The past of throw is threw (never “throwed”)." },
+    { "id": "l03-fix-05", "level": 1, "prompt": "Choose the correct verb:\n\n“We have ___ dinner already.”", "options": ["ate", "eaten"], "answer": 1, "explain": "With the helper “have,” use the participle: have eaten." },
+    { "id": "l03-fix-06", "level": 1, "prompt": "Choose the correct verb:\n\n“The bell has ___.”", "options": ["rang", "rung"], "answer": 1, "explain": "With the helper “has,” use the participle: has rung." },
+    { "id": "l03-fix-07", "level": 1, "prompt": "Choose the correct verb:\n\n“He ___ his work well yesterday.”", "options": ["did", "done"], "answer": 0, "explain": "Past time, no helper: did (never “done” alone)." },
+    { "id": "l03-fix-08", "level": 1, "prompt": "Choose the correct verb:\n\n“You ___ there when it happened.”", "options": ["was", "were"], "answer": 1, "explain": "With “you,” always use were." }
+  ]
+}

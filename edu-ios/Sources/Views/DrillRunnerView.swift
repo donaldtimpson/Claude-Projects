@@ -150,12 +150,18 @@ struct DrillRunnerView: View {
                     }
                     .pickerStyle(.segmented)
                 case .practice:
-                    Picker("Length", selection: $practiceLen) {
-                        Text("10").tag(10)
-                        Text("20").tag(20)
-                        if def.poolSize != nil { Text("All").tag(0) }
+                    if let hl = def.homeworkLength {
+                        Text("Homework — a \(hl)-question run. Get every one right for the ✦.")
+                            .font(.footnote).foregroundStyle(Theme.gold400)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Picker("Length", selection: $practiceLen) {
+                            Text("10").tag(10)
+                            Text("20").tag(20)
+                            if def.poolSize != nil { Text("All").tag(0) }
+                        }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
                 case .learn:
                     EmptyView()
                 }
@@ -163,32 +169,47 @@ struct DrillRunnerView: View {
                 Text(modeBlurb)
                     .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
 
-                Text("Choose a difficulty")
-                    .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
-                ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
-                    VStack(spacing: 4) {
-                        SecondaryButton(title: label) { start(def: def, level: value) }
-                        switch mode {
-                        case .rapidFire:
-                            let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
-                            Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
-                                .font(.caption2)
-                                .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
-                        case .learn:
-                            let items = def.poolItems?(value) ?? []
-                            let m = DrillMastery.shared.masteredCount(userId: userId, slug: slug, items: items)
-                            Text("\(m) / \(items.count) mastered")
-                                .font(.caption2)
-                                .foregroundStyle(m > 0 ? Theme.gold400 : Theme.inkSoft)
-                        case .practice:
-                            EmptyView()
+                // Drills with a meaningful Easy/Medium/Hard axis (math, geography, the Grammar
+                // Gauntlet's concept tiers) get three buttons; single-concept drills, where a
+                // 3-way split would be arbitrary, get one Start and always run the full pool.
+                if def.difficultyTiers {
+                    Text("Choose a difficulty")
+                        .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
+                    ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
+                        VStack(spacing: 4) {
+                            SecondaryButton(title: label) { start(def: def, level: value) }
+                            difficultyStat(def, value)
                         }
+                    }
+                } else {
+                    VStack(spacing: 4) {
+                        PrimaryButton(title: "Start") { start(def: def, level: 3) }
+                        difficultyStat(def, 3)
                     }
                 }
             }
             .padding()
         }
         .onAppear { sanitizeConfig(def) }
+    }
+
+    // The per-mode stat under a difficulty button (Rapid Fire best / Learn mastery / nothing).
+    @ViewBuilder private func difficultyStat(_ def: DrillDef, _ value: Int) -> some View {
+        switch mode {
+        case .rapidFire:
+            let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
+            Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
+                .font(.caption2)
+                .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
+        case .learn:
+            let items = def.poolItems?(value) ?? []
+            let m = DrillMastery.shared.masteredCount(userId: userId, slug: slug, items: items)
+            Text("\(m) / \(items.count) mastered")
+                .font(.caption2)
+                .foregroundStyle(m > 0 ? Theme.gold400 : Theme.inkSoft)
+        case .practice:
+            EmptyView()
+        }
     }
 
     // MARK: locate runner — the shared full-screen landscape map (same as Learn / Rapid Fire).
@@ -300,7 +321,7 @@ struct DrillRunnerView: View {
                 // Layout is fixed per drill so it doesn't flip question to question:
                 // forceGrid pins the 2×2 grid (country tiles stack the flag over the
                 // name); otherwise short answers tile 2×2 and long ones fall back to a list.
-                let useGrid = problem.forceGrid || options.allSatisfy { $0.count <= 12 }
+                let useGrid = !problem.forceList && (problem.forceGrid || options.allSatisfy { $0.count <= 12 })
                 // Identify ("Name the…") matches Rapid Fire: no option-color reveal, just the
                 // background blink + advance. Math choice drills still reveal + wait for a tap.
                 OptionButtons(options: options, correctIndex: correctIndex, selected: choice, revealed: isIdentify ? false : revealed, grid: useGrid, optionImages: problem.optionImages) { i in
@@ -374,6 +395,10 @@ struct DrillRunnerView: View {
             Text(pct == 100 ? "✦" : "✓").font(.system(size: 52)).foregroundStyle(Theme.gold400)
             Text(pct == 100 ? "Flawless" : "Nice work").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
             Text("\(correctCount) / \(count) correct · \(pct)%").foregroundStyle(Theme.ink)
+            if def?.homeworkLength != nil, pct < 100 {
+                Text("Homework needs a flawless run — try again for the ✦.")
+                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+            }
             HStack(spacing: 6) {
                 Text("Best streak").font(.footnote).foregroundStyle(Theme.inkSoft)
                 StreakPill(streak: bestStreak)
@@ -397,7 +422,9 @@ struct DrillRunnerView: View {
         switch mode {
         case .rapidFire: return "Beat the clock — build a combo for a high score."
         case .learn: return "Practice until you've mastered them all — weak ones come back more."
-        case .practice: return practiceLen == 0 ? "Every one, once, at your pace." : "\(practiceLen) problems at your pace."
+        case .practice:
+            if let hl = def?.homeworkLength { return "\(hl) questions — get every one right to earn the ✦." }
+            return practiceLen == 0 ? "Every one, once, at your pace." : "\(practiceLen) problems at your pace."
         }
     }
 
@@ -406,8 +433,8 @@ struct DrillRunnerView: View {
         case .rapidFire, .learn:
             launchedLevel = value   // presented by RapidFireView / LearnDrillView
         case .practice:
-            // Resolve the session length: 10/20, or "All" = the whole pool at this difficulty.
-            count = practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen
+            // Homework drills run a fixed sampled length; others use 10/20/All.
+            count = def.homeworkLength ?? (practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen)
             // Fresh shuffle bag so the session (esp. "All") walks every region once, in order.
             DrillCatalog.resetBag(slug: slug, level: value)
             level = value
@@ -497,6 +524,10 @@ struct DrillRunnerView: View {
 
     private func next(def: DrillDef, level value: Int) {
         if answered >= count {
+            // Homework: a flawless run earns the lesson's ✦ (on-device, honor system).
+            if def.homeworkLength != nil && correctCount == count {
+                LessonProgress.shared.markAced(userId: userId, slug: slug)
+            }
             record(level: value)
             finished = true
         } else {

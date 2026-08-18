@@ -1,0 +1,55 @@
+{
+  "slug": "lesson-08",
+  "lesson": 8,
+  "title": "Lesson 8 · Prepositions & Phrases",
+  "blurb": "Prepositions, prepositional phrases, adjective vs adverbial phrases, infinitives, and misplaced modifiers.",
+  "icon": "8️⃣",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l08-prep-01", "level": 1, "prompt": "Which word is the preposition?\n\n“The boy went through the gate.”", "options": ["went", "through", "gate"], "answer": 1, "explain": "“through” shows the relation of “gate” to “went” — the preposition." },
+    { "id": "l08-prep-02", "level": 1, "prompt": "Which word is the preposition?\n\n“He drove over the bridge.”", "options": ["drove", "over", "bridge"], "answer": 1, "explain": "“over” shows the relation of “bridge” to “drove” — the preposition." },
+    { "id": "l08-prep-03", "level": 1, "prompt": "Which word is the preposition?\n\n“She went to the doctor.”", "options": ["went", "to", "doctor"], "answer": 1, "explain": "“to” shows the relation of “doctor” to “went” — the preposition." },
+    { "id": "l08-prep-04", "level": 1, "prompt": "Which word is the preposition?\n\n“He sat beside the fire.”", "options": ["sat", "beside", "fire"], "answer": 1, "explain": "“beside” shows where he sat in relation to the fire — the preposition." },
+    { "id": "l08-prep-05", "level": 1, "prompt": "Which word is the preposition?\n\n“They walked into the garden.”", "options": ["walked", "into", "garden"], "answer": 1, "explain": "“into” shows the relation of “garden” to “walked” — the preposition." },
+    { "id": "l08-prep-06", "level": 1, "prompt": "Which word is the preposition?\n\n“Put the book on the shelf.”", "options": ["book", "on", "shelf"], "answer": 1, "explain": "“on” shows the relation of “shelf” to “Put” — the preposition." },
+    { "id": "l08-prep-07", "level": 1, "prompt": "Which word is the preposition?\n\n“The dog slept under the porch.”", "options": ["slept", "under", "porch"], "answer": 1, "explain": "“under” shows the relation of “porch” to “slept” — the preposition." },
+    { "id": "l08-prep-08", "level": 1, "prompt": "Which word is the preposition?\n\n“We walked across the field.”", "options": ["walked", "across", "field"], "answer": 1, "explain": "“across” shows the relation of “field” to “walked” — the preposition." },
+
+    { "id": "l08-phr-01", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“The book on the table is mine.”", "options": ["The book", "on the table", "is mine"], "answer": 1, "explain": "“on the table” is the preposition “on” with its object “table” — the phrase." },
+    { "id": "l08-phr-02", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“He ran to the store.”", "options": ["He ran", "to the store", "ran to"], "answer": 1, "explain": "“to the store” is the preposition with its object — the phrase." },
+    { "id": "l08-phr-03", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“A man of wealth arrived.”", "options": ["A man", "of wealth", "man arrived"], "answer": 1, "explain": "“of wealth” is the preposition “of” with its object — the phrase." },
+    { "id": "l08-phr-04", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“She sang with great joy.”", "options": ["She sang", "with great joy", "sang with"], "answer": 1, "explain": "“with great joy” is the preposition “with” and its object — the phrase." },
+    { "id": "l08-phr-05", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“The dog slept under the porch.”", "options": ["The dog", "under the porch", "slept under"], "answer": 1, "explain": "“under the porch” is the preposition with its object — the phrase." },
+    { "id": "l08-phr-06", "level": 1, "prompt": "Which words make the prepositional phrase?\n\n“We walked through the woods.”", "options": ["We walked", "through the woods", "walked through"], "answer": 1, "explain": "“through the woods” is the preposition with its object — the phrase." },
+
+    { "id": "l08-aa-01", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“The house on the hill is old.”", "options": ["Adjective", "Adverbial"], "answer": 0, "explain": "“on the hill” tells which house — an adjective phrase." },
+    { "id": "l08-aa-02", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“He walked to school.”", "options": ["Adjective", "Adverbial"], "answer": 1, "explain": "“to school” tells where he walked — an adverbial phrase." },
+    { "id": "l08-aa-03", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“A book of poems fell.”", "options": ["Adjective", "Adverbial"], "answer": 0, "explain": "“of poems” tells which book — an adjective phrase." },
+    { "id": "l08-aa-04", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“She sang in the choir.”", "options": ["Adjective", "Adverbial"], "answer": 1, "explain": "“in the choir” tells where she sang — an adverbial phrase." },
+    { "id": "l08-aa-05", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“The man with the hat left.”", "options": ["Adjective", "Adverbial"], "answer": 0, "explain": "“with the hat” tells which man — an adjective phrase." },
+    { "id": "l08-aa-06", "level": 1, "prompt": "Does the phrase modify a noun (adjective) or a verb (adverbial)?\n\n“They played in the yard.”", "options": ["Adjective", "Adverbial"], "answer": 1, "explain": "“in the yard” tells where they played — an adverbial phrase." },
+
+    { "id": "l08-inf-01", "level": 1, "prompt": "Which words make the infinitive?\n\n“To lie is wicked.”", "options": ["To lie", "is", "wicked"], "answer": 0, "explain": "“To lie” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-02", "level": 1, "prompt": "Which words make the infinitive?\n\n“He wants to go home.”", "options": ["wants", "to go", "home"], "answer": 1, "explain": "“to go” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-03", "level": 1, "prompt": "Which words make the infinitive?\n\n“John studies to learn.”", "options": ["John", "studies", "to learn"], "answer": 2, "explain": "“to learn” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-04", "level": 1, "prompt": "Which words make the infinitive?\n\n“She wishes to stay.”", "options": ["She", "wishes", "to stay"], "answer": 2, "explain": "“to stay” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-05", "level": 1, "prompt": "Which words make the infinitive?\n\n“To win takes work.”", "options": ["To win", "takes", "work"], "answer": 0, "explain": "“To win” is “to” plus the verb — the infinitive." },
+    { "id": "l08-inf-06", "level": 1, "prompt": "Which words make the infinitive?\n\n“Are you ready to recite?”", "options": ["Are", "ready", "to recite"], "answer": 2, "explain": "“to recite” is “to” plus the verb — the infinitive." },
+
+    { "id": "l08-job-01", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“To lie is wicked.”", "options": ["Subject", "Object", "Tells why"], "answer": 0, "explain": "“To lie” is what the sentence is about — the subject." },
+    { "id": "l08-job-02", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“He wants to go home.”", "options": ["Subject", "Object", "Tells why"], "answer": 1, "explain": "“to go home” is what he wants — the object." },
+    { "id": "l08-job-03", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“John studies to learn.”", "options": ["Subject", "Object", "Tells why"], "answer": 2, "explain": "“to learn” tells why he studies." },
+    { "id": "l08-job-04", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“To win takes work.”", "options": ["Subject", "Object", "Tells why"], "answer": 0, "explain": "“To win” is what the sentence is about — the subject." },
+    { "id": "l08-job-05", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“She hopes to travel.”", "options": ["Subject", "Object", "Tells why"], "answer": 1, "explain": "“to travel” is what she hopes — the object." },
+    { "id": "l08-job-06", "level": 1, "prompt": "What is the infinitive doing — subject, object, or telling why?\n\n“We ran to escape.”", "options": ["Subject", "Object", "Tells why"], "answer": 2, "explain": "“to escape” tells why we ran." },
+
+    { "id": "l08-mis-01", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“I saw a man walking a dog with a hat.”", "options": ["the man", "the dog", "the hat"], "answer": 1, "explain": "“with a hat” sits next to “dog,” so it seems the dog wears the hat." },
+    { "id": "l08-mis-02", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“She gave a balloon to the kid that was red.”", "options": ["the balloon", "the kid"], "answer": 1, "explain": "“that was red” sits next to “kid,” so it seems the kid was red." },
+    { "id": "l08-mis-03", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“The girl fed the cat wearing pajamas.”", "options": ["the girl", "the cat"], "answer": 1, "explain": "“wearing pajamas” sits next to “cat,” so it seems the cat wore pajamas." },
+    { "id": "l08-mis-04", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“The tourists watched the parade on the roof.”", "options": ["the tourists", "the parade"], "answer": 1, "explain": "“on the roof” sits next to “parade,” so it seems the parade was on the roof." },
+    { "id": "l08-mis-05", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“He handed tests to the kids with no names.”", "options": ["the tests", "the kids"], "answer": 1, "explain": "“with no names” sits next to “kids,” so it seems the kids had no names." },
+    { "id": "l08-mis-06", "level": 1, "prompt": "The modifier is out of place, so the sentence sounds silly. What does it seem to describe?\n\n“The boy found a wallet walking to school.”", "options": ["the boy", "the wallet"], "answer": 1, "explain": "“walking to school” sits next to “wallet,” so it seems the wallet was walking." }
+  ]
+}

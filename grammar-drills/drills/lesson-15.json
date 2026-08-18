@@ -1,0 +1,48 @@
+{
+  "slug": "lesson-15",
+  "lesson": 15,
+  "title": "Lesson 15 · Adverbs to Interjections in Depth",
+  "blurb": "The five classes of adverbs, comparing adverbs, classes of conjunctions, interjections, and common errors.",
+  "icon": "❗",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l15-cls-01", "level": 1, "prompt": "Which class of adverb is this?\n\n“now”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 0, "explain": "“now” answers “when?” — an adverb of time." },
+    { "id": "l15-cls-02", "level": 1, "prompt": "Which class of adverb is this?\n\n“here”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 1, "explain": "“here” answers “where?” — an adverb of place." },
+    { "id": "l15-cls-03", "level": 1, "prompt": "Which class of adverb is this?\n\n“why”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 2, "explain": "“why” answers “why?” — an adverb of cause." },
+    { "id": "l15-cls-04", "level": 1, "prompt": "Which class of adverb is this?\n\n“slowly”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 3, "explain": "“slowly” answers “how?” — an adverb of manner." },
+    { "id": "l15-cls-05", "level": 1, "prompt": "Which class of adverb is this?\n\n“very”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 4, "explain": "“very” answers “how much?” — an adverb of degree." },
+    { "id": "l15-cls-06", "level": 1, "prompt": "Which class of adverb is this?\n\n“soon”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 0, "explain": "“soon” answers “when?” — an adverb of time." },
+    { "id": "l15-cls-07", "level": 1, "prompt": "Which class of adverb is this?\n\n“there”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 1, "explain": "“there” answers “where?” — an adverb of place." },
+    { "id": "l15-cls-08", "level": 1, "prompt": "Which class of adverb is this?\n\n“almost”", "options": ["Time", "Place", "Cause", "Manner", "Degree"], "answer": 4, "explain": "“almost” answers “how much?” — an adverb of degree." },
+
+    { "id": "l15-cmp-01", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“fast”", "options": ["more fast, most fast", "faster, fastest", "fastlier, fastliest"], "answer": 1, "explain": "Short adverb — add -er, -est: faster, fastest." },
+    { "id": "l15-cmp-02", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“soon”", "options": ["more soon, most soon", "sooner, soonest", "soonlier, soonliest"], "answer": 1, "explain": "Short adverb — add -er, -est: sooner, soonest." },
+    { "id": "l15-cmp-03", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“wisely”", "options": ["wiselier, wiseliest", "more wisely, most wisely", "wiser, wisest"], "answer": 1, "explain": "An -ly adverb — use more, most: more wisely, most wisely." },
+    { "id": "l15-cmp-04", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“well”", "options": ["weller, wellest", "gooder, goodest", "better, best"], "answer": 2, "explain": "“well” is irregular: better, best." },
+    { "id": "l15-cmp-05", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“slowly”", "options": ["slowlier, slowliest", "more slowly, most slowly", "slowlyer, slowlyest"], "answer": 1, "explain": "An -ly adverb — use more, most: more slowly, most slowly." },
+    { "id": "l15-cmp-06", "level": 1, "prompt": "Which gives the correct comparative and superlative?\n\n“badly”", "options": ["badlier, badliest", "worse, worst", "badder, baddest"], "answer": 1, "explain": "“badly” is irregular: worse, worst." },
+
+    { "id": "l15-cj-01", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“and”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 0, "explain": "“and” joins equal parts — coordinate." },
+    { "id": "l15-cj-02", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“because”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 1, "explain": "“because” joins unequal parts (a clause to a main clause) — subordinate." },
+    { "id": "l15-cj-03", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“either…or”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 2, "explain": "“either…or” works in a pair — correlative." },
+    { "id": "l15-cj-04", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“but”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 0, "explain": "“but” joins equal parts — coordinate." },
+    { "id": "l15-cj-05", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“if”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 1, "explain": "“if” joins unequal parts (a clause to a main clause) — subordinate." },
+    { "id": "l15-cj-06", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“neither…nor”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 2, "explain": "“neither…nor” works in a pair — correlative." },
+    { "id": "l15-cj-07", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“or”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 0, "explain": "“or” joins equal parts — coordinate." },
+    { "id": "l15-cj-08", "level": 1, "prompt": "Which kind of conjunction is this?\n\n“although”", "options": ["Coordinate", "Subordinate", "Correlative"], "answer": 1, "explain": "“although” joins unequal parts — subordinate." },
+
+    { "id": "l15-fix-01", "level": 1, "prompt": "Choose the correct word(s):\n\n“She ___ coming.”", "options": ["ain’t", "isn’t"], "answer": 1, "explain": "Never use “ain’t” — say “isn’t.”" },
+    { "id": "l15-fix-02", "level": 1, "prompt": "Choose the correct word(s):\n\n“I ___ won.”", "options": ["might of", "might have"], "answer": 1, "explain": "Never “might of” — say “might have.”" },
+    { "id": "l15-fix-03", "level": 1, "prompt": "Choose the correct word(s):\n\n“The scissors ___ dull.”", "options": ["is", "are"], "answer": 1, "explain": "“scissors” takes a plural verb: the scissors are dull." },
+    { "id": "l15-fix-04", "level": 1, "prompt": "Choose the correct word(s):\n\n“Henry and Charles ___ glad.”", "options": ["was", "were"], "answer": 1, "explain": "Two subjects joined by “and” take a plural verb: were." },
+    { "id": "l15-fix-05", "level": 1, "prompt": "Choose the correct word(s):\n\n“He ___ know the answer.”", "options": ["don’t", "doesn’t"], "answer": 1, "explain": "A singular subject takes “doesn’t”: he doesn’t know." },
+    { "id": "l15-fix-06", "level": 1, "prompt": "Choose the correct word(s):\n\n“They ___ tired.”", "options": ["was", "were"], "answer": 1, "explain": "A plural subject takes a plural verb: they were." },
+
+    { "id": "l15-int-01", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Ah! What a view.”", "options": ["Ah", "What", "view"], "answer": 0, "explain": "“Ah” bursts out with feeling — the interjection." },
+    { "id": "l15-int-02", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Ouch! I fell.”", "options": ["Ouch", "I", "fell"], "answer": 0, "explain": "“Ouch” bursts out with feeling — the interjection." },
+    { "id": "l15-int-03", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Alas, he failed.”", "options": ["Alas", "he", "failed"], "answer": 0, "explain": "“Alas” bursts out with feeling — the interjection." },
+    { "id": "l15-int-04", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Hurrah, we won!”", "options": ["Hurrah", "we", "won"], "answer": 0, "explain": "“Hurrah” bursts out with feeling — the interjection." }
+  ]
+}

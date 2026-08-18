@@ -36,6 +36,10 @@ struct DrillProblem: Identifiable {
     // Pin the option layout so it doesn't flip question to question. Country names vary
     // in length; force the 2×2 grid (tiles stack the flag over a wrapping name).
     var forceGrid: Bool = false
+    // Pin the full-width LIST layout (overrides the auto grid-for-short-options heuristic).
+    // For sentence-choice drills (grammar: comma/capitalization/spot-the-error) whose options
+    // are whole sentences and read best stacked with ✓/✗ marks.
+    var forceList: Bool = false
     // Per-option flag image resource names (e.g. "us-ca") for drills whose flags are
     // images not emoji (US states). Parallel to the choice options.
     var optionImages: [String]? = nil
@@ -58,6 +62,16 @@ struct DrillDef: Identifiable {
     // Present this drill's play screens in landscape (tap-to-locate maps are far wider
     // than tall; the rotated screen gives the map its long dimension as width).
     var landscape: Bool = false
+    // Whether Easy/Medium/Hard is a meaningful axis for this drill. True for math (bigger
+    // numbers), geography (obscurity), and the Grammar Gauntlet (concept difficulty). False
+    // for a single-concept grammar drill, where a 3-way split of one concept's sentences is
+    // arbitrary — those just drill the whole pool (Learn mode adapts). When false the setup
+    // screen shows one Start button and the drill always runs at its full pool (level 3).
+    var difficultyTiers: Bool = true
+    // Lesson homework drills run a fixed-length sampled set (e.g. 30 of a ~45 pool) instead of
+    // the 10/20/All picker, and a flawless run at this length earns the lesson's ✦ badge.
+    // nil ⇒ an ordinary drill (not homework).
+    var homeworkLength: Int? = nil
     let generate: (Int) -> DrillProblem
 }
 
@@ -72,7 +86,8 @@ enum DrillCatalog {
         sequences, logarithms, derivative, integral,
         determinant, solveSystem, matrixVector, dotProduct, unitCircle, vectors,
         nameCountry, nameState, locateCountry, locateState,
-    ]
+        capitalCountry, capitalState,
+    ] + grammarDrills + lessonDrills
     static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
 
     private static func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
@@ -80,8 +95,10 @@ enum DrillCatalog {
     // Shuffle "bag" for small discrete domains (powers, squares…): draw the whole
     // range in a random order before any value repeats, so you don't see the same
     // number twice in quick succession. One bag per (drill, level); refills when empty.
+    // `draw` is internal (not private) so the grammar catalog in GrammarDrills.swift can
+    // share the exact same coverage machinery (and resetBag below clears it uniformly).
     private static var bags: [String: [Int]] = [:]
-    private static func draw(_ key: String, _ domain: () -> [Int]) -> Int {
+    static func draw(_ key: String, _ domain: () -> [Int]) -> Int {
         if bags[key]?.isEmpty ?? true { bags[key] = domain().shuffled() }
         return bags[key]!.removeLast()
     }
@@ -684,6 +701,71 @@ enum DrillCatalog {
         let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
             : pool[draw("name-state-L\(level)") { Array(0..<pool.count) }]
         return stateProblem(target)
+    }
+
+    // MARK: - Capital cities (choice; highlighted map → pick the capital)
+    // Mirrors mapProblem exactly, except the answer/options are CAPITAL cities (not region
+    // names) and a short prompt sits above the map. Same highlighted-map diagram ⇒ it reuses
+    // the identify UI verbatim (map + 2×2 tiles, background-blink auto-advance) via isIdentify.
+    // Distractors are 3 same-continent regions' capitals for plausibility.
+    private static func capitalProblem(target: GeoRegion, pool all: [GeoRegion], kind: GeoMapKind,
+                                       capitals: [String: String]) -> DrillProblem {
+        let sameGroup = all.filter { $0.continent == target.continent && $0.id != target.id }
+        var distractors: [GeoRegion] = []
+        var seen: Set<String> = [target.id]
+        for r in sameGroup.shuffled() + all.shuffled() {
+            if seen.insert(r.id).inserted { distractors.append(r) }
+            if distractors.count == 3 { break }
+        }
+        func cap(_ r: GeoRegion) -> String { capitals[r.id] ?? r.name }
+        let picks = ([target] + distractors).shuffled()
+        // Name the region in the prompt, with its emoji flag for countries. States have no
+        // emoji flag (their iso is a postal code, not a country code) — the map shows it.
+        let flag = kind == .world && !target.flag.isEmpty ? " \(target.flag)" : ""
+        return DrillProblem(
+            prompt: "Capital of \(target.name)\(flag)?",
+            input: .choice(options: picks.map(cap), correctIndex: picks.firstIndex { $0.id == target.id } ?? 0),
+            explanation: "\(cap(target)) — capital of \(target.name).",
+            diagram: .geoMap(kind: kind, highlightId: target.id),
+            dedupeKey: "cap:\(target.id)",
+            forceGrid: true
+        )
+    }
+    private static func capitalCountryProblem(_ t: GeoRegion) -> DrillProblem {
+        capitalProblem(target: t, pool: GeoAtlas.world.askable, kind: .world, capitals: GeoCapitals.country)
+    }
+    private static func capitalStateProblem(_ t: GeoRegion) -> DrillProblem {
+        capitalProblem(target: t, pool: GeoAtlas.usStates.askable, kind: .usStates, capitals: GeoCapitals.state)
+    }
+
+    static let capitalCountry = DrillDef(
+        slug: "capital-country",
+        title: "Capitals — Countries",
+        blurb: "See the highlighted country — pick its capital city.",
+        icon: "🏛️",
+        poolSize: { countryPool($0).count },
+        poolItems: { countryPool($0).map(\.id) },
+        problemForItem: { id, _ in capitalCountryProblem(GeoAtlas.world.region(id) ?? GeoAtlas.world.askable[0]) }
+    ) { level in
+        let pool = countryPool(level)
+        let target = pool.isEmpty ? GeoAtlas.world.askable.randomElement()!
+            : pool[draw("capital-country-L\(level)") { Array(0..<pool.count) }]
+        return capitalCountryProblem(target)
+    }
+
+    static let capitalState = DrillDef(
+        slug: "capital-state",
+        title: "Capitals — U.S. States",
+        blurb: "See the highlighted state — pick its capital city.",
+        icon: "🏙️",
+        poolSize: { statePool($0).count },
+        poolItems: { statePool($0).map(\.id) },
+        problemForItem: { id, _ in capitalStateProblem(GeoAtlas.usStates.region(id) ?? GeoAtlas.usStates.askable[0]) }
+    ) { level in
+        let pool = statePool(level)
+        let target = pool.isEmpty ? GeoAtlas.usStates.askable.randomElement()!
+            : pool[draw("capital-state-L\(level)") { Array(0..<pool.count) }]
+        return capitalStateProblem(target)
     }
 
     // MARK: - Locate (tap-to-find; the named region must be tapped on the map)

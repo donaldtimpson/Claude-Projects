@@ -1,0 +1,52 @@
+{
+  "slug": "lesson-10",
+  "lesson": 10,
+  "title": "Lesson 10 · Building Sentences & the Interjection",
+  "blurb": "Simple/compound/complex sentences, principal vs subordinate clauses, interjections, and the eight parts of speech.",
+  "icon": "🔟",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l10-sc-01", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“Birds sing.”", "options": ["Simple", "Compound"], "answer": 0, "explain": "One subject and one predicate — a simple sentence." },
+    { "id": "l10-sc-02", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“Birds sing, and flowers bloom.”", "options": ["Simple", "Compound"], "answer": 1, "explain": "Two complete statements joined by “and” — a compound sentence." },
+    { "id": "l10-sc-03", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“The dog barked loudly.”", "options": ["Simple", "Compound"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-sc-04", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“Rain fell, but we stayed dry.”", "options": ["Simple", "Compound"], "answer": 1, "explain": "Two complete statements joined by “but” — a compound sentence." },
+    { "id": "l10-sc-05", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“Snow is white.”", "options": ["Simple", "Compound"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-sc-06", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“I came, and I saw.”", "options": ["Simple", "Compound"], "answer": 1, "explain": "Two complete statements joined by “and” — a compound sentence." },
+    { "id": "l10-sc-07", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“Fish swim in the sea.”", "options": ["Simple", "Compound"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-sc-08", "level": 1, "prompt": "Is this sentence simple (one statement) or compound (two joined statements)?\n\n“He ran, so he won.”", "options": ["Simple", "Compound"], "answer": 1, "explain": "Two complete statements joined by “so” — a compound sentence." },
+
+    { "id": "l10-ps-01", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“I know”", "options": ["Principal", "Subordinate"], "answer": 0, "explain": "“I know” makes complete sense by itself — a principal clause." },
+    { "id": "l10-ps-02", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“where gold is found”", "options": ["Principal", "Subordinate"], "answer": 1, "explain": "“where gold is found” cannot stand alone — a subordinate clause." },
+    { "id": "l10-ps-03", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“she was tired”", "options": ["Principal", "Subordinate"], "answer": 0, "explain": "“she was tired” makes complete sense alone — a principal clause." },
+    { "id": "l10-ps-04", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“because it rained”", "options": ["Principal", "Subordinate"], "answer": 1, "explain": "“because it rained” cannot stand alone — a subordinate clause." },
+    { "id": "l10-ps-05", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“the boy studies”", "options": ["Principal", "Subordinate"], "answer": 0, "explain": "“the boy studies” makes complete sense alone — a principal clause." },
+    { "id": "l10-ps-06", "level": 1, "prompt": "Is this clause principal (makes sense alone) or subordinate (does not)?\n\n“when spring comes”", "options": ["Principal", "Subordinate"], "answer": 1, "explain": "“when spring comes” cannot stand alone — a subordinate clause." },
+
+    { "id": "l10-scx-01", "level": 1, "prompt": "Simple, compound, or complex?\n\n“Dogs bark.”", "options": ["Simple", "Compound", "Complex"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-scx-02", "level": 1, "prompt": "Simple, compound, or complex?\n\n“Dogs bark, and cats meow.”", "options": ["Simple", "Compound", "Complex"], "answer": 1, "explain": "Two complete statements joined as equals — a compound sentence." },
+    { "id": "l10-scx-03", "level": 1, "prompt": "Simple, compound, or complex?\n\n“I know that you are here.”", "options": ["Simple", "Compound", "Complex"], "answer": 2, "explain": "A subordinate clause (“that you are here”) is built in — a complex sentence." },
+    { "id": "l10-scx-04", "level": 1, "prompt": "Simple, compound, or complex?\n\n“She smiled when he arrived.”", "options": ["Simple", "Compound", "Complex"], "answer": 2, "explain": "A subordinate clause (“when he arrived”) is built in — a complex sentence." },
+    { "id": "l10-scx-05", "level": 1, "prompt": "Simple, compound, or complex?\n\n“Snow fell all night.”", "options": ["Simple", "Compound", "Complex"], "answer": 0, "explain": "One statement — a simple sentence." },
+    { "id": "l10-scx-06", "level": 1, "prompt": "Simple, compound, or complex?\n\n“He tried, but he failed.”", "options": ["Simple", "Compound", "Complex"], "answer": 1, "explain": "Two complete statements joined as equals — a compound sentence." },
+    { "id": "l10-scx-07", "level": 1, "prompt": "Simple, compound, or complex?\n\n“The book that I read was long.”", "options": ["Simple", "Compound", "Complex"], "answer": 2, "explain": "A subordinate clause (“that I read”) is built in — a complex sentence." },
+    { "id": "l10-scx-08", "level": 1, "prompt": "Simple, compound, or complex?\n\n“Birds fly south in winter.”", "options": ["Simple", "Compound", "Complex"], "answer": 0, "explain": "One statement — a simple sentence." },
+
+    { "id": "l10-int-01", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Hurrah! We won the game.”", "options": ["Hurrah", "won", "game"], "answer": 0, "explain": "“Hurrah” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-02", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Oh, what a surprise!”", "options": ["Oh", "what", "surprise"], "answer": 0, "explain": "“Oh” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-03", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Alas! The ship was lost.”", "options": ["Alas", "ship", "lost"], "answer": 0, "explain": "“Alas” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-04", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Ouch! That hurts.”", "options": ["Ouch", "That", "hurts"], "answer": 0, "explain": "“Ouch” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-05", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Hush! The baby is asleep.”", "options": ["Hush", "baby", "asleep"], "answer": 0, "explain": "“Hush” is thrown in to show feeling — the interjection." },
+    { "id": "l10-int-06", "level": 1, "prompt": "Which word is the interjection (the exclaiming word)?\n\n“Wow, look at that!”", "options": ["Wow", "look", "that"], "answer": 0, "explain": "“Wow” is thrown in to show feeling — the interjection." },
+
+    { "id": "l10-pos-01", "level": 1, "prompt": "Which part of speech names a person, place, or thing?", "options": ["Noun", "Verb", "Adverb", "Conjunction"], "answer": 0, "explain": "A noun names — a person, place, or thing." },
+    { "id": "l10-pos-02", "level": 1, "prompt": "Which part of speech stands in place of a noun?", "options": ["Pronoun", "Adjective", "Preposition", "Interjection"], "answer": 0, "explain": "A pronoun stands in for a noun." },
+    { "id": "l10-pos-03", "level": 1, "prompt": "Which part of speech asserts action, being, or state?", "options": ["Verb", "Noun", "Adverb", "Conjunction"], "answer": 0, "explain": "A verb asserts action, being, or state." },
+    { "id": "l10-pos-04", "level": 1, "prompt": "Which part of speech describes or defines a noun?", "options": ["Adjective", "Adverb", "Pronoun", "Preposition"], "answer": 0, "explain": "An adjective describes or defines a noun." },
+    { "id": "l10-pos-05", "level": 1, "prompt": "Which part of speech modifies a verb, adjective, or adverb?", "options": ["Adverb", "Adjective", "Noun", "Conjunction"], "answer": 0, "explain": "An adverb modifies a verb, adjective, or adverb." },
+    { "id": "l10-pos-06", "level": 1, "prompt": "Which part of speech shows relation and takes an object?", "options": ["Preposition", "Conjunction", "Verb", "Interjection"], "answer": 0, "explain": "A preposition shows relation and takes an object." },
+    { "id": "l10-pos-07", "level": 1, "prompt": "Which part of speech only joins words or groups?", "options": ["Conjunction", "Preposition", "Adverb", "Pronoun"], "answer": 0, "explain": "A conjunction only joins words or groups." },
+    { "id": "l10-pos-08", "level": 1, "prompt": "Which part of speech exclaims sudden feeling?", "options": ["Interjection", "Adverb", "Verb", "Noun"], "answer": 0, "explain": "An interjection exclaims sudden feeling." }
+  ]
+}

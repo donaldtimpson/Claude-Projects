@@ -1,0 +1,52 @@
+{
+  "slug": "lesson-19",
+  "lesson": 19,
+  "title": "Lesson 19 · Irregular Verbs & Capitals",
+  "blurb": "Principal parts of common irregular verbs, how they change, unipersonal verbs, and the capital-letter rules.",
+  "icon": "📖",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l19-a-01", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“go”", "options": ["goed, gone", "went, gone", "went, went"], "answer": 1, "explain": "go → went → gone." },
+    { "id": "l19-a-02", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“eat”", "options": ["ate, eaten", "eat, eaten", "ate, ate"], "answer": 0, "explain": "eat → ate → eaten." },
+    { "id": "l19-a-03", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“take”", "options": ["taked, taken", "took, taken", "took, took"], "answer": 1, "explain": "take → took → taken." },
+    { "id": "l19-a-04", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“sing”", "options": ["singed, sung", "sang, sung", "sung, sang"], "answer": 1, "explain": "sing → sang → sung." },
+    { "id": "l19-a-05", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“break”", "options": ["broke, broken", "breaked, broken", "broke, broke"], "answer": 0, "explain": "break → broke → broken." },
+    { "id": "l19-a-06", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“run”", "options": ["runned, run", "ran, run", "ran, ran"], "answer": 1, "explain": "run → ran → run." },
+    { "id": "l19-a-07", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“drink”", "options": ["drinked, drunk", "drank, drunk", "drunk, drank"], "answer": 1, "explain": "drink → drank → drunk." },
+    { "id": "l19-a-08", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“throw”", "options": ["throwed, thrown", "threw, thrown", "threw, throwed"], "answer": 1, "explain": "throw → threw → thrown." },
+
+    { "id": "l19-b-01", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“give”", "options": ["gived, given", "gave, given", "gave, gave"], "answer": 1, "explain": "give → gave → given." },
+    { "id": "l19-b-02", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“know”", "options": ["knowed, known", "knew, known", "known, knew"], "answer": 1, "explain": "know → knew → known." },
+    { "id": "l19-b-03", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“write”", "options": ["writed, written", "wrote, written", "wrote, wrote"], "answer": 1, "explain": "write → wrote → written." },
+    { "id": "l19-b-04", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“freeze”", "options": ["freezed, frozen", "froze, frozen", "froze, froze"], "answer": 1, "explain": "freeze → froze → frozen." },
+    { "id": "l19-b-05", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“begin”", "options": ["beginned, begun", "began, begun", "begun, began"], "answer": 1, "explain": "begin → began → begun." },
+    { "id": "l19-b-06", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“speak”", "options": ["speaked, spoken", "spoke, spoken", "spoke, spoke"], "answer": 1, "explain": "speak → spoke → spoken." },
+    { "id": "l19-b-07", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“choose”", "options": ["choosed, chosen", "chose, chosen", "chose, chose"], "answer": 1, "explain": "choose → chose → chosen." },
+    { "id": "l19-b-08", "level": 1, "prompt": "Which gives the correct past and perfect participle?\n\n“ride”", "options": ["rided, ridden", "rode, ridden", "rode, rode"], "answer": 1, "explain": "ride → rode → ridden." },
+
+    { "id": "l19-chg-01", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“cut”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 0, "explain": "cut → cut → cut: no change at all." },
+    { "id": "l19-chg-02", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“bring”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 1, "explain": "bring → brought → brought: same past and participle." },
+    { "id": "l19-chg-03", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“go”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 2, "explain": "go → went → gone: all three different." },
+    { "id": "l19-chg-04", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“put”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 0, "explain": "put → put → put: no change at all." },
+    { "id": "l19-chg-05", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“buy”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 1, "explain": "buy → bought → bought: same past and participle." },
+    { "id": "l19-chg-06", "level": 1, "prompt": "How does this irregular verb change through present → past → participle?\n\n“see”", "options": ["No change at all", "Same past and participle", "All three different"], "answer": 2, "explain": "see → saw → seen: all three different." },
+
+    { "id": "l19-cap-01", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“monday”", "options": ["Capital", "Small"], "answer": 0, "explain": "A day of the week is a proper name — capital." },
+    { "id": "l19-cap-02", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“dog”", "options": ["Capital", "Small"], "answer": 1, "explain": "A common noun takes a small letter." },
+    { "id": "l19-cap-03", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“chicago”", "options": ["Capital", "Small"], "answer": 0, "explain": "A place name is a proper name — capital." },
+    { "id": "l19-cap-04", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“river”", "options": ["Capital", "Small"], "answer": 1, "explain": "A common noun takes a small letter." },
+    { "id": "l19-cap-05", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“july”", "options": ["Capital", "Small"], "answer": 0, "explain": "A month is a proper name — capital." },
+    { "id": "l19-cap-06", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“american”", "options": ["Capital", "Small"], "answer": 0, "explain": "A word made from a proper name takes a capital." },
+    { "id": "l19-cap-07", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“happiness”", "options": ["Capital", "Small"], "answer": 1, "explain": "A common noun takes a small letter." },
+    { "id": "l19-cap-08", "level": 1, "prompt": "Should this word begin with a capital or a small letter?\n\n“maria”", "options": ["Capital", "Small"], "answer": 0, "explain": "A person’s name is a proper name — capital." },
+
+    { "id": "l19-rule-01", "level": 1, "prompt": "What begins every sentence?", "options": ["A capital letter", "A small letter", "A comma", "A number"], "answer": 0, "explain": "Every sentence begins with a capital letter." },
+    { "id": "l19-rule-02", "level": 1, "prompt": "Which single words are always capitals?", "options": ["I and O", "a and the", "he and she", "it and me"], "answer": 0, "explain": "The single words “I” and “O” are always capitals." },
+    { "id": "l19-rule-03", "level": 1, "prompt": "A unipersonal verb (as in “It snows”) has what kind of subject?", "options": ["The indefinite “it”", "A proper noun", "No subject word at all", "A plural subject"], "answer": 0, "explain": "“it” stands in as an indefinite subject that names nothing in particular." },
+    { "id": "l19-rule-04", "level": 1, "prompt": "In “It rains,” what kind of verb is “rains”?", "options": ["Unipersonal", "Transitive", "Passive", "Copulative"], "answer": 0, "explain": "It asserts an act with no real subject — a unipersonal verb." },
+    { "id": "l19-rule-05", "level": 1, "prompt": "An irregular verb does NOT form its past by doing what?", "options": ["Adding -ed", "Changing the word", "Staying the same", "Using a helper"], "answer": 0, "explain": "Irregular verbs never add -ed; they change or stay the same instead." },
+    { "id": "l19-rule-06", "level": 1, "prompt": "Words made from proper names (American, French) take a ___.", "options": ["Capital", "Small letter", "Comma", "Hyphen"], "answer": 0, "explain": "Words made from proper names take a capital letter." }
+  ]
+}

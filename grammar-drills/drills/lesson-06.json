@@ -1,0 +1,55 @@
+{
+  "slug": "lesson-06",
+  "lesson": 6,
+  "title": "Lesson 6 · Relative & Interrogative Pronouns",
+  "blurb": "Relative pronouns & clauses, antecedents, who/which/what, interrogatives, and pronoun mistakes.",
+  "icon": "6️⃣",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l06-rel-01", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“A man who is industrious will prosper.”", "options": ["man", "who", "will"], "answer": 1, "explain": "“who” stands for “man” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-02", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“This is the house which my father bought.”", "options": ["house", "which", "bought"], "answer": 1, "explain": "“which” stands for “house” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-03", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“I gave him all that I had.”", "options": ["all", "that", "had"], "answer": 1, "explain": "“that” stands for “all” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-04", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“I like a horse that is gentle.”", "options": ["horse", "that", "gentle"], "answer": 1, "explain": "“that” stands for “horse” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-05", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“Those who sow will reap.”", "options": ["Those", "who", "reap"], "answer": 1, "explain": "“who” stands for “those” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-06", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“He will do what is right.”", "options": ["do", "what", "right"], "answer": 1, "explain": "“what” means “that which” — the relative pronoun." },
+    { "id": "l06-rel-07", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“The knife which you gave me is lost.”", "options": ["knife", "which", "lost"], "answer": 1, "explain": "“which” stands for “knife” and joins the clause — the relative pronoun." },
+    { "id": "l06-rel-08", "level": 1, "prompt": "Which word is the relative pronoun (it joins a clause to a noun)?\n\n“The girl who sings is my sister.”", "options": ["girl", "who", "sings"], "answer": 1, "explain": "“who” stands for “girl” and joins the clause — the relative pronoun." },
+
+    { "id": "l06-ant-01", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“The boy who studies will learn.”", "options": ["boy", "studies", "learn"], "answer": 0, "explain": "“who” stands for “boy” — the antecedent." },
+    { "id": "l06-ant-02", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“The fish which you caught is a trout.”", "options": ["fish", "you", "trout"], "answer": 0, "explain": "“which” stands for “fish” — the antecedent." },
+    { "id": "l06-ant-03", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“I like a horse that is gentle.”", "options": ["I", "horse", "gentle"], "answer": 1, "explain": "“that” stands for “horse” — the antecedent." },
+    { "id": "l06-ant-04", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“Solomon, who was David’s son, built the temple.”", "options": ["Solomon", "David", "temple"], "answer": 0, "explain": "“who” stands for “Solomon” — the antecedent." },
+    { "id": "l06-ant-05", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“The knife which you gave me is lost.”", "options": ["knife", "you", "me"], "answer": 0, "explain": "“which” stands for “knife” — the antecedent." },
+    { "id": "l06-ant-06", "level": 1, "prompt": "What is the antecedent (the word the relative stands for)?\n\n“He is a man that deserves respect.”", "options": ["He", "man", "respect"], "answer": 1, "explain": "“that” stands for “man” — the antecedent." },
+
+    { "id": "l06-www-01", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“The girl ___ sings is my sister.”", "options": ["who", "which", "what"], "answer": 0, "explain": "Use “who” for a person — the girl who sings." },
+    { "id": "l06-www-02", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“The book ___ fell was old.”", "options": ["who", "which", "what"], "answer": 1, "explain": "Use “which” for a thing — the book which fell." },
+    { "id": "l06-www-03", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“He does ___ is right.”", "options": ["who", "which", "what"], "answer": 2, "explain": "“what” means “that which” — he does what is right." },
+    { "id": "l06-www-04", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“The boy ___ studies will learn.”", "options": ["who", "which", "what"], "answer": 0, "explain": "Use “who” for a person — the boy who studies." },
+    { "id": "l06-www-05", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“The ball ___ rolled away is lost.”", "options": ["who", "which", "what"], "answer": 1, "explain": "Use “which” for a thing — the ball which rolled away." },
+    { "id": "l06-www-06", "level": 1, "prompt": "Fill the blank: who, which, or what?\n\n“She has ___ she needs.”", "options": ["who", "which", "what"], "answer": 2, "explain": "“what” means “that which” — she has what she needs." },
+
+    { "id": "l06-int-01", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“Who wrote that letter?”", "options": ["Who", "wrote", "letter"], "answer": 0, "explain": "“Who” asks the question and stands alone — the interrogative pronoun." },
+    { "id": "l06-int-02", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“What did he say?”", "options": ["What", "he", "say"], "answer": 0, "explain": "“What” asks the question and stands alone — the interrogative pronoun." },
+    { "id": "l06-int-03", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“Whom did you call?”", "options": ["Whom", "you", "call"], "answer": 0, "explain": "“Whom” asks the question and stands alone — the interrogative pronoun." },
+    { "id": "l06-int-04", "level": 1, "prompt": "Which word is the interrogative pronoun (the question-word)?\n\n“Which is yours?”", "options": ["Which", "is", "yours"], "answer": 0, "explain": "“Which” asks the question and stands alone — the interrogative pronoun." },
+
+    { "id": "l06-pa-01", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“Which comes first?”", "options": ["Pronoun", "Adjective"], "answer": 0, "explain": "“Which” stands alone — an interrogative pronoun." },
+    { "id": "l06-pa-02", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“Which road shall I take?”", "options": ["Pronoun", "Adjective"], "answer": 1, "explain": "“Which” comes before the noun “road” — an interrogative adjective." },
+    { "id": "l06-pa-03", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“What noise is that?”", "options": ["Pronoun", "Adjective"], "answer": 1, "explain": "“What” comes before the noun “noise” — an interrogative adjective." },
+    { "id": "l06-pa-04", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“What can he mean?”", "options": ["Pronoun", "Adjective"], "answer": 0, "explain": "“What” stands alone — an interrogative pronoun." },
+    { "id": "l06-pa-05", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“Whose book is this?”", "options": ["Pronoun", "Adjective"], "answer": 1, "explain": "“Whose” comes before the noun “book” — an interrogative adjective." },
+    { "id": "l06-pa-06", "level": 1, "prompt": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?\n\n“Who borrowed the slate?”", "options": ["Pronoun", "Adjective"], "answer": 0, "explain": "“Who” stands alone — an interrogative pronoun." },
+
+    { "id": "l06-fix-01", "level": 1, "prompt": "Choose the correct form:\n\n“___ went in the boat.”", "options": ["Him and me", "He and I"], "answer": 1, "explain": "Use subject forms and name yourself last: He and I went." },
+    { "id": "l06-fix-02", "level": 1, "prompt": "Choose the correct form:\n\n“It was ___.”", "options": ["me", "I"], "answer": 1, "explain": "After “was,” use the subject form: It was I." },
+    { "id": "l06-fix-03", "level": 1, "prompt": "Choose the correct form:\n\n“Is that book ___?”", "options": ["your’s", "yours"], "answer": 1, "explain": "Possessive pronouns take no apostrophe: yours." },
+    { "id": "l06-fix-04", "level": 1, "prompt": "Choose the correct form:\n\n“No, it is ___.”", "options": ["her’s", "hers"], "answer": 1, "explain": "Possessive pronouns take no apostrophe: hers." },
+    { "id": "l06-fix-05", "level": 1, "prompt": "Choose the correct form:\n\n“The victory is ___.”", "options": ["their’s", "theirs"], "answer": 1, "explain": "Possessive pronouns take no apostrophe: theirs." },
+    { "id": "l06-fix-06", "level": 1, "prompt": "Choose the correct form:\n\n“This house is ___.”", "options": ["our’s", "ours"], "answer": 1, "explain": "Possessive pronouns take no apostrophe: ours." },
+    { "id": "l06-fix-07", "level": 1, "prompt": "Choose the correct form:\n\n“___ were tardy.”", "options": ["I and he", "He and I"], "answer": 1, "explain": "Name yourself last: He and I were tardy." },
+    { "id": "l06-fix-08", "level": 1, "prompt": "Choose the correct form:\n\n“___ were there.”", "options": ["Me and the doctor", "The doctor and I"], "answer": 1, "explain": "Use the subject form and name yourself last: The doctor and I." }
+  ]
+}

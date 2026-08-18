@@ -1,0 +1,52 @@
+{
+  "slug": "lesson-11",
+  "lesson": 11,
+  "title": "Lesson 11 · The Noun in Depth",
+  "blurb": "Gender, number & plurals, the four cases, singular vs plural, and noun properties.",
+  "icon": "📛",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l11-gen-01", "level": 1, "prompt": "What gender is this noun?\n\n“boy”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 0, "explain": "“boy” names a male — masculine." },
+    { "id": "l11-gen-02", "level": 1, "prompt": "What gender is this noun?\n\n“girl”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 1, "explain": "“girl” names a female — feminine." },
+    { "id": "l11-gen-03", "level": 1, "prompt": "What gender is this noun?\n\n“parent”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 2, "explain": "“parent” may be male or female — common." },
+    { "id": "l11-gen-04", "level": 1, "prompt": "What gender is this noun?\n\n“house”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 3, "explain": "“house” has no sex — neuter." },
+    { "id": "l11-gen-05", "level": 1, "prompt": "What gender is this noun?\n\n“actress”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 1, "explain": "“actress” names a female — feminine." },
+    { "id": "l11-gen-06", "level": 1, "prompt": "What gender is this noun?\n\n“king”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 0, "explain": "“king” names a male — masculine." },
+    { "id": "l11-gen-07", "level": 1, "prompt": "What gender is this noun?\n\n“child”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 2, "explain": "“child” may be male or female — common." },
+    { "id": "l11-gen-08", "level": 1, "prompt": "What gender is this noun?\n\n“table”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 3, "explain": "“table” has no sex — neuter." },
+
+    { "id": "l11-pl-01", "level": 1, "prompt": "Which is the correct plural of “calf”?", "options": ["calfs", "calves", "calfes"], "answer": 1, "explain": "f → ves: calf → calves." },
+    { "id": "l11-pl-02", "level": 1, "prompt": "Which is the correct plural of “hero”?", "options": ["heros", "heroes", "heroies"], "answer": 1, "explain": "o after a consonant → oes: hero → heroes." },
+    { "id": "l11-pl-03", "level": 1, "prompt": "Which is the correct plural of “goose”?", "options": ["gooses", "geese", "goeses"], "answer": 1, "explain": "“goose” is irregular: goose → geese." },
+    { "id": "l11-pl-04", "level": 1, "prompt": "Which is the correct plural of “ox”?", "options": ["oxes", "oxen", "oxs"], "answer": 1, "explain": "“ox” is irregular: ox → oxen." },
+    { "id": "l11-pl-05", "level": 1, "prompt": "Which is the correct plural of “mouse”?", "options": ["mouses", "mice", "meese"], "answer": 1, "explain": "“mouse” is irregular: mouse → mice." },
+    { "id": "l11-pl-06", "level": 1, "prompt": "Which is the correct plural of “child”?", "options": ["childs", "children", "childrens"], "answer": 1, "explain": "“child” is irregular: child → children." },
+    { "id": "l11-pl-07", "level": 1, "prompt": "Which is the correct plural of “brother-in-law”?", "options": ["brother-in-laws", "brothers-in-law", "brothers-in-laws"], "answer": 1, "explain": "A compound pluralizes its main word: brothers-in-law." },
+    { "id": "l11-pl-08", "level": 1, "prompt": "Which is the correct plural of “sheep”?", "options": ["sheeps", "sheep", "sheepes"], "answer": 1, "explain": "“sheep” is the same in singular and plural: sheep." },
+
+    { "id": "l11-case-01", "level": 1, "prompt": "What case is the noun in ( )?\n\n“Boys skate.” (Boys)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 0, "explain": "“Boys” is the subject — nominative case." },
+    { "id": "l11-case-02", "level": 1, "prompt": "What case is the noun in ( )?\n\n“John’s hat is new.” (John’s)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 1, "explain": "“John’s” shows ownership — possessive case." },
+    { "id": "l11-case-03", "level": 1, "prompt": "What case is the noun in ( )?\n\n“Indians hunt buffaloes.” (buffaloes)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 2, "explain": "“buffaloes” is the object of “hunt” — objective case." },
+    { "id": "l11-case-04", "level": 1, "prompt": "What case is the noun in ( )?\n\n“James, bring a book.” (James)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 3, "explain": "“James” is used independently, in direct address — absolute case." },
+    { "id": "l11-case-05", "level": 1, "prompt": "What case is the noun in ( )?\n\n“Horses are animals.” (Horses)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 0, "explain": "“Horses” is the subject — nominative case." },
+    { "id": "l11-case-06", "level": 1, "prompt": "What case is the noun in ( )?\n\n“We ran over the bridge.” (bridge)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 2, "explain": "“bridge” is the object of the preposition “over” — objective case." },
+    { "id": "l11-case-07", "level": 1, "prompt": "What case is the noun in ( )?\n\n“The sun’s rays are warm.” (sun’s)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 1, "explain": "“sun’s” shows ownership — possessive case." },
+    { "id": "l11-case-08", "level": 1, "prompt": "What case is the noun in ( )?\n\n“Oh, my son!” (son)", "options": ["Nominative", "Possessive", "Objective", "Absolute"], "answer": 3, "explain": "“son” is used independently, in exclamation — absolute case." },
+
+    { "id": "l11-num-01", "level": 1, "prompt": "Is this noun singular or plural?\n\n“geese”", "options": ["Singular", "Plural"], "answer": 1, "explain": "“geese” names more than one — plural." },
+    { "id": "l11-num-02", "level": 1, "prompt": "Is this noun singular or plural?\n\n“child”", "options": ["Singular", "Plural"], "answer": 0, "explain": "“child” names one — singular." },
+    { "id": "l11-num-03", "level": 1, "prompt": "Is this noun singular or plural?\n\n“oxen”", "options": ["Singular", "Plural"], "answer": 1, "explain": "“oxen” names more than one — plural." },
+    { "id": "l11-num-04", "level": 1, "prompt": "Is this noun singular or plural?\n\n“book”", "options": ["Singular", "Plural"], "answer": 0, "explain": "“book” names one — singular." },
+    { "id": "l11-num-05", "level": 1, "prompt": "Is this noun singular or plural?\n\n“mice”", "options": ["Singular", "Plural"], "answer": 1, "explain": "“mice” names more than one — plural." },
+    { "id": "l11-num-06", "level": 1, "prompt": "Is this noun singular or plural?\n\n“knife”", "options": ["Singular", "Plural"], "answer": 0, "explain": "“knife” names one — singular." },
+
+    { "id": "l11-prop-01", "level": 1, "prompt": "Which case is a subject in?", "options": ["Nominative", "Objective", "Possessive", "Absolute"], "answer": 0, "explain": "A subject is in the nominative case." },
+    { "id": "l11-prop-02", "level": 1, "prompt": "Which case is the object of a verb or preposition in?", "options": ["Objective", "Nominative", "Possessive", "Absolute"], "answer": 0, "explain": "An object is in the objective case." },
+    { "id": "l11-prop-03", "level": 1, "prompt": "Which case shows ownership?", "options": ["Possessive", "Nominative", "Objective", "Absolute"], "answer": 0, "explain": "Ownership is shown by the possessive case." },
+    { "id": "l11-prop-04", "level": 1, "prompt": "How many properties does a noun have (gender, person, number, case)?", "options": ["Two", "Three", "Four", "Five"], "answer": 2, "explain": "A noun has four properties: gender, person, number, and case." },
+    { "id": "l11-prop-05", "level": 1, "prompt": "What does the property “number” tell?", "options": ["One or more than one", "Who owns it", "The action done", "The relation shown"], "answer": 0, "explain": "Number tells one (singular) or more than one (plural)." },
+    { "id": "l11-prop-06", "level": 1, "prompt": "Declension names a noun’s forms for what?", "options": ["Number and case", "Gender and person", "Tense", "Mood"], "answer": 0, "explain": "Declension names a noun’s forms for number and case." }
+  ]
+}

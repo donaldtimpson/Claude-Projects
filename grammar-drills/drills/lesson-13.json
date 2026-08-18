@@ -1,0 +1,50 @@
+{
+  "slug": "lesson-13",
+  "lesson": 13,
+  "title": "Lesson 13 · The Verb in Depth I",
+  "blurb": "Voice (active/passive), the five modes, the six tenses, subject-verb agreement, and verb properties.",
+  "icon": "🏃",
+  "layout": "auto",
+  "order": "shuffle",
+  "tier": 1,
+  "items": [
+    { "id": "l13-vc-01", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“The boy wrote a letter.”", "options": ["Active", "Passive"], "answer": 0, "explain": "The boy does the writing — active voice." },
+    { "id": "l13-vc-02", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“The letter was written.”", "options": ["Active", "Passive"], "answer": 1, "explain": "The letter receives the action — passive voice." },
+    { "id": "l13-vc-03", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“The dog chased the cat.”", "options": ["Active", "Passive"], "answer": 0, "explain": "The dog does the chasing — active voice." },
+    { "id": "l13-vc-04", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“The cat was chased.”", "options": ["Active", "Passive"], "answer": 1, "explain": "The cat receives the action — passive voice." },
+    { "id": "l13-vc-05", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“Columbus discovered America.”", "options": ["Active", "Passive"], "answer": 0, "explain": "Columbus does the discovering — active voice." },
+    { "id": "l13-vc-06", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“America was discovered.”", "options": ["Active", "Passive"], "answer": 1, "explain": "America receives the action — passive voice." },
+    { "id": "l13-vc-07", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“The mail was robbed.”", "options": ["Active", "Passive"], "answer": 1, "explain": "The mail receives the action — passive voice." },
+    { "id": "l13-vc-08", "level": 1, "prompt": "Is the verb active (subject acts) or passive (subject is acted upon)?\n\n“Farmers plant corn.”", "options": ["Active", "Passive"], "answer": 0, "explain": "The farmers do the planting — active voice." },
+
+    { "id": "l13-md-01", "level": 1, "prompt": "What mode is the verb “burns”?\n\n“Fire burns.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 0, "explain": "It states a fact — indicative mode." },
+    { "id": "l13-md-02", "level": 1, "prompt": "What mode is the verb “must go”?\n\n“You must go.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 1, "explain": "“must” tells of necessity — potential mode." },
+    { "id": "l13-md-03", "level": 1, "prompt": "What mode is the verb “Go”?\n\n“Go home.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 3, "explain": "It gives a command — imperative mode." },
+    { "id": "l13-md-04", "level": 1, "prompt": "What mode is the verb “be”?\n\n“If it be true, I will come.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 2, "explain": "It states a supposition with “if” — subjunctive mode." },
+    { "id": "l13-md-05", "level": 1, "prompt": "What mode is the verb “to play”?\n\n“He wants to play.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 4, "explain": "“to play” names the action without affirming it — infinitive mode." },
+    { "id": "l13-md-06", "level": 1, "prompt": "What mode is the verb “can sing”?\n\n“She can sing.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 1, "explain": "“can” tells of power or ability — potential mode." },
+    { "id": "l13-md-07", "level": 1, "prompt": "What mode is the verb “encamped”?\n\n“The army encamped.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 0, "explain": "It states a fact — indicative mode." },
+    { "id": "l13-md-08", "level": 1, "prompt": "What mode is the verb “Lift”?\n\n“Lift up your heads.”", "options": ["Indicative", "Potential", "Subjunctive", "Imperative", "Infinitive"], "answer": 3, "explain": "It gives a command — imperative mode." },
+
+    { "id": "l13-tn-01", "level": 1, "prompt": "What tense is the verb?\n\n“I write.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 0, "explain": "The action is now — present tense." },
+    { "id": "l13-tn-02", "level": 1, "prompt": "What tense is the verb?\n\n“I wrote.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 1, "explain": "The action was before now — past tense." },
+    { "id": "l13-tn-03", "level": 1, "prompt": "What tense is the verb?\n\n“I shall write.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 2, "explain": "The action is to come — future tense." },
+    { "id": "l13-tn-04", "level": 1, "prompt": "What tense is the verb?\n\n“I have written.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 3, "explain": "Past action linked to now — present perfect tense." },
+    { "id": "l13-tn-05", "level": 1, "prompt": "What tense is the verb?\n\n“I had written.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 4, "explain": "Action before another past time — past perfect tense." },
+    { "id": "l13-tn-06", "level": 1, "prompt": "What tense is the verb?\n\n“I shall have written.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 5, "explain": "Action to be finished before a future point — future perfect tense." },
+    { "id": "l13-tn-07", "level": 1, "prompt": "What tense is the verb?\n\n“The wind blows.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 0, "explain": "The action is now — present tense." },
+    { "id": "l13-tn-08", "level": 1, "prompt": "What tense is the verb?\n\n“The bridge had fallen.”", "options": ["Present", "Past", "Future", "Present perfect", "Past perfect", "Future perfect"], "answer": 4, "explain": "Action before another past time — past perfect tense." },
+
+    { "id": "l13-ag-01", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The boy ___ fast.”", "options": ["run", "runs"], "answer": 1, "explain": "A singular subject takes a singular verb: the boy runs." },
+    { "id": "l13-ag-02", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The boys ___ fast.”", "options": ["run", "runs"], "answer": 0, "explain": "A plural subject takes a plural verb: the boys run." },
+    { "id": "l13-ag-03", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“She ___ letters.”", "options": ["write", "writes"], "answer": 1, "explain": "A singular subject takes a singular verb: she writes." },
+    { "id": "l13-ag-04", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“They ___ here.”", "options": ["was", "were"], "answer": 1, "explain": "A plural subject takes a plural verb: they were." },
+    { "id": "l13-ag-05", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“He ___ his work.”", "options": ["do", "does"], "answer": 1, "explain": "A singular subject takes a singular verb: he does." },
+    { "id": "l13-ag-06", "level": 1, "prompt": "Choose the verb that agrees with the subject:\n\n“The dogs ___ loudly.”", "options": ["bark", "barks"], "answer": 0, "explain": "A plural subject takes a plural verb: the dogs bark." },
+
+    { "id": "l13-pr-01", "level": 1, "prompt": "Voice belongs to which verbs?", "options": ["Transitive verbs", "Intransitive verbs", "All verbs", "No verbs"], "answer": 0, "explain": "Only transitive verbs have voice — they can act or be acted upon." },
+    { "id": "l13-pr-02", "level": 1, "prompt": "How many tenses are there?", "options": ["Three", "Four", "Five", "Six"], "answer": 3, "explain": "There are six tenses." },
+    { "id": "l13-pr-03", "level": 1, "prompt": "How many modes are there?", "options": ["Three", "Four", "Five", "Six"], "answer": 2, "explain": "There are five modes: indicative, potential, subjunctive, imperative, infinitive." },
+    { "id": "l13-pr-04", "level": 1, "prompt": "A verb must agree with its subject in what?", "options": ["Person and number", "Gender and case", "Voice and mode", "Tense only"], "answer": 0, "explain": "A verb agrees with its subject in person and number." }
+  ]
+}
