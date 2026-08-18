@@ -17,6 +17,7 @@ import {
 import {
   nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
 } from "./generators/geography";
+import { grammarLessonDrills, grammarPracticeDrills } from "./grammar";
 
 export const DRILLS: DrillDef[] = [
   arithmeticDrill, percentagesDrill, orderOfOpsDrill, powersOfTwoDrill, squaresDrill,
@@ -24,6 +25,8 @@ export const DRILLS: DrillDef[] = [
   determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
   unitCircleDrill, vectorsDrill,
   nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
+  ...grammarPracticeDrills,
+  ...grammarLessonDrills,
 ];
 
 export function drillBySlug(slug: string): DrillDef | undefined {

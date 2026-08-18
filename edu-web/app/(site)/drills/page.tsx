@@ -1,15 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { drillBySlug } from "@/lib/drills/registry";
+import { grammarLessonDrills, grammarPracticeDrills } from "@/lib/drills/grammar";
 import type { DrillDef } from "@/lib/drills/types";
 
 export const metadata: Metadata = {
   title: "Practice Drills",
-  description: "Endless timed practice — mental math, trigonometry, calculus, linear algebra, and geography.",
+  description: "Endless timed practice — grammar, mental math, trigonometry, calculus, linear algebra, and geography.",
 };
 
 // Grouped like the iOS hub, so the growing list stays scannable. Each entry is a
-// category with the drills (by slug) that belong to it, in display order.
+// category with the drills (by slug) that belong to it, in display order. The two
+// grammar categories derive their slugs from the bundled banks so they stay in sync.
 const CATEGORIES: { title: string; icon: string; slugs: string[] }[] = [
   {
     title: "Mental Math",
@@ -20,6 +22,8 @@ const CATEGORIES: { title: string; icon: string; slugs: string[] }[] = [
   { title: "Calculus", icon: "∫", slugs: ["derivative", "integral"] },
   { title: "Linear Algebra", icon: "▦", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"] },
   { title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state"] },
+  { title: "Grammar", icon: "✒️", slugs: grammarPracticeDrills.map((d) => d.slug) },
+  { title: "Grammar Lessons", icon: "🎓", slugs: grammarLessonDrills.map((d) => d.slug) },
 ];
 
 function DrillCard({ d }: { d: DrillDef }) {

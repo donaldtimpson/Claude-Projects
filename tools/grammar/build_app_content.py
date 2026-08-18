@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Build the bundled grammar lesson-drill JSON from the shared content source.
+"""Build the bundled grammar JSON banks from the shared content source.
 
-Source of truth: content/grammar/drills/lesson-*.json (one drill object each:
-slug/lesson/title/blurb/icon/layout/order/tier/items). This concatenates them,
-validates every item against the app loaders' rules (>=2 distinct options,
-in-range answer, unique ids), sorts by `lesson`, and writes {"drills":[...]} to
-each app that bundles it.
+Source of truth (content/grammar/):
+  drills/lesson-*.json  — per-lesson homework banks, concatenated → lessons.json
+  practice.json         — the ✒️ rule/vocab practice bank ({"drills":[...]}) → grammar.json
+
+Both are validated against the app loaders' rules (>=2 distinct options, in-range
+answer, unique ids) and emitted to every app that bundles them:
+  edu-ios/Resources/Grammar/{lessons,grammar}.json     (Xcode bundles these)
+  edu-web/lib/drills/grammar/data/{lessons,grammar}.json  (imported at build time)
 
 Run from anywhere: `python3 tools/grammar/build_app_content.py`.
 """
@@ -15,7 +18,6 @@ from pathlib import Path
 
 
 def repo_root() -> Path:
-    """Walk up until we find the dir holding both content/ and edu-ios/."""
     for d in Path(__file__).resolve().parents:
         if (d / "content").is_dir() and (d / "edu-ios").is_dir():
             return d
@@ -23,19 +25,20 @@ def repo_root() -> Path:
 
 
 ROOT = repo_root()
-SRC = ROOT / "content" / "grammar" / "drills"
-# Every app that bundles the built lessons file. Phase 2 adds the edu-web target here.
-TARGETS = [
-    ROOT / "edu-ios" / "Resources" / "Grammar" / "lessons.json",
+CONTENT = ROOT / "content" / "grammar"
+# Dirs each get both lessons.json and grammar.json written into them.
+TARGET_DIRS = [
+    ROOT / "edu-ios" / "Resources" / "Grammar",
+    ROOT / "edu-web" / "lib" / "drills" / "grammar" / "data",
 ]
 
 
-def validate(drill, path):
+def validate_drill(drill, where):
     errs = []
     slug = drill.get("slug", "?")
     for key in ("slug", "title", "icon", "items"):
         if key not in drill:
-            errs.append(f"{path.name}: missing '{key}'")
+            errs.append(f"{where}: missing '{key}'")
     seen_ids = set()
     for it in drill.get("items", []):
         iid = it.get("id", "?")
@@ -56,33 +59,50 @@ def validate(drill, path):
     return errs
 
 
-def main():
-    files = sorted(SRC.glob("lesson-*.json"))
+def load_lessons(errs):
+    files = sorted((CONTENT / "drills").glob("lesson-*.json"))
     if not files:
-        sys.exit(f"no lesson-*.json found in {SRC}")
-    drills, errs, slugs = [], [], set()
+        sys.exit(f"no lesson-*.json found in {CONTENT / 'drills'}")
+    drills, slugs = [], set()
     for p in files:
         d = json.loads(p.read_text())
-        errs += validate(d, p)
+        errs += validate_drill(d, p.name)
         if d.get("slug") in slugs:
             errs.append(f"duplicate slug {d.get('slug')}")
         slugs.add(d.get("slug"))
         drills.append(d)
+    drills.sort(key=lambda d: d.get("lesson", 999))
+    return {"drills": drills}
+
+
+def load_practice(errs):
+    obj = json.loads((CONTENT / "practice.json").read_text())
+    slugs = set()
+    for d in obj.get("drills", []):
+        errs += validate_drill(d, "practice.json")
+        if d.get("slug") in slugs:
+            errs.append(f"duplicate slug {d.get('slug')}")
+        slugs.add(d.get("slug"))
+    return obj
+
+
+def main():
+    errs = []
+    banks = {"lessons.json": load_lessons(errs), "grammar.json": load_practice(errs)}
     if errs:
         print("VALIDATION FAILED:")
         for e in errs:
             print("  -", e)
         sys.exit(1)
-    drills.sort(key=lambda d: d.get("lesson", 999))
-    payload = json.dumps({"drills": drills}, indent=1, ensure_ascii=False) + "\n"
-    for out in TARGETS:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(payload)
-        print(f"wrote {out.relative_to(ROOT)}")
-    total = sum(len(d["items"]) for d in drills)
-    print(f"  {len(drills)} lesson drills, {total} items")
-    for d in drills:
-        print(f"  L{d.get('lesson'):<2} {d['slug']:<12} {len(d['items']):>3} items  {d['title']}")
+    for name, payload in banks.items():
+        text = json.dumps(payload, indent=1, ensure_ascii=False) + "\n"
+        for d in TARGET_DIRS:
+            d.mkdir(parents=True, exist_ok=True)
+            (d / name).write_text(text)
+    for name, payload in banks.items():
+        total = sum(len(x["items"]) for x in payload["drills"])
+        print(f"{name}: {len(payload['drills'])} drills, {total} items "
+              f"→ {', '.join(str(d.relative_to(ROOT)) for d in TARGET_DIRS)}")
 
 
 if __name__ == "__main__":
