@@ -1,0 +1,145 @@
+{
+  "lesson": "syntax-letters",
+  "title": "Syntax & Letter-Writing",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 138-147",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Syntax & Letter-Writing",
+      "subtitle": "Lesson 17 · The Rules & the Friendly Letter"
+    },
+    {
+      "type": "concept",
+      "heading": "Syntax & Its Rules",
+      "bullets": [
+        "Syntax is the part of grammar that treats the construction of sentences.",
+        "A Rule of Syntax states how words should be used together.",
+        "Harvey gives twenty rules — they are the reasons we give when we parse.",
+        "The most useful ones are about case and about agreement."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Case Rules",
+      "bullets": [
+        "A subject or a predicate noun is in the nominative case:  “Boys skate.”  “Horses are animals.”",
+        "The object of a verb or a preposition is in the objective case:  “hunt buffaloes,” “over the bridge.”",
+        "A noun showing ownership is in the possessive case:  “John’s hat.”",
+        "A noun used independently is in the nominative absolute:  “James, come here.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Case?",
+      "instruction": "Tell the case of the noun or pronoun in parentheses.",
+      "items": [
+        "Boys skate.  (boys)",
+        "We ran over the bridge.  (bridge)",
+        "John’s hat is new.  (John’s)",
+        "They saw us.  (us)",
+        "Horses are animals.  (animals)",
+        "The dog’s bone is buried.  (dog’s)"
+      ],
+      "answers": [
+        "nominative",
+        "objective",
+        "possessive",
+        "objective",
+        "nominative",
+        "possessive"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Agreement Rules",
+      "bullets": [
+        "A verb agrees with its subject in person and number:  “He runs,” “they run.”",
+        "Two singular subjects joined by and take a plural verb:  “Tom and Sue are here.”",
+        "A pronoun agrees with its antecedent in gender, person, and number.",
+        "An adjective or participle belongs to some noun or pronoun."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Agreement",
+      "instruction": "Each sentence has an agreement mistake. Give the correct verb.",
+      "items": [
+        "He run fast.",
+        "Tom and Sue is here.",
+        "The dogs barks.",
+        "She write letters.",
+        "The boys was late.",
+        "Neither book are mine."
+      ],
+      "answers": [
+        "runs",
+        "are",
+        "bark",
+        "writes",
+        "were",
+        "is"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Parts of a Letter",
+      "bullets": [
+        "Heading — your town and the date, at the top right:  “Boston, Mass., May 1, 2026.”",
+        "Greeting — whom you write to:  “Dear Grandma,”",
+        "Body — the message itself, in clear sentences.",
+        "Closing & Signature — “Yours truly,” then your name."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Addressing the Envelope",
+      "bullets": [
+        "Write the name of the person on the first line:  “Mr. James Johnson.”",
+        "Then the street, then the city and state (and country, if far away).",
+        "Put the stamp in the upper right-hand corner.",
+        "Write everything plainly — a smudged address may never arrive."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Parts of a Letter",
+      "instruction": "Tell which part of a letter each belongs to: heading, greeting, body, closing, or signature.",
+      "answerInline": true,
+      "items": [
+        "May 1, 2026",
+        "Dear Grandma,",
+        "I hope you are well and happy.",
+        "Yours truly,",
+        "Henry  (at the bottom)",
+        "Boston, Massachusetts  (at the top)"
+      ],
+      "answers": [
+        "heading",
+        "greeting",
+        "body",
+        "closing",
+        "signature",
+        "heading"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is syntax?",
+        "What case is a subject in?",
+        "What case is the object of a verb or preposition in?",
+        "A verb must agree with its subject in what?",
+        "Name the parts of a friendly letter.",
+        "Where does the date go in a letter?"
+      ],
+      "answers": [
+        "The part of grammar that treats the construction of sentences.",
+        "The nominative case.",
+        "The objective case.",
+        "Person and number.",
+        "Heading, greeting, body, closing, and signature.",
+        "In the heading, at the top."
+      ]
+    }
+  ]
+}

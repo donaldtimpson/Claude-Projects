@@ -1,0 +1,255 @@
+{
+  "lesson": "adjectives-participles",
+  "title": "Adjectives, Articles & Participles",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 31-41",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Adjectives & Participles",
+      "subtitle": "Lesson 4 · Describing Words"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "Some words describe a noun by telling its quality:  white chalk, sour apples, good boys.",
+        "Other words do not describe — they point out or count:  this book, that boy, two apples.",
+        "Both kinds are joined to a noun to change or limit its meaning.",
+        "Any word that describes a noun, points it out, or counts it is called an Adjective."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Adjective",
+      "text": "An Adjective is a word used to describe or define a noun.",
+      "examples": [
+        "white chalk  ·  brave soldier",
+        "sour apples  ·  kind father",
+        "this book  ·  that road",
+        "two boys  ·  many houses"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Two Kinds of Adjectives",
+      "bullets": [
+        "A Descriptive Adjective describes a noun by giving it a quality:  good, white, brave, ripe.",
+        "A Definitive Adjective points out or counts a noun, without giving a quality:  this, that, two, few.",
+        "Every quality-word is descriptive; pointing-out and number words are definitive.",
+        "An adjective made from a proper noun keeps its capital:  American cotton, French customs."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Descriptive or Definitive?",
+      "instruction": "Tell whether each adjective is descriptive (gives a quality) or definitive (points out or counts).",
+      "items": [
+        "ripe",
+        "four",
+        "brave",
+        "these",
+        "smooth",
+        "either",
+        "many",
+        "beautiful"
+      ],
+      "answers": [
+        "descriptive",
+        "definitive",
+        "descriptive",
+        "definitive",
+        "descriptive",
+        "definitive",
+        "definitive",
+        "descriptive"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Article",
+      "bullets": [
+        "A, an, and the are special definitive adjectives called Articles.",
+        "“A horse” means any one horse; “the horse” means one particular horse.",
+        "The is the Definite Article — it points out a definite object.",
+        "A / An is the Indefinite Article — it points out in a general way.",
+        "Use a before a consonant sound, an before a vowel sound:  a book, an apple, an hour, a university."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — A or An?",
+      "instruction": "Choose a or an for each word — listen to its first sound, not just its first letter.",
+      "items": [
+        "egg",
+        "hour",
+        "cart",
+        "honor",
+        "eagle",
+        "house",
+        "orange",
+        "university"
+      ],
+      "answers": [
+        "an",
+        "an",
+        "a",
+        "an",
+        "an",
+        "a",
+        "an",
+        "a"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Mistakes with Adjectives",
+      "bullets": [
+        "Use a before a consonant sound, an before a vowel sound:  “a banana,” “an apple.”",
+        "The sound is what matters, not the letter:  “an hour” (silent h), “a unicorn” (a “yoo” sound).",
+        "Do not use these or those before a singular noun:  “this kind of shoe,” not “these kind.”",
+        "Do not say them for those:  “those puppies,” not “them puppies.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Adjective",
+      "instruction": "Each sentence has an adjective or article mistake. Give the correct word.",
+      "items": [
+        "A apple fell from the tree.",
+        "I saw an unicorn in the book.",
+        "She is a honest kid.",
+        "We waited a hour for the bus.",
+        "I don’t like these kind of shoes.",
+        "Those type of games are boring.",
+        "Look at them puppies!",
+        "Them cookies are burnt."
+      ],
+      "answers": [
+        "an",
+        "a",
+        "an",
+        "an",
+        "this",
+        "that",
+        "those",
+        "those"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Participle",
+      "text": "A Participle is a word made from a verb that also works like an adjective.",
+      "examples": [
+        "James saw the man plowing.  (plowing tells what he did, and describes him)",
+        "The boy is writing.  (the action is going on)",
+        "The letter is written.  (the action is finished)",
+        "twinkling stars  (a participle used to describe)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Three Participles",
+      "bullets": [
+        "Present Participle — the action is going on; it ends in -ing:  loving, writing, twinkling.",
+        "Perfect Participle — the action is finished; it ends in -ed, -d, -n, -en, or -t:  loved, written, built.",
+        "Compound Participle — the action finished before the main verb; formed with having:  having learned.",
+        "A present participle can even describe like an adjective:  “twinkling stars,” “a running brook.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Participle (Set 1)",
+      "instruction": "Point out the participle in each sentence and tell its kind: present, perfect, or compound.",
+      "items": [
+        "The boy, laughing, ran away.",
+        "The lesson, studied carefully, was recited.",
+        "Having recited, we were dismissed.",
+        "Look at Dash playing with Rose.",
+        "This note, written in haste, reached me.",
+        "Having finished the task, I will rest."
+      ],
+      "answers": [
+        "laughing — present",
+        "studied — perfect",
+        "having recited — compound",
+        "playing — present",
+        "written — perfect",
+        "having finished — compound"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Participle (Set 2)",
+      "instruction": "Point out the participle in each sentence and tell its kind: present, perfect, or compound.",
+      "items": [
+        "The boy passed on, whistling as before.",
+        "The fort, situated on a high hill, was taken.",
+        "Having eaten, the dog slept by the fire.",
+        "The children ran home, shouting with joy.",
+        "The broken cup lay upon the floor.",
+        "Having rested awhile, we set out again."
+      ],
+      "answers": [
+        "whistling — present",
+        "situated — perfect",
+        "having eaten — compound",
+        "shouting — present",
+        "broken — perfect",
+        "having rested — compound"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Participial Noun",
+      "text": "A Participial Noun is a word made from a verb, used as the name of an action.",
+      "examples": [
+        "I like skating.  (skating names an action)",
+        "Miss Gray teaches writing.",
+        "He was in danger of losing his life.",
+        "It is a noun, though it comes from a verb."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Participle or Participial Noun?",
+      "instruction": "Tell whether the verb-word describes (participle) or names an action (participial noun).",
+      "items": [
+        "I like skating.",
+        "The boy, laughing, ran off.",
+        "Miss Gray teaches writing.",
+        "Look at Dash playing.",
+        "He was in danger of losing his life.",
+        "The note, written in haste, arrived."
+      ],
+      "answers": [
+        "participial noun",
+        "participle",
+        "participial noun",
+        "participle",
+        "participial noun",
+        "participle"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is an adjective?",
+        "Name the two kinds of adjectives.",
+        "What is an article?",
+        "When do we use an?",
+        "What is a participle?",
+        "Name the three participles.",
+        "What is a participial noun?"
+      ],
+      "answers": [
+        "A word used to describe or define a noun.",
+        "Descriptive and definitive.",
+        "A, an, or the — a definitive adjective that points out a noun.",
+        "Before a word that begins with a vowel sound.",
+        "A word made from a verb that also works like an adjective.",
+        "Present, perfect, and compound.",
+        "A verb-made word used as the name of an action."
+      ]
+    }
+  ]
+}

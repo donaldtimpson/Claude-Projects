@@ -1,0 +1,145 @@
+{
+  "lesson": "punctuation",
+  "title": "Punctuation",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 148-154",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Punctuation",
+      "subtitle": "Lesson 18 · Points & Marks"
+    },
+    {
+      "type": "concept",
+      "heading": "What Is Punctuation?",
+      "bullets": [
+        "Punctuation is the art of dividing writing into sentences and parts by points and marks.",
+        "The marks show the reader where to pause and how the parts fit together.",
+        "The chief marks:  period ( . )  question mark ( ? )  exclamation point ( ! )",
+        "…and  comma ( , )  semicolon ( ; )  colon ( : )  dash ( — )  parentheses ( )."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "End Marks",
+      "bullets": [
+        "A Period ( . ) ends a statement or a command:  “The sky is blue.”  “Shut the door.”",
+        "A Question Mark ( ? ) ends a question:  “Where are you going?”",
+        "An Exclamation Point ( ! ) shows strong feeling:  “Watch out!”",
+        "Every sentence ends with one of these three marks."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which End Mark?",
+      "instruction": "Choose the right end mark:  .  ?  or  !",
+      "items": [
+        "The sky is blue ___",
+        "Where are you going ___",
+        "Watch out ___",
+        "Please sit down ___",
+        "Do you like pizza ___",
+        "What a game ___"
+      ],
+      "answers": [
+        ".",
+        "?",
+        "!",
+        ".",
+        "?",
+        "!"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Comma",
+      "bullets": [
+        "A comma shows the slightest pause between parts of a sentence.",
+        "Use it in a series of three or more:  “red, white, and blue.”",
+        "Use it after a greeting or opening word:  “Yes, I will come.”  “Hi, Mom.”",
+        "Use it to join two sentences with and, but, or:  “We ran, and we won.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Add the Commas",
+      "instruction": "Write each phrase with its commas added.",
+      "answerInline": true,
+      "items": [
+        "red white and blue",
+        "Hi Mom",
+        "cats dogs and birds",
+        "Yes I agree",
+        "Tom Sue and Ann",
+        "Well let’s go"
+      ],
+      "answers": [
+        "red, white, and blue",
+        "Hi, Mom",
+        "cats, dogs, and birds",
+        "Yes, I agree",
+        "Tom, Sue, and Ann",
+        "Well, let’s go"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "More Marks",
+      "bullets": [
+        "Semicolon ( ; ) — a bigger pause than a comma, joining two related sentences.",
+        "Colon ( : ) — introduces a list or a quotation:  “Bring these: milk, eggs, bread.”",
+        "Apostrophe ( ’ ) — shows ownership or a contraction:  “John’s,” “don’t.”",
+        "Quotation Marks ( “ ” ) — frame someone’s exact words."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Mark",
+      "instruction": "Name the punctuation mark that does each job.",
+      "items": [
+        "Ends a question",
+        "Shows strong feeling",
+        "Separates items in a series",
+        "Frames someone’s exact words",
+        "Shows ownership or a contraction",
+        "Introduces a list"
+      ],
+      "answers": [
+        "question mark",
+        "exclamation point",
+        "comma",
+        "quotation marks",
+        "apostrophe",
+        "colon"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Dash & Parentheses",
+      "bullets": [
+        "A Dash ( — ) marks a sudden break or a change of thought:  “I was sure — but no.”",
+        "Parentheses ( ) enclose an extra remark that could be left out.",
+        "“My gun was on my arm (as it always is) when I saw the rabbit.”",
+        "Use them sparingly — too many break up the reading."
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is punctuation?",
+        "What mark ends a question?",
+        "What mark shows strong feeling?",
+        "When do we use commas in a series?",
+        "What does an apostrophe show?",
+        "What do quotation marks frame?"
+      ],
+      "answers": [
+        "The art of dividing writing with points and marks.",
+        "The question mark.",
+        "The exclamation point.",
+        "To separate three or more items.",
+        "Ownership or a contraction.",
+        "Someone’s exact words."
+      ]
+    }
+  ]
+}

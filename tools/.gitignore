@@ -1,0 +1,4 @@
+# Generated output + local envs for the content tools (regenerable; not source of truth).
+**/build/
+**/__pycache__/
+**/.venv/

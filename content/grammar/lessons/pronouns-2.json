@@ -1,0 +1,261 @@
+{
+  "lesson": "pronouns-2",
+  "title": "Pronouns II — Relative & Interrogative",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 52-56",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Relatives & Interrogatives",
+      "subtitle": "Lesson 6 · Pronouns That Join & Ask"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "In “A man who is rich owns that house,” there are really two statements joined together.",
+        "One is “A man owns that house”; the other is “who is rich” (that is, the man is rich).",
+        "The second statement describes the noun man — it does the work of an adjective.",
+        "A statement used this way, as part of a larger sentence, is called a Clause."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Clause",
+      "bullets": [
+        "A Clause is a group of words with its own subject and predicate, used as one part of a larger sentence.",
+        "It is like a little sentence working inside a bigger one.",
+        "In “A man who is rich owns that house,” the clause is “who is rich.”",
+        "The whole clause modifies the noun man, doing the work of a single adjective."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Relative Pronoun",
+      "text": "A Relative Pronoun stands for a word before it and joins a modifying clause to that word.",
+      "examples": [
+        "the man who is rich  (who stands for man)",
+        "the house which he bought",
+        "a horse that is gentle",
+        "who, which, what, that"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Relative Clause & Antecedent",
+      "bullets": [
+        "A Relative Clause is a clause that begins with a relative pronoun:  “the boy who studies.”",
+        "It modifies a noun, telling which one:  “who studies” tells which boy.",
+        "The word the relative stands for is its Antecedent:  in “the boy who studies,” boy is the antecedent."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Relative Pronoun",
+      "instruction": "Name the relative pronoun in each sentence.",
+      "answerInline": true,
+      "items": [
+        "A man who is industrious will prosper.",
+        "This is the house which my father bought.",
+        "I gave him all that I had.",
+        "Those who sow will reap.",
+        "He will do what is right.",
+        "Whoever studies will learn.",
+        "The knife which you gave me is lost.",
+        "A kind boy avoids what injures others."
+      ],
+      "answers": [
+        "who",
+        "which",
+        "that",
+        "who",
+        "what",
+        "whoever",
+        "which",
+        "what"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Antecedent",
+      "instruction": "Name the antecedent — the word each relative pronoun stands for.",
+      "answerInline": true,
+      "items": [
+        "The boy who studies will learn.",
+        "The fish which you caught is a trout.",
+        "I like a horse that is gentle.",
+        "Solomon, who was David’s son, built the temple.",
+        "The knife which you gave me is lost.",
+        "He is a man that deserves respect."
+      ],
+      "answers": [
+        "boy",
+        "fish",
+        "horse",
+        "Solomon",
+        "knife",
+        "man"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Relative Clause",
+      "instruction": "Name the whole relative clause in each sentence.",
+      "answerInline": true,
+      "items": [
+        "The boy who studies wins.",
+        "Dogs that bark rarely bite.",
+        "The book which fell is torn.",
+        "A man who lies is not trusted.",
+        "The cake that Mom baked is gone.",
+        "People who help are kind."
+      ],
+      "answers": [
+        "who studies",
+        "that bark",
+        "which fell",
+        "who lies",
+        "that Mom baked",
+        "who help"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Who, Which, or That?",
+      "bullets": [
+        "Use who for persons:  “the girl who sings.”",
+        "Use which for animals and things:  “the dog which barks,” “the book which fell.”",
+        "Use that for either persons or things:  “the man that spoke,” “the house that stood.”",
+        "what means “that which”:  “He does what is right” = “the thing that is right.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Who, Which, or What?",
+      "instruction": "Fill each blank with who, which, or what.",
+      "items": [
+        "The girl ___ sings is my sister.",
+        "The book ___ fell was old.",
+        "He does ___ is right.",
+        "The boy ___ studies will learn.",
+        "The ball ___ rolled away is lost.",
+        "She has ___ she needs."
+      ],
+      "answers": [
+        "who",
+        "which",
+        "what",
+        "who",
+        "which",
+        "what"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Interrogative Pronouns",
+      "bullets": [
+        "An Interrogative Pronoun is used in asking a question:  who, whose, whom, which, what.",
+        "“Who wrote it?”  ·  “What did he say?”  ·  “Which is yours?”",
+        "When which or what comes before a noun, it is an interrogative adjective:  “Which road?” “What noise?”",
+        "So: standing alone → a pronoun; placed before a noun → an adjective."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Interrogative Pronoun",
+      "instruction": "Name the interrogative pronoun (the question-word that stands alone).",
+      "items": [
+        "Who wrote that letter?",
+        "What did he say?",
+        "Whom did you call?",
+        "Which is yours?",
+        "What can he mean?",
+        "Who discovered America?"
+      ],
+      "answers": [
+        "who",
+        "what",
+        "whom",
+        "which",
+        "what",
+        "who"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Pronoun or Adjective?",
+      "instruction": "Is the question-word a pronoun (stands alone) or an adjective (before a noun)?",
+      "items": [
+        "Which comes first?",
+        "Which road shall I take?",
+        "What noise is that?",
+        "What can he mean?",
+        "Whose book is this?",
+        "Who borrowed the slate?"
+      ],
+      "answers": [
+        "pronoun",
+        "adjective",
+        "adjective",
+        "pronoun",
+        "adjective",
+        "pronoun"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Mistakes with Pronouns",
+      "bullets": [
+        "Use I, he, she, they as the subject — not me, him, her, them:  “He and I went,” not “Him and me went.”",
+        "After is or was, use I, he, she:  “It was I,” not “It was me.”",
+        "Possessive pronouns take no apostrophe — write yours, hers, ours, theirs, not your’s or her’s.",
+        "Name yourself last:  “you and I,” “he and I,” not “I and he.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Pronoun",
+      "instruction": "Each sentence has a pronoun mistake. Give the correct words.",
+      "items": [
+        "Him and me were in the boat.",
+        "It was me.",
+        "Me and the doctor were there.",
+        "Is that book your’s?",
+        "No, it is her’s.",
+        "The victory is their’s.",
+        "This house is our’s.",
+        "I and he were tardy."
+      ],
+      "answers": [
+        "He and I",
+        "It was I",
+        "The doctor and I",
+        "yours",
+        "hers",
+        "theirs",
+        "ours",
+        "He and I"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a relative pronoun?",
+        "Name the relative pronouns.",
+        "What is an antecedent?",
+        "What is a relative clause?",
+        "What is an interrogative pronoun?",
+        "Name the interrogative pronouns.",
+        "Which is correct: “Him and me went” or “He and I went”?"
+      ],
+      "answers": [
+        "A word that stands for a preceding word and joins a modifying clause.",
+        "Who, which, what, and that.",
+        "The word a relative pronoun stands for.",
+        "A clause introduced by a relative pronoun.",
+        "A pronoun used in asking a question.",
+        "Who, whose, whom, which, and what.",
+        "“He and I went.”"
+      ]
+    }
+  ]
+}

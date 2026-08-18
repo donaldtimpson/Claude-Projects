@@ -1,0 +1,180 @@
+{
+  "lesson": "noun-in-depth",
+  "title": "The Noun in Depth",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 79-87",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Noun in Depth",
+      "subtitle": "Lesson 11 · Gender, Case & Parsing"
+    },
+    {
+      "type": "concept",
+      "heading": "Properties of the Noun",
+      "bullets": [
+        "A noun has four Properties:  Gender, Person, Number, and Case.",
+        "Gender — whether it names a male, a female, both, or neither.",
+        "Person — whether it is the speaker, spoken to, or spoken of (usually third).",
+        "Number — one, or more than one.   ·   Case — its relation to the other words."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Gender",
+      "bullets": [
+        "Gender is a distinction of nouns with regard to sex.",
+        "Masculine — males:  boy, king, actor.   ·   Feminine — females:  girl, queen, actress.",
+        "Common — either:  parent, child, cousin.   ·   Neuter — neither:  house, book, stone.",
+        "Tell male from female three ways: different words (father/mother), endings (actor/actress), or a joined word (he-goat/she-goat)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Gender?",
+      "instruction": "Tell the gender of each noun: masculine, feminine, common, or neuter.",
+      "items": [
+        "boy",
+        "girl",
+        "parent",
+        "house",
+        "actress",
+        "king",
+        "child",
+        "table"
+      ],
+      "answers": [
+        "masculine",
+        "feminine",
+        "common",
+        "neuter",
+        "feminine",
+        "masculine",
+        "common",
+        "neuter"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Number & Forming Plurals",
+      "bullets": [
+        "Number tells one (singular) or more than one (plural).",
+        "Most add s or es:  book→books, box→boxes.   ·   y after a consonant → ies:  mercy→mercies.",
+        "f or fe → ves:  knife→knives.   ·   o after a consonant → oes:  hero→heroes.",
+        "Irregular:  man→men, ox→oxen, goose→geese, child→children.   ·   Same:  sheep, deer.",
+        "Compounds pluralize the main word:  brothers-in-law, courts-martial."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Write the Plural",
+      "instruction": "Write the plural of each noun.",
+      "items": [
+        "calf",
+        "hero",
+        "goose",
+        "ox",
+        "mouse",
+        "child",
+        "brother-in-law",
+        "sheep"
+      ],
+      "answers": [
+        "calves",
+        "heroes",
+        "geese",
+        "oxen",
+        "mice",
+        "children",
+        "brothers-in-law",
+        "sheep"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Case",
+      "text": "Case is the relation of a noun or pronoun to the other words in a sentence.",
+      "examples": [
+        "Boys skate.  (subject)",
+        "John’s hat  (ownership)",
+        "Indians hunt buffaloes.  (object)",
+        "four cases: nominative, possessive, objective, absolute"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Four Cases",
+      "bullets": [
+        "Nominative — used as the subject or predicate:  “Boys skate.”  “Horses are animals.”",
+        "Possessive — shows ownership:  “John’s hat,” “the sun’s rays.”",
+        "Objective — object of a verb or preposition:  “Indians hunt buffaloes,” “over the bridge.”",
+        "Absolute — used independently:  “James, bring a book.”  “Oh, my son!”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Case?",
+      "instruction": "Tell the case of the noun in parentheses: nominative, possessive, objective, or absolute.",
+      "items": [
+        "Boys skate.  (boys)",
+        "John’s hat is new.  (John’s)",
+        "Indians hunt buffaloes.  (buffaloes)",
+        "James, bring a book.  (James)",
+        "Horses are animals.  (Horses)",
+        "We ran over the bridge.  (bridge)",
+        "The sun’s rays are warm.  (sun’s)",
+        "Oh, my son!  (son)"
+      ],
+      "answers": [
+        "nominative",
+        "possessive",
+        "objective",
+        "absolute",
+        "nominative",
+        "objective",
+        "possessive",
+        "absolute"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Declension",
+      "bullets": [
+        "Declension is naming a noun’s forms for number and case.",
+        "Boy — Nom.: boy, boys   ·   Poss.: boy’s, boys’   ·   Obj.: boy, boys.",
+        "Only the possessive changes its spelling; the nominative and objective look alike.",
+        "The nominative absolute has the same form as the nominative."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Parsing a Noun",
+      "bullets": [
+        "To parse a noun, tell everything about it: part of speech, class, gender, person, number, case, and the rule.",
+        "Order:  noun → common or proper → gender → person → number → case → rule.",
+        "Model — “Wheat is a vegetable.”  Wheat is a noun; common; neuter; third person; singular; nominative case (the subject).",
+        "Parsing simply puts together all the properties you have learned."
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What are the four properties of a noun?",
+        "Name the four genders.",
+        "Name the four cases.",
+        "What case is a subject in?",
+        "What case is the object of a verb or preposition in?",
+        "What is declension?",
+        "What is parsing?"
+      ],
+      "answers": [
+        "Gender, person, number, and case.",
+        "Masculine, feminine, common, and neuter.",
+        "Nominative, possessive, objective, and absolute.",
+        "The nominative case.",
+        "The objective case.",
+        "Naming a noun’s forms for number and case.",
+        "Telling a word’s part of speech, properties, and use."
+      ]
+    }
+  ]
+}

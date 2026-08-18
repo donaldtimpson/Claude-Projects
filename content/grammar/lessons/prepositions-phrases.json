@@ -1,0 +1,239 @@
+{
+  "lesson": "prepositions-phrases",
+  "title": "Prepositions, Phrases & Infinitives",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 62-66",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Prepositions & Phrases",
+      "subtitle": "Lesson 8 · Word Groups at Work"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "In “A man of wealth rode by our house,” look at the little words of and by.",
+        "“of” connects wealth to man; “by” connects house to rode.",
+        "Each shows how its noun is related to another word in the sentence.",
+        "A word used to show such a relation is called a Preposition."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Preposition",
+      "text": "A Preposition is a word used to show the relation between its object and some other word.",
+      "examples": [
+        "the book on the table",
+        "a man of wealth",
+        "rode by the house",
+        "the noun after it is its object"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Prepositions",
+      "bullets": [
+        "Place & direction:  in, on, at, by, to, into, from, up, down, over, under.",
+        "Others:  of, for, with, without, about, above, below, near, past.",
+        "Between things:  between, among, through, across, around, behind, beside.",
+        "A preposition almost always sits just before its object (a noun or pronoun)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Preposition",
+      "instruction": "Name the preposition (or prepositions) in each sentence.",
+      "items": [
+        "The boy went through the gate.",
+        "He drove over the bridge.",
+        "She went to the doctor.",
+        "The light came through the window.",
+        "He sat beside the fire.",
+        "They walked into the garden.",
+        "A man of wealth rode by.",
+        "Put the book on the shelf."
+      ],
+      "answers": [
+        "through",
+        "over",
+        "to",
+        "through",
+        "beside",
+        "into",
+        "of, by",
+        "on"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Phrase",
+      "bullets": [
+        "A Phrase is a group made of a preposition and its object:  of wealth, by our house.",
+        "A phrase does the work of a single adjective or adverb.",
+        "Adjective phrase — modifies a noun:  “a man of wealth” tells which man.",
+        "Adverbial phrase — modifies a verb:  “rode by our house” tells where he rode."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Phrase",
+      "instruction": "Name the prepositional phrase in each sentence.",
+      "answerInline": true,
+      "items": [
+        "The book on the table is mine.",
+        "He ran to the store.",
+        "A man of wealth arrived.",
+        "She sang with great joy.",
+        "The dog slept under the porch.",
+        "We walked through the woods."
+      ],
+      "answers": [
+        "on the table",
+        "to the store",
+        "of wealth",
+        "with great joy",
+        "under the porch",
+        "through the woods"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Adjective or Adverbial Phrase?",
+      "instruction": "Tell whether the phrase modifies a noun (adjective) or a verb (adverbial).",
+      "items": [
+        "The house on the hill is old.",
+        "He walked to school.",
+        "A book of poems fell.",
+        "She sang in the choir.",
+        "The man with the hat left.",
+        "They played in the yard."
+      ],
+      "answers": [
+        "adjective",
+        "adverbial",
+        "adjective",
+        "adverbial",
+        "adjective",
+        "adverbial"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Infinitive",
+      "text": "An Infinitive is a form of the verb, usually with “to,” that names an action without asserting it.",
+      "examples": [
+        "To play is pleasant.  (to play = the subject)",
+        "He wants to go.  (to go = the object)",
+        "John studies to learn.  (to learn tells why)",
+        "the word “to” is the sign of the infinitive"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Infinitive at Work",
+      "bullets": [
+        "An infinitive names or points to an action, but does not affirm it.",
+        "It can be the subject:  “To lie is wicked.”",
+        "It can be the object:  “He wants to go home.”",
+        "It can tell why:  “John studies to learn.”",
+        "The two parts — “to” and the verb — are kept together."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Infinitive",
+      "instruction": "Name the infinitive in each sentence.",
+      "items": [
+        "To lie is wicked.",
+        "He wants to go home.",
+        "John studies to learn.",
+        "She wishes to stay.",
+        "To win takes work.",
+        "Are you ready to recite?"
+      ],
+      "answers": [
+        "to lie",
+        "to go",
+        "to learn",
+        "to stay",
+        "to win",
+        "to recite"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Is the Infinitive Doing?",
+      "instruction": "Tell what the infinitive does: is it the subject, the object, or does it tell why?",
+      "items": [
+        "To lie is wicked.",
+        "He wants to go home.",
+        "John studies to learn.",
+        "To win takes work.",
+        "She hopes to travel.",
+        "We ran to escape."
+      ],
+      "answers": [
+        "subject",
+        "object",
+        "tells why",
+        "subject",
+        "object",
+        "tells why"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Where to Put a Modifier",
+      "bullets": [
+        "Place a modifier as near as possible to the word it modifies, or the meaning changes.",
+        "“John only studies algebra.” — only John does (no one else).",
+        "“John studies algebra only.” — algebra is all he studies.",
+        "A misplaced phrase can turn silly:  “A watch was found by a boy with steel hands.”",
+        "Keep each word, phrase, and clause beside the word it belongs to."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Does It Seem to Say?",
+      "instruction": "A modifier is out of place, so each sentence says something silly. What does the modifier seem to describe?",
+      "answerInline": true,
+      "items": [
+        "I saw a man walking a dog with a hat.",
+        "She gave a balloon to the kid that was red.",
+        "He fed the cat wearing pajamas.",
+        "We watched the parade on the roof.",
+        "He handed tests to the kids with no names.",
+        "I found a wallet walking to school."
+      ],
+      "answers": [
+        "the dog",
+        "the kid",
+        "the cat",
+        "the parade",
+        "the kids",
+        "the wallet"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a preposition?",
+        "What is the object of a preposition?",
+        "What is a phrase?",
+        "A phrase that modifies a noun is what kind?",
+        "What is an infinitive?",
+        "What is the sign of the infinitive?",
+        "Where should a modifier be placed?"
+      ],
+      "answers": [
+        "A word that shows the relation between its object and some other word.",
+        "The noun or pronoun that follows it.",
+        "A preposition and its object used together.",
+        "An adjective phrase.",
+        "A verb form, usually with “to,” that names an action without asserting it.",
+        "The word “to.”",
+        "As near as possible to the word it modifies."
+      ]
+    }
+  ]
+}

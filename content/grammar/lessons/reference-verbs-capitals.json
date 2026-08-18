@@ -1,0 +1,158 @@
+{
+  "lesson": "reference-verbs-capitals",
+  "title": "Reference: Irregular Verbs & Capitals",
+  "source": "Harvey's Elementary Grammar & Composition (1880), Appendix, pp. 156-160",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Irregular Verbs & Capitals",
+      "subtitle": "Lesson 19 · A Handy Reference"
+    },
+    {
+      "type": "concept",
+      "heading": "Irregular Verbs — A Reference",
+      "bullets": [
+        "Irregular verbs do not add -ed; they must be learned by heart.",
+        "No change at all:  cut/cut/cut, put/put/put, hit/hit/hit, let/let/let.",
+        "Same past and participle:  bring/brought/brought, buy/bought/bought, make/made/made.",
+        "All three different:  go/went/gone, see/saw/seen, write/wrote/written, ring/rang/rung."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "More Common Irregular Verbs",
+      "bullets": [
+        "begin/began/begun, drink/drank/drunk, sing/sang/sung, swim/swam/swum.",
+        "break/broke/broken, choose/chose/chosen, freeze/froze/frozen, speak/spoke/spoken.",
+        "eat/ate/eaten, give/gave/given, take/took/taken, know/knew/known.",
+        "ride/rode/ridden, throw/threw/thrown, fly/flew/flown, grow/grew/grown."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Past & Participle (Set 1)",
+      "instruction": "Give the past and the perfect participle of each verb.",
+      "answerInline": true,
+      "items": [
+        "go",
+        "eat",
+        "take",
+        "sing",
+        "break",
+        "run",
+        "drink",
+        "throw"
+      ],
+      "answers": [
+        "went, gone",
+        "ate, eaten",
+        "took, taken",
+        "sang, sung",
+        "broke, broken",
+        "ran, run",
+        "drank, drunk",
+        "threw, thrown"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Past & Participle (Set 2)",
+      "instruction": "Give the past and the perfect participle of each verb.",
+      "answerInline": true,
+      "items": [
+        "give",
+        "know",
+        "write",
+        "freeze",
+        "begin",
+        "speak",
+        "choose",
+        "ride"
+      ],
+      "answers": [
+        "gave, given",
+        "knew, known",
+        "wrote, written",
+        "froze, frozen",
+        "began, begun",
+        "spoke, spoken",
+        "chose, chosen",
+        "rode, ridden"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Unipersonal Verbs",
+      "bullets": [
+        "A Unipersonal Verb asserts an act with no real subject of its own.",
+        "The word “it” stands in as an indefinite subject.",
+        "Ex. — “It snows.”  “It rains.”  “It seems so.”",
+        "Here “it” names nothing in particular — it simply fills the subject’s place."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Capital Letters — The Rules",
+      "bullets": [
+        "Begin every sentence with a capital letter.",
+        "Begin every line of poetry with a capital letter.",
+        "Capitalize proper names — people, places, days, months:  Maria, Chicago, Monday, July.",
+        "The single words I and O are always capitals."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "More Capital Rules",
+      "bullets": [
+        "Titles of honor:  President Lincoln, Doctor Smith, Queen Victoria.",
+        "Words made from proper names:  American, French, Shakespearean.",
+        "Names for God:  God, the Almighty, the Lord.",
+        "Words of special importance may be capitalized for emphasis."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Capital or Small Letter?",
+      "instruction": "Should each word begin with a capital or a small letter?",
+      "items": [
+        "monday",
+        "dog",
+        "chicago",
+        "river",
+        "july",
+        "american",
+        "happiness",
+        "maria"
+      ],
+      "answers": [
+        "capital",
+        "small",
+        "capital",
+        "small",
+        "capital",
+        "capital",
+        "small",
+        "capital"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is an irregular verb?",
+        "Give the past and participle of “go.”",
+        "What is a unipersonal verb?",
+        "What begins every sentence?",
+        "Name things that take a capital letter.",
+        "Which single words are always capitals?"
+      ],
+      "answers": [
+        "One that does not add -ed for its past and participle.",
+        "Went, gone.",
+        "One that asserts an act with no real subject, like “It snows.”",
+        "A capital letter.",
+        "Proper names — people, places, days, and months.",
+        "I and O."
+      ]
+    }
+  ]
+}

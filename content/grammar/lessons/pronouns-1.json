@@ -1,0 +1,299 @@
+{
+  "lesson": "pronouns-1",
+  "title": "The Pronoun — Personal & Possessive",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 42-51",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Pronoun",
+      "subtitle": "Lesson 5 · Words That Stand In"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "“John put John’s hat on John’s head.” — the name John is repeated too many times.",
+        "It is better to say:  “John put his hat on his head.”",
+        "The word his is used in place of the noun John’s.",
+        "A word used in place of a noun is called a Pronoun — the word means “instead of a noun.”"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Pronoun",
+      "text": "A Pronoun is a word used instead of a noun.",
+      "examples": [
+        "he runs  ·  she sings",
+        "they listen  ·  it moves",
+        "I, you, we  ·  him, her, them",
+        "who, this, that"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Pronouns (Set 1)",
+      "instruction": "Name the pronoun (or pronouns) in each sentence.",
+      "items": [
+        "He is your uncle.",
+        "She lost the book.",
+        "It cannot find its way.",
+        "Sarah cannot find her book.",
+        "Who will find it?",
+        "They sold their farms.",
+        "I like her.",
+        "Did you tell them?"
+      ],
+      "answers": [
+        "he, your",
+        "she",
+        "it, its",
+        "her",
+        "who, it",
+        "they, their",
+        "I, her",
+        "you, them"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Pronouns (Set 2)",
+      "instruction": "Name the pronoun (or pronouns) in each sentence.",
+      "items": [
+        "His dog worried our cat.",
+        "Were you with them?",
+        "I gave it to him.",
+        "We found ours quickly.",
+        "She told me the news.",
+        "That is the book he wants.",
+        "Give them to us.",
+        "Who spoke to you?"
+      ],
+      "answers": [
+        "his, our",
+        "you, them",
+        "I, it, him",
+        "we, ours",
+        "she, me",
+        "that, he",
+        "them, us",
+        "who, you"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Adjective Elements",
+      "bullets": [
+        "An Adjective Element is a word or group of words that modifies a noun.",
+        "Adjectives and articles are adjective elements:  small lakes, the boy.",
+        "So are possessives (John’s hat) and appositives (Nero the emperor).",
+        "Anything that describes, points out, or limits a noun is an adjective element."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Possessive",
+      "bullets": [
+        "A Possessive is a noun or pronoun used to modify another noun by showing ownership.",
+        "“John’s hat” — John’s tells whose hat it is.",
+        "The apostrophe ( ’ ) marks a noun as a possessive:  John’s, the dog’s.",
+        "A possessive is said to be in the possessive case.",
+        "Sometimes it shows kind or authorship instead of ownership:  Ray’s Algebra."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Apostrophe Rules for Possessives",
+      "bullets": [
+        "One owner — add ’s:  John’s hat, the ox’s horn, Moses’s slate.",
+        "More than one, ending in s — add just the apostrophe:  the ladies’ car, the boys’ coats.",
+        "More than one, not ending in s — add ’s:  the men’s farms, the children’s shoes.",
+        "A group with “of” can replace a possessive:  the nest of the bird = the bird’s nest."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Write the Possessive",
+      "instruction": "Rewrite each as a possessive.",
+      "items": [
+        "the hat of John",
+        "the horn of the ox",
+        "the shoes of the children",
+        "the car of the ladies",
+        "the slate of Moses",
+        "the coats of the boys",
+        "the shoes of the women",
+        "the den of the fox"
+      ],
+      "answers": [
+        "John’s hat",
+        "the ox’s horn",
+        "the children’s shoes",
+        "the ladies’ car",
+        "Moses’s slate",
+        "the boys’ coats",
+        "the women’s shoes",
+        "the fox’s den"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Appositive",
+      "bullets": [
+        "An Appositive is a word or group placed beside a noun to name the same object.",
+        "It usually tells the rank, office, or business:  “Milton the poet,” “Mr. Jones the mason.”",
+        "The appositive and the noun name one and the same thing.",
+        "Set an appositive off with commas:  “Stephenson, the engineer, lived in England.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Appositive",
+      "instruction": "Name the appositive in each sentence.",
+      "items": [
+        "Mr. Whitcomb the lawyer is out of town.",
+        "Whang, the Chinese miller, acted foolishly.",
+        "Milton the poet was blind.",
+        "Stephenson, the celebrated engineer, lived in England.",
+        "Washington, the capital of the United States, is on the Potomac.",
+        "Nero, the cruel emperor, was hated."
+      ],
+      "answers": [
+        "the lawyer",
+        "the Chinese miller",
+        "the poet",
+        "the celebrated engineer",
+        "the capital of the United States",
+        "the cruel emperor"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Personal Pronouns & the Three Persons",
+      "bullets": [
+        "A Personal Pronoun shows, by its form, the person it stands for.",
+        "First Person — the speaker:  I, we.",
+        "Second Person — the one spoken to:  you  (older: thou, ye).",
+        "Third Person — the one spoken of:  he, she, it, they.",
+        "Ex. — “I write” (speaker), “you read” (spoken to), “they study” (spoken of)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Person?",
+      "instruction": "Tell the person of each pronoun: first, second, or third.",
+      "items": [
+        "I",
+        "you",
+        "he",
+        "we",
+        "they",
+        "she",
+        "it",
+        "thou"
+      ],
+      "answers": [
+        "first",
+        "second",
+        "third",
+        "first",
+        "third",
+        "third",
+        "third",
+        "second"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Possessive Pronoun",
+      "text": "A Possessive Pronoun stands for both the owner and the thing owned.",
+      "examples": [
+        "This house is ours.  (ours = our house)",
+        "That book is mine.  (mine = my book)",
+        "The victory is theirs.",
+        "mine, thine, his, hers, ours, yours, theirs"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Possessive Pronoun or Possessive Adjective?",
+      "bullets": [
+        "“That book is his.” — his stands alone for “his book”: a possessive pronoun.",
+        "“That is his book.” — his modifies “book”: a possessive adjective.",
+        "Stand-alone forms:  mine, thine, hers, ours, yours, theirs.",
+        "Noun-modifying forms:  my, thy, her, our, your, their.",
+        "Test — does the word stand alone (pronoun) or lean on a noun (adjective)?"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Pronoun or Adjective? (Set 1)",
+      "instruction": "Does the word stand alone (a possessive pronoun) or modify a noun (a possessive adjective)? Answer “pronoun” or “adjective.”",
+      "items": [
+        "That book is mine.",
+        "My book is here.",
+        "This slate is thine.",
+        "Those apples are his.",
+        "Her lesson is hard.",
+        "The victory is ours.",
+        "Your seat is there.",
+        "Theirs is a hard lot."
+      ],
+      "answers": [
+        "pronoun",
+        "adjective",
+        "pronoun",
+        "pronoun",
+        "adjective",
+        "pronoun",
+        "adjective",
+        "pronoun"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Pronoun or Adjective? (Set 2)",
+      "instruction": "Does the word stand alone (a possessive pronoun) or modify a noun (a possessive adjective)? Answer “pronoun” or “adjective.”",
+      "items": [
+        "This book is hers.",
+        "His dog ran away.",
+        "Our house is large.",
+        "Yours is a hard lesson.",
+        "Those marbles are mine.",
+        "Their farm is sold.",
+        "My coat is torn.",
+        "The garden is theirs."
+      ],
+      "answers": [
+        "pronoun",
+        "adjective",
+        "adjective",
+        "pronoun",
+        "pronoun",
+        "adjective",
+        "adjective",
+        "pronoun"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a pronoun?",
+        "What is an adjective element?",
+        "What is a possessive?",
+        "What is an appositive?",
+        "Name the three persons.",
+        "What is a possessive pronoun?",
+        "Name some possessive pronouns."
+      ],
+      "answers": [
+        "A word used instead of a noun.",
+        "A word or group of words that modifies a noun.",
+        "A noun or pronoun used to show ownership.",
+        "A word placed beside a noun to name the same thing.",
+        "First (speaker), second (spoken to), and third (spoken of).",
+        "One that stands for both the owner and the thing owned.",
+        "Mine, thine, his, hers, ours, yours, theirs."
+      ]
+    }
+  ]
+}

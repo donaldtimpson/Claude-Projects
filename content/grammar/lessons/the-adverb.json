@@ -1,0 +1,200 @@
+{
+  "lesson": "the-adverb",
+  "title": "The Adverb",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 57-61",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Adverb",
+      "subtitle": "Lesson 7 · Telling How, When & Where"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "In “Birds sing sweetly,” the word sweetly tells how the birds sing — it modifies the verb sing.",
+        "In “Very large vessels sailed,” the word very modifies the adjective large.",
+        "In “He rode quite fast,” the word quite modifies the adverb fast.",
+        "A word used to modify a verb, an adjective, or another adverb is called an Adverb."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Adverb",
+      "text": "An Adverb is a word used to modify a verb, an adjective, a participle, or an adverb.",
+      "examples": [
+        "sings sweetly  (modifies a verb)",
+        "very large  (modifies an adjective)",
+        "quite fast  (modifies an adverb)",
+        "gently falling snow  (modifies a participle)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "What Adverbs Tell",
+      "bullets": [
+        "Adverbs usually tell how, when, where, or how much (to what degree).",
+        "How:  slowly, sweetly, well.   ·   When:  soon, now, yesterday.",
+        "Where:  here, there, near.   ·   How much:  very, quite, too.",
+        "Ex. — “She sang sweetly (how) here (where) yesterday (when).”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Adverb",
+      "instruction": "Name the adverb in each sentence.",
+      "items": [
+        "That vessel sails slowly.",
+        "He built a house there.",
+        "Emma is quite late.",
+        "Those mountains are very high.",
+        "I will shortly return.",
+        "You will never see him again.",
+        "I would gladly pardon you.",
+        "He afterwards escaped."
+      ],
+      "answers": [
+        "slowly",
+        "there",
+        "quite",
+        "very",
+        "shortly",
+        "never",
+        "gladly",
+        "afterwards"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Does the Adverb Tell?",
+      "instruction": "Tell whether each adverb tells how, when, where, or how much.",
+      "items": [
+        "slowly",
+        "yesterday",
+        "there",
+        "very",
+        "gently",
+        "soon",
+        "here",
+        "quite"
+      ],
+      "answers": [
+        "how",
+        "when",
+        "where",
+        "how much",
+        "how",
+        "when",
+        "where",
+        "how much"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Does the Adverb Modify?",
+      "instruction": "Tell whether the adverb modifies a verb, an adjective, or another adverb.",
+      "items": [
+        "Birds sing sweetly.",
+        "Very large vessels sailed.",
+        "He rode quite fast.",
+        "She spoke softly.",
+        "The soup is too hot.",
+        "They left very quickly."
+      ],
+      "answers": [
+        "verb",
+        "adjective",
+        "adverb",
+        "verb",
+        "adjective",
+        "adverb"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Adverbial Element & Adverbial Clause",
+      "bullets": [
+        "A word or group of words used like an adverb is an Adverbial Element.",
+        "When that group is a clause (it has its own subject and predicate), it is an Adverbial Clause.",
+        "“Flowers bloom when spring comes.” — “when spring comes” tells when they bloom.",
+        "Adverbial clauses begin with when, where, while, because, if, and many other words."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Adverbial Clause",
+      "instruction": "Name the adverbial clause in each sentence.",
+      "answerInline": true,
+      "items": [
+        "Birds sing when day breaks.",
+        "Stay here until I return.",
+        "We rested because we were tired.",
+        "Call me if you need help.",
+        "He smiled while she spoke.",
+        "Plants grow where it is warm."
+      ],
+      "answers": [
+        "when day breaks",
+        "until I return",
+        "because we were tired",
+        "if you need help",
+        "while she spoke",
+        "where it is warm"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Mistakes with Adverbs",
+      "bullets": [
+        "Don’t use two negatives:  “I don’t want anything,” not “I don’t want nothing.”",
+        "Use an -ly adverb to tell how you do something:  “drive safely,” not “drive safe.”",
+        "After looks, feels, smells, tastes, use an adjective:  “smells sweet,” not “smells sweetly.”",
+        "Say “I did well,” not “I did good.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Adverb",
+      "instruction": "Each sentence has a mistake. Give the correct word.",
+      "items": [
+        "I don’t want nothing today.",
+        "Samuel speaks very distinct.",
+        "This flower smells sweetly.",
+        "You ought to read slower.",
+        "The team played good.",
+        "Don’t tell nobody.",
+        "The country looks beautifully.",
+        "Drive safe on the ice."
+      ],
+      "answers": [
+        "anything",
+        "distinctly",
+        "sweet",
+        "more slowly",
+        "well",
+        "anybody",
+        "beautiful",
+        "safely"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is an adverb?",
+        "What do adverbs usually tell?",
+        "What is an adverbial element?",
+        "What is an adverbial clause?",
+        "What words begin adverbial clauses?",
+        "Which is right: “drive safe” or “drive safely”?"
+      ],
+      "answers": [
+        "A word that modifies a verb, adjective, participle, or adverb.",
+        "How, when, where, or how much.",
+        "A word or group of words used like an adverb.",
+        "A clause used as an adverbial element.",
+        "When, where, while, because, if, and others.",
+        "“Drive safely.”"
+      ]
+    }
+  ]
+}

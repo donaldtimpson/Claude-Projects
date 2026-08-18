@@ -1,0 +1,299 @@
+{
+  "lesson": "the-verb",
+  "title": "The Verb",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 24-30",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Verb",
+      "subtitle": "Lesson 3 · Action, Being & State"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "In the sentence “Fishes swim,” the subject is “Fishes” and the predicate is “swim.”",
+        "There is no separate copula — no word like “are” is expressed.",
+        "One word can affirm something of a subject directly, expressing both the copula and the predicate.",
+        "A word used in this way — to affirm action, being, or state — is called a Verb."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Verb",
+      "text": "A Verb is a word which expresses action, being, or state.",
+      "examples": [
+        "George writes.  (action)",
+        "Rain falls.  (action)",
+        "The rocket launches.  (action)",
+        "I am.  (being)",
+        "He sleeps.  (state)",
+        "She dreams.  (state)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Every Sentence Needs a Verb",
+      "bullets": [
+        "The verb is the word that tells what the subject does or is.",
+        "Cross out the verb and the sentence falls apart:  “The dog ___ the ball.”",
+        "Ex. — Birds sing.   The sun shines.   Children laugh.   Water freezes.",
+        "Ex. — Mother bakes bread.   The team won.   Flowers are pretty.",
+        "In each one, the underlined-in-your-mind action or being word is the verb."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Verb",
+      "instruction": "Name the verb in each sentence.  (Just find it — don't worry about its class yet.)",
+      "items": [
+        "Birds fly.",
+        "The baby sleeps.",
+        "Rain falls.",
+        "Dogs bark loudly.",
+        "She sings sweetly.",
+        "The fire burns.",
+        "We are happy.",
+        "Snow melts quickly."
+      ],
+      "answers": [
+        "fly",
+        "sleeps",
+        "falls",
+        "bark",
+        "sings",
+        "burns",
+        "are",
+        "melts"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Transitive Verbs",
+      "bullets": [
+        "A Transitive Verb requires an object to complete its meaning.",
+        "The object receives the action of the verb.",
+        "Ex. — Columbus discovered America.   Maria painted the fence.   The dog buried a bone.",
+        "Test — ask “verb + what?”  If there is an answer, it is transitive:  “discovered what? America.”",
+        "Rem. — The object is not always written out:  “The child reads.”  (reads what? — understood.)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Intransitive Verbs",
+      "bullets": [
+        "An Intransitive Verb needs no object to complete its meaning.",
+        "The action stops with the subject; nothing receives it.",
+        "Ex. — Horses run.   The baby smiled.   Snow falls.   The engine hummed.",
+        "Test — ask “verb + what?”  If there is no answer, it is intransitive:  “run what? — nothing.”",
+        "Rem. — Many verbs can be either:  “She reads books” (transitive) or “She reads well” (intransitive)."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Copulative (Linking) Verbs",
+      "bullets": [
+        "A Copulative Verb joins a predicate to the subject and makes an assertion.",
+        "It links the subject to a word that describes or renames it.",
+        "Ex. — Lambs are playful.   The weather was warm.   The soup tastes good.",
+        "Common linking verbs — am, is, are, was, were, seem, become, feel, taste, look.",
+        "The copula is always a verb."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Three Classes at a Glance",
+      "bullets": [
+        "Transitive — passes the action to an object:   Dogs chase cats.",
+        "Intransitive — the action has no object:   Dogs bark.",
+        "Copulative — links the subject to a describing word:   Dogs are loyal.",
+        "Notice: the same subject can take all three — it all depends on the verb."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Point Out the Verbs (Set 1)",
+      "instruction": "Point out the verb in each sentence, and tell whether it is transitive, intransitive, or copulative.",
+      "items": [
+        "The nights are chilly.",
+        "Corn grows.",
+        "Horses draw wagons.",
+        "Merchants sell goods.",
+        "Fishes swim.",
+        "James is sick.",
+        "Dogs kill sheep.",
+        "Henry struck William."
+      ],
+      "answers": [
+        "are — copulative",
+        "grows — intransitive",
+        "draw — transitive (obj. wagons)",
+        "sell — transitive (obj. goods)",
+        "swim — intransitive",
+        "is — copulative",
+        "kill — transitive (obj. sheep)",
+        "struck — transitive (obj. William)"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Point Out the Verbs (Set 2)",
+      "instruction": "Point out the verb in each sentence, and tell whether it is transitive, intransitive, or copulative.",
+      "items": [
+        "The sun shines.",
+        "Farmers plant corn.",
+        "The soup tastes good.",
+        "Children play games.",
+        "Birds build nests.",
+        "The river flows.",
+        "Mother is kind.",
+        "Bakers make bread."
+      ],
+      "answers": [
+        "shines — intransitive",
+        "plant — transitive (obj. corn)",
+        "tastes — copulative",
+        "play — transitive (obj. games)",
+        "build — transitive (obj. nests)",
+        "flows — intransitive",
+        "is — copulative",
+        "make — transitive (obj. bread)"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Analyze — Diagram the Sentence (Set 1)",
+      "instruction": "Model — “Scholars learn lessons.”  Split it into subject | predicate | object.  The line between subject and predicate reaches below the baseline.",
+      "items": [
+        "Dogs hunt rabbits.",
+        "Jane studies botany.",
+        "Farmers sow grain.",
+        "Haste makes waste.",
+        "Cats catch mice."
+      ],
+      "answers": [
+        {
+          "s": "Dogs",
+          "p": "hunt",
+          "o": "rabbits"
+        },
+        {
+          "s": "Jane",
+          "p": "studies",
+          "o": "botany"
+        },
+        {
+          "s": "Farmers",
+          "p": "sow",
+          "o": "grain"
+        },
+        {
+          "s": "Haste",
+          "p": "makes",
+          "o": "waste"
+        },
+        {
+          "s": "Cats",
+          "p": "catch",
+          "o": "mice"
+        }
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Analyze — Diagram the Sentence (Set 2)",
+      "instruction": "Split each sentence into subject | predicate | object.  Remember: the divider after the subject reaches below the baseline.",
+      "items": [
+        "Bees make honey.",
+        "Carpenters build houses.",
+        "Rain waters plants.",
+        "Boys fly kites.",
+        "Cows eat grass."
+      ],
+      "answers": [
+        {
+          "s": "Bees",
+          "p": "make",
+          "o": "honey"
+        },
+        {
+          "s": "Carpenters",
+          "p": "build",
+          "o": "houses"
+        },
+        {
+          "s": "Rain",
+          "p": "waters",
+          "o": "plants"
+        },
+        {
+          "s": "Boys",
+          "p": "fly",
+          "o": "kites"
+        },
+        {
+          "s": "Cows",
+          "p": "eat",
+          "o": "grass"
+        }
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Mistakes with Verbs",
+      "bullets": [
+        "Use seen and gone only with a helper (has, have, had):  “I have seen it,” not “I have saw it.”",
+        "Use saw and went by themselves for past time:  “I saw a horse,” not “I seen a horse.”",
+        "Say did and came — not done and come — for past time:  “He did his work.”  “Father came home.”",
+        "With two or more subjects, use are or were:  “The horse and the cow are in the stable.”",
+        "With the subject you, always use were:  “You were there,” not “You was there.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Verb",
+      "instruction": "Each sentence has a verb mistake. Give the correct word.",
+      "items": [
+        "I have saw a fine horse today.",
+        "He done his work well yesterday.",
+        "The horse and the cow is in the stable.",
+        "You was there, we know.",
+        "My father come home last week.",
+        "I seen John at the fair.",
+        "George has went there several times.",
+        "Weasels was plenty around there."
+      ],
+      "answers": [
+        "seen",
+        "did",
+        "are",
+        "were",
+        "came",
+        "saw",
+        "gone",
+        "were"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a verb?",
+        "What three things can a verb express?",
+        "What is a transitive verb?",
+        "What is an intransitive verb?",
+        "What is a copulative verb?",
+        "Is a transitive verb's object always written out?",
+        "When may we use “seen” and “gone”?"
+      ],
+      "answers": [
+        "A word that expresses action, being, or state.",
+        "Action, being, or state.",
+        "One that needs an object to complete its meaning.",
+        "One that needs no object to complete its meaning.",
+        "One that links a predicate to the subject and makes an assertion.",
+        "No — “The child reads.”  (reads what? — the object is understood.)",
+        "Only with a helping verb — has, have, or had."
+      ]
+    }
+  ]
+}

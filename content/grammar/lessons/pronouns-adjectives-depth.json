@@ -1,0 +1,244 @@
+{
+  "lesson": "pronouns-adjectives-depth",
+  "title": "Pronouns & Adjectives in Depth",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 88-102",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Pronouns & Adjectives in Depth",
+      "subtitle": "Lesson 12 · Reflexives, Degrees & Comparison"
+    },
+    {
+      "type": "concept",
+      "heading": "Compound (Reflexive) Pronouns",
+      "bullets": [
+        "Add -self or -selves to a personal pronoun:  myself, yourself, himself, herself, itself.",
+        "Plural forms:  ourselves, yourselves, themselves.",
+        "Use them to turn the action back on the doer:  “She hurt herself.”",
+        "Or for emphasis:  “I myself saw it.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Reflexive Pronoun?",
+      "instruction": "Fill each blank with the right reflexive pronoun.",
+      "items": [
+        "I hurt ___.",
+        "She saw ___ in the mirror.",
+        "They helped ___.",
+        "He blamed ___.",
+        "We enjoyed ___.",
+        "You can do it ___.",
+        "The cat washed ___.",
+        "You all did it ___."
+      ],
+      "answers": [
+        "myself",
+        "herself",
+        "themselves",
+        "himself",
+        "ourselves",
+        "yourself",
+        "itself",
+        "yourselves"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Pronoun Cautions",
+      "bullets": [
+        "Use who as a subject, whom as an object:  “the man who spoke,” “the man whom I saw.”",
+        "Ask “who?” for the doer, “whom?” for the receiver:  “Who called?”  “Whom did you call?”",
+        "Put the persons in order — you and I, he and I (name yourself last).",
+        "Make a pronoun agree with its antecedent in gender, person, and number."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Who or Whom?",
+      "instruction": "Choose who or whom for each blank.",
+      "items": [
+        "___ wrote the letter?",
+        "___ did you call?",
+        "the man ___ spoke",
+        "the man ___ I saw",
+        "___ is there?",
+        "To ___ shall I give it?",
+        "the girl ___ won",
+        "___ do you trust?"
+      ],
+      "answers": [
+        "Who",
+        "Whom",
+        "who",
+        "whom",
+        "Who",
+        "whom",
+        "who",
+        "Whom"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Double Relatives",
+      "bullets": [
+        "Some relatives contain both the antecedent and the relative in one word.",
+        "what = “that which”:  “I got what I wanted” = “the thing which I wanted.”",
+        "whoever = “he who”:  “Whoever runs may read” = “he who runs may read.”",
+        "These are called Double Relatives — they do two jobs at once."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Comparison of Adjectives",
+      "bullets": [
+        "Adjectives change form to show different degrees of a quality.",
+        "Positive — the simple quality:  tall, rich, beautiful.",
+        "Comparative — compares two:  taller, richer, more beautiful.",
+        "Superlative — the highest among three or more:  tallest, richest, most beautiful."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Forming the Degrees",
+      "bullets": [
+        "Short words — add -er, -est:  tall, taller, tallest.",
+        "Longer words — use more, most:  careful, more careful, most careful.",
+        "Irregular:  good, better, best;  bad, worse, worst;  little, less, least;  many, more, most.",
+        "A few cannot be compared:  square, round, perfect, dead."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Compare the Adjective",
+      "instruction": "Give the comparative and the superlative of each adjective.",
+      "answerInline": true,
+      "items": [
+        "tall",
+        "big",
+        "good",
+        "happy",
+        "careful",
+        "bad"
+      ],
+      "answers": [
+        "taller, tallest",
+        "bigger, biggest",
+        "better, best",
+        "happier, happiest",
+        "more careful, most careful",
+        "worse, worst"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Degree?",
+      "instruction": "Tell whether each adjective is positive, comparative, or superlative.",
+      "items": [
+        "tall",
+        "taller",
+        "tallest",
+        "more useful",
+        "best",
+        "richer",
+        "happy",
+        "most hurtful"
+      ],
+      "answers": [
+        "positive",
+        "comparative",
+        "superlative",
+        "comparative",
+        "superlative",
+        "comparative",
+        "positive",
+        "superlative"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Kinds of Definitive Adjectives",
+      "bullets": [
+        "Demonstratives point out:  this, that, these, those.",
+        "Distributives take one at a time:  each, every, either, neither.",
+        "Indefinites are vague in amount:  all, any, some, few, many, several, no.",
+        "Numerals count or order:  cardinal (one, two), ordinal (first, second), multiplicative (double, triple)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Kind of Definitive?",
+      "instruction": "Tell whether each is demonstrative, distributive, indefinite, or numeral.",
+      "items": [
+        "this",
+        "each",
+        "some",
+        "three",
+        "those",
+        "every",
+        "many",
+        "second"
+      ],
+      "answers": [
+        "demonstrative",
+        "distributive",
+        "indefinite",
+        "numeral",
+        "demonstrative",
+        "distributive",
+        "indefinite",
+        "numeral"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Adjective Cautions",
+      "bullets": [
+        "Never double a comparison:  “taller,” not “more taller”; “tallest,” not “most tallest.”",
+        "Put the ordinal before the cardinal:  “the first four,” not “the four first.”",
+        "Match number:  “this kind,” “these kinds” — a plural adjective with a plural noun.",
+        "Some adjectives are already complete and take no more, most, or -er:  round, perfect."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Adjective",
+      "instruction": "Each sentence has a mistake. Give the correct words.",
+      "items": [
+        "He is more taller than I.",
+        "She is the most kindest.",
+        "Read the four first rows.",
+        "I don’t like these kind of shoes.",
+        "He seems more happier today.",
+        "Study the two last pages."
+      ],
+      "answers": [
+        "taller",
+        "kindest",
+        "first four",
+        "this kind",
+        "happier",
+        "last two"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "How are compound pronouns formed?",
+        "When do we use whom instead of who?",
+        "What is a double relative?",
+        "Name the three degrees of comparison.",
+        "How are the degrees of short adjectives formed?",
+        "Name some kinds of definitive adjectives."
+      ],
+      "answers": [
+        "By adding -self or -selves to a personal pronoun.",
+        "When it is the object of a verb or preposition.",
+        "A word that is both antecedent and relative, like “what.”",
+        "Positive, comparative, and superlative.",
+        "By adding -er and -est.",
+        "Demonstrative, distributive, indefinite, and numeral."
+      ]
+    }
+  ]
+}

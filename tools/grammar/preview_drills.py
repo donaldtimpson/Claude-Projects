@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "drills"
+SRC = ROOT.parent.parent / "content" / "grammar" / "drills"
 
 # Lyceum palette (mirrors grammar-slides/themes.py "lyceum")
 CSS = """

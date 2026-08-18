@@ -1,0 +1,182 @@
+{
+  "lesson": "foundations",
+  "title": "Foundations",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 7-12",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Foundations",
+      "subtitle": "Lesson 1 · What Language Is Made Of"
+    },
+    {
+      "type": "concept",
+      "heading": "Our Five Senses & Objects",
+      "bullets": [
+        "We have five senses: seeing, hearing, feeling, tasting, and smelling.",
+        "With them we perceive the things around us — we see, hear, feel, taste, and smell them.",
+        "We are also conscious of things we cannot see or touch — gravity, time, a thought, or a feeling like love.",
+        "Everything we can perceive or be conscious of is called an object."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Object",
+      "text": "An Object is anything we can perceive, or of which we may be conscious.",
+      "examples": [
+        "a book  (we see and touch it)",
+        "thunder  (we hear it)",
+        "honey  (we taste it)",
+        "a thought  (we are conscious of it)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Words & Language",
+      "bullets": [
+        "A Word is a syllable, or a group of syllables, used to express a thought:  dog, ap·ple, but·ter·fly.",
+        "Language is the expression of thought by means of words.",
+        "Spoken Language expresses ideas by the voice — the words we say.",
+        "Written Language uses letters and marks that stand for sounds — the words we write."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Grammar",
+      "bullets": [
+        "Grammar treats of the principles and usages of language — the rules for using words well.",
+        "English Grammar teaches us to speak and write the English language correctly.",
+        "It helps us say exactly what we mean, and understand what others say."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "The Sentence",
+      "text": "A Sentence is a group of words that makes complete sense.",
+      "examples": [
+        "Chalk is white.",
+        "Snow falls softly.",
+        "The school bell rang.",
+        "Fire is hot."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Proposition",
+      "bullets": [
+        "A Proposition is a thought that is true or false:  “Chalk is white.” (true) · “Snow is black.” (false)",
+        "A sentence expresses a proposition — the sentence is the words; the proposition is the idea it carries.",
+        "“Snow is white” and “Snow is a white thing” express the same proposition.",
+        "A question or command expresses no proposition — it asserts nothing true or false."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Rules for Writing a Sentence",
+      "bullets": [
+        "Begin every sentence with a capital letter.",
+        "Spell each word correctly.",
+        "Put a period ( . ) after a sentence that states a fact or gives a command.",
+        "Put a question mark ( ? ) after a question.",
+        "Never divide a syllable at the end of a line."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Is It a Sentence?",
+      "instruction": "Tell whether each group of words makes complete sense — a sentence, or not.",
+      "items": [
+        "Birds fly south.",
+        "The tall green",
+        "Snow is white.",
+        "Over the hill and",
+        "Dogs bark loudly.",
+        "When the cold rain"
+      ],
+      "answers": [
+        "sentence",
+        "not a sentence",
+        "sentence",
+        "not a sentence",
+        "sentence",
+        "not a sentence"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Four Kinds of Sentences",
+      "bullets": [
+        "A Declarative sentence states a fact:  “The window is open.”",
+        "An Interrogative sentence asks a question:  “Is the window open?”",
+        "An Imperative sentence gives a command or request:  “Open the window.”",
+        "An Exclamatory sentence shows feeling or emotion:  “How cold it is!”  ( ! )",
+        "Only the declarative kind expresses a Proposition — a thought that is true or false."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Kind of Sentence",
+      "instruction": "Tell the kind of each sentence: declarative, interrogative, imperative, or exclamatory.",
+      "items": [
+        "The winds bring perfume.",
+        "Where is my new book?",
+        "Open the window, Clarence.",
+        "How I trembled with fear!",
+        "Necessity is the mother of invention.",
+        "Does the sun ever rest?",
+        "Please forgive me.",
+        "What a beautiful morning!"
+      ],
+      "answers": [
+        "declarative",
+        "interrogative",
+        "imperative",
+        "exclamatory",
+        "declarative",
+        "interrogative",
+        "imperative",
+        "exclamatory"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Quotation Marks",
+      "bullets": [
+        "Quotation marks ( “ ” ) go before and after the exact words a person used.",
+        "Ex. — The man yawned and said, “How sleepy I am!”",
+        "Begin the quoted words with a capital letter.",
+        "Use them only for someone’s exact language — not when you merely tell what was said."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Parts of Speech",
+      "bullets": [
+        "Words are used in different ways. Take “Good scholars study diligently”:",
+        "“scholars” names · “study” tells the action · “good” describes · “diligently” tells how.",
+        "Words are sorted into classes by their meaning and use — these classes are the Parts of Speech.",
+        "Through this course we will meet each one: noun, verb, adjective, adverb, and more."
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is an object?",
+        "What is a sentence?",
+        "What is a proposition?",
+        "What does grammar teach?",
+        "Name the four kinds of sentences.",
+        "When do we use quotation marks?",
+        "What are the parts of speech?"
+      ],
+      "answers": [
+        "Anything we can perceive or be conscious of.",
+        "A group of words that makes complete sense.",
+        "A thought that is either true or false — a sentence expresses it.",
+        "The principles and usages of language — how to speak and write correctly.",
+        "Declarative, interrogative, imperative, and exclamatory.",
+        "Around someone’s exact words.",
+        "The classes into which words are divided by their meaning and use."
+      ]
+    }
+  ]
+}

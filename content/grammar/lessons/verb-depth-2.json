@@ -1,0 +1,195 @@
+{
+  "lesson": "verb-depth-2",
+  "title": "The Verb in Depth II",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 109-121",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Verb in Depth II",
+      "subtitle": "Lesson 14 · Helping Verbs, Parts & Conjugation"
+    },
+    {
+      "type": "concept",
+      "heading": "Auxiliary (Helping) Verbs",
+      "bullets": [
+        "Auxiliary verbs help conjugate other verbs:  be, have, do, shall, will, can, may, must.",
+        "They build tenses and forms:  “I have gone,” “she will sing,” “you must go.”",
+        "The helping verb comes first; the main verb follows.",
+        "Some (do, be, have) can also stand alone as main verbs:  “He does well.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Helping Verb",
+      "instruction": "Name the helping (auxiliary) verb in each sentence.",
+      "items": [
+        "I have gone home.",
+        "She will sing tonight.",
+        "You must go now.",
+        "He is running fast.",
+        "They do work hard.",
+        "I can swim well.",
+        "We shall win.",
+        "It may rain soon."
+      ],
+      "answers": [
+        "have",
+        "will",
+        "must",
+        "is",
+        "do",
+        "can",
+        "shall",
+        "may"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Principal Parts",
+      "bullets": [
+        "Every verb has three Principal Parts: the present, the past, and the perfect participle.",
+        "love — loved — loved.   ·   go — went — gone.   ·   see — saw — seen.",
+        "From these three forms, all the tenses can be built.",
+        "Conjugation is simply giving a verb in order through its modes, tenses, persons, and numbers."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Regular & Irregular Verbs",
+      "bullets": [
+        "A Regular Verb forms its past and participle by adding -d or -ed:  love, loved, loved.",
+        "An Irregular Verb changes the word instead:  go, went, gone;  see, saw, seen.",
+        "Most English verbs are regular; a few dozen common ones are irregular.",
+        "The irregular ones must simply be learned by practice."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Regular or Irregular?",
+      "instruction": "Tell whether each verb is regular or irregular.",
+      "items": [
+        "walk",
+        "go",
+        "love",
+        "see",
+        "jump",
+        "write",
+        "play",
+        "run"
+      ],
+      "answers": [
+        "regular",
+        "irregular",
+        "regular",
+        "irregular",
+        "regular",
+        "irregular",
+        "regular",
+        "irregular"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Give the Principal Parts",
+      "instruction": "Give the past and the perfect participle of each verb.",
+      "answerInline": true,
+      "items": [
+        "go",
+        "see",
+        "write",
+        "walk",
+        "ring",
+        "throw"
+      ],
+      "answers": [
+        "went, gone",
+        "saw, seen",
+        "wrote, written",
+        "walked, walked",
+        "rang, rung",
+        "threw, thrown"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Coordinate Forms",
+      "bullets": [
+        "Besides the plain form, a verb has three coordinate forms.",
+        "Progressive — action going on (be + -ing):  “I am writing.”",
+        "Emphatic — for emphasis (do):  “I do write.”  “He did go.”",
+        "Interrogative — for asking:  “Do you write?”  “Did he go?”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Form?",
+      "instruction": "Tell whether each verb is progressive, emphatic, or interrogative.",
+      "items": [
+        "I am writing.",
+        "I do love reading.",
+        "Do you write?",
+        "She was singing.",
+        "He did go.",
+        "Did they win?"
+      ],
+      "answers": [
+        "progressive",
+        "emphatic",
+        "interrogative",
+        "progressive",
+        "emphatic",
+        "interrogative"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common Verb Errors",
+      "bullets": [
+        "Irregular verbs never add -ed:  “threw,” not “throwed”; “brought,” not “bringed.”",
+        "Use the past participle with a helper:  “I have seen,” not “I have saw.”",
+        "Use the plain past by itself:  “I saw,” not “I seen.”",
+        "Watch the tricky pairs:  drank/drunk, rang/rung, went/gone, wore/worn."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Verb",
+      "instruction": "Each sentence has a verb mistake. Give the correct word.",
+      "items": [
+        "The man throwed a stone.",
+        "I have saw fine cattle.",
+        "This coat has wore well.",
+        "The bells ringed loudly.",
+        "He has went home.",
+        "She drinked the milk."
+      ],
+      "answers": [
+        "threw",
+        "seen",
+        "worn",
+        "rang",
+        "gone",
+        "drank"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is an auxiliary verb?",
+        "Name some auxiliaries.",
+        "What are the principal parts of a verb?",
+        "What is a regular verb?",
+        "What is an irregular verb?",
+        "Name the three coordinate forms."
+      ],
+      "answers": [
+        "A helping verb used to conjugate others.",
+        "Be, have, do, shall, will, can, may, must.",
+        "The present, the past, and the perfect participle.",
+        "One that forms its past and participle by adding -ed.",
+        "One that changes its form instead of adding -ed.",
+        "Progressive, emphatic, and interrogative."
+      ]
+    }
+  ]
+}

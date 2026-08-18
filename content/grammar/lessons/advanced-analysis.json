@@ -1,0 +1,134 @@
+{
+  "lesson": "advanced-analysis",
+  "title": "Advanced Analysis",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 133-137",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Advanced Analysis",
+      "subtitle": "Lesson 16 · Ellipsis, Subject & Predicate"
+    },
+    {
+      "type": "concept",
+      "heading": "Ellipsis",
+      "bullets": [
+        "Ellipsis is the leaving out of one or more words that are understood.",
+        "The missing words are still “there” in meaning — we just don’t say them.",
+        "In a command, the subject you is understood:  “[You] shut the door.”",
+        "In a comparison, a verb is often left out:  “He is older than I [am].”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Supply the Missing Word",
+      "instruction": "What word is understood (left out) in each sentence?",
+      "items": [
+        "Shut the door.",
+        "He is older than I.",
+        "Run home!",
+        "She is taller than he.",
+        "Wait here.",
+        "They are richer than we."
+      ],
+      "answers": [
+        "you",
+        "am",
+        "you",
+        "is",
+        "you",
+        "are"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Simple & Complete Subject",
+      "bullets": [
+        "The Grammatical (simple) Subject is the bare subject word, without modifiers.",
+        "The Logical (complete) Subject is the subject with all its modifiers.",
+        "“A great storm is raging.” — simple subject: storm; complete subject: a great storm.",
+        "Find the simple subject by asking who or what the sentence is about."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Simple Subject",
+      "instruction": "Name the grammatical (simple) subject — the bare subject word.",
+      "items": [
+        "A great storm is raging.",
+        "The tall green trees swayed.",
+        "My little brother cried.",
+        "He who runs may read.",
+        "The old brown dog slept.",
+        "Three hungry boys ate lunch."
+      ],
+      "answers": [
+        "storm",
+        "trees",
+        "brother",
+        "he",
+        "dog",
+        "boys"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Simple & Complete Predicate",
+      "bullets": [
+        "The Grammatical (simple) Predicate is the bare verb, without modifiers.",
+        "The Logical (complete) Predicate is the verb with all its modifiers.",
+        "“The storm rages furiously.” — simple predicate: rages; complete predicate: rages furiously.",
+        "Find the simple predicate by asking what the subject does or is."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Name the Simple Predicate",
+      "instruction": "Name the grammatical (simple) predicate — the bare verb.",
+      "items": [
+        "The storm rages furiously.",
+        "The boy ran quickly home.",
+        "Birds sing in the morning.",
+        "She writes long letters.",
+        "The dog barked at night.",
+        "Children play in the yard."
+      ],
+      "answers": [
+        "rages",
+        "ran",
+        "sing",
+        "writes",
+        "barked",
+        "play"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Abridgment",
+      "bullets": [
+        "A complex sentence can be shortened — abridged — into a simple one.",
+        "Turn a subordinate clause into a phrase or a single word.",
+        "“I knew that it was he.” → “I knew it to be him.”",
+        "“Because the weather was bad, the fair was not held.” → “The weather being bad, the fair was not held.”"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is ellipsis?",
+        "In “Shut the door,” what subject is understood?",
+        "What is the grammatical (simple) subject?",
+        "What is the logical (complete) subject?",
+        "What is the grammatical predicate?",
+        "What is abridgment?"
+      ],
+      "answers": [
+        "The leaving out of words that are understood.",
+        "You.",
+        "The bare subject word, without modifiers.",
+        "The subject with all its modifiers.",
+        "The bare verb, without modifiers.",
+        "Shortening a complex sentence by turning a clause into a phrase or word."
+      ]
+    }
+  ]
+}

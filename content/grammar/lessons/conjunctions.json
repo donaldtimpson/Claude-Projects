@@ -1,0 +1,187 @@
+{
+  "lesson": "conjunctions",
+  "title": "Conjunctions & Compound Elements",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 67-69",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Conjunction",
+      "subtitle": "Lesson 9 · Words That Join"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "In “Ellen and Mary study botany,” the word and joins the two subjects Ellen and Mary.",
+        "In “Ellen or Mary studies,” the word or joins them in another way.",
+        "In “Ellen will study, if Mary helps,” the word if joins two whole clauses.",
+        "A word used only to join words or groups of words is called a Conjunction."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Conjunction",
+      "text": "A Conjunction is a word used to connect words, phrases, clauses, and members.",
+      "examples": [
+        "salt and pepper  (joins words)",
+        "over the hill and through the woods  (joins phrases)",
+        "I will go, if you come  (joins clauses)",
+        "and, or, but, if, because, since"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Conjunction or Preposition?",
+      "bullets": [
+        "Both are small joining words, but they work in different ways.",
+        "A Preposition shows a relation and always has an object:  “of wealth,” “by the house.”",
+        "A Conjunction merely connects; it shows no relation and needs no object:  and, or, but, if.",
+        "Test — can a noun follow it as its object? Yes → preposition; no → conjunction."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Conjunction",
+      "instruction": "Name the conjunction (or conjunctions) in each sentence.",
+      "items": [
+        "We moved silently and cautiously.",
+        "He worked hard, but earned little.",
+        "I shall not go, if it rains.",
+        "Emma or Susan will stay home.",
+        "They submit, since they cannot win.",
+        "He is both kind and wise.",
+        "I stayed, because I was tired.",
+        "Study hard, or you will fail."
+      ],
+      "answers": [
+        "and",
+        "but",
+        "if",
+        "or",
+        "since",
+        "both, and",
+        "because",
+        "or"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Conjunction or Preposition?",
+      "instruction": "Tell whether each joining word is a conjunction or a preposition.",
+      "items": [
+        "and",
+        "of",
+        "but",
+        "with",
+        "if",
+        "under",
+        "because",
+        "through"
+      ],
+      "answers": [
+        "conjunction",
+        "preposition",
+        "conjunction",
+        "preposition",
+        "conjunction",
+        "preposition",
+        "conjunction",
+        "preposition"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Compound Element",
+      "text": "A Compound Element is two or more similar parts of the same proposition, joined by conjunctions.",
+      "examples": [
+        "James and Samuel are kind.  (compound subject)",
+        "We run, jump, and play.  (compound predicate)",
+        "Dad owns a farm and a factory.  (compound object)",
+        "any part of a sentence can be compound"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Kinds of Compound Elements",
+      "bullets": [
+        "Compound subject:  “Ellen and Lucy are sisters.”",
+        "Compound predicate:  “We run, jump, and play.”",
+        "Compound object:  “Dad owns a farm and a factory.”",
+        "Compound modifier:  “Tray is a large, black, and friendly dog.”",
+        "The conjunction may be written out, or simply understood."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — What Is Compound?",
+      "instruction": "Tell which part is compound: the subject, the predicate, or the object.",
+      "items": [
+        "Ellen and Lucy are sisters.",
+        "We run, jump, and play.",
+        "Dad owns a farm and a factory.",
+        "Cats and dogs are pets.",
+        "She reads and writes well.",
+        "He bought apples and pears."
+      ],
+      "answers": [
+        "subject",
+        "predicate",
+        "object",
+        "subject",
+        "predicate",
+        "object"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Commas in a Series",
+      "bullets": [
+        "When three or more parts are joined, use commas to separate them.",
+        "Put a comma after each part, and the conjunction before the last:  “red, white, and blue.”",
+        "When only two parts are joined, use just the conjunction — no comma:  “salt and pepper.”",
+        "Ex. — “She is kind, honest, and brave.”  ·  “We run and jump.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Punctuate the Series",
+      "instruction": "Write each list as a correct series, with commas and “and.”",
+      "answerInline": true,
+      "items": [
+        "dogs cats birds",
+        "red white blue",
+        "run jump play",
+        "milk eggs bread",
+        "Tom Sue Ann",
+        "north south east"
+      ],
+      "answers": [
+        "dogs, cats, and birds",
+        "red, white, and blue",
+        "run, jump, and play",
+        "milk, eggs, and bread",
+        "Tom, Sue, and Ann",
+        "north, south, and east"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a conjunction?",
+        "Name some conjunctions.",
+        "How does a conjunction differ from a preposition?",
+        "What is a compound element?",
+        "Name some kinds of compound elements.",
+        "In a series of three, where does the conjunction go?"
+      ],
+      "answers": [
+        "A word used to connect words, phrases, clauses, or members.",
+        "And, or, but, if, because, since.",
+        "A conjunction merely connects; a preposition shows a relation and has an object.",
+        "Two or more similar parts of a proposition joined by conjunctions.",
+        "Compound subject, predicate, and object.",
+        "Before the last part — “red, white, and blue.”"
+      ]
+    }
+  ]
+}

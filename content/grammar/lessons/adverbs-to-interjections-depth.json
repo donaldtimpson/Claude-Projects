@@ -1,0 +1,174 @@
+{
+  "lesson": "adverbs-to-interjections-depth",
+  "title": "Adverbs to Interjections in Depth",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 122-132",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Adverbs to Interjections",
+      "subtitle": "Lesson 15 · Classes, Comparison & Kinds"
+    },
+    {
+      "type": "concept",
+      "heading": "The Five Classes of Adverbs",
+      "bullets": [
+        "Adverbs of Time answer “when?”:  now, soon, always, never, then.",
+        "Adverbs of Place answer “where?”:  here, there, above, away, near.",
+        "Adverbs of Cause answer “why?”:  why, therefore, wherefore.",
+        "Adverbs of Manner answer “how?”:  well, badly, slowly, wisely.   ·   Adverbs of Degree answer “how much?”:  very, almost, quite, too."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Class of Adverb?",
+      "instruction": "Tell the class: time, place, cause, manner, or degree.",
+      "items": [
+        "now",
+        "here",
+        "why",
+        "slowly",
+        "very",
+        "soon",
+        "there",
+        "almost"
+      ],
+      "answers": [
+        "time",
+        "place",
+        "cause",
+        "manner",
+        "degree",
+        "time",
+        "place",
+        "degree"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Comparison of Adverbs",
+      "bullets": [
+        "Many adverbs compare, just like adjectives.",
+        "Short adverbs add -er, -est:  fast, faster, fastest;  soon, sooner, soonest.",
+        "Adverbs ending in -ly use more, most:  wisely, more wisely, most wisely.",
+        "Some are irregular:  well, better, best;  little, less, least."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Compare the Adverb",
+      "instruction": "Give the comparative and the superlative of each adverb.",
+      "answerInline": true,
+      "items": [
+        "fast",
+        "soon",
+        "wisely",
+        "well",
+        "slowly",
+        "badly"
+      ],
+      "answers": [
+        "faster, fastest",
+        "sooner, soonest",
+        "more wisely, most wisely",
+        "better, best",
+        "more slowly, most slowly",
+        "worse, worst"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Classes of Conjunctions",
+      "bullets": [
+        "Coordinate — join elements of equal rank:  and, but, or, nor.",
+        "Subordinate — join elements of unequal rank:  if, because, that, when, although.",
+        "Correlative — work in pairs:  both…and, either…or, neither…nor, not only…but also.",
+        "The kind depends on whether the parts joined are equal or unequal."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Kind of Conjunction?",
+      "instruction": "Tell whether each is coordinate, subordinate, or correlative.",
+      "items": [
+        "and",
+        "because",
+        "either…or",
+        "but",
+        "if",
+        "neither…nor",
+        "or",
+        "although"
+      ],
+      "answers": [
+        "coordinate",
+        "subordinate",
+        "correlative",
+        "coordinate",
+        "subordinate",
+        "correlative",
+        "coordinate",
+        "subordinate"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Interjection",
+      "bullets": [
+        "An Interjection is a word expressing sudden emotion, thrown into a sentence.",
+        "It neither affirms nor denies — it just bursts out.",
+        "Almost any word can be an interjection when shouted as an exclamation.",
+        "Ex. — Oh!  Ah!  Alas!  Hurrah!  Hush!  Ouch!"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Fixing Common Errors",
+      "bullets": [
+        "Say isn’t or aren’t — never ain’t:  “She isn’t here.”",
+        "Say might have — never “might of”:  “I might have gone.”",
+        "State general truths in the present:  “The earth is round,” not “was round.”",
+        "Match the verb to the subject:  “The scissors are dull.”  “Henry and Charles were glad.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Fix the Error",
+      "instruction": "Each sentence has a mistake. Give the correct word(s).",
+      "items": [
+        "She ain’t coming.",
+        "I might of won.",
+        "The scissors is dull.",
+        "Henry and Charles was glad.",
+        "He don’t know the answer.",
+        "They was tired."
+      ],
+      "answers": [
+        "isn’t",
+        "might have",
+        "are",
+        "were",
+        "doesn’t",
+        "were"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "Name the five classes of adverbs.",
+        "What do adverbs of manner answer?",
+        "How are -ly adverbs compared?",
+        "Name the three classes of conjunctions.",
+        "What do coordinate conjunctions join?",
+        "What is an interjection?"
+      ],
+      "answers": [
+        "Time, place, cause, manner, and degree.",
+        "The question “how?”",
+        "With “more” and “most.”",
+        "Coordinate, subordinate, and correlative.",
+        "Elements of equal rank.",
+        "A word that expresses sudden emotion."
+      ]
+    }
+  ]
+}

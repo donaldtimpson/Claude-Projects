@@ -1,0 +1,179 @@
+{
+  "lesson": "verb-depth-1",
+  "title": "The Verb in Depth I",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 103-108",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Verb in Depth I",
+      "subtitle": "Lesson 13 · Voice, Mode & Tense"
+    },
+    {
+      "type": "concept",
+      "heading": "Properties of the Verb",
+      "bullets": [
+        "A verb has five Properties:  Voice, Mode, Tense, Number, and Person.",
+        "Voice — whether the subject acts or is acted upon.",
+        "Mode — the manner of the action; Tense — its time.",
+        "Number and Person — how the verb agrees with its subject."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Voice",
+      "bullets": [
+        "Voice belongs only to transitive verbs — it shows who does and who receives.",
+        "Active Voice — the subject acts:  “The boy wrote a letter.”",
+        "Passive Voice — the subject is acted upon:  “The letter was written.”",
+        "The passive is formed with a form of “to be” + the perfect participle."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Active or Passive?",
+      "instruction": "Tell whether each verb is in the active or the passive voice.",
+      "items": [
+        "The boy wrote a letter.",
+        "The letter was written.",
+        "The dog chased the cat.",
+        "The cat was chased.",
+        "Columbus discovered America.",
+        "America was discovered.",
+        "The mail was robbed.",
+        "Farmers plant corn."
+      ],
+      "answers": [
+        "active",
+        "passive",
+        "active",
+        "passive",
+        "active",
+        "passive",
+        "passive",
+        "active"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Five Modes",
+      "bullets": [
+        "Indicative — states a fact:  “Fire burns.”",
+        "Potential — tells of power, duty, or possibility (may, can, must, might, could, would, should):  “You must go.”",
+        "Subjunctive — states a doubt or supposition, often with if:  “If this be true…”",
+        "Imperative — gives a command or request:  “Go.”  “Please stay.”",
+        "Infinitive — names the action without affirming it:  “to go,” “to speak.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Mode?",
+      "instruction": "Tell the mode of the verb: indicative, potential, subjunctive, imperative, or infinitive.",
+      "items": [
+        "Fire burns.",
+        "You must go.",
+        "Go home.",
+        "If it be true, I will come.",
+        "He wants to play.",
+        "She can sing.",
+        "The army encamped.",
+        "Lift up your heads."
+      ],
+      "answers": [
+        "indicative",
+        "potential",
+        "imperative",
+        "subjunctive",
+        "infinitive",
+        "potential",
+        "indicative",
+        "imperative"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Six Tenses",
+      "bullets": [
+        "Tense shows the time of the action.  Present — now:  “I write.”",
+        "Past — before now:  “I wrote.”   ·   Future — to come:  “I shall write.”",
+        "Present Perfect — past, but linked to now:  “I have written.”",
+        "Past Perfect — before another past:  “I had written.”",
+        "Future Perfect — finished before a future point:  “I shall have written.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Tense?",
+      "instruction": "Name the tense of each verb.",
+      "items": [
+        "I write.",
+        "I wrote.",
+        "I shall write.",
+        "I have written.",
+        "I had written.",
+        "I shall have written.",
+        "The wind blows.",
+        "The bridge had fallen."
+      ],
+      "answers": [
+        "present",
+        "past",
+        "future",
+        "present perfect",
+        "past perfect",
+        "future perfect",
+        "present",
+        "past perfect"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Person & Number of Verbs",
+      "bullets": [
+        "A verb changes a little to agree with its subject in person and number.",
+        "“I write,” but “he writes.”   ·   “The boy runs,” but “the boys run.”",
+        "A singular subject takes a singular verb; a plural subject, a plural verb.",
+        "The infinitive has no subject, so it has neither person nor number."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Make the Verb Agree",
+      "instruction": "Choose the verb form that agrees with the subject.",
+      "items": [
+        "The boy (run / runs) fast.",
+        "The boys (run / runs) fast.",
+        "She (write / writes) letters.",
+        "They (was / were) here.",
+        "He (do / does) his work.",
+        "The dogs (bark / barks) loudly."
+      ],
+      "answers": [
+        "runs",
+        "run",
+        "writes",
+        "were",
+        "does",
+        "bark"
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is voice?",
+        "Name the five modes.",
+        "What does the potential mode express?",
+        "How many tenses are there?",
+        "What does tense show?",
+        "A verb must agree with its subject in what?"
+      ],
+      "answers": [
+        "The form showing whether the subject acts or is acted upon.",
+        "Indicative, subjunctive, potential, imperative, and infinitive.",
+        "Power, necessity, duty, or possibility.",
+        "Six.",
+        "The time of the action.",
+        "Person and number."
+      ]
+    }
+  ]
+}

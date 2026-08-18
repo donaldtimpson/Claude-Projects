@@ -1,0 +1,269 @@
+{
+  "lesson": "the-noun",
+  "title": "The Noun & Sentence Analysis",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 13-23",
+  "slides": [
+    {
+      "type": "title",
+      "title": "The Noun",
+      "subtitle": "Lesson 2 · Naming & Analyzing"
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "The words boy, girl, city, book, and desk are all names of objects.",
+        "Each of these words is a name — and a word that is a name is called a Noun.",
+        "We can name a person (John), a place (Chicago), or a thing (railroad).",
+        "Whenever we name something we can see or think about, we are using a noun."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Noun",
+      "text": "A Noun is a name.",
+      "examples": [
+        "John  (a person)",
+        "Chicago  (a place)",
+        "railroad  (a thing)",
+        "book  (a thing)",
+        "courage  (an idea)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Common & Proper Nouns",
+      "bullets": [
+        "A Common Noun fits any one of a whole class:  boy, city, river, dog.",
+        "A Proper Noun names one particular person, place, or thing:  John, Chicago, the Mississippi.",
+        "Test — “boy” fits every boy, so it is common; “John” names one boy, so it is proper.",
+        "Rule — a proper noun always begins with a capital letter (and so do I and O).",
+        "A common noun starts with a small letter, unless it begins a sentence."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Common or Proper?",
+      "instruction": "Tell whether each noun is common or proper.",
+      "items": [
+        "Rain",
+        "Sarah",
+        "College",
+        "Boston",
+        "Railroad",
+        "Lake Erie",
+        "Church",
+        "Niagara Falls"
+      ],
+      "answers": [
+        "common",
+        "proper",
+        "common",
+        "proper",
+        "common",
+        "proper",
+        "common",
+        "proper"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Number — One, or More Than One",
+      "bullets": [
+        "Number tells whether a noun means one object or more than one.",
+        "Singular Number = one object:  fan, book, boy.",
+        "Plural Number = more than one:  fans, books, boys.",
+        "We change a noun from singular to plural to speak of many."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Making Plurals",
+      "bullets": [
+        "Most nouns — just add s:  book → books,  girl → girls.",
+        "After s, ch, sh, or x — add es:  church → churches,  box → boxes.",
+        "y after a consonant — change y to i, add es:  city → cities,  lady → ladies.",
+        "Ending in f or fe — often change to ves:  knife → knives,  calf → calves.",
+        "A few break the rules:  man → men,  woman → women,  ox → oxen,  sheep → sheep."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Write the Plurals",
+      "instruction": "Write the plural of each noun.",
+      "items": [
+        "Ox",
+        "City",
+        "Fish",
+        "Man",
+        "Box",
+        "Knife",
+        "Potato",
+        "Monkey"
+      ],
+      "answers": [
+        "oxen",
+        "cities",
+        "fish",
+        "men",
+        "boxes",
+        "knives",
+        "potatoes",
+        "monkeys"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Abbreviations",
+      "bullets": [
+        "An Abbreviation is a shortened way of writing a word.",
+        "Keep a few letters and put a period at the end:  Doctor → Dr.,  Mister → Mr.",
+        "Ex. — Gen. (General),  Mrs. (Mistress),  St. (Saint / Street),  Prof. (Professor).",
+        "Ex. — U.S. (United States),  A.M. (before noon),  P.M. (after noon),  No. (Number).",
+        "Most abbreviations begin with a capital letter."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Contractions",
+      "bullets": [
+        "A Contraction joins two words and drops some letters.",
+        "The apostrophe ( ’ ) marks the spot where letters are left out.",
+        "do not → don’t   ·   we are → we’re   ·   I have → I’ve",
+        "it is → it’s   ·   they are → they’re   ·   over → o’er",
+        "The apostrophe stands in for the missing letters."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Shortened Words",
+      "instruction": "Give the full words for each shortened form.",
+      "items": [
+        "Dr.",
+        "Mr.",
+        "we’re",
+        "don’t",
+        "U.S.",
+        "I’ve",
+        "Gen.",
+        "they’re"
+      ],
+      "answers": [
+        "Doctor",
+        "Mister",
+        "we are",
+        "do not",
+        "United States",
+        "I have",
+        "General",
+        "they are"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Parts of a Sentence",
+      "bullets": [
+        "Every sentence affirms something about something.",
+        "The Subject is what the sentence is about:  “Ice is cold.” → Ice.",
+        "The Predicate is what is affirmed about it:  “Ice is cold.” → cold.",
+        "The Copula is the word that links them and makes the assertion:  is.",
+        "Copula means “link.” It is usually a form of the verb be — is, was, will be."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Subject, Predicate, Copula",
+      "instruction": "Name the subject, predicate, and copula in each sentence.",
+      "items": [
+        "Air is transparent.",
+        "Iron is heavy.",
+        "Nero was cruel.",
+        "Mary should be kind.",
+        "Ellen is unhappy.",
+        "Martha was cheerful."
+      ],
+      "answers": [
+        "S: Air · C: is · P: transparent",
+        "S: Iron · C: is · P: heavy",
+        "S: Nero · C: was · P: cruel",
+        "S: Mary · C: should be · P: kind",
+        "S: Ellen · C: is · P: unhappy",
+        "S: Martha · C: was · P: cheerful"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Predicate & Quality-Words",
+      "bullets": [
+        "The predicate often names a quality of the subject:  “Man is mortal.” → mortal.",
+        "Quality-words tell what kind the subject is:  soft, wise, sweet, round, happy.",
+        "A noun can be the predicate too — then it tells the class:  “Horses are animals.” → animals.",
+        "So a predicate may be a quality (adjective) or a class (noun)."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Analysis",
+      "bullets": [
+        "An Element is one distinct part of a sentence.",
+        "The Subject and Predicate are the Principal Elements — no sentence can exist without them.",
+        "All other parts are Subordinate Elements. (The copula is not counted as an element.)",
+        "Analysis means separating a sentence into its elements.",
+        "Model — “Iron is heavy.” → Iron | is heavy  (subject | predicate)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Analyze — Diagram the Sentence",
+      "instruction": "Split each sentence into subject | predicate. The divider after the subject reaches below the baseline.",
+      "items": [
+        "Indigo is blue.",
+        "Flies are insects.",
+        "Boys will be playful.",
+        "Roses are fragrant.",
+        "Julius should be diligent."
+      ],
+      "answers": [
+        {
+          "s": "Indigo",
+          "p": "is blue"
+        },
+        {
+          "s": "Flies",
+          "p": "are insects"
+        },
+        {
+          "s": "Boys",
+          "p": "will be playful"
+        },
+        {
+          "s": "Roses",
+          "p": "are fragrant"
+        },
+        {
+          "s": "Julius",
+          "p": "should be diligent"
+        }
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a noun?",
+        "What is the difference between a common and a proper noun?",
+        "What does the plural number show?",
+        "What is an abbreviation?",
+        "What are the subject, predicate, and copula?",
+        "What is analysis?"
+      ],
+      "answers": [
+        "A word that is a name.",
+        "A common noun fits any of a class; a proper noun names one particular thing.",
+        "That a noun means more than one object.",
+        "A shortened way of writing a word, ending with a period.",
+        "The subject is what is spoken of; the predicate is what is affirmed of it; the copula links them.",
+        "Separating a sentence into its elements."
+      ]
+    }
+  ]
+}

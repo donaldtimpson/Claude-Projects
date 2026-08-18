@@ -1,0 +1,200 @@
+{
+  "lesson": "sentences-interjection",
+  "title": "Building Sentences & the Interjection",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 70-77",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Building Sentences",
+      "subtitle": "Lesson 10 · Simple, Compound & Complex"
+    },
+    {
+      "type": "concept",
+      "heading": "Three Ways to Build a Sentence",
+      "bullets": [
+        "Every sentence is built from one or more propositions (subject + predicate statements).",
+        "A Simple sentence has just one proposition.",
+        "A Compound sentence joins two or more complete sentences together.",
+        "A Complex sentence tucks a clause inside another."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Simple Sentence",
+      "text": "A Simple Sentence consists of a single proposition.",
+      "examples": [
+        "Wheat is a vegetable.",
+        "Birds sing.",
+        "The tired soldiers fought bravely.",
+        "one subject, one predicate — one complete thought"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Compound Sentence",
+      "text": "A Compound Sentence is two or more complete sentences joined together, each making sense alone.",
+      "examples": [
+        "Wheat grows in the field, and men reap it.",
+        "The wind blew, but the ship was safe.",
+        "Study hard, or you will fail.",
+        "each complete part is called a Member"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Simple or Compound?",
+      "instruction": "Tell whether each sentence is simple or compound.",
+      "items": [
+        "Birds sing.",
+        "Birds sing, and flowers bloom.",
+        "The dog barked loudly.",
+        "Rain fell, but we stayed dry.",
+        "Snow is white.",
+        "I came, and I saw.",
+        "Fish swim in the sea.",
+        "He ran, so he won."
+      ],
+      "answers": [
+        "simple",
+        "compound",
+        "simple",
+        "compound",
+        "simple",
+        "compound",
+        "simple",
+        "compound"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Complex Sentence",
+      "text": "A Complex Sentence is one in which some element is a clause — a group with its own subject and predicate.",
+      "examples": [
+        "I know where gold is found.",
+        "She smiled when he arrived.",
+        "The book that I read was long.",
+        "one main statement, with a clause built into it"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Principal & Subordinate Clauses",
+      "bullets": [
+        "A complex sentence has a principal clause and at least one subordinate clause.",
+        "A Principal Clause makes complete sense by itself:  “I know…”",
+        "A Subordinate Clause does not make complete sense alone:  “…where gold is found.”",
+        "The subordinate clause does the work of a single element inside the sentence."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Principal or Subordinate?",
+      "instruction": "Tell whether each clause is principal (makes sense alone) or subordinate (does not).",
+      "items": [
+        "I know",
+        "where gold is found",
+        "she was tired",
+        "because it rained",
+        "the boy studies",
+        "when spring comes"
+      ],
+      "answers": [
+        "principal",
+        "subordinate",
+        "principal",
+        "subordinate",
+        "principal",
+        "subordinate"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Simple, Compound, or Complex?",
+      "instruction": "Name the kind of each sentence.",
+      "items": [
+        "Dogs bark.",
+        "Dogs bark, and cats meow.",
+        "I know that you are here.",
+        "She smiled when he arrived.",
+        "Snow fell all night.",
+        "He tried, but he failed.",
+        "The book that I read was long.",
+        "Birds fly south in winter."
+      ],
+      "answers": [
+        "simple",
+        "compound",
+        "complex",
+        "complex",
+        "simple",
+        "compound",
+        "complex",
+        "simple"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Interjection",
+      "text": "An Interjection is a word thrown into a sentence to express sudden feeling or emotion.",
+      "examples": [
+        "Hurrah! We won the game.",
+        "Ouch! That hurts.",
+        "Alas! The ship was lost.",
+        "it neither affirms nor denies — it just exclaims"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Interjection",
+      "instruction": "Name the interjection in each sentence.",
+      "items": [
+        "Hurrah! We won the game.",
+        "Oh, what a surprise!",
+        "Alas! The ship was lost.",
+        "Ouch! That hurts.",
+        "Hush! The baby is asleep.",
+        "Wow, look at that!"
+      ],
+      "answers": [
+        "Hurrah",
+        "Oh",
+        "Alas",
+        "Ouch",
+        "Hush",
+        "Wow"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Eight Parts of Speech",
+      "bullets": [
+        "Noun — names.   ·   Pronoun — stands in for a noun.",
+        "Verb — asserts action, being, or state.   ·   Adjective — describes or defines.",
+        "Adverb — modifies a verb, adjective, or adverb.   ·   Preposition — shows relation.",
+        "Conjunction — joins.   ·   Interjection — exclaims.",
+        "Every word you meet is doing one of these eight jobs — that is all of Part I."
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a simple sentence?",
+        "What is a compound sentence?",
+        "What are the members of a compound sentence?",
+        "What is a complex sentence?",
+        "What is a subordinate clause?",
+        "What is an interjection?",
+        "Name the eight parts of speech."
+      ],
+      "answers": [
+        "One that consists of a single proposition.",
+        "Two or more complete sentences joined together.",
+        "The complete sentences it is made of.",
+        "One in which some element is a clause.",
+        "A clause that does not make complete sense alone.",
+        "A word that expresses sudden feeling or emotion.",
+        "Noun, pronoun, verb, adjective, adverb, preposition, conjunction, interjection."
+      ]
+    }
+  ]
+}

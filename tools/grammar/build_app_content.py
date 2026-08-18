@@ -1,18 +1,33 @@
 #!/usr/bin/env python3
-"""Concatenate drills/lesson-*.json into the bundled edu-ios/Resources/Grammar/lessons.json.
+"""Build the bundled grammar lesson-drill JSON from the shared content source.
 
-Each source file is one drill object (slug/lesson/title/blurb/icon/layout/order/tier/items).
-Validates every item against the iOS loader's rules (>=2 distinct options, in-range answer,
-unique ids) so a bad row can't silently drop in the app. Emits {"drills":[...]} ordered by
-the `lesson` number.
+Source of truth: content/grammar/drills/lesson-*.json (one drill object each:
+slug/lesson/title/blurb/icon/layout/order/tier/items). This concatenates them,
+validates every item against the app loaders' rules (>=2 distinct options,
+in-range answer, unique ids), sorts by `lesson`, and writes {"drills":[...]} to
+each app that bundles it.
+
+Run from anywhere: `python3 tools/grammar/build_app_content.py`.
 """
 import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
-SRC = ROOT / "drills"
-OUT = ROOT.parent / "edu-ios" / "Resources" / "Grammar" / "lessons.json"
+
+def repo_root() -> Path:
+    """Walk up until we find the dir holding both content/ and edu-ios/."""
+    for d in Path(__file__).resolve().parents:
+        if (d / "content").is_dir() and (d / "edu-ios").is_dir():
+            return d
+    sys.exit("could not locate repo root (needs content/ + edu-ios/)")
+
+
+ROOT = repo_root()
+SRC = ROOT / "content" / "grammar" / "drills"
+# Every app that bundles the built lessons file. Phase 2 adds the edu-web target here.
+TARGETS = [
+    ROOT / "edu-ios" / "Resources" / "Grammar" / "lessons.json",
+]
 
 
 def validate(drill, path):
@@ -44,7 +59,7 @@ def validate(drill, path):
 def main():
     files = sorted(SRC.glob("lesson-*.json"))
     if not files:
-        sys.exit("no drills/lesson-*.json found")
+        sys.exit(f"no lesson-*.json found in {SRC}")
     drills, errs, slugs = [], [], set()
     for p in files:
         d = json.loads(p.read_text())
@@ -59,10 +74,12 @@ def main():
             print("  -", e)
         sys.exit(1)
     drills.sort(key=lambda d: d.get("lesson", 999))
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({"drills": drills}, indent=1, ensure_ascii=False) + "\n")
+    payload = json.dumps({"drills": drills}, indent=1, ensure_ascii=False) + "\n"
+    for out in TARGETS:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(payload)
+        print(f"wrote {out.relative_to(ROOT)}")
     total = sum(len(d["items"]) for d in drills)
-    print(f"wrote {OUT}")
     print(f"  {len(drills)} lesson drills, {total} items")
     for d in drills:
         print(f"  L{d.get('lesson'):<2} {d['slug']:<12} {len(d['items']):>3} items  {d['title']}")
