@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { drillBySlug } from "@/lib/drills/registry";
 import { grammarLessonDrills, grammarPracticeDrills } from "@/lib/drills/grammar";
 import type { DrillDef } from "@/lib/drills/types";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getAcedLessonSlugs } from "@/lib/lessons";
 
 export const metadata: Metadata = {
   title: "Practice Drills",
@@ -26,7 +29,7 @@ const CATEGORIES: { title: string; icon: string; slugs: string[] }[] = [
   { title: "Grammar Lessons", icon: "🎓", slugs: grammarLessonDrills.map((d) => d.slug) },
 ];
 
-function DrillCard({ d }: { d: DrillDef }) {
+function DrillCard({ d, aced }: { d: DrillDef; aced?: boolean }) {
   return (
     <Link
       href={`/drills/${d.slug}`}
@@ -35,13 +38,18 @@ function DrillCard({ d }: { d: DrillDef }) {
       <div className="flex items-center gap-3 mb-2">
         <span className="text-2xl" aria-hidden>{d.icon}</span>
         <h3 className="font-display text-lg text-parchment group-hover:text-gold-300 transition-colors">{d.title}</h3>
+        {aced && <span className="ml-auto text-gold-300" title="Aced — a flawless homework run">✦</span>}
       </div>
       <p className="text-sm text-parchment-dim">{d.blurb}</p>
     </Link>
   );
 }
 
-export default function DrillsHubPage() {
+export default async function DrillsHubPage() {
+  const session = await getServerSession(authOptions);
+  const acedSet = session?.user?.id
+    ? new Set(await getAcedLessonSlugs(session.user.id))
+    : new Set<string>();
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
@@ -73,7 +81,7 @@ export default function DrillsHubPage() {
               <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {drills.map((d) => (
                   <li key={d.slug}>
-                    <DrillCard d={d} />
+                    <DrillCard d={d} aced={acedSet.has(d.slug)} />
                   </li>
                 ))}
               </ul>

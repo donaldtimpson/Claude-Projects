@@ -31,7 +31,18 @@ final class LessonProgress {
         return try? ctx.fetch(d).first
     }
 
-    func isAced(userId: String, slug: String) -> Bool { row(key(userId, slug)) != nil }
+    // Server truth (fetched from /me/lessons), merged with the local optimistic
+    // marks so the ✦ shows instantly on a flawless run and syncs across devices.
+    private var serverAced: [String: Set<String>] = [:]
+
+    func setServerAced(userId: String, slugs: [String]) {
+        serverAced[userId] = Set(slugs)
+    }
+
+    func isAced(userId: String, slug: String) -> Bool {
+        if serverAced[userId]?.contains(slug) == true { return true }
+        return row(key(userId, slug)) != nil
+    }
 
     func markAced(userId: String, slug: String) {
         let k = key(userId, slug)

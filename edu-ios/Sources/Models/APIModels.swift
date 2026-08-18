@@ -269,6 +269,12 @@ struct BadgesResponse: Codable {
     let badges: [Badge]
 }
 
+// Aced grammar-lesson slugs for the current user, derived server-side from a
+// flawless homework run (see edu-web lib/lessons.ts). Merged into LessonProgress.
+struct LessonsResponse: Codable {
+    let acedSlugs: [String]
+}
+
 struct WriteResult: Codable {
     let duplicate: Bool
     let badges: [Badge]

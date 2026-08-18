@@ -11,6 +11,7 @@ struct DrillsView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var active: ActiveDrill?
     @State private var query = ""
+    @State private var acedRefresh = false   // bumped after /me/lessons load to re-render the ✦
     @AppStorage("drill_recents") private var recentsCSV = ""   // most-recent-first slugs
 
     private var userId: String { auth.user?.id ?? "guest" }
@@ -38,6 +39,7 @@ struct DrillsView: View {
         .navigationTitle("Practice Drills")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "Search drills")
+        .task(id: userId) { await refreshAced() }
         .navigationDestination(for: DrillCategoryRoute.self) { route in
             CategoryDrillsView(route: route, userId: userId, open: open)
         }
@@ -51,6 +53,17 @@ struct DrillsView: View {
                         }
                     }
             }
+        }
+    }
+
+    // Server-derived ✦: fetch the user's aced lesson slugs and merge them into
+    // LessonProgress. Bumps acedRefresh so the rows re-render once the (signed-in)
+    // result lands; local optimistic marks still show instantly on a flawless run.
+    private func refreshAced() async {
+        guard auth.user != nil else { return }
+        if let res: LessonsResponse = try? await APIClient.shared.get("/me/lessons") {
+            LessonProgress.shared.setServerAced(userId: userId, slugs: res.acedSlugs)
+            acedRefresh.toggle()
         }
     }
 
