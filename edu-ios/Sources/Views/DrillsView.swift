@@ -19,7 +19,7 @@ struct DrillsView: View {
     }
 
     private static let categories: [DrillCategoryRoute] = [
-        .init(title: "Lessons", icon: "🎓", slugs: DrillCatalog.lessonSlugs),
+        .init(title: "Grammar Lessons", icon: "🎓", slugs: DrillCatalog.lessonSlugs),
         .init(title: "Mental Math", icon: "🧮", slugs: ["arithmetic", "percentages", "order-of-operations",
               "powers-of-two", "squares", "gcd", "primes", "sequences", "logarithms"]),
         .init(title: "Trigonometry", icon: "📐", slugs: ["unit-circle", "vectors"]),
@@ -113,7 +113,7 @@ struct DrillsView: View {
             Text(cat.icon).font(.system(size: 32))
             VStack(alignment: .leading, spacing: 2) {
                 Text(highlighted(cat.title, query)).font(.headline).foregroundStyle(Theme.ink)
-                if cat.title == "Lessons" {
+                if cat.slugs == DrillCatalog.lessonSlugs {
                     let aced = LessonProgress.shared.acedCount(userId: userId, slugs: cat.slugs)
                     Text(aced > 0 ? "✦ \(aced)/\(cat.slugs.count) aced" : "\(cat.slugs.count) lessons")
                         .font(.subheadline).foregroundStyle(aced > 0 ? Theme.gold400 : Theme.inkSoft)
