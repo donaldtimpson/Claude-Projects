@@ -16,6 +16,7 @@ import {
 } from "./generators/linear-algebra";
 import {
   nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
+  capitalCountryDrill, capitalStateDrill,
 } from "./generators/geography";
 import { grammarLessonDrills, grammarPracticeDrills } from "./grammar";
 
@@ -25,6 +26,7 @@ export const DRILLS: DrillDef[] = [
   determinantDrill, solveSystemDrill, matrixVectorDrill, dotProductDrill,
   unitCircleDrill, vectorsDrill,
   nameCountryDrill, nameStateDrill, locateCountryDrill, locateStateDrill,
+  capitalCountryDrill, capitalStateDrill,
   ...grammarPracticeDrills,
   ...grammarLessonDrills,
 ];

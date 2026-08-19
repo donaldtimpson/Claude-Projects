@@ -333,7 +333,9 @@ follow later edits (the gradebook divides by the assignment's own value).
 
 Procedurally-generated, timed/scored practice — distinct from quizzes (which draw from the stored
 `QuizQuestion` bank). A drill generates an endless stream of random problems **client-side**; there
-is no question bank and nothing to author. Three drills ship: `arithmetic`, `unit-circle`, `vectors`.
+is no question bank and nothing to author for the *procedural* drills. 62 drills ship across seven
+categories (see `lib/drills/categories.ts`): Mental Math, Trigonometry, Calculus, Linear Algebra,
+Geography, plus two **bundled-bank** grammar categories (see "Grammar drills" below).
 
 - **Framework:** a drill type is pure data + a `generate(level)` function (`lib/drills/types.ts`
   `DrillDef`). One generic client player (`components/drills/DrillPlayer.tsx`) renders and grades any
@@ -341,8 +343,10 @@ is no question bank and nothing to author. Three drills ship: `arithmetic`, `uni
   `Problem.input` (`numeric` | `choice` | `fields`). The correct answer lives inside the input
   descriptor, so grading is mechanical.
 - **Adding a drill** = write `lib/drills/generators/<name>.ts` exporting a `DrillDef`, then add it to
-  `DRILLS` in `lib/drills/registry.ts`. The hub card, `/drills/<slug>` route, mode/level selection,
-  KaTeX, and persistence all work automatically. Candidates that map onto existing input modes:
+  `DRILLS` in `lib/drills/registry.ts` **and** to a category's `drillSlugs` in
+  `lib/drills/categories.ts` (a drill missing from every category is reachable by URL and search but
+  never listed). The `/drills/<slug>` route, mode/level selection, KaTeX, and persistence all work
+  automatically. Candidates that map onto existing input modes:
   degree↔radian / log rules / derivative-of-power (`numeric`), truth tables / dot-cross + right-hand
   rule (`choice`/`fields`), factoring (`choice`).
 - **Math + diagrams:** KaTeX via `components/drills/Tex.tsx` (a thin `katex.renderToString` wrapper,
@@ -360,9 +364,27 @@ is no question bank and nothing to author. Three drills ship: `arithmetic`, `uni
   Apply with `npx prisma migrate deploy && npx prisma generate` from `edu-platform/` (no TTY for
   `migrate dev` here; local + prod share the Neon DB).
 
+**Hub structure (mirrors iOS `DrillsView`).** With 60+ drills, `/drills` lists **categories**, not
+drills: seven rows that click into `/drills/c/<category>`. Above them sit a client-side search
+(matches title + blurb + category name, match highlighted) and a "Continue" strip of the 5
+most-recently-opened drills. Recents are device-local (`localStorage`, `lib/drills/recents.ts`, read
+via `useSyncExternalStore` so SSR and client agree — never via an effect); the ✦ pass state stays
+server-derived. The hub is passed **serializable drill metadata only** — `DrillDef`s hold generator
+functions and would drag the grammar banks + geo atlas into the client bundle.
+
+**Grammar drills (bundled banks, not procedural).** The `Grammar` (✒️ practice) and
+`Grammar Lessons` (Harvey homework) categories are generated from `content/grammar/` at the repo
+root by `tools/grammar/build_app_content.py`, which emits byte-identical JSON to **both** apps —
+`edu-web/lib/drills/grammar/data/` and `edu-ios/Resources/Grammar/`. Edit the source in
+`content/grammar/`, never the generated `data/` files. `lib/drills/grammar/bank.ts` turns a bank
+into `DrillDef`s. A lesson is **aced** by a flawless 30-question homework run; that state is derived
+server-side from `DrillAttempt` rows (`lib/lessons.ts`) and shared with iOS via
+`GET /api/mobile/v1/me/lessons`, so the ✦ is one fact across platforms.
+
 | Route | Purpose |
 |---|---|
-| `/drills` | Hub — one card per registered drill |
+| `/drills` | Hub — search, a "Continue" strip, and seven category rows |
+| `/drills/c/[category]` | One category's drills, listed as rows |
 | `/drills/[slug]` | Difficulty + mode picker, then the drill session |
 
 ## Community quiz-post scheduler (`scripts/`, local-only)

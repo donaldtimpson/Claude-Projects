@@ -1,6 +1,7 @@
 // Geography drills — parity with the iOS app's four map drills:
 //   name-country / name-state  → identify the highlighted region (choice + map diagram)
 //   locate-country / locate-state → tap the named region on the map (mapTap input)
+//   capital-country / capital-state → see the highlighted region, pick its capital city
 // Data + pools come from lib/drills/geo/atlas (the shared Natural Earth vector data).
 
 import type { DrillDef, Problem, Level } from "../types";
@@ -13,6 +14,14 @@ import {
   US_STATES,
   type GeoRegion,
 } from "../geo/atlas";
+import capitalsData from "../geo/data/capitals.json";
+
+// Region id → capital city. Ported from the iOS GeoCapitals table (same Natural Earth
+// ids), so both platforms ask the same question and accept the same answer. Contested
+// cases resolve to the official capital (Bolivia → Sucre, Netherlands → Amsterdam,
+// South Africa → Pretoria, Ivory Coast → Yamoussoukro …). Every askable region has an
+// entry; a region missing one simply falls back to its own name rather than crashing.
+const CAPITALS: { country: Record<string, string>; state: Record<string, string> } = capitalsData;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -82,6 +91,28 @@ function locateProblem(target: GeoRegion, map: "world" | "us"): Problem {
   };
 }
 
+// ---- Capital city (choice + geoMap diagram) ---------------------------------
+// Mirrors identifyProblem, except the options are CAPITAL cities rather than region
+// names, and the prompt names the region. Distractors are 3 same-continent regions'
+// capitals, so the choice stays plausible instead of trivially eliminable.
+function capitalProblem(target: GeoRegion, all: GeoRegion[], map: "world" | "us"): Problem {
+  const table = map === "world" ? CAPITALS.country : CAPITALS.state;
+  const cap = (r: GeoRegion) => table[r.id] ?? r.name;
+  const picks = shuffle([target, ...distractors(target, all)]);
+  const flag = map === "world" ? flagEmoji(target.iso) : null;
+  return {
+    id: `${map}-cap-${target.id}-${Math.random().toString(36).slice(2, 7)}`,
+    prompt: `Capital of ${target.name}${flag ? ` ${flag}` : ""}?`,
+    input: {
+      kind: "choice",
+      options: picks.map(cap),
+      correctIndex: picks.findIndex((r) => r.id === target.id),
+    },
+    explanation: `${cap(target)} — capital of ${target.name}.`,
+    diagram: { kind: "geoMap", map, highlightId: target.id },
+  };
+}
+
 const LEVELS: { value: Level; label: string }[] = [
   { value: 1, label: "Easy" },
   { value: 2, label: "Medium" },
@@ -126,4 +157,24 @@ export const locateStateDrill: DrillDef = {
   subject: "Geography",
   levels: LEVELS,
   generate: (level) => locateProblem(draw(`locate-state-${level}`, statePool(level)), "us"),
+};
+
+export const capitalCountryDrill: DrillDef = {
+  slug: "capital-country",
+  title: "Capitals — Countries",
+  blurb: "See the highlighted country — pick its capital city.",
+  icon: "🏛️",
+  subject: "Geography",
+  levels: LEVELS,
+  generate: (level) => capitalProblem(draw(`capital-country-${level}`, countryPool(level)), WORLD.askable, "world"),
+};
+
+export const capitalStateDrill: DrillDef = {
+  slug: "capital-state",
+  title: "Capitals — U.S. States",
+  blurb: "See the highlighted state — pick its capital city.",
+  icon: "🏙️",
+  subject: "Geography",
+  levels: LEVELS,
+  generate: (level) => capitalProblem(draw(`capital-state-${level}`, statePool(level)), US_STATES.askable, "us"),
 };

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { DRILLS, drillBySlug } from "@/lib/drills/registry";
 import DrillSession from "./DrillSession";
+import RecordRecent from "./RecordRecent";
+import { categoryOfDrill } from "@/lib/drills/categories";
 
 export function generateStaticParams() {
   return DRILLS.map((d) => ({ slug: d.slug }));
@@ -27,13 +29,17 @@ export default async function DrillSessionPage({
   const { slug } = await params;
   const def = drillBySlug(slug);
   if (!def) notFound();
+  const cat = categoryOfDrill(def.slug);
 
   return (
     <main className="flex-1">
       <header className="border-b border-crimson-700 px-6 py-4">
         <div className="max-w-3xl mx-auto">
-          <Link href="/drills" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
-            ← All Drills
+          <Link
+            href={cat ? `/drills/c/${cat.slug}` : "/drills"}
+            className="text-sm text-parchment-dim hover:text-parchment transition-colors"
+          >
+            ← {cat ? cat.title : "All Drills"}
           </Link>
         </div>
       </header>
@@ -46,6 +52,7 @@ export default async function DrillSessionPage({
         {/* The DrillDef holds functions, which can't cross the server→client
             boundary — pass the slug and re-resolve from the registry client-side. */}
         <DrillSession slug={def.slug} />
+        <RecordRecent slug={def.slug} />
       </div>
     </main>
   );
