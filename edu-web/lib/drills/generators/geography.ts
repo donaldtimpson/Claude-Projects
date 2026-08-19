@@ -35,6 +35,12 @@ function shuffle<T>(arr: T[]): T[] {
 // Shuffle-bag per (drill, level): draw the whole pool in a random order before any
 // region repeats, so a session cycles all of them first (matches iOS).
 const bags = new Map<string, GeoRegion[]>();
+// Clear a drill's bag so a new session deals a fresh full permutation — what makes
+// the "All" length cover every region exactly once (mirrors iOS resetBag).
+function resetBag(key: string) {
+  bags.delete(key);
+}
+
 function draw(key: string, pool: GeoRegion[]): GeoRegion {
   if (pool.length === 0) return WORLD.askable[0];
   let bag = bags.get(key);
@@ -125,6 +131,8 @@ export const nameCountryDrill: DrillDef = {
   blurb: "Identify the highlighted country on the world map.",
   icon: "🌍",
   subject: "Geography",
+  poolSize: (level) => countryPool(level).length,
+  resetPool: (level) => resetBag(`name-country-${level}`),
   levels: LEVELS,
   generate: (level) => identifyProblem(draw(`name-country-${level}`, countryPool(level)), WORLD.askable, "world"),
 };
@@ -135,6 +143,8 @@ export const nameStateDrill: DrillDef = {
   blurb: "Identify the highlighted U.S. state — major rivers drawn in for context.",
   icon: "🗺️",
   subject: "Geography",
+  poolSize: (level) => statePool(level).length,
+  resetPool: (level) => resetBag(`name-state-${level}`),
   levels: LEVELS,
   generate: (level) => identifyProblem(draw(`name-state-${level}`, statePool(level)), US_STATES.askable, "us"),
 };
@@ -145,6 +155,8 @@ export const locateCountryDrill: DrillDef = {
   blurb: "Find the named country on the world map — click it.",
   icon: "🧭",
   subject: "Geography",
+  poolSize: (level) => countryPool(level).length,
+  resetPool: (level) => resetBag(`locate-country-${level}`),
   levels: LEVELS,
   generate: (level) => locateProblem(draw(`locate-country-${level}`, countryPool(level)), "world"),
 };
@@ -155,6 +167,8 @@ export const locateStateDrill: DrillDef = {
   blurb: "Find the named U.S. state — click it.",
   icon: "📍",
   subject: "Geography",
+  poolSize: (level) => statePool(level).length,
+  resetPool: (level) => resetBag(`locate-state-${level}`),
   levels: LEVELS,
   generate: (level) => locateProblem(draw(`locate-state-${level}`, statePool(level)), "us"),
 };
@@ -165,6 +179,8 @@ export const capitalCountryDrill: DrillDef = {
   blurb: "See the highlighted country — pick its capital city.",
   icon: "🏛️",
   subject: "Geography",
+  poolSize: (level) => countryPool(level).length,
+  resetPool: (level) => resetBag(`capital-country-${level}`),
   levels: LEVELS,
   generate: (level) => capitalProblem(draw(`capital-country-${level}`, countryPool(level)), WORLD.askable, "world"),
 };
@@ -175,6 +191,8 @@ export const capitalStateDrill: DrillDef = {
   blurb: "See the highlighted state — pick its capital city.",
   icon: "🏙️",
   subject: "Geography",
+  poolSize: (level) => statePool(level).length,
+  resetPool: (level) => resetBag(`capital-state-${level}`),
   levels: LEVELS,
   generate: (level) => capitalProblem(draw(`capital-state-${level}`, statePool(level)), US_STATES.askable, "us"),
 };

@@ -58,6 +58,10 @@ export function bankDrill(bank: Bank, subject: string): DrillDef {
     icon: bank.icon ?? "✒️",
     subject,
     levels: [{ value: 1 as Level, label: homework ? "Homework" : "Practice" }],
+    // Finite bank ⇒ the session picker can offer "All", and a session starts from a
+    // fresh bag so "All" deals every item exactly once.
+    poolSize: () => bank.items.length,
+    resetPool: () => { bags.delete(bank.slug); },
     generate: (): Problem => {
       const it = draw(bank.slug, bank.items);
       const { options, correctIndex } = orderedOptions(it, fixed);

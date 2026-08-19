@@ -79,6 +79,15 @@ export type DrillDef = {
   subject: string; // "Mathematics" etc.
   levels: { value: Level; label: string }[];
   generate: (level: Level) => Problem; // pure, synchronous
+  // Number of DISTINCT problems available at a level, for drills backed by a finite
+  // pool (grammar banks, map drills). Enables the session picker's "All" length;
+  // omitted ⇒ procedurally endless, so only fixed counts make sense. Mirrors the
+  // iOS DrillDef.poolSize.
+  poolSize?: (level: Level) => number;
+  // Clear this drill's shuffle bag so a new session starts a fresh full permutation —
+  // what makes "All" cover every item exactly once instead of finishing a half-dealt
+  // bag and repeating. Mirrors iOS DrillCatalog.resetBag.
+  resetPool?: (level: Level) => void;
 };
 
 // ---- Session mechanics ------------------------------------------------------

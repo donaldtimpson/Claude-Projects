@@ -41,8 +41,15 @@ export default function DrillPlayer({
   onSessionComplete?: (s: DrillSummary) => Promise<ToastBadge[]> | void;
   onExit?: () => void;
 }) {
-  const [current, setCurrent] = useState<Problem>(() => def.generate(level));
-  const [texts, setTexts] = useState<string[]>(() => blankTexts(current));
+  // def.generate() is NOT pure — bank and map drills draw from a shuffle bag, so each
+  // call consumes an item. A lazy useState initializer is the wrong home for it: React
+  // deliberately double-invokes those under StrictMode, which burned an extra item and
+  // made a full-pool "All" run come up one short (and repeat). Draw the first problem
+  // once per mount behind a ref guard instead.
+  const firstRef = useRef<Problem | null>(null);
+  if (firstRef.current === null) firstRef.current = def.generate(level);
+  const [current, setCurrent] = useState<Problem>(firstRef.current);
+  const [texts, setTexts] = useState<string[]>(() => blankTexts(firstRef.current!));
   const [results, setResults] = useState<boolean[]>([]);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);

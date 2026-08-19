@@ -6,8 +6,13 @@ import DrillPlayer from "@/components/drills/DrillPlayer";
 import { recordDrillSession } from "@/lib/actions";
 import type { DrillMode, Level } from "@/lib/drills/types";
 
-const COUNT_OPTIONS = [10, 20, 50];
+// Practice lengths, matching iOS: 10, 20, or the whole pool. 0 = "All", resolved
+// against the drill's poolSize at start. There is deliberately no fixed 50 — most
+// finite banks hold fewer than that (19 of the 20 grammar practice drills do), so a
+// 50 would have quietly repeated items rather than asking 50 distinct questions.
+const COUNT_OPTIONS = [10, 20];
 const TIMED_OPTIONS = [60, 120];
+const ALL = 0;
 
 // `persist` (default true) records the session for badges/streak via the server
 // action. The admin tester passes persist={false} to play without writing to the
@@ -18,12 +23,18 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
   // full credit if the lesson is assigned). No difficulty tiers, no timed sprint.
   const isLesson = def?.subject === "Grammar Lessons";
   const [level, setLevel] = useState<Level>(1);
+  // `n: 0` means "All" — the concrete count is resolved from poolSize when starting,
+  // since the pool size depends on the chosen level.
   const [mode, setMode] = useState<DrillMode>({ type: "count", n: isLesson ? 30 : 10 });
   const [playing, setPlaying] = useState(false);
   // Bump to force a fresh DrillPlayer mount on each "start".
   const [sessionKey, setSessionKey] = useState(0);
 
   if (!def) return null;
+
+  // Distinct problems available at this level; undefined for endless procedural
+  // drills, which therefore get no "All" chip.
+  const poolSize = def.poolSize?.(level);
 
   if (playing) {
     return (
@@ -81,6 +92,14 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
                   {n} problems
                 </Chip>
               ))}
+              {poolSize !== undefined && (
+                <Chip
+                  active={mode.type === "count" && (mode.n === ALL || mode.n === poolSize)}
+                  onClick={() => setMode({ type: "count", n: ALL })}
+                >
+                  All {poolSize}
+                </Chip>
+              )}
               {TIMED_OPTIONS.map((s) => (
                 <Chip
                   key={`t${s}`}
@@ -97,6 +116,12 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
 
       <button
         onClick={() => {
+          // Start each session from a fresh shuffle bag, so "All" covers the pool
+          // exactly once instead of finishing a half-dealt bag and repeating.
+          def.resetPool?.(level);
+          if (mode.type === "count" && mode.n === ALL) {
+            setMode({ type: "count", n: def.poolSize?.(level) ?? 20 });
+          }
           setSessionKey((k) => k + 1);
           setPlaying(true);
         }}
