@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getAcedLessonSlugsForUsers } from "@/lib/lessons";
 
 // Gradebook aggregation for one class section. Combines already-recorded data
 // (attendance from lecture watches; quizzes + final test as best-attempt) with
@@ -119,7 +120,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
 
   const sectionAssignments = await db.assignment.findMany({
     where: { sectionId: section.id },
-    select: { id: true, points: true },
+    select: { id: true, points: true, lessonSlug: true },
   });
   const pointsByAssignment = new Map(sectionAssignments.map((a) => [a.id, a.points]));
 
@@ -166,6 +167,29 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     hwEarned.set(s.userId, (hwEarned.get(s.userId) ?? 0) + (s.score ?? 0));
     hwPossible.set(s.userId, (hwPossible.get(s.userId) ?? 0) + pts);
     hwCount.set(s.userId, (hwCount.get(s.userId) ?? 0) + 1);
+  }
+
+  // Lesson-drill assignments are auto-graded and BINARY: acing the lesson (a
+  // flawless 30-run, derived from DrillAttempt) earns full points; a not-yet-aced
+  // lesson is simply uncounted — matching the "graded so far" running average used
+  // for problem-set submissions above (no zeros for unfinished work, no due gate).
+  const lessonAssignments = sectionAssignments.filter((a) => a.lessonSlug);
+  if (lessonAssignments.length > 0) {
+    const acedByUser = await getAcedLessonSlugsForUsers(
+      userIds,
+      lessonAssignments.map((a) => a.lessonSlug!),
+    );
+    for (const uid of userIds) {
+      const aced = acedByUser.get(uid);
+      if (!aced) continue;
+      for (const a of lessonAssignments) {
+        if (a.lessonSlug && aced.has(a.lessonSlug)) {
+          hwEarned.set(uid, (hwEarned.get(uid) ?? 0) + a.points);
+          hwPossible.set(uid, (hwPossible.get(uid) ?? 0) + a.points);
+          hwCount.set(uid, (hwCount.get(uid) ?? 0) + 1);
+        }
+      }
+    }
   }
 
   const watched = new Map<string, number>();

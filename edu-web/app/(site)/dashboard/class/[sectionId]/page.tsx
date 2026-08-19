@@ -5,6 +5,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
 import SubmitForm from "@/components/SubmitForm";
+import { getAcedLessonSlugs } from "@/lib/lessons";
+import { grammarLessonDrills } from "@/lib/drills/grammar";
 
 export const dynamic = "force-dynamic";
 
@@ -53,6 +55,11 @@ export default async function ClassHubPage({
       },
     })
   ).map((a) => ({ ...a, sub: a.submissions[0] ?? null }));
+
+  // Lesson-drill assignments are auto-graded by an ace — resolve titles + this
+  // student's passed lessons so we can show pass status instead of a submit form.
+  const lessonTitle = new Map(grammarLessonDrills.map((d) => [d.slug, d.title]));
+  const acedLessons = new Set(await getAcedLessonSlugs(userId));
 
   // Per-lecture quiz best scores + final test best.
   const videos = await db.video.findMany({
@@ -158,19 +165,55 @@ export default async function ClassHubPage({
           ) : (
             <ul className="space-y-3">
               {assignments.map((a) => {
+                // Lesson-drill homework: auto-graded by acing the 30-run. No URL
+                // submission — the student just does the drill; ✦ = full credit.
+                if (a.lessonSlug) {
+                  const aced = acedLessons.has(a.lessonSlug);
+                  const title = a.title ?? lessonTitle.get(a.lessonSlug) ?? a.lessonSlug;
+                  return (
+                    <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div className="min-w-0">
+                          <Link
+                            href={`/drills/${a.lessonSlug}`}
+                            className="font-medium text-parchment hover:text-gold-300 transition-colors"
+                          >
+                            {title}
+                          </Link>
+                          <p className="text-xs text-parchment-dim mt-0.5">
+                            Grammar lesson · pass the 30-question run · {a.points} pts
+                          </p>
+                        </div>
+                        {aced ? (
+                          <span className="text-sm text-gold-300 shrink-0">✦ aced · {a.points}/{a.points}</span>
+                        ) : (
+                          <span className="text-xs text-parchment-dim shrink-0">not yet aced</span>
+                        )}
+                      </div>
+                      <Link
+                        href={`/drills/${a.lessonSlug}`}
+                        className="inline-block text-sm text-gold-400 hover:text-gold-300 transition-colors"
+                      >
+                        {aced ? "Practice again →" : "Do the homework drill →"}
+                      </Link>
+                    </li>
+                  );
+                }
+
+                const ps = a.problemSet!;
                 const graded = a.sub && a.sub.score !== null;
                 return (
                   <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
                       <div className="min-w-0">
                         <Link
-                          href={`/courses/${courseId}/problems/${a.problemSet.id}`}
+                          href={`/courses/${courseId}/problems/${ps.id}`}
                           className="font-medium text-parchment hover:text-gold-300 transition-colors"
                         >
-                          {a.title ?? a.problemSet.title}
+                          {a.title ?? ps.title}
                         </Link>
                         <p className="text-xs text-parchment-dim mt-0.5">
-                          {a.title ? `${a.problemSet.title} · ` : ""}
+                          {a.title ? `${ps.title} · ` : ""}
                           {a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"} · {a.points} pts
                         </p>
                       </div>
@@ -190,9 +233,9 @@ export default async function ClassHubPage({
                     <SubmitForm assignmentId={a.id} currentUrl={a.sub?.url ?? null} />
                     {/* Solutions live inline with the problems they answer, so
                         point there rather than duplicating them here. */}
-                    {a.problemSet.solutionsPublic && a.problemSet.solution.trim() && (
+                    {ps.solutionsPublic && ps.solution.trim() && (
                         <Link
-                          href={`/courses/${courseId}/problems/${a.problemSet.id}`}
+                          href={`/courses/${courseId}/problems/${ps.id}`}
                           className="inline-block text-sm text-gold-400 hover:text-gold-300 transition-colors"
                         >
                           View problems &amp; worked solutions →

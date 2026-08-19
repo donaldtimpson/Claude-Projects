@@ -3,6 +3,7 @@
 import { useState } from "react";
 import NotesEditor from "../../NotesEditor";
 import QuizEditor from "../../QuizEditor";
+import LessonLinkEditor from "./LessonLinkEditor";
 
 type Question = {
   id: string;
@@ -43,6 +44,8 @@ export default function LectureRow({
   printHref,
   initialNote,
   initialQuestions,
+  lessons,
+  linkedLessons,
 }: {
   index: number;
   title: string;
@@ -50,6 +53,8 @@ export default function LectureRow({
   printHref: string;
   initialNote: Note | null;
   initialQuestions: Question[];
+  lessons: { slug: string; title: string }[];
+  linkedLessons: string[];
 }) {
   const [open, setOpen] = useState(false);
   const quiz = quizSummary(initialQuestions);
@@ -86,6 +91,7 @@ export default function LectureRow({
         <div className="px-5 pb-5 pt-1 space-y-4 border-t border-crimson-700/60">
           <NotesEditor videoId={videoId} initialNote={initialNote} printHref={printHref} />
           <QuizEditor videoId={videoId} initialQuestions={initialQuestions} />
+          <LessonLinkEditor videoId={videoId} lessons={lessons} linked={linkedLessons} />
         </div>
       )}
     </div>

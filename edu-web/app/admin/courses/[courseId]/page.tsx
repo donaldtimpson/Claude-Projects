@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import CurrentToggle from "../../CurrentToggle";
 import LectureRow from "./LectureRow";
 import LectureOrderEditor from "./LectureOrderEditor";
+import { grammarLessonDrills } from "@/lib/drills/grammar";
 
 export default async function AdminCourseHub({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
@@ -17,10 +18,17 @@ export default async function AdminCourseHub({ params }: { params: Promise<{ cou
   if (!course) notFound();
 
   const videoIds = course.videos.map((v) => v.id);
-  const [allQuestions, allNotes] = await Promise.all([
+  const [allQuestions, allNotes, allLessonLinks] = await Promise.all([
     db.quizQuestion.findMany({ where: { videoId: { in: videoIds } }, orderBy: { position: "asc" } }),
     db.lectureNote.findMany({ where: { videoId: { in: videoIds } } }),
+    db.videoLesson.findMany({ where: { videoId: { in: videoIds } }, select: { videoId: true, lessonSlug: true } }),
   ]);
+
+  const lessonOptions = grammarLessonDrills.map((d) => ({ slug: d.slug, title: d.title }));
+  const linkedByVideo = new Map<string, string[]>();
+  for (const vl of allLessonLinks) {
+    linkedByVideo.set(vl.videoId, [...(linkedByVideo.get(vl.videoId) ?? []), vl.lessonSlug]);
+  }
 
   const testCount = course._count.quizQuestions;
   const connectionCount = course._count.linksFrom + course._count.linksTo;
@@ -82,6 +90,8 @@ export default async function AdminCourseHub({ params }: { params: Promise<{ cou
               printHref={`/courses/${courseId}/${video.id}/notes`}
               initialNote={noteRow ? { id: noteRow.id, content: noteRow.content, isDraft: noteRow.isDraft } : null}
               initialQuestions={questions}
+              lessons={lessonOptions}
+              linkedLessons={linkedByVideo.get(video.id) ?? []}
             />
           );
         })}

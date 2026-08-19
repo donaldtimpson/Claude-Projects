@@ -106,6 +106,7 @@ model Video {
   transcript      Transcript?
   assignments     Assignment[]
   problemSets     ProblemSetVideo[]
+  lessons         VideoLesson[]
 }
 
 model LectureNote {
@@ -289,14 +290,31 @@ model ProblemSetVideo {
   @@index([videoId])
 }
 
-// A ProblemSet assigned to one Section with a due date + point value. Only the
-// section's enrolled students can submit. Optionally tagged to a lecture.
+// Which lecture(s) a grammar lesson drill is covered by. Like ProblemSetVideo but
+// the lesson side is a bundled-content slug (e.g. "lesson-03"), not a DB row — so
+// no FK on lessonSlug. Lets a lecture page surface "practice this lesson" and the
+// drill show "covered by lecture X". Many-to-many: a lesson may span lectures.
+model VideoLesson {
+  videoId    String
+  lessonSlug String
+
+  video      Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, lessonSlug])
+  @@index([lessonSlug])
+}
+
+// A homework assignment for one Section — EITHER a ProblemSet (paper/problem set,
+// URL submission, instructor-scored) OR a grammar lesson drill (`lessonSlug`,
+// auto-graded: acing the 30-run earns full points, binary). Exactly one of
+// problemSetId / lessonSlug is set. Optionally tagged to a lecture.
 model Assignment {
   id           String       @id @default(cuid())
   sectionId    String
-  problemSetId String
+  problemSetId String?      // set for a problem-set/paper assignment
+  lessonSlug   String?      // set for a lesson-drill assignment (e.g. "lesson-03"); auto-graded by an ace
   videoId      String? // optional "relates to lecture" tag
-  title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's title
+  title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's / lesson's title
   points       Int          @default(100)
   dueAt        DateTime?
   // RETIRED — solution visibility now lives solely on ProblemSet.solutionsPublic.
@@ -306,7 +324,7 @@ model Assignment {
   createdAt    DateTime     @default(now())
 
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  problemSet   ProblemSet   @relation(fields: [problemSetId], references: [id], onDelete: Cascade)
+  problemSet   ProblemSet?  @relation(fields: [problemSetId], references: [id], onDelete: Cascade)
   video        Video?       @relation(fields: [videoId], references: [id], onDelete: SetNull)
   submissions  Submission[]
 

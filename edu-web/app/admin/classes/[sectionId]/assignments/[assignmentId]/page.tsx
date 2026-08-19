@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { gradeSubmission } from "@/lib/assignments";
 
@@ -33,6 +33,10 @@ export default async function GradeAssignmentPage({
     },
   });
   if (!assignment || assignment.section.id !== sectionId) notFound();
+  // Lesson-drill assignments are auto-graded — there are no submissions to grade
+  // here; send back to the section (its completion view shows who's aced).
+  if (!assignment.problemSet) redirect(`/admin/classes/${sectionId}`);
+  const ps = assignment.problemSet;
 
   const subByUser = new Map(assignment.submissions.map((s) => [s.userId, s]));
 
@@ -42,9 +46,9 @@ export default async function GradeAssignmentPage({
         <Link href={`/admin/classes/${sectionId}`} className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← {assignment.section.name}
         </Link>
-        <h1 className="text-2xl font-bold text-parchment mt-2">{assignment.title ?? assignment.problemSet.title}</h1>
+        <h1 className="text-2xl font-bold text-parchment mt-2">{assignment.title ?? ps.title}</h1>
         <p className="text-sm text-parchment-dim mt-1">
-          {assignment.title ? `${assignment.problemSet.title} · ` : ""}
+          {assignment.title ? `${ps.title} · ` : ""}
           {assignment.points} points · {assignment.submissions.length}/{assignment.section.enrollments.length} submitted
         </p>
       </div>
@@ -90,14 +94,14 @@ export default async function GradeAssignmentPage({
                       name="score"
                       type="number"
                       min={0}
-                      max={assignment.points + assignment.problemSet.extraCreditPoints}
+                      max={assignment.points + ps.extraCreditPoints}
                       defaultValue={sub.score ?? ""}
                       placeholder="—"
                       className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
                     />
                     <span className="text-parchment-dim">
                       / {assignment.points}
-                      {assignment.problemSet.extraCreditPoints > 0 ? ` (+${assignment.problemSet.extraCreditPoints} EC)` : ""}
+                      {ps.extraCreditPoints > 0 ? ` (+${ps.extraCreditPoints} EC)` : ""}
                     </span>
                   </label>
                   <input

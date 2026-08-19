@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
 import { deleteAssignment, updateAssignment } from "@/lib/assignments";
 import { setGradeWeights, setManualMarks } from "@/lib/grades";
+import { grammarLessonDrills } from "@/lib/drills/grammar";
+import { getAcedLessonSlugsForUsers } from "@/lib/lessons";
 import AssignForm from "./AssignForm";
 
 const fmtDue = (d: Date | null) =>
@@ -53,6 +55,16 @@ export default async function GradebookPage({
       },
     }),
   ]);
+
+  // Lesson-drill assignments are auto-graded by an ace — resolve their titles and
+  // which enrolled students have passed each (for the completion view below).
+  const lessons = grammarLessonDrills.map((d) => ({ slug: d.slug, title: d.title }));
+  const lessonTitle = new Map(lessons.map((l) => [l.slug, l.title]));
+  const assignedLessonSlugs = assignments.map((a) => a.lessonSlug).filter((s): s is string => Boolean(s));
+  const acedByUser =
+    assignedLessonSlugs.length > 0
+      ? await getAcedLessonSlugsForUsers(gb.students.map((s) => s.userId), assignedLessonSlugs)
+      : new Map<string, Set<string>>();
 
   const w = gb.config.weights;
   const weightTotal = w.attendance + w.quizzes + w.test + w.homework + w.midterm + w.final;
@@ -246,106 +258,136 @@ export default async function GradebookPage({
           Homework Assignments
         </h2>
 
-        {problemSets.length === 0 ? (
-          <p className="text-sm text-parchment-dim">
-            No published problem sets for this course yet.{" "}
+        <AssignForm sectionId={sectionId} problemSets={problemSets} videos={videos} lessons={lessons} />
+        {problemSets.length === 0 && (
+          <p className="text-xs text-parchment-dim">
+            No published problem sets for this course yet — you can still assign grammar lessons above, or{" "}
             <Link href="/admin/problem-sets" className="text-gold-400 hover:text-gold-300 transition-colors">
-              Create &amp; publish one
-            </Link>{" "}
-            first, then assign it here.
+              create &amp; publish a problem set
+            </Link>
+            .
           </p>
-        ) : (
-          <AssignForm sectionId={sectionId} problemSets={problemSets} videos={videos} />
         )}
 
         {assignments.length > 0 && (
           <ul className="space-y-2">
-            {assignments.map((a) => (
-              <li
-                key={a.id}
-                className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-parchment truncate">{a.title ?? a.problemSet.title}</p>
-                    <p className="text-xs text-parchment-dim mt-0.5">
-                      {a.title ? `${a.problemSet.title} · ` : ""}Due {fmtDue(a.dueAt)} · {a.points} pts · {a._count.submissions}/{gb.students.length} submitted
-                    </p>
+            {assignments.map((a) => {
+              const isLesson = Boolean(a.lessonSlug);
+              const title =
+                a.title ?? a.problemSet?.title ?? lessonTitle.get(a.lessonSlug ?? "") ?? a.lessonSlug ?? "Assignment";
+              const acedCount = isLesson
+                ? gb.students.filter((s) => acedByUser.get(s.userId)?.has(a.lessonSlug!)).length
+                : 0;
+              return (
+                <li
+                  key={a.id}
+                  className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-parchment truncate">{title}</p>
+                      <p className="text-xs text-parchment-dim mt-0.5">
+                        {isLesson
+                          ? `Lesson drill · auto-graded (ace = full credit) · ${a.points} pts · ${acedCount}/${gb.students.length} aced`
+                          : `${a.title && a.problemSet ? `${a.problemSet.title} · ` : ""}Due ${fmtDue(a.dueAt)} · ${a.points} pts · ${a._count.submissions}/${gb.students.length} submitted`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 text-sm">
+                      {a.problemSet && (
+                        <Link
+                          href={`/admin/problem-sets/${a.problemSet.id}`}
+                          className={
+                            a.problemSet.solutionsPublic
+                              ? "text-green-400 hover:text-green-300 transition-colors"
+                              : "text-amber-400 hover:text-amber-300 transition-colors"
+                          }
+                          title="Solution visibility is set on the problem set — click to change it"
+                        >
+                          {a.problemSet.solutionsPublic ? "solutions: public ↗" : "solutions: withheld ↗"}
+                        </Link>
+                      )}
+                      {isLesson ? (
+                        <Link
+                          href={`/drills/${a.lessonSlug}`}
+                          className="text-gold-400 hover:text-gold-300 transition-colors"
+                        >
+                          open drill →
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/admin/classes/${sectionId}/assignments/${a.id}`}
+                          className="text-gold-400 hover:text-gold-300 transition-colors"
+                        >
+                          Grade →
+                        </Link>
+                      )}
+                      <form action={deleteAssignment}>
+                        <input type="hidden" name="id" value={a.id} />
+                        <button type="submit" className="text-parchment-dim hover:text-red-400 transition-colors">
+                          delete
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 text-sm">
-                    {/* Visibility belongs to the problem set, not to this
-                        assignment — report it and link to the one real toggle
-                        rather than owning a second copy of the state. */}
-                    <Link
-                      href={`/admin/problem-sets/${a.problemSet.id}`}
-                      className={
-                        a.problemSet.solutionsPublic
-                          ? "text-green-400 hover:text-green-300 transition-colors"
-                          : "text-amber-400 hover:text-amber-300 transition-colors"
-                      }
-                      title="Solution visibility is set on the problem set — click to change it"
-                    >
-                      {a.problemSet.solutionsPublic ? "solutions: public ↗" : "solutions: withheld ↗"}
-                    </Link>
-                    <Link
-                      href={`/admin/classes/${sectionId}/assignments/${a.id}`}
-                      className="text-gold-400 hover:text-gold-300 transition-colors"
-                    >
-                      Grade →
-                    </Link>
-                    <form action={deleteAssignment}>
+
+                  {isLesson && gb.students.length > 0 && (
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs border-t border-crimson-800 pt-2">
+                      {gb.students.map((s) => {
+                        const done = acedByUser.get(s.userId)?.has(a.lessonSlug!) ?? false;
+                        return (
+                          <span key={s.userId} className={done ? "text-green-400" : "text-parchment-dim/70"}>
+                            {done ? "✦" : "○"} {s.name ?? s.email}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <details className="text-sm">
+                    <summary className="cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
+                      edit
+                    </summary>
+                    <form action={updateAssignment} className="mt-3 flex flex-wrap items-end gap-3">
                       <input type="hidden" name="id" value={a.id} />
-                      <button type="submit" className="text-parchment-dim hover:text-red-400 transition-colors">
-                        delete
+                      <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                        Label
+                        <input
+                          name="title"
+                          defaultValue={a.title ?? ""}
+                          placeholder={a.problemSet?.title ?? lessonTitle.get(a.lessonSlug ?? "") ?? ""}
+                          className="w-56 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                        Points
+                        <input
+                          name="points"
+                          type="number"
+                          min={0}
+                          defaultValue={a.points}
+                          className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-xs text-parchment-dim">
+                        Due date (empty = none)
+                        <input
+                          name="dueAt"
+                          type="datetime-local"
+                          defaultValue={toDueInput(a.dueAt)}
+                          className="bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                        />
+                      </label>
+                      <button
+                        type="submit"
+                        className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+                      >
+                        Save
                       </button>
                     </form>
-                  </div>
-                </div>
-
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
-                    edit
-                  </summary>
-                  <form action={updateAssignment} className="mt-3 flex flex-wrap items-end gap-3">
-                    <input type="hidden" name="id" value={a.id} />
-                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
-                      Label
-                      <input
-                        name="title"
-                        defaultValue={a.title ?? ""}
-                        placeholder={a.problemSet.title}
-                        className="w-56 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
-                      Points
-                      <input
-                        name="points"
-                        type="number"
-                        min={0}
-                        defaultValue={a.points}
-                        className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1 text-xs text-parchment-dim">
-                      Due date (empty = none)
-                      <input
-                        name="dueAt"
-                        type="datetime-local"
-                        defaultValue={toDueInput(a.dueAt)}
-                        className="bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-                      />
-                    </label>
-                    <button
-                      type="submit"
-                      className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
-                    >
-                      Save
-                    </button>
-                  </form>
-                </details>
-              </li>
-            ))}
+                  </details>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

@@ -11,6 +11,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { checkAdminPassword } from "@/lib/admin-auth";
+import { LESSON_SLUGS } from "@/lib/lessons";
 
 async function assertAdmin() {
   const store = await cookies();
@@ -135,18 +136,47 @@ export async function deleteProblemSet(formData: FormData) {
   revalidatePath(`/courses/${ps.courseId}`);
 }
 
+// Replace the set of grammar lessons a lecture covers (many-to-many via
+// VideoLesson). Sent as repeated "lessonSlug" fields; empty clears every link.
+// Mirrors setProblemSetVideos. Lets a lecture surface "practice this lesson" and
+// the drill show "covered by lecture X" once videos exist.
+export async function setVideoLessons(formData: FormData) {
+  await assertAdmin();
+  const videoId = String(formData.get("videoId") ?? "");
+  if (!videoId) throw new Error("Missing video");
+  const known = new Set(LESSON_SLUGS);
+  const slugs = [...new Set(formData.getAll("lessonSlug").map(String))].filter((s) => known.has(s));
+  const video = await db.video.findUnique({ where: { id: videoId }, select: { courseId: true } });
+  if (!video) throw new Error("Video not found");
+  await db.$transaction([
+    db.videoLesson.deleteMany({ where: { videoId } }),
+    db.videoLesson.createMany({ data: slugs.map((lessonSlug) => ({ videoId, lessonSlug })) }),
+  ]);
+  revalidatePath(`/admin/courses/${video.courseId}`);
+  revalidatePath(`/courses/${video.courseId}/${videoId}`);
+}
+
 // ---- Assignments (section-level) ----
 
 export async function createAssignment(formData: FormData) {
   await assertAdmin();
   const sectionId = String(formData.get("sectionId") ?? "");
-  const problemSetId = String(formData.get("problemSetId") ?? "");
+  // An assignment is EITHER a problem set/paper OR a grammar lesson drill.
+  const kind = String(formData.get("kind") ?? "problemSet");
+  const problemSetId = String(formData.get("problemSetId") ?? "").trim() || null;
+  const lessonSlug = String(formData.get("lessonSlug") ?? "").trim() || null;
   const points = Math.max(0, parseInt(String(formData.get("points") ?? "100"), 10) || 100);
   const videoId = String(formData.get("videoId") ?? "").trim() || null;
   const title = String(formData.get("title") ?? "").trim() || null;
   const dueAt = parseDueAt(formData.get("dueAt"));
-  if (!sectionId || !problemSetId) throw new Error("Section and problem set are required");
-  await db.assignment.create({ data: { sectionId, problemSetId, points, videoId, dueAt, title } });
+  if (!sectionId) throw new Error("Section is required");
+  const data =
+    kind === "lesson"
+      ? { sectionId, lessonSlug, points, videoId, dueAt, title }
+      : { sectionId, problemSetId, points, videoId, dueAt, title };
+  if (kind === "lesson" && !lessonSlug) throw new Error("Lesson is required");
+  if (kind !== "lesson" && !problemSetId) throw new Error("Problem set is required");
+  await db.assignment.create({ data });
   const section = await db.section.findUnique({ where: { id: sectionId }, select: { courseId: true } });
   revalidatePath(`/admin/classes/${sectionId}`);
   if (section) revalidatePath(`/courses/${section.courseId}`);

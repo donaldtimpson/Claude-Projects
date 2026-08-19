@@ -3,24 +3,33 @@
 import { useState } from "react";
 import { createAssignment } from "@/lib/assignments";
 
-// Create-assignment form. Selecting a problem set pre-fills the point total from
-// the set (still editable), so totals flow to the gradebook without retyping.
+// Create-assignment form. An assignment is EITHER a problem set / paper (URL
+// submission, instructor-scored) OR a grammar lesson drill (auto-graded: acing the
+// 30-run earns full points). Selecting a problem set pre-fills its point total.
 export default function AssignForm({
   sectionId,
   problemSets,
   videos,
+  lessons,
 }: {
   sectionId: string;
   problemSets: { id: string; title: string; points: number }[];
   videos: { id: string; title: string }[];
+  lessons: { slug: string; title: string }[];
 }) {
+  const [kind, setKind] = useState<"problemSet" | "lesson">("problemSet");
   const [problemSetId, setProblemSetId] = useState("");
+  const [lessonSlug, setLessonSlug] = useState("");
   const [points, setPoints] = useState(0);
 
-  function onSelect(id: string) {
+  function onSelectProblemSet(id: string) {
     setProblemSetId(id);
     const ps = problemSets.find((p) => p.id === id);
     setPoints(ps ? ps.points : 0);
+  }
+  function onSelectLesson(slug: string) {
+    setLessonSlug(slug);
+    setPoints((p) => p || 10); // lessons carry no points of their own — sensible default
   }
 
   const inputCls =
@@ -29,29 +38,62 @@ export default function AssignForm({
   return (
     <form action={createAssignment} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
       <input type="hidden" name="sectionId" value={sectionId} />
+      <input type="hidden" name="kind" value={kind} />
+
+      <div className="flex flex-wrap gap-4 text-sm text-parchment-dim">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" checked={kind === "problemSet"} onChange={() => setKind("problemSet")} />
+          Problem set / paper
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" checked={kind === "lesson"} onChange={() => setKind("lesson")} />
+          Grammar lesson (auto-graded)
+        </label>
+      </div>
+
       <input
         name="title"
-        placeholder="Label (optional, e.g. Homework 1) — defaults to the problem set's name"
+        placeholder="Label (optional, e.g. Homework 1) — defaults to the source's name"
         autoComplete="off"
         className={`w-full ${inputCls} placeholder:text-parchment-dim/60`}
       />
+
       <div className="flex flex-col sm:flex-row gap-2">
-        <select
-          name="problemSetId"
-          required
-          value={problemSetId}
-          onChange={(e) => onSelect(e.target.value)}
-          className={`flex-[2] ${inputCls}`}
-        >
-          <option value="" disabled>
-            Problem set…
-          </option>
-          {problemSets.map((ps) => (
-            <option key={ps.id} value={ps.id}>
-              {ps.title} ({ps.points} pts)
+        {kind === "problemSet" ? (
+          <select
+            name="problemSetId"
+            required
+            value={problemSetId}
+            onChange={(e) => onSelectProblemSet(e.target.value)}
+            className={`flex-[2] ${inputCls}`}
+          >
+            <option value="" disabled>
+              Problem set…
             </option>
-          ))}
-        </select>
+            {problemSets.map((ps) => (
+              <option key={ps.id} value={ps.id}>
+                {ps.title} ({ps.points} pts)
+              </option>
+            ))}
+          </select>
+        ) : (
+          <select
+            name="lessonSlug"
+            required
+            value={lessonSlug}
+            onChange={(e) => onSelectLesson(e.target.value)}
+            className={`flex-[2] ${inputCls}`}
+          >
+            <option value="" disabled>
+              Lesson…
+            </option>
+            {lessons.map((l) => (
+              <option key={l.slug} value={l.slug}>
+                {l.title}
+              </option>
+            ))}
+          </select>
+        )}
         <select name="videoId" defaultValue="" className={`flex-1 ${inputCls}`}>
           <option value="">(optional) relates to lecture…</option>
           {videos.map((v) => (
@@ -61,6 +103,7 @@ export default function AssignForm({
           ))}
         </select>
       </div>
+
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <label className="text-sm text-parchment-dim flex items-center gap-2">
           Points
@@ -73,10 +116,13 @@ export default function AssignForm({
             className={`w-20 ${inputCls}`}
           />
         </label>
-        <label className="text-sm text-parchment-dim flex items-center gap-2">
-          Due
-          <input name="dueAt" type="datetime-local" className={inputCls} />
-        </label>
+        {/* Lessons have no due date (pass any time) — only problem sets/papers do. */}
+        {kind === "problemSet" && (
+          <label className="text-sm text-parchment-dim flex items-center gap-2">
+            Due
+            <input name="dueAt" type="datetime-local" className={inputCls} />
+          </label>
+        )}
         <button
           type="submit"
           className="sm:ml-auto font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
