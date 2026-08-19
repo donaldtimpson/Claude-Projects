@@ -349,7 +349,7 @@ export default function DrillPlayer({
         {input.kind === "mapTap" ? (
           // Tap-to-locate: the map is the input. Big and prominent — click the named region.
           <div className="space-y-4">
-            <div className="text-2xl text-parchment text-center">
+            <div className="text-2xl text-parchment text-center whitespace-pre-line">
               <Tex value={current.prompt} />
             </div>
             <GeoMap
@@ -363,7 +363,7 @@ export default function DrillPlayer({
         ) : current.diagram?.kind === "geoMap" ? (
           // Identify: highlighted map on top, flag options below.
           <div className="space-y-4">
-            <div className="text-xl text-parchment text-center">
+            <div className="text-xl text-parchment text-center whitespace-pre-line">
               <Tex value={current.prompt} />
             </div>
             <GeoMap
@@ -378,7 +378,7 @@ export default function DrillPlayer({
           // diagram on the right — keeps the whole problem in one screenful.
           <div className="flex flex-col sm:flex-row sm:items-start gap-5">
             <div className="flex-1 min-w-0 space-y-5">
-              <div className="text-2xl text-parchment">
+              <div className="text-2xl text-parchment whitespace-pre-line">
                 <Tex value={current.prompt} />
               </div>
               {answerEl}
@@ -389,7 +389,7 @@ export default function DrillPlayer({
           </div>
         ) : (
           <>
-            <div className="text-xl text-parchment text-center py-2">
+            <div className="text-xl text-parchment text-center py-2 whitespace-pre-line">
               <Tex value={current.prompt} block />
             </div>
             {answerEl}
