@@ -1,0 +1,7 @@
+A full Intermediate Algebra course, taught over a year to high school students, covering the ground between a first algebra course and college algebra.
+
+The course opens with integers, rationals, order of operations, and the properties of algebra, then works through solving linear equations, absolute value equations, and applications; graphs and equations of lines; inequalities and absolute value inequalities; and systems of equations.
+
+The second half turns to properties of exponents, operations on polynomials, factoring, rational expressions, and radicals — including radicals and exponents together — before taking up quadratic equations by radicals, by exponents, and by the quadratic formula, along with their applications. It closes with functions and function operations, logarithms, compound interest, and an introduction to the trigonometric functions.
+
+Every topic gets the time it needs, and the test and midterm reviews are included as their own lectures.

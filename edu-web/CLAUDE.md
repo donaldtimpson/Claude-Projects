@@ -262,6 +262,37 @@ description.
 quiz + notes it already generates), and optionally persist chapters to render clickable seek
 points on the on-site lecture page.
 
+## Course descriptions (`scripts/push-course-descriptions.ts`)
+
+`Course.description` is **not** editable in the DB in any lasting way: `POST /api/youtube/sync`
+overwrites it from the YouTube playlist description on every run, so a direct DB edit is silently
+undone the next time anyone hits Sync. The **playlist is the source of truth**, and the durable way
+to change a course blurb is to write the playlist.
+
+Source text lives in `scripts/course-descriptions/{youtubePlaylistId}.txt` — one file per course,
+and **committed** (unlike the derived `scripts/chapters/`, `notes/`, `transcripts/` caches, this is
+hand-authored). A playlist with no file is left alone.
+
+```bash
+npx tsx scripts/push-course-descriptions.ts --dry-run              # always first
+npx tsx scripts/push-course-descriptions.ts
+npx tsx scripts/push-course-descriptions.ts --playlist <id>
+```
+
+Then re-sync so the DB picks it up (admin dashboard → Sync YouTube, or `POST /api/youtube/sync`
+with the `admin_auth` cookie).
+
+**Gotchas.** `playlists.update` with `part=snippet` REPLACES the snippet and *requires* the title,
+so `updatePlaylistDescription` (`lib/youtube-oauth.ts`) re-reads and resends it — same shape as
+`updateVideoDescription`. And the write is visible to the OAuth read path immediately but takes a
+minute or two to reach the API-key path `fetchChannelPlaylists` uses, so a sync fired straight after
+a push can pull the *old* text; re-run the sync if a description doesn't change.
+
+Descriptions are read by students in two places with different tolerances: YouTube (where a
+"visit the site for extra materials" link at the *end* is useful) and the iOS course screen (which
+leads with the description, so a bare URL on line one looks like a bug). Write for both — lead with
+the course, put links last.
+
 ## Catalog search (`lib/search.ts`, `scripts/`)
 
 Global full-text search across courses, lectures, published notes, and **transcripts** — so a topic

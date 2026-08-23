@@ -1,0 +1,3 @@
+This playlist is designed to mirror a standard college-level University Physics II course in Electricity & Magnetism. Unlike a typical E&M course, however, this series is structured to function as a fully stand-alone course, with integrated coverage of the necessary calculus and Newtonian mechanics as they are needed throughout the material.
+
+To get the most out of this course, or to view extra materials, please visit: https://timpson-lyceum.vercel.app/courses/cmp4n6v650004h3uxd68xbvp8

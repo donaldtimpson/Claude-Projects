@@ -111,3 +111,62 @@ export async function updateVideoDescription(
   });
   if (!res.ok) throw new Error(`videos.update failed: ${res.status} ${await res.text()}`);
 }
+
+// --- Playlists (course descriptions) ---------------------------------------
+//
+// A Course's description mirrors its YouTube playlist description, and
+// app/api/youtube/sync overwrites the DB copy from YouTube on every run — so the
+// playlist is the only durable place to edit it. Same replace-the-whole-snippet
+// caveat as videos: playlists.update with part=snippet requires the title, and
+// clears anything omitted.
+
+export type PlaylistSnippet = {
+  title: string;
+  description: string;
+  defaultLanguage?: string;
+};
+
+export async function getPlaylistSnippet(playlistId: string): Promise<PlaylistSnippet> {
+  const token = await getAccessToken();
+  const url = new URL(`${BASE}/playlists`);
+  url.searchParams.set("part", "snippet");
+  url.searchParams.set("id", playlistId);
+  const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`playlists.list failed: ${res.status} ${await res.text()}`);
+  const data = (await res.json()) as { items?: { snippet: PlaylistSnippet }[] };
+  const snippet = data.items?.[0]?.snippet;
+  if (!snippet) {
+    throw new Error(`Playlist not found or not owned by the authed channel: ${playlistId}`);
+  }
+  return snippet;
+}
+
+export async function updatePlaylistDescription(
+  playlistId: string,
+  newDescription: string,
+): Promise<void> {
+  if (newDescription.length > MAX_DESCRIPTION_LENGTH) {
+    throw new Error(
+      `Description for ${playlistId} is ${newDescription.length} chars (> ${MAX_DESCRIPTION_LENGTH}).`,
+    );
+  }
+  const snippet = await getPlaylistSnippet(playlistId);
+  const body = {
+    id: playlistId,
+    snippet: {
+      title: snippet.title,
+      description: newDescription,
+      ...(snippet.defaultLanguage ? { defaultLanguage: snippet.defaultLanguage } : {}),
+    },
+  };
+
+  const token = await getAccessToken();
+  const url = new URL(`${BASE}/playlists`);
+  url.searchParams.set("part", "snippet");
+  const res = await fetch(url.toString(), {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`playlists.update failed: ${res.status} ${await res.text()}`);
+}

@@ -1,0 +1,5 @@
+A college-level College Algebra course that does not start where most algebra courses start. Before any algebra, we build the logic the subject is written in — propositional logic, then predicate logic — and then state the ten field axioms and prove the basic theorems of arithmetic from them. Only then does the algebra begin, on a foundation the student has actually seen laid.
+
+From there the course works through the standard material: real numbers and decimals, the four operations, absolute value, inequalities and the real number line, exponents, monomials and polynomials, products of binomials, factoring, rational expressions, radicals and rational exponents, and rationalizing denominators. It then takes up sets and linear inequalities in one variable, coordinates in the plane, inclination and slope, functions and relations, and equations of lines — with a look at the basics of trigonometry along the way.
+
+The course is in progress.

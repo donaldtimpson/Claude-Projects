@@ -1,0 +1,7 @@
+An undergraduate course in the Theory of Computation, taken from first principles to the limits of what a machine can decide.
+
+We start with the tools: propositional and predicate logic, set theory and functions, and enough graph theory to work with machines as diagrams. Then the hierarchy, in order — finite automata, nondeterministic finite automata, and regular expressions, with the pumping lemma to prove a language is not regular; right linear grammars, context-free grammars, and pushdown automata, with a second pumping lemma for the languages that are not context-free.
+
+The last third is Turing machines and their variants, the Church-Turing thesis and what it means to define "algorithm" at all, decidable and undecidable languages, and reducibility — ending with proofs that particular problems cannot be solved by any machine whatsoever.
+
+No prior computer science is assumed. The logic and set theory you need are built in the opening lectures.
