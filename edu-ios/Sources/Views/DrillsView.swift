@@ -84,7 +84,10 @@ struct DrillsView: View {
             sectionHeader("Categories")
             VStack(spacing: 10) {
                 ForEach(Self.categories, id: \.title) { cat in
-                    NavigationLink(value: cat) { categoryRow(cat) }.buttonStyle(.lyceumPress)
+                    NavigationLink(value: cat) { categoryRow(cat) }
+                        .buttonStyle(.lyceumPress)
+                        // Handle for the screenshot UI test (tools/screenshots.sh).
+                        .accessibilityIdentifier("drillCategoryRow")
                 }
             }
         }
@@ -220,6 +223,7 @@ struct DrillRow: View {
             .lyceumCard()
         }
         .buttonStyle(.lyceumPress)
+        .accessibilityIdentifier("drillRow")
     }
 }
 

@@ -142,6 +142,7 @@ struct LectureRow: View {
             }
         }
         .lyceumCard()
+        .accessibilityIdentifier("lectureRow")
     }
 
     private var titleText: Text {
@@ -178,6 +179,9 @@ struct CourseRow: View {
             }
         }
         .lyceumCard()
+        // Stable handle for the screenshot UI test, which can't tell a course row
+        // from a tab-bar button by shape alone.
+        .accessibilityIdentifier("courseRow")
     }
 
     private var titleText: Text {

@@ -49,6 +49,21 @@ targets:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
 
+  # Drives the app on a simulator and captures the App Store screenshots. Kept out
+  # of the Lyceum scheme so a normal build/test run doesn't launch the UI; run it
+  # with tools/screenshots.sh.
+  LyceumScreenshots:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Screenshots
+    dependencies:
+      - target: Lyceum
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.timpsonlyceum.LyceumScreenshots
+        TEST_TARGET_NAME: Lyceum
+
   LyceumTests:
     type: bundle.unit-test
     platform: iOS
@@ -61,6 +76,16 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.timpsonlyceum.LyceumTests
 
 schemes:
+  LyceumScreenshots:
+    build:
+      targets:
+        Lyceum: all
+        LyceumScreenshots: [test]
+    test:
+      config: Debug
+      targets:
+        - LyceumScreenshots
+
   Lyceum:
     build:
       targets:

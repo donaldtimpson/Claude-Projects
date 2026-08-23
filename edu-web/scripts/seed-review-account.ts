@@ -16,7 +16,9 @@ import { PrismaClient } from "@prisma/client";
 
 const REVIEW_EMAIL = "appreview@timpsonlyceum.com";
 const REVIEW_PASSWORD = "LyceumReview2026!";
-const REVIEW_NAME = "App Review";
+// Shows on the Profile screen, which is also an App Store screenshot — so it
+// wants to read like a student, not like a test fixture.
+const REVIEW_NAME = "Scholar";
 const REVIEW_HANDLE = "Peripatetic";
 
 const local = process.argv.includes("--local");
