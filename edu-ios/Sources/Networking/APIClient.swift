@@ -38,6 +38,11 @@ actor APIClient {
         try await request(path, method: "DELETE", body: Optional<Int>.none, auth: auth)
     }
 
+    // DELETE with a JSON body — account deletion re-sends the password to confirm.
+    func delete<T: Decodable, B: Encodable>(_ path: String, body: B, auth: Bool = true) async throws -> T {
+        try await request(path, method: "DELETE", body: body, auth: auth)
+    }
+
     // Replays an already-encoded JSON body (used by the offline write queue).
     func postRaw(_ path: String, jsonBody: Data, retry: Bool = true) async throws {
         guard let url = URL(string: v1 + path) else { throw APIError(status: 0, message: "Bad URL") }

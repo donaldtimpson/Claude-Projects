@@ -25,6 +25,14 @@ final class LessonProgress {
 
     private func key(_ userId: String, _ slug: String) -> String { "\(userId):\(slug)" }
 
+    // Wipe every local aced mark (account deletion). Rows are keyed by user id, so
+    // leaving them would hand the next sign-in on this device someone else's ✦.
+    func purgeAll() {
+        serverAced = [:]
+        try? ctx.delete(model: LessonAced.self)
+        try? ctx.save()
+    }
+
     private func row(_ key: String) -> LessonAced? {
         var d = FetchDescriptor<LessonAced>(predicate: #Predicate { $0.key == key })
         d.fetchLimit = 1

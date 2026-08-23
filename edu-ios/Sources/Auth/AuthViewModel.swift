@@ -54,6 +54,33 @@ final class AuthViewModel: ObservableObject {
         user = res.user
     }
 
+    // Permanently delete the account, server-side and on this device. App Store
+    // Review Guideline 5.1.1(v) requires this to be reachable from inside the app
+    // (Profile -> Delete Account), and to actually delete rather than deactivate.
+    // The password is re-sent so a stolen access token alone can't wipe an account.
+    func deleteAccount(password: String) async throws {
+        struct Deleted: Decodable { let deleted: Bool }
+        let _: Deleted = try await APIClient.shared.delete(
+            "/me", body: PasswordBody(password: password)
+        )
+        purgeLocalData()
+        TokenStore.clear()
+        user = nil
+    }
+
+    // On-device state outlives the server row, and every local store is keyed by
+    // user id — so without this the next account signed in on this device would
+    // inherit the deleted student's mastery boxes, ✦ marks, and high scores.
+    private func purgeLocalData() {
+        WriteQueueManager.shared.purgeAll()
+        LessonProgress.shared.purgeAll()
+        DrillMastery.shared.purgeAll()
+        let defaults = UserDefaults.standard
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("rapidbest_") {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
     func logout() async {
         if let rt = TokenStore.refreshToken {
             struct OK: Codable { let ok: Bool? }

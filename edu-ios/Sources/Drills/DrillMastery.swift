@@ -35,6 +35,12 @@ final class DrillMastery {
         "\(userId):\(slug):\(item)"
     }
 
+    // Wipe every local Leitner box (account deletion) — see LessonProgress.purgeAll.
+    func purgeAll() {
+        try? ctx.delete(model: DrillItemMastery.self)
+        try? ctx.save()
+    }
+
     private func row(_ key: String) -> DrillItemMastery? {
         var d = FetchDescriptor<DrillItemMastery>(predicate: #Predicate { $0.key == key })
         d.fetchLimit = 1

@@ -42,6 +42,11 @@ struct CredentialsBody: Encodable {
     let password: String
 }
 
+// Re-authentication for a destructive action (DELETE /me).
+struct PasswordBody: Encodable {
+    let password: String
+}
+
 struct RegisterBody: Encodable {
     let name: String
     let email: String

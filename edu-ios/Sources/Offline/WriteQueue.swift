@@ -79,6 +79,15 @@ final class WriteQueueManager: ObservableObject {
         refreshCount()
     }
 
+    // Drop every queued write. Used when an account is deleted: unsent progress
+    // belongs to an account that no longer exists, and replaying it under the next
+    // sign-in on this device would attribute it to the wrong student.
+    func purgeAll() {
+        try? context.delete(model: QueuedWrite.self)
+        try? context.save()
+        refreshCount()
+    }
+
     private func refreshCount() {
         pending = (try? context.fetchCount(FetchDescriptor<QueuedWrite>())) ?? 0
     }

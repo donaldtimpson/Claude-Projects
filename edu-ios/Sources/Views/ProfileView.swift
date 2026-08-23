@@ -4,6 +4,7 @@ struct ProfileView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var me: MeResponse?
     @State private var badges: [Badge] = []
+    @State private var showDelete = false
 
     var body: some View {
         signedIn
@@ -55,11 +56,32 @@ struct ProfileView: View {
                     }
                 }
 
+                // Reachable from inside the app, not just the App Store listing —
+                // reviewers look for it, and students shouldn't have to.
+                HStack(spacing: 18) {
+                    Link("Privacy Policy", destination: AppConfig.assetURL("/privacy")!)
+                    Link("Support", destination: AppConfig.assetURL("/support")!)
+                }
+                .font(.callout)
+                .tint(Theme.gold400)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+
                 SecondaryButton(title: "Sign out") { Task { await auth.logout() } }
+
+                // Account deletion has to be reachable from inside the app (App Store
+                // Review Guideline 5.1.1(v)). Kept quiet and last so nobody taps it by
+                // accident on the way to signing out.
+                Button("Delete Account") { showDelete = true }
+                    .font(.callout)
+                    .tint(Theme.danger)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
             }
             .padding()
         }
         .background(Theme.parchment)
+        .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
         .task { await load() }
     }
 

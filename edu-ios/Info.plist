@@ -10,6 +10,11 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<!-- The app's only cryptography is HTTPS (URLSession) and Keychain storage,
+	     both exempt from US export regulations. Declaring it here answers the
+	     export-compliance question once instead of on every upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Cinzel.ttf</string>
