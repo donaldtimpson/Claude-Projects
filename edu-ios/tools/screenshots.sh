@@ -19,11 +19,26 @@ export REVIEW_EMAIL="${REVIEW_EMAIL:-appreview@timpsonlyceum.com}"
 export REVIEW_PASSWORD="${REVIEW_PASSWORD:-LyceumReview2026!}"
 export API_BASE_URL="${API_BASE_URL:-https://timpson-lyceum.vercel.app}"
 
-# slug:device-name-prefix pairs, one per required display size. The prefix is
-# matched against the installed simulators and the newest runtime wins, so this
-# survives Xcode updates renaming the current top-end device.
+# slug:device-name-prefix pairs, one per display size App Store Connect offers a
+# slot for. The prefix is matched against the installed simulators and the newest
+# runtime wins, so this survives Xcode updates renaming the current top-end device.
+#
+# Two iPhone sizes on purpose: App Store Connect's iPhone slot varies by account
+# and shows EITHER 6.9" or 6.5". Files whose pixel size doesn't match the slot are
+# rejected outright, so capture both and upload whichever fits. The device -> pixel
+# mapping is easy to get wrong:
+#   iPhone 16/17 Pro Max  1320x2868  (6.9" slot)
+#   iPhone 13/12 Pro Max  1284x2778  (accepted by the 6.5" slot)
+#   iPhone 14 Pro Max     1290x2796  (accepted by NEITHER — do not use)
+#   iPhone 11 Pro Max     1242x2688  (also accepted by the 6.5" slot)
+#
+# iPhone 13 Pro Max may need creating first (it is not a default simulator):
+#   xcrun simctl create "iPhone 13 Pro Max" \
+#     com.apple.CoreSimulator.SimDeviceType.iPhone-13-Pro-Max \
+#     com.apple.CoreSimulator.SimRuntime.iOS-18-6
 DEVICES=(
-  "iphone-6.9:iPhone|Pro Max"
+  "iphone-6.9:iPhone|17 Pro Max"
+  "iphone-6.5:iPhone|13 Pro Max"
   "ipad-13:iPad Pro 13-inch"
 )
 
