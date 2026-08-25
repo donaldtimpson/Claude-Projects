@@ -5,12 +5,22 @@ against the state of the repo at that commit.
 
 ---
 
-## 0. The one thing blocking everything: enrollment
+## 0. Enrollment — done
 
-You need a **paid Apple Developer Program** membership of your own. The only
-paid team on this Mac is `busybusy, Inc` (`J7WN5UF5X3`), your employer's — you
-can't ship a personal app under it, and the `LGF933VBP2` currently baked into
-`project.yml` is a free personal team, which cannot upload to App Store Connect.
+**Settled as of 2026-08-23.** The individual membership is active and the team
+ID did **not** change: enrolling with the same personal Apple ID upgraded the
+existing personal team in place, so `LGF933VBP2` in `project.yml` and
+`ExportOptions.plist` is correct and needs no edit. (An earlier draft of this
+page predicted a new ID. It was wrong — noted here so nobody "fixes" a file that
+is already right.) Your employer's `busybusy, Inc` (`J7WN5UF5X3`) is untouched
+and unused.
+
+Build **1.0.0 (1)** uploaded successfully on 2026-08-23; the app's Apple ID is
+**6804510418**. Distribution uses Xcode's **cloud-managed** signing, so the
+distribution certificate lives with Xcode and will not appear in
+`security find-identity` — its absence there is not a problem.
+
+The original instructions, kept for the record:
 
 1. Go to <https://developer.apple.com/programs/enroll/> and sign in with your
    **personal** Apple ID (not the one tied to busybusy work).
@@ -25,12 +35,11 @@ Two consequences worth knowing before you click:
   not "The Timpson Lyceum". Only an organization membership can display a
   business name. If that matters, that's the fork in the road — say so and we
   can look at the org path instead.
-- **Your team ID will change.** A paid individual team gets a different ID from
-  the personal team. Once enrolled, update `DEVELOPMENT_TEAM` in
-  `edu-ios/project.yml` and run `xcodegen generate`. The ID is at
-  <https://developer.apple.com/account> → Membership Details.
-
-Nothing else on this page can be done until that clears, so start it first.
+- **Your team ID may change.** It did not here — the personal team was upgraded
+  in place — but if you ever do land on a new ID, it goes in `DEVELOPMENT_TEAM`
+  in `edu-ios/project.yml` and `teamID` in `ExportOptions.plist`, followed by
+  `xcodegen generate`. The ID is at <https://developer.apple.com/account> →
+  Membership Details.
 
 ---
 
@@ -267,11 +276,10 @@ App Store Connect and **Submit for Review**. First reviews usually land within
 
 ## 7. TestFlight beta testing
 
-TestFlight needs exactly what a submission needs: **a build uploaded to App
-Store Connect under a paid team** (§0, §6). It is not a way around that gate.
-The only Lyceum archive on this Mac is signed `Apple Development` under the free
-team `LGF933VBP2`, and that can be distributed to nobody — not testers, not
-reviewers.
+TestFlight needs what a submission needs: **a build uploaded to App Store
+Connect under a paid team** (§0, §6). You already have one — **1.0.0 (1)**,
+uploaded 2026-08-23 — so everything below is App Store Connect work, with no new
+archive required. That build expires **2026-11-21**, 90 days after upload.
 
 Two kinds of testing, and the difference is the whole story:
 
