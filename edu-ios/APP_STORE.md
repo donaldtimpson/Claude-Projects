@@ -132,6 +132,17 @@ First release.
 
 **Category** — Primary: `Education`. Secondary: `Reference`.
 
+**License Agreement** — leave it on Apple's **standard EULA**. The app is free
+with no purchases, and there is no `/terms` page on the site to align a custom
+one with. A custom EULA would still have to carry Apple's minimum terms, so it
+buys nothing. Revisit only if paid features or content-use terms ever appear.
+It has no effect on TestFlight.
+
+**Agreements** — the **Free Apps** agreement in Business → Agreements is active,
+but Apple reissues it from time to time. When it does, submissions *and* external
+TestFlight distribution stop until the Account Holder accepts the new version.
+If something refuses to submit for no visible reason, look there first.
+
 **Copyright**
 
 ```
