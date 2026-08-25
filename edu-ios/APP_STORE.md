@@ -684,18 +684,18 @@ below Sign-In Information and Contact Information. Apple's helper text on that
 box talks about Chinese permits for news and book apps, which makes it look like
 the wrong field — it isn't. That is the notes App Review reads. Watch the
 character counter after pasting; it silently drops anything over the cap. The full items 3–7 above come to 4,624 characters and the Notes
-field caps at **4,000**, so paste the condensed version below (3,924) there, and
+field caps at **4,000**, so paste the condensed version below (3,912) there, and
 put the full answers in the Resolution Center reply, which has more room.
 
 This replaces the shorter notes in §5 entirely.
 
 ```
 DEMO ACCOUNT (sign-in is required for all features)
-  email:    appreview@timpsonlyceum.com
-  password: LyceumReview2026!
-Pre-populated with watched lectures, completed quizzes, review cards due today,
-and earned badges, so no screen appears empty. No sample files or configuration
-are needed.
+email: appreview@timpsonlyceum.com
+password: LyceumReview2026!
+The account is pre-populated with watched lectures, completed quizzes, review
+cards due today, and earned badges, so no screen appears empty. No sample files
+or configuration are needed.
 
 WHAT THE APP IS
 A free educational app: a complete classical curriculum in mathematics, physics,
@@ -721,22 +721,24 @@ The app is entirely free: no purchases, no subscriptions, no advertising, no
 paid tier, and no content withheld.
 
 WHERE THE FEATURES ARE
-  Learn tab   : courses, lectures, notes, quizzes
-  Drills tab  : 62 drills, in practice / timed / learn modes
-  Review tab  : today's spaced-repetition deck across all courses
-  Profile tab : progress, badges, streak, and Delete Account
+Learn tab: courses, lectures, notes, quizzes
+Drills tab: 62 drills, in practice / timed / learn modes
+Review tab: today's spaced-repetition deck across all courses
+Profile tab: progress, badges, streak, and Delete Account
+
 Account deletion requires typing the word DELETE and re-entering the password,
 then permanently removes the account and all coursework attached to it, on the
 server and on the device. A network connection is needed to play a lecture,
 because video is served from YouTube; the drills work offline.
 
 EXTERNAL SERVICES
-  YouTube (Google LLC) - lecture playback via the IFrame Player API. All
-    videos are my own, on my own channel.
-  Vercel - hosting for the backend web application and its API.
-  Neon - the managed PostgreSQL database behind that API.
-  jsDelivr - CDN for the KaTeX and marked libraries that render mathematics in
-    the lecture-notes view.
+YouTube (Google LLC) - lecture playback via the IFrame Player API. All videos
+are my own, published on my own channel.
+Vercel - hosting for the backend web application and its API.
+Neon - the managed PostgreSQL database behind that API.
+jsDelivr - CDN for the KaTeX and marked libraries that render mathematics in the
+lecture-notes view.
+
 Authentication is first-party: bcrypt-hashed passwords and JWT sessions on our
 own backend. No third-party identity provider, no social login, and Sign in with
 Apple is not enabled in this version. There are no payment processors, no AI
