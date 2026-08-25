@@ -328,6 +328,47 @@ dt323259@gmail.com
 (`appreview@timpsonlyceum.com` / `LyceumReview2026!`) so Beta App Review can get
 in. Real testers should make their own accounts, or their progress collides.
 
+### Beta App Review Information
+
+Same page as Test Information, lower down, and it is the block that actually
+gets a build through Beta App Review. Distinct from §5's App Review notes,
+though the content overlaps.
+
+| Field | Value |
+| --- | --- |
+| First Name | `Donald` |
+| Last Name | `Timpson` |
+| Email | `dt323259@gmail.com` |
+| Phone Number | your own |
+| Sign-in required | **Yes** |
+| User Name | `appreview@timpsonlyceum.com` |
+| Password | `LyceumReview2026!` |
+
+**Review Notes**
+
+```
+Sign-in is required for everything in the app. Demo account:
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
+
+This is a free educational app for a classical curriculum in mathematics,
+physics, logic, and philosophy. There are no purchases, no subscription, and
+no ads.
+
+Lecture video is served from YouTube, so the device needs a network connection
+to play a lecture; the practice drills run on-device and work offline.
+
+Account deletion is at Profile -> Delete Account. It asks for the typed word
+DELETE and the password, then permanently removes the account and all of its
+coursework.
+
+The same courses are also on the web at https://timpson-lyceum.vercel.app.
+```
+
+Beta App Review hits the same login wall App Review does, so confirm the demo
+account still signs in before submitting — re-seed from `edu-web` with
+`npx tsx scripts/seed-review-account.ts --reset` if unsure.
+
 ### What to Test
 
 Per build, and it's the field testers actually read. For 1.0.0:
