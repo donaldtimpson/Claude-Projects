@@ -678,7 +678,12 @@ license or authorization to document.
 ### The Notes field
 
 Apple asked that this live in App Review Information → **Notes** for future
-submissions. The full items 3–7 above come to 4,624 characters and the Notes
+submissions. **Where it is:** the very bottom of the version page
+(`/distribution/ios/version/inflight`), in the **App Review Information** block,
+below Sign-In Information and Contact Information. Apple's helper text on that
+box talks about Chinese permits for news and book apps, which makes it look like
+the wrong field — it isn't. That is the notes App Review reads. Watch the
+character counter after pasting; it silently drops anything over the cap. The full items 3–7 above come to 4,624 characters and the Notes
 field caps at **4,000**, so paste the condensed version below (3,924) there, and
 put the full answers in the Resolution Center reply, which has more room.
 
