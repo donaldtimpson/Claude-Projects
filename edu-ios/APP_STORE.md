@@ -553,13 +553,13 @@ paste:
 
 ```
 Tested on physical hardware:
-  - <iPhone model>, iOS <version>   (via TestFlight, build 1.0.0 (1))
+  - iPhone 14 Pro Max, iOS 26.6   (installed via TestFlight)
 
 Tested in Simulator (Xcode 26):
   - iPhone 17 Pro Max, iOS 26
   - iPad Pro 13-inch (M4), iPadOS 26
 
-Minimum supported version is iOS 18.0.
+The app is universal (iPhone and iPad). Minimum supported version is iOS 18.0.
 ```
 
 Simulator coverage is worth listing but does not substitute for the physical
