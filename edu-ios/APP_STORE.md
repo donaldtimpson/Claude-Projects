@@ -175,7 +175,7 @@ There is no analytics SDK and no advertising identifier in the app.
 **Age rating.** Answer the questionnaire honestly. The one that matters: the app
 **does** carry user-generated content — students can post lecture comments from
 inside it. Declaring that will likely land the rating at 13+ rather than 4+.
-See the warning in §7.
+See the warning in §8.
 
 **Export compliance** is already answered in code:
 `ITSAppUsesNonExemptEncryption = false` in `Info.plist`, because the only
@@ -265,7 +265,113 @@ App Store Connect and **Submit for Review**. First reviews usually land within
 
 ---
 
-## 7. Known exposure, submitted on purpose
+## 7. TestFlight beta testing
+
+TestFlight needs exactly what a submission needs: **a build uploaded to App
+Store Connect under a paid team** (§0, §6). It is not a way around that gate.
+The only Lyceum archive on this Mac is signed `Apple Development` under the free
+team `LGF933VBP2`, and that can be distributed to nobody — not testers, not
+reviewers.
+
+Two kinds of testing, and the difference is the whole story:
+
+| | Internal | External |
+| --- | --- | --- |
+| Who | Up to 100 people, each of whom must be a user on your App Store Connect team | Up to 10,000 people, invited by email or by a public link |
+| Beta App Review | **None.** Testable as soon as the build finishes processing | **Required** for the first build of a version; later builds of the same version usually clear automatically |
+| Test Information needed | Feedback email | All of it — description, feedback email, demo account |
+| Use it for | Yourself, on your own devices; one or two people you trust with team access | Actual students |
+
+Every build expires **90 days** after upload, for testers as well as for you.
+Each internal tester can install on up to 30 devices.
+
+### Test Information
+
+App Store Connect → your app → **TestFlight** → **Test Information**. Filled in
+once for the app, not per build.
+
+**Beta App Description**
+
+```
+The Timpson Lyceum is a free classical curriculum in mathematics, physics, logic,
+and philosophy — thirteen complete courses and 267 lectures, with written notes,
+quizzes, daily spaced review, and offline practice drills.
+
+This is the first build. I am looking for two things: whether anything is broken
+on your device, and whether the app is actually pleasant to study in. Lecture
+video streams from YouTube, so playback needs a connection; the drills run
+entirely on-device and work in airplane mode.
+
+Nothing in the app costs money and there are no ads. An account is required
+because it holds your progress, your review schedule, and your streak. You can
+delete it, and everything attached to it, from Profile -> Delete Account.
+```
+
+**Feedback Email**
+
+```
+dt323259@gmail.com
+```
+
+**Privacy Policy URL** — `https://timpson-lyceum.vercel.app/privacy`
+(same as the listing, §2).
+
+**Sign-in required** — Yes. Give the same demo account as §5
+(`appreview@timpsonlyceum.com` / `LyceumReview2026!`) so Beta App Review can get
+in. Real testers should make their own accounts, or their progress collides.
+
+### What to Test
+
+Per build, and it's the field testers actually read. For 1.0.0:
+
+```
+Everything is new, so anything you hit is worth reporting. If you want a route
+through it:
+
+1. Make an account, then open Learn and start any lecture. Does the video play,
+   and does your place get remembered when you come back?
+2. Open the notes under a lecture. The mathematics should be typeset, not raw
+   markup — tell me if you see stray backslashes or dollar signs.
+3. Take a lecture quiz. Every answer has an explanation; say so if one is wrong
+   or badly worded.
+4. Come back tomorrow and open Review. Cards from yesterday's quiz should be
+   waiting.
+5. Try a few Practice Drills, including in airplane mode. Scores should sync
+   once you are back online.
+
+Send anything odd to the feedback address, or use the screenshot-and-share
+button in TestFlight. Device model and iOS version help.
+```
+
+### Getting testers in
+
+**Internal.** App Store Connect → **Users and Access** → invite the person by
+email (role of Developer or App Manager is enough), then **TestFlight** →
+Internal Testing → create a group → add them. They see the build within minutes
+of it processing, with no review. This is the fastest way to prove the pipeline
+works — add yourself first.
+
+**External.** TestFlight → External Testing → create a group ("Students", say),
+then either add emails one at a time or turn on the **public link** and cap it
+at a number you're willing to support. The first build goes to Beta App Review
+before any of them can install; that is usually same-day to 48 hours, and it is
+a lighter review than App Store review — but the demo account above has to work,
+or it fails there for the same reason a submission would.
+
+The public link is the one that fits your situation: it is an ordinary URL, so
+it can go in a YouTube community post or a video description, and anyone who
+taps it gets the build. Everyone needs the free **TestFlight** app from the App
+Store first.
+
+### Between rounds
+
+Every upload needs a **build number higher than the last** —
+`CURRENT_PROJECT_VERSION` in `project.yml`, same rule as §6. Testers get
+1.0.0 (2) as an update; you do not create a new version for it.
+
+---
+
+## 8. Known exposure, submitted on purpose
 
 Both of these were raised and you chose to submit as-is. Recording them so a
 rejection is not a surprise, and so the fix is already scoped.
@@ -288,7 +394,7 @@ Neither is a reason not to submit. Each costs a review cycle if it's caught.
 
 ---
 
-## 8. Small cleanups, not blockers
+## 9. Small cleanups, not blockers
 
 - Course descriptions start with a raw URL — the Electricity & Magnetism course
   opens with "To get the most out of this course... visit
