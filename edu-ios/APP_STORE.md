@@ -675,12 +675,91 @@ No third-party protected material is reproduced in the app, so there is no
 license or authorization to document.
 ```
 
-### The Notes field, going forward
+### The Notes field
 
-Apple asked that this live in App Review Information → Notes for future
-submissions. Replace the shorter §5 notes with items 3, 4, 5, 6, and 7 above,
-run together, keeping the demo credentials at the top where a reviewer sees them
-first.
+Apple asked that this live in App Review Information → **Notes** for future
+submissions. The full items 3–7 above come to 4,624 characters and the Notes
+field caps at **4,000**, so paste the condensed version below (3,924) there, and
+put the full answers in the Resolution Center reply, which has more room.
+
+This replaces the shorter notes in §5 entirely.
+
+```
+DEMO ACCOUNT (sign-in is required for all features)
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
+Pre-populated with watched lectures, completed quizzes, review cards due today,
+and earned badges, so no screen appears empty. No sample files or configuration
+are needed.
+
+WHAT THE APP IS
+A free educational app: a complete classical curriculum in mathematics, physics,
+logic, and philosophy. Thirteen courses and 267 video lectures, from
+Intermediate Algebra through Calculus, Real Analysis, General Topology, and
+Computation Theory; University Physics I and II; First-Order Predicate Logic;
+and surveys of the History of Philosophy and the History of Rome. I am a
+teacher, and these are recordings of the courses I teach.
+
+Each lecture carries written notes with typeset mathematics and a ten-question
+quiz with an explanation on every answer. Questions the student answers enter a
+daily spaced-repetition review deck across all their courses. There are also 62
+practice drills in grammar, geography, and arithmetic that run entirely
+on-device and work offline.
+
+AUDIENCE AND VALUE
+High-school and college students studying these subjects, and self-directed
+adult learners. Free lecture material online is normally an unordered playlist
+with no notes, no assessment, and no retention schedule. This is a sequenced
+course of study with all three.
+
+The app is entirely free: no purchases, no subscriptions, no advertising, no
+paid tier, and no content withheld.
+
+WHERE THE FEATURES ARE
+  Learn tab   : courses, lectures, notes, quizzes
+  Drills tab  : 62 drills, in practice / timed / learn modes
+  Review tab  : today's spaced-repetition deck across all courses
+  Profile tab : progress, badges, streak, and Delete Account
+Account deletion requires typing the word DELETE and re-entering the password,
+then permanently removes the account and all coursework attached to it, on the
+server and on the device. A network connection is needed to play a lecture,
+because video is served from YouTube; the drills work offline.
+
+EXTERNAL SERVICES
+  YouTube (Google LLC) - lecture playback via the IFrame Player API. All
+    videos are my own, on my own channel.
+  Vercel - hosting for the backend web application and its API.
+  Neon - the managed PostgreSQL database behind that API.
+  jsDelivr - CDN for the KaTeX and marked libraries that render mathematics in
+    the lecture-notes view.
+Authentication is first-party: bcrypt-hashed passwords and JWT sessions on our
+own backend. No third-party identity provider, no social login, and Sign in with
+Apple is not enabled in this version. There are no payment processors, no AI
+services, and no analytics, advertising, or attribution SDKs. The app requests
+no IDFA, does not present App Tracking Transparency, and requests no
+sensitive-data or device permissions of any kind.
+
+USER-GENERATED CONTENT
+None. This version has no comments, messaging, uploads, or user profiles visible
+to other users.
+
+REGIONAL DIFFERENCES
+None. Identical features and identical content in every region, English only, no
+region-locked material and no geographic restrictions.
+
+REGULATED INDUSTRY AND THIRD-PARTY MATERIAL
+Neither applies. This is general educational material, not accredited
+instruction; it grants no credential and makes no medical, legal, or financial
+claims. All content is my own or public domain: the lectures are my own
+recordings, the notes and quiz questions are written by me, the grammar course
+follows Harvey's "Elementary Grammar and Composition" (1880, public domain), and
+the Linear Algebra problem sets are original problems written by me. No
+third-party protected material is reproduced, so there is nothing to license.
+
+TESTED ON
+iPhone 14 Pro Max, iOS 26.6 (physical device, installed via TestFlight).
+Simulator: iPhone 17 Pro Max (iOS 26), iPad Pro 13-inch M4 (iPadOS 26).
+Universal app (iPhone and iPad); minimum supported version is iOS 18.0.
+```
 
 ---
-
