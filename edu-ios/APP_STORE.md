@@ -187,15 +187,16 @@ page, and they need to keep matching.
 | Contact Info → Name | Optional display name |
 | Identifiers → User ID | The account row |
 | Usage Data → Product Interaction | Watch progress, quiz and drill attempts, reviews, streak |
-| User Content → Other User Content | Lecture comments and submitted homework links |
 
 Then, for the tracking question: **"No, we do not use data for tracking."**
 There is no analytics SDK and no advertising identifier in the app.
 
-**Age rating.** Answer the questionnaire honestly. The one that matters: the app
-**does** carry user-generated content — students can post lecture comments from
-inside it. Declaring that will likely land the rating at 13+ rather than 4+.
-See the warning in §8.
+**Age rating.** Answer the questionnaire honestly. The one that used to matter
+was user-generated content — but as of 1.0 the app has **none**: lecture comments
+are switched off (§10) and there is no homework submission on iOS. Answer the UGC
+question as none, which should land the rating at 4+ rather than 13+. `User
+Content → Other User Content` is likewise gone from the table above and from
+`PrivacyInfo.xcprivacy`. All three answers go back together when comments return.
 
 **Export compliance** is already answered in code:
 `ITSAppUsesNonExemptEncryption = false` in `Info.plist`, because the only
@@ -447,14 +448,19 @@ shouldn't demand one, and a reviewer can check the website in a browser. If this
 comes back: let people browse courses, lectures, and notes signed out, and gate
 only progress, quizzes, review, drill sync, and comments.
 
-**Comments — Guideline 1.2.** Students can post lecture comments in the app, and
-there is no way to report a comment or block a user; you can only delete your
-own. Apps with user-generated content are required to have a report/block
-mechanism and a way to act on reports, and this is enforced fairly consistently.
-Two ways out if it's flagged: hide the comments tab in the iOS app for now (the
-web keeps it), or build `CommentReport` + report/block + an admin queue.
+**Comments — Guideline 1.2. Closed for 1.0.** Students could post lecture
+comments in the app with no way to report a comment or block a user, which apps
+carrying user-generated content are required to have. When App Review asked to
+see reporting and blocking by name (§10), Donald chose to **hide the Discussion
+tab in the iOS app for 1.0** rather than build moderation under time pressure.
+The web keeps comments; the backend endpoints are untouched.
 
-Neither is a reason not to submit. Each costs a review cycle if it's caught.
+The switch is `commentsEnabled` in `LectureView.swift` — flip it to `true` once
+`CommentReport` + report/block + an admin queue exist, and restore the App
+Privacy row, the privacy-manifest entry, and the age-rating answer with it.
+
+So the only live exposure is 5.1.1(i) above. It is not a reason not to submit;
+it costs a review cycle if it's caught.
 
 ---
 
@@ -496,7 +502,7 @@ Apple names four things to include if the app has them. Ours has two:
 | --- | --- |
 | Registration, login, account deletion | Yes — all three, must be shown |
 | Paid content, purchases, subscriptions | None. Say so in the reply |
-| User-generated content + report/block | Comments **yes**; report/block **no** — see the warning below |
+| User-generated content + report/block | **None as of 1.0** — the Discussion tab is switched off. Say so in the reply |
 | Prompts for sensitive data or capabilities | None. `Info.plist` has no `*UsageDescription` key at all |
 
 Shot list, in order:
@@ -509,36 +515,36 @@ Shot list, in order:
 4. Open that lecture's notes, and scroll far enough that typeset mathematics is
    on screen.
 5. Take a lecture quiz, answer two or three questions, show an explanation.
-6. Open the lecture **Discussion** and post a comment. This is the
-   user-generated content they asked about.
-7. Drills tab → run one drill to completion.
-8. Review tab → show a card.
-9. Profile → **Delete Account** → type DELETE, enter the password, complete it.
+6. Drills tab → run one drill to completion.
+7. Review tab → show a card.
+8. Profile → **Delete Account** → type DELETE, enter the password, complete it.
    Show the app returning to signed-out.
-10. Sign back in with the demo account to show it still works.
+9. Sign back in with the demo account to show it still works.
 
 Attach it to the App Store Connect reply, or — easier, given the file size — put
 it up as an **unlisted YouTube video** and paste the link. Apple accepts a link.
 
-### ⚠️ Before you record item 1
+### Comments are off in 1.0 — decided 2026-08-25
 
-Step 6 is a problem. Apple explicitly asked to see "user-generated content,
-**including content reporting and blocking mechanisms**." Lecture comments are
-user-generated content, and `CommentsView.swift` offers **delete-your-own and
-nothing else** — no report, no block. Filming step 6 hands a reviewer the
-Guideline 1.2 finding that §8 records as knowingly accepted.
+Apple explicitly asked to see "user-generated content, **including content
+reporting and blocking mechanisms**." The app had lecture comments and neither a
+report nor a block — `CommentsView.swift` offers delete-your-own and nothing
+else. Filming that would have handed a reviewer the Guideline 1.2 finding §8 had
+been carrying.
 
-That acceptance was made when 1.2 was a background risk. Apple has now asked
-about it by name, which is a different situation. Two ways out:
+Donald chose to **hide the Discussion tab for 1.0** rather than build moderation
+under review pressure. `commentsEnabled` in `LectureView.swift` is `false`; the
+Picker drops the Discussion segment, the section never renders, and the comments
+fetch is skipped. Nothing was deleted — the web keeps comments and the backend
+endpoints are untouched — so turning it back on for 1.1 is one line plus the
+moderation work.
 
-- **Build report and block first.** A report action and a block-this-user action
-  on each comment, plus filtering blocked users' comments out of the feed. Then
-  the recording answers the question instead of exposing it.
-- **Record as-is and say plainly that the app has no report or block yet**, and
-  that comments are visible only to signed-in students inside a lecture. This
-  can work, and it can also come back as a 1.2 rejection.
+Consequences already applied: `Other User Content` removed from
+`PrivacyInfo.xcprivacy` and from the §4 App Privacy table, and §4's age-rating
+guidance updated, because with comments off and no homework submission on iOS
+the app collects **no** user content at all. Those three go back together.
 
-Donald's call. Do not film step 6 until it's made.
+So the answer to Apple's UGC question is simply that the app has none.
 
 ### Item 2 — devices and operating systems tested
 
@@ -606,7 +612,7 @@ is required to play a lecture, because lecture video is served from YouTube; the
 practice drills run entirely on-device and work offline.
 
 Main features, and where they are:
-  - Learn tab      : courses, lectures, notes, quizzes, lecture discussion
+  - Learn tab      : courses, lectures, notes, and quizzes
   - Drills tab     : 62 practice drills, in practice / timed / learn modes
   - Review tab     : today's spaced-repetition deck across all courses
   - Profile tab    : progress, badges, streak, and Delete Account

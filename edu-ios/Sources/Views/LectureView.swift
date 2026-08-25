@@ -21,6 +21,13 @@ struct LectureView: View {
     @State private var composeReplyTo: CommentItem?
     @State private var pendingDelete: CommentItem?
 
+    /// Lecture discussion is off for the 1.0 App Store submission. Comments are
+    /// user-generated content, and Guideline 1.2 requires a way to report
+    /// content and block users, which we don't have yet — App Review asked to
+    /// see exactly that. Flip this back on once moderation ships; nothing else
+    /// was removed, and the backend endpoints are untouched. See APP_STORE.md §10.
+    private let commentsEnabled = false
+
     enum QuizPhase { case idle, running, done }
     struct ScorePair { let score: Int; let total: Int }
 
@@ -94,14 +101,16 @@ struct LectureView: View {
                     Picker("", selection: $tab) {
                         Text("Notes").tag(0)
                         Text("Quiz (\(detail.quiz.count))").tag(1)
-                        Text("Discussion (\(liveCommentCount(comments)))").tag(2)
+                        if commentsEnabled {
+                            Text("Discussion (\(liveCommentCount(comments)))").tag(2)
+                        }
                     }
                     .pickerStyle(.segmented)
 
                     switch tab {
-                    case 0: notesSection(detail)
                     case 1: quizSection(detail)
-                    default: discussionSection(detail)
+                    case 2 where commentsEnabled: discussionSection(detail)
+                    default: notesSection(detail)
                     }
                 }
                 .padding()
@@ -281,7 +290,7 @@ struct LectureView: View {
             detail = res
             aces = res.aces ?? []
             error = nil
-            await reloadComments()
+            if commentsEnabled { await reloadComments() }
             if auth.isSignedIn {
                 _ = await queue.submit(
                     path: "/progress/video-watched",
