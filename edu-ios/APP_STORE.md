@@ -224,6 +224,10 @@ npx tsx scripts/seed-review-account.ts --reset    # wipe and rebuild
 It signs in with a streak, 9 badges, 12 review cards due, 12 lectures watched,
 and 8 quizzes taken, so no screen greets a reviewer with zeroes.
 
+**App Review Information → Notes** — the short version below got a 2.1
+"Information Needed" rejection on 2026-08-25. **Use the expanded answers in §10
+instead**; this is kept for reference.
+
 **App Review Information → Notes** — paste this:
 
 ```
@@ -469,3 +473,208 @@ Neither is a reason not to submit. Each costs a review cycle if it's caught.
   login — but a paid membership can enable it, and it lowers signup friction.
   Re-enable the entitlement in `project.yml` and `appleSignInAvailable` in
   `AuthViews.swift`; the backend `/auth/apple` endpoint is already there.
+
+---
+
+## 10. The Guideline 2.1 rejection, 2026-08-25
+
+Apple rejected 1.0.0 (1) under **2.1 — Information Needed**. Nothing in the app
+was found wrong; they asked seven questions and want the answers in the App
+Review Information **Notes** field, plus a screen recording. The TestFlight line
+in their "How to Prevent Common Issues" footer is boilerplate — it is not a
+requirement, and nothing in the rejection asks for beta testers.
+
+### Item 1 — the screen recording
+
+Has to be captured **on a physical device**, on current iOS, starting from
+launching the app. Record with the TestFlight build already on your phone
+(Control Center → screen recording). Aim for five minutes or so, unhurried.
+
+Apple names four things to include if the app has them. Ours has two:
+
+| They ask for | We have |
+| --- | --- |
+| Registration, login, account deletion | Yes — all three, must be shown |
+| Paid content, purchases, subscriptions | None. Say so in the reply |
+| User-generated content + report/block | Comments **yes**; report/block **no** — see the warning below |
+| Prompts for sensitive data or capabilities | None. `Info.plist` has no `*UsageDescription` key at all |
+
+Shot list, in order:
+
+1. Launch from the Home screen — cold, not from the app switcher.
+2. **Register** a brand-new account. Use a throwaway address; do not reuse the
+   review account, they want to see the flow work from nothing.
+3. Learn tab → open a course → open a lecture → let the video actually play for
+   a few seconds.
+4. Open that lecture's notes, and scroll far enough that typeset mathematics is
+   on screen.
+5. Take a lecture quiz, answer two or three questions, show an explanation.
+6. Open the lecture **Discussion** and post a comment. This is the
+   user-generated content they asked about.
+7. Drills tab → run one drill to completion.
+8. Review tab → show a card.
+9. Profile → **Delete Account** → type DELETE, enter the password, complete it.
+   Show the app returning to signed-out.
+10. Sign back in with the demo account to show it still works.
+
+Attach it to the App Store Connect reply, or — easier, given the file size — put
+it up as an **unlisted YouTube video** and paste the link. Apple accepts a link.
+
+### ⚠️ Before you record item 1
+
+Step 6 is a problem. Apple explicitly asked to see "user-generated content,
+**including content reporting and blocking mechanisms**." Lecture comments are
+user-generated content, and `CommentsView.swift` offers **delete-your-own and
+nothing else** — no report, no block. Filming step 6 hands a reviewer the
+Guideline 1.2 finding that §8 records as knowingly accepted.
+
+That acceptance was made when 1.2 was a background risk. Apple has now asked
+about it by name, which is a different situation. Two ways out:
+
+- **Build report and block first.** A report action and a block-this-user action
+  on each comment, plus filtering blocked users' comments out of the feed. Then
+  the recording answers the question instead of exposing it.
+- **Record as-is and say plainly that the app has no report or block yet**, and
+  that comments are visible only to signed-in students inside a lecture. This
+  can work, and it can also come back as a 1.2 rejection.
+
+Donald's call. Do not film step 6 until it's made.
+
+### Item 2 — devices and operating systems tested
+
+Needs your actual list; Apple wants specific models, not "iPhone." Fill in and
+paste:
+
+```
+Tested on physical hardware:
+  - <iPhone model>, iOS <version>   (via TestFlight, build 1.0.0 (1))
+
+Tested in Simulator (Xcode 26):
+  - iPhone 17 Pro Max, iOS 26
+  - iPad Pro 13-inch (M4), iPadOS 26
+
+Minimum supported version is iOS 18.0.
+```
+
+Simulator coverage is worth listing but does not substitute for the physical
+device — that is the point they are making.
+
+### Items 3–7 — paste-ready
+
+**3. Functions, audience, problem solved, value**
+
+```
+The Timpson Lyceum is a free educational app offering a complete classical
+curriculum in mathematics, physics, logic, and philosophy. It contains thirteen
+published courses and 267 video lectures, ranging from Intermediate Algebra
+through Calculus, Real Analysis, General Topology, and Computation Theory;
+University Physics I and II; First-Order Predicate Logic; and surveys of the
+History of Philosophy and the History of Rome.
+
+I am a teacher, and these are recordings of the courses I teach. The app gives a
+student five things: the lecture videos in course order, written notes with
+properly typeset mathematics, a ten-question quiz per lecture with an
+explanation on every answer, a daily spaced-repetition review deck drawn from
+questions the student has already answered, and 62 offline practice drills in
+grammar, geography, and arithmetic.
+
+Target audience: high-school and college students studying these subjects,
+whether in my own classes or elsewhere, and self-directed adult learners. The
+problem it solves is that free lecture material online is normally an unordered
+playlist with no notes, no assessment, and no retention schedule. This is a
+structured course of study instead — sequenced, with the reading, testing, and
+review that make the lectures stick.
+
+The app is entirely free. There are no purchases, no subscriptions, and no
+advertising. There is no paid tier and no content withheld.
+```
+
+**4. Setup and access instructions**
+
+```
+An account is required, because the account holds the student's progress, review
+schedule, and streak. Demo account:
+
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
+
+This account is pre-populated with watched lectures, completed quizzes, review
+cards due today, and earned badges, so no screen appears empty.
+
+No sample files, entitlements, or configuration are needed. A network connection
+is required to play a lecture, because lecture video is served from YouTube; the
+practice drills run entirely on-device and work offline.
+
+Main features, and where they are:
+  - Learn tab      : courses, lectures, notes, quizzes, lecture discussion
+  - Drills tab     : 62 practice drills, in practice / timed / learn modes
+  - Review tab     : today's spaced-repetition deck across all courses
+  - Profile tab    : progress, badges, streak, and Delete Account
+
+Account deletion is at Profile -> Delete Account. It requires typing the word
+DELETE and re-entering the password, then permanently removes the account and
+all coursework attached to it, on the server and on the device.
+```
+
+**5. External services, tools, and platforms**
+
+```
+  - YouTube (Google LLC) - lecture video playback, embedded via the YouTube
+    IFrame Player API. All videos are my own, published on my own channel.
+  - Vercel - hosting for the backend web application and its API.
+  - Neon - the managed PostgreSQL database behind that API.
+  - jsDelivr - CDN delivering the KaTeX and marked JavaScript libraries used to
+    render mathematics inside the lecture-notes view.
+
+Authentication is first-party: accounts are created and stored by our own
+backend, with bcrypt-hashed passwords and JWT session tokens. There is no
+third-party identity provider, no social login, and Sign in with Apple is not
+enabled in this version.
+
+There are no payment processors, because nothing is for sale. There are no AI
+services. There is no analytics SDK, no advertising SDK, no attribution SDK, and
+no tracking of any kind; the app requests no IDFA and does not present App
+Tracking Transparency.
+```
+
+**6. Regional differences**
+
+```
+There are none. The app offers identical features and identical content in every
+region. It ships in English only, has no region-locked material, no
+regional pricing (it is free everywhere), and no geographic restrictions of any
+kind.
+```
+
+**7. Regulated industry and third-party material**
+
+```
+The app does not operate in a regulated industry. It is general educational
+material, not accredited instruction; it grants no degree, credential, or
+certification, and it makes no medical, legal, or financial claims.
+
+All content is my own or public domain:
+
+  - The 267 lectures are my own recordings, taught and published by me on my own
+    YouTube channel. I am the author and the copyright holder.
+  - Lecture notes, quiz questions, and their explanations are written by me.
+  - The grammar course follows Harvey's "Elementary Grammar and Composition"
+    (1880), which is in the public domain. The drills built from it are my own
+    authoring.
+  - The Linear Algebra problem sets are original problems written by me. They
+    follow the topic sequence of a standard textbook, as any linear algebra
+    course does, but no exercise is reproduced from it.
+
+No third-party protected material is reproduced in the app, so there is no
+license or authorization to document.
+```
+
+### The Notes field, going forward
+
+Apple asked that this live in App Review Information → Notes for future
+submissions. Replace the shorter §5 notes with items 3, 4, 5, 6, and 7 above,
+run together, keeping the demo credentials at the top where a reviewer sees them
+first.
+
+---
+
