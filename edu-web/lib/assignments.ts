@@ -245,7 +245,7 @@ export async function submitAssignment(_prev: SubmitState, formData: FormData): 
 
   const assignment = await db.assignment.findUnique({
     where: { id: assignmentId },
-    select: { sectionId: true, section: { select: { courseId: true } } },
+    select: { sectionId: true, problemSetId: true, section: { select: { courseId: true } } },
   });
   if (!assignment) return { error: "That assignment no longer exists." };
 
@@ -264,6 +264,11 @@ export async function submitAssignment(_prev: SubmitState, formData: FormData): 
   });
 
   revalidatePath(`/courses/${assignment.section.courseId}`);
+  // The problem set page carries its own copy of this form.
+  if (assignment.problemSetId) {
+    revalidatePath(`/courses/${assignment.section.courseId}/problems/${assignment.problemSetId}`);
+  }
   revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/class/${assignment.sectionId}`);
   return { success: "Submitted — your instructor can now see your link." };
 }

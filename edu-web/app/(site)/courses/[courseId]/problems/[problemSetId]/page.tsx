@@ -1,15 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import ProblemSetView from "@/components/ProblemSetView";
+import ProblemSetHomework, {
+  HomeworkBanner,
+  type ProblemSetAssignment,
+} from "@/components/ProblemSetHomework";
 import { pairProblemSet, canSeeSolutions } from "@/lib/problem-sets";
 
 export const dynamic = "force-dynamic";
 
 // Public problem-set page. Anyone can read the problems, and the worked
 // solutions render inline with them (collapsed per problem) unless the set has
-// been explicitly withheld. Only enrolled students (on the course page) get a
-// submit box for the corresponding assignment.
+// been explicitly withheld. A student actively enrolled in a section that
+// assigned this set also gets the submit box right here — homework gets done
+// while looking at the problems, so that's where turning it in belongs (the
+// class hub keeps its copy for the whole-course view).
 export default async function ProblemSetPage({
   params,
 }: {
@@ -47,6 +55,43 @@ export default async function ProblemSetPage({
   const prevSet = currentIdx > 0 ? siblings[currentIdx - 1] : null;
   const nextSet =
     currentIdx >= 0 && currentIdx < siblings.length - 1 ? siblings[currentIdx + 1] : null;
+
+  // Homework for *this* student: every assignment of this set belonging to a
+  // section they're actively enrolled in (normally one; a student registered
+  // for two sections of the same course gets both).
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id ?? null;
+  const myAssignments: ProblemSetAssignment[] = userId
+    ? (
+        await db.assignment.findMany({
+          where: {
+            problemSetId: ps.id,
+            section: { enrollments: { some: { userId, status: "active" } } },
+          },
+          orderBy: [{ dueAt: "asc" }, { createdAt: "asc" }],
+          select: {
+            id: true,
+            title: true,
+            points: true,
+            dueAt: true,
+            sectionId: true,
+            section: { select: { name: true } },
+            submissions: {
+              where: { userId },
+              select: { url: true, score: true, feedback: true },
+            },
+          },
+        })
+      ).map((a) => ({
+        id: a.id,
+        title: a.title,
+        points: a.points,
+        dueAt: a.dueAt,
+        sectionId: a.sectionId,
+        sectionName: a.section.name,
+        sub: a.submissions[0] ?? null,
+      }))
+    : [];
 
   return (
     <main className="flex-1">
@@ -91,6 +136,8 @@ export default async function ProblemSetPage({
           </div>
         )}
 
+        <HomeworkBanner assignments={myAssignments} />
+
         <div className="flex items-center gap-2 flex-wrap">
           {ps.attachmentUrl && (
             <a
@@ -125,6 +172,8 @@ export default async function ProblemSetPage({
         </div>
 
         <ProblemSetView data={paired} />
+
+        <ProblemSetHomework assignments={myAssignments} />
 
         {/* Prev / Next navigation — matches the lecture page's quick nav buttons */}
         {(prevSet || nextSet) && (
