@@ -94,14 +94,31 @@ final class DrillMastery {
         return items.reduce(0) { $0 + ((map[$1] ?? 0) >= Self.masteredBox ? 1 : 0) }
     }
 
+    /// How far along `items` are toward mastery, 0…1, with partial credit for every box.
+    /// Mastery takes five correct reps, so on a large pool "N mastered" only ticks once per
+    /// five right answers and reads as stuck — this moves on every one of them.
+    func progress(userId: String, slug: String, items: [String]) -> Double {
+        guard !items.isEmpty else { return 0 }
+        let map = boxes(userId: userId, slug: slug)
+        let sum = items.reduce(0) { $0 + min(map[$1] ?? 0, Self.masteredBox) }
+        return Double(sum) / Double(items.count * Self.masteredBox)
+    }
+
 }
 
 // A never-ending Learn session using graduated introduction + expanding rehearsal
-// (Anki-style "learning steps" + a new-item cap). New items are introduced only a few at
-// a time (due reviews take priority), a freshly-seen item recurs soon and then at widening
-// gaps as it sticks, and a miss resets it to the short interval. Scheduling is by "card
-// position from now"; the session never ends — once everything is mastered it keeps
-// cycling all items at long, jittered intervals. Persistent mastery lives in DrillMastery.
+// (Anki-style "learning steps" + a new-item cap). A freshly-introduced item recurs soon and
+// then at widening gaps as it sticks; anything already known to some degree comes back as a
+// review, spaced by how well it's known; a miss drops an item back to the short interval.
+// Scheduling is by "card position from now"; the session never ends — once everything is
+// mastered it keeps cycling at long intervals. Persistent mastery lives in DrillMastery.
+//
+// The distinction between LEARNING and REVIEW is load-bearing. `maxLearning` caps how many
+// items are mid-introduction at once, and restoring every partially-known item as "learning"
+// filled that cap on the first card of any resumed session — so the new queue never drained.
+// The bigger the pool the worse it read: Easy behaved (its pool is barely larger than the
+// items you'd started), while Hard just re-drilled the same handful and never once reached
+// the hard material.
 @MainActor
 final class LearnSession {
     private let userId: String
@@ -109,16 +126,27 @@ final class LearnSession {
     private let store = DrillMastery.shared
     let items: [String]
 
-    // Reappearance gaps (cards ahead) for successive correct reps; after the last the card
-    // "graduates" (long review interval). A miss sends it back to steps[0].
+    // Reappearance gaps (cards ahead) for successive correct reps while an item is being
+    // introduced; after the last it graduates onto the review schedule. A miss sends it back
+    // to steps[0] (a lapse re-enters learning, which is why the cap is self-limiting).
     private let steps = [3, 4, 6, 10]
-    private let reviewInterval = 16
-    private let maxLearning = 4          // cap on items still in the learning stage → gentle intro
+    private let newEvery = 5             // a new item gets a turn at least this often
+    // How many items may be mid-introduction at once. Scales with the deck: four at a time
+    // over the Gauntlet's 601 items is a trickle, while four is right for a 45-item lesson.
+    // Capped at eight — measured over simulated sessions, going past that gets more items
+    // SEEN but fewer actually mastered, which is the wrong trade for a learning mode.
+    private let maxLearning: Int
 
-    private struct Card { var id: String; var due: Int; var step: Int }  // step >= steps.count ⇒ graduated
+    // `step` drives spacing (>= steps.count ⇒ on the review schedule). `intro` is separate on
+    // purpose: it means "being met for the first time this session", and ONLY intro cards count
+    // against maxLearning. Deriving that from `step` instead conflated two different things —
+    // a review you just lapsed also sits at a low step, so a normal miss rate kept the
+    // introduction cap permanently full and new material still never arrived.
+    private struct Card { var id: String; var due: Int; var step: Int; var intro: Bool }
     private var scheduled: [Card] = []
     private var newQueue: [String] = []
     private var t = 0
+    private var lastIntroT = 0
     private var currentId: String?
 
     private(set) var answered = 0
@@ -126,32 +154,55 @@ final class LearnSession {
 
     init(userId: String, slug: String, items: [String]) {
         self.userId = userId; self.slug = slug; self.items = items
+        self.maxLearning = min(8, max(4, items.count / 75))
         for id in items.shuffled() {
             let box = store.box(userId: userId, slug: slug, item: id)
             if box == 0 {
-                newQueue.append(id)                                   // not yet introduced
-            } else if box >= DrillMastery.masteredBox {
-                scheduled.append(Card(id: id, due: Int.random(in: 1...reviewInterval), step: steps.count))
+                newQueue.append(id)          // never introduced, or missed all the way back down
             } else {
-                scheduled.append(Card(id: id, due: Int.random(in: 1...6), step: min(box, steps.count - 1)))
+                // Already known to some degree ⇒ a REVIEW, spaced by how well it's known.
+                // Not a learning card: it must not consume the introduction cap.
+                scheduled.append(Card(id: id, due: Int.random(in: 1...reviewGap(box)),
+                                      step: steps.count, intro: false))
             }
         }
     }
 
+    // Review spacing in cards-from-now, by persistent box. A barely-known item comes back
+    // soon; a mastered one rarely, so the pool keeps making room for new material.
+    private func reviewGap(_ box: Int) -> Int {
+        switch box {
+        case 0, 1: return 6
+        case 2:    return 10
+        case 3:    return 15
+        case 4:    return 22
+        default:   return 30
+        }
+    }
+
     var masteredCount: Int { store.masteredCount(userId: userId, slug: slug, items: items) }
-    private var learningCount: Int { scheduled.filter { $0.step < steps.count }.count }
+    /// 0…1 toward mastering the whole pool, with partial credit per box.
+    var progress: Double { store.progress(userId: userId, slug: slug, items: items) }
+    private var learningCount: Int { scheduled.reduce(0) { $0 + ($1.intro ? 1 : 0) } }
 
     /// The next item to show (nil only if the pool is empty). Never terminates otherwise.
     func next() -> String? {
         guard !items.isEmpty else { return nil }
         t += 1
-        if let i = dueIndex() {                                       // a review is due — highest priority
-            currentId = scheduled[i].id
-        } else if !newQueue.isEmpty && learningCount < maxLearning {  // room to introduce a new one
+        let due = dueIndex()
+        let roomForNew = !newQueue.isEmpty && learningCount < maxLearning
+        // Due reviews come first, but never to the point of never reaching new material:
+        // while there's room under the cap, a new item takes a turn every `newEvery` cards.
+        // Without that, a pool with more due reviews than the session can clear (any large
+        // Hard pool) would introduce nothing at all.
+        if roomForNew && (due == nil || t - lastIntroT >= newEvery) {
             let id = newQueue.removeFirst()
-            scheduled.append(Card(id: id, due: t, step: 0))
+            scheduled.append(Card(id: id, due: t, step: 0, intro: true))
+            lastIntroT = t
             currentId = id
-        } else if let i = soonestIndex() {                            // nothing due — bring the next one forward
+        } else if let i = due {
+            currentId = scheduled[i].id
+        } else if let i = soonestIndex() {                            // nothing due — pull the next one forward
             currentId = scheduled[i].id
         }
         return currentId
@@ -161,18 +212,16 @@ final class LearnSession {
         answered += 1
         if correct { correctCount += 1 }
         guard let id = currentId, let i = scheduled.firstIndex(where: { $0.id == id }) else { return }
-        store.grade(userId: userId, slug: slug, item: id, correct: correct)   // persistent mastery
-        if correct {
-            let s = scheduled[i].step
-            if s < steps.count {
-                scheduled[i].due = t + steps[s]
-                scheduled[i].step = s + 1
-            } else {
-                scheduled[i].due = t + reviewInterval + Int.random(in: 0...6)
-            }
-        } else {
-            scheduled[i].step = 0
+        let box = store.grade(userId: userId, slug: slug, item: id, correct: correct)   // persistent mastery
+        if !correct {
+            scheduled[i].step = 0                                     // a lapse re-enters learning
             scheduled[i].due = t + steps[0]
+        } else if scheduled[i].step < steps.count {
+            scheduled[i].due = t + steps[scheduled[i].step]
+            scheduled[i].step += 1
+            if scheduled[i].step >= steps.count { scheduled[i].intro = false }   // introduced; frees a slot
+        } else {
+            scheduled[i].due = t + reviewGap(box) + Int.random(in: 0...4)
         }
     }
 

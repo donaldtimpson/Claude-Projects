@@ -24,6 +24,7 @@ struct LearnDrillView: View {
     @State private var flash: Bool?                // green/red background blink on an answer
     @State private var locked = false              // identify (Rapid-Fire-style) double-tap guard
     @State private var masteredNow = 0
+    @State private var progressNow = 0.0   // partial credit toward mastery — see LearnSession.progress
     @State private var total = 0
     @State private var startedAt = Date()
 
@@ -56,7 +57,7 @@ struct LearnDrillView: View {
                                     .shadow(color: .black.opacity(0.2), radius: 6, y: 2)
                             }
                             .contentShape(Circle())
-                            QuizProgressBar(fraction: total > 0 ? Double(masteredNow) / Double(total) : 0)
+                            QuizProgressBar(fraction: progressNow)
                             Text("Mastered \(masteredNow) / \(total)").font(.caption).foregroundStyle(Theme.inkSoft)
                         }
                     }
@@ -104,7 +105,7 @@ struct LearnDrillView: View {
 
     private var header: some View {
         VStack(spacing: 8) {
-            QuizProgressBar(fraction: total > 0 ? Double(masteredNow) / Double(total) : 0)
+            QuizProgressBar(fraction: progressNow)
             Text("Mastered \(masteredNow) / \(total)")
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -118,6 +119,7 @@ struct LearnDrillView: View {
         session = s
         total = s.items.count
         masteredNow = s.masteredCount
+        progressNow = s.progress
         startedAt = Date()
         present()
     }
@@ -137,6 +139,7 @@ struct LearnDrillView: View {
         if correct { Haptics.success() } else { Haptics.error() }
         session?.grade(correct: correct)
         masteredNow = session?.masteredCount ?? masteredNow
+        progressNow = session?.progress ?? progressNow
         let token = problem?.id
         if isIdentify {
             // EXACTLY like Rapid Fire: blink, brief hold (no option reveal / card), advance.
