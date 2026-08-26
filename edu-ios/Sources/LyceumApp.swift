@@ -40,7 +40,13 @@ struct LyceumApp: App {
                 .tint(Theme.gold300)
                 .preferredColorScheme(.dark)
                 .task { await auth.bootstrap() }
-                .onAppear { startNetworkFlush() }
+                .onAppear {
+                    startNetworkFlush()
+                    // Build the drill SwiftData store + catalog off the main thread now,
+                    // while the splash is up waiting on auth, rather than inside the first
+                    // render of the Drills tab.
+                    DrillStore.warm()
+                }
         }
     }
 

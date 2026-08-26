@@ -88,7 +88,11 @@ enum DrillCatalog {
         nameCountry, nameState, locateCountry, locateState,
         capitalCountry, capitalState,
     ] + grammarDrills + lessonDrills
-    static func drill(slug: String) -> DrillDef? { all.first { $0.slug == slug } }
+    // Slug → drill. A linear scan over 60+ drills was fine at three, but every row and
+    // every recents chip resolves by slug during layout.
+    private static let bySlug: [String: DrillDef] = Dictionary(all.map { ($0.slug, $0) },
+                                                              uniquingKeysWith: { a, _ in a })
+    static func drill(slug: String) -> DrillDef? { bySlug[slug] }
 
     private static func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
 

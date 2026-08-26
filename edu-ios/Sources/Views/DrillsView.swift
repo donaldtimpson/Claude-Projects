@@ -227,9 +227,17 @@ struct DrillRow: View {
     }
 }
 
+// A drill's Learn pool, built once per slug. `poolItems` is a closure that rebuilds its
+// array on every call — and for the map drills it's what forces the geo atlas to parse —
+// so calling it straight from a view body re-did that work on every layout pass.
+@MainActor private var poolItemsCache: [String: [String]] = [:]
+
 // "N/total mastered" for Learn-capable drills (their whole pool), else nil.
 @MainActor func masterySubtitle(_ d: DrillDef, userId: String) -> String? {
-    guard let items = d.poolItems?(3) else { return nil }
+    guard let pool = d.poolItems else { return nil }
+    let items: [String]
+    if let cached = poolItemsCache[d.slug] { items = cached }
+    else { items = pool(3); poolItemsCache[d.slug] = items }
     let m = DrillMastery.shared.masteredCount(userId: userId, slug: d.slug, items: items)
     return m > 0 ? "\(m)/\(items.count) mastered" : nil
 }

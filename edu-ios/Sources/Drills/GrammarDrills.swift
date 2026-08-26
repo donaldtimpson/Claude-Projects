@@ -38,7 +38,7 @@ extension DrillCatalog {
     private static let grammarSpecs: [GrammarDrillSpec] = loadGrammar()
     static let grammarDrills: [DrillDef] = grammarSpecs.map(makeGrammarDrill) + [grammarGauntlet]
     // Slugs in catalog order — populates the Grammar category row in DrillsView.
-    static var grammarSlugs: [String] { grammarDrills.map(\.slug) }
+    static let grammarSlugs: [String] = grammarDrills.map(\.slug)
 
     // Build one problem from an item, honoring its source drill's layout + order:
     //  order "fixed"   → stable content-derived (case-insensitive alphabetical) slots, so a
@@ -132,7 +132,7 @@ extension DrillCatalog {
         return def
     }
     // Slugs in lesson order (the file is already sorted by lesson number at build time).
-    static var lessonSlugs: [String] { lessonDrills.map(\.slug) }
+    static let lessonSlugs: [String] = lessonDrills.map(\.slug)
 
     private static func loadGrammar() -> [GrammarDrillSpec] { loadDrills(resource: "grammar") }
 

@@ -23,20 +23,37 @@ final class DrillMastery {
     static let shared = DrillMastery()
     static let masteredBox = 5
 
-    private let container: ModelContainer
-    private var ctx: ModelContext { container.mainContext }
+    private var ctx: ModelContext { DrillStore.container.mainContext }
 
-    private init() {
-        do { container = try ModelContainer(for: DrillItemMastery.self) }
-        catch { fatalError("DrillMastery SwiftData container: \(error)") }
-    }
+    private init() {}
 
     private func key(_ userId: String, _ slug: String, _ item: String) -> String {
         "\(userId):\(slug):\(item)"
     }
 
+    // Boxes for one (user, drill), item id → box, read with a SINGLE fetch and kept.
+    // Callers ask per item — masteredCount over the Grammar Gauntlet is 601 lookups, and
+    // LearnSession.init is one per item in the pool — so a fetch each meant hundreds of
+    // predicate fetches on the main thread every time a row was laid out. This is the
+    // only writer, so the cache can't go stale behind our back.
+    private var boxes: [String: [String: Int]] = [:]
+
+    private func boxes(userId: String, slug: String) -> [String: Int] {
+        let scope = "\(userId):\(slug)"
+        if let cached = boxes[scope] { return cached }
+        let prefix = scope + ":"
+        let rows = (try? ctx.fetch(FetchDescriptor<DrillItemMastery>(
+            predicate: #Predicate { $0.key.starts(with: prefix) }))) ?? []
+        var map: [String: Int] = [:]
+        map.reserveCapacity(rows.count)
+        for r in rows { map[String(r.key.dropFirst(prefix.count))] = r.box }
+        boxes[scope] = map
+        return map
+    }
+
     // Wipe every local Leitner box (account deletion) — see LessonProgress.purgeAll.
     func purgeAll() {
+        boxes.removeAll()
         try? ctx.delete(model: DrillItemMastery.self)
         try? ctx.save()
     }
@@ -48,7 +65,7 @@ final class DrillMastery {
     }
 
     func box(userId: String, slug: String, item: String) -> Int {
-        row(key(userId, slug, item))?.box ?? 0
+        boxes(userId: userId, slug: slug)[item] ?? 0
     }
 
     /// Grade one item and return its new box. Correct → +1 (cap 5); wrong → −2 (floor 0, +lapse).
@@ -67,11 +84,14 @@ final class DrillMastery {
         r.reps += 1
         r.lastSeen = .now
         try? ctx.save()
+        _ = boxes(userId: userId, slug: slug)      // ensure the scope is loaded before we patch it
+        boxes["\(userId):\(slug)"]?[item] = r.box
         return r.box
     }
 
     func masteredCount(userId: String, slug: String, items: [String]) -> Int {
-        items.reduce(0) { $0 + (box(userId: userId, slug: slug, item: $1) >= Self.masteredBox ? 1 : 0) }
+        let map = boxes(userId: userId, slug: slug)
+        return items.reduce(0) { $0 + ((map[$1] ?? 0) >= Self.masteredBox ? 1 : 0) }
     }
 
 }
