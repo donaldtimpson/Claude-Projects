@@ -249,6 +249,11 @@ struct VideoDetailResponse: Codable {
     let aces: [QuizAce]?  // optional for resilience against pre-aces server builds
     // Problem sets tagged as covering this lecture; optional for the same reason.
     var problemSets: [ProblemSetItem]?
+    // Lesson drills tagged as covering this lecture. Slugs only — title and blurb
+    // come from the bundled catalog, so a slug this build doesn't know is simply
+    // dropped rather than rendering a row that can't open. Optional for the same
+    // resilience reason as the fields above.
+    var lessonSlugs: [String]?
 }
 
 struct DueCard: Codable, Identifiable, Hashable {

@@ -2,8 +2,9 @@ import { db } from "@/lib/db";
 import { ok, fail } from "@/lib/mobile/respond";
 import { getQuizAces } from "@/lib/gamification/engine";
 
-// Lecture screen payload: video meta + published note + published quiz. Like the
-// web QuizPlayer, quiz grading happens client-side, so correctIndex is included.
+// Lecture screen payload: video meta + published note + published quiz, plus the
+// problem sets and lesson drills tagged as covering this lecture. Like the web
+// QuizPlayer, quiz grading happens client-side, so correctIndex is included.
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ courseId: string; videoId: string }> },
@@ -63,5 +64,13 @@ export async function GET(
     hasSolutions: ps.solutionsPublic && ps.solution.trim().length > 0,
   }));
 
-  return ok({ video, note, quiz, aces, problemSets });
+  // Lesson drills tagged as covering this lecture. Only the slugs travel: the app
+  // resolves title and blurb from its own bundled grammar banks, which are built
+  // byte-identical to the web's from content/grammar/. Sending the text too would
+  // let a row render for a drill the installed build can't actually play.
+  const lessonSlugs = (
+    await db.videoLesson.findMany({ where: { videoId }, select: { lessonSlug: true } })
+  ).map((l) => l.lessonSlug);
+
+  return ok({ video, note, quiz, aces, problemSets, lessonSlugs });
 }

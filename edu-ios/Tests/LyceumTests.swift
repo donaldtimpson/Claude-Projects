@@ -111,4 +111,28 @@ final class LyceumTests: XCTestCase {
         XCTAssertEqual(mastery.progress(userId: user, slug: slug, items: items), 5.0 / 20.0, accuracy: 1e-9)
         XCTAssertEqual(mastery.masteredCount(userId: user, slug: slug, items: items), 1)
     }
+
+    // lessonSlugs is optional so an app build newer than the server still decodes.
+    // The lecture screen reads it to show linked lesson drills in Practice; a server
+    // that predates the field must not break the whole lecture payload.
+    func testVideoDetailDecodesWithAndWithoutLessonSlugs() throws {
+        let base = """
+        {"video":{"id":"v1","youtubeVideoId":"yt1","title":"Lesson 1","description":"",
+                  "position":0,"durationSeconds":1843,"updatedAt":"2026-08-27T00:00:00Z"},
+         "note":null,"quiz":[],"aces":[]
+        """
+        let older = try JSONDecoder().decode(
+            VideoDetailResponse.self, from: Data((base + "}").utf8))
+        XCTAssertNil(older.lessonSlugs, "a server without the field should decode, not throw")
+        XCTAssertEqual(older.video.title, "Lesson 1")
+
+        let newer = try JSONDecoder().decode(
+            VideoDetailResponse.self,
+            from: Data((base + ",\"lessonSlugs\":[\"lesson-01\",\"nope-99\"]}").utf8))
+        XCTAssertEqual(newer.lessonSlugs, ["lesson-01", "nope-99"])
+        // Unknown slugs are dropped rather than rendering a row that can't open.
+        let resolved = (newer.lessonSlugs ?? []).compactMap { DrillCatalog.drill(slug: $0) }
+        XCTAssertEqual(resolved.map(\.slug), ["lesson-01"])
+        XCTAssertEqual(resolved.first?.title, "Lesson 1 · Foundations")
+    }
 }

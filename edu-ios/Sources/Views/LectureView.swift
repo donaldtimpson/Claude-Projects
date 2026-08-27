@@ -20,6 +20,7 @@ struct LectureView: View {
     @State private var showCompose = false
     @State private var composeReplyTo: CommentItem?
     @State private var pendingDelete: CommentItem?
+    @State private var activeDrill: ActiveDrill?
 
     /// Lecture discussion is off for the 1.0 App Store submission. Comments are
     /// user-generated content, and Guideline 1.2 requires a way to report
@@ -61,6 +62,21 @@ struct LectureView: View {
                     pendingDelete = nil
                 }
                 Button("Cancel", role: .cancel) { pendingDelete = nil }
+            }
+            // Same presentation the drills hub uses, so a drill opened from a
+            // lecture behaves identically to one opened from Practice Drills.
+            .fullScreenCover(item: $activeDrill) { drill in
+                NavigationStack {
+                    DrillRunnerView(slug: drill.id)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button { activeDrill = nil } label: {
+                                    Image(systemName: "xmark").font(.body.weight(.semibold))
+                                }
+                                .tint(Theme.gold300)
+                            }
+                        }
+                }
             }
     }
 
@@ -119,8 +135,17 @@ struct LectureView: View {
         }
     }
 
+    /// Lesson drills tagged as covering this lecture, resolved against the bundled
+    /// catalog. A slug this build doesn't carry is dropped — better no row than a
+    /// row that can't open.
+    private func lessonDrills(_ detail: VideoDetailResponse) -> [DrillDef] {
+        (detail.lessonSlugs ?? []).compactMap { DrillCatalog.drill(slug: $0) }
+    }
+
     @ViewBuilder private func practiceSection(_ detail: VideoDetailResponse) -> some View {
-        if let sets = detail.problemSets, !sets.isEmpty {
+        let sets = detail.problemSets ?? []
+        let drills = lessonDrills(detail)
+        if !sets.isEmpty || !drills.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Text("PRACTICE")
                     .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
@@ -138,6 +163,31 @@ struct LectureView: View {
                                     .font(.serif(13)).foregroundStyle(Theme.inkSoft)
                             }
                             Spacer(minLength: 0)
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+                        }
+                        .lyceumCard()
+                    }
+                    .buttonStyle(.lyceumPress)
+                }
+                // Same section as the problem sets: from a student's side "practice
+                // this lecture" is one idea, whatever form the practice takes.
+                ForEach(drills) { d in
+                    Button { activeDrill = ActiveDrill(id: d.slug) } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(d.title)
+                                    .font(.display(14)).foregroundStyle(Theme.ink)
+                                    .multilineTextAlignment(.leading).lineLimit(2)
+                                Text(d.blurb)
+                                    .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                                    .multilineTextAlignment(.leading).lineLimit(2)
+                            }
+                            Spacer(minLength: 0)
+                            if LessonProgress.shared.isAced(userId: auth.user?.id ?? "guest", slug: d.slug) {
+                                Text("✦")
+                                    .font(.display(15)).foregroundStyle(Theme.gold300)
+                                    .accessibilityLabel("Aced")
+                            }
                             Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
                         }
                         .lyceumCard()
