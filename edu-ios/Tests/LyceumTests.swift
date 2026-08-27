@@ -135,4 +135,37 @@ final class LyceumTests: XCTestCase {
         XCTAssertEqual(resolved.map(\.slug), ["lesson-01"])
         XCTAssertEqual(resolved.first?.title, "Lesson 1 · Foundations")
     }
+
+    // The Progress screen's payload, captured from a real /me/progress response. The
+    // percentages are genuinely nil when a category has no data yet — the screen must
+    // show those as "—" (pending), never as 0%, which would read as a failing grade.
+    func testProgressResponseDecodesWithPendingCategories() throws {
+        let json = """
+        {"classes":[{"sectionId":"s1","sectionName":"PHY II - Summer 2026",
+          "courseId":"c1","courseTitle":"University Physics II",
+          "currentGrade":49.09090909090909,"attendancePct":18.181818181818183,
+          "quizAvgPct":80,"hwPct":null,"testPct":null,"midtermPct":null,"finalPct":null,
+          "watchedCount":2,"totalLectures":11,"quizzesTaken":1,"totalQuizzes":11,
+          "hwGradedCount":0,"totalAssignments":16,"hasTest":false,
+          "weights":{"attendance":10,"quizzes":10,"test":5,"homework":25,"midterm":25,"final":25}}],
+         "inProgress":[{"id":"c1","title":"University Physics II","watchedCount":2,"totalCount":11}],
+         "completed":[]}
+        """
+        let res = try JSONDecoder().decode(ProgressResponse.self, from: Data(json.utf8))
+        let c = try XCTUnwrap(res.classes.first)
+        XCTAssertNil(c.hwPct, "a category with no data must stay nil, not decode to 0")
+        XCTAssertEqual(ProfileView.pct(c.hwPct), "—")
+        XCTAssertEqual(ProfileView.pct(c.currentGrade), "49%")
+        XCTAssertEqual(ProfileView.pct(c.quizAvgPct), "80%")
+
+        // Six categories, in the web's order, each carrying its weight and denominator.
+        XCTAssertEqual(c.breakdown.map(\.label),
+                       ["Attendance", "Quizzes", "Homework", "Final Test", "Midterm", "Final"])
+        XCTAssertEqual(c.breakdown.map(\.weight).reduce(0, +), 100)
+        XCTAssertEqual(c.breakdown.first?.detail, "2/11 lectures")
+
+        let p = try XCTUnwrap(res.inProgress.first)
+        XCTAssertEqual(p.fraction, 2.0 / 11.0, accuracy: 1e-9)
+        XCTAssertTrue(res.completed.isEmpty)
+    }
 }

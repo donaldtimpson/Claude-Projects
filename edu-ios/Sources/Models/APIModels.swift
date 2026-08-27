@@ -256,6 +256,74 @@ struct VideoDetailResponse: Codable {
     var lessonSlugs: [String]?
 }
 
+// MARK: - Progress screen (mobile half of the web /dashboard)
+
+/// One enrolled class with this student's own grade. Percentages are nil until a
+/// category has data — "pending", not zero, exactly as the web renders it.
+struct ClassGrade: Codable, Identifiable, Hashable {
+    let sectionId: String
+    let sectionName: String
+    let courseId: String
+    let courseTitle: String
+    let currentGrade: Double?
+    let attendancePct: Double?
+    let quizAvgPct: Double?
+    let hwPct: Double?
+    let testPct: Double?
+    let midtermPct: Double?
+    let finalPct: Double?
+    let watchedCount: Int
+    let totalLectures: Int
+    let quizzesTaken: Int
+    let totalQuizzes: Int
+    let hwGradedCount: Int
+    let totalAssignments: Int
+    let hasTest: Bool
+    let weights: GradeWeights
+
+    var id: String { sectionId }
+
+    /// The six categories in the web's order, with their weights and denominators.
+    var breakdown: [(label: String, pct: Double?, weight: Int, detail: String)] {
+        [
+            ("Attendance", attendancePct, weights.attendance, "\(watchedCount)/\(totalLectures) lectures"),
+            ("Quizzes", quizAvgPct, weights.quizzes, "\(quizzesTaken)/\(totalQuizzes) taken"),
+            ("Homework", hwPct, weights.homework, "\(hwGradedCount)/\(totalAssignments) graded"),
+            ("Final Test", testPct, weights.test, hasTest ? "best attempt" : "no test yet"),
+            ("Midterm", midtermPct, weights.midterm, "in class"),
+            ("Final", finalPct, weights.final, "in class"),
+        ]
+    }
+}
+
+struct GradeWeights: Codable, Hashable {
+    let attendance: Int
+    let quizzes: Int
+    let test: Int
+    let homework: Int
+    let midterm: Int
+    let final: Int
+}
+
+struct CourseProgressItem: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let watchedCount: Int
+    let totalCount: Int
+
+    var fraction: Double { totalCount > 0 ? Double(watchedCount) / Double(totalCount) : 0 }
+}
+
+struct ProgressResponse: Codable {
+    let classes: [ClassGrade]
+    let inProgress: [CourseProgressItem]
+    let completed: [CourseProgressItem]
+}
+
+struct HandleResponse: Codable {
+    let user: AuthUser
+}
+
 struct DueCard: Codable, Identifiable, Hashable {
     let id: String
     let prompt: String

@@ -4,7 +4,10 @@ struct ProfileView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @State private var me: MeResponse?
     @State private var badges: [Badge] = []
+    @State private var progress: ProgressResponse?
     @State private var showDelete = false
+    @State private var showHandleEditor = false
+    @State private var expandedClass: String?
 
     var body: some View {
         signedIn
@@ -18,7 +21,16 @@ struct ProfileView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(auth.user?.name ?? "Scholar").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
-                if let handle = auth.user?.handle { Text("@\(handle)").foregroundStyle(Theme.inkSoft) }
+                // The handle is the only name shown in the Hall of Scholars, so it's
+                // editable here just as it is on the web dashboard.
+                Button { showHandleEditor = true } label: {
+                    HStack(spacing: 6) {
+                        Text(auth.user?.handle.map { "@\($0)" } ?? "Choose a handle")
+                            .foregroundStyle(auth.user?.handle == nil ? Theme.gold400 : Theme.inkSoft)
+                        Image(systemName: "pencil").font(.caption).foregroundStyle(Theme.gold400)
+                    }
+                }
+                .buttonStyle(.plain)
 
                 HStack {
                     stat("\(me?.streak.count ?? 0)", "day streak")
@@ -56,6 +68,21 @@ struct ProfileView: View {
                     }
                 }
 
+                if let p = progress, !p.classes.isEmpty {
+                    sectionHeader("MY CLASSES")
+                    ForEach(p.classes) { c in classCard(c) }
+                }
+
+                if let p = progress, !p.inProgress.isEmpty {
+                    sectionHeader("IN PROGRESS")
+                    ForEach(p.inProgress) { courseRow($0) }
+                }
+
+                if let p = progress, !p.completed.isEmpty {
+                    sectionHeader("COMPLETED")
+                    ForEach(p.completed) { courseRow($0) }
+                }
+
                 // Reachable from inside the app, not just the App Store listing —
                 // reviewers look for it, and students shouldn't have to.
                 HStack(spacing: 18) {
@@ -82,6 +109,11 @@ struct ProfileView: View {
         }
         .background(Theme.parchment)
         .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
+        .sheet(isPresented: $showHandleEditor) {
+            HandleEditorSheet(current: auth.user?.handle) { updated in
+                auth.user = updated
+            }
+        }
         .task { await load() }
     }
 
@@ -96,7 +128,94 @@ struct ProfileView: View {
     private func load() async {
         async let meResult: MeResponse? = try? await APIClient.shared.get("/me")
         async let badgesResult: BadgesResponse? = try? await APIClient.shared.get("/me/badges")
+        async let progressResult: ProgressResponse? = try? await APIClient.shared.get("/me/progress")
         me = await meResult
         badges = (await badgesResult)?.badges ?? []
+        progress = await progressResult
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 4)
+    }
+
+    /// One enrolled class: the headline grade, and the same six weighted categories
+    /// the web class hub shows, folded away until asked for.
+    @ViewBuilder private func classCard(_ c: ClassGrade) -> some View {
+        let open = expandedClass == c.sectionId
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.18)) {
+                    expandedClass = open ? nil : c.sectionId
+                }
+            } label: {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(c.courseTitle)
+                            .font(.display(14)).foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.leading).lineLimit(2)
+                        Text(c.sectionName).font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                    }
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(Self.pct(c.currentGrade))
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(Self.gradeColor(c.currentGrade))
+                        Text("current grade").font(.caption2).foregroundStyle(Theme.inkSoft)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            if open {
+                VStack(spacing: 6) {
+                    ForEach(c.breakdown, id: \.label) { row in
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(row.label).font(.serif(14)).foregroundStyle(Theme.ink)
+                            Text("· \(row.detail)").font(.caption).foregroundStyle(Theme.inkSoft)
+                            Spacer(minLength: 4)
+                            Text(Self.pct(row.pct))
+                                .font(.serif(14)).foregroundStyle(Self.gradeColor(row.pct))
+                            Text("\(row.weight)%")
+                                .font(.caption).foregroundStyle(Theme.inkSoft)
+                                .frame(width: 34, alignment: .trailing)
+                        }
+                    }
+                    Text("A category with no data yet shows — and doesn't count against you.")
+                        .font(.caption).foregroundStyle(Theme.inkSoft)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 2)
+                }
+            }
+
+            Text(open ? "Hide breakdown" : "Show breakdown")
+                .font(.caption).foregroundStyle(Theme.gold400)
+        }
+        .lyceumCard()
+    }
+
+    private func courseRow(_ c: CourseProgressItem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(c.title)
+                .font(.display(14)).foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.leading).lineLimit(2)
+            QuizProgressBar(fraction: c.fraction)
+            Text("\(c.watchedCount) of \(c.totalCount) lectures")
+                .font(.caption).foregroundStyle(Theme.inkSoft)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lyceumCard()
+    }
+
+    /// nil reads as "—", not 0: a category with no data yet is pending, not failed.
+    static func pct(_ v: Double?) -> String { v.map { "\(Int($0.rounded()))%" } ?? "—" }
+
+    static func gradeColor(_ v: Double?) -> Color {
+        guard let v else { return Theme.inkSoft }
+        if v >= 90 { return Theme.success }
+        if v >= 70 { return Theme.gold400 }
+        return Theme.danger
     }
 }
