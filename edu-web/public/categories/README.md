@@ -27,7 +27,12 @@ Palette is the site's own (`app/globals.css`): crimson `#0f0404`–`#4a1a1a`, go
 
 ## Provenance
 
-`history`, `mathematics`, `philosophy`, `science` are raster illustrations in an engraved
-style. `language.png` was composed as vector + type and rendered headless from
-`tools/category-plate/` — it follows the same template but does not have the engraved
-depth of the other four, so it is the one to replace first if the set is ever redone.
+All five are raster illustrations in an engraved style, generated from a prompt describing
+the series (size, palette, engraving style, and the objects for that subject) rather than
+drawn. Ask for the whole family at once, or for "one more to go with the other four" in the
+same conversation, so the palette and layout stay consistent. Source renders come out around
+1280x720 or larger; resample to 832 wide and crop to 466.
+
+Proofread any Latin or Greek in the artwork letter by letter before committing it — dropped
+and doubled letters are the usual failure, and text baked into an illustration cannot be
+fixed later without regenerating the whole plate.
