@@ -52,7 +52,12 @@ async function main() {
 
   for (const v of videos) {
     const outPath = join(OUT_DIR, `${v.youtubeVideoId}.txt`);
-    if (existsSync(outPath)) {
+    // An EMPTY file is the "no captions yet" marker written below — it must stay
+    // retryable. Treating it as cached meant a lecture fetched between upload and
+    // YouTube generating its auto-captions could never be fetched again, silently
+    // blocking notes/quiz/chapters for exactly the freshly-uploaded video that
+    // /current-quiz targets. Only a file with content counts as done.
+    if (existsSync(outPath) && readFileSync(outPath, "utf8").trim()) {
       skipped++;
       continue;
     }
@@ -77,7 +82,7 @@ async function main() {
       const vttFile = readdirSync(work).find((f) => f.endsWith(".vtt"));
       if (!vttFile) {
         console.warn(`  no captions: ${v.title}`);
-        writeFileSync(outPath, "");
+        writeFileSync(outPath, "");   // marker only; re-attempted on the next run
         failed++;
         continue;
       }

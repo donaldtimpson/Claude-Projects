@@ -94,7 +94,9 @@ async function main() {
 
   for (const v of videos) {
     const outPath = join(OUT_DIR, `${v.youtubeVideoId}.json`);
-    if (existsSync(outPath) && !force) {
+    // "[]" is the "no captions yet" marker written below; keep it retryable so a
+    // freshly-uploaded lecture isn't permanently stuck (see fetch-transcripts.ts).
+    if (existsSync(outPath) && !force && readFileSync(outPath, "utf8").trim() !== "[]") {
       skipped++;
       continue;
     }
@@ -119,7 +121,7 @@ async function main() {
       const vttFile = readdirSync(work).find((f) => f.endsWith(".vtt"));
       if (!vttFile) {
         console.warn(`  no captions: ${v.title}`);
-        writeFileSync(outPath, "[]");
+        writeFileSync(outPath, "[]");   // marker only; re-attempted on the next run
         failed++;
         continue;
       }
