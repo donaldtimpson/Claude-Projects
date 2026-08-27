@@ -4,6 +4,8 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { grammarLessonDrills } from "@/lib/drills/grammar";
+import { getAcedLessonSlugs } from "@/lib/lessons";
 import { nestComments } from "@/lib/comments";
 import { saveQuizAttempt } from "@/lib/actions";
 import { getQuizAces } from "@/lib/gamification/engine";
@@ -107,6 +109,22 @@ export default async function VideoPage({
       include: { problemSet: { select: { id: true, title: true, points: true } } },
     })
   ).map((link) => link.problemSet);
+
+  // Lesson drills tagged as covering this lecture (VideoLesson). Same many-to-many
+  // shape as problem sets, and they render in the same Practice section — from a
+  // student's side "practice this lecture" is one idea, whether the practice is a
+  // problem set or a drill. Aced state (✦) is server-derived, so it matches the
+  // drills hub and the iOS app rather than being recomputed here.
+  const lessonMeta = new Map(grammarLessonDrills.map((d) => [d.slug, d]));
+  const lessonDrills = (
+    await db.videoLesson.findMany({ where: { videoId: video.id }, select: { lessonSlug: true } })
+  )
+    .map((l) => lessonMeta.get(l.lessonSlug))
+    .filter((d): d is NonNullable<typeof d> => Boolean(d));
+  const acedLessons = new Set(
+    userId && lessonDrills.length > 0 ? await getAcedLessonSlugs(userId) : [],
+  );
+  const hasPractice = problemSets.length > 0 || lessonDrills.length > 0;
 
   // Manual-order courses: prev/next nav follows the hand-arranged position.
   if (video.course.manualOrder) {
@@ -222,7 +240,7 @@ export default async function VideoPage({
                 Quiz
               </a>
             )}
-            {problemSets.length > 0 && (
+            {hasPractice && (
               <a
                 href="#practice"
                 className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
@@ -239,8 +257,8 @@ export default async function VideoPage({
           </nav>
         )}
 
-        {/* Problem sets covering this lecture, with their worked solutions. */}
-        {problemSets.length > 0 && (
+        {/* Problem sets and lesson drills covering this lecture. */}
+        {hasPractice && (
           <section id="practice" className="scroll-mt-24 space-y-4">
             <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
               Practice
@@ -267,6 +285,36 @@ export default async function VideoPage({
                   </Link>
                 </li>
               ))}
+              {lessonDrills.map((d) => {
+                const aced = acedLessons.has(d.slug);
+                return (
+                  <li key={d.slug}>
+                    <Link
+                      href={`/drills/${d.slug}`}
+                      className="flex items-center justify-between gap-4 bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl px-5 py-3 transition-colors group"
+                    >
+                      <span className="min-w-0">
+                        <span className="block font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                          {d.title}
+                        </span>
+                        <span className="block text-xs text-parchment-dim mt-0.5">
+                          {d.blurb}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-3 shrink-0">
+                        {aced && (
+                          <span className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-gold-300">
+                            ✦ Aced
+                          </span>
+                        )}
+                        <span className="text-parchment-dim group-hover:text-gold-300 transition-colors">
+                          →
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </section>
         )}
