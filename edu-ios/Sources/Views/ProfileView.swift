@@ -77,8 +77,17 @@ struct ProfileView: View {
                                 }
                             }
                         }
-                        .padding(.vertical, 2)
+                        // A medallion's glow is a shadow of radius ≈ size * 0.13 — about
+                        // 8pt here — so it needs that much clearance on every side or the
+                        // ScrollView clips it and the badges read as flat-edged discs.
+                        // 2pt wasn't enough vertically and there was none at all on the
+                        // sides, which cut the first and last badge.
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16)
                     }
+                    // Cancel the parent's inset so the strip scrolls edge to edge; the
+                    // inner padding above puts the badges back in line with the headings.
+                    .padding(.horizontal, -16)
                 }
 
                 if let p = progress, !p.classes.isEmpty {
