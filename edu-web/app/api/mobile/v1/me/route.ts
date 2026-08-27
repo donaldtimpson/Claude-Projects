@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { getStreak } from "@/lib/gamification/engine";
+import { getStreak, generateHandle } from "@/lib/gamification/engine";
 import { getDueCount } from "@/lib/srs";
 import { withUser } from "@/lib/mobile/guard";
 import { verifyCredentials } from "@/lib/auth-core";
@@ -30,7 +30,13 @@ export async function GET(req: Request) {
     const drillBests = bestRows.map((r) => ({
       slug: r.slug, level: r.level, durationSec: r.durationSec, best: r._max.score ?? 0,
     }));
-    return ok({ user, streak, dueCount, drillBests });
+    // What this student is called in the Hall of Scholars when they haven't picked a
+    // handle. The leaderboard, the quiz aces, and the admin views all fall back to
+    // generateHandle, so a student with no handle already HAS a public name — the app
+    // just never showed it, leaving them unable to find themselves on the board. Sent
+    // alongside the raw handle rather than replacing it, so the editor can still tell
+    // "chosen" from "assigned", exactly as the web dashboard does.
+    return ok({ user, streak, dueCount, drillBests, handlePlaceholder: generateHandle(userId) });
   });
 }
 

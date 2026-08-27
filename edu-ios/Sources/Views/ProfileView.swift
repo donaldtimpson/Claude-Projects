@@ -17,17 +17,30 @@ struct ProfileView: View {
 
     private var earned: [Badge] { badges.filter { $0.unlocked } }
 
+    /// The name this student actually appears under publicly: their chosen handle, or
+    /// the server's assigned placeholder while they haven't picked one.
+    private var publicHandle: String {
+        auth.user?.handle ?? me?.handlePlaceholder ?? "Scholar"
+    }
+
     @ViewBuilder private var signedIn: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text(auth.user?.name ?? "Scholar").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
                 // The handle is the only name shown in the Hall of Scholars, so it's
-                // editable here just as it is on the web dashboard.
+                // editable here just as it is on the web dashboard. A student who never
+                // picked one still HAS a public name — the server's auto-assigned
+                // placeholder — so show that rather than a blank, and say it's assigned.
                 Button { showHandleEditor = true } label: {
-                    HStack(spacing: 6) {
-                        Text(auth.user?.handle.map { "@\($0)" } ?? "Choose a handle")
-                            .foregroundStyle(auth.user?.handle == nil ? Theme.gold400 : Theme.inkSoft)
-                        Image(systemName: "pencil").font(.caption).foregroundStyle(Theme.gold400)
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 6) {
+                            Text("@\(publicHandle)").foregroundStyle(Theme.inkSoft)
+                            Image(systemName: "pencil").font(.caption).foregroundStyle(Theme.gold400)
+                        }
+                        if auth.user?.handle == nil && me?.handlePlaceholder != nil {
+                            Text("auto-assigned — tap to choose your own")
+                                .font(.caption2).foregroundStyle(Theme.gold400)
+                        }
                     }
                 }
                 .buttonStyle(.plain)
@@ -110,7 +123,7 @@ struct ProfileView: View {
         .background(Theme.parchment)
         .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
         .sheet(isPresented: $showHandleEditor) {
-            HandleEditorSheet(current: auth.user?.handle) { updated in
+            HandleEditorSheet(current: auth.user?.handle, assigned: me?.handlePlaceholder) { updated in
                 auth.user = updated
             }
         }

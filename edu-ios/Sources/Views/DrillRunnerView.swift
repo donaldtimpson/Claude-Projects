@@ -66,8 +66,19 @@ struct DrillRunnerView: View {
     // Remembered across launches (global last-used config) so you don't reconfigure every
     // time; sanitized per-drill in setup() when a stored choice isn't available for a drill.
     @AppStorage("drill_last_mode") private var mode: DrillMode = .practice
+    /// A homework drill has exactly one shape — the fixed-length run that earns the ✦ —
+    /// so Practice / Learn / Rapid Fire is a choice with no meaning there. `mode` is a
+    /// SINGLE preference shared by every drill, so without this a Rapid Fire round on a
+    /// math drill would drop the next lesson straight into a timed "homework" run.
+    /// Overridden for the duration rather than written to, so the stored preference
+    /// survives for the drills where it does mean something.
+    private var activeMode: DrillMode { def?.homeworkLength != nil ? .practice : mode }
     @AppStorage("drill_last_rapidSeconds") private var rapidSeconds = 60
     @AppStorage("drill_last_practiceLen") private var practiceLen = 10   // 10, 20, or 0 = All
+    /// Lesson drills offer the same two sessions the web does: the homework run, or a
+    /// short practice. Defaults to homework and is deliberately NOT persisted — the
+    /// point of opening a lesson is the homework, and web resets to it each visit too.
+    @State private var lessonHomework = true
     @State private var launchedLevel: Int?   // rapid/learn present at this difficulty
     @State private var recentPrompts: [String] = []
 
@@ -89,9 +100,9 @@ struct DrillRunnerView: View {
         if let def {
             if finished {
                 summaryView
-            } else if let lvl = launchedLevel, mode == .rapidFire {
+            } else if let lvl = launchedLevel, activeMode == .rapidFire {
                 RapidFireView(def: def, level: lvl, seconds: rapidSeconds) { launchedLevel = nil }
-            } else if let lvl = launchedLevel, mode == .learn {
+            } else if let lvl = launchedLevel, activeMode == .learn {
                 LearnDrillView(def: def, level: lvl, userId: userId) { launchedLevel = nil }
             } else if let level, let problem {
                 if def.landscape {
@@ -135,14 +146,16 @@ struct DrillRunnerView: View {
                 Text(def.icon).font(.system(size: 64))
                 Text(def.blurb).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
 
-                Picker("Mode", selection: $mode) {
-                    Text("Practice").tag(DrillMode.practice)
-                    if def.poolItems != nil { Text("Learn").tag(DrillMode.learn) }
-                    Text("Rapid Fire").tag(DrillMode.rapidFire)
+                if def.homeworkLength == nil {
+                    Picker("Mode", selection: $mode) {
+                        Text("Practice").tag(DrillMode.practice)
+                        if def.poolItems != nil { Text("Learn").tag(DrillMode.learn) }
+                        Text("Rapid Fire").tag(DrillMode.rapidFire)
+                    }
+                    .pickerStyle(.segmented)
                 }
-                .pickerStyle(.segmented)
 
-                switch mode {
+                switch activeMode {
                 case .rapidFire:
                     Picker("Length", selection: $rapidSeconds) {
                         Text("60s").tag(60)
@@ -151,9 +164,11 @@ struct DrillRunnerView: View {
                     .pickerStyle(.segmented)
                 case .practice:
                     if let hl = def.homeworkLength {
-                        Text("Homework — a \(hl)-question run. Get every one right for the ✦.")
-                            .font(.footnote).foregroundStyle(Theme.gold400)
-                            .multilineTextAlignment(.center)
+                        Picker("Session", selection: $lessonHomework) {
+                            Text("Homework · \(hl)").tag(true)
+                            Text("Practice · 10").tag(false)
+                        }
+                        .pickerStyle(.segmented)
                     } else {
                         Picker("Length", selection: $practiceLen) {
                             Text("10").tag(10)
@@ -195,7 +210,7 @@ struct DrillRunnerView: View {
 
     // The per-mode stat under a difficulty button (Rapid Fire best / Learn mastery / nothing).
     @ViewBuilder private func difficultyStat(_ def: DrillDef, _ value: Int) -> some View {
-        switch mode {
+        switch activeMode {
         case .rapidFire:
             let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
             Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
@@ -419,22 +434,32 @@ struct DrillRunnerView: View {
     private func rapidBestKey(_ level: Int, _ seconds: Int) -> String { "rapidbest_\(slug)_L\(level)_\(seconds)" }
 
     private var modeBlurb: String {
-        switch mode {
+        switch activeMode {
         case .rapidFire: return "Beat the clock — build a combo for a high score."
         case .learn: return "Practice until you've mastered them all — weak ones come back more."
         case .practice:
-            if let hl = def?.homeworkLength { return "\(hl) questions — get every one right to earn the ✦." }
+            if let hl = def?.homeworkLength {
+                return lessonHomework
+                    ? "A random \(hl) from the pool. Get every one right to earn the ✦ — full credit if this lesson is assigned in your class."
+                    : "10 questions at your pace. Practice only — the ✦ needs the full \(hl)."
+            }
             return practiceLen == 0 ? "Every one, once, at your pace." : "\(practiceLen) problems at your pace."
         }
     }
 
     private func start(def: DrillDef, level value: Int) {
-        switch mode {
+        switch activeMode {
         case .rapidFire, .learn:
             launchedLevel = value   // presented by RapidFireView / LearnDrillView
         case .practice:
-            // Homework drills run a fixed sampled length; others use 10/20/All.
-            count = def.homeworkLength ?? (practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen)
+            // A lesson runs its homework length, or a short practice if that was chosen
+            // (a flawless 10 can't ace: the server needs correct == total AND total >= 30).
+            // Every other drill uses 10/20/All.
+            if let hl = def.homeworkLength {
+                count = lessonHomework ? hl : 10
+            } else {
+                count = practiceLen == 0 ? (def.poolSize?(value) ?? 20) : practiceLen
+            }
             // Fresh shuffle bag so the session (esp. "All") walks every region once, in order.
             DrillCatalog.resetBag(slug: slug, level: value)
             level = value

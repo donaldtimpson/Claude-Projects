@@ -39,6 +39,10 @@ struct MeResponse: Codable {
     let streak: Streak
     let dueCount: Int
     var drillBests: [DrillBest]? = nil   // synced Rapid Fire high scores
+    /// What the Hall of Scholars calls this student when `user.handle` is nil. The
+    /// leaderboard has always shown an auto-assigned name in that case; this is it, so
+    /// the profile can show the same one instead of a blank. Optional for older servers.
+    var handlePlaceholder: String? = nil
 }
 
 struct Badge: Codable, Identifiable, Hashable {

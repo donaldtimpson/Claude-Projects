@@ -6,6 +6,9 @@ import SwiftUI
 // only mirrors the length cap locally and shows whatever the server says.
 struct HandleEditorSheet: View {
     let current: String?
+    /// The auto-assigned name in use while `current` is nil — worth naming, since it's
+    /// what other students already see on the leaderboard.
+    var assigned: String?
     let onSaved: (AuthUser) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -24,6 +27,11 @@ struct HandleEditorSheet: View {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("This is the only name shown publicly in the Hall of Scholars — never your real name or email.")
                         .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+
+                    if current == nil, let assigned {
+                        Text("You're currently shown as @\(assigned), assigned automatically. Pick your own below.")
+                            .font(.serif(15)).foregroundStyle(Theme.gold400)
+                    }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Handle").font(.caption).foregroundStyle(Theme.inkSoft)
