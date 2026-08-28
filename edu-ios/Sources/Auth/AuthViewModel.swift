@@ -8,6 +8,18 @@ final class AuthViewModel: ObservableObject {
     var isSignedIn: Bool { user != nil }
 
     func bootstrap() async {
+        #if DEBUG
+        // The signed-out UI tests need a deterministic anonymous start. A simulator's
+        // Keychain survives uninstalling the app, so a token left by an earlier manual
+        // sign-in would otherwise quietly sign the test in and it would assert against
+        // the wrong state. DEBUG-only; never present in a shipped build.
+        if ProcessInfo.processInfo.environment["UI_TEST_ANONYMOUS"] == "1" {
+            TokenStore.clear()
+            user = nil
+            loading = false
+            return
+        }
+        #endif
         guard TokenStore.accessToken != nil else {
             user = nil
             loading = false

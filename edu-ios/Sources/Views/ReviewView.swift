@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReviewView: View {
     @EnvironmentObject private var queue: WriteQueueManager
+    @EnvironmentObject private var auth: AuthViewModel
 
     @State private var deck: ReviewDeckResponse?
     @State private var error: String?
@@ -14,10 +15,22 @@ struct ReviewView: View {
 
     var body: some View {
         Group {
-            switch phase {
-            case .idle: idleView
-            case .running: runningView
-            case .done: doneView
+            if !auth.isSignedIn {
+                // Review is the one tab that can't be anonymous: the deck IS the
+                // student's own history of missed questions, scheduled per person.
+                // Explain that rather than just refusing.
+                SignInGate(
+                    icon: "square.stack.3d.up",
+                    title: "Daily Review",
+                    message: "Review builds a deck from the questions you've missed and brings each one back just before you'd forget it. That needs an account to remember what you've seen.",
+                    reason: "Review remembers what you've missed and schedules it for you."
+                )
+            } else {
+                switch phase {
+                case .idle: idleView
+                case .running: runningView
+                case .done: doneView
+                }
             }
         }
         .navigationTitle("Daily Review")
@@ -102,6 +115,7 @@ struct ReviewView: View {
     }
 
     private func load() async {
+        guard auth.isSignedIn else { loading = false; return }
         loading = true
         do {
             deck = try await APIClient.shared.get("/review/deck")

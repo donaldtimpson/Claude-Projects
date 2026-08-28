@@ -441,12 +441,25 @@ Every upload needs a **build number higher than the last** —
 Both of these were raised and you chose to submit as-is. Recording them so a
 rejection is not a surprise, and so the fix is already scoped.
 
-**Login gate — Guideline 5.1.1(i).** The app requires an account before showing
-anything, while the website serves the same lectures to anonymous visitors. The
-guideline says that if an app's core content doesn't require an account, it
-shouldn't demand one, and a reviewer can check the website in a browser. If this
-comes back: let people browse courses, lectures, and notes signed out, and gate
-only progress, quizzes, review, drill sync, and comments.
+**Login gate — Guideline 5.1.1(i). FIXED 2026-08-28, after the rejection.** The
+app required an account before showing anything, while the website served the
+same lectures to anonymous visitors. It came back exactly as predicted.
+
+The app now opens on the catalog signed in or not. No wall, and deliberately no
+"skip" button on a sign-up screen either — a skippable wall is still the pattern
+reviewers scrutinise, and the website has never had one. Courses, lectures,
+notes, quizzes, and drills all work anonymously; only Review (the deck IS your
+own history) and Profile ask for an account, and each says what signing in buys
+rather than just refusing. The quiz and drill result screens now carry an
+actionable prompt instead of the dead-end "Sign in to save…" footnotes.
+
+No API work was needed — every browse endpoint under /api/mobile/v1 was already
+public, and only /me*, /progress/*, /quiz/attempt, /drills/session and /review/*
+require a token. The wall was purely RootView.
+
+`Screenshots/SignedOutAccessTests.swift` pins the behaviour: launches into the
+catalog, every tab reachable, drills ungated, Review explains itself. Run it with
+the LyceumScreenshots scheme; it needs no seeded account.
 
 **Comments — Guideline 1.2. Closed for 1.0.** Students could post lecture
 comments in the app with no way to report a comment or block a user, which apps
@@ -459,8 +472,8 @@ The switch is `commentsEnabled` in `LectureView.swift` — flip it to `true` onc
 `CommentReport` + report/block + an admin queue exist, and restore the App
 Privacy row, the privacy-manifest entry, and the age-rating answer with it.
 
-So the only live exposure is 5.1.1(i) above. It is not a reason not to submit;
-it costs a review cycle if it's caught.
+Both are now closed: 5.1.1(i) is fixed above, and comments stay hidden until
+moderation ships.
 
 ---
 

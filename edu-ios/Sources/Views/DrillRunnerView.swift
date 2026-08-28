@@ -419,8 +419,9 @@ struct DrillRunnerView: View {
                 StreakPill(streak: bestStreak)
             }
             if !auth.isSignedIn {
-                Text("Sign in to save drill progress and earn badges.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                SignInPrompt(
+                    message: "This run isn't saved. An account keeps your drill progress, streak, and badges.",
+                    reason: "Save your drill progress, streak, and badges.")
             }
             PrimaryButton(title: "Practice again") {
                 finished = false; level = nil; problem = nil

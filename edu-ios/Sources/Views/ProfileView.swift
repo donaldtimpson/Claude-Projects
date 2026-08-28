@@ -10,9 +10,18 @@ struct ProfileView: View {
     @State private var expandedClass: String?
 
     var body: some View {
-        signedIn
-            .navigationTitle("Profile")
-            .navigationBarTitleDisplayMode(.inline)
+        Group {
+            if auth.isSignedIn {
+                signedIn
+            } else {
+                // Signed out, this tab IS the sign-in screen. Nothing else in the app
+                // requires an account, so this is where the ask lives.
+                AuthView(reason: "Keep your progress, quiz scores, streak, and badges across your devices.")
+                    .background(Theme.parchment)
+            }
+        }
+        .navigationTitle(auth.isSignedIn ? "Profile" : "Sign In")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var earned: [Badge] { badges.filter { $0.unlocked } }

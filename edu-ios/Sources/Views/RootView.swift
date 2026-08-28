@@ -6,9 +6,14 @@ struct RootView: View {
     var body: some View {
         if auth.loading {
             SplashView()
-        } else if auth.user == nil {
-            AuthView()
         } else {
+            // The app opens straight into the catalog, signed in or not. Everything
+            // that doesn't need an identity — browsing courses, lectures, notes,
+            // quizzes, drills — works signed out, and only the tabs and actions that
+            // are inherently personal ask for an account, at the moment they need it.
+            // App Review rejected the old behaviour (the whole app behind a login)
+            // under Guideline 5.1.1(i); the website has always worked this way.
+            //
             // A bottom tab bar on iPhone and an expandable sidebar on iPad, from
             // one TabView — scales cleanly as we add destinations (search,
             // leaderboard, course map, settings…). See .sidebarAdaptable.

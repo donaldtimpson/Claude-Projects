@@ -1,10 +1,19 @@
 import AuthenticationServices
 import SwiftUI
 
-// The app's entry screen when signed out (the whole app is gated behind auth).
-// On success it sets auth.user, and RootView swaps in the TabView automatically.
+// Sign in / create an account. NOT a gate: the app opens straight into the catalog
+// and everything that doesn't need an identity works signed out (Guideline 5.1.1(i),
+// and the website behaves the same way). This appears as the Profile tab's body while
+// signed out, and as a sheet from the places where signing in actually buys something —
+// saving a quiz score, keeping drill progress, opening Review.
 struct AuthView: View {
     @EnvironmentObject private var auth: AuthViewModel
+
+    /// Shown above the form when raised from a specific action, so the ask is tied to
+    /// what the student was doing rather than being a generic wall.
+    var reason: String?
+    /// Set when presented as a sheet, to dismiss on success and offer a way out.
+    var onDismiss: (() -> Void)?
 
     // Sign in with Apple needs a paid Developer account + entitlement; hidden so
     // the app builds to a device with a free Apple ID. Flip to true when the
@@ -32,8 +41,15 @@ struct AuthView: View {
                     Text(mode == .signIn ? "Sign in to continue" : "Create your account")
                         .font(.serif(17))
                         .foregroundStyle(Theme.inkSoft)
+                    if let reason {
+                        Text(reason)
+                            .font(.serif(15))
+                            .foregroundStyle(Theme.gold400)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 2)
+                    }
                 }
-                .padding(.top, 48)
+                .padding(.top, onDismiss == nil ? 48 : 16)
 
                 VStack(spacing: 12) {
                     if mode == .register {
@@ -102,7 +118,9 @@ struct AuthView: View {
                                         email: email.trimmingCharacters(in: .whitespaces),
                                         password: password)
             }
-            // Success: auth.user is now set; RootView swaps to the TabView.
+            // Success: auth.user is set. As the Profile tab's body the view simply
+            // swaps to the profile; as a sheet it has to close itself.
+            onDismiss?()
         } catch {
             self.error = error.localizedDescription
         }
@@ -128,6 +146,7 @@ struct AuthView: View {
                         givenName: fullName?.givenName,
                         familyName: fullName?.familyName
                     )
+                    onDismiss?()
                 } catch {
                     self.error = error.localizedDescription
                 }

@@ -259,8 +259,9 @@ struct LectureView: View {
                             Text("\(quizScore.score) / \(quizScore.total)")
                                 .font(.largeTitle.weight(.bold)).foregroundStyle(Theme.crimson)
                             if !auth.isSignedIn {
-                                Text("Sign in to save your score and feed spaced repetition.")
-                                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                                SignInPrompt(
+                                    message: "This score isn't saved. An account keeps your scores and feeds them into daily review.",
+                                    reason: "Save this quiz score and review what you missed.")
                             }
                             SecondaryButton(title: "Retake quiz") { quizPhase = .running }
                         }

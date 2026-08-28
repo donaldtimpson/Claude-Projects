@@ -186,8 +186,9 @@ struct RapidFireView: View {
             }
             Text("Best: \(best)").font(.footnote).foregroundStyle(Theme.inkSoft)
             if !auth.isSignedIn {
-                Text("Sign in to save progress and earn badges.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                SignInPrompt(
+                    message: "This score isn't saved. An account keeps your high scores across devices.",
+                    reason: "Save your Rapid Fire high scores.")
             }
             PrimaryButton(title: "Play again") { restart() }
             SecondaryButton(title: "Done") { onExit() }
