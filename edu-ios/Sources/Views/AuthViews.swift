@@ -32,24 +32,19 @@ struct AuthView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                VStack(spacing: 8) {
-                    Text("The Timpson Lyceum")
-                        .font(.display(38))
-                        .kerning(2)
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(Theme.gold300)
-                    Text(mode == .signIn ? "Sign in to continue" : "Create your account")
-                        .font(.serif(17))
-                        .foregroundStyle(Theme.inkSoft)
-                    if let reason {
-                        Text(reason)
-                            .font(.serif(15))
-                            .foregroundStyle(Theme.gold400)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 2)
-                    }
-                }
-                .padding(.top, onDismiss == nil ? 48 : 16)
+                // One line above the form, not four. This used to be the app's entry
+                // screen, where a full wordmark and a "Sign in to continue" line earned
+                // their space; it's a tab inside the app now, so the reader already
+                // knows where they are and isn't being stopped from doing anything.
+                // The nav bar carries the title, so all that's left to say is what an
+                // account gets you — the reason from wherever this was raised, or the
+                // general case.
+                Text(reason ?? "Keep your progress, quiz scores, streak, and badges across your devices.")
+                    .font(.serif(16))
+                    .foregroundStyle(Theme.inkSoft)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+                    .padding(.top, 24)
 
                 VStack(spacing: 12) {
                     if mode == .register {

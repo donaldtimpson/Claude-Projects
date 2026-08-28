@@ -20,7 +20,9 @@ struct ProfileView: View {
                     .background(Theme.parchment)
             }
         }
-        .navigationTitle(auth.isSignedIn ? "Profile" : "Sign In")
+        // "Account" rather than "Sign In": the same screen switches to Create Account,
+        // and a title contradicting the form under it reads as a bug.
+        .navigationTitle(auth.isSignedIn ? "Profile" : "Account")
         .navigationBarTitleDisplayMode(.inline)
     }
 

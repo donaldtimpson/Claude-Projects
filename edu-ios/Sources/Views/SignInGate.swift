@@ -49,7 +49,7 @@ struct AuthSheet: View {
     var body: some View {
         NavigationStack {
             AuthView(reason: reason) { dismiss() }
-                .navigationTitle("")
+                .navigationTitle("Account")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
