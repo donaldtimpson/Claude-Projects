@@ -20,9 +20,10 @@ struct ProfileView: View {
                     .background(Theme.parchment)
             }
         }
-        // "Account" rather than "Sign In": the same screen switches to Create Account,
-        // and a title contradicting the form under it reads as a bug.
-        .navigationTitle(auth.isSignedIn ? "Profile" : "Account")
+        // Matches the web page's own heading word for word. Signed out the screen is
+        // the account form, so it says so — "Account" also covers the Create Account
+        // mode the same screen switches into.
+        .navigationTitle(auth.isSignedIn ? "My Progress" : "Account")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -115,6 +116,10 @@ struct ProfileView: View {
                     sectionHeader("COMPLETED")
                     ForEach(p.completed) { courseRow($0) }
                 }
+
+                // The screen is called My Progress, so the account controls need saying
+                // so rather than floating unlabelled under the coursework.
+                sectionHeader("ACCOUNT")
 
                 // Reachable from inside the app, not just the App Store listing —
                 // reviewers look for it, and students shouldn't have to.

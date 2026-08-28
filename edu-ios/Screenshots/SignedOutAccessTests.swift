@@ -38,7 +38,7 @@ final class SignedOutAccessTests: XCTestCase {
     /// Every tab is reachable without an account; the personal ones explain themselves.
     func testAllTabsAreReachableSignedOut() {
         XCTAssertTrue(tab("Learn").waitForExistence(timeout: 30))
-        for label in ["Review", "Drills", "Profile", "Learn"] {
+        for label in ["Review", "Drills", "Progress", "Learn"] {
             let t = tab(label)
             XCTAssertTrue(t.waitForExistence(timeout: 10), "\(label) tab missing signed out")
             t.tap()

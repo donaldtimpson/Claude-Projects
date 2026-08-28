@@ -27,7 +27,12 @@ struct RootView: View {
                 Tab("Drills", systemImage: "figure.strengthtraining.traditional") {
                     NavigationStack { DrillsView() }
                 }
-                Tab("Profile", systemImage: "person.crop.circle") {
+                // "Progress", not "Profile": this is the same screen the web calls
+                // My Progress, and showing one name on each platform for one set of
+                // data is just confusing. The tab label is the short form because
+                // "My Progress" truncates in a four-item tab bar; the screen title
+                // inside matches the web exactly.
+                Tab("Progress", systemImage: "chart.line.uptrend.xyaxis") {
                     NavigationStack { ProfileView() }
                 }
             }

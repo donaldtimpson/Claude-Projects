@@ -90,8 +90,8 @@ final class ScreenshotTests: XCTestCase {
             backToRoot()
         }
 
-        // 6. Profile: streak, badges, cards due.
-        if tapWhenReady(tab("Profile")) {
+        // 6. My Progress: streak, badges, cards due, classes.
+        if tapWhenReady(tab("Progress")) {
             waitForSettle()
             shoot("profile")
 
