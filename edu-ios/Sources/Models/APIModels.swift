@@ -268,6 +268,42 @@ struct VideoDetailResponse: Codable {
     var lessonSlugs: [String]?
 }
 
+// MARK: - Course map (the web /map)
+
+struct MapCourse: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    var shortTitle: String?
+    var isCurrent: Bool?
+
+    /// A node label has about 85pt to live in, so the full title won't do. Takes the
+    /// part before a dash subtitle and drops a trailing parenthetical year or gloss:
+    /// "University Physics II (2026) – Electricity & Magnetism" → "University Physics II",
+    /// "General Topology (Point Set Topology)" → "General Topology".
+    var nodeLabel: String {
+        var t = shortTitle ?? title
+        for sep in [" – ", " — ", " - "] {
+            if let r = t.range(of: sep) { t = String(t[..<r.lowerBound]); break }
+        }
+        if let open = t.lastIndex(of: "("), t.hasSuffix(")") {
+            t = String(t[..<open])
+        }
+        return t.trimmingCharacters(in: .whitespaces)
+    }
+}
+
+struct MapLink: Codable, Hashable {
+    let fromCourseId: String
+    let toCourseId: String
+    let kind: String
+    var isRecommended: Bool { kind == "RECOMMENDED" }
+}
+
+struct CourseMapResponse: Codable {
+    let courses: [MapCourse]
+    let links: [MapLink]
+}
+
 // MARK: - Hall of Scholars (the web /leaderboard)
 
 struct Scholar: Codable, Hashable {

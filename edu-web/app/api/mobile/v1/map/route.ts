@@ -6,7 +6,12 @@ import { ok } from "@/lib/mobile/respond";
 export async function GET() {
   const [courses, links] = await Promise.all([
     db.course.findMany({
-      select: { id: true, title: true, thumbnailUrl: true, canonicalCourseId: true },
+      // shortTitle is what the map labels nodes with — a full course title
+      // doesn't fit a node on a phone (or on the web map, which does the same).
+      select: {
+        id: true, title: true, shortTitle: true, thumbnailUrl: true,
+        canonicalCourseId: true, isCurrent: true,
+      },
     }),
     db.courseLink.findMany({
       select: { fromCourseId: true, toCourseId: true, kind: true },

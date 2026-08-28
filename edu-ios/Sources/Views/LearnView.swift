@@ -23,6 +23,13 @@ struct LearnView: View {
             // signed out, which matters because My Progress is the sign-in form then.
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { CourseMapView() } label: {
+                        Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
+                    }
+                    .tint(Theme.gold400)
+                    .accessibilityLabel("Course Map")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink { ScholarsView() } label: {
                         Image(systemName: "trophy")
                     }
@@ -35,6 +42,7 @@ struct LearnView: View {
             .navigationDestination(for: CourseListItem.self) { CourseDetailView(courseId: $0.id) }
             .navigationDestination(for: CourseHit.self) { CourseDetailView(courseId: $0.id) }
             .navigationDestination(for: CategoryItem.self) { CategoryView(category: $0) }
+            .navigationDestination(for: MapCourseRoute.self) { CourseDetailView(courseId: $0.id) }
             .navigationDestination(for: LectureHit.self) { hit in
                 LectureView(route: LectureRoute(courseId: hit.courseId, videoId: hit.videoId, title: hit.title))
             }
