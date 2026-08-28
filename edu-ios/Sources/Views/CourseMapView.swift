@@ -122,7 +122,13 @@ struct CourseMapView: View {
                         .background(Theme.accent, in: Capsule())
                 }
             }
-            NavigationLink(value: MapCourseRoute(id: course.id)) {
+            // A view-based link, not a value-based one. This screen is pushed from a
+            // toolbar link, and a toolbar's content isn't part of the chain SwiftUI
+            // searches for a matching navigationDestination — so the value-based link
+            // resolved to nothing and the tap silently did nothing at all.
+            NavigationLink {
+                CourseDetailView(courseId: course.id)
+            } label: {
                 HStack(spacing: 6) {
                     Text("Open this course").font(.display(13))
                     Image(systemName: "arrow.right")
@@ -286,6 +292,3 @@ struct CourseMapView: View {
         loading = false
     }
 }
-
-/// Route to a course from the map.
-struct MapCourseRoute: Hashable { let id: String }
