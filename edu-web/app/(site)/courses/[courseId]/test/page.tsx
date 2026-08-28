@@ -49,7 +49,7 @@ export default async function PlaylistTestPage({ params }: { params: Promise<{ c
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-        <h1 className="text-2xl font-bold text-parchment">Playlist Test: {course.title}</h1>
+        <h1 className="text-2xl font-bold text-parchment">Course Test: {course.title}</h1>
         <QuizPlayer
           questions={questions.map((q) => ({
             id: q.id,

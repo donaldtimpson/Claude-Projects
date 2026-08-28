@@ -13,8 +13,23 @@ struct LearnView: View {
 
     var body: some View {
         content
-            .navigationTitle("Timpson Lyceum")
+            // The catalog is "Courses" on the web; it was "Learn" in the tab bar and
+            // "Timpson Lyceum" in the title bar here — three names for one screen. The
+            // wordmark still opens the app on the splash.
+            .navigationTitle("Courses")
             .navigationBarTitleDisplayMode(.inline)
+            // The board is public and the web keeps it in the always-available nav
+            // drawer. There's no drawer here, so it hangs off the home tab — reachable
+            // signed out, which matters because My Progress is the sign-in form then.
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { ScholarsView() } label: {
+                        Image(systemName: "trophy")
+                    }
+                    .tint(Theme.gold400)
+                    .accessibilityLabel("Hall of Scholars")
+                }
+            }
             .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
             .navigationDestination(for: CourseListItem.self) { CourseDetailView(courseId: $0.id) }

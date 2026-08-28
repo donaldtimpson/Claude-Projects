@@ -19,6 +19,10 @@ export async function GET(
       isCurrent: true,
       updatedAt: true,
       canonicalCourseId: true,
+      // Published course-level questions — the course test. videoId: null is what
+      // distinguishes them from the per-lecture quizzes. The app needs the count to
+      // decide whether to offer the test at all, exactly as the web course page does.
+      _count: { select: { quizQuestions: { where: { videoId: null, isDraft: false } } } },
       videos: {
         orderBy: { position: "asc" },
         select: {
@@ -70,10 +74,11 @@ export async function GET(
     year: c.publishedAt ? c.publishedAt.getUTCFullYear() : null,
   }));
 
-  const { resources, problemSets, canonicalCourseId: _canon, ...rest } = course;
+  const { resources, problemSets, canonicalCourseId: _canon, _count, ...rest } = course;
   return ok({
     course: {
       ...rest,
+      testQuestionCount: _count.quizQuestions,
       problemSets: problemSets.map((ps) => {
         const positions = ps.videos.map((v) => v.video.position).sort((a, b) => a - b);
         return {

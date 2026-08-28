@@ -18,7 +18,9 @@ struct RootView: View {
             // one TabView — scales cleanly as we add destinations (search,
             // leaderboard, course map, settings…). See .sidebarAdaptable.
             TabView {
-                Tab("Learn", systemImage: "books.vertical") {
+                // "Courses", matching the web nav. It was "Learn" here and "Courses"
+                // there for one identical catalog.
+                Tab("Courses", systemImage: "books.vertical") {
                     NavigationStack { LearnView() }
                 }
                 Tab("Review", systemImage: "square.stack.3d.up") {

@@ -24,7 +24,7 @@ final class SignedOutAccessTests: XCTestCase {
 
     /// The app opens on the catalog, not on a login screen.
     func testLaunchesIntoTheCatalogWithoutAnAccount() {
-        XCTAssertTrue(tab("Learn").waitForExistence(timeout: 30),
+        XCTAssertTrue(tab("Courses").waitForExistence(timeout: 30),
                       "the tab bar should exist signed out — the app must not open behind a login")
         // The sign-in form must NOT be what greets an anonymous visitor.
         XCTAssertFalse(app.buttons["Sign in"].exists,
@@ -37,8 +37,8 @@ final class SignedOutAccessTests: XCTestCase {
 
     /// Every tab is reachable without an account; the personal ones explain themselves.
     func testAllTabsAreReachableSignedOut() {
-        XCTAssertTrue(tab("Learn").waitForExistence(timeout: 30))
-        for label in ["Review", "Drills", "Progress", "Learn"] {
+        XCTAssertTrue(tab("Courses").waitForExistence(timeout: 30))
+        for label in ["Review", "Drills", "Progress", "Courses"] {
             let t = tab(label)
             XCTAssertTrue(t.waitForExistence(timeout: 10), "\(label) tab missing signed out")
             t.tap()

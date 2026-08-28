@@ -166,7 +166,7 @@ export default async function DashboardPage() {
                         <span>Attendance <span className={gradeColor(c.row.attendancePct)}>{gradePct(c.row.attendancePct)}</span></span>
                         <span>Quizzes <span className={gradeColor(c.row.quizAvgPct)}>{gradePct(c.row.quizAvgPct)}</span></span>
                         <span>Homework <span className={gradeColor(c.row.hwPct)}>{gradePct(c.row.hwPct)}</span></span>
-                        <span>Final Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
+                        <span>Course Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
                         <span>Midterm <span className={gradeColor(c.row.midtermPct)}>{gradePct(c.row.midtermPct)}</span></span>
                         <span>Final <span className={gradeColor(c.row.finalPct)}>{gradePct(c.row.finalPct)}</span></span>
                       </div>

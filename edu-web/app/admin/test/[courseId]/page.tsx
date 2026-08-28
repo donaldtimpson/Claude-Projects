@@ -19,7 +19,7 @@ export default async function AdminPlaylistTest({ params }: { params: Promise<{ 
         <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-bold text-parchment mt-3">{course.title} — Playlist Test</h1>
+        <h1 className="text-2xl font-bold text-parchment mt-3">{course.title} — Course Test</h1>
         <p className="text-sm text-parchment-dim mt-1">
           These questions appear on the end-of-playlist test, not on individual videos.
         </p>

@@ -86,7 +86,7 @@ export default async function ClassHubPage({
     { label: "Attendance", pctv: row.attendancePct, weight: w.attendance, detail: `${row.watchedCount}/${gb.totalLectures} lectures` },
     { label: "Quizzes", pctv: row.quizAvgPct, weight: w.quizzes, detail: `${row.quizzesTaken}/${gb.totalQuizzes} taken` },
     { label: "Homework", pctv: row.hwPct, weight: w.homework, detail: `${row.hwGradedCount}/${gb.totalAssignments} graded` },
-    { label: "Final Test", pctv: row.testPct, weight: w.test, detail: gb.hasTest ? "best attempt" : "no test yet" },
+    { label: "Course Test", pctv: row.testPct, weight: w.test, detail: gb.hasTest ? "best attempt" : "no test yet" },
     { label: "Midterm", pctv: row.midtermPct, weight: w.midterm, detail: "in class" },
     { label: "Final", pctv: row.finalPct, weight: w.final, detail: "in class" },
   ];
@@ -283,7 +283,7 @@ export default async function ClassHubPage({
                     className="group flex items-center justify-between gap-4 bg-crimson-900 border border-crimson-700 rounded-lg px-4 py-2.5 hover:border-gold-500 transition-colors"
                   >
                     <span className="text-sm text-parchment group-hover:text-gold-300 transition-colors">
-                      Final Course Test
+                      Course Test
                     </span>
                     <span className={`text-sm shrink-0 ${pctClass(bestTest)}`}>
                       {bestTest === null ? "not taken" : pct(bestTest)}

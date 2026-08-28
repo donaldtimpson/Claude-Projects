@@ -38,7 +38,7 @@ final class ScreenshotTests: XCTestCase {
         try signInIfNeeded()
 
         // 1. Learn — the catalog, which is what the app opens on.
-        let learn = tab("Learn")
+        let learn = tab("Courses")
         XCTAssertTrue(learn.waitForExistence(timeout: 30), "Learn tab never appeared")
         learn.tap()
         waitForSettle()
@@ -124,7 +124,7 @@ final class ScreenshotTests: XCTestCase {
         app.buttons["Sign in"].tap()
 
         // The tab bar only exists once RootView has a user.
-        XCTAssertTrue(tab("Learn").waitForExistence(timeout: 45), "Sign-in did not complete")
+        XCTAssertTrue(tab("Courses").waitForExistence(timeout: 45), "Sign-in did not complete")
 
         // iOS offers to save the password into Keychain right after a SecureField
         // submit. The sheet belongs to SpringBoard, not the app, so it sits on top

@@ -160,7 +160,7 @@ final class LyceumTests: XCTestCase {
 
         // Six categories, in the web's order, each carrying its weight and denominator.
         XCTAssertEqual(c.breakdown.map(\.label),
-                       ["Attendance", "Quizzes", "Homework", "Final Test", "Midterm", "Final"])
+                       ["Attendance", "Quizzes", "Homework", "Course Test", "Midterm", "Final"])
         XCTAssertEqual(c.breakdown.map(\.weight).reduce(0, +), 100)
         XCTAssertEqual(c.breakdown.first?.detail, "2/11 lectures")
 

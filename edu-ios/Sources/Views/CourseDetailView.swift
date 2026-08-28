@@ -20,6 +20,9 @@ struct CourseDetailView: View {
             .searchable(text: $query, prompt: "Filter lectures")
             .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
             .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
+            .navigationDestination(for: CourseTestRoute.self) {
+                CourseTestView(courseId: $0.courseId, courseTitle: $0.title)
+            }
             .navigationDestination(for: CourseOffering.self) { CourseDetailView(courseId: $0.id) }
             .task { if course == nil { await load() } }
     }
@@ -42,6 +45,25 @@ struct CourseDetailView: View {
                     // Hide the description while filtering to keep results focused.
                     if query.isEmpty, !course.description.isEmpty {
                         ExpandableText(text: course.description)
+                    }
+
+                    // The course test, when the course has one. Sits above the
+                    // lectures like the web course page's CTA does.
+                    if query.isEmpty, let n = course.testQuestionCount, n > 0 {
+                        NavigationLink(value: CourseTestRoute(courseId: course.id, title: course.title)) {
+                            HStack {
+                                Text("📜").font(.system(size: 26))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Course Test").font(.display(15)).foregroundStyle(Theme.ink)
+                                    Text("\(n) questions covering the whole course")
+                                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+                            }
+                            .lyceumCard()
+                        }
+                        .buttonStyle(.lyceumPress)
                     }
 
                     SectionHeader(title: "Lectures")
@@ -131,4 +153,11 @@ struct CourseDetailView: View {
         }
         loading = false
     }
+}
+
+
+/// Route to a course's whole-course test.
+struct CourseTestRoute: Hashable {
+    let courseId: String
+    let title: String
 }

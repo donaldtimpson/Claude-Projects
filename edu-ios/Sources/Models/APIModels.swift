@@ -210,6 +210,9 @@ struct CourseDetail: Codable, Identifiable, Hashable {
     let problemSets: [ProblemSetItem]
     let resources: [CourseResourceItem]
     var offerings: [CourseOffering]?
+    /// Published course-level questions (the course test). 0 ⇒ this course has no
+    /// test yet, so nothing is offered. Optional for older servers.
+    var testQuestionCount: Int? = nil
 }
 
 struct CourseDetailResponse: Codable {
@@ -223,6 +226,11 @@ struct QuizQuestion: Codable, Identifiable, Hashable {
     let correctIndex: Int
     let explanation: String
     let position: Int
+}
+
+/// GET /quiz?courseId= — the course test's published questions.
+struct QuizResponse: Codable {
+    let questions: [QuizQuestion]
 }
 
 struct LectureNote: Codable, Hashable {
@@ -260,6 +268,48 @@ struct VideoDetailResponse: Codable {
     var lessonSlugs: [String]?
 }
 
+// MARK: - Hall of Scholars (the web /leaderboard)
+
+struct Scholar: Codable, Hashable {
+    let handle: String
+    let lectures: Int
+    let quizPts: Int
+    let completions: Int
+    let badgePts: Int
+    let standing: Int
+    var house: Bool? = nil
+    var note: String? = nil
+    /// Absent for the house scholars (Aristotle and company), who aren't real users.
+    var userId: String? = nil
+}
+
+struct ScholarEntry: Codable, Identifiable, Hashable {
+    let scholar: Scholar
+    var badges: [Badge]? = nil
+    var house: Bool? = nil
+    var note: String? = nil
+
+    var id: String { scholar.userId ?? "house:" + scholar.handle }
+    var isHouse: Bool { house ?? scholar.house ?? false }
+    var blurb: String? { note ?? scholar.note }
+}
+
+/// The scoring rules, sent with the board so the app's explainer can't drift from
+/// the totals it sits under. Optional for older servers.
+struct ScoringRules: Codable, Hashable {
+    let lecture: Int
+    let quizPerCorrect: Int
+    let testPerCorrect: Int
+    let completion: Int
+    let badgeMin: Int
+    let badgeMax: Int
+}
+
+struct LeaderboardResponse: Codable {
+    let scholars: [ScholarEntry]
+    var scoring: ScoringRules? = nil
+}
+
 // MARK: - Progress screen (mobile half of the web /dashboard)
 
 /// One enrolled class with this student's own grade. Percentages are nil until a
@@ -293,7 +343,7 @@ struct ClassGrade: Codable, Identifiable, Hashable {
             ("Attendance", attendancePct, weights.attendance, "\(watchedCount)/\(totalLectures) lectures"),
             ("Quizzes", quizAvgPct, weights.quizzes, "\(quizzesTaken)/\(totalQuizzes) taken"),
             ("Homework", hwPct, weights.homework, "\(hwGradedCount)/\(totalAssignments) graded"),
-            ("Final Test", testPct, weights.test, hasTest ? "best attempt" : "no test yet"),
+            ("Course Test", testPct, weights.test, hasTest ? "best attempt" : "no test yet"),
             ("Midterm", midtermPct, weights.midterm, "in class"),
             ("Final", finalPct, weights.final, "in class"),
         ]

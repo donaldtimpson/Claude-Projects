@@ -102,7 +102,7 @@ export default async function GradebookPage({
             [
               ["attendance", "Attendance"],
               ["quizzes", "Quizzes"],
-              ["test", "Final Test"],
+              ["test", "Course Test"],
               ["homework", "Homework"],
               ["midterm", "Midterm"],
               ["final", "Final"],

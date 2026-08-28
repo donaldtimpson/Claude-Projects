@@ -66,6 +66,9 @@ struct AuthSheet: View {
 struct SignInPrompt: View {
     let message: String
     var reason: String?
+    /// "…save it" fits a result screen with a score on it; elsewhere there's nothing
+    /// to save and the phrase reads as a bug.
+    var actionTitle: String = "Sign in to save it"
     @State private var showAuth = false
 
     var body: some View {
@@ -73,7 +76,7 @@ struct SignInPrompt: View {
             Text(message)
                 .font(.footnote).foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center)
-            Button("Sign in to save it") { showAuth = true }
+            Button(actionTitle) { showAuth = true }
                 .font(.callout.weight(.medium))
                 .tint(Theme.gold400)
         }

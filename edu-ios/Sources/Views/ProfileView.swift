@@ -102,6 +102,22 @@ struct ProfileView: View {
                     .padding(.horizontal, -16)
                 }
 
+                // The handle above only means something because of this board, so
+                // give it a way through from the screen that sets it.
+                NavigationLink { ScholarsView() } label: {
+                    HStack {
+                        Text("🏛️").font(.system(size: 22))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Hall of Scholars").font(.display(14)).foregroundStyle(Theme.ink)
+                            Text("See where you stand").font(.caption).foregroundStyle(Theme.inkSoft)
+                        }
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(Theme.gold400)
+                    }
+                    .lyceumCard()
+                }
+                .buttonStyle(.lyceumPress)
+
                 if let p = progress, !p.classes.isEmpty {
                     sectionHeader("MY CLASSES")
                     ForEach(p.classes) { c in classCard(c) }

@@ -223,7 +223,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                   href={`/courses/${course.id}/test`}
                   className="inline-block px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
                 >
-                  Take Playlist Test ({course._count.quizQuestions} questions)
+                  Take the Course Test ({course._count.quizQuestions} questions)
                 </Link>
               )}
               {reviewQuestionCount > 0 && (

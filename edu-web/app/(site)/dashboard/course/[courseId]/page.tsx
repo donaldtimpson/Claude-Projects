@@ -128,7 +128,7 @@ export default async function DashboardCoursePage({
         {course._count.quizQuestions > 0 && (
           <section className="space-y-4">
             <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
-              Playlist Tests
+              Course Tests
             </h2>
             {testAttempts.length === 0 ? (
               <div className="space-y-2">
@@ -146,7 +146,7 @@ export default async function DashboardCoursePage({
                   <li key={a.id}>
                     <AttemptRow
                       attemptId={a.id}
-                      label="Playlist Test"
+                      label="Course Test"
                       subtitleHref={`/courses/${courseId}/test`}
                       date={formatDate(a.completedAt)}
                       score={a.score}
