@@ -271,6 +271,11 @@ struct CourseMapView: View {
     }
 
     private func load() async {
+        // .task fires again when this screen reappears after a push is popped, and the
+        // load used to reassign focusId every time — so opening a course and coming
+        // back threw away where you'd walked to and dropped you at the default. Load
+        // once; after that the walk is the state worth keeping.
+        guard courses.isEmpty else { return }
         do {
             let res: CourseMapResponse = try await APIClient.shared.get("/map", auth: false)
             courses = res.courses
@@ -284,7 +289,11 @@ struct CourseMapView: View {
             let live = res.courses
                 .filter { $0.isCurrent == true && charted.contains($0.id) }
                 .max { outDegree($0.id) < outDegree($1.id) }
-            focusId = live?.id ?? charted.max { outDegree($0) < outDegree($1) }
+            // Only choose an opening course the first time; never override a focus
+            // the reader has already walked to.
+            if focusId == nil {
+                focusId = live?.id ?? charted.max { outDegree($0) < outDegree($1) }
+            }
             error = nil
         } catch {
             self.error = error.localizedDescription
