@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app draws its own palette in Compose; this only needs to keep the
+         system chrome dark so there is no white flash before the first frame. -->
+    <style name="Theme.Lyceum" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/lyceum_background</item>
+        <item name="android:statusBarColor">@color/lyceum_background</item>
+        <item name="android:navigationBarColor">@color/lyceum_background</item>
+    </style>
+</resources>

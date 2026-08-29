@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- crimson950, the screen field. Mirrors Theme.parchment in the iOS app. -->
+    <color name="lyceum_background">#0f0404</color>
+    <color name="lyceum_gold">#ddb954</color>
+</resources>
