@@ -89,12 +89,12 @@ object DrillEngine {
     }
 
     /**
-     * Every drill: the procedural generators above, plus the bundled grammar and
-     * lesson catalogues once [GrammarDrills.load] has run. Recomputed rather than
+     * Every drill: the procedural generators above, plus the geography set and
+     * the bundled grammar and lesson catalogues once their loaders have run. Recomputed rather than
      * cached in a `by lazy`, because the JSON-backed half arrives after process
      * start and a lazy would freeze the list before it landed.
      */
-    val all: List<DrillDef> get() = procedural + GrammarDrills.all
+    val all: List<DrillDef> get() = procedural + GeoDrills.all + GrammarDrills.all
 
     private val bySlug: Map<String, DrillDef> get() = all.associateBy { it.slug }
 

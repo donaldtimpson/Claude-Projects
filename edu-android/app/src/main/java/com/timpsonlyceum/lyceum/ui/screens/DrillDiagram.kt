@@ -8,11 +8,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.timpsonlyceum.lyceum.drills.DrillDiagram
+import com.timpsonlyceum.lyceum.drills.GeoAtlas
+import com.timpsonlyceum.lyceum.drills.GeoMapKind
 import com.timpsonlyceum.lyceum.ui.theme.Theme
 import com.timpsonlyceum.lyceum.ui.theme.serif
 import kotlin.math.PI
@@ -35,10 +39,7 @@ fun DrillDiagramView(diagram: DrillDiagram) {
         }
         is DrillDiagram.UnitCircle -> UnitCirclePlot(diagram.angleDeg, diagram.fn)
         is DrillDiagram.Vector -> VectorPlot(diagram.angleDeg, diagram.component)
-        is DrillDiagram.GeoMap -> Text(
-            "Map not available",
-            style = serif(14).copy(color = Theme.inkSoft),
-        )
+        is DrillDiagram.GeoMap -> GeoMapPlot(diagram.kind, diagram.highlightId)
     }
 }
 
@@ -134,6 +135,60 @@ private fun VectorPlot(angleDeg: Double, component: String) {
         } else {
             drawLine(Theme.inkSoft, Offset(px, py), Offset(cx, py), strokeWidth = 2f, pathEffect = dash)
             drawLine(Theme.success, Offset(cx, cy), Offset(cx, py), strokeWidth = 5f)
+        }
+    }
+}
+
+/**
+ * The atlas, with one region picked out in gold.
+ *
+ * The paths are in the file's own viewBox coordinates, so the whole map is
+ * scaled and centred into the canvas once and every shape drawn through that
+ * one transform — cheaper than transforming 175 paths, and it keeps the
+ * proportions honest whatever the screen.
+ */
+@Composable
+private fun GeoMapPlot(kind: GeoMapKind, highlightId: String) {
+    val map = if (kind == GeoMapKind.WORLD) GeoAtlas.world else GeoAtlas.usStates
+    if (map.regions.isEmpty()) {
+        Text("Atlas unavailable", style = serif(14).copy(color = Theme.inkSoft))
+        return
+    }
+
+    val vb = map.viewBox
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .aspectRatio((vb.width / vb.height).coerceIn(0.8f, 2.4f))
+    ) {
+        val scale = minOf(size.width / vb.width, size.height / vb.height)
+        val dx = (size.width - vb.width * scale) / 2f - vb.left * scale
+        val dy = (size.height - vb.height * scale) / 2f - vb.top * scale
+
+        withTransform({
+            translate(dx, dy)
+            scale(scale, scale, pivot = Offset.Zero)
+        }) {
+            // Every region in the quiet surface colour first, then the target on
+            // top, so the highlight is never overdrawn by a neighbour.
+            map.regions.forEach { r ->
+                if (r.id != highlightId) {
+                    drawPath(r.path, Theme.parchmentDeep)
+                    drawPath(r.path, Theme.line, style = Stroke(width = 1f / scale))
+                }
+            }
+            map.rivers.forEach { (_, data) ->
+                runCatching {
+                    val p = androidx.core.graphics.PathParser
+                        .createPathFromPathData(data)
+                        .asComposePath()
+                    drawPath(p, Theme.crimson700, style = Stroke(width = 1.5f / scale))
+                }
+            }
+            map.region(highlightId)?.let { target ->
+                drawPath(target.path, Theme.gold500)
+                drawPath(target.path, Theme.gold300, style = Stroke(width = 2f / scale))
+            }
         }
     }
 }

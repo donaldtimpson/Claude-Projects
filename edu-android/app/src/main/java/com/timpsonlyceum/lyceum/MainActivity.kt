@@ -21,6 +21,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         TokenStore.init(applicationContext)
         com.timpsonlyceum.lyceum.drills.GrammarDrills.load(applicationContext)
+        com.timpsonlyceum.lyceum.drills.GeoAtlas.load(applicationContext)
+        com.timpsonlyceum.lyceum.drills.GeoCapitals.load(applicationContext)
         enableEdgeToEdge()
         setContent {
             LyceumTheme { com.timpsonlyceum.lyceum.ui.LyceumApp() }
