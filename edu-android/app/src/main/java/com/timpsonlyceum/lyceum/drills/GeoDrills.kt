@@ -106,7 +106,12 @@ object GeoDrills {
         title = "Name the Country",
         blurb = "Identify the highlighted country on the world map.",
         icon = "🌍",
-        category = DrillCategory.GEOGRAPHY,
+        poolSize = { countryPool(it).size },
+        poolItems = { countryPool(it).map { r -> r.id } },
+        problemForItem = { id, _ ->
+            val r = GeoAtlas.world.region(id) ?: GeoAtlas.world.askable.first()
+            mapProblem(r, GeoAtlas.world.askable, GeoMapKind.WORLD)
+        },
     ) { level ->
         val pool = countryPool(level)
         val target = pick(pool, GeoAtlas.world.askable, "name-country-L$level")
@@ -119,7 +124,12 @@ object GeoDrills {
         title = "Name the State",
         blurb = "Identify the highlighted U.S. state — major rivers drawn in for context.",
         icon = "🗺️",
-        category = DrillCategory.GEOGRAPHY,
+        poolSize = { statePool(it).size },
+        poolItems = { statePool(it).map { r -> r.id } },
+        problemForItem = { id, _ ->
+            val r = GeoAtlas.usStates.region(id) ?: GeoAtlas.usStates.askable.first()
+            mapProblem(r, GeoAtlas.usStates.askable, GeoMapKind.US_STATES)
+        },
     ) { level ->
         val pool = statePool(level)
         val target = pick(pool, GeoAtlas.usStates.askable, "name-state-L$level")
@@ -132,7 +142,13 @@ object GeoDrills {
         title = "Capitals — Countries",
         blurb = "See the highlighted country — pick its capital city.",
         icon = "🏛️",
-        category = DrillCategory.GEOGRAPHY,
+        poolSize = { countryPool(it).count { r -> GeoCapitals.country.containsKey(r.id) } },
+        poolItems = { countryPool(it).filter { r -> GeoCapitals.country.containsKey(r.id) }.map { r -> r.id } },
+        problemForItem = { id, _ ->
+            val all = GeoAtlas.world.askable.filter { GeoCapitals.country.containsKey(it.id) }
+            val r = GeoAtlas.world.region(id) ?: all.first()
+            capitalProblem(r, all, GeoMapKind.WORLD, GeoCapitals.country)
+        },
     ) { level ->
         // Only regions with a capital on file are asked; an omission drops the
         // region from the drill rather than asking a question with no answer.
@@ -148,7 +164,13 @@ object GeoDrills {
         title = "Capitals — U.S. States",
         blurb = "See the highlighted state — pick its capital city.",
         icon = "🏦",
-        category = DrillCategory.GEOGRAPHY,
+        poolSize = { statePool(it).count { r -> GeoCapitals.state.containsKey(r.id) } },
+        poolItems = { statePool(it).filter { r -> GeoCapitals.state.containsKey(r.id) }.map { r -> r.id } },
+        problemForItem = { id, _ ->
+            val all = GeoAtlas.usStates.askable.filter { GeoCapitals.state.containsKey(it.id) }
+            val r = GeoAtlas.usStates.region(id) ?: all.first()
+            capitalProblem(r, all, GeoMapKind.US_STATES, GeoCapitals.state)
+        },
     ) { level ->
         val pool = statePool(level).filter { GeoCapitals.state.containsKey(it.id) }
         val all = GeoAtlas.usStates.askable.filter { GeoCapitals.state.containsKey(it.id) }

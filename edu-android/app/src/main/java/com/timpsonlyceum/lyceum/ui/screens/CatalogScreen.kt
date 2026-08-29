@@ -6,6 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,6 +39,8 @@ fun CatalogScreen(
     onOpenCourse: (String) -> Unit,
     onOpenCategory: (CategoryItem) -> Unit,
     onOpenLecture: (courseId: String, videoId: String) -> Unit,
+    onOpenMap: () -> Unit,
+    onOpenScholars: () -> Unit,
 ) {
     var courses by remember { mutableStateOf<List<CourseListItem>>(emptyList()) }
     var categories by remember { mutableStateOf<List<CategoryItem>>(emptyList()) }
@@ -79,6 +83,7 @@ fun CatalogScreen(
     }
 
     Column(Modifier.fillMaxSize().background(Theme.parchment)) {
+        CatalogHeader(onOpenMap, onOpenScholars)
         SearchField(query, onChange = { query = it })
 
         when {
@@ -95,6 +100,39 @@ fun CatalogScreen(
             loading -> LoadingScreen()
             error != null -> ErrorScreen("Couldn't load courses", error)
             else -> CatalogList(courses, categories, onOpenCourse, onOpenCategory)
+        }
+    }
+}
+
+/**
+ * The catalog's header.
+ *
+ * The course map and the Hall of Scholars hang off this tab because both are
+ * public and neither belongs to a signed-in section — the web keeps them in an
+ * always-available nav drawer, and there is no drawer here. Reaching them from
+ * the home tab also matters because Progress is the sign-in form when signed
+ * out, so hanging them there would have hidden them from visitors.
+ */
+@Composable
+private fun CatalogHeader(onOpenMap: () -> Unit, onOpenScholars: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("Courses", style = display(22).copy(color = Theme.crimson), modifier = Modifier.weight(1f))
+        IconButton(onClick = onOpenMap) {
+            Icon(
+                Icons.Filled.Hub,
+                contentDescription = "Course Map",
+                tint = Theme.gold400,
+            )
+        }
+        IconButton(onClick = onOpenScholars) {
+            Icon(
+                Icons.Filled.EmojiEvents,
+                contentDescription = "Hall of Scholars",
+                tint = Theme.gold400,
+            )
         }
     }
 }

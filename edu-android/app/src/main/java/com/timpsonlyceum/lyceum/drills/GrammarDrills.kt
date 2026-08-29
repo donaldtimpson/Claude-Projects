@@ -51,6 +51,12 @@ object GrammarDrills {
     var all: List<DrillDef> = emptyList()
         private set
 
+    /** Slugs in catalogue order, for the hub's Grammar and Grammar Lessons rows. */
+    var grammarSlugs: List<String> = emptyList()
+        private set
+    var lessonSlugs: List<String> = emptyList()
+        private set
+
     /**
      * Loads the bundled catalogues. Safe to call more than once; a malformed item
      * is dropped rather than taking the whole catalogue down with it.
@@ -59,7 +65,12 @@ object GrammarDrills {
         if (all.isNotEmpty()) return
         specs = read(context, "drills/grammar.json")
         lessonSpecs = read(context, "drills/lessons.json")
-        all = specs.map { makeDrill(it) } + listOf(gauntlet()) + lessonSpecs.map { makeDrill(it, lesson = true) }
+        val concepts = specs.map { makeDrill(it) }
+        val gauntlet = gauntlet()
+        val lessons = lessonSpecs.map { makeDrill(it, lesson = true) }
+        all = concepts + listOf(gauntlet) + lessons
+        grammarSlugs = (concepts + gauntlet).map { it.slug }
+        lessonSlugs = lessons.map { it.slug }
     }
 
     private fun read(context: Context, path: String): List<GrammarDrillSpec> = try {
@@ -104,16 +115,22 @@ object GrammarDrills {
 
     private fun makeDrill(spec: GrammarDrillSpec, lesson: Boolean = false): DrillDef {
         val items = spec.items
+        val byId = items.associateBy { it.id }
         return DrillDef(
             slug = spec.slug,
             title = spec.title,
             blurb = spec.blurb,
             icon = spec.icon,
-            category = if (lesson) DrillCategory.LESSONS else DrillCategory.GRAMMAR,
             // A single concept has no honest Easy/Medium/Hard — splitting one
             // concept's sentences three ways would be arbitrary, so the drill
             // just runs its whole pool. Concept difficulty lives in the Gauntlet.
             difficultyTiers = false,
+            poolSize = { items.size },
+            poolItems = { items.map { it.id } },
+            problemForItem = { id, _ -> problem(byId[id] ?: items.first(), spec.layout, spec.order) },
+            // 30 of the ~45 pool; the draw bag deals them distinct, and a flawless
+            // run is what earns the lesson's ✦.
+            homeworkLength = if (lesson) 30 else null,
         ) { _ ->
             // Share the shuffle bag so a run walks every item once before repeating.
             val i = DrillEngine.draw("${spec.slug}-L3") { items.indices.toList() }
@@ -134,16 +151,24 @@ object GrammarDrills {
 
         val tagged = specs.flatMap { s -> s.items.map { Tagged(it, s.layout, s.order, s.tier) } }
 
+        val byId = tagged.associateBy { it.item.id }
+        fun pool(level: Int) = tagged.filter { it.tier <= level }.ifEmpty { tagged }
+
         return DrillDef(
             slug = "grammar-gauntlet",
             title = "Grammar Gauntlet",
             blurb = "Every grammar drill mixed together — Easy to Hard by concept, no pattern to lean on.",
             icon = "🏆",
-            category = DrillCategory.GRAMMAR,
+            poolSize = { pool(it).size },
+            poolItems = { pool(it).map { t -> t.item.id } },
+            problemForItem = { id, _ ->
+                val t = byId[id] ?: tagged.first()
+                problem(t.item, t.layout, t.order)
+            },
         ) { level ->
-            val pool = tagged.filter { it.tier <= level }.ifEmpty { tagged }
-            val i = DrillEngine.draw("grammar-gauntlet-L$level") { pool.indices.toList() }
-            val t = pool[i]
+            val p = pool(level)
+            val i = DrillEngine.draw("grammar-gauntlet-L$level") { p.indices.toList() }
+            val t = p[i]
             problem(t.item, t.layout, t.order)
         }
     }

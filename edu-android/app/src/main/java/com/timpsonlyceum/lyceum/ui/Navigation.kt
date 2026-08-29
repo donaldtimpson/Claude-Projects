@@ -159,6 +159,8 @@ private fun CoursesTab(nav: NavHostController) {
         onOpenCourse = { nav.navigate(Routes.course(it)) },
         onOpenCategory = { nav.navigate(Routes.category(it.slug, it.name)) },
         onOpenLecture = { c, v -> nav.navigate(Routes.lecture(c, v)) },
+        onOpenMap = { nav.navigate(Routes.MAP) },
+        onOpenScholars = { nav.navigate(Routes.SCHOLARS) },
     )
 }
 

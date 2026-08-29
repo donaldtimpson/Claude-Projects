@@ -55,26 +55,33 @@ data class DrillDef(
     val title: String,
     val blurb: String,
     val icon: String,
-    val category: DrillCategory,
     /**
      * Whether Easy/Medium/Hard is a meaningful axis. True for maths (bigger
      * numbers) and geography (obscurity); false where a three-way split of one
      * concept's material would be arbitrary.
      */
     val difficultyTiers: Boolean = true,
+    /**
+     * How many distinct questions exist at a difficulty, for drills with a finite
+     * pool. Non-null is what enables Practice's "All" length; null means the drill
+     * is procedurally endless and 10/20 are the only honest choices.
+     */
+    val poolSize: ((Int) -> Int)? = null,
+    /**
+     * The stable item ids at a difficulty. Non-null is what makes a drill
+     * Learnable: Leitner boxes need something to attach to, and a procedural
+     * drill has no per-item identity to key on.
+     */
+    val poolItems: ((Int) -> List<String>)? = null,
+    /** Builds the problem for one specific item id — Learn mode asks by id. */
+    val problemForItem: ((String, Int) -> DrillProblem)? = null,
+    /**
+     * Lesson homework runs a fixed-length sampled set instead of the 10/20/All
+     * picker, and a flawless run earns the lesson's ✦. Null means an ordinary drill.
+     */
+    val homeworkLength: Int? = null,
     val generate: (Int) -> DrillProblem,
 )
-
-enum class DrillCategory(val label: String) {
-    ARITHMETIC("Arithmetic"),
-    ALGEBRA("Algebra & Sequences"),
-    CALCULUS("Calculus"),
-    LINEAR_ALGEBRA("Linear Algebra"),
-    TRIGONOMETRY("Trigonometry"),
-    GEOGRAPHY("Geography"),
-    GRAMMAR("Grammar"),
-    LESSONS("Lesson Homework"),
-}
 
 object DrillEngine {
 
@@ -214,7 +221,6 @@ object DrillEngine {
         title = "Mental Arithmetic",
         blurb = "Quick recall of addition, subtraction, multiplication, and division.",
         icon = "🧮",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val ops: List<String>
         val add: IntRange
@@ -264,7 +270,6 @@ object DrillEngine {
         title = "Percentages",
         blurb = "Mental percents of a number — tips, discounts, and more.",
         icon = "％",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val ps = when (level) {
             1 -> listOf(5, 10, 20, 25, 50)
@@ -288,7 +293,6 @@ object DrillEngine {
         title = "Order of Operations",
         blurb = "Evaluate expressions with the right precedence (PEMDAS).",
         icon = "🔢",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val hi = if (level == 1) 9 else if (level == 2) 12 else 20
         val a = rand(2..hi); val b = rand(2..9); val c = rand(2..hi)
@@ -314,7 +318,6 @@ object DrillEngine {
         title = "Powers of Two",
         blurb = "Recall 2ⁿ — the numbers behind bytes, bits, and binary.",
         icon = "⚡️",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val maxK = if (level == 1) 8 else if (level == 2) 12 else 16
         val k = draw("pow2_$level") { (2..maxK).toList() }
@@ -331,7 +334,6 @@ object DrillEngine {
         title = "Squares & Roots",
         blurb = "Perfect squares and their roots, on sight.",
         icon = "▧",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val hi = if (level == 1) 12 else if (level == 2) 20 else 30
         val n = draw("sq_$level") { (2..hi).toList() }
@@ -347,7 +349,6 @@ object DrillEngine {
         title = "Greatest Common Divisor",
         blurb = "Find the largest number that divides both.",
         icon = "∩",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val hi = if (level == 1) 20 else if (level == 2) 60 else 120
         val a = rand(2..hi); val b = rand(2..hi)
@@ -363,7 +364,6 @@ object DrillEngine {
         title = "Prime or Composite",
         blurb = "Snap-judge whether a number is prime.",
         icon = "🧩",
-        category = DrillCategory.ARITHMETIC,
     ) { level ->
         val hi = if (level == 1) 40 else if (level == 2) 80 else 150
         val n = rand(2..hi)
@@ -391,7 +391,6 @@ object DrillEngine {
         title = "Next in Sequence",
         blurb = "Spot the pattern and give the next term.",
         icon = "🔗",
-        category = DrillCategory.ALGEBRA,
     ) { level ->
         if (Random.nextBoolean()) {
             val a = rand(1..9); val d = rand(2..(if (level == 1) 5 else 9))
@@ -419,7 +418,6 @@ object DrillEngine {
         title = "Logarithms",
         blurb = "Evaluate a logarithm — the exponent that gets you there.",
         icon = "㏒",
-        category = DrillCategory.ALGEBRA,
     ) { level ->
         val bases = when (level) {
             1 -> listOf(2)
@@ -445,7 +443,6 @@ object DrillEngine {
         title = "Derivatives",
         blurb = "Differentiate c·xⁿ with the power rule.",
         icon = "ƒ′",
-        category = DrillCategory.CALCULUS,
     ) { level ->
         val n = rand(2..(if (level == 1) 5 else if (level == 2) 7 else 9))
         val c = if (level == 1) rand(1..5) else rand(2..9)
@@ -472,7 +469,6 @@ object DrillEngine {
         title = "Integrals",
         blurb = "Integrate c·xⁿ with the power rule — don't forget + C.",
         icon = "∫",
-        category = DrillCategory.CALCULUS,
     ) { level ->
         val n = rand(1..(if (level == 1) 4 else if (level == 2) 6 else 8))
         val m = n + 1
@@ -503,7 +499,6 @@ object DrillEngine {
         title = "2×2 Determinant",
         blurb = "Compute ad − bc for a 2×2 matrix.",
         icon = "▦",
-        category = DrillCategory.LINEAR_ALGEBRA,
     ) { level ->
         val range = if (level == 1) 1..6 else if (level == 2) -6..9 else -12..12
         val a = rand(range); val b = rand(range); val c = rand(range); val d = rand(range)
@@ -530,7 +525,6 @@ object DrillEngine {
         title = "Solve the System",
         blurb = "Two equations, two unknowns — find the (x, y) that works.",
         icon = "⊞",
-        category = DrillCategory.LINEAR_ALGEBRA,
     ) { level ->
         val solR = if (level == 1) 0..4 else if (level == 2) -3..4 else -5..5
         val coefR = if (level == 1) listOf(-2, -1, 1, 2) else listOf(-3, -2, -1, 1, 2, 3)
@@ -562,7 +556,6 @@ object DrillEngine {
         title = "Matrix × Vector",
         blurb = "Multiply a 2×2 matrix by a vector — rows dotted with the vector.",
         icon = "⧉",
-        category = DrillCategory.LINEAR_ALGEBRA,
     ) { level ->
         val r = if (level == 1) -2..3 else if (level == 2) -3..4 else -5..5
         val a = rand(r); val b = rand(r); val c = rand(r); val d = rand(r)
@@ -591,7 +584,6 @@ object DrillEngine {
         title = "Dot Product",
         blurb = "Multiply matching components and add them up.",
         icon = "•",
-        category = DrillCategory.LINEAR_ALGEBRA,
     ) { level ->
         val r = if (level == 1) -3..4 else if (level == 2) -5..6 else -8..8
         val a1 = rand(r); val a2 = rand(r); val b1 = rand(r); val b2 = rand(r)
@@ -646,7 +638,6 @@ object DrillEngine {
         title = "Unit Circle",
         blurb = "Recall exact sine, cosine, and tangent values at standard angles.",
         icon = "🔵",
-        category = DrillCategory.TRIGONOMETRY,
     ) { level ->
         val fns = if (level == 1) listOf("sin", "cos") else listOf("sin", "cos", "tan")
         val angleCount = if (level == 1) 5 else if (level == 2) 9 else angles.size
@@ -721,7 +712,6 @@ object DrillEngine {
         title = "Vector Components",
         blurb = "Find a vector's x or y component at common angles — exact values, no calculator.",
         icon = "➹",
-        category = DrillCategory.TRIGONOMETRY,
     ) { level ->
         val kRange = if (level == 1) 1..5 else if (level == 2) 1..6 else 2..8
         val angleCount = if (level == 1) 5 else if (level == 2) 9 else vecAngles.size

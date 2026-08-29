@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenStore.init(applicationContext)
+        com.timpsonlyceum.lyceum.drills.DrillStore.init(applicationContext)
         com.timpsonlyceum.lyceum.drills.GrammarDrills.load(applicationContext)
         com.timpsonlyceum.lyceum.drills.GeoAtlas.load(applicationContext)
         com.timpsonlyceum.lyceum.drills.GeoCapitals.load(applicationContext)

@@ -129,9 +129,7 @@ class AuthViewModel : ViewModel() {
  * account deletion never has to remember a list.
  */
 object LocalStores {
-    private val purgers = mutableListOf<() -> Unit>()
-
-    fun register(purge: () -> Unit) { purgers += purge }
-
-    fun purgeAll() { purgers.forEach { it() } }
+    fun purgeAll() {
+        com.timpsonlyceum.lyceum.drills.DrillStore.purgeAll()
+    }
 }

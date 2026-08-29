@@ -152,7 +152,7 @@ fun DrillRunner(
  * Ten attempts, then take what comes: a drill whose pool is smaller than the
  * window would otherwise spin forever.
  */
-private fun nextProblem(def: DrillDef, level: Int, recent: MutableList<String>): DrillProblem {
+fun nextProblem(def: DrillDef, level: Int, recent: MutableList<String>): DrillProblem {
     var p = def.generate(level)
     var tries = 0
     while (recent.contains(p.identity) && tries < 10) {
