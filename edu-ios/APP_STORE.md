@@ -812,3 +812,109 @@ Universal app (iPhone and iPad); minimum supported version is iOS 18.0.
 ```
 
 ---
+
+## 11. The Guideline 5.1.1(v) rejection, 2026-08-28
+
+The 2.1 round closed. Apple then reviewed **1.0 (2)** on **28 August 2026**, on
+an **iPad Air 11-inch (M3)**, and rejected it under **5.1.1(v) — Data Collection
+and Storage**: "the app requires users to register before accessing the content."
+
+**They reviewed a build that predates the fix.** Build 2 was uploaded 2026-08-25;
+guest access landed 2026-08-28 at 11:34 (commit a056b12). So there is nothing to
+argue and nothing further to build — 1.0.0 (3) is the answer, and it needs to go
+up *before* the reply is sent.
+
+Submission ID `2fa7767d-b3f5-41f1-adf8-eb3553b62e69`.
+
+### Verified on their exact device
+
+`SignedOutAccessTests` now runs 5/5 on iPad Air 11-inch (M3) / iPadOS 26.2 and on
+iPhone 17 Pro Max / iOS 26.5. A Release build on a freshly **erased** simulator —
+no `UI_TEST_ANONYMOUS`, no keychain token, so a genuine reviewer's cold launch —
+lands on the catalog.
+
+The suite gained `testALectureOpensSignedOut`, which was the gap: the old four
+tests pinned the catalog, the tabs, and drills, but never opened a lecture. The
+sentence Apple wrote is about *the content*, so the walk has to reach a playing
+lecture with no account, and now it does.
+
+### What is actually open, precisely
+
+Worth keeping straight, because the reply below states it to Apple:
+
+- **One** hard gate in the whole app: `SignInGate` in `ReviewView`.
+- Quizzes, course tests, drills, and Rapid Fire all **run** signed out. Only
+  *saving* the score asks for an account, via `SignInPrompt` on the result
+  screen.
+- The Hall of Scholars board is readable signed out; only "your standing"
+  prompts.
+- Signed out, the Progress tab is the sign-in screen and titles itself
+  "Account".
+
+### The Resolution Center reply
+
+Paste this after uploading 1.0.0 (3) and attaching the recording:
+
+```
+Thank you for the detailed review, and for naming the specific device and
+version — it made this straightforward to reproduce.
+
+You are right about 1.0 (2). That build did require an account before showing
+any content. Build 1.0 (3), submitted with this reply, removes that
+requirement.
+
+WHAT CHANGED
+
+The app now opens directly on the course catalog whether or not anyone is
+signed in. There is no login screen at launch, and deliberately no sign-up
+screen with a "skip" button either — the catalog is simply the first thing a
+new user sees.
+
+Available with no account and no registration prompt:
+  - The full catalog: 13 courses and 267 video lectures, browsable by category
+    and searchable
+  - Every lecture, including video playback
+  - Every lecture's written notes, with typeset mathematics
+  - Every lecture quiz and every course test, including the explanation shown
+    on each answer
+  - All 62 practice drills, in practice, timed, and learn modes
+  - The course map and the Hall of Scholars leaderboard
+
+Requires an account, because each of these is account-based:
+  - Review — a daily spaced-repetition deck built from the questions that
+    particular student answered incorrectly. It has no content of its own; it
+    is a view of one person's own history, and there is nothing to show without
+    an account.
+  - Progress — saved progress, streak, badges, and standing, along with account
+    deletion.
+  - Saving a quiz, course test, or drill result. The activity itself is open to
+    everyone; only persisting a score between sessions needs an account to
+    persist it to.
+
+Where an account is needed, the app explains what it is for and offers sign-in
+at that moment, rather than refusing.
+
+SCREEN RECORDING
+
+The recording accompanying this reply was made on a physical device and shows a
+cold launch straight into the catalog with no account, browsing and using the
+content signed out, then registering a new account and deleting it again from
+Progress -> Delete Account.
+
+VERIFIED ON YOUR REVIEW DEVICE
+
+You reviewed on an iPad Air 11-inch (M3). We reproduced that configuration
+directly: on an erased device with no stored credentials, a cold launch lands
+on the catalog, and a course and lecture open and play with no account. That
+path is now covered by automated UI tests that run on both iPhone and iPad, so
+it cannot quietly regress in a future build.
+
+The demo account remains available for the account-based features:
+
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
+
+Please let me know if anything else would help.
+```
+
+---

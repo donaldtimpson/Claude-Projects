@@ -55,6 +55,42 @@ final class SignedOutAccessTests: XCTestCase {
                        "Drills must not be gated — they work without an identity")
     }
 
+    /// The thing Apple actually disputed: a lecture — the content itself — opens
+    /// anonymously. 5.1.1(v) on build 2 said "the app requires users to register
+    /// before accessing the content", so browsing the catalog is not enough to
+    /// pin; the walk has to reach a playing lecture with no account.
+    func testALectureOpensSignedOut() {
+        XCTAssertTrue(app.staticTexts["CURRENTLY TEACHING"].waitForExistence(timeout: 30)
+                      || app.staticTexts["BROWSE BY CATEGORY"].waitForExistence(timeout: 5),
+                      "the catalog never rendered for an anonymous visitor")
+
+        let course = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS %@", "courseRow")).firstMatch
+        XCTAssertTrue(course.waitForExistence(timeout: 20), "no course row to open signed out")
+        course.tap()
+
+        let lecture = app.buttons.matching(
+            NSPredicate(format: "identifier CONTAINS %@", "lectureRow")).firstMatch
+        XCTAssertTrue(lecture.waitForExistence(timeout: 20),
+                      "a course's lecture list should be visible without an account")
+        lecture.tap()
+
+        // The lecture screen titles itself "Lecture N".
+        let lectureBar = app.navigationBars.matching(
+            NSPredicate(format: "identifier BEGINSWITH %@", "Lecture")).firstMatch
+        XCTAssertTrue(lectureBar.waitForExistence(timeout: 30),
+                      "a lecture must open without an account")
+
+        // And the video is really there, not a placeholder behind a gate.
+        XCTAssertTrue(app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "YouTube Video Player"))
+            .firstMatch.waitForExistence(timeout: 30),
+                      "the lecture player should load for an anonymous visitor")
+
+        XCTAssertFalse(app.buttons["Sign in or create an account"].exists,
+                       "a lecture must not be gated behind an account")
+    }
+
     /// Review is the one tab that genuinely needs an identity, and it says so.
     func testReviewExplainsWhyItNeedsAnAccount() {
         XCTAssertTrue(tab("Review").waitForExistence(timeout: 30))
