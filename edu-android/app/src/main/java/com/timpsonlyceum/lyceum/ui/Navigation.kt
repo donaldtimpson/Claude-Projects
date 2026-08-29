@@ -97,7 +97,7 @@ fun LyceumApp() {
                 ReviewScreen(auth) { nav.navigate(Routes.SIGN_IN) }
             }
             composable(Routes.DRILLS) {
-                DrillsScreen()
+                DrillsScreen(auth) { nav.navigate(Routes.SIGN_IN) }
             }
             composable(Routes.PROGRESS) {
                 ProgressScreen(auth, nav)
