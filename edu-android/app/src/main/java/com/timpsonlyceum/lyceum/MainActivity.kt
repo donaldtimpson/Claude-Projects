@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         TokenStore.init(applicationContext)
         enableEdgeToEdge()
         setContent {
-            LyceumTheme { RootScaffold() }
+            LyceumTheme { com.timpsonlyceum.lyceum.ui.LyceumApp() }
         }
     }
 }
