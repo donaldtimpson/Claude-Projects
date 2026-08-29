@@ -1,5 +1,6 @@
 package com.timpsonlyceum.lyceum.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -77,9 +78,14 @@ fun DrillsScreen(auth: AuthViewModel, onSignIn: () -> Unit) {
 
     val category = openCategory
     if (category != null) {
+        BackHandler { openCategory = null }
         CategoryDrillsScreen(category, userId, acedRefresh, onOpen = ::open) { openCategory = null }
         return
     }
+
+    // Clearing the search is what back should do first while typing — leaving the
+    // tab out from under a half-typed query is not what anyone means by it.
+    BackHandler(enabled = query.isNotBlank()) { query = "" }
 
     Column(Modifier.fillMaxSize().background(Theme.parchment)) {
         Text(

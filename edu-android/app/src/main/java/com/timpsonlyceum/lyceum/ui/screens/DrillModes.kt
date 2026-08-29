@@ -35,6 +35,7 @@ fun RapidFireRunner(
     level: Int,
     seconds: Int,
     userId: String,
+    onClose: () -> Unit,
     onFinished: (DrillResult, score: Int) -> Unit,
 ) {
     var remaining by remember(def.slug, level, seconds) { mutableIntStateOf(seconds) }
@@ -104,6 +105,7 @@ fun RapidFireRunner(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                DrillCloseButton(onClose)
                 Text(
                     "${remaining}s",
                     style = display(20).copy(
@@ -175,6 +177,7 @@ fun LearnRunner(
     def: DrillDef,
     level: Int,
     userId: String,
+    onClose: () -> Unit,
     onFinished: (DrillResult) -> Unit,
 ) {
     val poolItems = remember(def.slug, level) { def.poolItems?.invoke(level).orEmpty() }
@@ -237,7 +240,17 @@ fun LearnRunner(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        QuizProgressBar((index + if (revealed) 1 else 0).toFloat() / queue.size)
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            DrillCloseButton(onClose)
+            QuizProgressBar(
+                (index + if (revealed) 1 else 0).toFloat() / queue.size,
+                Modifier.weight(1f),
+            )
+        }
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,

@@ -31,6 +31,7 @@ fun DrillRunner(
     def: DrillDef,
     level: Int,
     length: Int,
+    onClose: () -> Unit,
     onFinished: (DrillResult) -> Unit,
 ) {
     var index by remember(def.slug, level, length) { mutableIntStateOf(0) }
@@ -79,13 +80,16 @@ fun DrillRunner(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        QuizProgressBar((index + if (revealed) 1 else 0).toFloat() / length)
-
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            DrillCloseButton(onClose)
+            QuizProgressBar(
+                (index + if (revealed) 1 else 0).toFloat() / length,
+                Modifier.weight(1f),
+            )
             Text("${index + 1} of $length", style = serif(14).copy(color = Theme.inkSoft))
             StreakPill(streak)
         }

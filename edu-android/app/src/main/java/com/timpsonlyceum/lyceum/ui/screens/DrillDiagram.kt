@@ -6,6 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.asComposePath
@@ -17,6 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.timpsonlyceum.lyceum.drills.DrillDiagram
 import com.timpsonlyceum.lyceum.drills.GeoAtlas
 import com.timpsonlyceum.lyceum.drills.GeoMapKind
+import com.timpsonlyceum.lyceum.drills.GeoViewport
 import com.timpsonlyceum.lyceum.ui.theme.Theme
 import com.timpsonlyceum.lyceum.ui.theme.serif
 import kotlin.math.PI
@@ -147,6 +149,9 @@ private fun VectorPlot(angleDeg: Double, component: String) {
  * one transform — cheaper than transforming 175 paths, and it keeps the
  * proportions honest whatever the screen.
  */
+/** The aspect the map is drawn at. Fixed so the zoom window is stable. */
+private const val MAP_ASPECT = 1.7f
+
 @Composable
 private fun GeoMapPlot(kind: GeoMapKind, highlightId: String) {
     val map = if (kind == GeoMapKind.WORLD) GeoAtlas.world else GeoAtlas.usStates
@@ -155,12 +160,14 @@ private fun GeoMapPlot(kind: GeoMapKind, highlightId: String) {
         return
     }
 
-    val vb = map.viewBox
-    Canvas(
-        Modifier
-            .fillMaxWidth()
-            .aspectRatio((vb.width / vb.height).coerceIn(0.8f, 2.4f))
-    ) {
+    // Zoom to a window around the target. The whole atlas at once makes a
+    // mid-sized country a few pixels across, which is not a question anyone can
+    // answer — the padding still leaves enough neighbours to have to recognise
+    // the shape rather than just spot the gold.
+    val vb = GeoViewport.settled(map, highlightId, MAP_ASPECT)
+
+    Canvas(Modifier.fillMaxWidth().aspectRatio(MAP_ASPECT)
+            .clipToBounds()) {
         val scale = minOf(size.width / vb.width, size.height / vb.height)
         val dx = (size.width - vb.width * scale) / 2f - vb.left * scale
         val dy = (size.height - vb.height * scale) / 2f - vb.top * scale

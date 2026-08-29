@@ -1,5 +1,6 @@
 package com.timpsonlyceum.lyceum.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -104,6 +105,13 @@ fun DrillSetupAndRun(
         phase = Phase.RUNNING
     }
 
+    BackHandler {
+        when (phase) {
+            Phase.SETUP -> onBack()
+            else -> phase = Phase.SETUP
+        }
+    }
+
     when (phase) {
         Phase.SETUP -> Column(
             Modifier
@@ -196,7 +204,7 @@ fun DrillSetupAndRun(
         }
 
         Phase.RUNNING -> when (activeMode) {
-            DrillMode.RAPID_FIRE -> RapidFireRunner(def, level, rapidSeconds, userId) { r, score ->
+            DrillMode.RAPID_FIRE -> RapidFireRunner(def, level, rapidSeconds, userId, onClose = { phase = Phase.SETUP }) { r, score ->
                 result = r
                 runCount = r.total
                 phase = Phase.DONE
@@ -204,14 +212,14 @@ fun DrillSetupAndRun(
                 record(r, "rapid", rapidSeconds, score)
             }
 
-            DrillMode.LEARN -> LearnRunner(def, level, userId) { r ->
+            DrillMode.LEARN -> LearnRunner(def, level, userId, onClose = { phase = Phase.SETUP }) { r ->
                 result = r
                 runCount = r.total
                 phase = Phase.DONE
                 record(r, "learn", ((System.currentTimeMillis() - startedAt) / 1000).toInt(), null)
             }
 
-            DrillMode.PRACTICE -> DrillRunner(def, level, runCount) { r ->
+            DrillMode.PRACTICE -> DrillRunner(def, level, runCount, onClose = { phase = Phase.SETUP }) { r ->
                 result = r
                 phase = Phase.DONE
                 // The ✦ is honour-system, exactly as on iOS: a flawless full-length

@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -20,10 +21,20 @@ import androidx.compose.ui.unit.dp
 import com.timpsonlyceum.lyceum.drills.GeoAtlas
 import com.timpsonlyceum.lyceum.drills.GeoMapKind
 import com.timpsonlyceum.lyceum.drills.GeoRegion
+import com.timpsonlyceum.lyceum.drills.GeoViewport
 import com.timpsonlyceum.lyceum.ui.theme.Theme
 import com.timpsonlyceum.lyceum.ui.theme.display
 import com.timpsonlyceum.lyceum.ui.theme.serif
 import kotlin.math.min
+
+/**
+ * The aspect the locate map is drawn at; the zoom window is built to match.
+ *
+ * Squarer than the identify drills' 1.7, because nothing sits below a locate map
+ * — the tap *is* the answer — so the height is free, and a bigger map is an
+ * easier target for a fingertip.
+ */
+private const val MAP_ASPECT = 1.05f
 
 /**
  * The tap-to-locate map: "Find Peru", and you tap it.
@@ -52,17 +63,21 @@ fun LocateMap(
         Text("Atlas unavailable", style = serif(14).copy(color = Theme.inkSoft))
         return
     }
-    val vb = map.viewBox
+    // A regional window, not the whole atlas — and with the target deliberately
+    // off-centre, since a target that is always in the middle can be found
+    // without knowing any geography.
+    val vb = remember(kind, targetId) { GeoViewport.locate(map, targetId, kind, MAP_ASPECT) }
 
     // Built once per atlas and kept: this is the expensive part.
-    val hitRegions = remember(kind) { buildHitRegions(map.regions, vb) }
+    val hitRegions = remember(kind) { buildHitRegions(map.regions, map.viewBox) }
 
     var canvasSize by remember(kind) { mutableStateOf(Offset.Zero) }
 
     Canvas(
         modifier
             .fillMaxWidth()
-            .aspectRatio((vb.width / vb.height).coerceIn(0.8f, 2.4f))
+            .aspectRatio(MAP_ASPECT)
+            .clipToBounds()
             .pointerInput(kind, revealed) {
                 detectTapGestures { pos ->
                     if (revealed) return@detectTapGestures

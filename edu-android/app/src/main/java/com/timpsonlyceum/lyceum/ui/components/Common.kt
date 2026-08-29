@@ -12,6 +12,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -221,5 +223,25 @@ fun StatRow(label: String, value: String, valueColor: Color = Theme.ink) {
     ) {
         Text(label, style = serif(15).copy(color = Theme.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(value, style = display(15).copy(color = valueColor))
+    }
+}
+
+
+/**
+ * The close control on a running drill.
+ *
+ * A drill is a full-screen task with no navigation bar of its own, so without
+ * this there is no way out but the system back gesture — and a first-time user
+ * should not have to guess that. iOS puts an ✕ in the toolbar for the same
+ * reason; system back still works alongside it.
+ */
+@Composable
+fun DrillCloseButton(onClose: () -> Unit, modifier: Modifier = Modifier) {
+    IconButton(onClick = onClose, modifier = modifier) {
+        Icon(
+            Icons.Filled.Close,
+            contentDescription = "Close drill",
+            tint = Theme.gold300,
+        )
     }
 }
