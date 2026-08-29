@@ -20,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenStore.init(applicationContext)
+        com.timpsonlyceum.lyceum.drills.GrammarDrills.load(applicationContext)
         enableEdgeToEdge()
         setContent {
             LyceumTheme { com.timpsonlyceum.lyceum.ui.LyceumApp() }

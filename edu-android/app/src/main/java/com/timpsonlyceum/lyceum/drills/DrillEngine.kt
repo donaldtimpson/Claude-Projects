@@ -73,11 +73,14 @@ enum class DrillCategory(val label: String) {
     TRIGONOMETRY("Trigonometry"),
     GEOGRAPHY("Geography"),
     GRAMMAR("Grammar"),
+    LESSONS("Lesson Homework"),
 }
 
 object DrillEngine {
 
-    val all: List<DrillDef> by lazy {
+    // `by lazy`, not a plain val: these are declared further down the object, so
+    // an eager list here would read them before they are initialised.
+    private val procedural: List<DrillDef> by lazy {
         listOf(
             arithmetic, percentages, orderOfOps, powersOfTwo, squares, gcdDrill, primes,
             sequences, logarithms, derivative, integral,
@@ -85,7 +88,15 @@ object DrillEngine {
         )
     }
 
-    private val bySlug: Map<String, DrillDef> by lazy { all.associateBy { it.slug } }
+    /**
+     * Every drill: the procedural generators above, plus the bundled grammar and
+     * lesson catalogues once [GrammarDrills.load] has run. Recomputed rather than
+     * cached in a `by lazy`, because the JSON-backed half arrives after process
+     * start and a lazy would freeze the list before it landed.
+     */
+    val all: List<DrillDef> get() = procedural + GrammarDrills.all
+
+    private val bySlug: Map<String, DrillDef> get() = all.associateBy { it.slug }
 
     fun drill(slug: String): DrillDef? = bySlug[slug]
 
