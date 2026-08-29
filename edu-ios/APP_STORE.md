@@ -206,9 +206,10 @@ cryptography is HTTPS and Keychain, both exempt. You should not be asked again.
 
 ## 5. Review account
 
-App Store Connect requires demo credentials whenever an app needs a login, and
-this one gates everything. The account is already created and seeded on
-production:
+App Store Connect requires demo credentials whenever an app needs a login. As of
+build 3 the app opens without one (§10), but the Review tab and saved progress
+still need an account, so keep answering **Yes** to "sign-in required" and hand
+these over. The account is already created and seeded on production:
 
 ```
 appreview@timpsonlyceum.com
@@ -229,7 +230,7 @@ and 8 quizzes taken, so no screen greets a reviewer with zeroes.
 "Information Needed" rejection on 2026-08-25. **Use the expanded answers in §10
 instead**; this is kept for reference.
 
-**App Review Information → Notes** — paste this:
+The superseded block, for reference only — **do not paste this one**:
 
 ```
 Sign-in is required. Demo account:
@@ -279,10 +280,23 @@ xcodebuild -exportArchive \
   -exportPath build/export
 ```
 
-Version is `MARKETING_VERSION 1.0.0` / `CURRENT_PROJECT_VERSION 1` in
-`project.yml`. Every upload needs a **build number higher than the last one**, so
-bump `CURRENT_PROJECT_VERSION` for each attempt — 1.0.0 (1), 1.0.0 (2), and so
-on. Apple rejects a duplicate immediately.
+Version is `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml`.
+Every upload needs a **build number higher than the last one**, so bump
+`CURRENT_PROJECT_VERSION` and re-run `xcodegen generate` for each attempt. Apple
+rejects a duplicate immediately.
+
+Builds so far:
+
+| Build | Uploaded | Outcome |
+| --- | --- | --- |
+| 1.0.0 (1) | 2026-08-23 | Rejected 2026-08-25, Guideline 2.1 — Information Needed (§10) |
+| 1.0.0 (2) | 2026-08-25 | Comments switched off; superseded before submission |
+| 1.0.0 (3) | archived 2026-08-29 | Guest access (5.1.1(i)), course map, Profile parity — **not yet uploaded** |
+
+`xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
+Organizer does not look at. Copy it to
+`~/Library/Developer/Xcode/Archives/<date>/` if you want to upload from the
+Organizer GUI, or upload `build/export/Lyceum.ipa` with Transporter.
 
 Once the build finishes processing (10–30 minutes), attach it to the version in
 App Store Connect and **Submit for Review**. First reviews usually land within
@@ -326,9 +340,10 @@ on your device, and whether the app is actually pleasant to study in. Lecture
 video streams from YouTube, so playback needs a connection; the drills run
 entirely on-device and work in airplane mode.
 
-Nothing in the app costs money and there are no ads. An account is required
-because it holds your progress, your review schedule, and your streak. You can
-delete it, and everything attached to it, from Profile -> Delete Account.
+Nothing in the app costs money and there are no ads. You can browse courses and
+run drills without signing in; an account holds your progress, your review
+schedule, and your streak. You can delete it, and everything attached to it,
+from Profile -> Delete Account.
 ```
 
 **Feedback Email**
@@ -340,9 +355,12 @@ dt323259@gmail.com
 **Privacy Policy URL** — `https://timpson-lyceum.vercel.app/privacy`
 (same as the listing, §2).
 
-**Sign-in required** — Yes. Give the same demo account as §5
-(`appreview@timpsonlyceum.com` / `LyceumReview2026!`) so Beta App Review can get
-in. Real testers should make their own accounts, or their progress collides.
+**Sign-in required** — **Yes**, still, even though the app now opens without an
+account (§10). The flag is what lets you hand over credentials, and Beta App
+Review needs them to reach the Review tab and saved progress. Give the same demo
+account as §5 (`appreview@timpsonlyceum.com` / `LyceumReview2026!`), and let the
+notes say that most of the app needs no account. Real testers should make their
+own accounts, or their progress collides.
 
 ### Beta App Review Information
 
@@ -363,7 +381,8 @@ though the content overlaps.
 **Review Notes**
 
 ```
-Sign-in is required for everything in the app. Demo account:
+The app opens without an account: lectures, notes, quizzes, and drills all work
+signed out. The Review tab and saved progress need an account. Demo account:
   email:    appreview@timpsonlyceum.com
   password: LyceumReview2026!
 
@@ -520,7 +539,10 @@ Apple names four things to include if the app has them. Ours has two:
 
 Shot list, in order:
 
-1. Launch from the Home screen — cold, not from the app switcher.
+1. Launch from the Home screen — cold, not from the app switcher. As of build 3
+   this lands on the catalog **signed out**; linger there and open a lecture
+   before signing in, so the reviewer sees the app works with no account. That
+   is the Guideline 5.1.1(i) evidence.
 2. **Register** a brand-new account. Use a throwaway address; do not reuse the
    review account, they want to see the flow work from nothing.
 3. Learn tab → open a course → open a lecture → let the video actually play for
@@ -611,8 +633,12 @@ advertising. There is no paid tier and no content withheld.
 **4. Setup and access instructions**
 
 ```
-An account is required, because the account holds the student's progress, review
-schedule, and streak. Demo account:
+No account is required to use the app. It opens on the course catalog signed
+out, and lectures, notes, quizzes, and drills all work anonymously. An account
+holds the student's saved progress, review schedule, and streak, and is needed
+only for the Review tab and for progress that persists between sessions.
+
+To see the signed-in half of the app, a demo account:
 
   email:    appreview@timpsonlyceum.com
   password: LyceumReview2026!
@@ -703,26 +729,29 @@ put the full answers in the Resolution Center reply, which has more room.
 This replaces the shorter notes in §5 entirely.
 
 ```
-DEMO ACCOUNT (sign-in is required for all features)
+NO ACCOUNT IS NEEDED TO USE THE APP
+It opens on the course catalog signed out. Lectures, notes, quizzes, and drills
+all work anonymously. An account only adds saved progress and the daily Review
+deck, which is the student's own history of missed questions.
+
+DEMO ACCOUNT (for the signed-in features)
 email: appreview@timpsonlyceum.com
 password: LyceumReview2026!
-The account is pre-populated with watched lectures, completed quizzes, review
-cards due today, and earned badges, so no screen appears empty. No sample files
-or configuration are needed.
+Pre-populated with watched lectures, quizzes, review cards due today, and
+badges, so no screen appears empty. No sample files or configuration needed.
 
 WHAT THE APP IS
 A free educational app: a complete classical curriculum in mathematics, physics,
-logic, and philosophy. Thirteen courses and 267 video lectures, from
-Intermediate Algebra through Calculus, Real Analysis, General Topology, and
-Computation Theory; University Physics I and II; First-Order Predicate Logic;
-and surveys of the History of Philosophy and the History of Rome. I am a
-teacher, and these are recordings of the courses I teach.
+logic, and philosophy. Thirteen courses and 267 video lectures:
+Intermediate Algebra through Calculus, Real Analysis, General Topology,
+Computation Theory, University Physics I and II, First-Order Predicate Logic,
+and surveys of the History of Philosophy and of Rome. I am a teacher; these are
+recordings of the courses I teach.
 
 Each lecture carries written notes with typeset mathematics and a ten-question
-quiz with an explanation on every answer. Questions the student answers enter a
-daily spaced-repetition review deck across all their courses. There are also 62
-practice drills in grammar, geography, and arithmetic that run entirely
-on-device and work offline.
+quiz with an explanation on every answer. Answered questions enter a daily
+spaced-repetition deck spanning all the student's courses. There are also 62
+drills in grammar, geography, and arithmetic that run on-device, offline.
 
 AUDIENCE AND VALUE
 High-school and college students studying these subjects, and self-directed
@@ -730,33 +759,33 @@ adult learners. Free lecture material online is normally an unordered playlist
 with no notes, no assessment, and no retention schedule. This is a sequenced
 course of study with all three.
 
-The app is entirely free: no purchases, no subscriptions, no advertising, no
-paid tier, and no content withheld.
+The app is entirely free: no purchases, subscriptions, advertising, paid tier,
+or withheld content.
 
 WHERE THE FEATURES ARE
-Learn tab: courses, lectures, notes, quizzes
-Drills tab: 62 drills, in practice / timed / learn modes
-Review tab: today's spaced-repetition deck across all courses
-Profile tab: progress, badges, streak, and Delete Account
+Learn tab: courses, lectures, notes, quizzes - open, no account
+Drills tab: 62 drills in practice / timed / learn modes - open, no account
+Review tab: today's spaced-repetition deck - needs an account
+Profile tab: progress, badges, streak, Delete Account - it is the sign-in
+screen when signed out
 
-Account deletion requires typing the word DELETE and re-entering the password,
-then permanently removes the account and all coursework attached to it, on the
-server and on the device. A network connection is needed to play a lecture,
-because video is served from YouTube; the drills work offline.
+Account deletion requires typing DELETE and re-entering the password, then
+permanently removes the account and all its coursework, on the server and on
+the device. Playing a lecture needs a network connection because video comes
+from YouTube; the drills work offline.
 
 EXTERNAL SERVICES
 YouTube (Google LLC) - lecture playback via the IFrame Player API. All videos
 are my own, published on my own channel.
 Vercel - hosting for the backend web application and its API.
 Neon - the managed PostgreSQL database behind that API.
-jsDelivr - CDN for the KaTeX and marked libraries that render mathematics in the
-lecture-notes view.
+jsDelivr - CDN for the KaTeX and marked libraries that render mathematics.
 
 Authentication is first-party: bcrypt-hashed passwords and JWT sessions on our
-own backend. No third-party identity provider, no social login, and Sign in with
+own backend. No third-party identity provider or social login; Sign in with
 Apple is not enabled in this version. There are no payment processors, no AI
 services, and no analytics, advertising, or attribution SDKs. The app requests
-no IDFA, does not present App Tracking Transparency, and requests no
+no IDFA, presents no App Tracking Transparency prompt, and requests no
 sensitive-data or device permissions of any kind.
 
 USER-GENERATED CONTENT
@@ -764,8 +793,8 @@ None. This version has no comments, messaging, uploads, or user profiles visible
 to other users.
 
 REGIONAL DIFFERENCES
-None. Identical features and identical content in every region, English only, no
-region-locked material and no geographic restrictions.
+None. Identical features and content in every region, English only, no
+region-locked material or geographic restrictions.
 
 REGULATED INDUSTRY AND THIRD-PARTY MATERIAL
 Neither applies. This is general educational material, not accredited
@@ -773,8 +802,8 @@ instruction; it grants no credential and makes no medical, legal, or financial
 claims. All content is my own or public domain: the lectures are my own
 recordings, the notes and quiz questions are written by me, the grammar course
 follows Harvey's "Elementary Grammar and Composition" (1880, public domain), and
-the Linear Algebra problem sets are original problems written by me. No
-third-party protected material is reproduced, so there is nothing to license.
+the Linear Algebra problem sets are my own. No third-party protected material
+is reproduced.
 
 TESTED ON
 iPhone 14 Pro Max, iOS 26.6 (physical device, installed via TestFlight).
