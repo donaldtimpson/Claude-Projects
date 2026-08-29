@@ -44,6 +44,7 @@ fun DrillRunner(
     var entry by remember(def.slug, level, length) { mutableStateOf("") }
     var revealed by remember(def.slug, level, length) { mutableStateOf(false) }
     var wasRight by remember(def.slug, level, length) { mutableStateOf(false) }
+    var tapped by remember(def.slug, level, length) { mutableStateOf<String?>(null) }
 
     fun score(right: Boolean) {
         wasRight = right
@@ -66,6 +67,7 @@ fun DrillRunner(
         problem = nextProblem(def, level, recent)
         selected = null
         entry = ""
+        tapped = null
         revealed = false
     }
 
@@ -89,7 +91,7 @@ fun DrillRunner(
         }
 
         Text(
-            problem.prompt,
+            if (problem.input is DrillInput.MapTap) "Find ${problem.prompt}" else problem.prompt,
             style = display(24).copy(color = Theme.ink, textAlign = TextAlign.Center),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -121,10 +123,15 @@ fun DrillRunner(
                 }
             }
 
-            is DrillInput.MapTap -> Text(
-                "Map drills need the bundled atlas, which isn't ported yet.",
-                style = serif(15).copy(color = Theme.inkSoft),
-            )
+            is DrillInput.MapTap -> LocateMap(
+                kind = input.kind,
+                targetId = problem.dedupeKey.orEmpty(),
+                revealed = revealed,
+                tappedId = tapped,
+            ) { id ->
+                tapped = id
+                score(id == problem.dedupeKey)
+            }
         }
 
         if (revealed) {

@@ -120,7 +120,7 @@ fun RapidFireRunner(
             )
 
             Text(
-                problem.prompt,
+                if (problem.input is DrillInput.MapTap) "Find ${problem.prompt}" else problem.prompt,
                 style = display(24).copy(color = Theme.ink, textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -138,10 +138,12 @@ fun RapidFireRunner(
 
                 is DrillInput.Numeric -> RapidNumeric(input) { answer(it) }
 
-                is DrillInput.MapTap -> Text(
-                    "Map drills need tap-to-locate, which isn't ported yet.",
-                    style = serif(15).copy(color = Theme.inkSoft),
-                )
+                is DrillInput.MapTap -> LocateMap(
+                    kind = input.kind,
+                    targetId = problem.dedupeKey.orEmpty(),
+                    revealed = false,
+                    tappedId = null,
+                ) { id -> answer(id == problem.dedupeKey) }
             }
         }
     }
@@ -203,6 +205,7 @@ fun LearnRunner(
     var entry by remember(def.slug, level) { mutableStateOf("") }
     var revealed by remember(def.slug, level) { mutableStateOf(false) }
     var wasRight by remember(def.slug, level) { mutableStateOf(false) }
+    var tapped by remember(def.slug, level) { mutableStateOf<String?>(null) }
 
     val itemId = queue.getOrNull(index) ?: run {
         LaunchedEffect(Unit) { onFinished(DrillResult(correct, queue.size, bestStreak)) }
@@ -249,7 +252,7 @@ fun LearnRunner(
         }
 
         Text(
-            problem.prompt,
+            if (problem.input is DrillInput.MapTap) "Find ${problem.prompt}" else problem.prompt,
             style = display(24).copy(color = Theme.ink, textAlign = TextAlign.Center),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -277,10 +280,15 @@ fun LearnRunner(
                 }
             }
 
-            is DrillInput.MapTap -> Text(
-                "Map drills need tap-to-locate, which isn't ported yet.",
-                style = serif(15).copy(color = Theme.inkSoft),
-            )
+            is DrillInput.MapTap -> LocateMap(
+                kind = input.kind,
+                targetId = problem.dedupeKey.orEmpty(),
+                revealed = revealed,
+                tappedId = tapped,
+            ) { id ->
+                tapped = id
+                score(id == problem.dedupeKey)
+            }
         }
 
         if (revealed) {
@@ -304,6 +312,7 @@ fun LearnRunner(
                     index++
                     selected = null
                     entry = ""
+                    tapped = null
                     revealed = false
                 }
             }

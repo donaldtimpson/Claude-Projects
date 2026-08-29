@@ -35,7 +35,7 @@ object GeoDrills {
         GeoAtlas.usStates.askable.filter { it.rank <= level }
 
     val all: List<DrillDef> by lazy {
-        listOf(nameCountry, nameState, capitalCountry, capitalState)
+        listOf(nameCountry, nameState, locateCountry, locateState, capitalCountry, capitalState)
     }
 
     /** Three distractors, same continent first, then anywhere. */
@@ -177,5 +177,43 @@ object GeoDrills {
         val target = pick(pool, all, "capital-state-L$level")
         if (target == null) empty("Atlas unavailable.")
         else capitalProblem(target, all, GeoMapKind.US_STATES, GeoCapitals.state)
+    }
+
+    /** "Find <name>" — the answer is a tap on the map, not a choice. */
+    private fun locateProblem(target: GeoRegion, kind: GeoMapKind) = DrillProblem(
+        prompt = target.name,
+        input = DrillInput.MapTap(kind),
+        explanation = "${target.name} — ${target.continent}.",
+        dedupeKey = target.id,   // the region that has to be tapped
+    )
+
+    val locateCountry = DrillDef(
+        slug = "locate-country",
+        title = "Where's the Country?",
+        blurb = "Find the named country on the world map — tap it.",
+        icon = "🧭",
+        poolSize = { countryPool(it).size },
+        poolItems = { countryPool(it).map { r -> r.id } },
+        problemForItem = { id, _ ->
+            locateProblem(GeoAtlas.world.region(id) ?: GeoAtlas.world.askable.first(), GeoMapKind.WORLD)
+        },
+    ) { level ->
+        val target = pick(countryPool(level), GeoAtlas.world.askable, "locate-country-L$level")
+        if (target == null) empty("Atlas unavailable.") else locateProblem(target, GeoMapKind.WORLD)
+    }
+
+    val locateState = DrillDef(
+        slug = "locate-state",
+        title = "Where's the State?",
+        blurb = "Find the named U.S. state on the map — tap it.",
+        icon = "📍",
+        poolSize = { statePool(it).size },
+        poolItems = { statePool(it).map { r -> r.id } },
+        problemForItem = { id, _ ->
+            locateProblem(GeoAtlas.usStates.region(id) ?: GeoAtlas.usStates.askable.first(), GeoMapKind.US_STATES)
+        },
+    ) { level ->
+        val target = pick(statePool(level), GeoAtlas.usStates.askable, "locate-state-L$level")
+        if (target == null) empty("Atlas unavailable.") else locateProblem(target, GeoMapKind.US_STATES)
     }
 }

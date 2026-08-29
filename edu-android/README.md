@@ -46,7 +46,7 @@ wrapper (`./gradlew`), not `gradle`.
 | My Progress, grades, badges, delete account | Done |
 | Hall of Scholars | Done |
 | Course map | Listed, not drawn as a graph (see below) |
-| Drills | 61 of 62 (see below) |
+| Drills | All 63, in three modes |
 | Lecture discussion | Deliberately absent, as on iOS |
 
 Signed-out behaviour matches iOS and is the thing not to regress: the app opens
@@ -61,11 +61,6 @@ code, so the embed is accepted, but the emulator does not decode the video and
 the frame stays black — the same limitation the iOS Simulator has. This needs
 one run on a physical Android device to call working.
 
-**Tap-to-locate drills** (`locate-country`, `locate-state`) are not ported. The
-atlas geometry is already here; what's missing is point-in-path hit-testing to
-turn a tap into a region. `DrillInput.MapTap` exists and the runner shows an
-honest message rather than a dead tap target.
-
 **The course map is a list, not a graph.** Each course with its prerequisites
 underneath. That carries the thing a student acts on — "what should I take
 before this?" — but it is not the pannable graph the iOS app draws.
@@ -75,8 +70,9 @@ and falls back to two boxed letters. It is not reliably detectable: on the API 3
 emulator both `Paint.hasGlyph` and text measurement claim the sequence composes
 while the raster still shows boxes. See the note at the top of `GeoDrills.kt`.
 
-**Not ported from iOS:** the offline write queue, Rapid Fire and Learn drill
-modes, and drill mastery. Drills currently run in practice mode only.
+**Not ported from iOS:** the offline write queue. Everything a drill does now
+works — Practice, Learn (Leitner boxes), and Rapid Fire — but a run completed
+with no connection is lost rather than queued for replay.
 
 **No Play Store setup.** No developer account yet, so there is no release
 signing config, no keystore, and no listing. Debug builds only.
@@ -84,7 +80,8 @@ signing config, no keystore, and no listing. Debug builds only.
 ## Layout
 
 ```
-drills/     the drill engine — pure generators, plus JSON-backed grammar and geo
+drills/     the drill engine — pure generators, JSON-backed grammar and geo,
+            the category lists, and DrillStore (mastery, ✦, bests, recents)
 model/      the API contract, mirroring edu-ios Sources/Models
 net/        AppConfig, TokenStore, ApiClient, Repository
 ui/theme/   palette and the two brand faces, names matched to the iOS Theme
