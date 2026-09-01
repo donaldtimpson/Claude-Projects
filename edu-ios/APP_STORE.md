@@ -1018,12 +1018,19 @@ Both pages continue to offer an email address as an optional convenience, but it
 is not required for deletion and never was the only route — in-app deletion is
 the primary path and is described first on both pages.
 
+SCREEN RECORDING
+
+A recording of the new deletion flow accompanies this reply. It shows the whole
+path on a physical device: creating an account, opening Profile -> Delete
+Account, typing DELETE as the only requirement, and the app returning to a
+signed-out state with the account gone.
+
 VERIFIED ON YOUR REVIEW DEVICE
 
-You reviewed on an iPad Air 11-inch (M3). We ran the deletion flow on that
-configuration: create an account, delete it from Profile -> Delete Account with
-only the typed confirmation, and the app returns to a signed-out state with the
-account gone.
+You reviewed on an iPad Air 11-inch (M3). We also ran the flow on that
+configuration and it behaves identically, and the deletion path is now covered
+by an automated UI test that asserts no password field is present on that
+screen, so it cannot regress in a later build.
 
 The demo account remains available for the account-based features:
 
