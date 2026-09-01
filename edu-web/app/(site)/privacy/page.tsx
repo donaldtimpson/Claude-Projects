@@ -85,8 +85,9 @@ export default function PrivacyPage() {
         <Section title="Deleting your account">
           <p>
             You can delete your account and everything attached to it from inside the app:{" "}
-            <span className="text-parchment">Profile → Delete Account</span>. You will be asked for
-            your password to confirm.
+            <span className="text-parchment">Profile → Delete Account</span>. You will be asked to
+            type the word DELETE to confirm, because it cannot be undone. Nothing else is required —
+            no password, no email, and no request to us.
           </p>
           <p>
             Deletion is immediate and permanent. It removes your account, your progress, your quiz

@@ -49,8 +49,9 @@ export default function SupportPage() {
 
         <Section title="Deleting your account">
           <p>
-            In the app: <span className="text-parchment">Profile → Delete Account</span>. It asks for
-            your password, then permanently removes your account and all of your coursework. See the{" "}
+            In the app: <span className="text-parchment">Profile → Delete Account</span>. It asks you
+            to type DELETE to confirm, then permanently removes your account and all of your
+            coursework. See the{" "}
             <Link href="/privacy" className="text-gold-300 hover:text-gold-400 transition-colors">
               Privacy Policy
             </Link>{" "}

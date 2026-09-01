@@ -243,8 +243,7 @@ Lecture video is served from YouTube, so the device needs a network connection
 to play a lecture; the practice drills work offline.
 
 Account deletion is at Profile -> Delete Account. It asks for the typed word
-DELETE and the password, then permanently removes the account and all of its
-coursework.
+DELETE, then permanently removes the account and all of its coursework.
 
 The same courses are also on the web at https://timpson-lyceum.vercel.app.
 ```
@@ -291,7 +290,8 @@ Builds so far:
 | --- | --- | --- |
 | 1.0.0 (1) | 2026-08-23 | Rejected 2026-08-25, Guideline 2.1 — Information Needed (§10) |
 | 1.0.0 (2) | 2026-08-25 | Comments switched off; superseded before submission |
-| 1.0.0 (3) | archived 2026-08-29 | Guest access (5.1.1(i)), course map, Profile parity — **not yet uploaded** |
+| 1.0.0 (3) | 2026-08-29 | Rejected 2026-09-01, Guideline 5.1.1(v) — password on the delete screen (§12) |
+| 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion — **not yet uploaded** |
 
 `xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
 Organizer does not look at. Copy it to
@@ -394,8 +394,7 @@ Lecture video is served from YouTube, so the device needs a network connection
 to play a lecture; the practice drills run on-device and work offline.
 
 Account deletion is at Profile -> Delete Account. It asks for the typed word
-DELETE and the password, then permanently removes the account and all of its
-coursework.
+DELETE, then permanently removes the account and all of its coursework.
 
 The same courses are also on the web at https://timpson-lyceum.vercel.app.
 ```
@@ -552,7 +551,7 @@ Shot list, in order:
 5. Take a lecture quiz, answer two or three questions, show an explanation.
 6. Drills tab → run one drill to completion.
 7. Review tab → show a card.
-8. Profile → **Delete Account** → type DELETE, enter the password, complete it.
+8. Profile → **Delete Account** → type DELETE, complete it.
    Show the app returning to signed-out.
 9. Sign back in with the demo account to show it still works.
 
@@ -627,7 +626,7 @@ structured course of study instead — sequenced, with the reading, testing, and
 review that make the lectures stick.
 
 The app is entirely free. There are no purchases, no subscriptions, and no
-advertising. There is no paid tier and no content withheld.
+advertising. There is no paid tier and nothing withheld.
 ```
 
 **4. Setup and access instructions**
@@ -657,8 +656,8 @@ Main features, and where they are:
   - Profile tab    : progress, badges, streak, and Delete Account
 
 Account deletion is at Profile -> Delete Account. It requires typing the word
-DELETE and re-entering the password, then permanently removes the account and
-all coursework attached to it, on the server and on the device.
+DELETE, then permanently removes the account and all coursework attached to it,
+on the server and on the device.
 ```
 
 **5. External services, tools, and platforms**
@@ -759,8 +758,7 @@ adult learners. Free lecture material online is normally an unordered playlist
 with no notes, no assessment, and no retention schedule. This is a sequenced
 course of study with all three.
 
-The app is entirely free: no purchases, subscriptions, advertising, paid tier,
-or withheld content.
+The app is entirely free: no purchases, subscriptions, ads, or paid tier.
 
 WHERE THE FEATURES ARE
 Learn tab: courses, lectures, notes, quizzes - open, no account
@@ -769,10 +767,10 @@ Review tab: today's spaced-repetition deck - needs an account
 Profile tab: progress, badges, streak, Delete Account - it is the sign-in
 screen when signed out
 
-Account deletion requires typing DELETE and re-entering the password, then
-permanently removes the account and all its coursework, on the server and on
-the device. Playing a lecture needs a network connection because video comes
-from YouTube; the drills work offline.
+Account deletion needs only the typed word DELETE — no password, no request to
+us — and permanently removes the account and its coursework, server-side and on
+the device. Playing a lecture needs a connection because video comes from
+YouTube; the drills work offline.
 
 EXTERNAL SERVICES
 YouTube (Google LLC) - lecture playback via the IFrame Player API. All videos
@@ -908,6 +906,124 @@ directly: on an erased device with no stored credentials, a cold launch lands
 on the catalog, and a course and lecture open and play with no account. That
 path is now covered by automated UI tests that run on both iPhone and iPad, so
 it cannot quietly regress in a future build.
+
+The demo account remains available for the account-based features:
+
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
+
+Please let me know if anything else would help.
+```
+
+---
+
+## 12. The Guideline 5.1.1(v) rejection, 2026-09-01
+
+Third rejection, same guideline, but a **different and correct** finding. Apple
+reviewed **1.0 (3)** on 1 September on an iPad Air 11-inch (M3): the delete
+screen asked for the account password, and 5.1.1(v) says the flow must not
+require the user to "add a password to complete account deletion".
+
+Same submission ID, `2fa7767d-b3f5-41f1-adf8-eb3553b62e69`.
+
+**They are right and we complied.** The password re-entry was ours, added so a
+stolen access token alone couldn't destroy a student's coursework. Reading the
+clause narrowly — the user isn't *adding* a password, they already have one, and
+re-entry is a "confirmation step" the guideline permits — there is an argument.
+It was not worth a fourth review cycle on a coin flip.
+
+### What changed
+
+- `DeleteAccountSheet.swift` — the password field is gone. The typed DELETE
+  stays: the guideline explicitly allows confirmation steps, and this is the one
+  screen in the app with no undo.
+- `AuthViewModel.deleteAccount()` takes no password.
+- `DELETE /api/mobile/v1/me` no longer accepts or expects one, so the
+  requirement is gone from the server too rather than hidden in the UI. That
+  route is the **only** account-deletion path in the whole system — there is no
+  web equivalent, so nothing else re-authenticates either.
+- Android's dialog matches; Play's policy is the same in substance.
+
+### The part that would have bitten us again
+
+**The Privacy Policy and Support pages both stated in writing that deletion asks
+for your password.** Both are linked from the Profile screen and reviewers read
+them. Fixing the app while leaving those pages describing the old flow is how
+you earn a fourth rejection. Both now describe the current flow, and both still
+offer the email address as an optional convenience — never a requirement, and
+in-app deletion is described first.
+
+### Pinned
+
+`Screenshots/AccountDeletionTests.swift` creates a throwaway account, opens the
+delete sheet, asserts **`secureTextFields.count == 0`**, types DELETE, and
+completes the deletion. Third rejection on one guideline is enough to warrant a
+test rather than a promise.
+
+Note the assertion order: the test waits for the sheet to actually be on screen
+*before* asserting what isn't on it. The first draft asserted "no password field"
+against a screen that hadn't loaded yet, which passed for the wrong reason — the
+one way a test like this can lie.
+
+Verified on the review device (iPad Air 11-inch M3, iPadOS 26.2): deletion 2/2,
+signed-out access 5/5, unit 10/10. Also verified at the API: register → `/me`
+200 → `DELETE /me` with no body → `{"deleted":true}` → `/me` 401.
+
+### The Resolution Center reply
+
+Paste after uploading 1.0.0 (4):
+
+```
+Thank you — the finding is correct, and it is fixed in build 1.0 (4), submitted
+with this reply.
+
+WHAT WAS WRONG
+
+The Delete Account screen in 1.0 (3) had two fields: a typed confirmation and
+the account password. We had added the password re-entry as a safeguard, so that
+a stolen session token alone could not destroy a student's coursework. We now
+understand that a password field on the deletion screen is the barrier the
+guideline prohibits, regardless of whether the account already has a password,
+and we have removed it.
+
+WHAT DELETION LOOKS LIKE IN 1.0 (4)
+
+Profile -> Delete Account. The screen lists exactly what will be destroyed, and
+asks the user to type the word DELETE. That is the only requirement.
+
+  - No password, and no credential of any kind.
+  - No new account, no registration, and nothing to add to an existing account.
+  - No website to visit, and no form to fill in outside the app.
+  - No email, phone call, or support request.
+  - It is a real deletion, not a deactivation: the account row and every record
+    attached to it are removed in one transaction, and the app also clears its
+    on-device stores. There is no recovery path.
+
+The typed confirmation is the app's only remaining step, and we kept it solely
+to prevent an accidental tap on an action with no undo, which the guideline
+expressly permits.
+
+The server no longer accepts or expects a password on the deletion endpoint, so
+the requirement is gone from the backend as well as the interface, not merely
+hidden in the UI.
+
+ALSO CORRECTED
+
+Our Privacy Policy and Support pages both described the old flow and stated that
+deletion would ask for a password. Both now describe the current flow. We
+mention this because a reviewer reading those pages would have been told the
+wrong thing, and we would rather correct it than leave it to be found.
+
+Both pages continue to offer an email address as an optional convenience, but it
+is not required for deletion and never was the only route — in-app deletion is
+the primary path and is described first on both pages.
+
+VERIFIED ON YOUR REVIEW DEVICE
+
+You reviewed on an iPad Air 11-inch (M3). We ran the deletion flow on that
+configuration: create an account, delete it from Profile -> Delete Account with
+only the typed confirmation, and the app returns to a signed-out state with the
+account gone.
 
 The demo account remains available for the account-based features:
 

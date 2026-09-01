@@ -93,12 +93,16 @@ class AuthViewModel : ViewModel() {
     /**
      * Permanently deletes the account, server-side and on this device.
      *
+     * No password: Guideline 5.1.1(v) forbids requiring one to complete deletion,
+     * which is what the iOS build was rejected for. The typed DELETE confirmation
+     * is the guard.
+     *
      * The local purge matters as much as the server call: every on-device store
      * is keyed by user id, so without it the next account signed in on this
      * device would inherit the deleted student's progress.
      */
-    suspend fun deleteAccount(password: String) {
-        Repository.deleteAccount(password)
+    suspend fun deleteAccount() {
+        Repository.deleteAccount()
         purgeLocalData()
         TokenStore.clear()
         _user.value = null

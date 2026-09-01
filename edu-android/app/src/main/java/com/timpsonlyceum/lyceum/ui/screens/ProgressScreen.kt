@@ -240,9 +240,9 @@ fun ProgressScreen(auth: AuthViewModel, nav: NavHostController) {
     if (confirmDelete) {
         DeleteAccountDialog(
             onDismiss = { confirmDelete = false },
-            onConfirm = { password ->
+            onConfirm = {
                 scope.launch {
-                    runCatching { auth.deleteAccount(password) }
+                    runCatching { auth.deleteAccount() }
                     confirmDelete = false
                 }
             },
@@ -363,13 +363,16 @@ private fun HandleEditorDialog(
 }
 
 /**
- * Deleting an account is permanent, so it wants the typed word DELETE and the
- * password — the password so a stolen session alone cannot wipe an account.
+ * Deleting an account is permanent, so it asks for the typed word DELETE.
+ *
+ * Deliberately no password field. App Review rejected the iOS build over one
+ * under Guideline 5.1.1(v) — the flow must not require the user to add a
+ * password to complete deletion — and Play's policy is the same in substance.
+ * A typed confirmation is what the guideline actually allows.
  */
 @Composable
-private fun DeleteAccountDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+private fun DeleteAccountDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
     var typed by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -383,18 +386,12 @@ private fun DeleteAccountDialog(onDismiss: () -> Unit, onConfirm: (String) -> Un
                     style = serif(15).copy(color = Theme.ink),
                 )
                 LyceumField(typed, "Type DELETE to confirm", onChange = { typed = it })
-                LyceumField(
-                    password, "Password",
-                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
-                    isPassword = true,
-                    onChange = { password = it },
-                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(password) },
-                enabled = typed.trim() == "DELETE" && password.isNotBlank(),
+                onClick = onConfirm,
+                enabled = typed.trim() == "DELETE",
             ) { Text("Delete", style = serif(15).copy(color = Theme.danger)) }
         },
         dismissButton = {

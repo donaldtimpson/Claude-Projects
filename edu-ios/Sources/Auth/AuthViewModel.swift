@@ -69,12 +69,13 @@ final class AuthViewModel: ObservableObject {
     // Permanently delete the account, server-side and on this device. App Store
     // Review Guideline 5.1.1(v) requires this to be reachable from inside the app
     // (Profile -> Delete Account), and to actually delete rather than deactivate.
-    // The password is re-sent so a stolen access token alone can't wipe an account.
-    func deleteAccount(password: String) async throws {
+    //
+    // No password: the same guideline forbids requiring one to complete deletion,
+    // which is what 1.0 (3) was rejected for. The typed DELETE confirmation in
+    // DeleteAccountSheet is the guard, and the guideline allows exactly that.
+    func deleteAccount() async throws {
         struct Deleted: Decodable { let deleted: Bool }
-        let _: Deleted = try await APIClient.shared.delete(
-            "/me", body: PasswordBody(password: password)
-        )
+        let _: Deleted = try await APIClient.shared.delete("/me")
         purgeLocalData()
         TokenStore.clear()
         user = nil

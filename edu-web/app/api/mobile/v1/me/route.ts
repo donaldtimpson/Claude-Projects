@@ -2,7 +2,6 @@ import { db } from "@/lib/db";
 import { getStreak, generateHandle } from "@/lib/gamification/engine";
 import { getDueCount } from "@/lib/srs";
 import { withUser } from "@/lib/mobile/guard";
-import { verifyCredentials } from "@/lib/auth-core";
 import { ok, fail, unauthorized } from "@/lib/mobile/respond";
 
 export async function GET(req: Request) {
@@ -53,18 +52,25 @@ export async function DELETE(req: Request) {
   return withUser(req, async (userId) => {
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { email: true, password: true },
+      select: { id: true },
     });
     if (!user) return fail(404, "Account not found.");
 
-    // Re-authenticate before destroying data: a stolen access token alone must
-    // not be enough to wipe a student's account. Apple-only accounts have no
-    // password, so the app gates those behind its typed confirmation instead.
-    if (user.password) {
-      const body = await req.json().catch(() => ({}) as { password?: string });
-      const confirmed = await verifyCredentials(user.email, body?.password);
-      if (!confirmed) return fail(401, "Incorrect password.");
-    }
+    // Deliberately NO password re-entry. This route used to re-authenticate before
+    // destroying data, on the reasoning that a stolen access token alone should not
+    // be enough to wipe an account. App Review rejected 1.0 (3) under Guideline
+    // 5.1.1(v) for exactly that: the guideline says an app must not require the
+    // user to "add a password to complete account deletion", and a reviewer reads a
+    // password field on the delete screen as that barrier regardless of whether the
+    // account already has one.
+    //
+    // What guards the action instead is what the guideline does allow — a
+    // confirmation step: the app makes the student type DELETE, and lists what is
+    // about to be destroyed. The bearer token still has to be valid, which means an
+    // unlocked device holding a Keychain-stored token an hour old at most.
+    //
+    // This is the only account-deletion path in the system — there is no web
+    // equivalent — so nothing else re-authenticates either.
 
     await db.$transaction([
       db.idempotencyKey.deleteMany({ where: { userId } }),

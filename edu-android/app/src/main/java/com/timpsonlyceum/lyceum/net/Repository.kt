@@ -74,12 +74,13 @@ object Repository {
     suspend fun me(): MeResponse = ApiClient.get("/me", MeResponse.serializer())
 
     /**
-     * Permanently deletes the account, server-side. The password is re-sent so a
-     * stolen access token alone cannot wipe an account.
+     * Permanently deletes the account, server-side. No body: Guideline 5.1.1(v)
+     * forbids requiring a password to complete deletion, so the server no longer
+     * asks for one and the app's typed DELETE confirmation is the guard.
      */
-    suspend fun deleteAccount(password: String): DeletedResponse = ApiClient.delete(
+    suspend fun deleteAccount(): DeletedResponse = ApiClient.delete(
         "/me",
-        json.encodeToString(PasswordBody.serializer(), PasswordBody(password)),
+        null,
         DeletedResponse.serializer(),
     )
 
