@@ -1,0 +1,719 @@
+<title>Sound It Out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Archivo:wght@500;600&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap">
+<style>
+:root{
+  --ink:#1B2A33;
+  --ink-2:#41555F;
+  --ink-3:#6E828C;
+  --ground:#E4EAE8;
+  --ground-2:#D3DCD9;
+  --surface:#FFFFFF;
+  --surface-2:#F4F7F6;
+  --line:#C3CFCB;
+  --line-soft:#DDE5E2;
+  --vowel:#C8433A;
+  --heart:#E0A038;
+  --heart-soft:#FAEBCE;
+  --go:#2E7D6E;
+  --frame:#16232B;
+  --frame-2:#243642;
+  --shadow:rgba(22,35,43,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E7EDEB;
+    --ink-2:#B0C1BC;
+    --ink-3:#849993;
+    --ground:#111A1F;
+    --ground-2:#18242B;
+    --surface:#1C2A31;
+    --surface-2:#162228;
+    --line:#31454E;
+    --line-soft:#26363E;
+    --vowel:#F0796E;
+    --heart:#EAB765;
+    --heart-soft:#3D3320;
+    --go:#5FBAA7;
+    --frame:#0A1216;
+    --frame-2:#16232B;
+    --shadow:rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#E7EDEB;
+  --ink-2:#B0C1BC;
+  --ink-3:#849993;
+  --ground:#111A1F;
+  --ground-2:#18242B;
+  --surface:#1C2A31;
+  --surface-2:#162228;
+  --line:#31454E;
+  --line-soft:#26363E;
+  --vowel:#F0796E;
+  --heart:#EAB765;
+  --heart-soft:#3D3320;
+  --go:#5FBAA7;
+  --frame:#0A1216;
+  --frame-2:#16232B;
+  --shadow:rgba(0,0,0,.5);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"Literata",Georgia,serif;
+  line-height:1.6;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;padding-bottom:20px;border-bottom:2px solid var(--ink);margin-bottom:22px}
+.mast h1{
+  font-family:"Andika",system-ui,sans-serif;
+  font-weight:700;font-size:clamp(30px,4.6vw,44px);
+  margin:0;letter-spacing:-.015em;text-wrap:balance;
+}
+.mast h1 .v{color:var(--vowel)}
+.mast p{margin:0;max-width:56ch;color:var(--ink-2);font-size:15px}
+.tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tag{
+  font-family:"Archivo",system-ui,sans-serif;font-size:10.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);
+  border:1px solid var(--line);border-radius:2px;padding:3px 7px;
+}
+
+/* ---------- deck rail ---------- */
+.rail{margin-bottom:24px}
+.rail-lab{
+  font-family:"Archivo",system-ui,sans-serif;font-size:10.5px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px;
+}
+.decks{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.deckbtn{
+  flex:0 0 auto;display:flex;flex-direction:column;gap:2px;align-items:flex-start;
+  background:var(--surface);border:1px solid var(--line);border-radius:3px;
+  padding:9px 13px;cursor:pointer;color:var(--ink);text-align:left;
+  font-family:"Archivo",system-ui,sans-serif;min-width:112px;
+  transition:border-color .12s,background .12s;
+}
+.deckbtn:hover{border-color:var(--ink-3)}
+.deckbtn .step{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.deckbtn .nm{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.deckbtn[aria-selected="true"]{background:var(--ink);border-color:var(--ink)}
+.deckbtn[aria-selected="true"] .nm{color:var(--ground)}
+.deckbtn[aria-selected="true"] .step{color:var(--ground-2);opacity:.75}
+.deckbtn.track{border-style:dashed}
+:focus-visible{outline:2.5px solid var(--vowel);outline-offset:2px}
+
+/* ---------- stage ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:34px;align-items:start}
+@media(max-width:860px){.stage{grid-template-columns:1fr;gap:26px}}
+
+/* phone */
+.phone{
+  background:var(--frame);border-radius:34px;padding:11px;
+  box-shadow:0 18px 40px -14px var(--shadow);position:sticky;top:20px;
+}
+@media(max-width:860px){.phone{position:static;max-width:340px;margin:0 auto}}
+.screen{
+  background:var(--surface);border-radius:25px;overflow:hidden;
+  display:flex;flex-direction:column;height:606px;
+}
+.statusbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 18px 3px;font-family:"Archivo",sans-serif;font-size:10px;
+  font-weight:600;color:var(--ink-3);letter-spacing:.03em;
+}
+.appbar{
+  padding:5px 16px 10px;border-bottom:1px solid var(--line-soft);
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+}
+.appbar .title{font-family:"Andika",sans-serif;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.appbar .count{font-family:"Archivo",sans-serif;font-size:11px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* mode chips */
+.chips{display:flex;gap:5px;padding:9px 16px 0;flex-wrap:wrap}
+.chip{
+  font-family:"Archivo",sans-serif;font-size:10.5px;font-weight:600;
+  letter-spacing:.04em;padding:4px 9px;border-radius:11px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2);
+}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--ground)}
+.chip.warn[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:#fff}
+
+/* card area */
+.cardzone{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:12px 16px;min-height:0;
+}
+.card{
+  width:100%;background:var(--surface-2);border:1px solid var(--line-soft);
+  border-radius:14px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:20px 16px;flex:1;text-align:center;
+}
+.word{
+  font-family:"Andika",sans-serif;font-weight:700;
+  font-size:clamp(38px,10vw,56px);line-height:1.05;letter-spacing:.01em;
+  word-break:break-word;
+}
+.word .v{color:var(--vowel)}
+.big-letters{font-family:"Andika",sans-serif;font-weight:700;font-size:76px;line-height:1;letter-spacing:.06em}
+.big-letters .v{color:var(--vowel)}
+.pic{font-size:84px;line-height:1}
+.pic-row{display:flex;gap:8px;justify-content:center;align-items:center}
+.pic-row .pic{font-size:46px;opacity:.32}
+.pic-row .pic.on{font-size:84px;opacity:1}
+.hint{
+  font-family:"Archivo",sans-serif;font-size:11.5px;color:var(--ink-3);
+  letter-spacing:.02em;max-width:30ch;line-height:1.5;
+}
+.hint b{color:var(--go);font-weight:600}
+.hint s{color:var(--vowel);text-decoration-thickness:1.5px}
+.sentence{
+  font-family:"Andika",sans-serif;font-weight:400;font-size:clamp(24px,6.4vw,32px);
+  line-height:1.4;letter-spacing:.005em;
+}
+.sentence .v{color:var(--vowel)}
+.sw{border-bottom:2.5px solid var(--heart);padding-bottom:1px}
+.heart-part{background:var(--heart-soft);border-radius:3px;padding:0 2px;position:relative}
+.heartmark{font-size:13px;color:var(--heart);vertical-align:super}
+.parts{display:flex;gap:6px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+.part{display:flex;flex-direction:column;align-items:center;gap:2px}
+.part .g{font-family:"Andika",sans-serif;font-weight:700;font-size:46px;line-height:1}
+.part .lab{font-family:"Archivo",sans-serif;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.part.irr .g{color:var(--heart)}
+.part.irr .lab{color:var(--heart)}
+
+/* flip card */
+.flip{width:100%;flex:1;perspective:900px;cursor:pointer;border:0;background:none;padding:0;font:inherit;color:inherit}
+.flip-in{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.4,.15,.2,1);transform-style:preserve-3d}
+.flip[aria-pressed="true"] .flip-in{transform:rotateY(180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;
+  background:var(--surface-2);border:1px solid var(--line-soft);border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:18px;
+}
+.face.back{transform:rotateY(180deg);background:var(--surface-2);border-color:var(--go)}
+@media(prefers-reduced-motion:reduce){.flip-in{transition:none}}
+
+/* controls */
+.controls{display:flex;gap:8px;padding:10px 16px 16px;align-items:center}
+.nav{
+  flex:1;font-family:"Archivo",sans-serif;font-size:13px;font-weight:600;
+  padding:12px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);cursor:pointer;
+}
+.nav.primary{background:var(--ink);border-color:var(--ink);color:var(--ground);flex:2}
+.nav:hover{border-color:var(--ink-3)}
+.cats{display:flex;gap:5px;padding:0 16px;flex-wrap:wrap}
+.cat{
+  font-family:"Archivo",sans-serif;font-size:10.5px;font-weight:600;padding:3px 8px;
+  border-radius:3px;border:1px solid var(--line);background:transparent;color:var(--ink-2);cursor:pointer;
+}
+.cat[aria-pressed="true"]{background:var(--go);border-color:var(--go);color:#fff}
+
+/* ---------- notes rail ---------- */
+.notes{display:flex;flex-direction:column;gap:22px;min-width:0}
+.note h2{
+  font-family:"Literata",serif;font-size:20px;font-weight:600;margin:0 0 4px;
+  letter-spacing:-.01em;text-wrap:balance;
+}
+.note .eyebrow{
+  font-family:"Archivo",sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--vowel);margin-bottom:5px;
+}
+.note p{margin:0 0 10px;font-size:15px;color:var(--ink-2);max-width:64ch}
+.note p:last-child{margin-bottom:0}
+.note strong{color:var(--ink);font-weight:600}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:7px 14px;margin:12px 0 0;font-size:14px}
+.dl dt{font-family:"Archivo",sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding-top:4px}
+.dl dd{margin:0;color:var(--ink-2)}
+.callout{
+  border-left:3px solid var(--vowel);padding:2px 0 2px 15px;margin:14px 0 0;
+  font-size:14.5px;color:var(--ink-2);
+}
+.callout b{color:var(--ink);font-weight:600}
+.qs{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:11px}
+.qs li{display:flex;gap:11px;font-size:14.5px;color:var(--ink-2);align-items:baseline}
+.qs .n{
+  font-family:"Archivo",sans-serif;font-size:10px;font-weight:600;color:var(--ground);
+  background:var(--ink);border-radius:2px;padding:2px 5px;flex:0 0 auto;letter-spacing:.05em;
+}
+.rule{height:1px;background:var(--line-soft);border:0;margin:0}
+.foot{
+  margin-top:34px;padding-top:16px;border-top:1px solid var(--line);
+  font-family:"Archivo",sans-serif;font-size:11.5px;color:var(--ink-3);
+  display:flex;flex-wrap:wrap;gap:6px 20px;
+}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-family:"Archivo",sans-serif;font-size:11px;color:var(--ink-3)}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw-key{width:16px;height:0;border-bottom:2.5px solid var(--heart);display:inline-block}
+.v-key{color:var(--vowel);font-family:"Andika",sans-serif;font-weight:700;font-size:15px}
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <h1>S<span class="v">ou</span>nd It <span class="v">Ou</span>t</h1>
+      <div class="tagrow">
+        <span class="tag">Clickable mockup</span>
+        <span class="tag">Parent + child</span>
+        <span class="tag">Nothing is real yet</span>
+      </div>
+    </div>
+    <p>Six decks that carry a child from spoken vocabulary to reading a sentence. Tap the decks below to page
+      through each one. Emoji stand in for real artwork; the notes beside each deck say what I'd build and
+      what I still need from you.</p>
+  </header>
+
+  <nav class="rail">
+    <div class="rail-lab">The decks</div>
+    <div class="decks" id="decks" role="tablist"></div>
+  </nav>
+
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span>Sound It Out</span></div>
+        <div class="appbar">
+          <span class="title" id="appTitle">Picture Words</span>
+          <span class="count" id="appCount">1 / 8</span>
+        </div>
+        <div class="chips" id="chips"></div>
+        <div class="cats" id="cats"></div>
+        <div class="cardzone" id="cardzone"></div>
+        <div class="controls">
+          <button class="nav" id="prevBtn">Back</button>
+          <button class="nav primary" id="nextBtn">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="notes" id="notes"></div>
+  </div>
+
+  <div class="legend">
+    <span><span class="v-key">a e i o u</span> vowels always red — a real phonics convention, kept across every deck</span>
+    <span><span class="sw-key"></span> underline marks a sight word</span>
+  </div>
+
+  <div class="foot">
+    <span>Typeface: Andika (SIL) — single-story <b>a</b> and <b>g</b>, matching how children are taught to write</span>
+    <span>Prototype only · no audio wired · no data saved</span>
+  </div>
+</div>
+
+<script>
+const V = "aeiou";
+function mark(word){
+  return [...word].map(ch => V.includes(ch.toLowerCase()) ? `<span class="v">${ch}</span>` : ch).join("");
+}
+function markSentence(s, sight){
+  return s.split(/(\s+)/).map(tok => {
+    if(!tok.trim()) return tok;
+    const bare = tok.replace(/[.!?,]/g,"").toLowerCase();
+    const inner = mark(tok);
+    return (sight||[]).includes(bare) ? `<span class="sw">${inner}</span>` : inner;
+  }).join("");
+}
+
+const DECKS = [
+  {
+    id:"pics", step:"Track", name:"Picture Words", track:true,
+    title:"Picture Words",
+    modes:[{id:"three",label:"Show all 3 images"},{id:"reading",label:"Reading mode"}],
+    cats:["Animals","Food","Home","Doing"],
+    items:[
+      {w:"dog", pics:["🐕","🐩","🦮"], cat:"Animals"},
+      {w:"cat", pics:["🐈","🐱","🐈‍⬛"], cat:"Animals"},
+      {w:"bird",pics:["🐦","🦜","🕊️"], cat:"Animals"},
+      {w:"fish",pics:["🐟","🐠","🐡"], cat:"Animals"},
+      {w:"apple",pics:["🍎","🍏","🥧"], cat:"Food"},
+      {w:"bread",pics:["🍞","🥖","🥯"], cat:"Food"},
+      {w:"cup", pics:["🥤","☕","🍵"], cat:"Home"},
+      {w:"bed", pics:["🛏️","🛌","💤"], cat:"Home"},
+      {w:"run", pics:["🏃","🏃‍♀️","👟"], cat:"Doing"},
+      {w:"eat", pics:["🍽️","😋","🥄"], cat:"Doing"}
+    ],
+    render(st){
+      const it = this.items[st.i];
+      if(st.mode === "reading"){
+        return `<div class="card">
+          <div class="word">${mark(it.w)}</div>
+          <div class="hint">Reading mode — the picture is hidden. Tap <b>Next</b> after they read it.
+          This is the victory lap: same deck, months later.</div>
+        </div>`;
+      }
+      if(st.mode === "three"){
+        return `<div class="card">
+          <div class="pic-row">${it.pics.map((p,n)=>`<span class="pic ${n===1?"on":""}">${p}</span>`).join("")}</div>
+          <div class="word">${mark(it.w)}</div>
+          <div class="hint">Three different ${it.w}s teach the <b>idea</b> of "${it.w}" — not one picture.</div>
+        </div>`;
+      }
+      return "";
+    },
+    notes:[
+      {eyebrow:"Your correction, applied", h:"The word is for you, not the child",
+       p:`You said the label exists so the parent knows what the picture is meant to show — that removes my
+          objection entirely. The child is building <strong>spoken vocabulary</strong> here, not decoding.
+          So I've pulled this out of the numbered ladder and marked it a <strong>parallel track</strong>:
+          useful from day one, and it doesn't have to come before letters.`},
+      {eyebrow:"Your idea, and it's the good one", h:"Three images per word is concept-formation",
+       p:`A child shown one dog learns that picture. A child shown a beagle, a poodle and a lab learns the
+          <strong>category</strong>. That's a real distinction and worth building deliberately: vary breed,
+          color, angle, photo vs. illustration. I'd make three the minimum, not the maximum.`},
+      {eyebrow:"The arc you described", h:"Reading mode is the payoff",
+       p:`Flip the toggle and the picture disappears — the child now <em>reads</em> the deck they once only
+          named. Same content, two jobs, separated by a year. That's a genuinely lovely structure and it
+          costs one boolean.`},
+      {eyebrow:"The cost", h:"This deck is the expensive one",
+       p:`500 words × 3 images is <strong>1,500 assets</strong>. That's the whole budget of the app, and you've
+          twice chosen to avoid image assets — vector-only geography drills, and the Vercel optimizer quota
+          blanking your thumbnails. I'd ship decks 1–5 of the ladder first and grow this one by category
+          (Animals, Food, Home, Doing) rather than gating launch on 1,500 pictures.`}
+    ]
+  },
+
+  {
+    id:"letters", step:"Step 1", name:"Letter Sounds",
+    title:"Letter Sounds",
+    modes:[{id:"learn",label:"Learn (set order)"},{id:"practice",label:"Practice (shuffle)"}],
+    items:[
+      {c:"S",l:"s",snd:"/s/",as:"sun",bad:"suh"},
+      {c:"A",l:"a",snd:"/a/",as:"ant",bad:"ay"},
+      {c:"T",l:"t",snd:"/t/",as:"tap",bad:"tuh"},
+      {c:"P",l:"p",snd:"/p/",as:"pin",bad:"puh"},
+      {c:"I",l:"i",snd:"/i/",as:"it",bad:"eye"},
+      {c:"N",l:"n",snd:"/n/",as:"net",bad:"nuh"}
+    ],
+    render(st){
+      const it = this.items[st.i];
+      const isV = V.includes(it.l);
+      return `<div class="card">
+        <div class="big-letters">${isV?`<span class="v">${it.c}${it.l}</span>`:`${it.c}${it.l}`}</div>
+        <div class="hint">Say <b>${it.snd}</b> as in <b>${it.as}</b> — not "<s>${it.bad}</s>"</div>
+        ${st.mode==="practice"
+          ? `<div class="hint">Shuffled from the letters already introduced.</div>`
+          : `<div class="hint">Letter ${st.i+1} of 6 in the first set.</div>`}
+      </div>`;
+    },
+    notes:[
+      {eyebrow:"Kept exactly as you specified", h:"No pictures, and that's the sophisticated call",
+       p:`Almost every alphabet app does "A is for Apple," which builds a letter→picture→<em>name</em> link and
+          quietly trains guessing. You asked for bare letterforms. That's correct, and it's why this deck can
+          actually teach sounding out.`},
+      {eyebrow:"One change I'd argue for", h:"Teaching order isn't alphabetical — or random",
+       p:`You asked for random order and cycling. That's a great <strong>review</strong> mode and it's the second
+          chip above. But a brand-new learner needs a deliberate order. Start
+          <strong>s, a, t, p, i, n</strong> and after six letters the child can read real words:
+          <em>sat, pat, tap, nap, pin, tin, sit</em>. Grinding A→Z gets you nothing readable until far later.`},
+      {eyebrow:"The thing that stalls beginners", h:"The schwa problem, surfaced in the UI",
+       p:`If a parent says "buh" for <em>b</em>, then "buh-a-tuh" never blends into <em>bat</em>. That single habit
+          derails more beginning readers than anything else, so the card coaches the parent directly.
+          It also means <strong>any audio must be recorded, not text-to-speech</strong> — synthetic voices are
+          bad at isolated phonemes.`}
+    ]
+  },
+
+  {
+    id:"blend", step:"Step 2", name:"Blending",
+    title:"Blending",
+    modes:[{id:"cv",label:"A · fa fe fi"},{id:"rime",label:"B · at → fat"}],
+    cv:["fa","fe","fi","fo","fu","ma","me","mi","mo","mu"],
+    rime:[
+      {build:["at"],full:"at"},{build:["f","at"],full:"fat"},{build:["s","at"],full:"sat"},
+      {build:["m","at"],full:"mat"},{build:["r","at"],full:"rat"},{build:["c","at"],full:"cat"},
+      {build:["h","at"],full:"hat"},{build:["p","at"],full:"pat"}
+    ],
+    render(st){
+      if(st.mode === "cv"){
+        const s = this.cv[st.i % this.cv.length];
+        return `<div class="card">
+          <div class="word">${mark(s)}</div>
+          <div class="hint">Your original idea: consonant + vowel.</div>
+          <div class="hint">But in English "${s}" is unstable — compare <b>fat</b> and <b>fable</b>.
+          Try variant B.</div>
+        </div>`;
+      }
+      const it = this.rime[st.i % this.rime.length];
+      const onset = it.build.length>1 ? it.build[0] : "";
+      return `<div class="card">
+        <div class="parts">
+          ${onset?`<div class="part"><span class="g">${mark(onset)}</span><span class="lab">onset</span></div>`:""}
+          <div class="part"><span class="g">${mark(it.build[it.build.length-1])}</span><span class="lab">rime</span></div>
+        </div>
+        <div class="word">${mark(it.full)}</div>
+        <div class="hint">One rime, a whole word family. <b>-at</b> is stable in English — it always says /at/.</div>
+      </div>`;
+    },
+    notes:[
+      {eyebrow:"Two versions to compare", h:"Same deck, two different units",
+       p:`Toggle the chips above. <strong>Variant A</strong> is your <em>fa / fe / fi</em> idea.
+          <strong>Variant B</strong> builds on the rime instead: <em>at → fat → sat → mat</em>.`},
+      {eyebrow:"Why I'd pick B", h:"English vowels aren't stable in open syllables",
+       p:`<em>fa / fe / fi</em> works beautifully in Spanish — <em>ma me mi mo mu</em> is standard there — because
+          Spanish vowels say one thing. English doesn't cooperate: the "fa" in <strong>fat</strong> is not the
+          "fa" in <strong>fable</strong>, and "fi" could be <em>fit</em> or <em>fine</em>. You'd be drilling a chunk
+          that's ambiguous and rarely appears intact.`},
+      {eyebrow:"What rimes buy you", h:"Stability, and a word family per card",
+       p:`<strong>-at</strong>, <strong>-an</strong>, <strong>-ig</strong>, <strong>-op</strong> are reliable in
+          English. Teach one and the child unlocks eight words by swapping the front letter — which is also far
+          more satisfying than syllables that aren't words.`},
+      {eyebrow:"Or keep both", h:"A is a fine warm-up",
+       p:`CV cards do build the articulatory habit of gluing two sounds together. Nothing stops you using A as a
+          30-second warm-up and B as the workhorse. That's cheap — it's the same card component.`}
+    ]
+  },
+
+  {
+    id:"words", step:"Step 3", name:"Words",
+    title:"Words",
+    modes:[{id:"parent",label:"Parent checks"},{id:"flip",label:"Tap to flip"}],
+    cats:["CVC","Digraphs","Blends","Silent e"],
+    items:[
+      {w:"sat",pic:null,cat:"CVC"},{w:"pin",pic:"📌",cat:"CVC"},{w:"cat",pic:"🐈",cat:"CVC"},
+      {w:"bed",pic:"🛏️",cat:"CVC"},{w:"hop",pic:"🐇",cat:"CVC"},{w:"mud",pic:null,cat:"CVC"},
+      {w:"ship",pic:"🚢",cat:"Digraphs"},{w:"fish",pic:"🐟",cat:"Digraphs"},
+      {w:"chat",pic:null,cat:"Digraphs"},{w:"bath",pic:"🛁",cat:"Digraphs"},
+      {w:"frog",pic:"🐸",cat:"Blends"},{w:"drum",pic:"🥁",cat:"Blends"},
+      {w:"clap",pic:"👏",cat:"Blends"},{w:"stop",pic:"🛑",cat:"Blends"},
+      {w:"cake",pic:"🍰",cat:"Silent e"},{w:"bike",pic:"🚲",cat:"Silent e"},
+      {w:"kite",pic:"🪁",cat:"Silent e"},{w:"rope",pic:"🪢",cat:"Silent e"}
+    ],
+    render(st){
+      const it = this.items[st.i];
+      if(st.mode === "flip"){
+        const back = it.pic
+          ? `<div class="pic">${it.pic}</div><div class="hint">Tap again for the next word.</div>`
+          : `<div class="hint" style="font-size:14px">No picture exists for <b>${it.w}</b>.<br><br>
+             This is the limit of self-check: only concrete nouns can confirm themselves.</div>`;
+        return `<button class="flip" id="flipBtn" aria-pressed="${st.flipped?"true":"false"}">
+          <div class="flip-in">
+            <div class="face"><div class="word">${mark(it.w)}</div>
+              <div class="hint">Read it out loud, then tap to check.</div></div>
+            <div class="face back">${back}</div>
+          </div>
+        </button>`;
+      }
+      return `<div class="card">
+        <div class="word">${mark(it.w)}</div>
+        <div class="hint">Parent taps <b>Next</b> if they got it.</div>
+      </div>`;
+    },
+    notes:[
+      {eyebrow:"Your idea, prototyped", h:"Tap to flip — it works, but only halfway",
+       p:`Switch to <strong>Tap to flip</strong> and try a few. On <em>cat</em>, <em>frog</em>, <em>kite</em> it's
+          delightful and genuinely child-driven. Now page to <strong>sat</strong>, <strong>chat</strong> or
+          <strong>mud</strong> — there's nothing to draw.`},
+      {eyebrow:"The constraint worth knowing now", h:"Roughly half of decodable words aren't imageable",
+       p:`Self-check by picture only works for concrete nouns. Verbs, adjectives and function words —
+          which is most of what makes a sentence — can't confirm themselves. Two honest ways out:
+          <strong>(a)</strong> restrict the flip deck to imageable words and let the rest be parent-checked, or
+          <strong>(b)</strong> flip to recorded audio of the word instead of a picture, which works for every word
+          and doubles as the model pronunciation.`},
+      {eyebrow:"My recommendation", h:"Audio on the back, picture when one exists",
+       p:`That gets you a fully child-driven deck with no gaps, and the recording work is the same work you
+          already need for Step 1. Picture <em>and</em> audio where both exist.`},
+      {eyebrow:"Structure", h:"Not one flat pile of words",
+       p:`You said "a ton of phonetically spelled words." I'd level it — the chips above are the four rungs:
+          <strong>CVC → digraphs (sh, ch, th) → blends (st, fr, cl) → silent e</strong>. A child who's done
+          <em>cat</em> is not ready for <em>strength</em>, and the levels are what make the deck sequenceable.`}
+    ]
+  },
+
+  {
+    id:"sentences", step:"Step 4", name:"Sentences",
+    title:"Sentences",
+    modes:[{id:"plain",label:"Read it"},{id:"pic",label:"With picture"}],
+    items:[
+      {s:"Sam sat.",pic:"🧒"},
+      {s:"A cat naps.",pic:"😴"},
+      {s:"The pig is big.",pic:"🐖"},
+      {s:"Sam has a red hat.",pic:"🎩"},
+      {s:"The dog ran fast.",pic:"🐕"},
+      {s:"A fish is in the pot.",pic:"🐟"},
+      {s:"Tim can hop on the log.",pic:"🪵"}
+    ],
+    sight:["a","the"],
+    render(st){
+      const it = this.items[st.i];
+      return `<div class="card">
+        ${st.mode==="pic"?`<div class="pic">${it.pic}</div>`:""}
+        <div class="sentence">${markSentence(it.s, this.sight)}</div>
+        <div class="hint">Every word decodes, except <b>the</b> and <b>a</b> — underlined.</div>
+      </div>`;
+    },
+    notes:[
+      {eyebrow:"The bridge most apps skip", h:"Decodable sentences are the whole point",
+       p:`Plenty of apps drill words and then hand the child a real picture book, which is a cliff. Sentences
+          built only from patterns they've been taught is the rung between, and you had it in your list
+          unprompted. Keep it.`},
+      {eyebrow:"One sequencing change", h:"Sight words have to arrive before this deck, not after",
+       p:`You put sight words in deck 6, after sentences. But try writing a natural sentence without
+          <strong>the</strong> or <strong>a</strong> — you get "Sam sat." "A big pig." It's possible and it's
+          stilted, and it caps how far this deck can go. Introducing just <em>the</em> and <em>a</em> early
+          multiplies what you can write, so I've slipped them in here and underlined them.`},
+      {eyebrow:"Small thing", h:"Capitals finally earn their place",
+       p:`Step 1 shows both cases, but lowercase is what gets decoded. Here's where the capital does a job —
+          it marks the start of a sentence — so it's worth a word from the parent at this point, not earlier.`}
+    ]
+  },
+
+  {
+    id:"sight", step:"Step 5", name:"Sight Words",
+    title:"Sight Words",
+    modes:[{id:"heart",label:"Heart words"},{id:"insentence",label:"In a sentence"}],
+    items:[
+      {w:"said", parts:[{g:"s",ok:true},{g:"ai",ok:false},{g:"d",ok:true}], s:"She said it was fun."},
+      {w:"was",  parts:[{g:"w",ok:true},{g:"a",ok:false},{g:"s",ok:false}], s:"The dog was big."},
+      {w:"the",  parts:[{g:"th",ok:true},{g:"e",ok:false}], s:"The cat sat on the mat."},
+      {w:"to",   parts:[{g:"t",ok:true},{g:"o",ok:false}], s:"They have to go."},
+      {w:"have", parts:[{g:"h",ok:true},{g:"a",ok:true},{g:"v",ok:true},{g:"e",ok:false}], s:"You have a red hat."},
+      {w:"you",  parts:[{g:"y",ok:true},{g:"ou",ok:false}], s:"You said it was fun."}
+    ],
+    render(st){
+      const it = this.items[st.i];
+      if(st.mode === "insentence"){
+        return `<div class="card">
+          <div class="sentence">${markSentence(it.s, this.items.map(x=>x.w))}</div>
+          <div class="hint">Underlined words are learned by heart; everything else decodes.</div>
+        </div>`;
+      }
+      return `<div class="card">
+        <div class="parts">
+          ${it.parts.map(p=>`<div class="part ${p.ok?"":"irr"}">
+            <span class="g">${p.ok?mark(p.g):p.g}</span>
+            <span class="lab">${p.ok?"sounds out":"by heart ♥"}</span>
+          </div>`).join("")}
+        </div>
+        <div class="word">${mark(it.w)}</div>
+        <div class="hint">Only the amber part has to be memorized.</div>
+      </div>`;
+    },
+    notes:[
+      {eyebrow:"A better model than memorizing", h:"Heart words, not sight words",
+       p:`The old approach memorizes the whole word shape. The better one teaches the part that
+          <em>does</em> follow the rules and flags only the rogue bit as the piece to learn "by heart."
+          In <strong>said</strong>, the <em>s</em> and <em>d</em> are perfectly regular — only the
+          <em>ai</em> misbehaves. That's one thing to memorize instead of four.`},
+      {eyebrow:"Why it matters here", h:"It keeps decoding as the default habit",
+       p:`Whole-word memorizing teaches the child that some words are looked at rather than read, which
+          competes with everything decks 1–4 built. Heart words keep decoding switched on and carve out
+          the smallest possible exception.`},
+      {eyebrow:"Ordering", h:"Highest-frequency first, not easiest first",
+       p:`<em>the, was, said, to, you, have, they, of</em> — a small set covers a startling share of any
+          real page, which is what makes real books reachable. That's the list I'd build first.`}
+    ]
+  }
+];
+
+const OPEN = [
+  ["Audio", "Is there recorded audio? For a pre-reader who can't read instructions it's close to essential — and it's the thing that makes the flip deck work for non-picturable words. It must be recorded, not TTS."],
+  ["Child-driven", "Tap-to-flip gets you most of the way. The honest gap is that nothing verifies the child actually read it correctly — speech recognition on a four-year-old reading nonsense syllables isn't reliable enough to build on. Parent-verified with a child-driven feel may be the right compromise."],
+  ["Scope of deck 1", "500 words × 3 images = 1,500 assets. Photos, commissioned illustration, or a stock set? This decision sets the budget and the timeline for the whole app."],
+  ["Separate app?", "I think yes — a four-year-old and your Physics students share no UI, no login model, no branding. But the drill engine, DrillAttempt and progress plumbing from edu-ios are worth lifting wholesale."],
+  ["Content home", "content/reading/ as the single source, built out to iOS, Android and web — exactly the pattern content/grammar/ already follows."],
+  ["Progress", "Does a parent want to see 'knows 41 of 60 letter sounds'? That's the difference between a flashcard toy and something a parent trusts. It also implies per-child profiles."]
+];
+
+let st = { deck:0, i:0, mode:null, cat:null, flipped:false };
+
+const $ = id => document.getElementById(id);
+
+function railHTML(){
+  return DECKS.map((d,n)=>`
+    <button class="deckbtn ${d.track?"track":""}" role="tab" data-deck="${n}"
+      aria-selected="${n===st.deck}">
+      <span class="step">${d.step}</span><span class="nm">${d.name}</span>
+    </button>`).join("");
+}
+
+function visible(d){
+  if(!d.items) return [];
+  if(d.cats && st.cat) return d.items.filter(x=>x.cat===st.cat);
+  return d.items;
+}
+
+function render(){
+  const d = DECKS[st.deck];
+  if(!st.mode) st.mode = d.modes[0].id;
+
+  $("decks").innerHTML = railHTML();
+  $("decks").querySelectorAll("[data-deck]").forEach(b=>{
+    b.onclick = ()=>{ st = {deck:+b.dataset.deck, i:0, mode:null, cat:null, flipped:false}; render(); };
+  });
+
+  $("appTitle").textContent = d.title;
+
+  $("chips").innerHTML = d.modes.map(m=>
+    `<button class="chip ${m.id==="flip"||m.id==="reading"?"warn":""}" data-mode="${m.id}"
+       aria-pressed="${st.mode===m.id}">${m.label}</button>`).join("");
+  $("chips").querySelectorAll("[data-mode]").forEach(b=>{
+    b.onclick = ()=>{ st.mode = b.dataset.mode; st.flipped=false; render(); };
+  });
+
+  if(d.cats){
+    $("cats").style.display = "flex";
+    $("cats").innerHTML = d.cats.map(c=>
+      `<button class="cat" data-cat="${c}" aria-pressed="${st.cat===c}">${c}</button>`).join("");
+    $("cats").querySelectorAll("[data-cat]").forEach(b=>{
+      b.onclick = ()=>{ st.cat = (st.cat===b.dataset.cat)?null:b.dataset.cat; st.i=0; st.flipped=false; render(); };
+    });
+  } else { $("cats").style.display="none"; $("cats").innerHTML=""; }
+
+  // deck 2 blending has no .items; length differs by variant
+  let len;
+  if(d.id==="blend") len = (st.mode==="cv") ? d.cv.length : d.rime.length;
+  else len = visible(d).length;
+  if(st.i >= len) st.i = 0;
+
+  $("appCount").textContent = `${st.i+1} / ${len}`;
+
+  const proxy = Object.create(d);
+  if(d.items && d.cats && st.cat) proxy.items = visible(d);
+  $("cardzone").innerHTML = proxy.render(st);
+
+  const fb = $("flipBtn");
+  if(fb) fb.onclick = ()=>{
+    if(st.flipped){ st.flipped=false; st.i=(st.i+1)%len; }
+    else st.flipped = true;
+    render();
+  };
+
+  $("notes").innerHTML = d.notes.map(n=>`
+    <section class="note">
+      <div class="eyebrow">${n.eyebrow}</div>
+      <h2>${n.h}</h2>
+      <p>${n.p}</p>
+    </section>
+    <hr class="rule">`).join("") + `
+    <section class="note">
+      <div class="eyebrow">Still open</div>
+      <h2>What I need from you</h2>
+      <ul class="qs">${OPEN.map(([k,v],n)=>
+        `<li><span class="n">${String(n+1).padStart(2,"0")}</span><span><strong>${k}.</strong> ${v}</span></li>`).join("")}</ul>
+    </section>`;
+}
+
+$("nextBtn").onclick = ()=>{
+  const d = DECKS[st.deck];
+  let len; if(d.id==="blend") len=(st.mode==="cv")?d.cv.length:d.rime.length; else len=visible(d).length;
+  st.i = (st.i+1)%len; st.flipped=false; render();
+};
+$("prevBtn").onclick = ()=>{
+  const d = DECKS[st.deck];
+  let len; if(d.id==="blend") len=(st.mode==="cv")?d.cv.length:d.rime.length; else len=visible(d).length;
+  st.i = (st.i-1+len)%len; st.flipped=false; render();
+};
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowRight") $("nextBtn").click();
+  if(e.key==="ArrowLeft") $("prevBtn").click();
+});
+
+render();
+</script>
