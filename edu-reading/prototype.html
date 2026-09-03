@@ -252,6 +252,54 @@ body{
 .legend span{display:flex;align-items:center;gap:6px}
 .sw-key{width:16px;height:0;border-bottom:2.5px solid var(--heart);display:inline-block}
 .v-key{color:var(--vowel);font-family:"Andika",sans-serif;font-weight:700;font-size:15px}
+
+/* ---------- the world ---------- */
+.scene{
+  width:100%;flex:1;border-radius:14px;border:1px solid var(--line-soft);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+}
+.sky{flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:6px;padding:14px}
+.ground{height:26px;flex:0 0 auto}
+.biome-grass .sky{background:linear-gradient(#CFE7F2,#EAF4F8)} .biome-grass .ground{background:#7FB069}
+.biome-beach .sky{background:linear-gradient(#FBE4C0,#FDF3E2)} .biome-beach .ground{background:#E8C88A}
+.biome-snow  .sky{background:linear-gradient(#DCE9F0,#F4F9FB)} .biome-snow  .ground{background:#E8F0F4}
+.biome-night .sky{background:linear-gradient(#1E2C46,#3A4A6B)} .biome-night .ground{background:#26304A}
+.biome-space .sky{background:linear-gradient(#120C24,#2A1B47)} .biome-space .ground{background:#1A1230}
+.thing{
+  font-size:38px;line-height:1;background:none;border:0;padding:3px;cursor:pointer;
+  transition:transform .3s ease;position:relative;
+}
+.thing:hover{transform:translateY(-3px)}
+.thing.locked{filter:grayscale(1) brightness(.55) contrast(.4);opacity:.4;cursor:default}
+.thing.fx-big{transform:scale(1.85)}
+.thing.fx-red{filter:hue-rotate(-40deg) saturate(4.5) brightness(1.05)}
+.thing.fx-hot{filter:brightness(1.35) drop-shadow(0 0 12px #F5A623)}
+.thing.fx-hop{animation:hopfx .45s ease-in-out 3}
+@keyframes hopfx{0%,100%{transform:translateY(0)}40%{transform:translateY(-24px)}}
+@media(prefers-reduced-motion:reduce){.thing,.thing.fx-hop{animation:none;transition:none}}
+.bubble{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% - 2px);
+  background:var(--ink);color:var(--ground);font-family:"Andika",sans-serif;font-weight:700;
+  font-size:15px;padding:2px 9px;border-radius:9px;white-space:nowrap;pointer-events:none;
+}
+.castrow{display:flex;flex-direction:column;gap:5px;padding:9px 0 0;width:100%}
+.cast{
+  font-family:"Andika",sans-serif;font-size:16px;text-align:left;padding:8px 11px;
+  border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink);cursor:pointer;
+}
+.cast:hover{border-color:var(--go)}
+.cast .v{color:var(--vowel)}
+.biomes{display:flex;gap:6px;justify-content:center;padding:9px 0 0;flex-wrap:wrap}
+.bio{
+  font-size:24px;background:none;border:1.5px solid transparent;border-radius:9px;
+  padding:4px 7px;cursor:pointer;line-height:1;
+}
+.bio[aria-pressed="true"]{border-color:var(--go);background:var(--surface-2)}
+.bio.locked{filter:grayscale(1);opacity:.35;cursor:default}
+.dots{display:flex;gap:3px;justify-content:center;margin-top:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dot.on{background:var(--go)}
 </style>
 
 <div class="wrap">
@@ -265,9 +313,10 @@ body{
         <span class="tag">Nothing is real yet</span>
       </div>
     </div>
-    <p>Six decks that carry a child from spoken vocabulary to reading a sentence. Tap the decks below to page
-      through each one. Emoji stand in for real artwork; the notes beside each deck say what I'd build and
-      what I still need from you.</p>
+    <p>Six decks carrying a child from spoken vocabulary to reading a sentence — plus <strong>The Word
+      World</strong>, where every word they read becomes a thing they own. Tap the decks below to page through
+      each one. Emoji stand in for real artwork; the notes beside each deck carry the reasoning and the
+      decisions taken so far.</p>
   </header>
 
   <nav class="rail">
@@ -415,8 +464,10 @@ const DECKS = [
       {eyebrow:"The thing that stalls beginners", h:"The schwa problem, surfaced in the UI",
        p:`If a parent says "buh" for <em>b</em>, then "buh-a-tuh" never blends into <em>bat</em>. That single habit
           derails more beginning readers than anything else, so the card coaches the parent directly.
-          It also means <strong>any audio must be recorded, not text-to-speech</strong> — synthetic voices are
-          bad at isolated phonemes.`}
+          It's also the one place free audio can't help you: the word banks hold <em>words</em>, and
+          text-to-speech is bad at isolated phonemes. But there are only <strong>44 sounds</strong>, and you
+          own a microphone and a recording habit — cut them yourself in an afternoon and you control the
+          schwa exactly. That's the cheapest high-value asset in the whole project.`}
     ]
   },
 
@@ -516,9 +567,12 @@ const DECKS = [
           <strong>(a)</strong> restrict the flip deck to imageable words and let the rest be parent-checked, or
           <strong>(b)</strong> flip to recorded audio of the word instead of a picture, which works for every word
           and doubles as the model pronunciation.`},
-      {eyebrow:"My recommendation", h:"Audio on the back, picture when one exists",
-       p:`That gets you a fully child-driven deck with no gaps, and the recording work is the same work you
-          already need for Step 1. Picture <em>and</em> audio where both exist.`},
+      {eyebrow:"Now affordable — this is the fix", h:"Audio on the back, picture when one exists",
+       p:`You said audio only if it's free. It is: <strong>Lingua Libre</strong> has 107,091 English word
+          recordings on Wikimedia Commons under CC BY-SA — real human voices, attribution only, which you've
+          said you're glad to give. Pick one prolific speaker and the voice stays consistent. That closes the
+          gap completely: <em>sat</em> and <em>mud</em> can now check themselves out loud even though nothing
+          can be drawn for them.`},
       {eyebrow:"Structure", h:"Not one flat pile of words",
        p:`You said "a ton of phonetically spelled words." I'd level it — the chips above are the four rungs:
           <strong>CVC → digraphs (sh, ch, th) → blends (st, fr, cl) → silent e</strong>. A child who's done
@@ -609,16 +663,102 @@ const DECKS = [
        p:`<em>the, was, said, to, you, have, they, of</em> — a small set covers a startling share of any
           real page, which is what makes real books reachable. That's the list I'd build first.`}
     ]
+  },
+
+  {
+    id:"world", step:"Reward", name:"The Word World", track:true,
+    title:"My World",
+    modes:[{id:"collect",label:"What I've read"},{id:"cast",label:"Read a sentence"},{id:"biome",label:"Places"}],
+    biomes:[
+      {id:"grass",icon:"🌱",open:true},{id:"beach",icon:"🏖️",open:true},
+      {id:"snow",icon:"❄️",open:false},{id:"night",icon:"🌙",open:false},{id:"space",icon:"🚀",open:false}
+    ],
+    things:[
+      {w:"cat",e:"🐈",got:true},{w:"pig",e:"🐖",got:true},{w:"dog",e:"🐕",got:true},
+      {w:"sun",e:"☀️",got:true},{w:"hat",e:"🎩",got:true},{w:"log",e:"🪵",got:true},
+      {w:"cup",e:"🥤",got:true},{w:"bed",e:"🛏️",got:true},
+      {w:"frog",e:"🐸",got:false},{w:"ship",e:"🚢",got:false},
+      {w:"drum",e:"🥁",got:false},{w:"kite",e:"🪁",got:false}
+    ],
+    spells:[
+      {s:"The pig is big.",t:"pig",fx:"big"},
+      {s:"The cat is red.",t:"cat",fx:"red"},
+      {s:"The dog can hop.",t:"dog",fx:"hop"},
+      {s:"The sun is hot.",t:"sun",fx:"hot"}
+    ],
+    items:[0,0,0,0,0],
+    render(st){
+      const bi = this.biomes[st.i] || this.biomes[0];
+      const scene = `<div class="scene biome-${bi.id}">
+        <div class="sky">${this.things.map((t,n)=>`
+          <button class="thing ${t.got?"":"locked"} ${W.fxOn===t.w?("fx-"+W.fx):""}" data-thing="${n}">
+            ${t.e}${W.say===t.w?`<span class="bubble">${mark(t.w)}</span>`:""}
+          </button>`).join("")}</div>
+        <div class="ground"></div>
+      </div>`;
+      if(st.mode === "collect"){
+        const got = this.things.filter(t=>t.got).length;
+        return scene + `<div class="dots">${this.things.map((t,n)=>
+            `<span class="dot ${t.got?"on":""}"></span>`).join("")}</div>
+          <div class="hint" style="padding-top:6px">Tap anything you've read — it says its word.
+          Grey things are words you haven't met yet. ${got} of ${this.things.length} collected.</div>`;
+      }
+      if(st.mode === "cast"){
+        return scene + `<div class="castrow">${this.spells.map((sp,n)=>
+          `<button class="cast" data-spell="${n}">${markSentence(sp.s,["the","a"])}</button>`).join("")}</div>`;
+      }
+      return scene + `<div class="biomes">${this.biomes.map((b,n)=>
+          `<button class="bio ${b.open?"":"locked"}" data-bio="${n}" aria-pressed="${n===st.i}">${b.icon}</button>`).join("")}
+        </div><div class="hint" style="padding-top:6px">New places open when a deck is finished. No coins,
+        no prices — nothing here needs reading.</div>`;
+    },
+    notes:[
+      {eyebrow:"You said go crazy — here it is", h:"Words you read become things you own",
+       p:`Read <strong>cat</strong> and a cat joins your world. Read <strong>hat</strong> and a hat appears.
+          Read <strong>hop</strong> and you can make things hop. The reward for reading a word is the word
+          <em>itself</em>, as a toy you keep. Switch to <strong>What I've read</strong> and tap things —
+          grey ones are words not yet met.`},
+      {eyebrow:"The mechanic I'm most confident about", h:"Sentences are spells",
+       p:`Tap <strong>Read a sentence</strong>, then tap "The pig is big." The pig <em>actually gets big</em>.
+          "The cat is red" turns the cat red. This is the whole idea in one gesture:
+          <strong>reading changes the world</strong> — which is not a metaphor bolted onto the app, it's the
+          literal truth about literacy, delivered as a game. It also turns Step 4, the driest deck in every
+          other reading app, into the one they'll beg for.`},
+      {eyebrow:"Why not points and badges", h:"A pre-reader can't read a scoreboard",
+       p:`Points, percentages and a shop are all <em>text and abstract number</em> — the two things this child
+          doesn't have yet. The world filling up <strong>is</strong> the progress bar, and it's legible at a
+          glance to a four-year-old and to you. Every word class has a home:
+          nouns are objects, adjectives are properties, verbs are actions, and the function words
+          (<em>the, a, is</em>) are the glue that unlocks sentence-casting — which is exactly what they are
+          in the language.`},
+      {eyebrow:"One thing I'd refuse to build", h:"No streaks",
+       p:`Your other apps have streaks and they're right there. Here they're wrong: a streak punishes a family
+          holiday and quietly transfers guilt to you. Invert it — <strong>reward returning, never punish
+          absence</strong>. Come back after two weeks and a bird has landed in the world, flowers opened,
+          something small is new. Same dopamine, none of the tax.`},
+      {eyebrow:"Instead of your point store", h:"Places, not purchases",
+       p:`You floated a store for themes. A store needs prices and item names — reading, which is the thing they
+          don't have. So the theme <em>is</em> the world's place, and it opens by finishing a deck: grass →
+          beach → snow → night → space. Tap <strong>Places</strong> to see it. If you want the agency a store
+          gives, the testable variant is spending collected words as dots rather than numbers — worth trying
+          on your kids both ways.`},
+      {eyebrow:"The quiet win", h:"The reward layer is also the review layer",
+       p:`Tapping a thing plays its word. A child who taps the frog forty times has read <em>frog</em> forty
+          times. That's spaced repetition wearing a costume — and it means the collection isn't a side dish
+          bolted onto the learning, it <em>is</em> more learning.`}
+    ]
   }
 ];
 
+const W = { say:null, fxOn:null, fx:null };
+
 const OPEN = [
-  ["Audio", "Is there recorded audio? For a pre-reader who can't read instructions it's close to essential — and it's the thing that makes the flip deck work for non-picturable words. It must be recorded, not TTS."],
-  ["Child-driven", "Tap-to-flip gets you most of the way. The honest gap is that nothing verifies the child actually read it correctly — speech recognition on a four-year-old reading nonsense syllables isn't reliable enough to build on. Parent-verified with a child-driven feel may be the right compromise."],
-  ["Scope of deck 1", "500 words × 3 images = 1,500 assets. Photos, commissioned illustration, or a stock set? This decision sets the budget and the timeline for the whole app."],
-  ["Separate app?", "I think yes — a four-year-old and your Physics students share no UI, no login model, no branding. But the drill engine, DrillAttempt and progress plumbing from edu-ios are worth lifting wholesale."],
-  ["Content home", "content/reading/ as the single source, built out to iOS, Android and web — exactly the pattern content/grammar/ already follows."],
-  ["Progress", "Does a parent want to see 'knows 41 of 60 letter sounds'? That's the difference between a flashcard toy and something a parent trusts. It also implies per-child profiles."]
+  ["Audio — solved, and free", "Lingua Libre / Wikimedia Commons holds <b>107,091 English word recordings</b> under CC BY-SA — real human voices, attribution only. Filter to one prolific speaker so the voice is consistent across the app. The 44 letter sounds aren't in there, but you own a microphone and a YouTube channel: record those yourself in twenty minutes and you also control the schwa. On-device iOS speech is the free fallback for any gap."],
+  ["Images — free, attribution optional", "<b>Pexels</b> and <b>Pixabay</b> allow commercial use with no attribution required, and they're real photos, which suits your three-images-per-word idea far better than a symbol set (a pictogram library has exactly one dog). <b>Wikimedia Commons</b> adds enormous breadth under CC BY / CC BY-SA. Avoid ARASAAC despite the perfect fit — it's <b>non-commercial</b>, which is the one clause a paid or ad-supported future can't survive."],
+  ["A credits screen is an asset, not a cost", "You offered a 'thank you' page. Build it — and put it behind the parental gate you need anyway. It satisfies CC BY attribution for every source at once, and it's the natural home for the one Timpson Lyceum mention."],
+  ["Kids Category has a hard rule", "If you list under Kids, guideline 1.3 forbids any link out of the app unless it sits behind a <b>parental gate</b>. Your Lyceum mention is exactly such a link. Guideline 5.1.4 also bars sending device or personal info to third parties — which your no-accounts, no-tracking stance already clears by a mile. Build the gate once and it serves credits, the Lyceum link, and any future parent view."],
+  ["Testing plan", "You have the thing almost nobody building this has: actual children. The variants are built to be A/B'd — CV vs. rime blending, parent-check vs. tap-to-flip, and later places-unlock vs. spend-your-words. Watch which one they ask to do again."],
+  ["Content home", "iOS-only is the right call, but keep the decks as plain JSON in <code>content/reading/</code> rather than hardcoded in Swift. It costs nothing now, and it's the whole Android port later — the same shape <code>content/grammar/</code> already has."]
 ];
 
 let st = { deck:0, i:0, mode:null, cat:null, flipped:false };
@@ -684,6 +824,29 @@ function render(){
     else st.flipped = true;
     render();
   };
+
+  $("cardzone").querySelectorAll("[data-thing]").forEach(b=>{
+    b.onclick = ()=>{
+      const t = d.things[+b.dataset.thing];
+      if(!t.got) return;
+      W.say = t.w; render();
+      setTimeout(()=>{ W.say=null; render(); }, 1500);
+    };
+  });
+  $("cardzone").querySelectorAll("[data-spell]").forEach(b=>{
+    b.onclick = ()=>{
+      const sp = d.spells[+b.dataset.spell];
+      W.fxOn = sp.t; W.fx = sp.fx; render();
+      setTimeout(()=>{ W.fxOn=null; W.fx=null; render(); }, 2300);
+    };
+  });
+  $("cardzone").querySelectorAll("[data-bio]").forEach(b=>{
+    b.onclick = ()=>{
+      const bi = d.biomes[+b.dataset.bio];
+      if(!bi.open) return;
+      st.i = +b.dataset.bio; render();
+    };
+  });
 
   $("notes").innerHTML = d.notes.map(n=>`
     <section class="note">
