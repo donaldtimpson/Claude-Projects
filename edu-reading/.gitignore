@@ -1,0 +1,4 @@
+ios/build/
+ios/SoundItOut.xcodeproj/
+*.xcuserdatad
+.DS_Store

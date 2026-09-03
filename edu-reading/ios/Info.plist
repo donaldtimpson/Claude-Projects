@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- This app has no network layer at all: nothing is sent, nothing is fetched,
+	     nothing is stored off-device. That is a deliberate product decision, not an
+	     oversight, and it is what keeps App Store guideline 5.1.4 (Kids) trivially satisfied. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Andika-Regular.ttf</string>
+		<string>Andika-Bold.ttf</string>
+	</array>
+</dict>
+</plist>
