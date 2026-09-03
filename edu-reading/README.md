@@ -119,6 +119,26 @@ confused. No system font on iOS has those letterforms.
 Vowels are red everywhere. That is a real phonics convention, and holding it across
 all six decks is the strongest visual cue in the app.
 
+## Icon
+
+A single lowercase **a** in Andika, red on amber. Two reasons it is a letter and
+not a mascot:
+
+- Andika's single-storey `a` is a circle with a stem — the letterform that makes
+  the app defensible is also the roundest, most toy-like shape in the alphabet, so
+  the typographic argument and the kid appeal land on the same mark.
+- **The letter is red because vowels are red.** The icon states the app's own rule
+  rather than decorating it. The higher-contrast cream-on-red version was rejected
+  for exactly this: it inverts the convention.
+
+Six alternates sit in `icon/`, with `icon/candidates.png` showing them side by side
+at home-screen size — which is the only size that decides anything.
+
+```bash
+./tools/set-icon.sh            # list
+./tools/set-icon.sh bubble     # swap, then rebuild
+```
+
 ## Prototype
 
 `prototype.html` is the original clickable mockup, including variants not built
