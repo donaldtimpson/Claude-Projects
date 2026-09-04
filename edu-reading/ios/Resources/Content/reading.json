@@ -43,8 +43,7 @@
    "category": "Animals",
    "images": [
     "🐖",
-    "🐷",
-    "🐗"
+    "🐷"
    ]
   },
   {
@@ -52,35 +51,28 @@
    "category": "Animals",
    "images": [
     "🐄",
-    "🐮",
-    "🐂"
+    "🐮"
    ]
   },
   {
    "word": "duck",
    "category": "Animals",
    "images": [
-    "🦆",
-    "🐤",
-    "🐥"
+    "🦆"
    ]
   },
   {
    "word": "frog",
    "category": "Animals",
    "images": [
-    "🐸",
-    "🐊",
-    "🦎"
+    "🐸"
    ]
   },
   {
    "word": "bee",
    "category": "Animals",
    "images": [
-    "🐝",
-    "🦋",
-    "🐞"
+    "🐝"
    ]
   },
   {
@@ -88,8 +80,7 @@
    "category": "Animals",
    "images": [
     "🐴",
-    "🐎",
-    "🦓"
+    "🐎"
    ]
   },
   {
@@ -97,8 +88,7 @@
    "category": "Food",
    "images": [
     "🍎",
-    "🍏",
-    "🥧"
+    "🍏"
    ]
   },
   {
@@ -114,18 +104,14 @@
    "word": "milk",
    "category": "Food",
    "images": [
-    "🥛",
-    "🍼",
-    "🧀"
+    "🥛"
    ]
   },
   {
    "word": "egg",
    "category": "Food",
    "images": [
-    "🥚",
-    "🍳",
-    "🐣"
+    "🥚"
    ]
   },
   {
@@ -141,18 +127,14 @@
    "word": "corn",
    "category": "Food",
    "images": [
-    "🌽",
-    "🫓",
-    "🥣"
+    "🌽"
    ]
   },
   {
    "word": "bed",
    "category": "Home",
    "images": [
-    "🛏️",
-    "🛌",
-    "💤"
+    "🛏️"
    ]
   },
   {
@@ -168,9 +150,7 @@
    "word": "door",
    "category": "Home",
    "images": [
-    "🚪",
-    "🔑",
-    "🏠"
+    "🚪"
    ]
   },
   {
@@ -178,17 +158,14 @@
    "category": "Home",
    "images": [
     "💡",
-    "🪔",
-    "🕯️"
+    "🪔"
    ]
   },
   {
    "word": "sock",
    "category": "Home",
    "images": [
-    "🧦",
-    "👟",
-    "👕"
+    "🧦"
    ]
   },
   {
@@ -206,25 +183,21 @@
    "images": [
     "✋",
     "🤚",
-    "👏"
+    "🖐️"
    ]
   },
   {
    "word": "foot",
    "category": "Body",
    "images": [
-    "🦶",
-    "👣",
-    "🦵"
+    "🦶"
    ]
   },
   {
    "word": "nose",
    "category": "Body",
    "images": [
-    "👃",
-    "😤",
-    "🤧"
+    "👃"
    ]
   },
   {
@@ -232,17 +205,7 @@
    "category": "Body",
    "images": [
     "👁️",
-    "👀",
-    "😊"
-   ]
-  },
-  {
-   "word": "hair",
-   "category": "Body",
-   "images": [
-    "💇",
-    "🧑‍🦰",
-    "💈"
+    "👀"
    ]
   },
   {
@@ -250,53 +213,42 @@
    "category": "Doing",
    "images": [
     "🏃",
-    "🏃‍♀️",
-    "👟"
+    "🏃‍♀️"
    ]
   },
   {
    "word": "jump",
    "category": "Doing",
    "images": [
-    "🤸",
-    "⛹️",
-    "🦘"
+    "🤸"
    ]
   },
   {
    "word": "sleep",
    "category": "Doing",
    "images": [
-    "😴",
-    "🛌",
-    "💤"
+    "😴"
    ]
   },
   {
    "word": "eat",
    "category": "Doing",
    "images": [
-    "🍽️",
-    "😋",
-    "🥄"
+    "😋"
    ]
   },
   {
    "word": "sing",
    "category": "Doing",
    "images": [
-    "🎤",
-    "🎵",
-    "🎶"
+    "🎤"
    ]
   },
   {
    "word": "swim",
    "category": "Doing",
    "images": [
-    "🏊",
-    "🌊",
-    "🤽"
+    "🏊"
    ]
   },
   {
@@ -304,8 +256,7 @@
    "category": "Outside",
    "images": [
     "☀️",
-    "🌞",
-    "🌅"
+    "🌞"
    ]
   },
   {
@@ -330,9 +281,7 @@
    "word": "rain",
    "category": "Outside",
    "images": [
-    "🌧️",
-    "☔",
-    "💧"
+    "🌧️"
    ]
   },
   {
@@ -340,17 +289,14 @@
    "category": "Outside",
    "images": [
     "⭐",
-    "🌟",
-    "✨"
+    "🌟"
    ]
   },
   {
    "word": "rock",
    "category": "Outside",
    "images": [
-    "🪨",
-    "⛰️",
-    "🏔️"
+    "🪨"
    ]
   }
  ],

@@ -7,23 +7,26 @@ struct SentencesView: View {
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x7A5EA8)
+    // No teaching order to protect here, so it is a straight reshuffle each open.
+    @State private var pool: [ReadingContent.Sentence] = []
     @State private var index = 0
 
     var body: some View {
-        DeckScreen(title: "Sentences", count: c.sentences.count, index: $index, accent: accent) { i in
-            SayCard(text: c.sentences[i].text, size: 44, sentence: true, accent: accent) {
+        DeckScreen(title: "Sentences", count: pool.count, index: $index, accent: accent) { i in
+            SayCard(text: pool[min(i, pool.count - 1)].text, size: 44, sentence: true, accent: accent) {
                 collect(i)
             }
         } onTap: { i in
-            Voice.shared.say(c.sentences[i].text)
+            Voice.shared.say(pool[min(i, pool.count - 1)].text)
             collect(i)
         }
+        .onAppear { if pool.isEmpty { pool = c.sentences.shuffled() } }
     }
 
     private func collect(_ i: Int) {
         // Reading a sentence collects every decodable word in it, so the world
         // fills fastest exactly when things get exciting.
-        for t in c.sentences[i].text.split(separator: " ") {
+        for t in pool[min(i, pool.count - 1)].text.split(separator: " ") {
             let bare = t.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?,"))
             if !bare.isEmpty && !c.sightSet.contains(bare) { progress.learn(word: bare) }
         }

@@ -14,16 +14,18 @@ struct WordsView: View {
     @State private var index = 0
     @State private var flipped = false
 
-    private var pool: [ReadingContent.Word] {
+    // Levels keep their order — a child who has done "cat" is not ready for
+    // "strength" — but the words inside a level are shuffled on every open.
+    @State private var pool: [ReadingContent.Word] = []
+
+    private func makePool() -> [ReadingContent.Word] {
         let order = c.wordLevels
-        return c.words.sorted {
-            (order.firstIndex(of: $0.level) ?? 9) < (order.firstIndex(of: $1.level) ?? 9)
-        }
+        return shuffledWithin(c.words) { order.firstIndex(of: $0.level) ?? 9 }
     }
 
     var body: some View {
         DeckScreen(title: "Words", count: pool.count, index: $index, accent: accent) { i in
-            let w = pool[i]
+            let w = pool[min(i, pool.count - 1)]
             ZStack {
                 if flipped {
                     VStack(spacing: 16) {
@@ -46,6 +48,7 @@ struct WordsView: View {
                 }
             }
         } onTap: { i in
+            guard i < pool.count else { return }
             let w = pool[i]
             Voice.shared.say(w.word)
             progress.learn(word: w.word)
@@ -53,5 +56,6 @@ struct WordsView: View {
         } onAdvance: {
             flipped = false
         }
+        .onAppear { if pool.isEmpty { pool = makePool() } }
     }
 }

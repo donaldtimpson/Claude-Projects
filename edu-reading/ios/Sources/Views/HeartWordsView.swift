@@ -7,11 +7,13 @@ import SwiftUI
 struct HeartWordsView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xE0A038)
+    // No teaching order to protect here, so it is a straight reshuffle each open.
+    @State private var pool: [ReadingContent.HeartWord] = []
     @State private var index = 0
 
     var body: some View {
-        DeckScreen(title: "By Heart", count: c.heartWords.count, index: $index, accent: accent) { i in
-            let h = c.heartWords[i]
+        DeckScreen(title: "By Heart", count: pool.count, index: $index, accent: accent) { i in
+            let h = pool[min(i, pool.count - 1)]
             VStack(spacing: 26) {
                 Spacer()
                 HStack(alignment: .lastTextBaseline, spacing: 6) {
@@ -35,7 +37,8 @@ struct HeartWordsView: View {
             }
             .padding(24)
         } onTap: { i in
-            Voice.shared.say(c.heartWords[i].word)
+            Voice.shared.say(pool[min(i, pool.count - 1)].word)
         }
+        .onAppear { if pool.isEmpty { pool = c.heartWords.shuffled() } }
     }
 }

@@ -13,20 +13,27 @@ struct BlendingView: View {
     private let accent = Color(hex: 0x2E7D6E)
     @State private var index = 0
 
-    // Flattened so every family runs on into the next: one long swipe-through,
-    // no picker.
-    private var rimeCards: [(onset: String, rime: String, word: String)] {
-        c.rimes.flatMap { fam in
+    // One long swipe-through, no picker. Families come up in a different order each
+    // time, and so do the words inside them — but the bare rime always leads its own
+    // family, since "at" is what the family is built from.
+    @State private var rimeCards: [(onset: String, rime: String, word: String)] = []
+    @State private var cvCards: [String] = []
+
+    private func makePools() {
+        rimeCards = c.rimes.shuffled().flatMap { fam in
             [(onset: "", rime: fam.rime, word: fam.rime)] +
-            fam.words.map { (onset: String($0.dropLast(fam.rime.count)), rime: fam.rime, word: $0) }
+            fam.words.shuffled().map {
+                (onset: String($0.dropLast(fam.rime.count)), rime: fam.rime, word: $0)
+            }
         }
+        cvCards = c.cvBlends.map(\.text).shuffled()
     }
-    private var count: Int { settings.rimeBlending ? rimeCards.count : c.cvBlends.count }
+    private var count: Int { settings.rimeBlending ? rimeCards.count : cvCards.count }
 
     var body: some View {
         DeckScreen(title: "Blending", count: count, index: $index, accent: accent) { i in
             if settings.rimeBlending {
-                let card = rimeCards[i]
+                let card = rimeCards[min(i, rimeCards.count - 1)]
                 VStack(spacing: 26) {
                     Spacer()
                     HStack(alignment: .lastTextBaseline, spacing: 6) {
@@ -40,14 +47,16 @@ struct BlendingView: View {
                     Spacer()
                 }
             } else {
-                SayCard(text: c.cvBlends[i].text, size: 118, accent: accent,
+                SayCard(text: cvCards[min(i, cvCards.count - 1)], size: 118, accent: accent,
                         caption: "Stretch the first sound into the second.")
             }
         } onTap: { i in
-            let w = settings.rimeBlending ? rimeCards[i].word : c.cvBlends[i].text
+            guard i < count else { return }
+            let w = settings.rimeBlending ? rimeCards[i].word : cvCards[i]
             Voice.shared.say(w)
             if settings.rimeBlending { progress.learn(word: w) }
         }
-        .onChange(of: settings.rimeBlending) { index = 0 }
+        .onAppear { if rimeCards.isEmpty { makePools() } }
+        .onChange(of: settings.rimeBlending) { index = 0; makePools() }
     }
 }

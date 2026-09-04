@@ -95,9 +95,30 @@ Drop recordings into `Resources/` and tier one takes over with no code change:
   and the schwa matters: "buh-a-tuh" never blends into "bat". Until real audio
   exists the letter deck stays silent rather than teach the wrong sound.
 
-## Art
+## Art — and why the pictures aren't real yet
 
-Emoji are placeholders. `ReadingContent.Word.image` is the single hook — point it
+Emoji are placeholders, and **automated sourcing was tried and rejected.** Two
+approaches, both instructive:
+
+- **Free-text image search** (Wikimedia Commons): searching `apple` returns an
+  Apple II computer; `dog` returns a dhole. Unusable.
+- **Curated Wikipedia lead images** (pick the article, take its picture): better,
+  but those images are chosen for encyclopedic accuracy, not for showing a
+  four-year-old what a word means. `corn` came back a 19th-century botanical
+  plate, `sleep` a Domenico Fetti painting, `eat` a vintage advertising poster,
+  `rock` the Grand Canyon, and `star` was byte-identical to `sun`. About half were
+  unusable and the rest needed checking anyway.
+
+The conclusion is that this deck needs **stock photography**, whose whole purpose
+is depicting a thing clearly — not documentation. Pexels and Pixabay both allow
+commercial use with no attribution required and have free APIs; a key takes two
+minutes and unblocks it.
+
+**Integration is already done and costs nothing.** Drop `dog.jpg` into
+`Assets.xcassets` and the Look and Say deck uses it instead of the emoji. Add
+`dog-2`, `dog-3` and tapping cycles them. No content edit, no code change.
+
+`ReadingContent.Word.image` is the equivalent hook for the Words deck. `ReadingContent.Word.image` is the single hook — point it
 at bundled assets and everything downstream follows.
 
 **12 of the 57 words have no image and never will** (`sat`, `chat`, `mud`…). That

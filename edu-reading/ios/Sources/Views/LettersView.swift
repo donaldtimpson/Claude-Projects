@@ -13,13 +13,22 @@ struct LettersView: View {
     var start: Int = 0
     @State private var index = 0
 
-    private var pool: [ReadingContent.Letter] {
-        c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) }
+    // Reshuffled on every open (see shuffledWithin). Sets stay in teaching order;
+    // the order inside a set is arbitrary, so it is randomised.
+    @State private var pool: [ReadingContent.Letter] = []
+
+    private func makePool() -> [ReadingContent.Letter] {
+        #if DEBUG
+        // A fixed start index is only used by the screenshot router, and it needs a
+        // stable deck to address.
+        if start > 0 { return c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) } }
+        #endif
+        return shuffledWithin(c.letters) { $0.set }
     }
 
     var body: some View {
         DeckScreen(title: "Letters", count: pool.count, index: $index, accent: accent) { i in
-            let l = pool[i]
+            let l = pool[min(i, pool.count - 1)]
             VStack(spacing: 20) {
                 Spacer()
                 // Both letters at one nominal size, on a shared baseline. The
@@ -41,9 +50,14 @@ struct LettersView: View {
             }
             .padding(24)
         } onTap: { i in
+            guard i < pool.count else { return }
             if Voice.shared.hasRecording(pool[i].sound) { Voice.shared.say(pool[i].sound) }
             progress.learn(letter: pool[i].lower)
         }
-        .onAppear { index = start; progress.learn(letter: pool[start % pool.count].lower) }
+        .onAppear {
+            if pool.isEmpty { pool = makePool() }
+            index = start
+            if !pool.isEmpty { progress.learn(letter: pool[start % pool.count].lower) }
+        }
     }
 }
