@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 extension Color {
     init(hex: UInt) {
@@ -37,6 +38,43 @@ extension Font {
 }
 
 let VOWELS = Set("aeiouAEIOU")
+
+// Andika's ascenders overshoot its cap height, so a lowercase b, d, f, h, k or l —
+// and the dots on i and j — render TALLER than the matching capital. Eight of the
+// twenty-six pairs are affected.
+//
+// That reads as a mistake, and it quietly contradicts what a child is taught:
+// capitals are the big letters. The fix is not to shrink the lowercase arbitrarily,
+// because on handwriting paper a tall lowercase letter reaches exactly the same top
+// line as a capital. They should finish LEVEL. So: measure both glyphs and scale the
+// lowercase down only when it overshoots.
+enum LetterFit {
+    private static var cache: [String: CGFloat] = [:]
+
+    private static func top(_ ch: Character, _ font: CTFont) -> CGFloat {
+        var uni = Array(String(ch).utf16)
+        var glyph = CGGlyph()
+        guard CTFontGetGlyphsForCharacters(font, &uni, &glyph, 1) else { return 0 }
+        var rect = CGRect.zero
+        _ = withUnsafePointer(to: glyph) {
+            CTFontGetBoundingRectsForGlyphs(font, .default, $0, &rect, 1)
+        }
+        return rect.maxY
+    }
+
+    /// 1.0 when the lowercase already sits at or below the capital's height;
+    /// otherwise the factor that brings its top down level.
+    static func lowerScale(upper: String, lower: String) -> CGFloat {
+        let key = upper + lower
+        if let hit = cache[key] { return hit }
+        guard let u = upper.first, let l = lower.first else { return 1 }
+        let font = CTFontCreateWithName("Andika-Bold" as CFString, 100, nil)
+        let tu = top(u, font), tl = top(l, font)
+        let scale = (tl > tu && tu > 0) ? tu / tl : 1
+        cache[key] = scale
+        return scale
+    }
+}
 
 /// Builds a word with its vowels in red. Used by every deck.
 func phonics(_ s: String, size: CGFloat, bold: Bool = true) -> Text {

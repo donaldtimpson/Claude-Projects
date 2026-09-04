@@ -34,7 +34,7 @@ private struct RootView: View {
             let name = ProcessInfo.processInfo.arguments[i + 1]
             NavigationStack {
                 switch name {
-                case "letters":   LettersView()
+                case "letters":   LettersView(start: Int(ProcessInfo.processInfo.arguments.last ?? "") ?? 0)
                 case "blending":  BlendingView()
                 case "words":     WordsView()
                 case "sentences": SentencesView()

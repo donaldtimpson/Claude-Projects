@@ -10,6 +10,7 @@ struct LettersView: View {
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xF0A93B)
+    var start: Int = 0
     @State private var index = 0
 
     private var pool: [ReadingContent.Letter] {
@@ -35,6 +36,6 @@ struct LettersView: View {
             if Voice.shared.hasRecording(pool[i].sound) { Voice.shared.say(pool[i].sound) }
             progress.learn(letter: pool[i].lower)
         }
-        .onAppear { progress.learn(letter: pool[index % pool.count].lower) }
+        .onAppear { index = start; progress.learn(letter: pool[start % pool.count].lower) }
     }
 }
