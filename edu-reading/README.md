@@ -43,7 +43,7 @@ Five of them form a ladder; the sixth runs alongside it.
 | 3 | **Words** | 57 words across CVC → digraphs → blends → silent e |
 | 4 | **Sentences** | 20 fully decodable sentences |
 | 5 | **Sight Words** | The rule-breakers, as *heart words* |
-| — | **Picture Words** | 39 vocabulary cards, available any time |
+| — | **Look and Say** | 211 words, 446 pictures, available any time |
 
 **Look and Say (deck 1) is the gentlest thing in the app** and the entry point for
 a child far too young for the rest of it: big picture, tap to hear it, tap again to
@@ -58,7 +58,7 @@ Each photograph is **its own card**, dealt in rounds so every word appears once
 before any word appears twice. The three pictures of a pig land about a full deck
 apart rather than stacked on one card — meeting an unfamiliar pig twenty cards
 later asks the child to recognise the *category* from a picture they have not
-seen, which is the entire reason for having three. 86 cards from 38 words.
+seen, which is the entire reason for having three. 446 cards from 211 words.
 
 **Letter Sounds has no pictures on purpose.** "A is for Apple" builds a
 letter → picture → *name* link and trains guessing from images. This deck teaches
@@ -112,36 +112,59 @@ Drop recordings into `Resources/` and tier one takes over with no code change:
 
 ## Photographs
 
-**85 real photographs across 37 of the 38 words**, bundled in `Assets.xcassets`
-(~5 MB). All CC0 or CC BY, sourced through [Openverse](https://openverse.org),
-which needs no API key.
+**446 photographs across 211 words** (~23 MB), all CC0 or CC BY, sourced through
+[Openverse](https://openverse.org), which needs no API key. Words with no usable
+photograph fall back to emoji; a handful were removed entirely.
 
-Getting them was fetch-then-curate, and the curation is the part that matters.
-Automated selection alone does not work: free-text Wikimedia search returns an
-Apple II computer for `apple` and a dhole for `dog`, while Wikipedia lead images —
-chosen for encyclopedic accuracy, not for showing a four-year-old what a word
-means — gave a Renaissance painting for `sleep` and the Sun for `star`. So every
-candidate was laid out on a contact sheet and picked by eye. First-pass queries
-returned guinea pigs and a train for `pig`, and a milk tanker for `milk`; those
-thirteen words were re-queried with sharper terms.
+`tools/photos/` holds the pipeline and, more importantly, **the decisions**:
+`picks.json` and `picks-requery.json` are what was chosen, `query-hints.json` the
+searches that needed sharpening, and `rejected.json` the 30 words that were cut
+with the reason for each.
 
-`milk` still has no usable photograph and keeps its emoji — the fallback exists
-precisely so one missing word is not a blocker.
+### Why a person has to look at every one
 
-**To add or replace one:** drop `dog.jpg` into `Assets.xcassets` as a
-single-scale universal imageset. `dog-2`, `dog-3` become extra variants that
-tapping cycles. No content edit, no code change.
+Automated selection produces cards that teach the wrong thing, and it fails in
+ways a machine cannot notice. Real results from this run:
 
-> Use a **single-scale** universal imageset. An imageset that declares empty 2x/3x
-> slots returns nil from `UIImage(named:)` on a 3x device even though the file is
-> present in `Assets.car` — which looks exactly like the image not being bundled.
+| Query | What came back |
+|---|---|
+| `apple` (Wikimedia) | An Apple II computer |
+| `dog` (Wikimedia) | A dhole — a wild canid |
+| `sleep` (Wikipedia lead) | A Domenico Fetti painting |
+| `star` (Wikipedia lead) | The Sun, byte-identical to the `sun` card |
+| `teddy` | Four photographs of dogs |
+| `chicken` | Raw poultry and fried chicken |
+| `panda` | Red pandas |
+| `pig` | Guinea pigs, and a freight train |
+| `kangaroo` | Two city skylines |
+| `shirt` | **A t-shirt printed with profanity** |
 
-Attribution is a legal requirement for the 72 CC BY photographs, so
-`photo-credits.json` travels with them and the grown-ups' area lists every
-photographer by name.
+That last one is the argument on its own. Roughly a quarter of first-pass results
+need rejecting, and for a children's app the only reliable detector is an eye.
 
-Emoji remain the fallback everywhere, and `ReadingContent.Word.image` is the
-equivalent hook for the Words deck.
+### What cannot be photographed
+
+Verbs mostly failed: `throw`, `catch`, `push`, `pull`, `point`, `wave`, `build`,
+`draw` were all cut, because a still photograph cannot disambiguate an action
+without a caption — the one thing a pre-reader cannot use. Isolated body parts
+(`arm`, `leg`, `knee`, `finger`, `tongue`) and roles (`doctor`, `farmer`,
+`teacher`) went the same way. **Better absent than misleading.**
+
+Verbs that survived did so because the whole scene reads as the action:
+`run`, `swim`, `climb`, `dance`, `cry`, `read`, `drink`, `paint`, `clap`, `ride`.
+
+### Adding your own
+
+Drop `dog.jpg` into `Assets.xcassets` as a **single-scale universal** imageset.
+`dog-2`, `dog-3` become extra cards for the same word. No content edit, no code.
+
+> Single-scale matters: an imageset declaring empty 2x/3x slots returns nil from
+> `UIImage(named:)` on a 3x device even though the file is in `Assets.car` —
+> indistinguishable from the image not being bundled.
+
+Attribution is a legal requirement for the 406 CC BY photographs, so
+`photo-credits.json` ships with them and the grown-ups' area names every
+photographer.
 
 ## Content
 
