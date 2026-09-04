@@ -1,77 +1,73 @@
 import SwiftUI
 
-// The reward layer, and deliberately not points, badges or a streak.
+// The reward layer, and deliberately not points, badges or streaks.
 //
-// A pre-reader cannot read a scoreboard: points and prices are text and abstract
-// number, the two things this child does not have yet. So the world filling up IS
-// the progress bar, legible at a glance to a four-year-old and to an adult.
+// One interaction, no modes: tap a thing you own and it says its word. If a
+// sentence exists about it, the sentence happens — tap the pig and it says
+// "The pig is big" while actually getting big. That is the whole idea in one
+// gesture: reading changes the world.
 //
-// And tapping a collected thing replays its word — a child who taps the frog forty
-// times has read "frog" forty times, which makes the reward layer double as the
-// review layer.
+// A pre-reader cannot read a scoreboard, so how full the world is IS the progress
+// bar. Tapping a thing replays its word, which makes the reward layer double as
+// the review layer: a child who taps the frog forty times has read it forty times.
 struct WorldView: View {
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
 
-    enum Mode: String, CaseIterable {
-        case collect = "What I've read", cast = "Read a sentence", places = "Places"
-    }
-    @State private var mode: Mode = .collect
     @State private var saying: String?
     @State private var effect: (target: String, kind: String)?
 
-    private var biome: ReadingContent.Biome { c.world.biomes[min(progress.biomeIndex, c.world.biomes.count - 1)] }
-
-    var body: some View {
-        VStack(spacing: 12) {
-            ChipRow(items: Mode.allCases, label: \.rawValue, selection: $mode)
-                .padding(.horizontal, 18)
-
-            scene
-                .frame(maxHeight: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1.5))
-                .padding(.horizontal, 18)
-
-            Group {
-                switch mode {
-                case .collect: collectFooter
-                case .cast: castFooter
-                case .places: placesFooter
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 16)
-        }
-        .background(Theme.ground)
-        .navigationTitle("My World")
-        .navigationBarTitleDisplayMode(.inline)
+    private var biome: ReadingContent.Biome {
+        c.world.biomes[min(progress.biomeIndex, c.world.biomes.count - 1)]
+    }
+    private func spell(for word: String) -> ReadingContent.Spell? {
+        c.world.spells.first { $0.target == word }
     }
 
-    private var scene: some View {
+    var body: some View {
         VStack(spacing: 0) {
             ZStack {
                 LinearGradient(colors: skyColors, startPoint: .top, endPoint: .bottom)
                 GeometryReader { geo in
                     ScrollView {
-                        // Centred when the collection is short, scrolling once it
-                        // outgrows the sky — so an early world doesn't read as a
-                        // mostly-empty grid pinned to the top.
                         VStack {
                             Spacer(minLength: 0)
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4),
-                                                     count: 5), spacing: 10) {
-                                ForEach(c.collectibles, id: \.word) { w in thing(w) }
+                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6),
+                                                     count: 5), spacing: 16) {
+                                ForEach(c.collectibles, id: \.word) { thing($0) }
                             }
                             Spacer(minLength: 0)
                         }
-                        .padding(14)
+                        .padding(18)
                         .frame(minHeight: geo.size.height)
                     }
                 }
             }
-            Rectangle().fill(groundColor).frame(height: 30)
+            Rectangle().fill(groundColor).frame(height: 34)
+
+            // Places, as pictures. Five taps, each of which visibly changes the
+            // world — that is play, not a settings row.
+            HStack(spacing: 10) {
+                ForEach(Array(c.world.biomes.enumerated()), id: \.offset) { i, b in
+                    let open = progress.unlocked(b)
+                    Button {
+                        guard open else { return }
+                        withAnimation(.easeInOut(duration: 0.5)) { progress.choose(biome: i) }
+                    } label: {
+                        Text(b.icon).font(.system(size: 30))
+                            .grayscale(open ? 0 : 1).opacity(open ? 1 : 0.28)
+                            .padding(7)
+                            .background(progress.biomeIndex == i ? Theme.paper : .clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 10)
         }
+        .background(Theme.ground)
+        .navigationTitle("My World")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func thing(_ w: ReadingContent.Word) -> some View {
@@ -79,108 +75,47 @@ struct WorldView: View {
         let fx = effect?.target == w.word ? effect?.kind : nil
         return Button {
             guard known else { return }
-            Voice.shared.say(w.word)
+            if let sp = spell(for: w.word) {
+                Voice.shared.say(sp.text)
+                progress.cast(sp.text)
+                withAnimation(.spring(response: 0.45, dampingFraction: 0.55)) {
+                    effect = (w.word, sp.effect)
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    withAnimation(.easeOut(duration: 0.4)) { effect = nil }
+                }
+            } else {
+                Voice.shared.say(w.word)
+            }
             saying = w.word
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                 if saying == w.word { saying = nil }
             }
         } label: {
             Text(w.image ?? "")
-                .font(.system(size: 34))
-                .scaleEffect(fx == "big" ? 1.9 : 1)
-                .offset(y: fx == "hop" ? -18 : 0)
+                .font(.system(size: 38))
+                .scaleEffect(fx == "big" ? 2.0 : 1)
+                .offset(y: fx == "hop" ? -22 : 0)
                 .saturation(fx == "red" ? 3 : 1)
                 .hueRotation(.degrees(fx == "red" ? -40 : 0))
-                .shadow(color: fx == "hot" ? .orange : .clear, radius: fx == "hot" ? 14 : 0)
+                .shadow(color: fx == "hot" ? .orange : .clear, radius: fx == "hot" ? 16 : 0)
                 .grayscale(known ? 0 : 1)
-                .opacity(known ? 1 : 0.3)
+                .opacity(known ? 1 : 0.26)
                 .overlay(alignment: .top) {
                     if saying == w.word {
                         phonics(w.word, size: 15)
-                            .padding(.horizontal, 7).padding(.vertical, 2)
+                            .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(Theme.paper)
                             .clipShape(Capsule())
-                            .offset(y: -20)
+                            .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                            .offset(y: -22)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
-                .animation(.spring(duration: 0.45), value: fx)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: fx)
+                .animation(.spring(response: 0.3), value: saying)
         }
         .buttonStyle(.plain)
-    }
-
-    private var collectFooter: some View {
-        let got = progress.knownWords.count
-        return VStack(spacing: 4) {
-            Text(got == 0 ? "Nothing here yet — go and read a word."
-                          : "Tap anything to hear it. \(got) collected.")
-                .font(.andika(15)).foregroundStyle(Theme.inkSoft)
-            Text("Grey things are words not met yet.")
-                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-    }
-
-    // The mechanic the whole app is built around: reading a sentence CHANGES the
-    // world. Not a metaphor bolted on — it is the literal truth about literacy,
-    // handed to the child as a game, and it turns the decodable-sentence deck from
-    // the driest rung into the one they ask for.
-    private var castFooter: some View {
-        VStack(spacing: 7) {
-            ForEach(c.world.spells, id: \.text) { spell in
-                Button {
-                    Voice.shared.say(spell.text)
-                    progress.cast(spell.text)
-                    progress.learn(word: spell.target)
-                    withAnimation { effect = (spell.target, spell.effect) }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
-                        withAnimation { effect = nil }
-                    }
-                } label: {
-                    phonicsSentence(spell.text, size: 19, sight: c.sightSet)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 13).padding(.vertical, 10)
-                        .background(Theme.paper)
-                        .clipShape(RoundedRectangle(cornerRadius: 11))
-                        .overlay(RoundedRectangle(cornerRadius: 11).stroke(Theme.line, lineWidth: 1.5))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-    }
-
-    // Themes as PLACES, opened by reading, rather than a shop. A shop needs prices
-    // and item names — reading, which is the thing they haven't got yet.
-    private var placesFooter: some View {
-        VStack(spacing: 7) {
-            HStack(spacing: 8) {
-                ForEach(Array(c.world.biomes.enumerated()), id: \.offset) { i, b in
-                    let open = progress.unlocked(b)
-                    Button { if open { progress.choose(biome: i) } } label: {
-                        Text(b.icon).font(.system(size: 28))
-                            .grayscale(open ? 0 : 1).opacity(open ? 1 : 0.35)
-                            .padding(6)
-                            .background(progress.biomeIndex == i ? Theme.paper : .clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10)
-                                .stroke(progress.biomeIndex == i ? Theme.go : .clear, lineWidth: 2))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            Text(nextPlaceHint)
-                .font(.andika(13)).foregroundStyle(Theme.inkSoft)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private var nextPlaceHint: String {
-        if let next = c.world.biomes.first(where: { !progress.unlocked($0) }) {
-            let need = next.unlockAt - progress.knownWords.count
-            return "\(need) more word\(need == 1 ? "" : "s") opens a new place."
-        }
-        return "Every place is open."
     }
 
     private var skyColors: [Color] {

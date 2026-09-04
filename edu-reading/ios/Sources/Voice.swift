@@ -1,4 +1,5 @@
 import AVFoundation
+import AudioToolbox
 
 // Speech has two tiers, and the order matters.
 //
@@ -32,6 +33,13 @@ final class Voice {
         u.pitchMultiplier = 1.05
         u.postUtteranceDelay = 0
         synth.speak(u)
+    }
+
+    /// A short rising tone for "you read it". Deliberately not a voice saying
+    /// "well done" — that gets old by the fifth card, and it talks over the child.
+    func chime() {
+        let n = 1
+        AudioServicesPlaySystemSound(SystemSoundID(1103 + n))
     }
 
     /// True when real recorded audio backs this word. The letter-sounds deck uses

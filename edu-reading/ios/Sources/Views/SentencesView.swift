@@ -1,46 +1,30 @@
 import SwiftUI
 
-// The rung almost every reading app skips: words, then straight to a real book.
-// Sentences built only from patterns already taught are the bridge between.
-//
+// The rung most reading apps skip: words, then straight to a real book.
 // "the" and "a" appear here rather than waiting for the sight-word deck, because
-// without them a decodable sentence can only ever be "Sam sat." — the two
-// commonest words in English are what make natural sentences possible at all.
+// without them a decodable sentence can only ever be "Sam sat."
 struct SentencesView: View {
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
-
+    private let accent = Color(hex: 0x7A5EA8)
     @State private var index = 0
-    @State private var showPicture = false
 
     var body: some View {
-        DeckShell(title: "Sentences", count: c.sentences.count, index: $index) {
-            let s = c.sentences[index % c.sentences.count].text
-            VStack(spacing: 20) {
-                Spacer()
-                phonicsSentence(s, size: 34, sight: c.sightSet)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 8)
-                SpeakButton(text: s)
-                Text("Underlined words are learned, not sounded out.")
-                    .font(.andika(13)).foregroundStyle(Theme.inkSoft)
-                Spacer()
+        DeckScreen(title: "Sentences", count: c.sentences.count, index: $index, accent: accent) { i in
+            SayCard(text: c.sentences[i].text, size: 44, sentence: true, accent: accent) {
+                collect(i)
             }
-            .padding(20)
-            .cardSurface()
-        } controls: {
-            EmptyView()
+        } onTap: { i in
+            Voice.shared.say(c.sentences[i].text)
+            collect(i)
         }
-        .onChange(of: index) { record() }
-        .onAppear { record() }
     }
 
-    private func record() {
-        // Reading a sentence collects every decodable word in it, which is what
-        // makes the world fill fastest at exactly the moment it gets exciting.
-        let s = c.sentences[index % c.sentences.count].text
-        for token in s.split(separator: " ") {
-            let bare = token.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?,"))
+    private func collect(_ i: Int) {
+        // Reading a sentence collects every decodable word in it, so the world
+        // fills fastest exactly when things get exciting.
+        for t in c.sentences[i].text.split(separator: " ") {
+            let bare = t.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?,"))
             if !bare.isEmpty && !c.sightSet.contains(bare) { progress.learn(word: bare) }
         }
     }

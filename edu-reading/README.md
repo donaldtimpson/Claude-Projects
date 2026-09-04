@@ -8,6 +8,21 @@ Separate from Timpson Lyceum in every way: different audience, different brandin
 cd ios && xcodegen generate && open SoundItOut.xcodeproj
 ```
 
+## How a child drives it
+
+**Tap the card, or swipe it away. That is the entire interface.** No Next button,
+no Back button, no chips — a child taps whatever is on screen expecting something
+to happen, so anything that is not the card is a trap. Levels advance on their own;
+everything a grown-up would choose lives behind the parental gate.
+
+**Voice (optional).** With it on, the card listens the whole time it is up and turns
+itself when the word is read. The target word is known in advance, so this is
+verification rather than open recognition — and it is built so it **can only ever
+say yes**. A match celebrates; a non-match does nothing at all. A small child is
+never told they were wrong on a signal we don't trust, which is what makes an
+unreliable technology safe here. Recognition is forced on-device, so speech never
+leaves the phone.
+
 ## The six decks
 
 Five of them form a ladder; the sixth runs alongside it.
@@ -21,7 +36,10 @@ Five of them form a ladder; the sixth runs alongside it.
 | 5 | **Sight Words** | The rule-breakers, as *heart words* |
 | — | **Picture Words** | 39 vocabulary cards, available any time |
 
-**Picture Words is not step one of reading.** The word under the picture is for the
+**Look and Say (deck 1) is the gentlest thing in the app** and the entry point for
+a child far too young for the rest of it: big picture, tap to hear it, tap again to
+cycle its three images, swipe on. It is not step one of reading and never gates the
+ladder. The word under the picture is for the
 adult, so they know which word the image is meant to prompt; the child is building
 spoken vocabulary. Reading mode hides the picture, so the same deck becomes a
 victory lap a year later. Three images per word, never one — a child shown a single

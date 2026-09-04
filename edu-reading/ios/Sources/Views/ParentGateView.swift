@@ -51,6 +51,7 @@ struct ParentGateView: View {
 
 private struct AdultView: View {
     @Environment(Progress.self) private var progress
+    @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
     @State private var confirmReset = false
 
@@ -63,6 +64,51 @@ private struct AdultView: View {
                     row("Sentences read", "\(progress.castSpells.count)")
                     Text("Nothing here is uploaded. It never leaves this device.")
                         .font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                }
+
+                section("SETTINGS") {
+                    Toggle(isOn: Binding(
+                        get: { settings.listenForVoice },
+                        set: { want in
+                            if want && !Listener.isAuthorized {
+                                // Guideline 1.3: a Kids app may only request
+                                // permissions from behind a parental gate. This is it.
+                                Listener.requestAccess { ok in
+                                    settings.listenForVoice = ok; settings.save()
+                                }
+                            } else {
+                                settings.listenForVoice = want; settings.save()
+                            }
+                        })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Listen for their voice").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text("The card listens while it's up, and turns itself when they read it. It only ever says yes — it never tells a child they got it wrong.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
+
+                    Toggle(isOn: Binding(get: { settings.rimeBlending },
+                                         set: { settings.rimeBlending = $0; settings.save() })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Blend by word family").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text(settings.rimeBlending
+                                 ? "at → fat → sat. Stable in English."
+                                 : "fa, fe, fi. Works in Spanish; shakier in English.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
+
+                    Toggle(isOn: Binding(get: { settings.showWordOnPictures },
+                                         set: { settings.showWordOnPictures = $0; settings.save() })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Show the word on picture cards").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text("It's there for you, not them. Hide it once they start reading.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
                 }
 
                 section("THANK YOU") {

@@ -7,6 +7,10 @@
 	     oversight, and it is what keeps App Store guideline 5.1.4 (Kids) trivially satisfied. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>So your child can read a word out loud and the app can cheer when they get it. Recording happens on this device only and is never saved or sent anywhere.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Used on this device to notice when your child reads the word correctly. Nothing is recorded, stored, or sent anywhere.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Andika-Regular.ttf</string>

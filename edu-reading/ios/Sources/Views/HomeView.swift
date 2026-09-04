@@ -18,24 +18,24 @@ struct HomeView: View {
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
 
-                        DeckTile(step: "1", name: "Letter Sounds",
-                                 blurb: "\(c.letters.count) letters, taught in sound order") { LettersView() }
+                        DeckTile(step: "1", name: "Letters",
+                                 blurb: "\(c.letters.count) sounds, in the order that helps") { LettersView() }
                         DeckTile(step: "2", name: "Blending",
                                  blurb: "Glue two sounds into one") { BlendingView() }
                         DeckTile(step: "3", name: "Words",
-                                 blurb: "\(c.words.count) words in four steps") { WordsView() }
+                                 blurb: "\(c.words.count) words, getting harder") { WordsView() }
                         DeckTile(step: "4", name: "Sentences",
                                  blurb: "\(c.sentences.count) sentences you can sound out") { SentencesView() }
-                        DeckTile(step: "5", name: "Sight Words",
-                                 blurb: "The rule-breakers, learned by heart") { HeartWordsView() }
+                        DeckTile(step: "5", name: "By Heart",
+                                 blurb: "The rule-breakers") { HeartWordsView() }
                     }
 
                     VStack(alignment: .leading, spacing: 9) {
                         Text("ANY TIME")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
-                        DeckTile(step: "•", name: "Picture Words",
-                                 blurb: "\(c.pictureWords.count) words to talk about together",
+                        DeckTile(step: "•", name: "Look and Say",
+                                 blurb: "\(c.pictureWords.count) words to name together",
                                  dashed: true) { PictureWordsView() }
                     }
 
