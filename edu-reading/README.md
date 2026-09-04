@@ -153,19 +153,34 @@ without a caption — the one thing a pre-reader cannot use. Isolated body parts
 Verbs that survived did so because the whole scene reads as the action:
 `run`, `swim`, `climb`, `dance`, `cry`, `read`, `drink`, `paint`, `clap`, `ride`.
 
-### Photographs and drawings together
+### Two decks, not one
 
-Both are shipped, and by default they **interleave** rather than living in
-separate decks. A beagle, a labrador and a cartoon dog are all "dog", and moving
-between a photograph and an icon of the same thing is its own step — the
-round-dealing already puts a word's pictures a full deck apart, so the child meets
-the real dog and the drawn one well apart rather than side by side. Photographs
-come first for a word, drawings later, which asks the child to generalise rather
-than to match.
+**Photos** and **Drawings** are separate decks. They were interleaved at first —
+the argument being that meeting a real dog and a drawn one teaches the category —
+but testing showed the drawings are reliably legible while a fair number of the
+photographs are not, and a bad photograph interrupting a good deck is worse than
+either deck alone. Drawings-only is also often easiest for the youngest child:
+less to look past.
 
-**Pictures** in the grown-ups' area switches between Both, Photos and Drawings.
-Drawings-only is worth trying with a younger child: a simple icon often reads more
-easily than a busy photograph.
+### Card numbers
+
+Every card carries a plain number, so a bad one can be reported without describing
+it. Numbers come from **content order**, so they are stable across shuffles,
+launches and devices; each deck owns a range:
+
+| Range | Deck |
+|---|---|
+| 1–999 | Photos |
+| 1000–1999 | Drawings |
+| 2000–2999 | Words |
+| 3000–3999 | Sentences |
+| 4000–4099 | Letters |
+| 4100–4199 | By Heart |
+| 5000–5999 | Blending |
+
+`tools/photos/card-index.md` maps every number to its word, asset and source.
+Toggle the numbers off in the grown-ups' area before handing the app to anyone
+who isn't testing it.
 
 ### Adding your own
 

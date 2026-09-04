@@ -189,3 +189,34 @@ struct DeckScreen<Content: View>: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
+/// Card numbers are plain integers, but each deck owns a range, so a bare number
+/// still says which deck it came from without anyone having to type a letter.
+enum CardIds {
+    static let photos    = 1        // 1–999
+    static let drawings  = 1000     // 1000–1999
+    static let words     = 2000     // 2000–2999
+    static let sentences = 3000     // 3000–3999
+    static let letters   = 4000     // 4000–4099
+    static let heart     = 4100     // 4100–4199
+    static let blending  = 5000     // 5000–5999
+}
+
+/// A small stable label so a specific card can be named out loud — "142" rather
+/// than "the one that says sit with two children in it". The number comes from the
+/// CONTENT order, never the shuffled order, so it means the same thing on every
+/// launch and on every device. Toggleable in the grown-ups' area.
+struct CardTag: View {
+    let id: Int
+    @Environment(Settings.self) private var settings
+    var body: some View {
+        if settings.showCardIds {
+            Text("\(id)")
+                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                .foregroundStyle(Theme.inkSoft.opacity(0.55))
+                .padding(.horizontal, 7).padding(.vertical, 3)
+                .background(Theme.ground.opacity(0.6))
+                .clipShape(Capsule())
+        }
+    }
+}

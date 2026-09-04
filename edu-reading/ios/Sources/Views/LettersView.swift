@@ -17,6 +17,11 @@ struct LettersView: View {
     // the order inside a set is arbitrary, so it is randomised.
     @State private var pool: [ReadingContent.Letter] = []
 
+    /// Content order, so the number is stable however the deck is shuffled.
+    private func letterId(_ l: ReadingContent.Letter) -> Int {
+        (c.letters.firstIndex(of: l) ?? 0) + 1
+    }
+
     private func makePool() -> [ReadingContent.Letter] {
         #if DEBUG
         // A fixed start index is only used by the screenshot router, and it needs a
@@ -30,6 +35,7 @@ struct LettersView: View {
         DeckScreen(title: "Letters", count: pool.count, index: $index, accent: accent) { i in
             let l = pool[min(i, pool.count - 1)]
             VStack(spacing: 20) {
+                HStack { Spacer(); CardTag(id: CardIds.letters + letterId(l)) }
                 Spacer()
                 // Both letters at one nominal size, on a shared baseline. The
                 // lowercase is trimmed only when its ascender would overshoot the

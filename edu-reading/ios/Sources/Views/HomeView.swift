@@ -34,9 +34,12 @@ struct HomeView: View {
                         Text("ANY TIME")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
-                        DeckTile(step: "•", name: "Look and Say",
-                                 blurb: "\(c.pictureWords.count) words to name together",
-                                 dashed: true) { PictureWordsView() }
+                        DeckTile(step: "•", name: "Photos",
+                                 blurb: "Real pictures of \(c.pictureWords.count) words",
+                                 dashed: true) { PictureWordsView(drawings: false) }
+                        DeckTile(step: "•", name: "Drawings",
+                                 blurb: "Simple pictures — easiest for the youngest",
+                                 dashed: true) { PictureWordsView(drawings: true) }
                     }
 
                     NavigationLink { ParentGateView() } label: {

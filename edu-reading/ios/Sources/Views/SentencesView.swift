@@ -13,8 +13,12 @@ struct SentencesView: View {
 
     var body: some View {
         DeckScreen(title: "Sentences", count: pool.count, index: $index, accent: accent) { i in
-            SayCard(text: pool[min(i, pool.count - 1)].text, size: 44, sentence: true, accent: accent) {
+            let s = pool[min(i, pool.count - 1)]
+            SayCard(text: s.text, size: 44, sentence: true, accent: accent) {
                 collect(i)
+            }
+            .overlay(alignment: .topTrailing) {
+                CardTag(id: CardIds.sentences + (c.sentences.firstIndex(of: s) ?? 0) + 1).padding(18)
             }
         } onTap: { i in
             Voice.shared.say(pool[min(i, pool.count - 1)].text)

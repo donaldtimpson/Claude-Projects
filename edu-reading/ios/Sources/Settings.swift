@@ -23,9 +23,12 @@ final class Settings {
     }
     var pictureStyle: PictureStyle = .both
 
+    // Card ids, for reporting a bad card without having to describe it.
+    var showCardIds = true
+
     private static let key = "sound-it-out.settings.v1"
     struct Snapshot: Codable { var rime: Bool; var listen: Bool; var label: Bool
-                               var autoTurn: Bool?; var style: String? }
+                               var autoTurn: Bool?; var style: String?; var ids: Bool? }
 
     init() {
         guard let d = UserDefaults.standard.data(forKey: Self.key),
@@ -33,10 +36,11 @@ final class Settings {
         rimeBlending = s.rime; listenForVoice = s.listen; showWordOnPictures = s.label
         autoTurn = s.autoTurn ?? false
         pictureStyle = PictureStyle(rawValue: s.style ?? "") ?? .both
+        showCardIds = s.ids ?? true
     }
     func save() {
         let s = Snapshot(rime: rimeBlending, listen: listenForVoice, label: showWordOnPictures,
-                         autoTurn: autoTurn, style: pictureStyle.rawValue)
+                         autoTurn: autoTurn, style: pictureStyle.rawValue, ids: showCardIds)
         if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: Self.key) }
     }
 }

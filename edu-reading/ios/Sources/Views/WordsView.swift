@@ -18,6 +18,10 @@ struct WordsView: View {
     // "strength" — but the words inside a level are shuffled on every open.
     @State private var pool: [ReadingContent.Word] = []
 
+    private func wordId(_ w: ReadingContent.Word) -> Int {
+        (c.words.firstIndex(of: w) ?? 0) + 1
+    }
+
     private func makePool() -> [ReadingContent.Word] {
         let order = c.wordLevels
         return shuffledWithin(c.words) { order.firstIndex(of: $0.level) ?? 9 }
@@ -27,6 +31,7 @@ struct WordsView: View {
         DeckScreen(title: "Words", count: pool.count, index: $index, accent: accent) { i in
             let w = pool[min(i, pool.count - 1)]
             ZStack {
+                VStack { HStack { Spacer(); CardTag(id: CardIds.words + wordId(w)) }; Spacer() }.padding(18)
                 if flipped {
                     VStack(spacing: 16) {
                         Spacer()
