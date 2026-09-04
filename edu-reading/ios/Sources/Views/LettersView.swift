@@ -22,7 +22,15 @@ struct LettersView: View {
             let l = pool[i]
             VStack(spacing: 20) {
                 Spacer()
-                (phonics(l.upper, size: 108) + phonics(l.lower, size: 132)).kerning(6)
+                // Both letters at one nominal size, on a shared baseline. The
+                // lowercase is trimmed only when its ascender would overshoot the
+                // capital (see LetterFit) — separate Texts, because per-segment
+                // sizes inside a Text concatenation are not reliably honoured.
+                HStack(alignment: .lastTextBaseline, spacing: 12) {
+                    phonics(l.upper, size: 132)
+                    phonics(l.lower, size: 132 * LetterFit.lowerScale(upper: l.upper,
+                                                                     lower: l.lower))
+                }
                 Text("\(l.sound)  as in \(l.asIn)")
                     .font(.andika(20, bold: true)).foregroundStyle(accent)
                 Spacer()

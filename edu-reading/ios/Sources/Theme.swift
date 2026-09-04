@@ -51,6 +51,16 @@ let VOWELS = Set("aeiouAEIOU")
 enum LetterFit {
     private static var cache: [String: CGFloat] = [:]
 
+    /// Built from the bundled file rather than by name. CTFontCreateWithName
+    /// silently falls back to a system font when a name doesn't resolve, and a
+    /// fallback's metrics would give a plausible-looking but wrong scale.
+    private static let font: CTFont? = {
+        guard let url = Bundle.main.url(forResource: "Andika-Bold", withExtension: "ttf"),
+              let provider = CGDataProvider(url: url as CFURL),
+              let cg = CGFont(provider) else { return nil }
+        return CTFontCreateWithGraphicsFont(cg, 100, nil, nil)
+    }()
+
     private static func top(_ ch: Character, _ font: CTFont) -> CGFloat {
         var uni = Array(String(ch).utf16)
         var glyph = CGGlyph()
@@ -67,8 +77,7 @@ enum LetterFit {
     static func lowerScale(upper: String, lower: String) -> CGFloat {
         let key = upper + lower
         if let hit = cache[key] { return hit }
-        guard let u = upper.first, let l = lower.first else { return 1 }
-        let font = CTFontCreateWithName("Andika-Bold" as CFString, 100, nil)
+        guard let font, let u = upper.first, let l = lower.first else { return 1 }
         let tu = top(u, font), tl = top(l, font)
         let scale = (tl > tu && tu > 0) ? tu / tl : 1
         cache[key] = scale
