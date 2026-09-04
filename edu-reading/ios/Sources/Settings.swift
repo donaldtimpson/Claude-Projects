@@ -12,18 +12,31 @@ final class Settings {
     // the card turns itself when the word finishes.
     var autoTurn = false
 
+    // Photographs and drawings are two ways of showing the same idea, and moving
+    // between them is a real step: a beagle, a labrador and a cartoon dog are all
+    // "dog". So by default they INTERLEAVE rather than living in separate decks —
+    // the round-dealing already puts a word's pictures a full deck apart. Younger
+    // children often read a simple drawing more easily than a busy photograph,
+    // which is what the other two settings are for.
+    enum PictureStyle: String, Codable, CaseIterable {
+        case both = "Both", photos = "Photos", drawings = "Drawings"
+    }
+    var pictureStyle: PictureStyle = .both
+
     private static let key = "sound-it-out.settings.v1"
-    struct Snapshot: Codable { var rime: Bool; var listen: Bool; var label: Bool; var autoTurn: Bool? }
+    struct Snapshot: Codable { var rime: Bool; var listen: Bool; var label: Bool
+                               var autoTurn: Bool?; var style: String? }
 
     init() {
         guard let d = UserDefaults.standard.data(forKey: Self.key),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         rimeBlending = s.rime; listenForVoice = s.listen; showWordOnPictures = s.label
         autoTurn = s.autoTurn ?? false
+        pictureStyle = PictureStyle(rawValue: s.style ?? "") ?? .both
     }
     func save() {
         let s = Snapshot(rime: rimeBlending, listen: listenForVoice, label: showWordOnPictures,
-                         autoTurn: autoTurn)
+                         autoTurn: autoTurn, style: pictureStyle.rawValue)
         if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: Self.key) }
     }
 }

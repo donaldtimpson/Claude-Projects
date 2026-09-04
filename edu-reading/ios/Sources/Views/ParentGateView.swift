@@ -88,6 +88,24 @@ private struct AdultView: View {
                     }
                     .tint(Theme.go)
 
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Pictures").font(.andika(16)).foregroundStyle(Theme.ink)
+                        Picker("", selection: Binding(
+                            get: { settings.pictureStyle },
+                            set: { settings.pictureStyle = $0; settings.save() })) {
+                            ForEach(Settings.PictureStyle.allCases, id: \.self) {
+                                Text($0.rawValue).tag($0)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        Text(settings.pictureStyle == .both
+                             ? "Photographs and drawings of the same word, spread apart. Meeting a real dog and a drawn one is how a child learns that both are \"dog\"."
+                             : settings.pictureStyle == .photos
+                             ? "Photographs only."
+                             : "Drawings only — often easier for a younger child, with less to look past.")
+                            .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                    }
+
                     Toggle(isOn: Binding(get: { settings.autoTurn },
                                          set: { settings.autoTurn = $0; settings.save() })) {
                         VStack(alignment: .leading, spacing: 2) {

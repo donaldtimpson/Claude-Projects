@@ -19,7 +19,7 @@ struct PictureWordsView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xD9646E)
 
-    private struct Card: Hashable { let word: String; let variant: Int }
+    private struct Card: Hashable { let word: String; let variant: Int; let drawing: Bool }
 
     @State private var pool: [Card] = []
     @State private var index = 0
@@ -31,13 +31,12 @@ struct PictureWordsView: View {
             let p = c.pictureWords.first { $0.word == card.word }
             VStack(spacing: 24) {
                 Spacer()
-                if let art = photo(card.word, card.variant) {
+                if !card.drawing, let art = photo(card.word, card.variant) {
                     Image(uiImage: art)
                         .resizable().scaledToFit()
                         .frame(maxHeight: 330)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                } else if let p {
-                    // Emoji stand in wherever no photograph was found.
+                } else if let p, !p.images.isEmpty {
                     Text(p.images[card.variant % p.images.count])
                         .font(.system(size: 190))
                 }
@@ -52,22 +51,30 @@ struct PictureWordsView: View {
             Voice.shared.say(pool[i].word)
         }
         .onAppear { if pool.isEmpty { pool = makePool() } }
+        .onChange(of: settings.pictureStyle) { index = 0; pool = makePool() }
     }
 
-    /// How many distinct pictures exist for a word: bundled photographs first,
-    /// falling back to the emoji the content file carries.
-    private func variantCount(_ word: String) -> Int {
-        var n = 0
-        if UIImage(named: word) != nil {
-            n = 1
-            while UIImage(named: "\(word)-\(n + 1)") != nil, n < 6 { n += 1 }
-            return n
-        }
-        return c.pictureWords.first { $0.word == word }?.images.count ?? 1
+    /// Photographs bundled for a word, in order.
+    private func photoCount(_ word: String) -> Int {
+        guard UIImage(named: word) != nil else { return 0 }
+        var n = 1
+        while UIImage(named: "\(word)-\(n + 1)") != nil, n < 6 { n += 1 }
+        return n
     }
 
     private func photo(_ word: String, _ variant: Int) -> UIImage? {
         variant == 0 ? UIImage(named: word) : UIImage(named: "\(word)-\(variant + 1)")
+    }
+
+    /// How many cards a word contributes, and of which kind. Drawings come last so
+    /// that in a mixed deck the photograph is met first and the icon later — the
+    /// order that asks the child to generalise rather than to match.
+    private func variants(_ p: ReadingContent.PictureWord) -> (photos: Int, drawings: Int) {
+        switch settings.pictureStyle {
+        case .photos:   return (photoCount(p.word), 0)
+        case .drawings: return (0, p.images.count)
+        case .both:     return (photoCount(p.word), p.images.count)
+        }
     }
 
     /// Dealt in rounds, not shuffled flat: every word appears once before any word
@@ -75,13 +82,17 @@ struct PictureWordsView: View {
     /// apart, so no two pigs ever land near each other, and the deck still opens
     /// differently every time because each round is shuffled independently.
     private func makePool() -> [Card] {
-        let counts = c.pictureWords.map { ($0.word, variantCount($0.word)) }
-        let deepest = counts.map(\.1).max() ?? 1
+        let counts = c.pictureWords.map { (p: $0, v: variants($0)) }
+        let deepest = counts.map { max($0.v.photos, 0) + max($0.v.drawings, 0) }.max() ?? 1
         var out: [Card] = []
         for round in 0..<deepest {
-            let thisRound = counts.filter { $0.1 > round }
-                                  .map { Card(word: $0.0, variant: round) }
-                                  .shuffled()
+            let thisRound: [Card] = counts.compactMap { entry in
+                let (ph, dr) = entry.v
+                if round < ph { return Card(word: entry.p.word, variant: round, drawing: false) }
+                let d = round - ph
+                if d < dr { return Card(word: entry.p.word, variant: d, drawing: true) }
+                return nil
+            }.shuffled()
             out.append(contentsOf: thisRound)
         }
         return out

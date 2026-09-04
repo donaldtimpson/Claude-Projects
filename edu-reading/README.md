@@ -153,6 +153,20 @@ without a caption — the one thing a pre-reader cannot use. Isolated body parts
 Verbs that survived did so because the whole scene reads as the action:
 `run`, `swim`, `climb`, `dance`, `cry`, `read`, `drink`, `paint`, `clap`, `ride`.
 
+### Photographs and drawings together
+
+Both are shipped, and by default they **interleave** rather than living in
+separate decks. A beagle, a labrador and a cartoon dog are all "dog", and moving
+between a photograph and an icon of the same thing is its own step — the
+round-dealing already puts a word's pictures a full deck apart, so the child meets
+the real dog and the drawn one well apart rather than side by side. Photographs
+come first for a word, drawings later, which asks the child to generalise rather
+than to match.
+
+**Pictures** in the grown-ups' area switches between Both, Photos and Drawings.
+Drawings-only is worth trying with a younger child: a simple icon often reads more
+easily than a busy photograph.
+
 ### Adding your own
 
 Drop `dog.jpg` into `Assets.xcassets` as a **single-scale universal** imageset.
