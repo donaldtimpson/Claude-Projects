@@ -115,9 +115,22 @@ private struct AdultView: View {
                     // CC BY / CC BY-SA attribution for everything the app ships.
                     credit("Andika", "SIL International, under the Open Font License. A typeface drawn for beginning readers — single-storey a and g, and letterforms that can't be confused with one another.")
                     credit("Lingua Libre & Wikimedia Commons", "Recorded English pronunciations, contributed by volunteers under CC BY-SA.")
-                    credit("Pexels & Pixabay", "Freely licensed photography.")
+                    credit("Openverse", "How the photographs were found — an index of openly-licensed images.")
                     Text("If a recording or picture here is yours, thank you. Tell us and we'll name you properly.")
                         .font(.andika(13)).foregroundStyle(Theme.inkSoft)
+
+                    NavigationLink {
+                        PhotoCreditsView()
+                    } label: {
+                        HStack {
+                            Text("The \(PhotoCredit.all.count) photographers")
+                                .font(.andika(16, bold: true)).foregroundStyle(Theme.go)
+                            Spacer()
+                            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 section("MORE FROM US") {

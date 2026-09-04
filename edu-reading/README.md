@@ -95,39 +95,38 @@ Drop recordings into `Resources/` and tier one takes over with no code change:
   and the schwa matters: "buh-a-tuh" never blends into "bat". Until real audio
   exists the letter deck stays silent rather than teach the wrong sound.
 
-## Art — and why the pictures aren't real yet
+## Photographs
 
-Emoji are placeholders, and **automated sourcing was tried and rejected.** Two
-approaches, both instructive:
+**85 real photographs across 37 of the 38 words**, bundled in `Assets.xcassets`
+(~5 MB). All CC0 or CC BY, sourced through [Openverse](https://openverse.org),
+which needs no API key.
 
-- **Free-text image search** (Wikimedia Commons): searching `apple` returns an
-  Apple II computer; `dog` returns a dhole. Unusable.
-- **Curated Wikipedia lead images** (pick the article, take its picture): better,
-  but those images are chosen for encyclopedic accuracy, not for showing a
-  four-year-old what a word means. `corn` came back a 19th-century botanical
-  plate, `sleep` a Domenico Fetti painting, `eat` a vintage advertising poster,
-  `rock` the Grand Canyon, and `star` was byte-identical to `sun`. About half were
-  unusable and the rest needed checking anyway.
+Getting them was fetch-then-curate, and the curation is the part that matters.
+Automated selection alone does not work: free-text Wikimedia search returns an
+Apple II computer for `apple` and a dhole for `dog`, while Wikipedia lead images —
+chosen for encyclopedic accuracy, not for showing a four-year-old what a word
+means — gave a Renaissance painting for `sleep` and the Sun for `star`. So every
+candidate was laid out on a contact sheet and picked by eye. First-pass queries
+returned guinea pigs and a train for `pig`, and a milk tanker for `milk`; those
+thirteen words were re-queried with sharper terms.
 
-The conclusion is that this deck needs **stock photography**, whose whole purpose
-is depicting a thing clearly — not documentation. Pexels and Pixabay both allow
-commercial use with no attribution required and have free APIs; a key takes two
-minutes and unblocks it.
+`milk` still has no usable photograph and keeps its emoji — the fallback exists
+precisely so one missing word is not a blocker.
 
-**Integration is already done and costs nothing.** Drop `dog.jpg` into
-`Assets.xcassets` and the Look and Say deck uses it instead of the emoji. Add
-`dog-2`, `dog-3` and tapping cycles them. No content edit, no code change.
+**To add or replace one:** drop `dog.jpg` into `Assets.xcassets` as a
+single-scale universal imageset. `dog-2`, `dog-3` become extra variants that
+tapping cycles. No content edit, no code change.
 
-`ReadingContent.Word.image` is the equivalent hook for the Words deck. `ReadingContent.Word.image` is the single hook — point it
-at bundled assets and everything downstream follows.
+> Use a **single-scale** universal imageset. An imageset that declares empty 2x/3x
+> slots returns nil from `UIImage(named:)` on a 3x device even though the file is
+> present in `Assets.car` — which looks exactly like the image not being bundled.
 
-**12 of the 57 words have no image and never will** (`sat`, `chat`, `mud`…). That
-is the honest limit of picture-based self-check, and why the flip card falls
-through to audio. Sourcing: [Pexels](https://pexels.com) and
-[Pixabay](https://pixabay.com) allow commercial use with no attribution required,
-and real photos suit the three-images-per-word idea better than a symbol set (a
-pictogram library has exactly one dog). **Avoid ARASAAC** despite the perfect fit —
-it is non-commercial.
+Attribution is a legal requirement for the 72 CC BY photographs, so
+`photo-credits.json` travels with them and the grown-ups' area lists every
+photographer by name.
+
+Emoji remain the fallback everywhere, and `ReadingContent.Word.image` is the
+equivalent hook for the Words deck.
 
 ## Content
 
