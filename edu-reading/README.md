@@ -15,6 +15,15 @@ no Back button, no chips — a child taps whatever is on screen expecting someth
 to happen, so anything that is not the card is a trap. Levels advance on their own;
 everything a grown-up would choose lives behind the parental gate.
 
+**Turning a card.** Tap once and the card says what is on it; tap again and it
+turns. Swiping works too, but is never required — a child who only ever taps can
+finish the whole deck, which is the point: a tap that does nothing reads as
+broken. The card is drawn as a visible *stack*, and on opening the top card
+slides a little and springs back — a wordless demonstration that it moves
+sideways, so the swipe is discoverable without being taught. For a younger child,
+**Cards turn themselves** in the grown-ups' area makes one tap enough: it speaks
+and then turns on its own, and tapping again just replays it.
+
 **Voice (optional).** With it on, the card listens the whole time it is up and turns
 itself when the word is read. The target word is known in advance, so this is
 verification rather than open recognition — and it is built so it **can only ever
@@ -44,6 +53,12 @@ adult, so they know which word the image is meant to prompt; the child is buildi
 spoken vocabulary. Reading mode hides the picture, so the same deck becomes a
 victory lap a year later. Three images per word, never one — a child shown a single
 dog learns that picture, not the category.
+
+Each photograph is **its own card**, dealt in rounds so every word appears once
+before any word appears twice. The three pictures of a pig land about a full deck
+apart rather than stacked on one card — meeting an unfamiliar pig twenty cards
+later asks the child to recognise the *category* from a picture they have not
+seen, which is the entire reason for having three. 86 cards from 38 words.
 
 **Letter Sounds has no pictures on purpose.** "A is for Apple" builds a
 letter → picture → *name* link and trains guessing from images. This deck teaches

@@ -88,6 +88,18 @@ private struct AdultView: View {
                     }
                     .tint(Theme.go)
 
+                    Toggle(isOn: Binding(get: { settings.autoTurn },
+                                         set: { settings.autoTurn = $0; settings.save() })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Cards turn themselves").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text(settings.autoTurn
+                                 ? "Tap and the card says its word, then turns on its own. Tapping again just says it again."
+                                 : "Tap once to hear the card, tap again to turn it. Swiping works too.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
+
                     Toggle(isOn: Binding(get: { settings.rimeBlending },
                                          set: { settings.rimeBlending = $0; settings.save() })) {
                         VStack(alignment: .leading, spacing: 2) {

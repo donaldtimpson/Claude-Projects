@@ -48,11 +48,12 @@ struct WordsView: View {
                 }
             }
         } onTap: { i in
+            // First tap reveals and speaks; CardStack turns the card on the second.
             guard i < pool.count else { return }
             let w = pool[i]
             Voice.shared.say(w.word)
             progress.learn(word: w.word)
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped.toggle() }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
         } onAdvance: {
             flipped = false
         }
