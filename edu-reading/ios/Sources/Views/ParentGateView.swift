@@ -117,7 +117,7 @@ private struct AdultView: View {
                             }
                         }
                         .pickerStyle(.segmented)
-                        Text("Ten first. Twenty adds the teens, which are the irregular ones — eleven and twelve say nothing about their digits.")
+                        Text("Ten first. Twenty adds the teens, which are the irregular ones. Fifty and a hundred lay the counters out in rows of ten, which is the hundred-square.")
                             .font(.andika(12)).foregroundStyle(Theme.inkSoft)
                     }
 

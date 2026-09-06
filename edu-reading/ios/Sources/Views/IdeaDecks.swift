@@ -8,56 +8,45 @@ import SwiftUI
 // different dogs teach "dog"; a single red circle labelled "red" teaches
 // "circle" just as readily.
 //
-// That is also where the extra cards come from. Every item appears several times
-// in genuinely different arrangements, and each variation carries its own lesson:
-//   • colour, across unlike shapes and across many small scattered pieces
-//   • shape, across colours and across SIZES — size does not change identity
-//   • number, across arrangements — five in a row is still five, which is
-//     conservation of number and a real milestone rather than padding
+// ONE card per item. An earlier version gave each item several layouts, which
+// made the decks longer without making them broader — twelve ways to look at a
+// square is not the same as knowing twelve shapes. The decks grew by adding
+// items instead.
 
 // MARK: - Colours
 
 struct ColorsView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x4E8FBF)
-    private struct Card: Hashable { let idx: Int; let layout: Int }
-    @State private var pool: [Card] = []
+    @State private var pool: [Int] = []
     @State private var index = 0
 
     var body: some View {
         DeckScreen(title: "Colours", count: pool.count, index: $index, accent: accent) { i in
-            let card = pool[min(i, max(pool.count - 1, 0))]
-            let swatch = c.colors[card.idx]
+            let idx = pool[min(i, max(pool.count - 1, 0))]
+            let swatch = c.colors[idx]
             let tint = Color(hexString: swatch.hex)
             AdaptiveCard {
                 ZStack {
                     Theme.paper
                     GeometryReader { geo in
-                        Group {
-                            if card.layout == 0 {
-                                FourShapes(tint: tint, size: geo.size)
-                            } else {
-                                Scatter(tint: tint, size: geo.size)
-                            }
-                        }
-                        .frame(width: geo.size.width, height: geo.size.height)
+                        FourShapes(tint: tint, size: geo.size)
+                            .frame(width: geo.size.width, height: geo.size.height)
                     }
                 }
             } caption: {
                 phonics(swatch.word, size: 40)
             }
             .overlay(alignment: .bottomTrailing) {
-                CardTag(id: CardIds.colors + card.idx + 1).padding(14)
+                CardTag(id: CardIds.colors + idx + 1).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.colors[pool[min(i, pool.count - 1)].idx].word)
+            Voice.shared.say(c.colors[pool[min(i, pool.count - 1)]].word)
         }
         .onAppear { if pool.isEmpty { rebuild() } }
     }
 
-    private func rebuild() {
-        pool = c.colors.indices.flatMap { i in (0..<2).map { Card(idx: i, layout: $0) } }.shuffled()
-    }
+    private func rebuild() { pool = Array(c.colors.indices).shuffled() }
 
     /// Four unlike shapes, one colour: the colour is all they share.
     private struct FourShapes: View {
@@ -77,27 +66,6 @@ struct ColorsView: View {
         }
     }
 
-    /// Many small pieces at different sizes — the colour survives scale and count.
-    private struct Scatter: View {
-        let tint: Color; let size: CGSize
-        var body: some View {
-            let s = min(size.width, size.height)
-            Canvas { ctx, sz in
-                var rng = SeededRandom(seed: 7)
-                for _ in 0..<26 {
-                    let d = s * (0.05 + rng.next() * 0.09)
-                    let x = rng.next() * (sz.width - d)
-                    let y = rng.next() * (sz.height - d)
-                    let r = CGRect(x: x, y: y, width: d, height: d)
-                    let path = rng.next() < 0.5 ? Path(ellipseIn: r)
-                        : Path(roundedRect: r, cornerRadius: d * 0.22)
-                    ctx.fill(path, with: .color(tint))
-                    // Pale colours need the outline or they disappear on white.
-                    ctx.stroke(path, with: .color(Theme.ink.opacity(0.22)), lineWidth: 1)
-                }
-            }
-        }
-    }
 }
 
 // MARK: - Shapes
@@ -105,44 +73,33 @@ struct ColorsView: View {
 struct ShapesView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x6FA368)
-    private struct Card: Hashable { let idx: Int; let layout: Int }
-    @State private var pool: [Card] = []
+    @State private var pool: [Int] = []
     @State private var index = 0
     private let palette: [Color] = [Color(hex: 0xD93A32), Color(hex: 0x2F6FD0),
                                     Color(hex: 0xF0B429), Color(hex: 0x7A4FA3)]
 
     var body: some View {
         DeckScreen(title: "Shapes", count: pool.count, index: $index, accent: accent) { i in
-            let card = pool[min(i, max(pool.count - 1, 0))]
-            let name = c.shapes[card.idx].word
+            let idx = pool[min(i, max(pool.count - 1, 0))]
+            let name = c.shapes[idx].word
             AdaptiveCard {
                 ZStack {
                     Theme.paper
                     GeometryReader { geo in
                         let s = min(geo.size.width, geo.size.height)
-                        Group {
-                            if card.layout == 0 {
-                                // One shape, four colours — the mirror of a colour card.
-                                VStack(spacing: s * 0.06) {
-                                    HStack(spacing: s * 0.06) {
-                                        AnyShapeProxy(named: name).fill(palette[0]).frame(width: s * 0.3, height: s * 0.3)
-                                        AnyShapeProxy(named: name).fill(palette[1]).frame(width: s * 0.3, height: s * 0.3)
-                                    }
-                                    HStack(spacing: s * 0.06) {
-                                        AnyShapeProxy(named: name).fill(palette[2]).frame(width: s * 0.3, height: s * 0.3)
-                                        AnyShapeProxy(named: name).fill(palette[3]).frame(width: s * 0.3, height: s * 0.3)
-                                    }
-                                }
-                            } else {
-                                // One shape, one colour, four SIZES: a small circle
-                                // is still a circle, which is not obvious at three.
-                                HStack(alignment: .center, spacing: s * 0.05) {
-                                    ForEach([0.40, 0.26, 0.15], id: \.self) { f in
-                                        AnyShapeProxy(named: name)
-                                            .fill(palette[1])
-                                            .frame(width: s * f, height: s * f)
-                                    }
-                                }
+                        // One shape, four colours — the mirror of a colour card.
+                        VStack(spacing: s * 0.06) {
+                            HStack(spacing: s * 0.06) {
+                                AnyShapeProxy(named: name).fill(palette[0])
+                                    .frame(width: s * 0.3, height: s * 0.3)
+                                AnyShapeProxy(named: name).fill(palette[1])
+                                    .frame(width: s * 0.3, height: s * 0.3)
+                            }
+                            HStack(spacing: s * 0.06) {
+                                AnyShapeProxy(named: name).fill(palette[2])
+                                    .frame(width: s * 0.3, height: s * 0.3)
+                                AnyShapeProxy(named: name).fill(palette[3])
+                                    .frame(width: s * 0.3, height: s * 0.3)
                             }
                         }
                         .frame(width: geo.size.width, height: geo.size.height)
@@ -152,17 +109,15 @@ struct ShapesView: View {
                 phonics(name, size: 40)
             }
             .overlay(alignment: .bottomTrailing) {
-                CardTag(id: CardIds.shapes + card.idx + 1).padding(14)
+                CardTag(id: CardIds.shapes + idx + 1).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.shapes[pool[min(i, pool.count - 1)].idx].word)
+            Voice.shared.say(c.shapes[pool[min(i, pool.count - 1)]].word)
         }
         .onAppear { if pool.isEmpty { rebuild() } }
     }
 
-    private func rebuild() {
-        pool = c.shapes.indices.flatMap { i in (0..<2).map { Card(idx: i, layout: $0) } }.shuffled()
-    }
+    private func rebuild() { pool = Array(c.shapes.indices).shuffled() }
 }
 
 // MARK: - Numbers
@@ -174,8 +129,7 @@ struct NumbersView: View {
     @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xC98A3E)
-    private struct Card: Hashable { let n: Int; let layout: Int }
-    @State private var pool: [Card] = []
+    @State private var pool: [Int] = []
     @State private var index = 0
     @State private var ordered = true
 
@@ -184,7 +138,7 @@ struct NumbersView: View {
     var body: some View {
         DeckScreen(title: "Numbers", count: pool.count, index: $index, accent: accent,
                    ordered: $ordered) { i in
-            let card = pool[min(i, max(pool.count - 1, 0))]
+            let n = pool[min(i, max(pool.count - 1, 0))]
             AdaptiveCard {
                 ZStack {
                     Theme.paper
@@ -192,15 +146,9 @@ struct NumbersView: View {
                         // The numeral means nothing to a pre-reader, so the count
                         // leads and the numeral supports it.
                         VStack(spacing: geo.size.height * 0.05) {
-                            Group {
-                                switch card.layout {
-                                case 0: Grouped(n: card.n, token: tokens[card.n % tokens.count], size: geo.size)
-                                case 1: Dice(n: card.n, tint: accent, size: geo.size)
-                                default: Line(n: card.n, token: tokens[(card.n + 4) % tokens.count], size: geo.size)
-                                }
-                            }
-                            .frame(height: geo.size.height * 0.62)
-                            Text("\(card.n)")
+                            Grouped(n: n, token: tokens[n % tokens.count], size: geo.size)
+                                .frame(height: geo.size.height * 0.62)
+                            Text("\(n)")
                                 .font(.andika(min(geo.size.height * 0.26, 84), bold: true))
                                 .foregroundStyle(accent)
                         }
@@ -208,13 +156,16 @@ struct NumbersView: View {
                     }
                 }
             } caption: {
-                phonics(c.numbers.words[card.n - 1], size: 40)
+                phonics(c.numbers.words[n - 1], size: 40)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(.horizontal, 16)
             }
             .overlay(alignment: .bottomTrailing) {
-                CardTag(id: CardIds.numbers + card.n).padding(14)
+                CardTag(id: CardIds.numbers + n).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.numbers.words[pool[min(i, pool.count - 1)].n - 1])
+            Voice.shared.say(c.numbers.words[pool[min(i, pool.count - 1)] - 1])
         }
         .onAppear { rebuild(); index = start }
         .onChange(of: settings.numberLevel) { index = 0; rebuild() }
@@ -222,19 +173,26 @@ struct NumbersView: View {
     }
 
     private func rebuild() {
-        let top = max(settings.numberLevel, 1)
-        let cards = (1...top).flatMap { n in (0..<3).map { Card(n: n, layout: $0) } }
-        // In order means 1,1,1,2,2,2… so a child meets each number's three
-        // arrangements together, which is where the point lands: the count is the
-        // same however it is laid out.
+        #if DEBUG
+        let a = ProcessInfo.processInfo.arguments
+        let override = a.firstIndex(of: "-level").flatMap { i in
+            i + 1 < a.count ? Int(a[i + 1]) : nil
+        }
+        #else
+        let override: Int? = nil
+        #endif
+        let top = max(override ?? settings.numberLevel, 1)
+        let cards = Array(1...top)
         pool = ordered ? cards : cards.shuffled()
     }
 
-    /// Rows of five, because a row of seventeen cannot be counted by eye.
+    /// Rows of five up to twenty, because a row of seventeen cannot be counted by
+    /// eye. Past twenty it switches to rows of TEN, which is the hundred-square a
+    /// child meets later — and the only arrangement in which forty-two is legible.
     private struct Grouped: View {
         let n: Int; let token: String; let size: CGSize
         var body: some View {
-            let cols = n <= 5 ? n : 5
+            let cols = n <= 5 ? n : (n <= 20 ? 5 : 10)
             let rows = Int(ceil(Double(n) / Double(cols)))
             let cell = min(size.width / CGFloat(cols + 1), size.height / CGFloat(rows + 1))
             VStack(spacing: cell * 0.16) {
@@ -249,51 +207,6 @@ struct NumbersView: View {
         }
     }
 
-    /// A dice face, which is the arrangement a child learns to read WITHOUT
-    /// counting. Above six it becomes stacked dice, which is still the same trick.
-    private struct Dice: View {
-        let n: Int; let tint: Color; let size: CGSize
-        private static let faces: [[(Int, Int)]] = [
-            [], [(1,1)], [(0,0),(2,2)], [(0,0),(1,1),(2,2)],
-            [(0,0),(2,0),(0,2),(2,2)], [(0,0),(2,0),(1,1),(0,2),(2,2)],
-            [(0,0),(2,0),(0,1),(2,1),(0,2),(2,2)],
-        ]
-        var body: some View {
-            let groups = stride(from: n, to: 0, by: -6).map { min($0, 6) }
-            let side = min(size.width / CGFloat(groups.count + 1), size.height * 0.8)
-            HStack(spacing: side * 0.14) {
-                ForEach(Array(groups.enumerated()), id: \.offset) { _, k in
-                    ZStack {
-                        RoundedRectangle(cornerRadius: side * 0.16)
-                            .fill(Theme.paper)
-                            .overlay(RoundedRectangle(cornerRadius: side * 0.16)
-                                .strokeBorder(tint.opacity(0.55), lineWidth: 2))
-                        let pips = Self.faces[k]
-                        ForEach(Array(pips.enumerated()), id: \.offset) { _, p in
-                            Circle().fill(tint)
-                                .frame(width: side * 0.17, height: side * 0.17)
-                                .offset(x: CGFloat(p.0 - 1) * side * 0.27,
-                                        y: CGFloat(p.1 - 1) * side * 0.27)
-                        }
-                    }
-                    .frame(width: side, height: side)
-                }
-            }
-        }
-    }
-
-    /// One long row. Same count, a shape that looks nothing like the other two.
-    private struct Line: View {
-        let n: Int; let token: String; let size: CGSize
-        var body: some View {
-            let cell = min(size.width / CGFloat(n + 1), size.height * 0.5)
-            HStack(spacing: cell * 0.14) {
-                ForEach(0..<n, id: \.self) { _ in
-                    Text(token).font(.system(size: cell * 0.8))
-                }
-            }
-        }
-    }
 }
 
 // MARK: - drawing helpers

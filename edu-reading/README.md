@@ -80,6 +80,28 @@ back button: **Letters** (the teaching order *is* the lesson — s a t p i n fir
 Everywhere else there is nothing to be in order *of*, so there is no control — a
 button that does nothing is worse than no button.
 
+### Colours, shapes and numbers
+
+Drawn rather than sourced — no photographs to hunt, nothing to audit, no licences,
+and every card correct by construction. **One card per item**: an earlier version
+gave each item several layouts, which made the decks longer without making them
+broader. Twelve ways to look at a square is not the same as knowing twelve shapes,
+so the decks grew by adding items.
+
+| Deck | Items | The card |
+|---|---|---|
+| Colours | 20 | four unlike shapes in one colour |
+| Shapes | 16 | one shape in four colours |
+| Numbers | to 100 | a count, the numeral, and the word |
+
+Each still applies the app's rule — vary everything except what is being taught —
+since a single red circle labelled *red* teaches "circle" just as readily.
+
+Counters group in **fives up to twenty**, because a row of seventeen cannot be
+counted by eye, and in **tens above it**, which makes a hundred read as the
+hundred-square a child meets later. Levels are 5 / 10 / 20 / 50 / 100 in the
+grown-ups' area.
+
 ### Two decks, not one
 
 **Photos** and **Drawings** are separate decks. They were interleaved at first —

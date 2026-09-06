@@ -13,10 +13,8 @@ Every card shows a plain number (toggle in the grown-ups' area). Ranges say whic
 | 5000–5999 | Blending |
 | 6000–6099 | Colours |
 | 6100–6199 | Shapes |
-| 6200–6299 | Numbers |
+| 6200–6399 | Numbers |
 
-A colour, shape or number shows the same id for each of its layouts, since the
-id names the ITEM rather than the individual card.
 **Numbers shift whenever cards are added or removed** — regenerate after any change.
 
 ## Photos
@@ -656,3 +654,83 @@ id names the ITEM rather than the individual card.
 | 6218 | eighteen |
 | 6219 | nineteen |
 | 6220 | twenty |
+| 6221 | twenty-one |
+| 6222 | twenty-two |
+| 6223 | twenty-three |
+| 6224 | twenty-four |
+| 6225 | twenty-five |
+| 6226 | twenty-six |
+| 6227 | twenty-seven |
+| 6228 | twenty-eight |
+| 6229 | twenty-nine |
+| 6230 | thirty |
+| 6231 | thirty-one |
+| 6232 | thirty-two |
+| 6233 | thirty-three |
+| 6234 | thirty-four |
+| 6235 | thirty-five |
+| 6236 | thirty-six |
+| 6237 | thirty-seven |
+| 6238 | thirty-eight |
+| 6239 | thirty-nine |
+| 6240 | forty |
+| 6241 | forty-one |
+| 6242 | forty-two |
+| 6243 | forty-three |
+| 6244 | forty-four |
+| 6245 | forty-five |
+| 6246 | forty-six |
+| 6247 | forty-seven |
+| 6248 | forty-eight |
+| 6249 | forty-nine |
+| 6250 | fifty |
+| 6251 | fifty-one |
+| 6252 | fifty-two |
+| 6253 | fifty-three |
+| 6254 | fifty-four |
+| 6255 | fifty-five |
+| 6256 | fifty-six |
+| 6257 | fifty-seven |
+| 6258 | fifty-eight |
+| 6259 | fifty-nine |
+| 6260 | sixty |
+| 6261 | sixty-one |
+| 6262 | sixty-two |
+| 6263 | sixty-three |
+| 6264 | sixty-four |
+| 6265 | sixty-five |
+| 6266 | sixty-six |
+| 6267 | sixty-seven |
+| 6268 | sixty-eight |
+| 6269 | sixty-nine |
+| 6270 | seventy |
+| 6271 | seventy-one |
+| 6272 | seventy-two |
+| 6273 | seventy-three |
+| 6274 | seventy-four |
+| 6275 | seventy-five |
+| 6276 | seventy-six |
+| 6277 | seventy-seven |
+| 6278 | seventy-eight |
+| 6279 | seventy-nine |
+| 6280 | eighty |
+| 6281 | eighty-one |
+| 6282 | eighty-two |
+| 6283 | eighty-three |
+| 6284 | eighty-four |
+| 6285 | eighty-five |
+| 6286 | eighty-six |
+| 6287 | eighty-seven |
+| 6288 | eighty-eight |
+| 6289 | eighty-nine |
+| 6290 | ninety |
+| 6291 | ninety-one |
+| 6292 | ninety-two |
+| 6293 | ninety-three |
+| 6294 | ninety-four |
+| 6295 | ninety-five |
+| 6296 | ninety-six |
+| 6297 | ninety-seven |
+| 6298 | ninety-eight |
+| 6299 | ninety-nine |
+| 6300 | one hundred |
