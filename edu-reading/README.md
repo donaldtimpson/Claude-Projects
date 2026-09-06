@@ -81,6 +81,16 @@ photographs are not, and a bad photograph interrupting a good deck is worse than
 either deck alone. Drawings-only is also often easiest for the youngest child:
 less to look past.
 
+### Every tinted surface is opaque
+
+`Color.mixed(with:amount:)` blends toward another colour and stays opaque. Nothing
+in the app tints with `.opacity()`, because a translucent wash composites over
+whatever is behind it — in dark mode the deck's accent ground turned near-black and
+swallowed the dark back chevron drawn on top of it. The app also pins
+`.preferredColorScheme(.light)`: the palette is a single fixed light one, chosen
+for a lit room with an adult and a child sharing a screen, and half-inheriting dark
+mode only produced surfaces neither palette expected.
+
 ### No title inside a deck
 
 A child cannot read "Photos", and in landscape the title bar eats the one

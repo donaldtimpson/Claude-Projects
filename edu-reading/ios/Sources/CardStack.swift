@@ -24,14 +24,14 @@ struct CardStack<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                accent.opacity(0.16).ignoresSafeArea()
+                Theme.ground.mixed(with: accent, amount: 0.22).ignoresSafeArea()
 
                 // The card is visibly a DECK: two more behind it, peeking below and
                 // to the right. A child who taps and taps has usually just not been
                 // told there is anything else — a stack says so without words.
                 ForEach([2, 1], id: \.self) { back in
                     RoundedRectangle(cornerRadius: 34, style: .continuous)
-                        .fill(Theme.paper.opacity(back == 1 ? 0.92 : 0.75))
+                        .fill(Theme.paper.mixed(with: accent, amount: back == 1 ? 0.06 : 0.13))
                         .overlay(RoundedRectangle(cornerRadius: 34, style: .continuous)
                             .stroke(accent.opacity(0.30), lineWidth: 1.5))
                         .scaleEffect(x: 1 - CGFloat(back) * 0.05, y: 1, anchor: .top)
@@ -132,7 +132,7 @@ struct Dots: View {
             ForEach(0..<shown, id: \.self) { i in
                 let active = count <= 14 ? i == index : i == index * shown / max(count, 1)
                 Circle()
-                    .fill(active ? accent : accent.opacity(0.24))
+                    .fill(active ? accent : accent.mixed(with: Theme.ground, amount: 0.62))
                     .frame(width: active ? 8 : 6, height: active ? 8 : 6)
             }
         }
@@ -186,17 +186,21 @@ struct DeckScreen<Content: View>: View {
             Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)
                 .padding(.bottom, 10)
         }
-        .background(accent.opacity(0.16).ignoresSafeArea())
+        .background(Theme.ground.mixed(with: accent, amount: 0.22).ignoresSafeArea())
         .overlay(alignment: .topLeading) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.ink.opacity(0.55))
-                    .frame(width: 44, height: 44)          // a full touch target
-                    .contentShape(Circle())
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                    .frame(width: 42, height: 42)          // a full touch target
+                    .background(Theme.paper)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Theme.line, lineWidth: 1))
+                    .shadow(color: .black.opacity(0.14), radius: 5, y: 2)
             }
             .buttonStyle(.plain)
-            .padding(.leading, 4)
+            .padding(.leading, 10)
+            .padding(.top, 6)
         }
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
@@ -228,7 +232,7 @@ struct CardTag: View {
                 .font(.system(size: 11, weight: .medium, design: .monospaced))
                 .foregroundStyle(Theme.inkSoft.opacity(0.55))
                 .padding(.horizontal, 7).padding(.vertical, 3)
-                .background(Theme.ground.opacity(0.6))
+                .background(Theme.ground)
                 .clipShape(Capsule())
         }
     }

@@ -20,6 +20,10 @@ struct SoundItOutApp: App {
             RootView()
                 .environment(progress)
                 .environment(settings)
+                // Theme is a single fixed light palette — chosen for a lit room with
+                // an adult and a child sharing one screen. Inheriting dark mode gave
+                // half-dark surfaces and swallowed dark controls drawn on them.
+                .preferredColorScheme(.light)
         }
     }
 }

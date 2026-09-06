@@ -1,7 +1,24 @@
 import SwiftUI
+import UIKit
 import CoreText
 
 extension Color {
+    /// Mixes toward another colour and stays OPAQUE. A translucent tint composites
+    /// over whatever is behind it, so in dark mode an accent wash turned near-black
+    /// and swallowed anything dark drawn on top of it. Every tinted surface in the
+    /// app is built with this instead.
+    func mixed(with other: Color, amount: Double) -> Color {
+        let a = UIColor(self), b = UIColor(other)
+        var ar: CGFloat = 0, ag: CGFloat = 0, ab: CGFloat = 0, aa: CGFloat = 0
+        var br: CGFloat = 0, bg: CGFloat = 0, bb: CGFloat = 0, ba: CGFloat = 0
+        a.getRed(&ar, green: &ag, blue: &ab, alpha: &aa)
+        b.getRed(&br, green: &bg, blue: &bb, alpha: &ba)
+        let t = CGFloat(amount)
+        return Color(.sRGB, red: Double(ar + (br - ar) * t),
+                     green: Double(ag + (bg - ag) * t),
+                     blue: Double(ab + (bb - ab) * t), opacity: 1)
+    }
+
     init(hex: UInt) {
         self.init(.sRGB,
                   red: Double((hex >> 16) & 0xff) / 255,
