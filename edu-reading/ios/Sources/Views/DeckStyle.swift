@@ -53,7 +53,7 @@ struct PictureDecksHub: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(14)
-                        .background(Theme.paper.mixed(with: tint, amount: 0.10))
+                        .background(Skin.current.tileFill.mixed(with: tint, amount: 0.10))
                         .clipShape(RoundedRectangle(cornerRadius: 18))
                         .overlay(RoundedRectangle(cornerRadius: 18)
                             .stroke(tint.mixed(with: Theme.paper, amount: 0.45), lineWidth: 1.5))
@@ -63,7 +63,7 @@ struct PictureDecksHub: View {
             }
             .padding(16)
         }
-        .background(Theme.ground)
+        .background(Skin.current.appGround.ignoresSafeArea())
         .navigationTitle("Look and Say")
         .navigationBarTitleDisplayMode(.inline)
     }

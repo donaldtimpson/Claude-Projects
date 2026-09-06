@@ -169,6 +169,29 @@ adult-facing things at once: the CC BY attributions, the one Lyceum mention, and
 reset. Guideline 5.1.4 bars sending device or personal information to third
 parties — there is no networking code in this app at all.
 
+## How it looks
+
+The first version was flat, and the cause was not the palette — it was that the
+card was **mostly empty white**, with a small photograph floating in the middle of
+it. The picture now bleeds to the card's edges with the word in a band beneath,
+which is the shape a flashcard actually has, and the dead space is gone.
+
+Around that, `Skin.swift` holds three directions, switchable in the grown-ups' area
+so they can be judged on a device with a child rather than argued from screenshots:
+
+| | |
+|---|---|
+| **Plain** | what shipped: flat white card on a flat tint |
+| **Paper** | a warm card resting on a lit table — tight contact shadow under a soft ambient one, a hairline edge, and a stack that is genuinely stacked |
+| **Sunroom** | brighter and warmer, the deck's colour a wash of light behind the card |
+
+Everything is depth rather than decoration. A children's app fails by burying the
+content under pattern and colour, so the work went into making the card read as an
+*object* — which is on-theme, since the app is a deck of cards.
+
+Home and hub tiles carry each deck's own colour, so a child who cannot read the
+names still has somewhere to aim.
+
 ## Typography
 
 Bundled **Andika** (SIL, OFL) is load-bearing, not decoration: single-storey `a`

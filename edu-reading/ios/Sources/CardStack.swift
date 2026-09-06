@@ -15,6 +15,7 @@ struct CardStack<Content: View>: View {
     @ViewBuilder var content: (Int) -> Content
 
     @Environment(Settings.self) private var settings
+    private let skin = Skin.current
     @State private var drag: CGSize = .zero
     @State private var pop = false
     @State private var spoke = false      // has this card been tapped once yet
@@ -24,18 +25,20 @@ struct CardStack<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                Theme.ground.mixed(with: accent, amount: 0.22).ignoresSafeArea()
+                skin.ground(accent).ignoresSafeArea()
 
                 // The card is visibly a DECK: two more behind it, peeking below and
                 // to the right. A child who taps and taps has usually just not been
                 // told there is anything else — a stack says so without words.
                 ForEach([2, 1], id: \.self) { back in
-                    RoundedRectangle(cornerRadius: 34, style: .continuous)
-                        .fill(Theme.paper.mixed(with: accent, amount: back == 1 ? 0.06 : 0.13))
-                        .overlay(RoundedRectangle(cornerRadius: 34, style: .continuous)
-                            .stroke(accent.opacity(0.30), lineWidth: 1.5))
-                        .scaleEffect(x: 1 - CGFloat(back) * 0.05, y: 1, anchor: .top)
-                        .offset(y: CGFloat(back) * 16)
+                    RoundedRectangle(cornerRadius: skin.cardRadius, style: .continuous)
+                        .fill(skin.stackFill(accent))
+                        .overlay(RoundedRectangle(cornerRadius: skin.cardRadius, style: .continuous)
+                            .strokeBorder(skin.cardEdge, lineWidth: 1))
+                        .shadow(color: .black.opacity(0.10), radius: 5, y: 2)
+                        .scaleEffect(x: 1 - CGFloat(back) * 0.04, y: 1, anchor: .top)
+                        .rotationEffect(.degrees(skin.stackTilt * (back == 1 ? 1 : -1)), anchor: .bottom)
+                        .offset(y: CGFloat(back) * skin.stackDrop)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 18)
                 }
@@ -43,9 +46,7 @@ struct CardStack<Content: View>: View {
                 if count > 0 {
                     content(index % count)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Theme.paper)
-                        .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
-                        .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
+                        .modifier(CardSurfaceStyle(skin: skin))
                         .padding(.horizontal, 20)
                         .padding(.vertical, 18)
                         .id(index)
@@ -175,6 +176,7 @@ struct DeckScreen<Content: View>: View {
     var onAdvance: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    private let skin = Skin.current
 
     var body: some View {
         VStack(spacing: 0) {
@@ -186,7 +188,7 @@ struct DeckScreen<Content: View>: View {
             Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)
                 .padding(.bottom, 10)
         }
-        .background(Theme.ground.mixed(with: accent, amount: 0.22).ignoresSafeArea())
+        .background(skin.ground(accent).ignoresSafeArea())
         .overlay(alignment: .topLeading) {
             BackChevron { dismiss() }
                 .padding(.leading, 10)
@@ -231,23 +233,31 @@ struct CardTag: View {
     }
 }
 
-/// One card face for every screen shape. The picture takes all the room that is
-/// left after the caption, and scales to fit it — so a tall portrait card gives a
-/// tall picture and a short landscape card gives a short one, with no branch and
-/// nothing to get the wrong way round. Portrait is never compromised to serve
-/// landscape, because there is only one layout.
+/// One card face for every screen shape: the picture fills everything above a
+/// fixed band, and the word sits in the band. One layout, so it cannot render the
+/// wrong way round, and a tall card simply yields a taller picture.
+///
+/// The picture BLEEDS to the card's edges. The earlier version floated a small
+/// picture inside a large white card, and that dead white space is what read as
+/// flat — not the colours. A flashcard is a picture with a word under it.
 struct AdaptiveCard<Art: View, Caption: View>: View {
     @ViewBuilder var art: () -> Art
     @ViewBuilder var caption: () -> Caption
 
+    private let skin = Skin.current
+
     var body: some View {
-        VStack(spacing: 18) {
-            art()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            caption()
-                .fixedSize(horizontal: false, vertical: true)
+        GeometryReader { geo in
+            let band = min(max(geo.size.height * 0.21, 66), 118)
+            VStack(spacing: 0) {
+                art()
+                    .frame(width: geo.size.width, height: geo.size.height - band)
+                    .clipped()
+                Rectangle().fill(skin.cardEdge).frame(height: 1)
+                caption()
+                    .frame(width: geo.size.width, height: band)
+            }
         }
-        .padding(24)
     }
 }
 

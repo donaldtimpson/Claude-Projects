@@ -54,6 +54,7 @@ private struct AdultView: View {
     @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
     @State private var confirmReset = false
+    @State private var bump = 0
 
     var body: some View {
         ScrollView {
@@ -153,6 +154,29 @@ private struct AdultView: View {
                         }
                     }
                     .tint(Theme.go)
+                }
+
+                section("HOW IT LOOKS") {
+                    // Switchable here so the look can be judged on a real device
+                    // with a real child, rather than from screenshots.
+                    ForEach(Skin.allCases, id: \.self) { s in
+                        Button {
+                            Skin.choose(s); bump += 1
+                        } label: {
+                            HStack(alignment: .top, spacing: 10) {
+                                Image(systemName: Skin.current == s ? "largecircle.fill.circle" : "circle")
+                                    .foregroundStyle(Skin.current == s ? Theme.go : Theme.inkSoft)
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(s.label).font(.andika(16, bold: true)).foregroundStyle(Theme.ink)
+                                    Text(s.blurb).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                                }
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    Text("Takes effect on the next card you open.")
+                        .font(.andika(12)).foregroundStyle(Theme.inkSoft)
                 }
 
                 section("THANK YOU") {

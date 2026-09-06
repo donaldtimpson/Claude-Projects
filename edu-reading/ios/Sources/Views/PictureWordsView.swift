@@ -38,22 +38,29 @@ struct PictureWordsView: View {
             AdaptiveCard {
                 if card.drawing {
                     if let p, !p.images.isEmpty {
-                        // An emoji is a glyph and cannot be resized like an image,
-                        // so measure the space and pick a point size that fills it.
+                        // A glyph cannot be resized like an image, so measure the
+                        // space and pick a point size that fills it. It sits on a
+                        // faint wash of the deck's colour rather than bare white,
+                        // so a drawing card has the same weight as a photo card.
                         GeometryReader { geo in
-                            Text(p.images[card.variant % p.images.count])
-                                .font(.system(size: min(geo.size.width, geo.size.height) * 0.86))
-                                .frame(width: geo.size.width, height: geo.size.height)
+                            ZStack {
+                                Theme.paper.mixed(with: accent, amount: 0.10)
+                                Text(p.images[card.variant % p.images.count])
+                                    .font(.system(size: min(geo.size.width, geo.size.height) * 0.62))
+                            }
+                            .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
                 } else if let art = photo(card.word, card.variant) {
+                    // Fills the card edge to edge. A photograph floating in white
+                    // was the dead space that made the deck feel flat.
                     Image(uiImage: art)
-                        .resizable().scaledToFit()
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
                 }
             } caption: {
                 if settings.showWordOnPictures {
-                    phonics(card.word, size: 34).opacity(0.75)
+                    phonics(card.word, size: 40)
                 }
             }
             .overlay(alignment: .topTrailing) { CardTag(id: card.id).padding(18) }

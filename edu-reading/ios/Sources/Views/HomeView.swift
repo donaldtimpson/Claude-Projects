@@ -18,15 +18,15 @@ struct HomeView: View {
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
 
-                        DeckTile(step: "1", name: "Letters",
+                        DeckTile(step: "1", tint: 0xE0A038, name: "Letters",
                                  blurb: "\(c.letters.count) sounds, in the order that helps") { LettersView() }
-                        DeckTile(step: "2", name: "Blending",
+                        DeckTile(step: "2", tint: 0x2E7D6E, name: "Blending",
                                  blurb: "Glue two sounds into one") { BlendingView() }
-                        DeckTile(step: "3", name: "Words",
+                        DeckTile(step: "3", tint: 0x3B7EA1, name: "Words",
                                  blurb: "\(c.words.count) words, getting harder") { WordsView() }
-                        DeckTile(step: "4", name: "Sentences",
+                        DeckTile(step: "4", tint: 0x7A5EA8, name: "Sentences",
                                  blurb: "\(c.sentences.count) sentences you can sound out") { SentencesView() }
-                        DeckTile(step: "5", name: "By Heart",
+                        DeckTile(step: "5", tint: 0xC8433A, name: "By Heart",
                                  blurb: "The rule-breakers") { HeartWordsView() }
                     }
 
@@ -36,7 +36,7 @@ struct HomeView: View {
                             .foregroundStyle(Theme.inkSoft)
                         // One tile into sixteen small decks, rather than sixteen
                         // rows here — the home screen stays scannable.
-                        DeckTile(step: "•", name: "Look and Say",
+                        DeckTile(step: "•", tint: 0xD9646E, name: "Look and Say",
                                  blurb: "\(c.pictureCategories.count) sets of picture cards",
                                  dashed: true) { PictureDecksHub() }
                     }
@@ -45,11 +45,11 @@ struct HomeView: View {
                         Text("FIRST IDEAS")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
-                        DeckTile(step: "•", name: "Colours",
+                        DeckTile(step: "•", tint: 0x4E8FBF, name: "Colours",
                                  blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
-                        DeckTile(step: "•", name: "Shapes",
+                        DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
                                  blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
-                        DeckTile(step: "•", name: "Numbers",
+                        DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
                                  blurb: "Counting, one to twenty", dashed: true) { NumbersView() }
                     }
 
@@ -64,7 +64,7 @@ struct HomeView: View {
                 }
                 .padding(18)
             }
-            .background(Theme.ground)
+            .background(Skin.current.appGround.ignoresSafeArea())
             .navigationTitle("Sound It Out")
         }
         .tint(Theme.go)
@@ -109,35 +109,44 @@ private struct WorldTile: View {
 
 private struct DeckTile<Destination: View>: View {
     let step: String
+    var tint: UInt = 0x63777F
     let name: String
     let blurb: String
     var dashed: Bool = false
     @ViewBuilder let destination: () -> Destination
 
     var body: some View {
+        let skin = Skin.current
+        let colour = Color(hex: tint)
         NavigationLink { destination() } label: {
             HStack(spacing: 14) {
+                // The step marker carries the deck's own colour, so the home screen
+                // is a row of distinguishable places rather than a grey list.
                 Text(step)
                     .font(.andika(19, bold: true))
-                    .foregroundStyle(Theme.paper)
+                    .foregroundStyle(.white)
                     .frame(width: 38, height: 38)
-                    .background(Theme.ink)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .background(colour)
+                    .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    .shadow(color: colour.opacity(0.35), radius: 4, y: 2)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(name).font(.andika(20, bold: true)).foregroundStyle(Theme.ink)
                     Text(blurb).font(.andika(13)).foregroundStyle(Theme.inkSoft)
                 }
                 Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(colour.opacity(0.55))
             }
             .padding(14)
-            .background(Theme.paper)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .background(skin.tileFill)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Theme.line, style: StrokeStyle(lineWidth: 1.5,
-                                                           dash: dashed ? [6, 4] : []))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(colour.mixed(with: skin.tileFill, amount: 0.68),
+                            style: StrokeStyle(lineWidth: 1.5, dash: dashed ? [6, 4] : []))
             )
+            .shadow(color: .black.opacity(0.05), radius: 6, y: 3)
         }
         .buttonStyle(.plain)
     }
