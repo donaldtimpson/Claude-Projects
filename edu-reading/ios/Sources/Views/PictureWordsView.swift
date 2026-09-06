@@ -35,7 +35,8 @@ struct PictureWordsView: View {
             let p = c.pictureWords.first { $0.word == card.word }
             // Stacked in portrait, side-by-side in landscape — a short wide card
             // has no room for a big picture above a word.
-            AdaptiveCard {
+            let art = card.drawing ? nil : photo(card.word, card.variant)
+            AdaptiveCard(aspect: art.map { $0.size.width / max($0.size.height, 1) } ?? 1) {
                 if card.drawing {
                     if let p, !p.images.isEmpty {
                         // A glyph cannot be resized like an image, so measure the
@@ -51,12 +52,16 @@ struct PictureWordsView: View {
                             .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
-                } else if let art = photo(card.word, card.variant) {
-                    // Fills the card edge to edge. A photograph floating in white
-                    // was the dead space that made the deck feel flat.
+                } else if let art {
+                    // The WHOLE photograph, never cropped. Filling the card was an
+                    // over-correction: dead white space was the complaint, but
+                    // cropping to remove it throws away the context a child reads
+                    // the picture by, and a visibly cut-off image feels wrong on
+                    // its own. The remaining space is a MAT — tinted like the
+                    // drawing cards, so it reads as a mount rather than emptiness.
                     Image(uiImage: art)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .aspectRatio(contentMode: .fit)
                 }
             } caption: {
                 if settings.showWordOnPictures {

@@ -339,38 +339,36 @@ Every card shows a plain number (toggle in the grown-ups' area). Ranges say whic
 | 316 | nose | People | `nose-2` |
 | 317 | eye | People | `eye` |
 | 318 | eye | People | `eye-2` |
-| 319 | mouth | People | `mouth` |
-| 320 | mouth | People | `mouth-2` |
-| 321 | shoe | What We Wear | `shoe` |
-| 322 | shoe | What We Wear | `shoe-2` |
-| 323 | shoe | What We Wear | `shoe-3` |
-| 324 | coat | What We Wear | `coat` |
-| 325 | boot | What We Wear | `boot` |
-| 326 | scarf | What We Wear | `scarf` |
-| 327 | belt | What We Wear | `belt` |
-| 328 | belt | What We Wear | `belt-2` |
-| 329 | sock | What We Wear | `sock` |
-| 330 | sock | What We Wear | `sock-2` |
-| 331 | sock | What We Wear | `sock-3` |
-| 332 | run | Doing Things | `run` |
-| 333 | run | Doing Things | `run-2` |
-| 334 | walk | Doing Things | `walk` |
-| 335 | sit | Doing Things | `sit` |
-| 336 | climb | Doing Things | `climb` |
-| 337 | climb | Doing Things | `climb-2` |
-| 338 | swim | Doing Things | `swim` |
-| 339 | swim | Doing Things | `swim-2` |
-| 340 | dance | Doing Things | `dance` |
-| 341 | dance | Doing Things | `dance-2` |
-| 342 | drink | Doing Things | `drink` |
-| 343 | read | Doing Things | `read` |
-| 344 | write | Doing Things | `write` |
-| 345 | write | Doing Things | `write-2` |
-| 346 | cry | Doing Things | `cry` |
-| 347 | cry | Doing Things | `cry-2` |
-| 348 | laugh | Doing Things | `laugh` |
-| 349 | clap | Doing Things | `clap` |
-| 350 | ride | Doing Things | `ride` |
+| 319 | shoe | What We Wear | `shoe` |
+| 320 | shoe | What We Wear | `shoe-2` |
+| 321 | shoe | What We Wear | `shoe-3` |
+| 322 | coat | What We Wear | `coat` |
+| 323 | boot | What We Wear | `boot` |
+| 324 | scarf | What We Wear | `scarf` |
+| 325 | belt | What We Wear | `belt` |
+| 326 | belt | What We Wear | `belt-2` |
+| 327 | sock | What We Wear | `sock` |
+| 328 | sock | What We Wear | `sock-2` |
+| 329 | sock | What We Wear | `sock-3` |
+| 330 | run | Doing Things | `run` |
+| 331 | run | Doing Things | `run-2` |
+| 332 | walk | Doing Things | `walk` |
+| 333 | sit | Doing Things | `sit` |
+| 334 | climb | Doing Things | `climb` |
+| 335 | climb | Doing Things | `climb-2` |
+| 336 | swim | Doing Things | `swim` |
+| 337 | swim | Doing Things | `swim-2` |
+| 338 | dance | Doing Things | `dance` |
+| 339 | dance | Doing Things | `dance-2` |
+| 340 | drink | Doing Things | `drink` |
+| 341 | read | Doing Things | `read` |
+| 342 | write | Doing Things | `write` |
+| 343 | write | Doing Things | `write-2` |
+| 344 | cry | Doing Things | `cry` |
+| 345 | cry | Doing Things | `cry-2` |
+| 346 | laugh | Doing Things | `laugh` |
+| 347 | clap | Doing Things | `clap` |
+| 348 | ride | Doing Things | `ride` |
 
 ## Drawings
 

@@ -260,6 +260,10 @@ struct CardTag: View {
 /// picture inside a large white card, and that dead white space is what read as
 /// flat — not the colours. A flashcard is a picture with a word under it.
 struct AdaptiveCard<Art: View, Caption: View>: View {
+    /// The picture's width-over-height, when the caller knows it. Given one, the
+    /// card takes the full width and its HEIGHT hugs the picture — so a wide photo
+    /// makes a short card and there is almost no mat, without cropping anything.
+    var aspect: CGFloat? = nil
     @ViewBuilder var art: () -> Art
     @ViewBuilder var caption: () -> Caption
 
@@ -268,14 +272,21 @@ struct AdaptiveCard<Art: View, Caption: View>: View {
     var body: some View {
         GeometryReader { geo in
             let band = min(max(geo.size.height * 0.21, 66), 118)
+            let maxArt = geo.size.height - band
+            let artHeight: CGFloat = {
+                guard let aspect, aspect > 0 else { return maxArt }
+                return min(geo.size.width / aspect, maxArt)
+            }()
             VStack(spacing: 0) {
                 art()
-                    .frame(width: geo.size.width, height: geo.size.height - band)
+                    .frame(width: geo.size.width, height: artHeight)
                     .clipped()
                 Rectangle().fill(skin.cardEdge).frame(height: 1)
                 caption()
                     .frame(width: geo.size.width, height: band)
             }
+            // Centred, so a short card sits in the middle rather than at the top.
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .center)
         }
     }
 }
