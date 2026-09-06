@@ -15,9 +15,9 @@ Every card shows a plain number (toggle in the grown-ups' area). Ranges say whic
 | 6100–6199 | Shapes |
 | 6200–6299 | Numbers |
 
-A photo or drawing keeps its number whichever picture deck it is met in, since
-numbers follow overall content order rather than deck order.
-**They shift whenever cards are added or removed** — regenerate after any change.
+A colour, shape or number shows the same id for each of its layouts, since the
+id names the ITEM rather than the individual card.
+**Numbers shift whenever cards are added or removed** — regenerate after any change.
 
 ## Photos
 
@@ -601,6 +601,15 @@ numbers follow overall content order rather than deck order.
 | 6009 | black |
 | 6010 | white |
 | 6011 | grey |
+| 6012 | gold |
+| 6013 | silver |
+| 6014 | teal |
+| 6015 | navy |
+| 6016 | lime |
+| 6017 | peach |
+| 6018 | mint |
+| 6019 | cream |
+| 6020 | maroon |
 
 ## Shapes
 
@@ -614,6 +623,14 @@ numbers follow overall content order rather than deck order.
 | 6106 | rectangle |
 | 6107 | oval |
 | 6108 | diamond |
+| 6109 | pentagon |
+| 6110 | hexagon |
+| 6111 | octagon |
+| 6112 | crescent |
+| 6113 | cross |
+| 6114 | arrow |
+| 6115 | ring |
+| 6116 | semicircle |
 
 ## Numbers
 

@@ -63,7 +63,7 @@ struct PictureWordsView: View {
                     phonics(card.word, size: 40)
                 }
             }
-            .overlay(alignment: .topTrailing) { CardTag(id: card.id).padding(18) }
+            .overlay(alignment: .bottomTrailing) { CardTag(id: card.id).padding(18) }
         } onTap: { i in
             guard i < pool.count else { return }
             Voice.shared.say(pool[i].word)

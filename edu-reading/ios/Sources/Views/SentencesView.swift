@@ -17,7 +17,7 @@ struct SentencesView: View {
             SayCard(text: s.text, size: 44, sentence: true, accent: accent) {
                 collect(i)
             }
-            .overlay(alignment: .topTrailing) {
+            .overlay(alignment: .bottomTrailing) {
                 CardTag(id: CardIds.sentences + (c.sentences.firstIndex(of: s) ?? 0) + 1).padding(18)
             }
         } onTap: { i in

@@ -171,12 +171,21 @@ struct DeckScreen<Content: View>: View {
     let count: Int
     @Binding var index: Int
     var accent: Color
+    /// Present only on decks where the order carries meaning — counting, and the
+    /// teaching order of the letters. Everywhere else there is nothing to be in
+    /// order OF, and a control that does nothing is worse than no control.
+    var ordered: Binding<Bool>? = nil
     @ViewBuilder var content: (Int) -> Content
     var onTap: (Int) -> Void
     var onAdvance: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     private let skin = Skin.current
+
+    /// Present only on decks where the order carries meaning — counting, and the
+    /// teaching order of the letters. Everywhere else there is nothing to be in
+    /// order OF, and a control that does nothing is worse than no control.
+
 
     var body: some View {
         VStack(spacing: 0) {
@@ -193,6 +202,16 @@ struct DeckScreen<Content: View>: View {
             BackChevron { dismiss() }
                 .padding(.leading, 10)
                 .padding(.top, 6)
+        }
+        .overlay(alignment: .topTrailing) {
+            if let ordered {
+                // Mirrors the back button rather than adding a segmented control:
+                // one adult-sized tap target, and the icon says which mode you are
+                // in rather than which you would switch to.
+                OrderToggle(ordered: ordered)
+                    .padding(.trailing, 10)
+                    .padding(.top, 6)
+            }
         }
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
@@ -280,7 +299,7 @@ struct BackChevron: View {
     }
 }
 
-private struct GlassCircle: ViewModifier {
+struct GlassCircle: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             content.glassEffect(.regular.interactive(), in: .circle)
@@ -290,5 +309,27 @@ private struct GlassCircle: ViewModifier {
                 .overlay(Circle().stroke(Theme.ink.opacity(0.10), lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
         }
+    }
+}
+
+
+/// In-order or shuffled. Deliberately the same shape and glass as the back button,
+/// so the two adult controls read as a pair sitting above the child's card.
+struct OrderToggle: View {
+    @Binding var ordered: Bool
+
+    var body: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { ordered.toggle() }
+        } label: {
+            Image(systemName: ordered ? "list.number" : "shuffle")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+                .frame(width: 42, height: 42)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .modifier(GlassCircle())
+        .accessibilityLabel(ordered ? "In order" : "Shuffled")
     }
 }

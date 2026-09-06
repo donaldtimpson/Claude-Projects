@@ -12,6 +12,9 @@ struct LettersView: View {
     private let accent = Color(hex: 0xF0A93B)
     var start: Int = 0
     @State private var index = 0
+    // The order IS the teaching here: s a t p i n first, so six letters in a
+    // child can already read sat, pat, tap, nap, pin, tin, sit.
+    @State private var ordered = true
 
     // Reshuffled on every open (see shuffledWithin). Sets stay in teaching order;
     // the order inside a set is arbitrary, so it is randomised.
@@ -28,14 +31,15 @@ struct LettersView: View {
         // stable deck to address.
         if start > 0 { return c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) } }
         #endif
-        return shuffledWithin(c.letters) { $0.set }
+        let inOrder = c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) }
+        return ordered ? inOrder : shuffledWithin(c.letters) { $0.set }
     }
 
     var body: some View {
-        DeckScreen(title: "Letters", count: pool.count, index: $index, accent: accent) { i in
+        DeckScreen(title: "Letters", count: pool.count, index: $index, accent: accent,
+                   ordered: $ordered) { i in
             let l = pool[min(i, pool.count - 1)]
             VStack(spacing: 20) {
-                HStack { Spacer(); CardTag(id: CardIds.letters + letterId(l)) }
                 Spacer()
                 // Both letters at one nominal size, on a shared baseline. The
                 // lowercase is trimmed only when its ascender would overshoot the
@@ -55,11 +59,15 @@ struct LettersView: View {
                     .font(.andika(13)).foregroundStyle(Theme.inkSoft)
             }
             .padding(24)
+            .overlay(alignment: .bottomTrailing) {
+                CardTag(id: CardIds.letters + letterId(l)).padding(14)
+            }
         } onTap: { i in
             guard i < pool.count else { return }
             if Voice.shared.hasRecording(pool[i].sound) { Voice.shared.say(pool[i].sound) }
             progress.learn(letter: pool[i].lower)
         }
+        .onChange(of: ordered) { index = 0; pool = makePool() }
         .onAppear {
             if pool.isEmpty { pool = makePool() }
             index = start

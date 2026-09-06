@@ -31,7 +31,6 @@ struct WordsView: View {
         DeckScreen(title: "Words", count: pool.count, index: $index, accent: accent) { i in
             let w = pool[min(i, pool.count - 1)]
             ZStack {
-                VStack { HStack { Spacer(); CardTag(id: CardIds.words + wordId(w)) }; Spacer() }.padding(18)
                 if flipped {
                     VStack(spacing: 16) {
                         Spacer()
@@ -51,6 +50,9 @@ struct WordsView: View {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
                     }
                 }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                CardTag(id: CardIds.words + wordId(w)).padding(14)
             }
         } onTap: { i in
             // First tap reveals and speaks; CardStack turns the card on the second.

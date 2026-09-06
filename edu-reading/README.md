@@ -72,6 +72,14 @@ have four pictures, many have one, and that unevenness is correct — a forced m
 teaches the wrong thing, and a word with one good picture beats a word with three
 where two are guesses.
 
+### In order, or shuffled
+
+Decks whose order carries meaning show a toggle in the top right, mirroring the
+back button: **Letters** (the teaching order *is* the lesson — s a t p i n first),
+**Blending** (a rime, then the family built from it), and **Numbers** (counting).
+Everywhere else there is nothing to be in order *of*, so there is no control — a
+button that does nothing is worse than no button.
+
 ### Two decks, not one
 
 **Photos** and **Drawings** are separate decks. They were interleaved at first —

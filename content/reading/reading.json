@@ -2458,6 +2458,42 @@
   {
    "word": "grey",
    "hex": "9AA3A8"
+  },
+  {
+   "word": "gold",
+   "hex": "C9A227"
+  },
+  {
+   "word": "silver",
+   "hex": "BFC6CC"
+  },
+  {
+   "word": "teal",
+   "hex": "2E8B8B"
+  },
+  {
+   "word": "navy",
+   "hex": "1F3A6E"
+  },
+  {
+   "word": "lime",
+   "hex": "8CC63F"
+  },
+  {
+   "word": "peach",
+   "hex": "F2A883"
+  },
+  {
+   "word": "mint",
+   "hex": "93D3B8"
+  },
+  {
+   "word": "cream",
+   "hex": "F5E9D0"
+  },
+  {
+   "word": "maroon",
+   "hex": "7B2A2A"
   }
  ],
  "shapes": [
@@ -2484,6 +2520,30 @@
   },
   {
    "word": "diamond"
+  },
+  {
+   "word": "pentagon"
+  },
+  {
+   "word": "hexagon"
+  },
+  {
+   "word": "octagon"
+  },
+  {
+   "word": "crescent"
+  },
+  {
+   "word": "cross"
+  },
+  {
+   "word": "arrow"
+  },
+  {
+   "word": "ring"
+  },
+  {
+   "word": "semicircle"
   }
  ],
  "numbers": {

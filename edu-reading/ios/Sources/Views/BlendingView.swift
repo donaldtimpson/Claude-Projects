@@ -12,6 +12,9 @@ struct BlendingView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x2E7D6E)
     @State private var index = 0
+    // Families build: the bare rime, then the words made from it. In order that
+    // reads as a lesson; shuffled it is practice.
+    @State private var ordered = true
 
     // One long swipe-through, no picker. Families come up in a different order each
     // time, and so do the words inside them — but the bare rime always leads its own
@@ -20,18 +23,22 @@ struct BlendingView: View {
     @State private var cvCards: [String] = []
 
     private func makePools() {
-        rimeCards = c.rimes.shuffled().flatMap { fam in
-            [(onset: "", rime: fam.rime, word: fam.rime)] +
-            fam.words.shuffled().map {
-                (onset: String($0.dropLast(fam.rime.count)), rime: fam.rime, word: $0)
-            }
+        let fams = ordered ? c.rimes : c.rimes.shuffled()
+        rimeCards = fams.flatMap { fam in
+            let ws = ordered ? fam.words : fam.words.shuffled()
+            // The bare rime always leads its own family — it is what the family is
+            // built from — so only the words after it are ever shuffled.
+            return [(onset: "", rime: fam.rime, word: fam.rime)] +
+                ws.map { (onset: String($0.dropLast(fam.rime.count)), rime: fam.rime, word: $0) }
         }
-        cvCards = c.cvBlends.map(\.text).shuffled()
+        let cv = c.cvBlends.map(\.text)
+        cvCards = ordered ? cv : cv.shuffled()
     }
     private var count: Int { settings.rimeBlending ? rimeCards.count : cvCards.count }
 
     var body: some View {
-        DeckScreen(title: "Blending", count: count, index: $index, accent: accent) { i in
+        DeckScreen(title: "Blending", count: count, index: $index, accent: accent,
+                   ordered: $ordered) { i in
             if settings.rimeBlending {
                 let card = rimeCards[min(i, rimeCards.count - 1)]
                 VStack(spacing: 26) {
@@ -58,5 +65,6 @@ struct BlendingView: View {
         }
         .onAppear { if rimeCards.isEmpty { makePools() } }
         .onChange(of: settings.rimeBlending) { index = 0; makePools() }
+        .onChange(of: ordered) { index = 0; makePools() }
     }
 }
