@@ -26,13 +26,14 @@ struct LettersView: View {
     }
 
     private func makePool() -> [ReadingContent.Letter] {
+        // The CONTENT ORDER is the teaching order — s a t p i n, then the next set.
+        // Sorting by (set, letter) looked orderly and was alphabetical within each
+        // set, which is precisely the order this deck exists to avoid; "in order"
+        // therefore came out looking random. Never re-sort; the file already knows.
         #if DEBUG
-        // A fixed start index is only used by the screenshot router, and it needs a
-        // stable deck to address.
-        if start > 0 { return c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) } }
+        if start > 0 { return c.letters }
         #endif
-        let inOrder = c.letters.sorted { ($0.set, $0.upper) < ($1.set, $1.upper) }
-        return ordered ? inOrder : shuffledWithin(c.letters) { $0.set }
+        return ordered ? c.letters : shuffledWithin(c.letters) { $0.set }
     }
 
     var body: some View {

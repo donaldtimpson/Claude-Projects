@@ -288,7 +288,7 @@ struct AnyShapeProxy: Shape {
         case "heart":      return heart(in: r)
         case "oval":       return Ellipse().path(in: CGRect(x: r.minX, y: r.midY - s * 0.35,
                                                             width: r.width, height: s * 0.7))
-        case "diamond":    return polygon(4, in: r)
+        case "diamond":    return diamond(in: r)
         case "pentagon":   return polygon(5, in: r)
         case "hexagon":    return polygon(6, in: r)
         case "octagon":    return polygon(8, in: r)
@@ -299,6 +299,22 @@ struct AnyShapeProxy: Shape {
         case "semicircle": return semicircle(in: r)
         default:           return Circle().path(in: r)
         }
+    }
+
+    /// Point at the top, not a square on its corner. polygon(4) cannot be used:
+    /// the flat-bottom rotation that makes a hexagon and an octagon sit correctly
+    /// turns a four-sided one into an axis-aligned square, so "diamond" and
+    /// "square" came out as the same card. It is also narrower than it is tall,
+    /// which is what distinguishes a diamond from a tilted square.
+    private func diamond(in r: CGRect) -> Path {
+        let inset = r.width * 0.12
+        var p = Path()
+        p.move(to: CGPoint(x: r.midX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX - inset, y: r.midY))
+        p.addLine(to: CGPoint(x: r.midX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX + inset, y: r.midY))
+        p.closeSubpath()
+        return p
     }
 
     private func heart(in r: CGRect) -> Path {
@@ -318,10 +334,22 @@ struct AnyShapeProxy: Shape {
         p.closeSubpath(); return p
     }
 
+    /// Two arcs meeting at the same two points: the outer left half of a circle,
+    /// then a shallower curve back. Subtracting an offset circle by winding was
+    /// tried twice and is fragile — this is one closed contour with no holes.
     private func crescent(in r: CGRect) -> Path {
-        var p = Path(ellipseIn: r)
-        p.addPath(Path(ellipseIn: CGRect(x: r.minX + r.width * 0.28, y: r.minY - r.height * 0.04,
-                                         width: r.width * 0.86, height: r.height * 1.02)))
+        let rad = min(r.width, r.height) / 2
+        let cx = r.midX - rad * 0.10, cy = r.midY
+        let top = CGPoint(x: cx, y: cy - rad), bottom = CGPoint(x: cx, y: cy + rad)
+        var p = Path()
+        p.move(to: top)
+        // SwiftUI's y axis points down, so `clockwise: false` is the sweep that
+        // goes round the LEFT. Getting this backwards gave a pointed lens.
+        p.addArc(center: CGPoint(x: cx, y: cy), radius: rad,
+                 startAngle: .degrees(-90), endAngle: .degrees(90), clockwise: false)
+        p.addQuadCurve(to: top, control: CGPoint(x: cx + rad * 0.62, y: cy))
+        p.closeSubpath()
+        _ = bottom
         return p
     }
 
@@ -349,8 +377,16 @@ struct AnyShapeProxy: Shape {
     }
 
     private func ring(in r: CGRect) -> Path {
-        var p = Path(ellipseIn: r)
-        p.addPath(Path(ellipseIn: r.insetBy(dx: r.width * 0.26, dy: r.height * 0.26)))
+        let rad = min(r.width, r.height) / 2
+        var p = Path()
+        p.move(to: CGPoint(x: r.midX + rad, y: r.midY))
+        p.addArc(center: CGPoint(x: r.midX, y: r.midY), radius: rad,
+                 startAngle: .degrees(0), endAngle: .degrees(360), clockwise: false)
+        p.closeSubpath()
+        p.move(to: CGPoint(x: r.midX + rad * 0.52, y: r.midY))
+        p.addArc(center: CGPoint(x: r.midX, y: r.midY), radius: rad * 0.52,
+                 startAngle: .degrees(360), endAngle: .degrees(0), clockwise: true)
+        p.closeSubpath()
         return p
     }
 
@@ -366,3 +402,29 @@ struct AnyShapeProxy: Shape {
 extension Color {
     init(hexString: String) { self.init(hex: UInt(hexString, radix: 16) ?? 0) }
 }
+
+
+#if DEBUG
+/// Every shape at once, so the whole set can be checked in one look rather than
+/// paged through sixteen cards. The diamond bug survived because I only ever saw
+/// one shape at a time.
+struct ShapeSheet: View {
+    private let c = ReadingContent.shared
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 10)], spacing: 14) {
+                ForEach(c.shapes, id: \.word) { sh in
+                    VStack(spacing: 4) {
+                        AnyShapeProxy(named: sh.word)
+                            .fill(Color(hex: 0x2F6FD0))
+                            .frame(width: 70, height: 70)
+                        Text(sh.word).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(Theme.paper)
+    }
+}
+#endif
