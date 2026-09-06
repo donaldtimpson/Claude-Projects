@@ -100,12 +100,18 @@ so the decks grew by adding items.
 
 | Deck | Items | The card |
 |---|---|---|
-| Colours | 20 | four unlike shapes in one colour |
+| Colours | 11 | four unlike shapes in one colour |
 | Shapes | 16 | one shape in four colours |
 | Numbers | to 100 | a count, the numeral, and the word |
 
 Each still applies the app's rule — vary everything except what is being taught —
 since a single red circle labelled *red* teaches "circle" just as readily.
+
+The eleven colours are the **basic colour terms of English** — the complete set a
+language settles on and the set a child acquires as words. Twenty was worse, not
+better: *peach* is not a word a child says, and putting peach, gold, cream and
+maroon in the same deck as *brown* left brown with nothing to be distinct from.
+Anything past the eleven is a shade adults argue about.
 
 Counters group in **fives up to twenty**, because a row of seventeen cannot be
 counted by eye, and in **tens above it**, which makes a hundred read as the

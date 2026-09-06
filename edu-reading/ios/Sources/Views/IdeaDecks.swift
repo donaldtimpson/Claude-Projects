@@ -405,6 +405,28 @@ extension Color {
 
 
 #if DEBUG
+/// Every colour at once. Looking at one card at a time is how "peach" and "brown"
+/// both survived three passes: apart they each look fine, together they are the
+/// same card twice.
+struct ColourSheet: View {
+    private let c = ReadingContent.shared
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 10)], spacing: 14) {
+                ForEach(c.colors, id: \.word) { s in
+                    VStack(spacing: 4) {
+                        Swatch(shape: AnyShapeProxy(named: "circle"),
+                               tint: Color(hexString: s.hex), side: 70)
+                        Text(s.word).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(Theme.paper)
+    }
+}
+
 /// Every shape at once, so the whole set can be checked in one look rather than
 /// paged through sixteen cards. The diamond bug survived because I only ever saw
 /// one shape at a time.

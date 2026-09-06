@@ -555,25 +555,16 @@ Every card shows a plain number (toggle in the grown-ups' area). Ranges say whic
 | # | colour |
 |---|---|
 | 6001 | red |
-| 6002 | blue |
+| 6002 | orange |
 | 6003 | yellow |
 | 6004 | green |
-| 6005 | orange |
+| 6005 | blue |
 | 6006 | purple |
 | 6007 | pink |
 | 6008 | brown |
-| 6009 | black |
-| 6010 | white |
-| 6011 | grey |
-| 6012 | gold |
-| 6013 | silver |
-| 6014 | teal |
-| 6015 | navy |
-| 6016 | lime |
-| 6017 | peach |
-| 6018 | mint |
-| 6019 | cream |
-| 6020 | maroon |
+| 6009 | grey |
+| 6010 | black |
+| 6011 | white |
 
 ## Shapes
 

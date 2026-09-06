@@ -48,6 +48,7 @@ private struct RootView: View {
                 case "colors":    ColorsView()
                 case "shapes":    ShapesView()
                 case "shapesheet": ShapeSheet()
+                case "colorsheet": ColourSheet()
                 case "numbers":   NumbersView(start: Int(ProcessInfo.processInfo.arguments.last ?? "") ?? 0)
                 case "world":     WorldView()
                 case "parent":    ParentGateView()

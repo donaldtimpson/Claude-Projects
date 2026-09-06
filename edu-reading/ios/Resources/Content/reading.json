@@ -2417,83 +2417,47 @@
  "colors": [
   {
    "word": "red",
-   "hex": "D93A32"
-  },
-  {
-   "word": "blue",
-   "hex": "2F6FD0"
-  },
-  {
-   "word": "yellow",
-   "hex": "F0B429"
-  },
-  {
-   "word": "green",
-   "hex": "3E9B4F"
+   "hex": "D62828"
   },
   {
    "word": "orange",
-   "hex": "E8722C"
+   "hex": "F07118"
+  },
+  {
+   "word": "yellow",
+   "hex": "FFD21E"
+  },
+  {
+   "word": "green",
+   "hex": "2E9E4F"
+  },
+  {
+   "word": "blue",
+   "hex": "1F6FD0"
   },
   {
    "word": "purple",
-   "hex": "7A4FA3"
+   "hex": "7A3FA8"
   },
   {
    "word": "pink",
-   "hex": "E876A8"
+   "hex": "F274B0"
   },
   {
    "word": "brown",
-   "hex": "8A5A34"
+   "hex": "6E4520"
+  },
+  {
+   "word": "grey",
+   "hex": "9AA0A6"
   },
   {
    "word": "black",
-   "hex": "23272B"
+   "hex": "1E2226"
   },
   {
    "word": "white",
    "hex": "FFFFFF"
-  },
-  {
-   "word": "grey",
-   "hex": "9AA3A8"
-  },
-  {
-   "word": "gold",
-   "hex": "C9A227"
-  },
-  {
-   "word": "silver",
-   "hex": "BFC6CC"
-  },
-  {
-   "word": "teal",
-   "hex": "2E8B8B"
-  },
-  {
-   "word": "navy",
-   "hex": "1F3A6E"
-  },
-  {
-   "word": "lime",
-   "hex": "8CC63F"
-  },
-  {
-   "word": "peach",
-   "hex": "F2A883"
-  },
-  {
-   "word": "mint",
-   "hex": "93D3B8"
-  },
-  {
-   "word": "cream",
-   "hex": "F5E9D0"
-  },
-  {
-   "word": "maroon",
-   "hex": "7B2A2A"
   }
  ],
  "shapes": [
