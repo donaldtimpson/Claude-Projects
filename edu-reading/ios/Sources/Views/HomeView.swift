@@ -15,6 +15,16 @@ struct HomeView: View {
                         .buttonStyle(.plain)
 
                     VStack(alignment: .leading, spacing: 9) {
+                        Text("A GAME")
+                            .font(.andika(12, bold: true)).kerning(1.4)
+                            .foregroundStyle(Theme.inkSoft)
+                        DeckTile(step: "?", tint: 0x3E8FA8, name: "Find It",
+                                 blurb: settings.quizReads ? "Read the word, find the picture"
+                                                           : "Hear the word, find the picture")
+                            { QuizView() }
+                    }
+
+                    VStack(alignment: .leading, spacing: 9) {
                         Text("LEARNING TO READ")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
@@ -50,10 +60,6 @@ struct HomeView: View {
                                  blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
                         DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
                                  blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
-                        DeckTile(step: "•", tint: 0x3E8FA8, name: "Find It",
-                                 blurb: settings.quizReads ? "Read the word, find the picture"
-                                                           : "Hear the word, find the picture",
-                                 dashed: true) { QuizView() }
                         DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
                                  blurb: "Counting, one to \(c.numbers.words[settings.numberLevel - 1])",
                                  dashed: true) { NumbersView() }
