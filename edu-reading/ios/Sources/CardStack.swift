@@ -188,19 +188,9 @@ struct DeckScreen<Content: View>: View {
         }
         .background(Theme.ground.mixed(with: accent, amount: 0.22).ignoresSafeArea())
         .overlay(alignment: .topLeading) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(Theme.ink)
-                    .frame(width: 42, height: 42)          // a full touch target
-                    .background(Theme.paper)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Theme.line, lineWidth: 1))
-                    .shadow(color: .black.opacity(0.14), radius: 5, y: 2)
-            }
-            .buttonStyle(.plain)
-            .padding(.leading, 10)
-            .padding(.top, 6)
+            BackChevron { dismiss() }
+                .padding(.leading, 10)
+                .padding(.top, 6)
         }
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
@@ -217,6 +207,9 @@ enum CardIds {
     static let letters   = 4000     // 4000–4099
     static let heart     = 4100     // 4100–4199
     static let blending  = 5000     // 5000–5999
+    static let colors    = 6000     // 6000–6099
+    static let shapes    = 6100     // 6100–6199
+    static let numbers   = 6200     // 6200–6299
 }
 
 /// A small stable label so a specific card can be named out loud — "142" rather
@@ -255,5 +248,37 @@ struct AdaptiveCard<Art: View, Caption: View>: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(24)
+    }
+}
+
+
+/// The way out of a deck. Translucent on purpose: the card fills most of the
+/// screen, so a solid disc would punch a hole in the picture.
+struct BackChevron: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.left")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+                .frame(width: 42, height: 42)      // a full touch target
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .modifier(GlassCircle())
+    }
+}
+
+private struct GlassCircle: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular.interactive(), in: .circle)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(Circle().stroke(Theme.ink.opacity(0.10), lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.10), radius: 4, y: 2)
+        }
     }
 }

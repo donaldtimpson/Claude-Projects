@@ -26,9 +26,13 @@ final class Settings {
     // Card ids, for reporting a bad card without having to describe it.
     var showCardIds = true
 
+    // Levels rather than a free range: 1–10 and 1–20 are real boundaries. English
+    // teens are irregular, and past twenty the lesson becomes place value.
+    var numberLevel = 10
+
     private static let key = "sound-it-out.settings.v1"
     struct Snapshot: Codable { var rime: Bool; var listen: Bool; var label: Bool
-                               var autoTurn: Bool?; var style: String?; var ids: Bool? }
+                               var autoTurn: Bool?; var style: String?; var ids: Bool?; var num: Int? }
 
     init() {
         guard let d = UserDefaults.standard.data(forKey: Self.key),
@@ -37,10 +41,12 @@ final class Settings {
         autoTurn = s.autoTurn ?? false
         pictureStyle = PictureStyle(rawValue: s.style ?? "") ?? .both
         showCardIds = s.ids ?? true
+        numberLevel = s.num ?? 10
     }
     func save() {
         let s = Snapshot(rime: rimeBlending, listen: listenForVoice, label: showWordOnPictures,
-                         autoTurn: autoTurn, style: pictureStyle.rawValue, ids: showCardIds)
+                         autoTurn: autoTurn, style: pictureStyle.rawValue, ids: showCardIds,
+                         num: numberLevel)
         if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: Self.key) }
     }
 }

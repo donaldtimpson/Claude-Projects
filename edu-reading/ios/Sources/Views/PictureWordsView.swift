@@ -15,26 +15,28 @@ import UIKit
 // any word appears twice: meeting an unfamiliar dog thirty cards later asks the
 // child to recognise the CATEGORY, which is the whole point of having several.
 struct PictureWordsView: View {
-    let drawings: Bool
+    /// Which deck this is. Nil means every word, which is only used by the
+    /// screenshot router.
+    var deck: String? = nil
 
     @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
-    private var accent: Color { drawings ? Color(hex: 0xC77CB0) : Color(hex: 0xD9646E) }
+    private var accent: Color { DeckStyle.accent(for: deck) }
 
-    private struct Card: Hashable { let word: String; let variant: Int; let id: Int }
+    private struct Card: Hashable { let word: String; let variant: Int; let id: Int; let drawing: Bool }
 
     @State private var pool: [Card] = []
     @State private var index = 0
 
     var body: some View {
-        DeckScreen(title: drawings ? "Drawings" : "Photos", count: pool.count,
+        DeckScreen(title: deck ?? "Look and Say", count: pool.count,
                    index: $index, accent: accent) { i in
             let card = pool[min(i, max(pool.count - 1, 0))]
             let p = c.pictureWords.first { $0.word == card.word }
             // Stacked in portrait, side-by-side in landscape — a short wide card
             // has no room for a big picture above a word.
             AdaptiveCard {
-                if drawings {
+                if card.drawing {
                     if let p, !p.images.isEmpty {
                         // An emoji is a glyph and cannot be resized like an image,
                         // so measure the space and pick a point size that fills it.
@@ -76,21 +78,37 @@ struct PictureWordsView: View {
     /// Ids are assigned by walking the content in order, so a card's number is the
     /// same on every launch and every device no matter how the deck is shuffled.
     private func makePool() -> [Card] {
-        var cards: [Card] = []
-        var next = 0
+        let words = deck.map { c.words(in: $0) } ?? c.pictureWords
+        // Ids stay tied to overall content order, so a number means the same card
+        // whichever deck it was met in.
+        var photoId: [String: Int] = [:], drawId: [String: Int] = [:]
+        var pn = 0, dn = 0
         for p in c.pictureWords {
-            let n = drawings ? p.images.count : photoCount(p.word)
-            for v in 0..<n {
-                let base = drawings ? CardIds.drawings : CardIds.photos
-                cards.append(Card(word: p.word, variant: v, id: base + next)); next += 1
+            photoId[p.word] = pn; pn += photoCount(p.word)
+            drawId[p.word] = dn; dn += p.images.count
+        }
+        var cards: [Card] = []
+        for p in words {
+            let style = settings.pictureStyle
+            if style != .drawings {
+                for v in 0..<photoCount(p.word) {
+                    cards.append(Card(word: p.word, variant: v,
+                                      id: CardIds.photos + (photoId[p.word] ?? 0) + v, drawing: false))
+                }
+            }
+            if style != .photos {
+                for v in 0..<p.images.count {
+                    cards.append(Card(word: p.word, variant: v,
+                                      id: CardIds.drawings + (drawId[p.word] ?? 0) + v, drawing: true))
+                }
             }
         }
-        // then dealt in rounds and shuffled within each round
-        let deepest = cards.reduce(into: [String: Int]()) { $0[$1.word, default: 0] += 1 }
-        let maxRounds = deepest.values.max() ?? 1
+        // Dealt in rounds so every word appears once before any word appears twice.
+        let byWord = Dictionary(grouping: cards, by: \.word)
+        let deepest = byWord.values.map(\.count).max() ?? 1
         var out: [Card] = []
-        for round in 0..<maxRounds {
-            out.append(contentsOf: cards.filter { $0.variant == round }.shuffled())
+        for r in 0..<deepest {
+            out.append(contentsOf: byWord.values.compactMap { r < $0.count ? $0[r] : nil }.shuffled())
         }
         return out
     }

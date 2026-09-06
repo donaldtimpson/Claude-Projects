@@ -31,15 +31,26 @@ struct HomeView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 9) {
-                        Text("ANY TIME")
+                        Text("FIRST WORDS")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Theme.inkSoft)
-                        DeckTile(step: "•", name: "Photos",
-                                 blurb: "Real pictures of \(c.pictureWords.count) words",
-                                 dashed: true) { PictureWordsView(drawings: false) }
-                        DeckTile(step: "•", name: "Drawings",
-                                 blurb: "Simple pictures — easiest for the youngest",
-                                 dashed: true) { PictureWordsView(drawings: true) }
+                        // One tile into sixteen small decks, rather than sixteen
+                        // rows here — the home screen stays scannable.
+                        DeckTile(step: "•", name: "Look and Say",
+                                 blurb: "\(c.pictureCategories.count) sets of picture cards",
+                                 dashed: true) { PictureDecksHub() }
+                    }
+
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("FIRST IDEAS")
+                            .font(.andika(12, bold: true)).kerning(1.4)
+                            .foregroundStyle(Theme.inkSoft)
+                        DeckTile(step: "•", name: "Colours",
+                                 blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
+                        DeckTile(step: "•", name: "Shapes",
+                                 blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
+                        DeckTile(step: "•", name: "Numbers",
+                                 blurb: "Counting, one to twenty", dashed: true) { NumbersView() }
                     }
 
                     NavigationLink { ParentGateView() } label: {

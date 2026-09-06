@@ -106,6 +106,20 @@ private struct AdultView: View {
                             .font(.andika(12)).foregroundStyle(Theme.inkSoft)
                     }
 
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Numbers go up to").font(.andika(16)).foregroundStyle(Theme.ink)
+                        Picker("", selection: Binding(
+                            get: { settings.numberLevel },
+                            set: { settings.numberLevel = $0; settings.save() })) {
+                            ForEach(ReadingContent.shared.numbers.levels, id: \.self) {
+                                Text("\($0)").tag($0)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        Text("Ten first. Twenty adds the teens, which are the irregular ones — eleven and twelve say nothing about their digits.")
+                            .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                    }
+
                     Toggle(isOn: Binding(get: { settings.autoTurn },
                                          set: { settings.autoTurn = $0; settings.save() })) {
                         VStack(alignment: .leading, spacing: 2) {

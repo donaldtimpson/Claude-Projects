@@ -3,89 +3,8 @@
  "note": "Source of truth for Sound It Out. Edit here, then run edu-reading/tools/sync-content.sh.",
  "pictureWords": [
   {
-   "word": "ant",
-   "category": "Animals",
-   "images": [
-    "🐜"
-   ]
-  },
-  {
-   "word": "bear",
-   "category": "Animals",
-   "images": [
-    "🐻"
-   ]
-  },
-  {
-   "word": "bee",
-   "category": "Animals",
-   "images": [
-    "🐝"
-   ]
-  },
-  {
-   "word": "bird",
-   "category": "Animals",
-   "images": [
-    "🐦",
-    "🕊️"
-   ]
-  },
-  {
-   "word": "butterfly",
-   "category": "Animals",
-   "images": [
-    "🦋"
-   ]
-  },
-  {
-   "word": "camel",
-   "category": "Animals",
-   "images": [
-    "🐫"
-   ]
-  },
-  {
-   "word": "cat",
-   "category": "Animals",
-   "images": [
-    "🐈",
-    "🐱",
-    "🐈‍⬛"
-   ]
-  },
-  {
-   "word": "chicken",
-   "category": "Animals",
-   "images": [
-    "🐔"
-   ]
-  },
-  {
-   "word": "cow",
-   "category": "Animals",
-   "images": [
-    "🐄",
-    "🐮"
-   ]
-  },
-  {
-   "word": "crab",
-   "category": "Animals",
-   "images": [
-    "🦀"
-   ]
-  },
-  {
-   "word": "deer",
-   "category": "Animals",
-   "images": [
-    "🦌"
-   ]
-  },
-  {
    "word": "dog",
-   "category": "Animals",
+   "category": "Pets & Farm",
    "images": [
     "🐕",
     "🐩",
@@ -93,36 +12,231 @@
    ]
   },
   {
-   "word": "dolphin",
-   "category": "Animals",
+   "word": "cat",
+   "category": "Pets & Farm",
    "images": [
-    "🐬"
+    "🐈",
+    "🐱",
+    "🐈‍⬛"
    ]
   },
   {
-   "word": "donkey",
-   "category": "Animals",
+   "word": "pig",
+   "category": "Pets & Farm",
    "images": [
-    "🫏"
+    "🐖",
+    "🐷"
+   ]
+  },
+  {
+   "word": "cow",
+   "category": "Pets & Farm",
+   "images": [
+    "🐄",
+    "🐮"
+   ]
+  },
+  {
+   "word": "horse",
+   "category": "Pets & Farm",
+   "images": [
+    "🐴",
+    "🐎"
+   ]
+  },
+  {
+   "word": "sheep",
+   "category": "Pets & Farm",
+   "images": [
+    "🐑"
+   ]
+  },
+  {
+   "word": "goat",
+   "category": "Pets & Farm",
+   "images": [
+    "🐐"
+   ]
+  },
+  {
+   "word": "chicken",
+   "category": "Pets & Farm",
+   "images": [
+    "🐔"
    ]
   },
   {
    "word": "duck",
-   "category": "Animals",
+   "category": "Pets & Farm",
    "images": [
     "🦆"
    ]
   },
   {
+   "word": "rabbit",
+   "category": "Pets & Farm",
+   "images": [
+    "🐰"
+   ]
+  },
+  {
+   "word": "donkey",
+   "category": "Pets & Farm",
+   "images": [
+    "🫏"
+   ]
+  },
+  {
+   "word": "llama",
+   "category": "Pets & Farm",
+   "images": [
+    "🦙"
+   ]
+  },
+  {
+   "word": "mouse",
+   "category": "Pets & Farm",
+   "images": [
+    "🐭"
+   ]
+  },
+  {
+   "word": "bird",
+   "category": "Pets & Farm",
+   "images": [
+    "🐦",
+    "🕊️"
+   ]
+  },
+  {
+   "word": "parrot",
+   "category": "Pets & Farm",
+   "images": [
+    "🦜"
+   ]
+  },
+  {
+   "word": "lion",
+   "category": "Wild Animals",
+   "images": [
+    "🦁"
+   ]
+  },
+  {
+   "word": "tiger",
+   "category": "Wild Animals",
+   "images": [
+    "🐯"
+   ]
+  },
+  {
    "word": "elephant",
-   "category": "Animals",
+   "category": "Wild Animals",
    "images": [
     "🐘"
    ]
   },
   {
+   "word": "giraffe",
+   "category": "Wild Animals",
+   "images": [
+    "🦒"
+   ]
+  },
+  {
+   "word": "zebra",
+   "category": "Wild Animals",
+   "images": [
+    "🦓"
+   ]
+  },
+  {
+   "word": "bear",
+   "category": "Wild Animals",
+   "images": [
+    "🐻"
+   ]
+  },
+  {
+   "word": "wolf",
+   "category": "Wild Animals",
+   "images": [
+    "🐺"
+   ]
+  },
+  {
+   "word": "fox",
+   "category": "Wild Animals",
+   "images": [
+    "🦊"
+   ]
+  },
+  {
+   "word": "deer",
+   "category": "Wild Animals",
+   "images": [
+    "🦌"
+   ]
+  },
+  {
+   "word": "monkey",
+   "category": "Wild Animals",
+   "images": [
+    "🐵"
+   ]
+  },
+  {
+   "word": "panda",
+   "category": "Wild Animals",
+   "images": [
+    "🐼"
+   ]
+  },
+  {
+   "word": "koala",
+   "category": "Wild Animals",
+   "images": [
+    "🐨"
+   ]
+  },
+  {
+   "word": "kangaroo",
+   "category": "Wild Animals",
+   "images": [
+    "🦘"
+   ]
+  },
+  {
+   "word": "camel",
+   "category": "Wild Animals",
+   "images": [
+    "🐫"
+   ]
+  },
+  {
+   "word": "snake",
+   "category": "Wild Animals",
+   "images": [
+    "🐍"
+   ]
+  },
+  {
+   "word": "owl",
+   "category": "Wild Animals",
+   "images": [
+    "🦉"
+   ]
+  },
+  {
+   "word": "peacock",
+   "category": "Wild Animals",
+   "images": [
+    "🦚"
+   ]
+  },
+  {
    "word": "fish",
-   "category": "Animals",
+   "category": "In the Water",
    "images": [
     "🐟",
     "🐠",
@@ -130,444 +244,125 @@
    ]
   },
   {
-   "word": "fox",
-   "category": "Animals",
-   "images": [
-    "🦊"
-   ]
-  },
-  {
-   "word": "frog",
-   "category": "Animals",
-   "images": [
-    "🐸"
-   ]
-  },
-  {
-   "word": "giraffe",
-   "category": "Animals",
-   "images": [
-    "🦒"
-   ]
-  },
-  {
-   "word": "goat",
-   "category": "Animals",
-   "images": [
-    "🐐"
-   ]
-  },
-  {
-   "word": "goose",
-   "category": "Animals",
-   "images": []
-  },
-  {
-   "word": "hedgehog",
-   "category": "Animals",
-   "images": [
-    "🦔"
-   ]
-  },
-  {
-   "word": "horse",
-   "category": "Animals",
-   "images": [
-    "🐴",
-    "🐎"
-   ]
-  },
-  {
-   "word": "kangaroo",
-   "category": "Animals",
-   "images": [
-    "🦘"
-   ]
-  },
-  {
-   "word": "koala",
-   "category": "Animals",
-   "images": [
-    "🐨"
-   ]
-  },
-  {
-   "word": "lion",
-   "category": "Animals",
-   "images": [
-    "🦁"
-   ]
-  },
-  {
-   "word": "llama",
-   "category": "Animals",
-   "images": [
-    "🦙"
-   ]
-  },
-  {
-   "word": "monkey",
-   "category": "Animals",
-   "images": [
-    "🐵"
-   ]
-  },
-  {
-   "word": "mouse",
-   "category": "Animals",
-   "images": [
-    "🐭"
-   ]
-  },
-  {
-   "word": "owl",
-   "category": "Animals",
-   "images": [
-    "🦉"
-   ]
-  },
-  {
-   "word": "panda",
-   "category": "Animals",
-   "images": [
-    "🐼"
-   ]
-  },
-  {
-   "word": "parrot",
-   "category": "Animals",
-   "images": [
-    "🦜"
-   ]
-  },
-  {
-   "word": "peacock",
-   "category": "Animals",
-   "images": [
-    "🦚"
-   ]
-  },
-  {
-   "word": "penguin",
-   "category": "Animals",
-   "images": [
-    "🐧"
-   ]
-  },
-  {
-   "word": "pig",
-   "category": "Animals",
-   "images": [
-    "🐖",
-    "🐷"
-   ]
-  },
-  {
-   "word": "rabbit",
-   "category": "Animals",
-   "images": [
-    "🐰"
-   ]
-  },
-  {
-   "word": "seal",
-   "category": "Animals",
-   "images": [
-    "🦭"
-   ]
-  },
-  {
-   "word": "shark",
-   "category": "Animals",
-   "images": [
-    "🦈"
-   ]
-  },
-  {
-   "word": "sheep",
-   "category": "Animals",
-   "images": [
-    "🐑"
-   ]
-  },
-  {
-   "word": "snail",
-   "category": "Animals",
-   "images": [
-    "🐌"
-   ]
-  },
-  {
-   "word": "snake",
-   "category": "Animals",
-   "images": [
-    "🐍"
-   ]
-  },
-  {
-   "word": "spider",
-   "category": "Animals",
-   "images": [
-    "🕷️"
-   ]
-  },
-  {
-   "word": "squirrel",
-   "category": "Animals",
-   "images": [
-    "🐿️"
-   ]
-  },
-  {
-   "word": "swan",
-   "category": "Animals",
-   "images": [
-    "🦢"
-   ]
-  },
-  {
-   "word": "tiger",
-   "category": "Animals",
-   "images": [
-    "🐯"
-   ]
-  },
-  {
-   "word": "turtle",
-   "category": "Animals",
-   "images": [
-    "🐢"
-   ]
-  },
-  {
    "word": "whale",
-   "category": "Animals",
+   "category": "In the Water",
    "images": [
     "🐳"
    ]
   },
   {
-   "word": "wolf",
-   "category": "Animals",
+   "word": "shark",
+   "category": "In the Water",
    "images": [
-    "🐺"
+    "🦈"
    ]
   },
   {
-   "word": "zebra",
-   "category": "Animals",
+   "word": "dolphin",
+   "category": "In the Water",
    "images": [
-    "🦓"
+    "🐬"
    ]
   },
   {
-   "word": "eye",
-   "category": "Body",
+   "word": "seal",
+   "category": "In the Water",
    "images": [
-    "👁️",
-    "👀"
+    "🦭"
    ]
   },
   {
-   "word": "foot",
-   "category": "Body",
+   "word": "crab",
+   "category": "In the Water",
    "images": [
-    "🦶"
+    "🦀"
    ]
   },
   {
-   "word": "hand",
-   "category": "Body",
+   "word": "turtle",
+   "category": "In the Water",
    "images": [
-    "✋",
-    "🤚",
-    "🖐️"
+    "🐢"
    ]
   },
   {
-   "word": "mouth",
-   "category": "Body",
+   "word": "penguin",
+   "category": "In the Water",
    "images": [
-    "👄"
+    "🐧"
    ]
   },
   {
-   "word": "nose",
-   "category": "Body",
+   "word": "frog",
+   "category": "In the Water",
    "images": [
-    "👃"
+    "🐸"
    ]
   },
   {
-   "word": "tooth",
-   "category": "Body",
+   "word": "swan",
+   "category": "In the Water",
    "images": [
-    "🦷"
+    "🦢"
    ]
   },
   {
-   "word": "belt",
-   "category": "Clothes",
+   "word": "goose",
+   "category": "In the Water",
    "images": []
   },
   {
-   "word": "boot",
-   "category": "Clothes",
+   "word": "bee",
+   "category": "Little Ones",
    "images": [
-    "👢"
+    "🐝"
    ]
   },
   {
-   "word": "coat",
-   "category": "Clothes",
+   "word": "ant",
+   "category": "Little Ones",
    "images": [
-    "🧥"
+    "🐜"
    ]
   },
   {
-   "word": "dress",
-   "category": "Clothes",
+   "word": "spider",
+   "category": "Little Ones",
    "images": [
-    "👗"
+    "🕷️"
    ]
   },
   {
-   "word": "scarf",
-   "category": "Clothes",
+   "word": "butterfly",
+   "category": "Little Ones",
    "images": [
-    "🧣"
+    "🦋"
    ]
   },
   {
-   "word": "shoe",
-   "category": "Clothes",
+   "word": "snail",
+   "category": "Little Ones",
    "images": [
-    "👟"
+    "🐌"
    ]
   },
   {
-   "word": "clap",
-   "category": "Doing",
+   "word": "hedgehog",
+   "category": "Little Ones",
    "images": [
-    "👏"
+    "🦔"
    ]
   },
   {
-   "word": "climb",
-   "category": "Doing",
+   "word": "squirrel",
+   "category": "Little Ones",
    "images": [
-    "🧗"
-   ]
-  },
-  {
-   "word": "cry",
-   "category": "Doing",
-   "images": [
-    "😢"
-   ]
-  },
-  {
-   "word": "dance",
-   "category": "Doing",
-   "images": [
-    "💃"
-   ]
-  },
-  {
-   "word": "drink",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "eat",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "laugh",
-   "category": "Doing",
-   "images": [
-    "😄"
-   ]
-  },
-  {
-   "word": "paint",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "play",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "read",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "ride",
-   "category": "Doing",
-   "images": [
-    "🚴"
-   ]
-  },
-  {
-   "word": "run",
-   "category": "Doing",
-   "images": [
-    "🏃",
-    "🏃‍♀️"
-   ]
-  },
-  {
-   "word": "sing",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "sit",
-   "category": "Doing",
-   "images": []
-  },
-  {
-   "word": "sleep",
-   "category": "Doing",
-   "images": [
-    "😴"
-   ]
-  },
-  {
-   "word": "stand",
-   "category": "Doing",
-   "images": [
-    "🧍"
-   ]
-  },
-  {
-   "word": "swim",
-   "category": "Doing",
-   "images": [
-    "🏊"
-   ]
-  },
-  {
-   "word": "walk",
-   "category": "Doing",
-   "images": [
-    "🚶"
-   ]
-  },
-  {
-   "word": "write",
-   "category": "Doing",
-   "images": [
-    "✍️"
+    "🐿️"
    ]
   },
   {
    "word": "apple",
-   "category": "Food",
+   "category": "Fruit & Veg",
    "images": [
     "🍎",
     "🍏"
@@ -575,22 +370,169 @@
   },
   {
    "word": "banana",
-   "category": "Food",
+   "category": "Fruit & Veg",
    "images": [
     "🍌"
    ]
   },
   {
+   "word": "orange",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍊"
+   ]
+  },
+  {
+   "word": "grape",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍇"
+   ]
+  },
+  {
+   "word": "lemon",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍋"
+   ]
+  },
+  {
+   "word": "strawberry",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍓"
+   ]
+  },
+  {
+   "word": "pear",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍐"
+   ]
+  },
+  {
+   "word": "melon",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍉"
+   ]
+  },
+  {
+   "word": "peach",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍑"
+   ]
+  },
+  {
+   "word": "cherry",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍒"
+   ]
+  },
+  {
+   "word": "carrot",
+   "category": "Fruit & Veg",
+   "images": [
+    "🥕"
+   ]
+  },
+  {
+   "word": "potato",
+   "category": "Fruit & Veg",
+   "images": [
+    "🥔"
+   ]
+  },
+  {
+   "word": "tomato",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍅"
+   ]
+  },
+  {
+   "word": "onion",
+   "category": "Fruit & Veg",
+   "images": [
+    "🧅"
+   ]
+  },
+  {
+   "word": "mushroom",
+   "category": "Fruit & Veg",
+   "images": [
+    "🍄"
+   ]
+  },
+  {
+   "word": "corn",
+   "category": "Fruit & Veg",
+   "images": [
+    "🌽"
+   ]
+  },
+  {
+   "word": "pumpkin",
+   "category": "Fruit & Veg",
+   "images": [
+    "🎃"
+   ]
+  },
+  {
+   "word": "nuts",
+   "category": "Fruit & Veg",
+   "images": [
+    "🥜"
+   ]
+  },
+  {
    "word": "bread",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🍞",
     "🥖"
    ]
   },
   {
+   "word": "cheese",
+   "category": "Meals",
+   "images": [
+    "🧀"
+   ]
+  },
+  {
+   "word": "rice",
+   "category": "Meals",
+   "images": [
+    "🍚"
+   ]
+  },
+  {
+   "word": "soup",
+   "category": "Meals",
+   "images": [
+    "🍲"
+   ]
+  },
+  {
+   "word": "pizza",
+   "category": "Meals",
+   "images": [
+    "🍕"
+   ]
+  },
+  {
+   "word": "cookie",
+   "category": "Meals",
+   "images": [
+    "🍪"
+   ]
+  },
+  {
    "word": "cake",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🍰",
     "🎂",
@@ -598,386 +540,118 @@
    ]
   },
   {
-   "word": "carrot",
-   "category": "Food",
-   "images": [
-    "🥕"
-   ]
-  },
-  {
-   "word": "cheese",
-   "category": "Food",
-   "images": [
-    "🧀"
-   ]
-  },
-  {
-   "word": "cherry",
-   "category": "Food",
-   "images": [
-    "🍒"
-   ]
-  },
-  {
-   "word": "cookie",
-   "category": "Food",
-   "images": [
-    "🍪"
-   ]
-  },
-  {
-   "word": "corn",
-   "category": "Food",
-   "images": [
-    "🌽"
-   ]
-  },
-  {
    "word": "egg",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🥚"
    ]
   },
   {
-   "word": "grape",
-   "category": "Food",
-   "images": [
-    "🍇"
-   ]
-  },
-  {
-   "word": "honey",
-   "category": "Food",
-   "images": [
-    "🍯"
-   ]
-  },
-  {
-   "word": "lemon",
-   "category": "Food",
-   "images": [
-    "🍋"
-   ]
-  },
-  {
-   "word": "melon",
-   "category": "Food",
-   "images": [
-    "🍉"
-   ]
-  },
-  {
    "word": "milk",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🥛"
    ]
   },
   {
-   "word": "mushroom",
-   "category": "Food",
+   "word": "water",
+   "category": "Meals",
    "images": [
-    "🍄"
+    "💧"
    ]
   },
   {
-   "word": "nuts",
-   "category": "Food",
+   "word": "honey",
+   "category": "Meals",
    "images": [
-    "🥜"
-   ]
-  },
-  {
-   "word": "onion",
-   "category": "Food",
-   "images": [
-    "🧅"
-   ]
-  },
-  {
-   "word": "orange",
-   "category": "Food",
-   "images": [
-    "🍊"
+    "🍯"
    ]
   },
   {
    "word": "pasta",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🍝"
    ]
   },
   {
-   "word": "peach",
-   "category": "Food",
-   "images": [
-    "🍑"
-   ]
-  },
-  {
-   "word": "pear",
-   "category": "Food",
-   "images": [
-    "🍐"
-   ]
-  },
-  {
-   "word": "pizza",
-   "category": "Food",
-   "images": [
-    "🍕"
-   ]
-  },
-  {
-   "word": "potato",
-   "category": "Food",
-   "images": [
-    "🥔"
-   ]
-  },
-  {
-   "word": "pumpkin",
-   "category": "Food",
-   "images": [
-    "🎃"
-   ]
-  },
-  {
-   "word": "rice",
-   "category": "Food",
-   "images": [
-    "🍚"
-   ]
-  },
-  {
    "word": "salad",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🥗"
    ]
   },
   {
    "word": "sandwich",
-   "category": "Food",
+   "category": "Meals",
    "images": [
     "🥪"
    ]
   },
   {
-   "word": "soup",
-   "category": "Food",
-   "images": [
-    "🍲"
-   ]
-  },
-  {
-   "word": "strawberry",
-   "category": "Food",
-   "images": [
-    "🍓"
-   ]
-  },
-  {
-   "word": "tomato",
-   "category": "Food",
-   "images": [
-    "🍅"
-   ]
-  },
-  {
-   "word": "water",
-   "category": "Food",
-   "images": [
-    "💧"
-   ]
-  },
-  {
-   "word": "bike",
-   "category": "Going",
-   "images": [
-    "🚲"
-   ]
-  },
-  {
-   "word": "boat",
-   "category": "Going",
-   "images": [
-    "⛵"
-   ]
-  },
-  {
-   "word": "bus",
-   "category": "Going",
-   "images": [
-    "🚌"
-   ]
-  },
-  {
-   "word": "car",
-   "category": "Going",
-   "images": [
-    "🚗"
-   ]
-  },
-  {
-   "word": "plane",
-   "category": "Going",
-   "images": [
-    "✈️"
-   ]
-  },
-  {
-   "word": "rocket",
-   "category": "Going",
-   "images": [
-    "🚀"
-   ]
-  },
-  {
-   "word": "ship",
-   "category": "Going",
-   "images": [
-    "🚢"
-   ]
-  },
-  {
-   "word": "tractor",
-   "category": "Going",
-   "images": [
-    "🚜"
-   ]
-  },
-  {
-   "word": "train",
-   "category": "Going",
-   "images": [
-    "🚂"
-   ]
-  },
-  {
-   "word": "truck",
-   "category": "Going",
-   "images": [
-    "🚚"
-   ]
-  },
-  {
-   "word": "bag",
-   "category": "Home",
-   "images": [
-    "👜"
-   ]
-  },
-  {
-   "word": "basket",
-   "category": "Home",
-   "images": [
-    "🧺"
-   ]
-  },
-  {
-   "word": "bath",
-   "category": "Home",
-   "images": [
-    "🛁"
-   ]
-  },
-  {
    "word": "bed",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🛏️"
    ]
   },
   {
-   "word": "blanket",
-   "category": "Home",
-   "images": []
-  },
-  {
-   "word": "book",
-   "category": "Home",
-   "images": [
-    "📕",
-    "📖",
-    "📚"
-   ]
-  },
-  {
-   "word": "box",
-   "category": "Home",
-   "images": [
-    "📦"
-   ]
-  },
-  {
-   "word": "broom",
-   "category": "Home",
-   "images": [
-    "🧹"
-   ]
-  },
-  {
-   "word": "brush",
-   "category": "Home",
-   "images": []
-  },
-  {
-   "word": "candle",
-   "category": "Home",
-   "images": [
-    "🕯️"
-   ]
-  },
-  {
    "word": "chair",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🪑"
    ]
   },
   {
-   "word": "clock",
-   "category": "Home",
-   "images": [
-    "🕐"
-   ]
-  },
-  {
-   "word": "cup",
-   "category": "Home",
-   "images": [
-    "🥤",
-    "☕",
-    "🍵"
-   ]
+   "word": "table",
+   "category": "At Home",
+   "images": []
   },
   {
    "word": "door",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🚪"
    ]
   },
   {
+   "word": "window",
+   "category": "At Home",
+   "images": [
+    "🪟"
+   ]
+  },
+  {
    "word": "house",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🏠"
    ]
   },
   {
    "word": "key",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🔑"
    ]
   },
   {
+   "word": "clock",
+   "category": "At Home",
+   "images": [
+    "🕐"
+   ]
+  },
+  {
+   "word": "box",
+   "category": "At Home",
+   "images": [
+    "📦"
+   ]
+  },
+  {
    "word": "lamp",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "💡",
     "🪔"
@@ -985,182 +659,247 @@
   },
   {
    "word": "mirror",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🪞"
    ]
   },
   {
+   "word": "bath",
+   "category": "At Home",
+   "images": [
+    "🛁"
+   ]
+  },
+  {
    "word": "phone",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "☎️"
    ]
   },
   {
+   "word": "bag",
+   "category": "At Home",
+   "images": [
+    "👜"
+   ]
+  },
+  {
+   "word": "broom",
+   "category": "At Home",
+   "images": [
+    "🧹"
+   ]
+  },
+  {
+   "word": "basket",
+   "category": "At Home",
+   "images": [
+    "🧺"
+   ]
+  },
+  {
+   "word": "candle",
+   "category": "At Home",
+   "images": [
+    "🕯️"
+   ]
+  },
+  {
+   "word": "blanket",
+   "category": "At Home",
+   "images": []
+  },
+  {
+   "word": "stairs",
+   "category": "At Home",
+   "images": []
+  },
+  {
    "word": "soap",
-   "category": "Home",
+   "category": "At Home",
    "images": [
     "🧼"
    ]
   },
   {
-   "word": "sock",
-   "category": "Home",
-   "images": [
-    "🧦"
-   ]
-  },
-  {
-   "word": "stairs",
-   "category": "Home",
-   "images": []
-  },
-  {
-   "word": "table",
-   "category": "Home",
-   "images": []
-  },
-  {
    "word": "towel",
-   "category": "Home",
+   "category": "At Home",
    "images": []
   },
   {
-   "word": "window",
-   "category": "Home",
-   "images": [
-    "🪟"
-   ]
-  },
-  {
-   "word": "bottle",
-   "category": "Kitchen",
-   "images": [
-    "🍼"
-   ]
-  },
-  {
-   "word": "bowl",
-   "category": "Kitchen",
-   "images": [
-    "🥣"
-   ]
-  },
-  {
-   "word": "fork",
-   "category": "Kitchen",
-   "images": [
-    "🍴"
-   ]
-  },
-  {
-   "word": "jar",
-   "category": "Kitchen",
-   "images": [
-    "🫙"
-   ]
-  },
-  {
-   "word": "kettle",
-   "category": "Kitchen",
-   "images": [
-    "🫖"
-   ]
-  },
-  {
-   "word": "knife",
-   "category": "Kitchen",
-   "images": [
-    "🔪"
-   ]
-  },
-  {
-   "word": "pan",
-   "category": "Kitchen",
-   "images": [
-    "🍳"
-   ]
-  },
-  {
-   "word": "plate",
-   "category": "Kitchen",
-   "images": [
-    "🍽️"
-   ]
-  },
-  {
-   "word": "pot",
-   "category": "Kitchen",
+   "word": "brush",
+   "category": "At Home",
    "images": []
+  },
+  {
+   "word": "book",
+   "category": "At Home",
+   "images": [
+    "📕",
+    "📖",
+    "📚"
+   ]
   },
   {
    "word": "spoon",
-   "category": "Kitchen",
+   "category": "In the Kitchen",
    "images": [
     "🥄"
    ]
   },
   {
-   "word": "bench",
-   "category": "Outside",
+   "word": "fork",
+   "category": "In the Kitchen",
+   "images": [
+    "🍴"
+   ]
+  },
+  {
+   "word": "knife",
+   "category": "In the Kitchen",
+   "images": [
+    "🔪"
+   ]
+  },
+  {
+   "word": "plate",
+   "category": "In the Kitchen",
+   "images": [
+    "🍽️"
+   ]
+  },
+  {
+   "word": "bowl",
+   "category": "In the Kitchen",
+   "images": [
+    "🥣"
+   ]
+  },
+  {
+   "word": "pot",
+   "category": "In the Kitchen",
    "images": []
   },
   {
-   "word": "cloud",
-   "category": "Outside",
+   "word": "pan",
+   "category": "In the Kitchen",
    "images": [
-    "☁️"
+    "🍳"
    ]
   },
   {
-   "word": "feather",
-   "category": "Outside",
+   "word": "kettle",
+   "category": "In the Kitchen",
    "images": [
-    "🪶"
+    "🫖"
    ]
   },
   {
-   "word": "fire",
-   "category": "Outside",
+   "word": "jar",
+   "category": "In the Kitchen",
    "images": [
-    "🔥"
+    "🫙"
    ]
   },
   {
-   "word": "flower",
-   "category": "Outside",
+   "word": "bottle",
+   "category": "In the Kitchen",
    "images": [
-    "🌸"
+    "🍼"
    ]
   },
   {
-   "word": "grass",
-   "category": "Outside",
-   "images": []
-  },
-  {
-   "word": "hill",
-   "category": "Outside",
-   "images": []
-  },
-  {
-   "word": "ice",
-   "category": "Outside",
+   "word": "cup",
+   "category": "In the Kitchen",
    "images": [
-    "🧊"
+    "🥤",
+    "☕",
+    "🍵"
    ]
   },
   {
-   "word": "leaf",
-   "category": "Outside",
+   "word": "bike",
+   "category": "Getting Around",
    "images": [
-    "🍃"
+    "🚲"
+   ]
+  },
+  {
+   "word": "boat",
+   "category": "Getting Around",
+   "images": [
+    "⛵"
+   ]
+  },
+  {
+   "word": "train",
+   "category": "Getting Around",
+   "images": [
+    "🚂"
+   ]
+  },
+  {
+   "word": "car",
+   "category": "Getting Around",
+   "images": [
+    "🚗"
+   ]
+  },
+  {
+   "word": "bus",
+   "category": "Getting Around",
+   "images": [
+    "🚌"
+   ]
+  },
+  {
+   "word": "truck",
+   "category": "Getting Around",
+   "images": [
+    "🚚"
+   ]
+  },
+  {
+   "word": "plane",
+   "category": "Getting Around",
+   "images": [
+    "✈️"
+   ]
+  },
+  {
+   "word": "tractor",
+   "category": "Getting Around",
+   "images": [
+    "🚜"
+   ]
+  },
+  {
+   "word": "ship",
+   "category": "Getting Around",
+   "images": [
+    "🚢"
+   ]
+  },
+  {
+   "word": "rocket",
+   "category": "Getting Around",
+   "images": [
+    "🚀"
+   ]
+  },
+  {
+   "word": "sun",
+   "category": "Sky & Weather",
+   "images": [
+    "☀️",
+    "🌞"
    ]
   },
   {
    "word": "moon",
-   "category": "Outside",
+   "category": "Sky & Weather",
    "images": [
     "🌙",
     "🌕",
@@ -1168,100 +907,58 @@
    ]
   },
   {
-   "word": "mountain",
-   "category": "Outside",
-   "images": [
-    "⛰️"
-   ]
-  },
-  {
-   "word": "nest",
-   "category": "Outside",
-   "images": [
-    "🪹"
-   ]
-  },
-  {
-   "word": "puddle",
-   "category": "Outside",
-   "images": []
-  },
-  {
-   "word": "rain",
-   "category": "Outside",
-   "images": [
-    "🌧️"
-   ]
-  },
-  {
-   "word": "rainbow",
-   "category": "Outside",
-   "images": [
-    "🌈"
-   ]
-  },
-  {
-   "word": "river",
-   "category": "Outside",
-   "images": []
-  },
-  {
-   "word": "rock",
-   "category": "Outside",
-   "images": [
-    "🪨"
-   ]
-  },
-  {
-   "word": "sand",
-   "category": "Outside",
-   "images": []
-  },
-  {
-   "word": "sea",
-   "category": "Outside",
-   "images": [
-    "🌊"
-   ]
-  },
-  {
-   "word": "shell",
-   "category": "Outside",
-   "images": [
-    "🐚"
-   ]
-  },
-  {
-   "word": "snow",
-   "category": "Outside",
-   "images": [
-    "❄️"
-   ]
-  },
-  {
    "word": "star",
-   "category": "Outside",
+   "category": "Sky & Weather",
    "images": [
     "⭐",
     "🌟"
    ]
   },
   {
-   "word": "stick",
-   "category": "Outside",
-   "images": []
+   "word": "cloud",
+   "category": "Sky & Weather",
+   "images": [
+    "☁️"
+   ]
   },
   {
-   "word": "sun",
-   "category": "Outside",
+   "word": "rain",
+   "category": "Sky & Weather",
    "images": [
-    "☀️",
-    "🌞"
+    "🌧️"
+   ]
+  },
+  {
+   "word": "snow",
+   "category": "Sky & Weather",
+   "images": [
+    "❄️"
+   ]
+  },
+  {
+   "word": "rainbow",
+   "category": "Sky & Weather",
+   "images": [
+    "🌈"
+   ]
+  },
+  {
+   "word": "ice",
+   "category": "Sky & Weather",
+   "images": [
+    "🧊"
+   ]
+  },
+  {
+   "word": "fire",
+   "category": "Sky & Weather",
+   "images": [
+    "🔥"
    ]
   },
   {
    "word": "tree",
-   "category": "Outside",
+   "category": "Out in the Wild",
    "images": [
     "🌳",
     "🌲",
@@ -1269,10 +966,205 @@
    ]
   },
   {
+   "word": "flower",
+   "category": "Out in the Wild",
+   "images": [
+    "🌸"
+   ]
+  },
+  {
+   "word": "leaf",
+   "category": "Out in the Wild",
+   "images": [
+    "🍃"
+   ]
+  },
+  {
+   "word": "grass",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "river",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "sea",
+   "category": "Out in the Wild",
+   "images": [
+    "🌊"
+   ]
+  },
+  {
+   "word": "sand",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "beach",
+   "category": "Out in the Wild",
+   "images": [
+    "🏖️"
+   ]
+  },
+  {
+   "word": "mountain",
+   "category": "Out in the Wild",
+   "images": [
+    "⛰️"
+   ]
+  },
+  {
+   "word": "hill",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "rock",
+   "category": "Out in the Wild",
+   "images": [
+    "🪨"
+   ]
+  },
+  {
    "word": "wood",
-   "category": "Outside",
+   "category": "Out in the Wild",
    "images": [
     "🪵"
+   ]
+  },
+  {
+   "word": "nest",
+   "category": "Out in the Wild",
+   "images": [
+    "🪹"
+   ]
+  },
+  {
+   "word": "feather",
+   "category": "Out in the Wild",
+   "images": [
+    "🪶"
+   ]
+  },
+  {
+   "word": "shell",
+   "category": "Out in the Wild",
+   "images": [
+    "🐚"
+   ]
+  },
+  {
+   "word": "stick",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "puddle",
+   "category": "Out in the Wild",
+   "images": []
+  },
+  {
+   "word": "farm",
+   "category": "Places We Go",
+   "images": []
+  },
+  {
+   "word": "park",
+   "category": "Places We Go",
+   "images": []
+  },
+  {
+   "word": "school",
+   "category": "Places We Go",
+   "images": [
+    "🏫"
+   ]
+  },
+  {
+   "word": "shop",
+   "category": "Places We Go",
+   "images": []
+  },
+  {
+   "word": "building",
+   "category": "Places We Go",
+   "images": [
+    "🏪"
+   ]
+  },
+  {
+   "word": "bench",
+   "category": "Places We Go",
+   "images": []
+  },
+  {
+   "word": "road",
+   "category": "Places We Go",
+   "images": [
+    "🛣️"
+   ]
+  },
+  {
+   "word": "bridge",
+   "category": "Places We Go",
+   "images": [
+    "🌉"
+   ]
+  },
+  {
+   "word": "ball",
+   "category": "Toys & Play",
+   "images": [
+    "⚽"
+   ]
+  },
+  {
+   "word": "doll",
+   "category": "Toys & Play",
+   "images": [
+    "🪆"
+   ]
+  },
+  {
+   "word": "balloon",
+   "category": "Toys & Play",
+   "images": [
+    "🎈"
+   ]
+  },
+  {
+   "word": "bubble",
+   "category": "Toys & Play",
+   "images": [
+    "🫧"
+   ]
+  },
+  {
+   "word": "puzzle",
+   "category": "Toys & Play",
+   "images": [
+    "🧩"
+   ]
+  },
+  {
+   "word": "teddy",
+   "category": "Toys & Play",
+   "images": [
+    "🧸"
+   ]
+  },
+  {
+   "word": "swing",
+   "category": "Toys & Play",
+   "images": []
+  },
+  {
+   "word": "slide",
+   "category": "Toys & Play",
+   "images": [
+    "🛝"
    ]
   },
   {
@@ -1304,107 +1196,195 @@
    ]
   },
   {
-   "word": "beach",
-   "category": "Places",
+   "word": "hand",
+   "category": "People",
    "images": [
-    "🏖️"
+    "✋",
+    "🤚",
+    "🖐️"
    ]
   },
   {
-   "word": "bridge",
-   "category": "Places",
+   "word": "foot",
+   "category": "People",
    "images": [
-    "🌉"
+    "🦶"
    ]
   },
   {
-   "word": "building",
-   "category": "Places",
+   "word": "nose",
+   "category": "People",
    "images": [
-    "🏪"
+    "👃"
    ]
   },
   {
-   "word": "farm",
-   "category": "Places",
+   "word": "eye",
+   "category": "People",
+   "images": [
+    "👁️",
+    "👀"
+   ]
+  },
+  {
+   "word": "mouth",
+   "category": "People",
+   "images": [
+    "👄"
+   ]
+  },
+  {
+   "word": "tooth",
+   "category": "People",
+   "images": [
+    "🦷"
+   ]
+  },
+  {
+   "word": "shoe",
+   "category": "What We Wear",
+   "images": [
+    "👟"
+   ]
+  },
+  {
+   "word": "coat",
+   "category": "What We Wear",
+   "images": [
+    "🧥"
+   ]
+  },
+  {
+   "word": "dress",
+   "category": "What We Wear",
+   "images": [
+    "👗"
+   ]
+  },
+  {
+   "word": "boot",
+   "category": "What We Wear",
+   "images": [
+    "👢"
+   ]
+  },
+  {
+   "word": "scarf",
+   "category": "What We Wear",
+   "images": [
+    "🧣"
+   ]
+  },
+  {
+   "word": "belt",
+   "category": "What We Wear",
    "images": []
   },
   {
-   "word": "park",
-   "category": "Places",
+   "word": "sock",
+   "category": "What We Wear",
+   "images": [
+    "🧦"
+   ]
+  },
+  {
+   "word": "run",
+   "category": "Doing Things",
+   "images": [
+    "🏃",
+    "🏃‍♀️"
+   ]
+  },
+  {
+   "word": "walk",
+   "category": "Doing Things",
+   "images": [
+    "🚶"
+   ]
+  },
+  {
+   "word": "sit",
+   "category": "Doing Things",
    "images": []
   },
   {
-   "word": "road",
-   "category": "Places",
+   "word": "stand",
+   "category": "Doing Things",
    "images": [
-    "🛣️"
+    "🧍"
    ]
   },
   {
-   "word": "school",
-   "category": "Places",
+   "word": "climb",
+   "category": "Doing Things",
    "images": [
-    "🏫"
+    "🧗"
    ]
   },
   {
-   "word": "shop",
-   "category": "Places",
+   "word": "swim",
+   "category": "Doing Things",
+   "images": [
+    "🏊"
+   ]
+  },
+  {
+   "word": "dance",
+   "category": "Doing Things",
+   "images": [
+    "💃"
+   ]
+  },
+  {
+   "word": "sleep",
+   "category": "Doing Things",
+   "images": [
+    "😴"
+   ]
+  },
+  {
+   "word": "drink",
+   "category": "Doing Things",
    "images": []
   },
   {
-   "word": "ball",
-   "category": "Toys",
-   "images": [
-    "⚽"
-   ]
-  },
-  {
-   "word": "balloon",
-   "category": "Toys",
-   "images": [
-    "🎈"
-   ]
-  },
-  {
-   "word": "bubble",
-   "category": "Toys",
-   "images": [
-    "🫧"
-   ]
-  },
-  {
-   "word": "doll",
-   "category": "Toys",
-   "images": [
-    "🪆"
-   ]
-  },
-  {
-   "word": "puzzle",
-   "category": "Toys",
-   "images": [
-    "🧩"
-   ]
-  },
-  {
-   "word": "slide",
-   "category": "Toys",
-   "images": [
-    "🛝"
-   ]
-  },
-  {
-   "word": "swing",
-   "category": "Toys",
+   "word": "read",
+   "category": "Doing Things",
    "images": []
   },
   {
-   "word": "teddy",
-   "category": "Toys",
+   "word": "write",
+   "category": "Doing Things",
    "images": [
-    "🧸"
+    "✍️"
+   ]
+  },
+  {
+   "word": "cry",
+   "category": "Doing Things",
+   "images": [
+    "😢"
+   ]
+  },
+  {
+   "word": "laugh",
+   "category": "Doing Things",
+   "images": [
+    "😄"
+   ]
+  },
+  {
+   "word": "clap",
+   "category": "Doing Things",
+   "images": [
+    "👏"
+   ]
+  },
+  {
+   "word": "ride",
+   "category": "Doing Things",
+   "images": [
+    "🚴"
    ]
   }
  ],
@@ -2415,5 +2395,124 @@
   "some",
   "do",
   "is"
- ]
+ ],
+ "deckOrder": [
+  "Pets & Farm",
+  "Wild Animals",
+  "In the Water",
+  "Little Ones",
+  "Fruit & Veg",
+  "Meals",
+  "At Home",
+  "In the Kitchen",
+  "Getting Around",
+  "Sky & Weather",
+  "Out in the Wild",
+  "Places We Go",
+  "Toys & Play",
+  "People",
+  "What We Wear",
+  "Doing Things"
+ ],
+ "colors": [
+  {
+   "word": "red",
+   "hex": "D93A32"
+  },
+  {
+   "word": "blue",
+   "hex": "2F6FD0"
+  },
+  {
+   "word": "yellow",
+   "hex": "F0B429"
+  },
+  {
+   "word": "green",
+   "hex": "3E9B4F"
+  },
+  {
+   "word": "orange",
+   "hex": "E8722C"
+  },
+  {
+   "word": "purple",
+   "hex": "7A4FA3"
+  },
+  {
+   "word": "pink",
+   "hex": "E876A8"
+  },
+  {
+   "word": "brown",
+   "hex": "8A5A34"
+  },
+  {
+   "word": "black",
+   "hex": "23272B"
+  },
+  {
+   "word": "white",
+   "hex": "FFFFFF"
+  },
+  {
+   "word": "grey",
+   "hex": "9AA3A8"
+  }
+ ],
+ "shapes": [
+  {
+   "word": "circle"
+  },
+  {
+   "word": "square"
+  },
+  {
+   "word": "triangle"
+  },
+  {
+   "word": "star"
+  },
+  {
+   "word": "heart"
+  },
+  {
+   "word": "rectangle"
+  },
+  {
+   "word": "oval"
+  },
+  {
+   "word": "diamond"
+  }
+ ],
+ "numbers": {
+  "levels": [
+   5,
+   10,
+   20
+  ],
+  "words": [
+   "one",
+   "two",
+   "three",
+   "four",
+   "five",
+   "six",
+   "seven",
+   "eight",
+   "nine",
+   "ten",
+   "eleven",
+   "twelve",
+   "thirteen",
+   "fourteen",
+   "fifteen",
+   "sixteen",
+   "seventeen",
+   "eighteen",
+   "nineteen",
+   "twenty"
+  ]
+ }
 }

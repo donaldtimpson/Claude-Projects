@@ -27,6 +27,14 @@ struct ReadingContent: Codable {
     let heartWords: [HeartWord]
     let world: World
     let sightWords: [String]
+    let deckOrder: [String]
+    let colors: [Swatch]
+    let shapes: [Shape2]
+    let numbers: Numbers
+
+    struct Swatch: Codable, Hashable { let word: String; let hex: String }
+    struct Shape2: Codable, Hashable { let word: String }
+    struct Numbers: Codable { let levels: [Int]; let words: [String] }
 
     static let shared: ReadingContent = {
         guard let url = Bundle.main.url(forResource: "reading", withExtension: "json"),
@@ -38,11 +46,12 @@ struct ReadingContent: Codable {
 
     var sightSet: Set<String> { Set(sightWords) }
     var wordLevels: [String] { ["CVC", "Digraphs", "Blends", "SilentE"] }
+    /// Deck order comes from the content file, so re-ordering the decks is an edit
+    /// to content rather than to code.
     var pictureCategories: [String] {
-        var seen: [String] = []
-        for p in pictureWords where !seen.contains(p.category) { seen.append(p.category) }
-        return seen
+        deckOrder.filter { d in pictureWords.contains { $0.category == d } }
     }
+    func words(in deck: String) -> [PictureWord] { pictureWords.filter { $0.category == deck } }
     /// The collectible objects in the world are exactly the words that have art.
     /// One asset set, two jobs — the flip-card reveal and the reward.
     var collectibles: [Word] { words.filter { $0.image != nil } }
