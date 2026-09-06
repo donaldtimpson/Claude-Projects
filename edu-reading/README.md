@@ -78,15 +78,21 @@ less to look past.
 ### Landscape and the back swipe
 
 Cards are swiped left **and** right to move through a deck, which collides with the
-iOS edge-swipe that means "go back" — a slightly-too-far-left swipe threw the child
+iOS edge-swipe meaning "go back" — a slightly-too-far-left swipe threw the child
 out of the deck. There is no direction left to reserve for navigation, so the edge
-gesture is disabled inside a deck (`noBackSwipe()`) and the bar's back button is
-the way out.
+gesture is disabled inside a deck (`noBackSwipe()`); the bar's back button is the
+way out, and the gesture is restored on the way out.
 
-Landscape is supported on iPhone. A landscape card is short rather than narrow, so
-the picture and the word sit **side by side** instead of stacked. Because the
-Simulator cannot be rotated from the command line, a DEBUG-only `-landscape`
-launch argument forces that layout for screenshots.
+Landscape is supported on iPhone, and **there is no landscape layout**. Branching
+on orientation was tried and thrown away: it made portrait worse to serve
+landscape, and a debug override for it leaked into portrait. `AdaptiveCard` instead
+gives the picture whatever room is left after the word and scales it to fit, so a
+tall card yields a tall picture and a short one a short picture. One layout cannot
+render the wrong way round.
+
+`UITests/LandscapeShot.swift` rotates the Simulator and captures both picture
+decks, because `simctl` cannot rotate and a layout nobody looks at is a layout
+that is broken.
 
 ### Card numbers
 

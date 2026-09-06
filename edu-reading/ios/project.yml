@@ -34,3 +34,17 @@ targets:
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+
+  # Rotates the Simulator so the landscape layout can be verified; see
+  # UITests/LandscapeShot.swift. Not part of the app.
+  SoundItOutUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: SoundItOut
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.timpson.SoundItOutUITests
+        TEST_TARGET_NAME: SoundItOut

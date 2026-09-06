@@ -18,8 +18,6 @@ struct PictureWordsView: View {
     let drawings: Bool
 
     @Environment(Settings.self) private var settings
-    @Environment(\.verticalSizeClass) private var vertical
-    private var landscape: Bool { vertical == .compact || Layout.forcedLandscape }
     private let c = ReadingContent.shared
     private var accent: Color { drawings ? Color(hex: 0xC77CB0) : Color(hex: 0xD9646E) }
 
@@ -35,18 +33,20 @@ struct PictureWordsView: View {
             let p = c.pictureWords.first { $0.word == card.word }
             // Stacked in portrait, side-by-side in landscape — a short wide card
             // has no room for a big picture above a word.
-            AdaptiveCard(landscape: landscape) {
-                Group {
-                    if drawings {
-                        if let p, !p.images.isEmpty {
-                            Text(p.images[card.variant % p.images.count])
-                                .font(.system(size: landscape ? 150 : 190))
-                        }
-                    } else if let art = photo(card.word, card.variant) {
-                        Image(uiImage: art)
-                            .resizable().scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: 20))
+            AdaptiveCard {
+                if drawings {
+                    if let p, !p.images.isEmpty {
+                        // An emoji is a glyph, so it cannot be resized to fit a
+                        // box — scale it down from a large size instead.
+                        Text(p.images[card.variant % p.images.count])
+                            .font(.system(size: 200))
+                            .minimumScaleFactor(0.3)
+                            .lineLimit(1)
                     }
+                } else if let art = photo(card.word, card.variant) {
+                    Image(uiImage: art)
+                        .resizable().scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
             } caption: {
                 if settings.showWordOnPictures {

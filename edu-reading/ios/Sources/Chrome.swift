@@ -33,18 +33,3 @@ extension View {
         background(DisableBackSwipe().frame(width: 0, height: 0))
     }
 }
-
-/// Landscape means "short", so the check is the vertical size class rather than the
-/// raw orientation — an iPad in portrait is still tall and keeps the stacked layout.
-///
-/// The debug override exists because the Simulator cannot be rotated from the
-/// command line, and a layout that is never looked at is a layout that is broken.
-enum Layout {
-    static var forcedLandscape: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("-landscape")
-        #else
-        return false
-        #endif
-    }
-}

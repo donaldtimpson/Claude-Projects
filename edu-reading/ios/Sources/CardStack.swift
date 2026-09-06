@@ -15,8 +15,6 @@ struct CardStack<Content: View>: View {
     @ViewBuilder var content: (Int) -> Content
 
     @Environment(Settings.self) private var settings
-    @Environment(\.verticalSizeClass) private var vertical
-    private var landscape: Bool { vertical == .compact || Layout.forcedLandscape }
     @State private var drag: CGSize = .zero
     @State private var pop = false
     @State private var spoke = false      // has this card been tapped once yet
@@ -37,9 +35,9 @@ struct CardStack<Content: View>: View {
                         .overlay(RoundedRectangle(cornerRadius: 34, style: .continuous)
                             .stroke(accent.opacity(0.30), lineWidth: 1.5))
                         .scaleEffect(x: 1 - CGFloat(back) * 0.05, y: 1, anchor: .top)
-                        .offset(y: CGFloat(back) * (landscape ? 9 : 16))
-                        .padding(.horizontal, landscape ? 44 : 20)
-                        .padding(.vertical, landscape ? 8 : 18)
+                        .offset(y: CGFloat(back) * 16)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 18)
                 }
 
                 if count > 0 {
@@ -48,8 +46,8 @@ struct CardStack<Content: View>: View {
                         .background(Theme.paper)
                         .clipShape(RoundedRectangle(cornerRadius: 34, style: .continuous))
                         .shadow(color: .black.opacity(0.12), radius: 20, y: 8)
-                        .padding(.horizontal, landscape ? 44 : 20)
-                        .padding(.vertical, landscape ? 8 : 18)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 18)
                         .id(index)
                         .transition(.asymmetric(
                             insertion: .move(edge: .trailing).combined(with: .opacity),
@@ -224,28 +222,22 @@ struct CardTag: View {
     }
 }
 
-/// A card face that stacks its picture above its caption in portrait and puts them
-/// side by side in landscape, where vertical room is what runs out first.
+/// One card face for every screen shape. The picture takes all the room that is
+/// left after the caption, and scales to fit it — so a tall portrait card gives a
+/// tall picture and a short landscape card gives a short one, with no branch and
+/// nothing to get the wrong way round. Portrait is never compromised to serve
+/// landscape, because there is only one layout.
 struct AdaptiveCard<Art: View, Caption: View>: View {
-    let landscape: Bool
     @ViewBuilder var art: () -> Art
     @ViewBuilder var caption: () -> Caption
 
     var body: some View {
-        if landscape {
-            HStack(spacing: 26) {
-                art().frame(maxWidth: .infinity, maxHeight: .infinity)
-                caption()
-            }
-            .padding(20)
-        } else {
-            VStack(spacing: 24) {
-                Spacer()
-                art().frame(maxHeight: 330)
-                Spacer()
-                caption()
-            }
-            .padding(24)
+        VStack(spacing: 18) {
+            art()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            caption()
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .padding(24)
     }
 }
