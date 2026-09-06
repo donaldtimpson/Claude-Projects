@@ -573,19 +573,18 @@ Every card shows a plain number (toggle in the grown-ups' area). Ranges say whic
 | 6101 | circle |
 | 6102 | square |
 | 6103 | triangle |
-| 6104 | star |
-| 6105 | heart |
-| 6106 | rectangle |
-| 6107 | oval |
-| 6108 | diamond |
-| 6109 | pentagon |
-| 6110 | hexagon |
-| 6111 | octagon |
-| 6112 | crescent |
-| 6113 | cross |
-| 6114 | arrow |
-| 6115 | ring |
-| 6116 | semicircle |
+| 6104 | rectangle |
+| 6105 | oval |
+| 6106 | diamond |
+| 6107 | star |
+| 6108 | heart |
+| 6109 | crescent |
+| 6110 | semicircle |
+| 6111 | trapezoid |
+| 6112 | parallelogram |
+| 6113 | pentagon |
+| 6114 | hexagon |
+| 6115 | octagon |
 
 ## Numbers
 

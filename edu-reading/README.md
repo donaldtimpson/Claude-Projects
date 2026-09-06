@@ -85,6 +85,12 @@ which is defensible on paper and unreadable as a button: a parent presses "in
 order" and expects the alphabet. Shuffle is there for when they want something
 else.
 
+> **Always clean-build before verifying.** This has now bitten twice: incremental
+> `xcodebuild` reports BUILD SUCCEEDED while reusing stale products, and the app
+> renders the *previous* version of the code. Both times the symptom looked like a
+> logic bug — letters ignoring the sort, new shapes rendering as circles.
+> `strings` the dylib for something you just added.
+>
 > **Verify against a clean build.** Incremental `xcodebuild` in this project has
 > silently reported BUILD SUCCEEDED while reusing stale products — several changes
 > were "verified" against a binary that did not contain them. `strings` the dylib
@@ -101,11 +107,16 @@ so the decks grew by adding items.
 | Deck | Items | The card |
 |---|---|---|
 | Colours | 11 | four unlike shapes in one colour |
-| Shapes | 16 | one shape in four colours |
+| Shapes | 15 | one shape in four colours |
 | Numbers | to 100 | a count, the numeral, and the word |
 
 Each still applies the app's rule — vary everything except what is being taught —
 since a single red circle labelled *red* teaches "circle" just as readily.
+
+The fifteen shapes are the standard early-years 2D set. Cross, arrow and ring
+were cut for the same reason peach was: they are **symbols rather than shapes** —
+a child meets an arrow on a sign, not in a shape lesson, and names a ring
+"circle". Trapezoid and parallelogram were the real gaps.
 
 The eleven colours are the **basic colour terms of English** — the complete set a
 language settles on and the set a child acquires as words. Twenty was worse, not

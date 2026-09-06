@@ -292,11 +292,10 @@ struct AnyShapeProxy: Shape {
         case "pentagon":   return polygon(5, in: r)
         case "hexagon":    return polygon(6, in: r)
         case "octagon":    return polygon(8, in: r)
-        case "crescent":   return crescent(in: r)
-        case "cross":      return cross(in: r)
-        case "arrow":      return arrow(in: r)
-        case "ring":       return ring(in: r)
-        case "semicircle": return semicircle(in: r)
+        case "crescent":      return crescent(in: r)
+        case "semicircle":    return semicircle(in: r)
+        case "trapezoid":     return trapezoid(in: r)
+        case "parallelogram": return parallelogram(in: r)
         default:           return Circle().path(in: r)
         }
     }
@@ -353,39 +352,29 @@ struct AnyShapeProxy: Shape {
         return p
     }
 
-    private func cross(in r: CGRect) -> Path {
-        let t = min(r.width, r.height) * 0.34
+    /// One pair of parallel sides, drawn as the isosceles trapezoid a child is
+    /// shown: level top and bottom, sloping ends.
+    private func trapezoid(in r: CGRect) -> Path {
+        let inset = r.width * 0.22
+        let top = r.minY + r.height * 0.16, bottom = r.maxY - r.height * 0.16
         var p = Path()
-        p.addRoundedRect(in: CGRect(x: r.midX - t / 2, y: r.minY, width: t, height: r.height),
-                         cornerSize: CGSize(width: t * 0.18, height: t * 0.18))
-        p.addRoundedRect(in: CGRect(x: r.minX, y: r.midY - t / 2, width: r.width, height: t),
-                         cornerSize: CGSize(width: t * 0.18, height: t * 0.18))
+        p.move(to: CGPoint(x: r.minX + inset, y: top))
+        p.addLine(to: CGPoint(x: r.maxX - inset, y: top))
+        p.addLine(to: CGPoint(x: r.maxX, y: bottom))
+        p.addLine(to: CGPoint(x: r.minX, y: bottom))
+        p.closeSubpath()
         return p
     }
 
-    private func arrow(in r: CGRect) -> Path {
-        let w = r.width, h = r.height
+    /// A pushed-over rectangle — both pairs of sides parallel.
+    private func parallelogram(in r: CGRect) -> Path {
+        let lean = r.width * 0.24
+        let top = r.minY + r.height * 0.18, bottom = r.maxY - r.height * 0.18
         var p = Path()
-        p.move(to: CGPoint(x: r.minX, y: r.midY - h * 0.14))
-        p.addLine(to: CGPoint(x: r.minX + w * 0.55, y: r.midY - h * 0.14))
-        p.addLine(to: CGPoint(x: r.minX + w * 0.55, y: r.minY))
-        p.addLine(to: CGPoint(x: r.maxX, y: r.midY))
-        p.addLine(to: CGPoint(x: r.minX + w * 0.55, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.minX + w * 0.55, y: r.midY + h * 0.14))
-        p.addLine(to: CGPoint(x: r.minX, y: r.midY + h * 0.14))
-        p.closeSubpath(); return p
-    }
-
-    private func ring(in r: CGRect) -> Path {
-        let rad = min(r.width, r.height) / 2
-        var p = Path()
-        p.move(to: CGPoint(x: r.midX + rad, y: r.midY))
-        p.addArc(center: CGPoint(x: r.midX, y: r.midY), radius: rad,
-                 startAngle: .degrees(0), endAngle: .degrees(360), clockwise: false)
-        p.closeSubpath()
-        p.move(to: CGPoint(x: r.midX + rad * 0.52, y: r.midY))
-        p.addArc(center: CGPoint(x: r.midX, y: r.midY), radius: rad * 0.52,
-                 startAngle: .degrees(360), endAngle: .degrees(0), clockwise: true)
+        p.move(to: CGPoint(x: r.minX + lean, y: top))
+        p.addLine(to: CGPoint(x: r.maxX, y: top))
+        p.addLine(to: CGPoint(x: r.maxX - lean, y: bottom))
+        p.addLine(to: CGPoint(x: r.minX, y: bottom))
         p.closeSubpath()
         return p
     }

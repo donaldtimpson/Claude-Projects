@@ -2471,12 +2471,6 @@
    "word": "triangle"
   },
   {
-   "word": "star"
-  },
-  {
-   "word": "heart"
-  },
-  {
    "word": "rectangle"
   },
   {
@@ -2486,6 +2480,24 @@
    "word": "diamond"
   },
   {
+   "word": "star"
+  },
+  {
+   "word": "heart"
+  },
+  {
+   "word": "crescent"
+  },
+  {
+   "word": "semicircle"
+  },
+  {
+   "word": "trapezoid"
+  },
+  {
+   "word": "parallelogram"
+  },
+  {
    "word": "pentagon"
   },
   {
@@ -2493,21 +2505,6 @@
   },
   {
    "word": "octagon"
-  },
-  {
-   "word": "crescent"
-  },
-  {
-   "word": "cross"
-  },
-  {
-   "word": "arrow"
-  },
-  {
-   "word": "ring"
-  },
-  {
-   "word": "semicircle"
   }
  ],
  "numbers": {
