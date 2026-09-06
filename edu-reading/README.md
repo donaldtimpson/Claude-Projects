@@ -206,6 +206,34 @@ Attribution is a legal requirement for the 406 CC BY photographs, so
 `photo-credits.json` ships with them and the grown-ups' area names every
 photographer.
 
+## My World — players, badges, places
+
+**What counts as earning was the whole problem.** A word used to be collected by
+swiping past its card, which is attendance rather than achievement — exactly why
+the reward layer felt hollow. A word is now *read* when the child **says it aloud**
+(the on-device listener in `Listener.swift`) or, with the microphone off, when the
+grown-up marks it. Both are moments, and a moment is what a badge and a toast can
+hang on.
+
+**Players.** Several children, one phone, no passwords: a three-year-old signs in
+by pointing at their own face. That is the only authentication a pre-reader can
+perform, and it is all this needs — nothing stored is worth protecting and nothing
+leaves the device. A first run creates a default player silently rather than gating
+a child behind a setup screen.
+
+**Badges.** Thirteen, in `Achievements.swift`. The first lands on the first word,
+because a reward system that takes a week to start is not one. There is deliberately
+**no streak** — a streak punishes a family holiday and hands the guilt to the
+parent. *Welcome Back* rewards returning instead: it can be gained, never lost.
+
+**Places.** Five worlds — Meadow, Beach, Snow, Night, Space — unlocked by badges and
+applied to **the whole app**. The earlier version changed the sky on one tab only,
+which is decoration wearing a progress bar's clothes.
+
+This replaced the flat / paper / sunroom skins: a child has no reason to care
+whether a shadow is soft or tight. The paper card treatment stayed as the house
+style, and colour — the thing a child actually notices — became the reward.
+
 ## Content
 
 `content/reading/reading.json` at the repo root is the source of truth. After

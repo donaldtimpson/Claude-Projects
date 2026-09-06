@@ -55,6 +55,16 @@ struct HomeView: View {
                                  dashed: true) { NumbersView() }
                     }
 
+                    NavigationLink { ProfilePicker() } label: {
+                        Text("Someone else's turn")
+                            .font(.andika(15))
+                            .foregroundStyle(Theme.inkSoft)
+                            .frame(maxWidth: .infinity, minHeight: 46)
+                            .overlay(RoundedRectangle(cornerRadius: 12)
+                                .stroke(Theme.inkSoft.opacity(0.3), lineWidth: 1.5))
+                    }
+                    .buttonStyle(.plain)
+
                     NavigationLink { ParentGateView() } label: {
                         Text("For grown-ups")
                             .font(.andika(15))
@@ -73,39 +83,41 @@ struct HomeView: View {
     }
 }
 
+/// The reward tile. Shows the child whose progress this is, what they have won,
+/// and where they can go — the three things the world screen holds.
 private struct WorldTile: View {
     @Environment(Progress.self) private var progress
-    private let c = ReadingContent.shared
+    @Environment(Profiles.self) private var profiles
 
     var body: some View {
-        let got = progress.knownWords.count
-        let total = c.collectibles.count
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("My World").font(.andika(26, bold: true)).foregroundStyle(Theme.ink)
-                Spacer()
-                Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
-            }
-            // The reward for reading a word is the word itself, as a thing you keep.
-            HStack(spacing: 4) {
-                ForEach(c.collectibles.prefix(9), id: \.word) { w in
-                    Text(w.image ?? "")
-                        .font(.system(size: 26))
-                        .grayscale(progress.knows(word: w.word) ? 0 : 1)
-                        .opacity(progress.knows(word: w.word) ? 1 : 0.28)
+        HStack(spacing: 14) {
+            Text(profiles.current?.face ?? "🌱").font(.system(size: 40))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(profiles.current?.name ?? "My World")
+                    .font(.andika(22, bold: true)).foregroundStyle(Theme.ink)
+                HStack(spacing: 10) {
+                    tally("\(progress.readWords.count)", "words")
+                    tally("\(progress.awards.count)", "badges")
+                    tally("\(progress.worlds.count)", "places")
                 }
-                if total > 9 { Text("…").foregroundStyle(Theme.inkSoft) }
             }
-            Text(got == 0 ? "Read a word and it comes to live here."
-                          : "\(got) collected")
-                .font(.andika(14)).foregroundStyle(Theme.inkSoft)
+            Spacer()
+            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
         }
-        .padding(18)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(LinearGradient(colors: [Color(hex: 0xCFE7F2), Color(hex: 0xEAF4F8)],
-                                   startPoint: .top, endPoint: .bottom))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.line, lineWidth: 1.5))
+        .background(Skin.live.card)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .stroke(Skin.live.accent.opacity(0.45), lineWidth: 1.5))
+        .shadow(color: .black.opacity(0.05), radius: 6, y: 3)
+    }
+
+    private func tally(_ n: String, _ label: String) -> some View {
+        HStack(spacing: 3) {
+            Text(n).font(.andika(15, bold: true)).foregroundStyle(Skin.live.accent)
+            Text(label).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+        }
     }
 }
 

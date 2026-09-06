@@ -28,11 +28,12 @@ struct SentencesView: View {
     }
 
     private func collect(_ i: Int) {
+        progress.readSentence(pool[min(i, pool.count - 1)].text)
         // Reading a sentence collects every decodable word in it, so the world
         // fills fastest exactly when things get exciting.
         for t in pool[min(i, pool.count - 1)].text.split(separator: " ") {
             let bare = t.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?,"))
-            if !bare.isEmpty && !c.sightSet.contains(bare) { progress.learn(word: bare) }
+            if !bare.isEmpty && !c.sightSet.contains(bare) { progress.readWord( bare) }
         }
     }
 }

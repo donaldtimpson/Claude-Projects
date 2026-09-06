@@ -46,7 +46,7 @@ struct WordsView: View {
                     .transition(.scale.combined(with: .opacity))
                 } else {
                     SayCard(text: w.word, size: 118, accent: accent) {
-                        progress.learn(word: w.word)
+                        progress.readWord( w.word)
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
                     }
                 }
@@ -59,7 +59,7 @@ struct WordsView: View {
             guard i < pool.count else { return }
             let w = pool[i]
             Voice.shared.say(w.word)
-            progress.learn(word: w.word)
+            progress.readWord( w.word)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
         } onAdvance: {
             flipped = false

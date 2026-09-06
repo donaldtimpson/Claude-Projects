@@ -48,7 +48,7 @@ struct BlendingView: View {
                         phonics(card.rime, size: 44).opacity(0.6)
                     }
                     SayCard(text: card.word, size: 106, accent: accent) {
-                        progress.learn(word: card.word)
+                        progress.readWord( card.word)
                     }
                     .frame(maxHeight: 250)
                     Spacer()
@@ -61,7 +61,7 @@ struct BlendingView: View {
             guard i < count else { return }
             let w = settings.rimeBlending ? rimeCards[i].word : cvCards[i]
             Voice.shared.say(w)
-            if settings.rimeBlending { progress.learn(word: w) }
+            if settings.rimeBlending { progress.readWord( w) }
         }
         .onAppear { if rimeCards.isEmpty { makePools() } }
         .onChange(of: settings.rimeBlending) { index = 0; makePools() }

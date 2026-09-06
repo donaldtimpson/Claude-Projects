@@ -1,139 +1,212 @@
 import SwiftUI
 
-// The reward layer, and deliberately not points, badges or streaks.
-//
-// One interaction, no modes: tap a thing you own and it says its word. If a
-// sentence exists about it, the sentence happens — tap the pig and it says
-// "The pig is big" while actually getting big. That is the whole idea in one
-// gesture: reading changes the world.
-//
-// A pre-reader cannot read a scoreboard, so how full the world is IS the progress
-// bar. Tapping a thing replays its word, which makes the reward layer double as
-// the review layer: a child who taps the frog forty times has read it forty times.
+// One screen, three sections: what you have read, what you have won, and where you
+// can go. The old version had a places tab that only changed the sky on that one
+// screen — decoration wearing a progress bar's clothes. Worlds now apply to the
+// whole app, so choosing one is actually moving somewhere.
 struct WorldView: View {
     @Environment(Progress.self) private var progress
+    @Environment(Profiles.self) private var profiles
     private let c = ReadingContent.shared
 
-    @State private var saying: String?
-    @State private var effect: (target: String, kind: String)?
-
-    private var biome: ReadingContent.Biome {
-        c.world.biomes[min(progress.biomeIndex, c.world.biomes.count - 1)]
-    }
-    private func spell(for word: String) -> ReadingContent.Spell? {
-        c.world.spells.first { $0.target == word }
-    }
+    private var columns: [GridItem] { [GridItem(.adaptive(minimum: 74), spacing: 10)] }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ZStack {
-                LinearGradient(colors: skyColors, startPoint: .top, endPoint: .bottom)
-                GeometryReader { geo in
-                    ScrollView {
-                        VStack {
-                            Spacer(minLength: 0)
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6),
-                                                     count: 5), spacing: 16) {
-                                ForEach(c.collectibles, id: \.word) { thing($0) }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+
+                section("WHAT I'VE READ", "\(progress.readWords.count)") {
+                    if progress.readWords.isEmpty {
+                        hint("Read a word out loud and it comes to live here.")
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 10) {
+                            ForEach(collected, id: \.self) { w in
+                                Button { Voice.shared.say(w) } label: {
+                                    VStack(spacing: 3) {
+                                        Text(face(for: w)).font(.system(size: 30))
+                                        phonics(w, size: 13)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(Skin.live.card)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                                .buttonStyle(.plain)
                             }
-                            Spacer(minLength: 0)
                         }
-                        .padding(18)
-                        .frame(minHeight: geo.size.height)
                     }
                 }
-            }
-            Rectangle().fill(groundColor).frame(height: 34)
 
-            // Places, as pictures. Five taps, each of which visibly changes the
-            // world — that is play, not a settings row.
-            HStack(spacing: 10) {
-                ForEach(Array(c.world.biomes.enumerated()), id: \.offset) { i, b in
-                    let open = progress.unlocked(b)
-                    Button {
-                        guard open else { return }
-                        withAnimation(.easeInOut(duration: 0.5)) { progress.choose(biome: i) }
-                    } label: {
-                        Text(b.icon).font(.system(size: 30))
-                            .grayscale(open ? 0 : 1).opacity(open ? 1 : 0.28)
-                            .padding(7)
-                            .background(progress.biomeIndex == i ? Theme.paper : .clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                section("MY BADGES", "\(progress.awards.count) of \(Awards.all.count)") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: 10)], spacing: 10) {
+                        ForEach(Awards.all) { a in
+                            let got = progress.has(a.id)
+                            VStack(spacing: 4) {
+                                Text(a.face).font(.system(size: 30))
+                                    .grayscale(got ? 0 : 1).opacity(got ? 1 : 0.28)
+                                Text(a.name).font(.andika(11, bold: true))
+                                    .foregroundStyle(got ? Theme.ink : Theme.inkSoft)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Skin.live.card)
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .stroke(got ? Color(hex: a.tint).opacity(0.6) : .clear, lineWidth: 2))
+                        }
+                    }
+                }
+
+                section("WHERE I CAN GO", "\(progress.worlds.count) of \(World.all.count)") {
+                    // Choosing a world changes the WHOLE app, which is the point.
+                    HStack(spacing: 10) {
+                        ForEach(World.all) { w in
+                            let open = progress.opened(w)
+                            Button {
+                                guard open else { return }
+                                withAnimation(.easeInOut(duration: 0.45)) { Skin.live.set(w) }
+                            } label: {
+                                VStack(spacing: 3) {
+                                    Text(w.face).font(.system(size: 26))
+                                        .grayscale(open ? 0 : 1).opacity(open ? 1 : 0.3)
+                                    Text(w.name).font(.andika(10))
+                                        .foregroundStyle(Theme.inkSoft)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 9)
+                                .background(Skin.live.world.id == w.id ? Skin.live.card : .clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Skin.live.world.id == w.id ? Skin.live.accent : .clear,
+                                            lineWidth: 2))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    hint(nextWorldHint)
+                }
+            }
+            .padding(18)
+        }
+        .background(Skin.live.ground.ignoresSafeArea())
+        .navigationTitle(profiles.current.map { "\($0.face) \($0.name)" } ?? "My World")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var collected: [String] {
+        c.pictureWords.map(\.word).filter { progress.knows(word: $0) }
+    }
+    private func face(for word: String) -> String {
+        c.pictureWords.first { $0.word == word }?.images.first ?? "🔤"
+    }
+    private var nextWorldHint: String {
+        if let next = Awards.all.first(where: { $0.unlocksWorld != nil && !progress.has($0.id) }) {
+            return "\(next.name) opens a new place."
+        }
+        return "Every place is open."
+    }
+
+    @ViewBuilder
+    private func section<C: View>(_ title: String, _ tally: String,
+                                  @ViewBuilder content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack {
+                Text(title).font(.andika(12, bold: true)).kerning(1.3)
+                    .foregroundStyle(Theme.inkSoft)
+                Spacer()
+                Text(tally).font(.andika(12, bold: true)).foregroundStyle(Skin.live.accent)
+            }
+            content()
+        }
+    }
+    private func hint(_ t: String) -> some View {
+        Text(t).font(.andika(13)).foregroundStyle(Theme.inkSoft)
+    }
+}
+
+/// Signing in, for someone who cannot read. Pick your own face.
+struct ProfilePicker: View {
+    @Environment(Profiles.self) private var profiles
+    @Environment(Progress.self) private var progress
+    @Environment(\.dismiss) private var dismiss
+    @State private var adding = false
+    @State private var name = ""
+    @State private var face = Profiles.faces[0]
+    @State private var colour = Profiles.colours[0]
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                Text("Who's playing?").font(.andika(26, bold: true)).foregroundStyle(Theme.ink)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 12)], spacing: 12) {
+                    ForEach(profiles.all) { p in
+                        Button {
+                            profiles.select(p); progress.load(profile: p.id); dismiss()
+                        } label: {
+                            VStack(spacing: 6) {
+                                Text(p.face).font(.system(size: 44))
+                                Text(p.name).font(.andika(15, bold: true)).foregroundStyle(Theme.ink)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Skin.live.card)
+                            .clipShape(RoundedRectangle(cornerRadius: 18))
+                            .overlay(RoundedRectangle(cornerRadius: 18)
+                                .stroke(Color(hex: p.colour).opacity(0.6), lineWidth: 2))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    Button { adding = true } label: {
+                        VStack(spacing: 6) {
+                            Image(systemName: "plus").font(.system(size: 30, weight: .semibold))
+                                .foregroundStyle(Theme.inkSoft)
+                            Text("Add").font(.andika(15)).foregroundStyle(Theme.inkSoft)
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 16)
+                        .overlay(RoundedRectangle(cornerRadius: 18)
+                            .stroke(Theme.inkSoft.opacity(0.35),
+                                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])))
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.vertical, 10)
+            .padding(20)
         }
-        .background(Theme.ground)
-        .navigationTitle("My World")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private func thing(_ w: ReadingContent.Word) -> some View {
-        let known = progress.knows(word: w.word)
-        let fx = effect?.target == w.word ? effect?.kind : nil
-        return Button {
-            guard known else { return }
-            if let sp = spell(for: w.word) {
-                Voice.shared.say(sp.text)
-                progress.cast(sp.text)
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.55)) {
-                    effect = (w.word, sp.effect)
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                    withAnimation(.easeOut(duration: 0.4)) { effect = nil }
-                }
-            } else {
-                Voice.shared.say(w.word)
-            }
-            saying = w.word
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                if saying == w.word { saying = nil }
-            }
-        } label: {
-            Text(w.image ?? "")
-                .font(.system(size: 38))
-                .scaleEffect(fx == "big" ? 2.0 : 1)
-                .offset(y: fx == "hop" ? -22 : 0)
-                .saturation(fx == "red" ? 3 : 1)
-                .hueRotation(.degrees(fx == "red" ? -40 : 0))
-                .shadow(color: fx == "hot" ? .orange : .clear, radius: fx == "hot" ? 16 : 0)
-                .grayscale(known ? 0 : 1)
-                .opacity(known ? 1 : 0.26)
-                .overlay(alignment: .top) {
-                    if saying == w.word {
-                        phonics(w.word, size: 15)
-                            .padding(.horizontal, 8).padding(.vertical, 3)
-                            .background(Theme.paper)
-                            .clipShape(Capsule())
-                            .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
-                            .offset(y: -22)
-                            .transition(.scale.combined(with: .opacity))
+        .background(Skin.live.ground.ignoresSafeArea())
+        .sheet(isPresented: $adding) {
+            NavigationStack {
+                Form {
+                    Section("Name") { TextField("Name", text: $name) }
+                    Section("Face") {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 46))], spacing: 8) {
+                            ForEach(Profiles.faces, id: \.self) { f in
+                                Button { face = f } label: {
+                                    Text(f).font(.system(size: 30))
+                                        .padding(5)
+                                        .background(face == f ? Skin.live.accent.opacity(0.2) : .clear)
+                                        .clipShape(Circle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: fx)
-                .animation(.spring(response: 0.3), value: saying)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var skyColors: [Color] {
-        switch biome.id {
-        case "beach": return [Color(hex: 0xFBE4C0), Color(hex: 0xFDF3E2)]
-        case "snow":  return [Color(hex: 0xDCE9F0), Color(hex: 0xF4F9FB)]
-        case "night": return [Color(hex: 0x1E2C46), Color(hex: 0x3A4A6B)]
-        case "space": return [Color(hex: 0x120C24), Color(hex: 0x2A1B47)]
-        default:      return [Color(hex: 0xCFE7F2), Color(hex: 0xEAF4F8)]
-        }
-    }
-    private var groundColor: Color {
-        switch biome.id {
-        case "beach": return Color(hex: 0xE8C88A)
-        case "snow":  return Color(hex: 0xE8F0F4)
-        case "night": return Color(hex: 0x26304A)
-        case "space": return Color(hex: 0x1A1230)
-        default:      return Color(hex: 0x7FB069)
+                .navigationTitle("New player")
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Add") {
+                            let p = profiles.add(name: name.isEmpty ? "Me" : name,
+                                                 face: face, colour: colour)
+                            progress.load(profile: p.id)
+                            adding = false; name = ""; dismiss()
+                        }
+                    }
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { adding = false }
+                    }
+                }
+            }
         }
     }
 }

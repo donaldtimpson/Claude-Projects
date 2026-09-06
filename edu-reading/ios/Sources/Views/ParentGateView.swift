@@ -60,9 +60,10 @@ private struct AdultView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 section("WHERE THEY ARE") {
-                    row("Words collected", "\(progress.knownWords.count) of \(c.collectibles.count)")
-                    row("Letter sounds seen", "\(progress.knownLetters.count) of \(c.letters.count)")
-                    row("Sentences read", "\(progress.castSpells.count)")
+                    row("Words read aloud", "\(progress.readWords.count)")
+                    row("Letters met", "\(progress.seenLetters.count) of \(c.letters.count)")
+                    row("Sentences read", "\(progress.readSentences.count)")
+                    row("Badges", "\(progress.awards.count) of \(Awards.all.count)")
                     Text("Nothing here is uploaded. It never leaves this device.")
                         .font(.andika(13)).foregroundStyle(Theme.inkSoft)
                 }
@@ -154,29 +155,6 @@ private struct AdultView: View {
                         }
                     }
                     .tint(Theme.go)
-                }
-
-                section("HOW IT LOOKS") {
-                    // Switchable here so the look can be judged on a real device
-                    // with a real child, rather than from screenshots.
-                    ForEach(Skin.allCases, id: \.self) { s in
-                        Button {
-                            Skin.choose(s); bump += 1
-                        } label: {
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: Skin.current == s ? "largecircle.fill.circle" : "circle")
-                                    .foregroundStyle(Skin.current == s ? Theme.go : Theme.inkSoft)
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(s.label).font(.andika(16, bold: true)).foregroundStyle(Theme.ink)
-                                    Text(s.blurb).font(.andika(12)).foregroundStyle(Theme.inkSoft)
-                                }
-                                Spacer()
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    Text("Takes effect on the next card you open.")
-                        .font(.andika(12)).foregroundStyle(Theme.inkSoft)
                 }
 
                 section("THANK YOU") {

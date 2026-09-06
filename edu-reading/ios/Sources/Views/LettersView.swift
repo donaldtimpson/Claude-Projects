@@ -63,13 +63,13 @@ struct LettersView: View {
         } onTap: { i in
             guard i < pool.count else { return }
             if Voice.shared.hasRecording(pool[i].sound) { Voice.shared.say(pool[i].sound) }
-            progress.learn(letter: pool[i].lower)
+            progress.metLetter( pool[i].lower)
         }
         .onChange(of: ordered) { index = 0; pool = makePool() }
         .onAppear {
             if pool.isEmpty { pool = makePool() }
             index = start
-            if !pool.isEmpty { progress.learn(letter: pool[start % pool.count].lower) }
+            if !pool.isEmpty { progress.metLetter( pool[start % pool.count].lower) }
         }
     }
 }

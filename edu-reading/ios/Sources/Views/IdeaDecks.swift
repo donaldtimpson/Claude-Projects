@@ -16,6 +16,7 @@ import SwiftUI
 // MARK: - Colours
 
 struct ColorsView: View {
+    @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x4E8FBF)
     @State private var pool: [Int] = []
@@ -41,7 +42,8 @@ struct ColorsView: View {
                 CardTag(id: CardIds.colors + idx + 1).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.colors[pool[min(i, pool.count - 1)]].word)
+            let w = c.colors[pool[min(i, pool.count - 1)]].word
+            Voice.shared.say(w); progress.namedColour(w)
         }
         .onAppear { if pool.isEmpty { rebuild() } }
     }
@@ -71,6 +73,7 @@ struct ColorsView: View {
 // MARK: - Shapes
 
 struct ShapesView: View {
+    @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x6FA368)
     @State private var pool: [Int] = []
@@ -112,7 +115,8 @@ struct ShapesView: View {
                 CardTag(id: CardIds.shapes + idx + 1).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.shapes[pool[min(i, pool.count - 1)]].word)
+            let w = c.shapes[pool[min(i, pool.count - 1)]].word
+            Voice.shared.say(w); progress.namedShape(w)
         }
         .onAppear { if pool.isEmpty { rebuild() } }
     }
@@ -123,6 +127,7 @@ struct ShapesView: View {
 // MARK: - Numbers
 
 struct NumbersView: View {
+    @Environment(Progress.self) private var progress
     /// Screenshot router only: open at a given card so the dice and row layouts
     /// can be looked at without tapping through.
     var start: Int = 0
@@ -165,7 +170,8 @@ struct NumbersView: View {
                 CardTag(id: CardIds.numbers + n).padding(14)
             }
         } onTap: { i in
-            Voice.shared.say(c.numbers.words[pool[min(i, pool.count - 1)] - 1])
+            let n = pool[min(i, pool.count - 1)]
+            Voice.shared.say(c.numbers.words[n - 1]); progress.counted(n)
         }
         .onAppear { rebuild(); index = start }
         .onChange(of: settings.numberLevel) { index = 0; rebuild() }
