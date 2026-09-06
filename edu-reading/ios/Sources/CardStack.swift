@@ -185,8 +185,9 @@ struct DeckScreen<Content: View>: View {
                 .padding(.bottom, 14)
         }
         .background(accent.opacity(0.16).ignoresSafeArea())
-        .navigationTitle(title)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .noBackSwipe()
     }
 }

@@ -58,6 +58,12 @@ Each photograph is **its own card**, dealt in rounds so every word appears once
 before any word appears twice — meeting an unfamiliar dog thirty cards later asks
 the child to recognise the *category*, which is the point of having more than one.
 
+**Both decks were audited the same way, and the drawings needed it as much as the
+photographs did.** An emoji is not automatically a good card: 🦁 had been filed
+under *zoo*, 🥋 under *belt*, 🧻 under *towel*, 🪜 under *stairs*. Worse, the same
+glyph was serving several words — 🪑 was *chair*, *table*, *bench* and *sit* at
+once. 28 drawings were removed; no glyph now appears on two words.
+
 **Words are matched to pictures, not pictures to words.** An earlier pass tried to
 find three photographs for every word and the third was always a stretch — a
 lion's face ended up on "zoo", a polar bear too. Now every photograph is judged on
@@ -74,6 +80,12 @@ but testing showed the drawings are reliably legible while a fair number of the
 photographs are not, and a bad photograph interrupting a good deck is worse than
 either deck alone. Drawings-only is also often easiest for the youngest child:
 less to look past.
+
+### No title inside a deck
+
+A child cannot read "Photos", and in landscape the title bar eats the one
+dimension that is scarce. Decks show no title in either orientation; the back
+chevron is enough to say where you are.
 
 ### Landscape and the back swipe
 

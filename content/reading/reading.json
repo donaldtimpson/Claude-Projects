@@ -25,7 +25,6 @@
    "category": "Animals",
    "images": [
     "🐦",
-    "🦜",
     "🕊️"
    ]
   },
@@ -96,8 +95,7 @@
    "category": "Food",
    "images": [
     "🍞",
-    "🥖",
-    "🥯"
+    "🥖"
    ]
   },
   {
@@ -540,9 +538,7 @@
   {
    "word": "goose",
    "category": "Animals",
-   "images": [
-    "🦢"
-   ]
+   "images": []
   },
   {
    "word": "donkey",
@@ -769,20 +765,6 @@
    ]
   },
   {
-   "word": "head",
-   "category": "Body",
-   "images": [
-    "🧑"
-   ]
-  },
-  {
-   "word": "toe",
-   "category": "Body",
-   "images": [
-    "🦶"
-   ]
-  },
-  {
    "word": "teeth",
    "category": "Body",
    "images": [
@@ -827,9 +809,7 @@
   {
    "word": "belt",
    "category": "Clothes",
-   "images": [
-    "🥋"
-   ]
+   "images": []
   },
   {
    "word": "chair",
@@ -841,9 +821,7 @@
   {
    "word": "table",
    "category": "Home",
-   "images": [
-    "🪑"
-   ]
+   "images": []
   },
   {
    "word": "window",
@@ -897,9 +875,7 @@
   {
    "word": "towel",
    "category": "Home",
-   "images": [
-    "🧻"
-   ]
+   "images": []
   },
   {
    "word": "mirror",
@@ -953,23 +929,12 @@
   {
    "word": "blanket",
    "category": "Home",
-   "images": [
-    "🛏️"
-   ]
-  },
-  {
-   "word": "pillow",
-   "category": "Home",
-   "images": [
-    "🛏️"
-   ]
+   "images": []
   },
   {
    "word": "stairs",
    "category": "Home",
-   "images": [
-    "🪜"
-   ]
+   "images": []
   },
   {
    "word": "spoon",
@@ -1009,9 +974,7 @@
   {
    "word": "pot",
    "category": "Kitchen",
-   "images": [
-    "🍲"
-   ]
+   "images": []
   },
   {
    "word": "pan",
@@ -1056,13 +1019,6 @@
    ]
   },
   {
-   "word": "blocks",
-   "category": "Toys",
-   "images": [
-    "🧱"
-   ]
-  },
-  {
    "word": "balloon",
    "category": "Toys",
    "images": [
@@ -1093,9 +1049,7 @@
   {
    "word": "swing",
    "category": "Toys",
-   "images": [
-    "🛝"
-   ]
+   "images": []
   },
   {
    "word": "slide",
@@ -1191,9 +1145,7 @@
   {
    "word": "grass",
    "category": "Outside",
-   "images": [
-    "🌱"
-   ]
+   "images": []
   },
   {
    "word": "cloud",
@@ -1226,9 +1178,7 @@
   {
    "word": "sand",
    "category": "Outside",
-   "images": [
-    "🏖️"
-   ]
+   "images": []
   },
   {
    "word": "mountain",
@@ -1254,9 +1204,7 @@
   {
    "word": "hill",
    "category": "Outside",
-   "images": [
-    "⛰️"
-   ]
+   "images": []
   },
   {
    "word": "wood",
@@ -1289,16 +1237,12 @@
   {
    "word": "stick",
    "category": "Outside",
-   "images": [
-    "🥢"
-   ]
+   "images": []
   },
   {
    "word": "puddle",
    "category": "Outside",
-   "images": [
-    "💦"
-   ]
+   "images": []
   },
   {
    "word": "rainbow",
@@ -1310,23 +1254,17 @@
   {
    "word": "bench",
    "category": "Outside",
-   "images": [
-    "🪑"
-   ]
+   "images": []
   },
   {
    "word": "farm",
    "category": "Places",
-   "images": [
-    "🚜"
-   ]
+   "images": []
   },
   {
    "word": "park",
    "category": "Places",
-   "images": [
-    "🏞️"
-   ]
+   "images": []
   },
   {
    "word": "shop",
@@ -1357,24 +1295,10 @@
    ]
   },
   {
-   "word": "garden",
-   "category": "Places",
-   "images": [
-    "🌻"
-   ]
-  },
-  {
    "word": "beach",
    "category": "Places",
    "images": [
     "🏖️"
-   ]
-  },
-  {
-   "word": "zoo",
-   "category": "Places",
-   "images": [
-    "🦁"
    ]
   },
   {
@@ -1387,9 +1311,7 @@
   {
    "word": "sit",
    "category": "Doing",
-   "images": [
-    "🪑"
-   ]
+   "images": []
   },
   {
    "word": "stand",
@@ -1401,16 +1323,12 @@
   {
    "word": "drink",
    "category": "Doing",
-   "images": [
-    "🥛"
-   ]
+   "images": []
   },
   {
    "word": "read",
    "category": "Doing",
-   "images": [
-    "📖"
-   ]
+   "images": []
   },
   {
    "word": "write",
@@ -1450,9 +1368,7 @@
   {
    "word": "play",
    "category": "Doing",
-   "images": [
-    "🤸"
-   ]
+   "images": []
   },
   {
    "word": "ride",
