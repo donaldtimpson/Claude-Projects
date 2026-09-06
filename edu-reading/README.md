@@ -75,10 +75,20 @@ where two are guesses.
 ### In order, or shuffled
 
 Decks whose order carries meaning show a toggle in the top right, mirroring the
-back button: **Letters** (the teaching order *is* the lesson — s a t p i n first),
-**Blending** (a rime, then the family built from it), and **Numbers** (counting).
-Everywhere else there is nothing to be in order *of*, so there is no control — a
-button that does nothing is worse than no button.
+back button: **Letters** (A to Z), **Blending** (a rime, then the family built
+from it), and **Numbers** (counting). Everywhere else there is nothing to be in
+order *of*, so there is no control — a button that does nothing is worse than no
+button.
+
+Letters were briefly ordered by the phonics teaching sequence (s a t p i n first),
+which is defensible on paper and unreadable as a button: a parent presses "in
+order" and expects the alphabet. Shuffle is there for when they want something
+else.
+
+> **Verify against a clean build.** Incremental `xcodebuild` in this project has
+> silently reported BUILD SUCCEEDED while reusing stale products — several changes
+> were "verified" against a binary that did not contain them. `strings` the dylib
+> for something you just added, or `xcodebuild clean` first.
 
 ### Colours, shapes and numbers
 

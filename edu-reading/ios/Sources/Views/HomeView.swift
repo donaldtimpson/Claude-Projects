@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(Progress.self) private var progress
+    @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
 
     var body: some View {
@@ -19,7 +20,7 @@ struct HomeView: View {
                             .foregroundStyle(Theme.inkSoft)
 
                         DeckTile(step: "1", tint: 0xE0A038, name: "Letters",
-                                 blurb: "\(c.letters.count) sounds, in the order that helps") { LettersView() }
+                                 blurb: "\(c.letters.count) sounds, A to Z or shuffled") { LettersView() }
                         DeckTile(step: "2", tint: 0x2E7D6E, name: "Blending",
                                  blurb: "Glue two sounds into one") { BlendingView() }
                         DeckTile(step: "3", tint: 0x3B7EA1, name: "Words",
@@ -50,7 +51,8 @@ struct HomeView: View {
                         DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
                                  blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
                         DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
-                                 blurb: "Counting, one to twenty", dashed: true) { NumbersView() }
+                                 blurb: "Counting, one to \(c.numbers.words[settings.numberLevel - 1])",
+                                 dashed: true) { NumbersView() }
                     }
 
                     NavigationLink { ParentGateView() } label: {
