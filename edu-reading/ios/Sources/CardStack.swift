@@ -174,6 +174,8 @@ struct DeckScreen<Content: View>: View {
     var onTap: (Int) -> Void
     var onAdvance: (() -> Void)? = nil
 
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         VStack(spacing: 0) {
             CardStack(count: count, index: $index, accent: accent,
@@ -182,12 +184,21 @@ struct DeckScreen<Content: View>: View {
                 content(i)
             }
             Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)
-                .padding(.bottom, 14)
+                .padding(.bottom, 10)
         }
         .background(accent.opacity(0.16).ignoresSafeArea())
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .overlay(alignment: .topLeading) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.ink.opacity(0.55))
+                    .frame(width: 44, height: 44)          // a full touch target
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 4)
+        }
+        .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
     }
 }

@@ -36,12 +36,13 @@ struct PictureWordsView: View {
             AdaptiveCard {
                 if drawings {
                     if let p, !p.images.isEmpty {
-                        // An emoji is a glyph, so it cannot be resized to fit a
-                        // box — scale it down from a large size instead.
-                        Text(p.images[card.variant % p.images.count])
-                            .font(.system(size: 200))
-                            .minimumScaleFactor(0.3)
-                            .lineLimit(1)
+                        // An emoji is a glyph and cannot be resized like an image,
+                        // so measure the space and pick a point size that fills it.
+                        GeometryReader { geo in
+                            Text(p.images[card.variant % p.images.count])
+                                .font(.system(size: min(geo.size.width, geo.size.height) * 0.86))
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        }
                     }
                 } else if let art = photo(card.word, card.variant) {
                     Image(uiImage: art)
