@@ -55,103 +55,16 @@ victory lap a year later. Three images per word, never one — a child shown a s
 dog learns that picture, not the category.
 
 Each photograph is **its own card**, dealt in rounds so every word appears once
-before any word appears twice. The three pictures of a pig land about a full deck
-apart rather than stacked on one card — meeting an unfamiliar pig twenty cards
-later asks the child to recognise the *category* from a picture they have not
-seen, which is the entire reason for having three. 446 cards from 211 words.
+before any word appears twice — meeting an unfamiliar dog thirty cards later asks
+the child to recognise the *category*, which is the point of having more than one.
 
-**Letter Sounds has no pictures on purpose.** "A is for Apple" builds a
-letter → picture → *name* link and trains guessing from images. This deck teaches
-the sound, and it teaches it in a deliberate order (`s a t p i n` first), so after
-six letters a child can read `sat, pat, tap, nap, pin, tin, sit`. Shuffle is a
-review mode, not the teaching order.
-
-**Blending ships two versions to be tried on real children.** Variant A is
-consonant + vowel (`fa fe fi`), which works beautifully in Spanish but is unstable
-in English — the *fa* in *fat* is not the *fa* in *fable*. Variant B builds on the
-rime (`at → fat → sat`), a unit English keeps stable, and hands over a whole word
-family per card.
-
-**Sight words arrive in deck 4, not deck 5.** Without `the` and `a`, a decodable
-sentence can only ever be "Sam sat."
-
-## The Word World
-
-The reward layer, and deliberately **not points, badges or streaks**.
-
-Words you read become things you own. Reading a sentence *changes* the world —
-"The pig is big" actually enlarges the pig. That is not a metaphor bolted on; it is
-the literal truth about literacy handed over as a game, and it turns the
-decodable-sentence deck from the driest rung into the one they ask for.
-
-Three deliberate refusals:
-
-- **No points or badges.** They are text and abstract number — the two things a
-  pre-reader hasn't got. How full the world is *is* the progress bar.
-- **No streaks.** A streak punishes a family holiday and hands the guilt to the
-  parent. Nothing here decays or expires.
-- **No shop.** A shop needs prices and item names. Themes are *places* instead
-  (grass → beach → snow → night → space), opened by reading.
-
-Tapping a collected thing replays its word, so a child who taps the frog forty
-times has read *frog* forty times — the reward layer doubles as the review layer.
-
-## Audio
-
-`Voice.swift` has two tiers. It plays a bundled `<word>.m4a` if one exists, and
-otherwise falls back to on-device synthesis so every word speaks today.
-
-Drop recordings into `Resources/` and tier one takes over with no code change:
-
-- **Words** — [Lingua Libre / Wikimedia Commons](https://commons.wikimedia.org/wiki/Category:Lingua_Libre_pronunciation-eng)
-  has ~107,000 English pronunciations under CC BY-SA. Filter to one prolific
-  speaker so the voice stays consistent.
-- **The 44 letter sounds** — record by hand. Synthesis is bad at isolated phonemes,
-  and the schwa matters: "buh-a-tuh" never blends into "bat". Until real audio
-  exists the letter deck stays silent rather than teach the wrong sound.
-
-## Photographs
-
-**446 photographs across 211 words** (~23 MB), all CC0 or CC BY, sourced through
-[Openverse](https://openverse.org), which needs no API key. Words with no usable
-photograph fall back to emoji; a handful were removed entirely.
-
-`tools/photos/` holds the pipeline and, more importantly, **the decisions**:
-`picks.json` and `picks-requery.json` are what was chosen, `query-hints.json` the
-searches that needed sharpening, and `rejected.json` the 30 words that were cut
-with the reason for each.
-
-### Why a person has to look at every one
-
-Automated selection produces cards that teach the wrong thing, and it fails in
-ways a machine cannot notice. Real results from this run:
-
-| Query | What came back |
-|---|---|
-| `apple` (Wikimedia) | An Apple II computer |
-| `dog` (Wikimedia) | A dhole — a wild canid |
-| `sleep` (Wikipedia lead) | A Domenico Fetti painting |
-| `star` (Wikipedia lead) | The Sun, byte-identical to the `sun` card |
-| `teddy` | Four photographs of dogs |
-| `chicken` | Raw poultry and fried chicken |
-| `panda` | Red pandas |
-| `pig` | Guinea pigs, and a freight train |
-| `kangaroo` | Two city skylines |
-| `shirt` | **A t-shirt printed with profanity** |
-
-That last one is the argument on its own. Roughly a quarter of first-pass results
-need rejecting, and for a children's app the only reliable detector is an eye.
-
-### What cannot be photographed
-
-Verbs mostly failed: `throw`, `catch`, `push`, `pull`, `point`, `wave`, `build`,
-`draw` were all cut, because a still photograph cannot disambiguate an action
-without a caption — the one thing a pre-reader cannot use. Isolated body parts
-(`arm`, `leg`, `knee`, `finger`, `tongue`) and roles (`doctor`, `farmer`,
-`teacher`) went the same way. **Better absent than misleading.**
-
-Verbs that survived did so because the whole scene reads as the action:
-`run`, `swim`, `climb`, `dance`, `cry`, `read`, `drink`, `paint`, `clap`, `ride`.
+**Words are matched to pictures, not pictures to words.** An earlier pass tried to
+find three photographs for every word and the third was always a stretch — a
+lion's face ended up on "zoo", a polar bear too. Now every photograph is judged on
+its own: *what does this actually show?* The word follows the picture. Some words
+have four pictures, many have one, and that unevenness is correct — a forced match
+teaches the wrong thing, and a word with one good picture beats a word with three
+where two are guesses.
 
 ### Two decks, not one
 
@@ -161,6 +74,19 @@ but testing showed the drawings are reliably legible while a fair number of the
 photographs are not, and a bad photograph interrupting a good deck is worse than
 either deck alone. Drawings-only is also often easiest for the youngest child:
 less to look past.
+
+### Landscape and the back swipe
+
+Cards are swiped left **and** right to move through a deck, which collides with the
+iOS edge-swipe that means "go back" — a slightly-too-far-left swipe threw the child
+out of the deck. There is no direction left to reserve for navigation, so the edge
+gesture is disabled inside a deck (`noBackSwipe()`) and the bar's back button is
+the way out.
+
+Landscape is supported on iPhone. A landscape card is short rather than narrow, so
+the picture and the word sit **side by side** instead of stacked. Because the
+Simulator cannot be rotated from the command line, a DEBUG-only `-landscape`
+launch argument forces that layout for screenshots.
 
 ### Card numbers
 

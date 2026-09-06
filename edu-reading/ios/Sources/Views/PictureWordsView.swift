@@ -18,6 +18,8 @@ struct PictureWordsView: View {
     let drawings: Bool
 
     @Environment(Settings.self) private var settings
+    @Environment(\.verticalSizeClass) private var vertical
+    private var landscape: Bool { vertical == .compact || Layout.forcedLandscape }
     private let c = ReadingContent.shared
     private var accent: Color { drawings ? Color(hex: 0xC77CB0) : Color(hex: 0xD9646E) }
 
@@ -31,29 +33,27 @@ struct PictureWordsView: View {
                    index: $index, accent: accent) { i in
             let card = pool[min(i, max(pool.count - 1, 0))]
             let p = c.pictureWords.first { $0.word == card.word }
-            VStack(spacing: 24) {
-                HStack {
-                    Spacer()
-                    CardTag(id: card.id)
-                }
-                Spacer()
-                if drawings {
-                    if let p, !p.images.isEmpty {
-                        Text(p.images[card.variant % p.images.count])
-                            .font(.system(size: 190))
+            // Stacked in portrait, side-by-side in landscape — a short wide card
+            // has no room for a big picture above a word.
+            AdaptiveCard(landscape: landscape) {
+                Group {
+                    if drawings {
+                        if let p, !p.images.isEmpty {
+                            Text(p.images[card.variant % p.images.count])
+                                .font(.system(size: landscape ? 150 : 190))
+                        }
+                    } else if let art = photo(card.word, card.variant) {
+                        Image(uiImage: art)
+                            .resizable().scaledToFit()
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
-                } else if let art = photo(card.word, card.variant) {
-                    Image(uiImage: art)
-                        .resizable().scaledToFit()
-                        .frame(maxHeight: 330)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
-                Spacer()
+            } caption: {
                 if settings.showWordOnPictures {
                     phonics(card.word, size: 34).opacity(0.75)
                 }
             }
-            .padding(24)
+            .overlay(alignment: .topTrailing) { CardTag(id: card.id).padding(18) }
         } onTap: { i in
             guard i < pool.count else { return }
             Voice.shared.say(pool[i].word)
