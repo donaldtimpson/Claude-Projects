@@ -50,6 +50,10 @@ struct HomeView: View {
                                  blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
                         DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
                                  blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
+                        DeckTile(step: "•", tint: 0x3E8FA8, name: "Find It",
+                                 blurb: settings.quizReads ? "Read the word, find the picture"
+                                                           : "Hear the word, find the picture",
+                                 dashed: true) { QuizView() }
                         DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
                                  blurb: "Counting, one to \(c.numbers.words[settings.numberLevel - 1])",
                                  dashed: true) { NumbersView() }

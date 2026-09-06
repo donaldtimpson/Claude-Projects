@@ -20,6 +20,7 @@ final class Progress {
     private(set) var awards: Set<String> = []
     private(set) var worlds: Set<String> = [World.free]
     private(set) var finishedDecks: Set<String> = []
+    private(set) var quizRight: Int = 0
     private(set) var lastDay: String = ""
 
     /// Set by the engine when something is earned; the app shows it and clears it.
@@ -29,6 +30,7 @@ final class Progress {
         var words: [String] = []; var letters: [String] = []; var sentences: [String] = []
         var colours: [String] = []; var shapes: [String] = []; var counted: [Int] = []
         var awards: [String] = []; var worlds: [String] = []; var decks: [String] = []
+        var quizRight: Int = 0
         var lastDay: String = ""
     }
 
@@ -38,21 +40,32 @@ final class Progress {
         profileID = profile
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
+        quizRight = 0
         guard let d = UserDefaults.standard.data(forKey: key(profile)),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         readWords = Set(s.words); seenLetters = Set(s.letters); readSentences = Set(s.sentences)
         colours = Set(s.colours); shapes = Set(s.shapes); counted = Set(s.counted)
         awards = Set(s.awards); worlds = Set(s.worlds).union([World.free])
-        finishedDecks = Set(s.decks); lastDay = s.lastDay
+        finishedDecks = Set(s.decks); lastDay = s.lastDay; quizRight = s.quizRight
     }
 
     private func save() {
-        let s = Snapshot(words: Array(readWords), letters: Array(seenLetters),
-                         sentences: Array(readSentences), colours: Array(colours),
-                         shapes: Array(shapes), counted: Array(counted),
-                         awards: Array(awards), worlds: Array(worlds),
-                         decks: Array(finishedDecks), lastDay: lastDay)
-        if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: key(profileID)) }
+        // Built field by field: as one literal the type-checker gives up on it.
+        var s = Snapshot()
+        s.words = Array(readWords)
+        s.letters = Array(seenLetters)
+        s.sentences = Array(readSentences)
+        s.colours = Array(colours)
+        s.shapes = Array(shapes)
+        s.counted = Array(counted)
+        s.awards = Array(awards)
+        s.worlds = Array(worlds)
+        s.decks = Array(finishedDecks)
+        s.lastDay = lastDay
+        s.quizRight = quizRight
+        if let d = try? JSONEncoder().encode(s) {
+            UserDefaults.standard.set(d, forKey: key(profileID))
+        }
     }
 
     // MARK: earning
@@ -64,6 +77,8 @@ final class Progress {
     func namedShape(_ s: String)    { if shapes.insert(s).inserted { check() } }
     func counted(_ n: Int)          { if counted.insert(n).inserted { check() } }
     func finishedDeck(_ d: String)  { if finishedDecks.insert(d).inserted { check() } }
+    /// A right answer out of several is the one unambiguous signal in the app.
+    func answeredQuiz()             { quizRight += 1; check() }
 
     /// Called once when the app opens. Rewards coming back rather than never
     /// having left — there is no streak to break, so a holiday costs nothing.
@@ -104,12 +119,15 @@ final class Progress {
         if shapes.count >= c.shapes.count { grant("all-shapes") }
         if counted.isSuperset(of: Set(1...10)) { grant("count-ten") }
         if !finishedDecks.isEmpty { grant("a-deck") }
+        if quizRight >= 1  { grant("first-quiz") }
+        if quizRight >= 20 { grant("quiz-twenty") }
         save()
     }
 
     func reset() {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
+        quizRight = 0
         save()
     }
 }

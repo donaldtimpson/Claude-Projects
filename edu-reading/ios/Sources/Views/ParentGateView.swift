@@ -109,6 +109,30 @@ private struct AdultView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
+                        Text("Find It — how many pictures").font(.andika(16)).foregroundStyle(Theme.ink)
+                        Picker("", selection: Binding(
+                            get: { settings.quizChoices },
+                            set: { settings.quizChoices = $0; settings.save() })) {
+                            ForEach([2, 3, 4], id: \.self) { Text("\($0)").tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        Text("Two is a real question for a two-year-old; four is not.")
+                            .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                    }
+
+                    Toggle(isOn: Binding(get: { settings.quizReads },
+                                         set: { settings.quizReads = $0; settings.save() })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Find It shows the word").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text(settings.quizReads
+                                 ? "The word is printed — this is the reading test."
+                                 : "The app says the word instead, so no reading is needed.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
+
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("Numbers go up to").font(.andika(16)).foregroundStyle(Theme.ink)
                         Picker("", selection: Binding(
                             get: { settings.numberLevel },

@@ -30,9 +30,17 @@ final class Settings {
     // teens are irregular, and past twenty the lesson becomes place value.
     var numberLevel = 10
 
+    // Two choices is a real question for a two-year-old and four is not; this is
+    // the difficulty dial for the quiz.
+    var quizChoices = 2
+    // False: the app says the word and the child finds it — no reading needed.
+    // True: the word is printed, which is the reading test.
+    var quizReads = false
+
     private static let key = "sound-it-out.settings.v1"
     struct Snapshot: Codable { var rime: Bool; var listen: Bool; var label: Bool
-                               var autoTurn: Bool?; var style: String?; var ids: Bool?; var num: Int? }
+                               var autoTurn: Bool?; var style: String?; var ids: Bool?; var num: Int?
+                               var qc: Int?; var qr: Bool? }
 
     init() {
         guard let d = UserDefaults.standard.data(forKey: Self.key),
@@ -42,11 +50,13 @@ final class Settings {
         pictureStyle = PictureStyle(rawValue: s.style ?? "") ?? .both
         showCardIds = s.ids ?? true
         numberLevel = s.num ?? 10
+        quizChoices = s.qc ?? 2
+        quizReads = s.qr ?? false
     }
     func save() {
         let s = Snapshot(rime: rimeBlending, listen: listenForVoice, label: showWordOnPictures,
                          autoTurn: autoTurn, style: pictureStyle.rawValue, ids: showCardIds,
-                         num: numberLevel)
+                         num: numberLevel, qc: quizChoices, qr: quizReads)
         if let d = try? JSONEncoder().encode(s) { UserDefaults.standard.set(d, forKey: Self.key) }
     }
 }

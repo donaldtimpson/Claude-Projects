@@ -234,6 +234,32 @@ This replaced the flat / paper / sunroom skins: a child has no reason to care
 whether a shadow is soft or tight. The paper card treatment stayed as the house
 style, and colour — the thing a child actually notices — became the reward.
 
+## Find It — the only unambiguous answer in the app
+
+Everything else is self-assessed: a card is tapped, a word is said, a grown-up
+decides. **Tapping the right picture out of several is a real signal**, and it is
+the one input a pre-literate child can give cleanly.
+
+Two modes, one engine:
+
+| | Prompt | Needs reading | From about |
+|---|---|---|---|
+| **Listen** | the app says the word | no | two |
+| **Read** | the word is printed | yes | once decoding starts |
+
+Listen mode is the more useful half and the one that is easy to overlook: it tests
+**vocabulary** rather than decoding, so it works long before the reading ladder
+does. Read mode is the same screen with the prompt swapped.
+
+**Distractors come from the same deck.** Choosing between a dog and a rocket
+teaches nothing; choosing between a dog and a fox teaches something. Two, three or
+four pictures in the grown-ups' area — two is a real question for a two-year-old
+and four is not, and two choices are drawn one above the other so each picture is
+as large as possible.
+
+**Nothing punishes.** A wrong tap shakes gently and stays put: no cross, no
+buzzer, no score to lose. The child simply has not finished yet.
+
 ## Content
 
 `content/reading/reading.json` at the repo root is the source of truth. After

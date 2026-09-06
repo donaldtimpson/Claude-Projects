@@ -49,6 +49,10 @@ enum Awards {
         // holiday; this cannot be lost, only gained.
         Award(id: "came-back", name: "Welcome Back", blurb: "You came back another day",
               face: "👋", tint: 0x8A7BB5),
+        Award(id: "first-quiz", name: "Good Guess", blurb: "You found the right picture",
+              face: "🎈", tint: 0x3E8FA8),
+        Award(id: "quiz-twenty", name: "Sharp Eyes", blurb: "Twenty right in Find It",
+              face: "👀", tint: 0x2E7D6E, unlocksWorld: "beach"),
     ]
     static func find(_ id: String) -> Award? { all.first { $0.id == id } }
 }
