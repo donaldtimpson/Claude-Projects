@@ -27,20 +27,9 @@ struct CardStack<Content: View>: View {
     /// spends half of them replaying the card instead of moving on — which reads
     /// as the card refusing to advance. Ignored until the word has finished.
     @State private var armed = true
-    /// 180 while a card is arriving face down, animating to 0 as it turns over.
-    /// SIGNED, so the card turns in from the side it travelled from: swipe left to
-    /// advance and the next card comes in from the right, and the reverse going
-    /// back. Turning the same way regardless felt like it came from the wrong side.
-    @State private var deal: Double = 0
+    /// Which way the last move went, so the card turns in from the side it came
+    /// from: advance and it swings in from the right, go back and from the left.
     @State private var lastDir: Int = 1
-    /// Screenshot only: hold the card face down so the back can be looked at.
-    private var heldFaceDown: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("-showback")
-        #else
-        return false
-        #endif
-    }
     @State private var hinted = false
     @State private var turnTask: DispatchWorkItem?
 
@@ -69,28 +58,26 @@ struct CardStack<Content: View>: View {
                 }
 
                 if count > 0 {
-                    // Past ninety degrees you are looking at the back of the card,
-                    // so that is what is drawn — the deal actually turns over.
-                    Group {
-                        if heldFaceDown || abs(deal) > 90 {
-                            // Counter-rotated so the pattern is not mirrored.
-                            CardBack(radius: skin.cardRadius)
-                                .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
-                                .padding(.horizontal, 26)
-                                .padding(.vertical, 24)
-                        } else {
-                            content(index % count)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .modifier(CardSurfaceStyle(skin: skin))
-                        }
-                    }
-                    .rotation3DEffect(.degrees(deal), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
-                        .padding(.horizontal, 26)
-                        .padding(.vertical, 24)
+                    // The flip is a TRANSITION, not a state machine I drive myself.
+                    // Two hand-rolled attempts failed silently: step() is called
+                    // inside a withAnimation and the manual "snap face down" kept
+                    // being swallowed by that transaction. Letting SwiftUI own the
+                    // animation removes the whole class of problem.
+                    //
+                    // Edge-on the card is invisible, and what shows through is the
+                    // fanned card BACK behind it — so the back is revealed by the
+                    // turn without needing to be drawn twice.
+                    content(index % count)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .modifier(CardSurfaceStyle(skin: skin))
                         .id(index)
                         .transition(.asymmetric(
-                            insertion: .identity,
-                            removal: .move(edge: .leading).combined(with: .opacity)))
+                            insertion: .modifier(active: Flip(angle: Double(lastDir) * 90),
+                                                 identity: Flip(angle: 0)),
+                            removal: .modifier(active: Flip(angle: Double(-lastDir) * 90),
+                                               identity: Flip(angle: 0))))
+                        .padding(.horizontal, 26)
+                        .padding(.vertical, 24)
                         .offset(x: drag.width, y: drag.height * 0.2)
                         .rotationEffect(.degrees(Double(drag.width / 30)))
                         .scaleEffect(pop ? 1.03 : 1)
@@ -99,27 +86,28 @@ struct CardStack<Content: View>: View {
                                 .onChanged { drag = $0.translation }
                                 .onEnded { v in
                                     let far = abs(v.translation.width) > geo.size.width * 0.2
+                                    let dir = v.translation.width < 0 ? 1 : -1
+                                    if far { lastDir = dir }
                                     withAnimation(.spring(response: 0.34, dampingFraction: 0.78)) {
                                         drag = .zero
-                                        if far { step(v.translation.width < 0 ? 1 : -1) }
+                                        if far { step(dir) }
                                     }
                                 }
                         )
                         .onTapGesture { tapped() }
                 }
             }
-            .onAppear { hintOnce(geo.size.width) }
-            .onChange(of: index) {
-                spoke = false; armed = true; turnTask?.cancel()
-                // Deal the new card face down, then turn it over. Quick on purpose:
-                // this is a flourish between cards, not a thing to sit through.
-                // A beat face down before it turns, or the back is never actually
-                // seen — the flip finished before the eye got there.
-                deal = Double(lastDir) * 180
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
-                    withAnimation(.easeInOut(duration: 0.38)) { deal = 0 }
+            .onAppear {
+                hintOnce(geo.size.width)
+                #if DEBUG
+                // Screenshot only: advance on a timer so the flip can be caught
+                // mid-turn instead of taken on trust.
+                if ProcessInfo.processInfo.arguments.contains("-autoflip") {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { step(1) }
                 }
+                #endif
             }
+            .onChange(of: index) { spoke = false; armed = true; turnTask?.cancel() }
             .onDisappear { turnTask?.cancel() }
         }
     }
@@ -127,16 +115,27 @@ struct CardStack<Content: View>: View {
     // First tap speaks the card, second tap turns it. Every tap does something, so
     // the app never reads as broken — and a child never has to discover the swipe
     // to keep going.
+    /// One place for the turn's timing, and slowed right down for screenshots so a
+    /// transient animation can actually be looked at rather than taken on trust.
+    static var turn: Animation {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-slowflip") {
+            return .easeInOut(duration: 2.5)
+        }
+        #endif
+        return .spring(response: 0.42, dampingFraction: 0.86)
+    }
+
     private func tapped() {
         turnTask?.cancel()
         guard armed else { return }
         guard speaks else {
             onTap()
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
+            withAnimation(Self.turn) { step(1) }
             return
         }
         if spoke && !settings.autoTurn {
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
+            withAnimation(Self.turn) { step(1) }
             return
         }
         onTap()
@@ -153,7 +152,7 @@ struct CardStack<Content: View>: View {
             // Tapping again just replays it and resets the wait, so hammering the
             // card is rewarded rather than punished.
             let t = DispatchWorkItem {
-                withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
+                withAnimation(Self.turn) { step(1) }
             }
             turnTask = t
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: t)
@@ -403,5 +402,16 @@ struct OrderToggle: View {
         .buttonStyle(.plain)
         .modifier(GlassCircle())
         .accessibilityLabel(ordered ? "In order" : "Shuffled")
+    }
+}
+
+
+/// Half a turn about the vertical axis. Used as a transition, so SwiftUI animates
+/// it: at ninety degrees the card is edge-on and invisible, and the fanned card
+/// BACK behind it shows through — which is how the back gets revealed by the turn.
+struct Flip: ViewModifier {
+    let angle: Double
+    func body(content: Content) -> some View {
+        content.rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.5)
     }
 }
