@@ -26,8 +26,15 @@ struct QuizView: View {
     }
 
     @State private var round: Round?
-    @State private var wrong: String?
     @State private var right: String?
+    /// Choices already ruled out this round. A wrong pick is not punished — it is
+    /// taken off the table, which is definite feedback AND narrows the question.
+    @State private var ruledOut: Set<String> = []
+    @State private var flash: String?
+    /// Taps are ignored until the word has finished being spoken. A child who is
+    /// enjoying it taps fast, and without this the next question arrives under a
+    /// finger already on its way down and is answered by accident.
+    @State private var armed = false
     @State private var asked = 0
 
     /// Screenshot router only: force the printed-word mode.
@@ -74,6 +81,20 @@ struct QuizView: View {
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
         .onAppear { if round == nil { deal() } }
+        #if DEBUG
+        // Screenshot only: answer the first question automatically so the right
+        // and wrong states can be looked at rather than assumed.
+        .onChange(of: armed) { _, on in
+            guard on, let r = round else { return }
+            let a = ProcessInfo.processInfo.arguments
+            if a.contains("-autoright") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { pick(r.answer, in: r) }
+            } else if a.contains("-autowrong"),
+                      let w = r.choices.first(where: { $0 != r.answer }) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { pick(w, in: r) }
+            }
+        }
+        #endif
     }
 
     // MARK: prompt
@@ -108,40 +129,70 @@ struct QuizView: View {
 
     private func choice(_ w: String, in round: Round, height: CGFloat) -> some View {
         let isRight = right == w
-        let isWrong = wrong == w
+        let isWrong = flash == w
+        let out = ruledOut.contains(w)
         return Button { pick(w, in: round) } label: {
             WordPicture(word: w)
                 .frame(maxWidth: .infinity)
                 .frame(height: max(height - 20, 80))
                 .padding(10)
-                .background(Skin.live.card)
+                .background(
+                    // The whole card turns green or red for a moment. A child needs
+                    // the answer to be unmissable, and colour carries further than
+                    // a border.
+                    isRight ? Color(hex: 0x3E9B4F).opacity(0.22)
+                            : (isWrong ? Color(hex: 0xD62828).opacity(0.20) : Skin.live.card)
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(isRight ? accent : Theme.ink.opacity(0.10),
-                            lineWidth: isRight ? 3 : 1))
-                .scaleEffect(isRight ? 1.06 : 1)
+                    .stroke(isRight ? Color(hex: 0x3E9B4F)
+                                    : (isWrong ? Color(hex: 0xD62828) : Theme.ink.opacity(0.10)),
+                            lineWidth: (isRight || isWrong) ? 4 : 1))
+                .overlay(alignment: .topTrailing) {
+                    if isRight {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 34))
+                            .foregroundStyle(Color(hex: 0x3E9B4F), .white)
+                            .padding(10)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .scaleEffect(isRight ? 1.05 : (out ? 0.94 : 1))
+                // Ruled out: dimmed and left on screen, so the child can see what
+                // they tried without it looking like a mistake to feel bad about.
+                .opacity(out && !isWrong ? 0.35 : (armed ? 1 : 0.55))
+                .grayscale(out && !isWrong ? 0.9 : 0)
                 .offset(x: isWrong ? -7 : 0)
                 .shadow(color: .black.opacity(0.07), radius: 5, y: 3)
         }
         .buttonStyle(.plain)
+        .disabled(!armed || out || right != nil)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: armed)
     }
 
     private func pick(_ w: String, in round: Round) {
-        guard right == nil else { return }
+        guard armed, right == nil, !ruledOut.contains(w) else { return }
         if w == round.answer {
-            right = w
+            armed = false
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { right = w }
+            Buzz.yes()
             Voice.shared.chime()
-            Voice.shared.say(w)
             progress.readWord(w)
             progress.answeredQuiz()
             asked += 1
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+            // Long enough to see the green and the tick before the next question.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
                 withAnimation(.easeInOut(duration: 0.25)) { right = nil; deal() }
             }
         } else {
-            // A shake and nothing else. No cross, no buzzer, no score lost.
-            withAnimation(.default.repeatCount(3, autoreverses: true).speed(6)) { wrong = w }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { wrong = nil }
+            Buzz.no()
+            withAnimation(.default.repeatCount(3, autoreverses: true).speed(6)) { flash = w }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                withAnimation(.easeOut(duration: 0.25)) {
+                    flash = nil
+                    _ = ruledOut.insert(w)
+                }
+            }
         }
     }
 
@@ -160,8 +211,25 @@ struct QuizView: View {
         }
         let picks = Array(others.shuffled().prefix(settings.quizChoices - 1)).map(\.word)
         round = Round(answer: answer.word, choices: (picks + [answer.word]).shuffled())
-        if !reads {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { Voice.shared.say(answer.word) }
+        ruledOut = []
+        armed = false
+        if reads {
+            // Nothing to wait for, but still a beat so a fast tapper cannot answer
+            // the next question with the tap that answered the last one.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                withAnimation { armed = true }
+            }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                Voice.shared.say(answer.word) {
+                    withAnimation { armed = true }
+                }
+            }
+            // Belt and braces: if the utterance never reports back, do not leave
+            // the child tapping a dead screen.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                if !armed { withAnimation { armed = true } }
+            }
         }
     }
 }

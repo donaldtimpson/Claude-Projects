@@ -257,8 +257,18 @@ four pictures in the grown-ups' area — two is a real question for a two-year-o
 and four is not, and two choices are drawn one above the other so each picture is
 as large as possible.
 
-**Nothing punishes.** A wrong tap shakes gently and stays put: no cross, no
-buzzer, no score to lose. The child simply has not finished yet.
+**Input is locked until the word has been spoken.** A child who is enjoying it taps
+fast, and without this the next question arrives under a finger already on its way
+down and gets answered by accident. `Voice.say` reports when the utterance
+finishes; the choices sit dimmed until then and settle to full opacity when they
+are live, so the wait reads as the screen getting ready rather than as a warning.
+
+**Right and wrong are unmistakable, and neither is a telling-off.** A correct tap
+turns the card green with a tick, plays a chime and fires a success haptic. A wrong
+tap flashes red, gives a soft haptic, and then **rules that picture out** — dimmed
+and greyed but still on screen. Removing the option is definite feedback *and*
+narrows the question, which is help rather than punishment. There is still no
+buzzer and no score to lose.
 
 ## Content
 
