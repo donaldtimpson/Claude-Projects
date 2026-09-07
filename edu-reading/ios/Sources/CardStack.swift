@@ -30,6 +30,11 @@ struct CardStack<Content: View>: View {
     /// Which way the last move went, so the card turns in from the side it came
     /// from: advance and it swings in from the right, go back and from the left.
     @State private var lastDir: Int = 1
+    @State private var flyX: CGFloat = 0      // the outgoing card, on its way out
+    @State private var flyTilt: Double = 0
+    @State private var flying = false
+    @State private var turnIn: Double = 0     // the incoming card, edge-on to flat
+    @State private var busy = false
     @State private var hinted = false
     @State private var turnTask: DispatchWorkItem?
 
@@ -58,35 +63,22 @@ struct CardStack<Content: View>: View {
                 }
 
                 if count > 0 {
-                    // The flip is a TRANSITION, not a state machine I drive myself.
-                    // Two hand-rolled attempts failed silently: step() is called
-                    // inside a withAnimation and the manual "snap face down" kept
-                    // being swallowed by that transaction. Letting SwiftUI own the
-                    // animation removes the whole class of problem.
-                    //
-                    // Edge-on the card is invisible, and what shows through is the
-                    // fanned card BACK behind it — so the back is revealed by the
-                    // turn without needing to be drawn twice.
+                    // Two phases, both driven from step(): the old card is thrown
+                    // out in the direction of travel, then the new one is placed
+                    // edge-on and turned face up. Done with plain state rather than
+                    // a transition, because SwiftUI's remove-and-insert would not
+                    // animate the REMOVAL here however it was asked, and a card
+                    // that vanishes where it stands reads as no animation at all.
                     content(index % count)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .modifier(CardSurfaceStyle(skin: skin))
-                        .id(index)
-                        .transition(.asymmetric(
-                            // In: swings up from edge-on, on the side it travelled
-                            // from. Out: turns AND leaves. Rotating the outgoing
-                            // card edge-on in place made it vanish where it stood
-                            // rather than go anywhere, which read as a card simply
-                            // disappearing — the deal had no sense of direction.
-                            insertion: .modifier(active: Flip(angle: Double(lastDir) * 88),
-                                                 identity: Flip(angle: 0)),
-                            removal: .modifier(active: Flip(angle: Double(-lastDir) * 70),
-                                               identity: Flip(angle: 0))
-                                .combined(with: .offset(x: CGFloat(-lastDir) * 420))
-                                .combined(with: .opacity)))
+                        .rotation3DEffect(.degrees(turnIn), axis: (x: 0, y: 1, z: 0),
+                                          perspective: 0.5)
                         .padding(.horizontal, 26)
                         .padding(.vertical, 24)
-                        .offset(x: drag.width, y: drag.height * 0.2)
-                        .rotationEffect(.degrees(Double(drag.width / 30)))
+                        .offset(x: drag.width + flyX, y: drag.height * 0.2)
+                        .rotationEffect(.degrees(Double(drag.width / 30) + flyTilt))
+                        .opacity(flying ? 0 : 1)
                         .scaleEffect(pop ? 1.03 : 1)
                         .gesture(
                             DragGesture(minimumDistance: 14)
@@ -94,26 +86,29 @@ struct CardStack<Content: View>: View {
                                 .onEnded { v in
                                     let far = abs(v.translation.width) > geo.size.width * 0.2
                                     let dir = v.translation.width < 0 ? 1 : -1
-                                    if far { lastDir = dir }
-                                    withAnimation(.spring(response: 0.34, dampingFraction: 0.78)) {
+                                    if far {
                                         drag = .zero
-                                        if far { step(dir) }
+                                        step(dir)
+                                    } else {
+                                        withAnimation(.spring(response: 0.34, dampingFraction: 0.78)) {
+                                            drag = .zero
+                                        }
                                     }
                                 }
                         )
                         .onTapGesture { tapped() }
                 }
             }
-            .onAppear {
-                hintOnce(geo.size.width)
-                #if DEBUG
-                // Screenshot only: advance on a timer so the flip can be caught
-                // mid-turn instead of taken on trust.
-                if ProcessInfo.processInfo.arguments.contains("-autoflip") {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { step(1) }
-                }
-                #endif
+            .onAppear { hintOnce(geo.size.width) }
+            #if DEBUG
+            // Screenshot only: advance on a timer so a turn can be caught mid-move
+            // instead of taken on trust. Driven from onReceive rather than a closure
+            // captured in onAppear, which freezes the deck at its empty state.
+            .onReceive(Timer.publish(every: Self.slow ? 9 : 3.2, on: .main, in: .common)
+                        .autoconnect()) { _ in
+                if ProcessInfo.processInfo.arguments.contains("-autoflip") { step(1) }
             }
+            #endif
             .onChange(of: index) { spoke = false; armed = true; turnTask?.cancel() }
             .onDisappear { turnTask?.cancel() }
         }
@@ -124,25 +119,27 @@ struct CardStack<Content: View>: View {
     // to keep going.
     /// One place for the turn's timing, and slowed right down for screenshots so a
     /// transient animation can actually be looked at rather than taken on trust.
-    static var turn: Animation {
+    static var slow: Bool {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("-slowflip") {
-            return .easeInOut(duration: 2.5)
-        }
+        return ProcessInfo.processInfo.arguments.contains("-slowflip")
+        #else
+        return false
         #endif
-        return .easeInOut(duration: 0.42)
     }
+    /// The outgoing card's throw, and how long to wait before dealing the next.
+    static var outSecs: Double { slow ? 3.0 : 0.16 }
+    static var turn: Animation { .easeOut(duration: slow ? 2.5 : 0.34) }
 
     private func tapped() {
         turnTask?.cancel()
         guard armed else { return }
         guard speaks else {
             onTap()
-            withAnimation(Self.turn) { step(1) }
+            step(1)
             return
         }
         if spoke && !settings.autoTurn {
-            withAnimation(Self.turn) { step(1) }
+            step(1)
             return
         }
         onTap()
@@ -159,7 +156,7 @@ struct CardStack<Content: View>: View {
             // Tapping again just replays it and resets the wait, so hammering the
             // card is rewarded rather than punished.
             let t = DispatchWorkItem {
-                withAnimation(Self.turn) { step(1) }
+                step(1)
             }
             turnTask = t
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: t)
@@ -167,10 +164,33 @@ struct CardStack<Content: View>: View {
     }
 
     private func step(_ d: Int) {
-        guard count > 0 else { return }
+        // Snapshot the count. Phase two runs from a closure, and a closure holds
+        // the copy of this struct that existed when it was made — reading `count`
+        // in there can mean reading a deck that had not loaded yet.
+        let n = count
+        guard n > 0, !busy else { return }
+        busy = true
         lastDir = d
-        index = (index + d + count) % count
-        onAdvance?()
+
+        // Phase one: throw the current card out the way it was pushed.
+        withAnimation(.easeIn(duration: Self.outSecs)) {
+            flyX = CGFloat(-d) * 460
+            flyTilt = Double(-d) * 14
+            flying = true
+        }
+
+        // Phase two: swap, place the next card edge-on, and turn it face up.
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.outSecs) {
+            var instant = Transaction(); instant.disablesAnimations = true
+            withTransaction(instant) {
+                index = (index + d + n) % n
+                flyX = 0; flyTilt = 0; flying = false
+                turnIn = Double(d) * 90
+            }
+            onAdvance?()
+            withAnimation(Self.turn) { turnIn = 0 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + (Self.slow ? 2.6 : 0.36)) { busy = false }
+        }
     }
 
     /// One small slide-and-return when a deck opens: a wordless demonstration that

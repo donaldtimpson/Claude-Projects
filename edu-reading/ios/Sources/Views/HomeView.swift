@@ -17,7 +17,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 9) {
                         Text("A GAME")
                             .font(.andika(12, bold: true)).kerning(1.4)
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
                         DeckTile(step: "?", tint: 0x3E8FA8, name: "Find It",
                                  blurb: settings.quizReads ? "Read the word, find the picture"
                                                            : "Hear the word, find the picture")
@@ -27,7 +27,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 9) {
                         Text("LEARNING TO READ")
                             .font(.andika(12, bold: true)).kerning(1.4)
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
 
                         DeckTile(step: "1", tint: 0xE0A038, name: "Letters",
                                  blurb: "\(c.letters.count) sounds, A to Z or shuffled") { LettersView() }
@@ -44,7 +44,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 9) {
                         Text("FIRST WORDS")
                             .font(.andika(12, bold: true)).kerning(1.4)
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
                         // One tile into sixteen small decks, rather than sixteen
                         // rows here — the home screen stays scannable.
                         DeckTile(step: "•", tint: 0xD9646E, name: "Look and Say",
@@ -55,7 +55,7 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 9) {
                         Text("FIRST IDEAS")
                             .font(.andika(12, bold: true)).kerning(1.4)
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
                         DeckTile(step: "•", tint: 0x4E8FBF, name: "Colours",
                                  blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
                         DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
@@ -68,7 +68,7 @@ struct HomeView: View {
                     NavigationLink { ProfilePicker() } label: {
                         Text("Someone else's turn")
                             .font(.andika(15))
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
                             .frame(maxWidth: .infinity, minHeight: 46)
                             .overlay(RoundedRectangle(cornerRadius: 12)
                                 .stroke(Theme.inkSoft.opacity(0.3), lineWidth: 1.5))
@@ -78,7 +78,7 @@ struct HomeView: View {
                     NavigationLink { ParentGateView() } label: {
                         Text("For grown-ups")
                             .font(.andika(15))
-                            .foregroundStyle(Theme.inkSoft)
+                            .foregroundStyle(Skin.live.onSkySoft)
                             .frame(maxWidth: .infinity, minHeight: 46)
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1.5))
                     }
@@ -112,7 +112,7 @@ private struct WorldTile: View {
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").foregroundStyle(Skin.live.onSkySoft)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +126,7 @@ private struct WorldTile: View {
     private func tally(_ n: String, _ label: String) -> some View {
         HStack(spacing: 3) {
             Text(n).font(.andika(15, bold: true)).foregroundStyle(Skin.live.accent)
-            Text(label).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+            Text(label).font(.andika(12)).foregroundStyle(Skin.live.onSkySoft)
         }
     }
 }
@@ -155,7 +155,7 @@ private struct DeckTile<Destination: View>: View {
                     .shadow(color: colour.opacity(0.35), radius: 4, y: 2)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(name).font(.andika(20, bold: true)).foregroundStyle(Theme.ink)
-                    Text(blurb).font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                    Text(blurb).font(.andika(13)).foregroundStyle(Skin.live.onSkySoft)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")

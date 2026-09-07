@@ -19,6 +19,9 @@ struct World: Identifiable, Hashable {
     let card: UInt         // the card's paper
     let band: UInt         // the strip the word sits in
     let accent: UInt
+    /// Text drawn ON the ground rather than on a card. Without this every theme
+    /// had to stay pale enough for dark ink, which is why "space" came out pink.
+    let onSky: UInt
     /// A soft light at the horizon, for the themes that want atmosphere. The plain
     /// one has none, which is most of what makes it plain.
     let glow: UInt?
@@ -27,21 +30,23 @@ struct World: Identifiable, Hashable {
         // Free, and on purpose the quietest thing here.
         World(id: "classroom", name: "Classroom", face: "📋",
               sky: [0xF3F1EC, 0xE9E6DF], card: 0xFFFDF9, band: 0xFAF8F3,
-              accent: 0x5E6B73, glow: nil),
+              accent: 0x5E6B73, onSky: 0x1B2A33, glow: nil),
         // Each one further from the plain default than the last, so unlocking is
         // visibly a step rather than a shuffle.
         World(id: "meadow", name: "Meadow", face: "🌱",
               sky: [0xF2F8E4, 0xD3E7BC], card: 0xFFFEF6, band: 0xE9F4D5,
-              accent: 0x4F9440, glow: 0xC9E7A6),
+              accent: 0x4F9440, onSky: 0x1E2A18, glow: 0xC9E7A6),
         World(id: "beach", name: "Beach", face: "🏖️",
               sky: [0xFFF3D9, 0xF8D69B], card: 0xFFFBEE, band: 0xFDE9C4,
-              accent: 0xDD7F1E, glow: 0xFFC978),
+              accent: 0xDD7F1E, onSky: 0x33240F, glow: 0xFFC978),
         World(id: "snow", name: "Snow", face: "❄️",
               sky: [0xEFF8FE, 0xC9DFF2], card: 0xFFFFFF, band: 0xE2EFFA,
-              accent: 0x2E79C0, glow: 0xD6EBFC),
+              accent: 0x2E79C0, onSky: 0x142430, glow: 0xD6EBFC),
+        // Actually dark. A night sky is the whole idea, and the cards stay light
+        // so the pictures and the words are unaffected by it.
         World(id: "space", name: "Space", face: "🚀",
-              sky: [0xEDE1FB, 0xCBB6EC], card: 0xFFFBFF, band: 0xE9DAFA,
-              accent: 0x6C36C4, glow: 0xD3B8F7),
+              sky: [0x0B1030, 0x241A4A], card: 0xFDFBFF, band: 0xEDE6FA,
+              accent: 0x8B6BE0, onSky: 0xEDE9FF, glow: 0x3A2C6E),
     ]
     static func find(_ id: String) -> World { all.first { $0.id == id } ?? all[0] }
     static var free: String { "classroom" }
@@ -83,4 +88,7 @@ final class Skin2 {
     var card: Color { Color(hex: world.card) }
     var band: Color { Color(hex: world.band) }
     var accent: Color { Color(hex: world.accent) }
+    /// For text and chrome drawn on the ground, not on a card.
+    var onSky: Color { Color(hex: world.onSky) }
+    var onSkySoft: Color { Color(hex: world.onSky).opacity(0.65) }
 }
