@@ -226,9 +226,25 @@ because a reward system that takes a week to start is not one. There is delibera
 **no streak** — a streak punishes a family holiday and hands the guilt to the
 parent. *Welcome Back* rewards returning instead: it can be gained, never lost.
 
-**Places.** Five worlds — Meadow, Beach, Snow, Night, Space — unlocked by badges and
-applied to **the whole app**. The earlier version changed the sky on one tab only,
-which is decoration wearing a progress bar's clothes.
+**Places.** Five themes, unlocked by badges and applied to **the whole app** —
+ground, cards, word band, accents and chrome. The earlier version changed the sky
+on one tab only, which is decoration wearing a progress bar's clothes.
+
+They **escalate**, and the free one is deliberately the plainest:
+
+| | |
+|---|---|
+| **Classroom** *(free)* | off-white and neutral — looks like a tool, not a toy |
+| Meadow · Beach · Snow · Space | progressively warmer, more saturated, more playful |
+
+A parent's first impression is therefore calm and trustworthy, the App Store
+screenshots are the restrained version, and the playful looks are something a
+child *earns* rather than a palette swap nobody asked for.
+
+**The card is themed, not just the background.** We never see the back of a card,
+so what is available is the paper, the band the word sits in, and the edge — which
+turns out to be plenty. A sand-coloured card on a warm ground reads as *beach*
+without a single decorative shell.
 
 This replaced the flat / paper / sunroom skins: a child has no reason to care
 whether a shadow is soft or tight. The paper card treatment stayed as the house

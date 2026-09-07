@@ -34,8 +34,10 @@ struct LettersView: View {
     }
 
     var body: some View {
+        // Nothing to play until the forty-four sounds are recorded, so a single
+        // tap moves on rather than leaving a dead first tap.
         DeckScreen(title: "Letters", count: pool.count, index: $index, accent: accent,
-                   ordered: $ordered) { i in
+                   ordered: $ordered, speaks: Voice.shared.hasAnyLetterAudio) { i in
             let l = pool[min(i, pool.count - 1)]
             VStack(spacing: 20) {
                 Spacer()

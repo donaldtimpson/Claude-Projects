@@ -55,6 +55,12 @@ final class Voice: NSObject {
         AudioServicesPlaySystemSound(SystemSoundID(1103 + n))
     }
 
+    /// Whether any phoneme recordings are bundled at all. Until they are, the
+    /// letters deck has nothing to play and should not ask for two taps.
+    var hasAnyLetterAudio: Bool {
+        ReadingContent.shared.letters.contains { hasRecording($0.sound) }
+    }
+
     /// True when real recorded audio backs this word. The letter-sounds deck uses
     /// it to stay honest: synthesis is bad at isolated phonemes, so it stays silent
     /// rather than teaching the wrong sound.

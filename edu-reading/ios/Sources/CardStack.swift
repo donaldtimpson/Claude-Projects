@@ -12,6 +12,10 @@ struct CardStack<Content: View>: View {
     var accent: Color
     var onTap: () -> Void
     var onAdvance: (() -> Void)? = nil
+    /// False on decks with nothing to play. Two taps only make sense when the
+    /// first one DOES something: with no audio the first tap is silently dead and
+    /// the card feels broken, so a single tap moves on instead.
+    var speaks: Bool = true
     @ViewBuilder var content: (Int) -> Content
 
     @Environment(Settings.self) private var settings
@@ -81,6 +85,11 @@ struct CardStack<Content: View>: View {
     // to keep going.
     private func tapped() {
         turnTask?.cancel()
+        guard speaks else {
+            onTap()
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
+            return
+        }
         if spoke && !settings.autoTurn {
             withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
             return
@@ -175,6 +184,8 @@ struct DeckScreen<Content: View>: View {
     /// teaching order of the letters. Everywhere else there is nothing to be in
     /// order OF, and a control that does nothing is worse than no control.
     var ordered: Binding<Bool>? = nil
+    /// See CardStack.speaks — decks with no audio advance on a single tap.
+    var speaks: Bool = true
     @ViewBuilder var content: (Int) -> Content
     var onTap: (Int) -> Void
     var onAdvance: (() -> Void)? = nil
@@ -191,7 +202,7 @@ struct DeckScreen<Content: View>: View {
         VStack(spacing: 0) {
             CardStack(count: count, index: $index, accent: accent,
                       onTap: { if count > 0 { onTap(index % count) } },
-                      onAdvance: onAdvance) { i in
+                      onAdvance: onAdvance, speaks: speaks) { i in
                 content(i)
             }
             Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)
@@ -284,6 +295,7 @@ struct AdaptiveCard<Art: View, Caption: View>: View {
                 Rectangle().fill(skin.cardEdge).frame(height: 1)
                 caption()
                     .frame(width: geo.size.width, height: band)
+                    .background(Skin.live.band)
             }
             // Centred, so a short card sits in the middle rather than at the top.
             .frame(width: geo.size.width, height: geo.size.height, alignment: .center)

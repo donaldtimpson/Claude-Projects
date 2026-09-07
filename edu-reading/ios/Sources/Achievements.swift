@@ -24,11 +24,11 @@ enum Awards {
         Award(id: "first-word", name: "First Word", blurb: "You read a word out loud",
               face: "🌱", tint: 0x6FA368),
         Award(id: "ten-words", name: "Ten Words", blurb: "Ten words read", face: "🔟",
-              tint: 0x4E8FBF, unlocksWorld: "beach"),
+              tint: 0x4E8FBF, unlocksWorld: "meadow"),
         Award(id: "letters-half", name: "Halfway Through", blurb: "Thirteen letters met",
               face: "🔤", tint: 0xE0A038),
         Award(id: "all-letters", name: "Every Letter", blurb: "All twenty-six letters met",
-              face: "🅰️", tint: 0xC8433A, unlocksWorld: "snow"),
+              face: "🅰️", tint: 0xC8433A, unlocksWorld: "beach"),
         Award(id: "twenty-five", name: "Twenty-Five", blurb: "Twenty-five words read",
               face: "🎯", tint: 0xC98A3E),
         Award(id: "a-sentence", name: "A Whole Sentence", blurb: "You read a sentence",
@@ -40,7 +40,7 @@ enum Awards {
         Award(id: "count-ten", name: "Count to Ten", blurb: "One to ten", face: "🔢",
               tint: 0x2E7D6E),
         Award(id: "fifty", name: "Fifty Words", blurb: "Fifty words read", face: "⭐️",
-              tint: 0xF0A93B, unlocksWorld: "night"),
+              tint: 0xF0A93B, unlocksWorld: "snow"),
         Award(id: "a-deck", name: "A Whole Deck", blurb: "You finished a set of cards",
               face: "🏅", tint: 0xC77CB0),
         Award(id: "hundred", name: "One Hundred", blurb: "A hundred words read",
@@ -52,7 +52,7 @@ enum Awards {
         Award(id: "first-quiz", name: "Good Guess", blurb: "You found the right picture",
               face: "🎈", tint: 0x3E8FA8),
         Award(id: "quiz-twenty", name: "Sharp Eyes", blurb: "Twenty right in Find It",
-              face: "👀", tint: 0x2E7D6E, unlocksWorld: "beach"),
+              face: "👀", tint: 0x2E7D6E, unlocksWorld: "meadow"),
     ]
     static func find(_ id: String) -> Award? { all.first { $0.id == id } }
 }
