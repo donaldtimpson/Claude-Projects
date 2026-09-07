@@ -71,7 +71,7 @@ struct WorldView: View {
                                     Text(w.face).font(.system(size: 26))
                                         .grayscale(open ? 0 : 1).opacity(open ? 1 : 0.3)
                                     Text(w.name).font(.andika(10))
-                                        .foregroundStyle(Theme.inkSoft)
+                                        .foregroundStyle(Skin.live.onSkySoft)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 9)
@@ -113,7 +113,7 @@ struct WorldView: View {
         VStack(alignment: .leading, spacing: 9) {
             HStack {
                 Text(title).font(.andika(12, bold: true)).kerning(1.3)
-                    .foregroundStyle(Theme.inkSoft)
+                    .foregroundStyle(Skin.live.onSkySoft)
                 Spacer()
                 Text(tally).font(.andika(12, bold: true)).foregroundStyle(Skin.live.accent)
             }
@@ -121,7 +121,7 @@ struct WorldView: View {
         }
     }
     private func hint(_ t: String) -> some View {
-        Text(t).font(.andika(13)).foregroundStyle(Theme.inkSoft)
+        Text(t).font(.andika(13)).foregroundStyle(Skin.live.onSkySoft)
     }
 }
 
@@ -138,7 +138,8 @@ struct ProfilePicker: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Text("Who's playing?").font(.andika(26, bold: true)).foregroundStyle(Theme.ink)
+                Text("Who's playing?").font(.andika(26, bold: true))
+                    .foregroundStyle(Skin.live.onSky)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 12)], spacing: 12) {
                     ForEach(profiles.all) { p in
                         Button {
@@ -160,12 +161,12 @@ struct ProfilePicker: View {
                     Button { adding = true } label: {
                         VStack(spacing: 6) {
                             Image(systemName: "plus").font(.system(size: 30, weight: .semibold))
-                                .foregroundStyle(Theme.inkSoft)
-                            Text("Add").font(.andika(15)).foregroundStyle(Theme.inkSoft)
+                                .foregroundStyle(Skin.live.onSkySoft)
+                            Text("Add").font(.andika(15)).foregroundStyle(Skin.live.onSkySoft)
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
                         .overlay(RoundedRectangle(cornerRadius: 18)
-                            .stroke(Theme.inkSoft.opacity(0.35),
+                            .stroke(Skin.live.onSkySoft.opacity(0.45),
                                     style: StrokeStyle(lineWidth: 2, dash: [6, 4])))
                     }
                     .buttonStyle(.plain)

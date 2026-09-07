@@ -71,7 +71,7 @@ struct HomeView: View {
                             .foregroundStyle(Skin.live.onSkySoft)
                             .frame(maxWidth: .infinity, minHeight: 46)
                             .overlay(RoundedRectangle(cornerRadius: 12)
-                                .stroke(Theme.inkSoft.opacity(0.3), lineWidth: 1.5))
+                                .stroke(Skin.live.onSkySoft.opacity(0.45), lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
 
@@ -112,7 +112,7 @@ private struct WorldTile: View {
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right").foregroundStyle(Skin.live.onSkySoft)
+            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,11 +126,15 @@ private struct WorldTile: View {
     private func tally(_ n: String, _ label: String) -> some View {
         HStack(spacing: 3) {
             Text(n).font(.andika(15, bold: true)).foregroundStyle(Skin.live.accent)
-            Text(label).font(.andika(12)).foregroundStyle(Skin.live.onSkySoft)
+            Text(label).font(.andika(12)).foregroundStyle(Theme.inkSoft)
         }
     }
 }
 
+/// Ink rule for this screen, and it is easy to get backwards: text drawn straight
+/// onto the ground takes the theme's onSky ink, text sitting on a card takes the
+/// ordinary dark ink. The rows are light in EVERY theme, space included, so their
+/// text must not follow the sky.
 private struct DeckTile<Destination: View>: View {
     let step: String
     var tint: UInt = 0x63777F
@@ -155,7 +159,7 @@ private struct DeckTile<Destination: View>: View {
                     .shadow(color: colour.opacity(0.35), radius: 4, y: 2)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(name).font(.andika(20, bold: true)).foregroundStyle(Theme.ink)
-                    Text(blurb).font(.andika(13)).foregroundStyle(Skin.live.onSkySoft)
+                    Text(blurb).font(.andika(13)).foregroundStyle(Theme.inkSoft)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
