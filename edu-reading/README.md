@@ -241,10 +241,17 @@ A parent's first impression is therefore calm and trustworthy, the App Store
 screenshots are the restrained version, and the playful looks are something a
 child *earns* rather than a palette swap nobody asked for.
 
-**The card is themed, not just the background.** We never see the back of a card,
-so what is available is the paper, the band the word sits in, and the edge — which
-turns out to be plenty. A sand-coloured card on a warm ground reads as *beach*
-without a single decorative shell.
+**The back of the card carries the theme.** It is the biggest themeable surface in
+the app and it was blank. The two cards behind the top one are on screen the whole
+time, so they are now **fanned** rather than squared up — squared up they sat
+entirely hidden and the pattern they carry was invisible — and a card is **dealt
+face down and flips over**, which is the moment the back is properly seen.
+
+Patterns are drawn, not sourced: waves for Beach, leaves for Meadow, crystals for
+Snow, stars for Space, and a plain dotted rule for Classroom. Every theme also has
+a faint **backdrop** behind the whole app — a low sun and swells, hills, a drift,
+a starfield — kept quiet enough that a photograph of a dog is still the loudest
+thing on screen. Classroom has none, which is most of what makes it plain.
 
 This replaced the flat / paper / sunroom skins: a child has no reason to care
 whether a shadow is soft or tight. The paper card treatment stayed as the house

@@ -23,6 +23,20 @@ struct CardStack<Content: View>: View {
     @State private var drag: CGSize = .zero
     @State private var pop = false
     @State private var spoke = false      // has this card been tapped once yet
+    /// Taps land during the word and are simply thrown away, so a fast tapper
+    /// spends half of them replaying the card instead of moving on — which reads
+    /// as the card refusing to advance. Ignored until the word has finished.
+    @State private var armed = true
+    /// 180 while a card is arriving face down, animating to 0 as it turns over.
+    @State private var deal: Double = 0
+    /// Screenshot only: hold the card face down so the back can be looked at.
+    private var heldFaceDown: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-showback")
+        #else
+        return false
+        #endif
+    }
     @State private var hinted = false
     @State private var turnTask: DispatchWorkItem?
 
@@ -35,28 +49,40 @@ struct CardStack<Content: View>: View {
                 // to the right. A child who taps and taps has usually just not been
                 // told there is anything else — a stack says so without words.
                 ForEach([2, 1], id: \.self) { back in
-                    RoundedRectangle(cornerRadius: skin.cardRadius, style: .continuous)
-                        .fill(skin.stackFill(accent))
-                        .overlay(RoundedRectangle(cornerRadius: skin.cardRadius, style: .continuous)
-                            .strokeBorder(skin.cardEdge, lineWidth: 1))
-                        .shadow(color: .black.opacity(0.10), radius: 5, y: 2)
-                        .scaleEffect(x: 1 - CGFloat(back) * 0.04, y: 1, anchor: .top)
-                        .rotationEffect(.degrees(skin.stackTilt * (back == 1 ? 1 : -1)), anchor: .bottom)
-                        .offset(y: CGFloat(back) * skin.stackDrop)
+                    // Face down, so the theme is on screen the whole time. This is
+                    // the biggest themeable surface in the app and it was blank.
+                    // Fanned rather than stacked square, so the patterned backs are
+                    // actually SEEN. Squared up they sat entirely behind the top
+                    // card and the theme they carry was invisible.
+                    CardBack(radius: skin.cardRadius)
+                        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 18)
+                        .scaleEffect(1 - CGFloat(back) * 0.02)
+                        .rotationEffect(.degrees(Double(back) * (back == 1 ? 3.4 : -3.4)),
+                                        anchor: .bottom)
+                        .offset(y: CGFloat(back) * 5)
                 }
 
                 if count > 0 {
-                    content(index % count)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .modifier(CardSurfaceStyle(skin: skin))
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 18)
+                    // Past ninety degrees you are looking at the back of the card,
+                    // so that is what is drawn — the deal actually turns over.
+                    Group {
+                        if heldFaceDown || abs(deal) > 90 {
+                            CardBack(radius: skin.cardRadius)
+                                .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+                        } else {
+                            content(index % count)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .modifier(CardSurfaceStyle(skin: skin))
+                        }
+                    }
+                    .rotation3DEffect(.degrees(deal), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
+                        .padding(.horizontal, 26)
+                        .padding(.vertical, 24)
                         .id(index)
                         .transition(.asymmetric(
-                            insertion: .move(edge: .trailing).combined(with: .opacity),
-                            removal: .move(edge: .leading).combined(with: .opacity)))
+                            insertion: .opacity, removal: .move(edge: .leading).combined(with: .opacity)))
                         .offset(x: drag.width, y: drag.height * 0.2)
                         .rotationEffect(.degrees(Double(drag.width / 30)))
                         .scaleEffect(pop ? 1.03 : 1)
@@ -75,7 +101,13 @@ struct CardStack<Content: View>: View {
                 }
             }
             .onAppear { hintOnce(geo.size.width) }
-            .onChange(of: index) { spoke = false; turnTask?.cancel() }
+            .onChange(of: index) {
+                spoke = false; armed = true; turnTask?.cancel()
+                // Deal the new card face down, then turn it over. Quick on purpose:
+                // this is a flourish between cards, not a thing to sit through.
+                deal = 180
+                withAnimation(.easeOut(duration: 0.34)) { deal = 0 }
+            }
             .onDisappear { turnTask?.cancel() }
         }
     }
@@ -85,6 +117,7 @@ struct CardStack<Content: View>: View {
     // to keep going.
     private func tapped() {
         turnTask?.cancel()
+        guard armed else { return }
         guard speaks else {
             onTap()
             withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) { step(1) }
@@ -96,6 +129,9 @@ struct CardStack<Content: View>: View {
         }
         onTap()
         spoke = true
+        armed = false
+        // Re-armed when the word finishes, or after a beat if nothing was spoken.
+        Voice.shared.whenIdle { armed = true }
         withAnimation(.spring(response: 0.2, dampingFraction: 0.45)) { pop = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { pop = false }

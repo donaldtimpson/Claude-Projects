@@ -26,14 +26,19 @@ struct Skin {
     /// each deck still feels like a different room inside the same world.
     @ViewBuilder
     func ground(_ accent: Color) -> some View {
-        LinearGradient(colors: Skin.live.world.sky.map {
-            Color(hex: $0).mixed(with: accent, amount: 0.14)
-        }, startPoint: .top, endPoint: .bottom)
+        ZStack {
+            LinearGradient(colors: Skin.live.world.sky.map {
+                Color(hex: $0).mixed(with: accent, amount: 0.14)
+            }, startPoint: .top, endPoint: .bottom)
+            Backdrop()
+        }
     }
 
     /// Home and hub ground — the world itself, untinted.
     @ViewBuilder
-    var appGround: some View { Skin.live.ground }
+    var appGround: some View {
+        ZStack { Skin.live.ground; Backdrop() }
+    }
     var tileFill: Color { Skin.live.card }
 }
 

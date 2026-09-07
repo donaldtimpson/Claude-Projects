@@ -55,6 +55,19 @@ final class Voice: NSObject {
         AudioServicesPlaySystemSound(SystemSoundID(1103 + n))
     }
 
+    /// Calls back when whatever is playing finishes — or straight away if nothing
+    /// is. Callers use it to stop accepting taps while a word is being said.
+    func whenIdle(_ done: @escaping () -> Void) {
+        if synth.isSpeaking || (player?.isPlaying ?? false) {
+            let existing = onDone
+            onDone = { existing?(); done() }
+            // A callback can be missed; never leave the screen dead because of it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: done)
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: done)
+        }
+    }
+
     /// Whether any phoneme recordings are bundled at all. Until they are, the
     /// letters deck has nothing to play and should not ask for two taps.
     var hasAnyLetterAudio: Bool {
