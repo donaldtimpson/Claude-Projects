@@ -72,10 +72,17 @@ struct CardStack<Content: View>: View {
                         .modifier(CardSurfaceStyle(skin: skin))
                         .id(index)
                         .transition(.asymmetric(
-                            insertion: .modifier(active: Flip(angle: Double(lastDir) * 90),
+                            // In: swings up from edge-on, on the side it travelled
+                            // from. Out: turns AND leaves. Rotating the outgoing
+                            // card edge-on in place made it vanish where it stood
+                            // rather than go anywhere, which read as a card simply
+                            // disappearing — the deal had no sense of direction.
+                            insertion: .modifier(active: Flip(angle: Double(lastDir) * 88),
                                                  identity: Flip(angle: 0)),
-                            removal: .modifier(active: Flip(angle: Double(-lastDir) * 90),
-                                               identity: Flip(angle: 0))))
+                            removal: .modifier(active: Flip(angle: Double(-lastDir) * 70),
+                                               identity: Flip(angle: 0))
+                                .combined(with: .offset(x: CGFloat(-lastDir) * 420))
+                                .combined(with: .opacity)))
                         .padding(.horizontal, 26)
                         .padding(.vertical, 24)
                         .offset(x: drag.width, y: drag.height * 0.2)
@@ -103,7 +110,7 @@ struct CardStack<Content: View>: View {
                 // Screenshot only: advance on a timer so the flip can be caught
                 // mid-turn instead of taken on trust.
                 if ProcessInfo.processInfo.arguments.contains("-autoflip") {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { step(1) }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { step(1) }
                 }
                 #endif
             }
@@ -123,7 +130,7 @@ struct CardStack<Content: View>: View {
             return .easeInOut(duration: 2.5)
         }
         #endif
-        return .spring(response: 0.42, dampingFraction: 0.86)
+        return .easeInOut(duration: 0.42)
     }
 
     private func tapped() {

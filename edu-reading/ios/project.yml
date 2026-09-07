@@ -12,6 +12,10 @@ settings:
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1,2"
     GENERATE_INFOPLIST_FILE: YES
+    # Baked in so `xcodegen generate` stops wiping the signing team. Regenerating
+    # rewrites the whole .xcodeproj, so anything picked in Xcode's UI is lost on the
+    # next run — as it was, repeatedly. Change it here if the team ever changes.
+    DEVELOPMENT_TEAM: LGF933VBP2
     CODE_SIGN_STYLE: Automatic
 
 targets:

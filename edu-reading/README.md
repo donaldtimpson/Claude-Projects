@@ -8,6 +8,10 @@ Separate from Timpson Lyceum in every way: different audience, different brandin
 cd ios && xcodegen generate && open SoundItOut.xcodeproj
 ```
 
+> `xcodegen generate` rewrites the whole `.xcodeproj`, so anything set in Xcode's
+> UI is lost on the next run. The signing team is therefore baked into
+> `project.yml` — change it there, not in Xcode.
+
 ## How a child drives it
 
 **Tap the card, or swipe it away. That is the entire interface.** No Next button,
