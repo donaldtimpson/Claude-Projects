@@ -33,60 +33,37 @@ struct CardBack: View {
             .strokeBorder(Color(hex: 0x2B2018).opacity(0.10), lineWidth: 1))
     }
 
+    /// Emoji as the motif rather than abstract paths. It is the illustration
+    /// language the app already speaks — the drawings deck is entirely emoji — it
+    /// costs nothing, and a tiny shell reads as "beach" in a way a wavy line does
+    /// not. Faint and staggered, so it stays wallpaper rather than becoming a
+    /// picture that competes with the card in front of it.
     static func pattern(_ w: World, _ ctx: inout GraphicsContext, _ size: CGSize) {
-        let tint = Color(hex: w.accent)
+        let motifs: [String]
+        let step: CGFloat
         switch w.id {
-        case "meadow":
-            // Leaves, each turned about ITS OWN centre — rotating the path
-            // directly spins it around the canvas origin and flings them about.
-            grid(size, 32) { p, i in
-                var leaf = Path()
-                leaf.move(to: CGPoint(x: 0, y: -8))
-                leaf.addQuadCurve(to: CGPoint(x: 0, y: 8), control: CGPoint(x: 9, y: 0))
-                leaf.addQuadCurve(to: CGPoint(x: 0, y: -8), control: CGPoint(x: -9, y: 0))
-                let t = CGAffineTransform(rotationAngle: Double(i % 7) * 0.45)
-                    .concatenating(.init(translationX: p.x, y: p.y))
-                ctx.fill(leaf.applying(t), with: .color(tint.opacity(0.26)))
-            }
-        case "beach":
-            // Waves, running the width of the card.
-            var y: CGFloat = 14
-            while y < size.height {
-                var wave = Path()
-                wave.move(to: CGPoint(x: -10, y: y))
-                var x: CGFloat = -10
-                while x < size.width + 20 {
-                    wave.addQuadCurve(to: CGPoint(x: x + 22, y: y),
-                                      control: CGPoint(x: x + 11, y: y - 7))
-                    x += 22
-                }
-                ctx.stroke(wave, with: .color(tint.opacity(0.30)), lineWidth: 2)
-                y += 22
-            }
-        case "snow":
-            grid(size, 30) { p, i in
-                let r: CGFloat = i.isMultiple(of: 3) ? 5 : 3
-                for k in 0..<3 {
-                    let a = Double(k) * .pi / 3
-                    var arm = Path()
-                    arm.move(to: CGPoint(x: p.x - cos(a) * r, y: p.y - sin(a) * r))
-                    arm.addLine(to: CGPoint(x: p.x + cos(a) * r, y: p.y + sin(a) * r))
-                    ctx.stroke(arm, with: .color(tint.opacity(0.34)), lineWidth: 1.5)
-                }
-            }
-        case "space":
-            grid(size, 26) { p, i in
-                let r: CGFloat = [1.2, 2.2, 1.6, 3.0][i % 4]
-                ctx.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r,
-                                                width: r * 2, height: r * 2)),
-                         with: .color(tint.opacity(i % 4 == 3 ? 0.48 : 0.28)))
-            }
+        case "meadow": motifs = ["🌿", "🌼", "🍃", "🌱"];      step = 46
+        case "beach":  motifs = ["🐚", "🌴", "⛱️", "🦀"];      step = 48
+        case "snow":   motifs = ["❄️", "⛄", "🌨️", "❄️"];      step = 46
+        case "space":  motifs = ["⭐️", "🪐", "🚀", "✨"];      step = 48
         default:
-            // Classroom: a fine dotted grid and nothing else.
+            // Classroom keeps a plain dotted rule: being the quiet one is its job.
+            let tint = Color(hex: w.accent)
             grid(size, 26) { p, _ in
-                ctx.fill(Path(ellipseIn: CGRect(x: p.x - 1, y: p.y - 1, width: 2, height: 2)),
-                         with: .color(tint.opacity(0.16)))
+                ctx.fill(Path(ellipseIn: CGRect(x: p.x - 1.2, y: p.y - 1.2,
+                                                width: 2.4, height: 2.4)),
+                         with: .color(tint.opacity(0.22)))
             }
+            return
+        }
+        grid(size, step) { p, i in
+            var g = ctx
+            g.opacity = 0.26
+            g.translateBy(x: p.x, y: p.y)
+            // A little turn each, so a grid of stamps reads as a scattering.
+            g.rotate(by: .degrees(Double((i % 5) - 2) * 9))
+            g.draw(Text(motifs[i % motifs.count]).font(.system(size: step * 0.52)),
+                   at: .zero, anchor: .center)
         }
     }
 
@@ -113,69 +90,71 @@ struct CardBack: View {
 struct Backdrop: View {
     var world: World = Skin.live.world
 
+    /// A composed SCENE rather than a texture: things placed where they belong —
+    /// a palm low on the left, a sun high on the right, a crab on the sand. Emoji
+    /// again, because it is the app's illustration language and because a drawn
+    /// palm at eight percent still says "beach" where an abstract curve does not.
+    ///
+    /// Each entry is (emoji, x, y, size, opacity) in fractions of the screen, so
+    /// the scene composes the same on any device.
+    private var scene: [(String, CGFloat, CGFloat, CGFloat, Double)] {
+        switch world.id {
+        case "beach":
+            return [("☀️", 0.82, 0.07, 0.30, 0.20),
+                    ("🌴", 0.10, 0.10, 0.26, 0.15),
+                    ("🌴", 0.09, 0.96, 0.30, 0.16),
+                    ("⛱️", 0.80, 0.96, 0.24, 0.15),
+                    ("🐚", 0.45, 0.985, 0.13, 0.15),
+                    ("🦀", 0.62, 0.99, 0.12, 0.13)]
+        case "meadow":
+            return [("☁️", 0.20, 0.07, 0.26, 0.16),
+                    ("☁️", 0.78, 0.13, 0.20, 0.12),
+                    ("🌳", 0.11, 0.96, 0.30, 0.16),
+                    ("🌷", 0.42, 0.985, 0.14, 0.15),
+                    ("🌼", 0.60, 0.99, 0.13, 0.14),
+                    ("🦋", 0.86, 0.95, 0.14, 0.13)]
+        case "snow":
+            return [("⛄", 0.14, 0.96, 0.30, 0.17),
+                    ("🌲", 0.84, 0.95, 0.28, 0.15),
+                    ("🌲", 0.68, 0.99, 0.18, 0.12),
+                    ("❄️", 0.26, 0.07, 0.16, 0.17),
+                    ("❄️", 0.76, 0.12, 0.12, 0.14),
+                    ("❄️", 0.52, 0.05, 0.09, 0.12)]
+        case "space":
+            return [("🪐", 0.80, 0.09, 0.32, 0.20),
+                    ("🚀", 0.14, 0.09, 0.22, 0.17),
+                    ("⭐️", 0.45, 0.05, 0.12, 0.15),
+                    ("🌙", 0.16, 0.96, 0.24, 0.17),
+                    ("✨", 0.55, 0.99, 0.14, 0.14),
+                    ("⭐️", 0.86, 0.97, 0.11, 0.14)]
+        default:
+            return []           // Classroom has no scenery. That is what makes it plain.
+        }
+    }
+
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width, h = geo.size.height
-            Canvas { ctx, _ in
-                let tint = Color(hex: world.accent)
-                switch world.id {
-                case "beach":
-                    // Sun low, a horizon, and a few long swells.
-                    ctx.fill(Path(ellipseIn: CGRect(x: w * 0.60, y: h * 0.10,
-                                                    width: w * 0.30, height: w * 0.30)),
-                             with: .color(tint.opacity(0.10)))
-                    var sea = Path()
-                    sea.addRect(CGRect(x: 0, y: h * 0.72, width: w, height: h * 0.28))
-                    ctx.fill(sea, with: .color(tint.opacity(0.06)))
-                    for k in 0..<4 {
-                        let y = h * 0.74 + CGFloat(k) * h * 0.055
-                        var s = Path(); s.move(to: CGPoint(x: -10, y: y))
-                        var x: CGFloat = -10
-                        while x < w + 20 {
-                            s.addQuadCurve(to: CGPoint(x: x + 46, y: y),
-                                           control: CGPoint(x: x + 23, y: y - 9))
-                            x += 46
+            ZStack {
+                // A starfield behind the objects, for the two themes that want one.
+                if world.id == "space" || world.id == "snow" {
+                    Canvas { ctx, _ in
+                        var rng = SeededRandom2(seed: world.id == "space" ? 5 : 11)
+                        let tint = Color(hex: world.accent)
+                        for _ in 0..<52 {
+                            let x = rng.next() * w, y = rng.next() * h
+                            let r = 0.9 + rng.next() * 2.0
+                            ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r * 2, height: r * 2)),
+                                     with: .color(tint.opacity(0.10 + rng.next() * 0.14)))
                         }
-                        ctx.stroke(s, with: .color(tint.opacity(0.10)), lineWidth: 2)
                     }
-                case "meadow":
-                    for (i, f) in [0.80, 0.87].enumerated() {
-                        var hill = Path()
-                        hill.move(to: CGPoint(x: -20, y: h))
-                        hill.addQuadCurve(to: CGPoint(x: w + 20, y: h * f),
-                                          control: CGPoint(x: w * (i == 0 ? 0.3 : 0.7),
-                                                           y: h * (f - 0.14)))
-                        hill.addLine(to: CGPoint(x: w + 20, y: h))
-                        hill.closeSubpath()
-                        ctx.fill(hill, with: .color(tint.opacity(i == 0 ? 0.09 : 0.06)))
-                    }
-                case "snow":
-                    var drift = Path()
-                    drift.move(to: CGPoint(x: -20, y: h))
-                    drift.addQuadCurve(to: CGPoint(x: w + 20, y: h * 0.86),
-                                       control: CGPoint(x: w * 0.5, y: h * 0.74))
-                    drift.addLine(to: CGPoint(x: w + 20, y: h)); drift.closeSubpath()
-                    ctx.fill(drift, with: .color(tint.opacity(0.08)))
-                    var rng = SeededRandom2(seed: 11)
-                    for _ in 0..<40 {
-                        let x = rng.next() * w, y = rng.next() * h * 0.8
-                        let r = 1.5 + rng.next() * 2.5
-                        ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r * 2, height: r * 2)),
-                                 with: .color(tint.opacity(0.16)))
-                    }
-                case "space":
-                    var rng = SeededRandom2(seed: 5)
-                    for _ in 0..<70 {
-                        let x = rng.next() * w, y = rng.next() * h
-                        let r = 0.8 + rng.next() * 2.2
-                        ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r * 2, height: r * 2)),
-                                 with: .color(tint.opacity(0.10 + rng.next() * 0.18)))
-                    }
-                    ctx.stroke(Path(ellipseIn: CGRect(x: w * 0.55, y: h * 0.78,
-                                                      width: w * 0.7, height: w * 0.7)),
-                               with: .color(tint.opacity(0.12)), lineWidth: 2)
-                default:
-                    break   // Classroom has no scenery, which is the point of it.
+                }
+                ForEach(Array(scene.enumerated()), id: \.offset) { _, item in
+                    let (glyph, fx, fy, fs, op) = item
+                    Text(glyph)
+                        .font(.system(size: min(w, h) * fs))
+                        .opacity(op)
+                        .position(x: w * fx, y: h * fy)
                 }
             }
         }

@@ -247,11 +247,17 @@ time, so they are now **fanned** rather than squared up — squared up they sat
 entirely hidden and the pattern they carry was invisible — and a card is **dealt
 face down and flips over**, which is the moment the back is properly seen.
 
-Patterns are drawn, not sourced: waves for Beach, leaves for Meadow, crystals for
-Snow, stars for Space, and a plain dotted rule for Classroom. Every theme also has
-a faint **backdrop** behind the whole app — a low sun and swells, hills, a drift,
-a starfield — kept quiet enough that a photograph of a dog is still the loudest
-thing on screen. Classroom has none, which is most of what makes it plain.
+**Emoji are the illustration language**, on the backs and in the scenery. The
+drawings deck is already entirely emoji, they cost nothing, they are correct at
+every size, and a tiny shell says *beach* in a way a wavy line does not. Backs
+carry a scattered motif — shells and palms and crabs, snowflakes and snowmen,
+rockets and planets — and each theme has a composed **scene** behind the whole
+app: a sun high on the right, a palm low on the left, a snowman in the corner.
+
+Both are kept faint, and the scene is composed for the bands that are actually
+visible — the top strip and the very bottom edge — because a card or a row of
+tiles covers the middle of every screen. Classroom has no scenery at all, which
+is most of what makes it the plain one.
 
 This replaced the flat / paper / sunroom skins: a child has no reason to care
 whether a shadow is soft or tight. The paper card treatment stayed as the house

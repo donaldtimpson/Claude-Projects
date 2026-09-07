@@ -28,7 +28,11 @@ struct CardStack<Content: View>: View {
     /// as the card refusing to advance. Ignored until the word has finished.
     @State private var armed = true
     /// 180 while a card is arriving face down, animating to 0 as it turns over.
+    /// SIGNED, so the card turns in from the side it travelled from: swipe left to
+    /// advance and the next card comes in from the right, and the reverse going
+    /// back. Turning the same way regardless felt like it came from the wrong side.
     @State private var deal: Double = 0
+    @State private var lastDir: Int = 1
     /// Screenshot only: hold the card face down so the back can be looked at.
     private var heldFaceDown: Bool {
         #if DEBUG
@@ -69,8 +73,11 @@ struct CardStack<Content: View>: View {
                     // so that is what is drawn — the deal actually turns over.
                     Group {
                         if heldFaceDown || abs(deal) > 90 {
+                            // Counter-rotated so the pattern is not mirrored.
                             CardBack(radius: skin.cardRadius)
                                 .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
+                                .padding(.horizontal, 26)
+                                .padding(.vertical, 24)
                         } else {
                             content(index % count)
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -82,7 +89,8 @@ struct CardStack<Content: View>: View {
                         .padding(.vertical, 24)
                         .id(index)
                         .transition(.asymmetric(
-                            insertion: .opacity, removal: .move(edge: .leading).combined(with: .opacity)))
+                            insertion: .identity,
+                            removal: .move(edge: .leading).combined(with: .opacity)))
                         .offset(x: drag.width, y: drag.height * 0.2)
                         .rotationEffect(.degrees(Double(drag.width / 30)))
                         .scaleEffect(pop ? 1.03 : 1)
@@ -105,8 +113,12 @@ struct CardStack<Content: View>: View {
                 spoke = false; armed = true; turnTask?.cancel()
                 // Deal the new card face down, then turn it over. Quick on purpose:
                 // this is a flourish between cards, not a thing to sit through.
-                deal = 180
-                withAnimation(.easeOut(duration: 0.34)) { deal = 0 }
+                // A beat face down before it turns, or the back is never actually
+                // seen — the flip finished before the eye got there.
+                deal = Double(lastDir) * 180
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+                    withAnimation(.easeInOut(duration: 0.38)) { deal = 0 }
+                }
             }
             .onDisappear { turnTask?.cancel() }
         }
@@ -150,6 +162,7 @@ struct CardStack<Content: View>: View {
 
     private func step(_ d: Int) {
         guard count > 0 else { return }
+        lastDir = d
         index = (index + d + count) % count
         onAdvance?()
     }
