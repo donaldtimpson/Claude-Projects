@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import CurrentToggle from "../../CurrentToggle";
+import SyllabusEditor from "../../SyllabusEditor";
 import LectureRow from "./LectureRow";
 import LectureOrderEditor from "./LectureOrderEditor";
 import { grammarLessonDrills } from "@/lib/drills/grammar";
@@ -65,6 +66,8 @@ export default async function AdminCourseHub({ params }: { params: Promise<{ cou
           lectures={course.videos.map((v) => ({ id: v.id, title: v.title }))}
         />
       )}
+
+      <SyllabusEditor courseId={course.id} initialSyllabus={course.syllabus} />
 
       <section className="space-y-3">
         <h2 className="font-display text-sm tracking-[0.15em] uppercase text-parchment-dim">Lectures</h2>

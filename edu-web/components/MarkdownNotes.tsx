@@ -58,6 +58,29 @@ function buildComponents(variant: Variant): Components {
       <blockquote className={`border-l-2 pl-4 my-3 italic ${quote}`}>{children}</blockquote>
     ),
     hr: () => <hr className={`my-5 ${rule}`} />,
+    table: ({ children }) => (
+      <div className="my-4 overflow-x-auto">
+        <table className={`w-full border-collapse ${bodyText}`}>{children}</table>
+      </div>
+    ),
+    th: ({ children }) => (
+      <th
+        className={`px-3 py-2 text-left font-semibold border-b ${
+          dark ? "text-parchment border-gold-500/40" : "text-zinc-900 border-zinc-400"
+        }`}
+      >
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td
+        className={`px-3 py-2 align-top border-b ${
+          dark ? "text-parchment-dim border-crimson-800" : "text-zinc-700 border-zinc-200"
+        }`}
+      >
+        {children}
+      </td>
+    ),
   };
 }
 

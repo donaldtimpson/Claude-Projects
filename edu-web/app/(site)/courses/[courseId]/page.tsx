@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
+import MarkdownNotes from "@/components/MarkdownNotes";
 import RegisterForm from "./RegisterForm";
 
 export const dynamic = "force-dynamic";
@@ -294,6 +295,30 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {course.syllabus.trim() && (
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm uppercase tracking-wider text-parchment-dim">Syllabus</h2>
+              <a
+                href={`/courses/${course.id}/syllabus`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-parchment-dim hover:text-gold-300 transition-colors"
+              >
+                PDF ↗
+              </a>
+            </div>
+            <details className="bg-crimson-900 border border-crimson-700 rounded-xl">
+              <summary className="cursor-pointer select-none px-5 py-4 font-medium text-parchment marker:text-gold-400">
+                Course syllabus — grading, policies, and the full schedule
+              </summary>
+              <div className="px-5 pb-5 pt-1 border-t border-crimson-800">
+                <MarkdownNotes content={course.syllabus} />
+              </div>
+            </details>
           </section>
         )}
 

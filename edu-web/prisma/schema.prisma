@@ -15,6 +15,7 @@ model Course {
   title             String
   shortTitle        String?        // clean subject name for compact display (rows, nav); falls back to title
   description       String         @default("")
+  syllabus          String         @default("") // Markdown course syllabus; rendered on the course page + /courses/[id]/syllabus print route
   thumbnailUrl      String         @default("")
   videoCount        Int            @default(0)
   isCurrent         Boolean        @default(false)
