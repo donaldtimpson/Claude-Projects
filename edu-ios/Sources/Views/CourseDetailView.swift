@@ -6,6 +6,11 @@ struct LectureRoute: Hashable {
     let title: String
 }
 
+struct SyllabusRoute: Hashable {
+    let title: String
+    let markdown: String
+}
+
 struct CourseDetailView: View {
     let courseId: String
     @State private var course: CourseDetail?
@@ -24,6 +29,7 @@ struct CourseDetailView: View {
                 CourseTestView(courseId: $0.courseId, courseTitle: $0.title)
             }
             .navigationDestination(for: CourseOffering.self) { CourseDetailView(courseId: $0.id) }
+            .navigationDestination(for: SyllabusRoute.self) { SyllabusView(title: $0.title, markdown: $0.markdown) }
             .task { if course == nil { await load() } }
     }
 
@@ -45,6 +51,24 @@ struct CourseDetailView: View {
                     // Hide the description while filtering to keep results focused.
                     if query.isEmpty, !course.description.isEmpty {
                         ExpandableText(text: course.description)
+                    }
+
+                    // The syllabus, when set — grading, policies, and the schedule.
+                    if query.isEmpty, let syl = course.syllabus, !syl.isEmpty {
+                        NavigationLink(value: SyllabusRoute(title: "Syllabus", markdown: syl)) {
+                            HStack {
+                                Text("📘").font(.system(size: 26))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Syllabus").font(.display(15)).foregroundStyle(Theme.ink)
+                                    Text("Grading, policies, and the full schedule")
+                                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+                            }
+                            .lyceumCard()
+                        }
+                        .buttonStyle(.lyceumPress)
                     }
 
                     // The course test, when the course has one. Sits above the
@@ -152,6 +176,25 @@ struct CourseDetailView: View {
             self.error = error.localizedDescription
         }
         loading = false
+    }
+}
+
+/// Full syllabus screen — renders the course's Markdown syllabus (grading,
+/// policies, schedule) with the shared math/markdown web renderer.
+struct SyllabusView: View {
+    let title: String
+    let markdown: String
+    @State private var webHeight: CGFloat = 200
+
+    var body: some View {
+        ScrollView {
+            MathWebView(markdown: markdown, height: $webHeight)
+                .frame(height: webHeight)
+                .padding()
+        }
+        .background(Theme.parchment)
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

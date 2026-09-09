@@ -14,6 +14,7 @@ export async function GET(
       title: true,
       shortTitle: true,
       description: true,
+      syllabus: true,
       thumbnailUrl: true,
       videoCount: true,
       isCurrent: true,

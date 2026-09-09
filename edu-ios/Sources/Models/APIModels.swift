@@ -202,6 +202,8 @@ struct CourseDetail: Codable, Identifiable, Hashable {
     let title: String
     var shortTitle: String?
     let description: String
+    /// Markdown course syllabus. Optional for older servers / offline caches.
+    var syllabus: String? = nil
     let thumbnailUrl: String
     let videoCount: Int
     let isCurrent: Bool

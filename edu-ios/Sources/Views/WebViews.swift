@@ -152,6 +152,10 @@ struct MathWebView: UIViewRepresentable {
         a{color:#ddb954}
         code{background:#2d1212;color:#e8cb7e;padding:1px 4px;border-radius:4px}
         pre{background:#2d1212;padding:10px;border-radius:8px;overflow-x:auto}
+        table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;display:block;overflow-x:auto}
+        th,td{border-bottom:1px solid #4a1a1a;padding:7px 10px;text-align:left;vertical-align:top}
+        th{color:#f5ecd8;border-bottom-color:rgba(207,161,53,.4);font-weight:600}
+        td{color:#c4af8e}
         .katex{color:#f5ecd8}
         .katex-display{overflow-x:auto;overflow-y:hidden}</style></head>
         <body><div id='c'></div>
