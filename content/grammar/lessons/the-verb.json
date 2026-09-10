@@ -13,9 +13,31 @@
       "heading": "Oral Lesson",
       "bullets": [
         "In the sentence “Fishes swim,” the subject is “Fishes” and the predicate is “swim.”",
-        "There is no separate copula — no word like “are” is expressed.",
-        "One word can affirm something of a subject directly, expressing both the copula and the predicate.",
-        "A word used in this way — to affirm action, being, or state — is called a Verb."
+        "Is there any copula expressed?  There is not.",
+        "The predicate, then, can be affirmed of the subject directly — one word expressing both the copula and the predicate.",
+        "A word which can be used to affirm something of a subject is called a Verb.",
+        "It usually expresses action, being, or state:  I run (action);  I am (being);  I sleep (state)."
+      ]
+    },
+    {
+      "type": "table",
+      "heading": "The Three Kinds",
+      "rows": [
+        {
+          "label": "Action",
+          "text": "The subject does something — a deed or a motion.",
+          "examples": "writes, runs, throws, falls"
+        },
+        {
+          "label": "Being",
+          "text": "The verb be — asserts that the subject exists, or links it to what it is.",
+          "examples": "is, was, am, be"
+        },
+        {
+          "label": "State",
+          "text": "The subject is in a condition — neither acting nor merely existing.",
+          "examples": "sleeps, sits, stands, waits"
+        }
       ]
     },
     {
@@ -25,26 +47,27 @@
       "examples": [
         "George writes.  (action)",
         "Rain falls.  (action)",
-        "The rocket launches.  (action)",
-        "I am.  (being)",
-        "He sleeps.  (state)",
-        "She dreams.  (state)"
+        "God is.  (being)",
+        "Dinosaurs existed.  (being)",
+        "She dreams.  (state)",
+        "Houses stand.  (state)"
       ]
     },
     {
       "type": "concept",
-      "heading": "Every Sentence Needs a Verb",
+      "heading": "How to Know a Verb",
       "bullets": [
-        "The verb is the word that tells what the subject does or is.",
+        "Ask:  does the word affirm something of the subject?  If so, it is a verb.",
+        "“Horses trot.”  — “trot” is a verb; it affirms action of the subject “horses.”",
+        "“Houses stand.”  — “stand” is a verb; it affirms state of the subject “houses.”",
         "Cross out the verb and the sentence falls apart:  “The dog ___ the ball.”",
-        "Ex. — Birds sing.   The sun shines.   Children laugh.   Water freezes.",
-        "Ex. — Mother bakes bread.   The team won.   Flowers are pretty.",
-        "In each one, the underlined-in-your-mind action or being word is the verb."
+        "Every complete sentence must contain a verb — the word that tells what the subject does or is."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Find the Verb",
+      "answerInline": true,
       "instruction": "Name the verb in each sentence.  (Just find it — don't worry about its class yet.)",
       "items": [
         "Birds fly.",
@@ -54,7 +77,11 @@
         "She sings sweetly.",
         "The fire burns.",
         "We are happy.",
-        "Snow melts quickly."
+        "Snow melts quickly.",
+        "The old clock ticks.",
+        "Children laugh.",
+        "Water freezes.",
+        "The soldiers marched."
       ],
       "answers": [
         "fly",
@@ -64,40 +91,103 @@
         "sings",
         "burns",
         "are",
-        "melts"
+        "melts",
+        "ticks",
+        "laugh",
+        "freezes",
+        "marched"
       ]
     },
     {
       "type": "concept",
-      "heading": "Transitive Verbs",
+      "heading": "The Object",
       "bullets": [
-        "A Transitive Verb requires an object to complete its meaning.",
+        "In “Boys study grammar,” the word “grammar” is required to complete the meaning of the predicate “study.”",
+        "It tells what the boys study, and so completes the verb's meaning.",
+        "Such a completing word is called the Objective Element, or Object.",
+        "Ex. — Fire burns wood.   (burns what? — wood, the object)"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Objective Element (Object)",
+      "text": "An Objective Element is a word or a group of words which completes the meaning of a verb.",
+      "examples": [
+        "Boys study grammar.  (object — grammar)",
+        "Columbus discovered America.  (object — America)",
+        "Fire burns wood.  (object — wood)",
+        "The dog buried a bone.  (object — a bone)",
+        "Merchants sell goods.  (object — goods)"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Transitive Verb",
+      "text": "A Transitive Verb requires the addition of an object to complete its meaning.",
+      "examples": [
+        "Columbus discovered America.  (discovered what? — America)",
+        "John struck James.  (struck whom? — James)",
+        "Maria painted the fence.  (painted what? — the fence)",
+        "The dog buried a bone.  (buried what? — a bone)",
+        "Farmers raise wheat.  (raise what? — wheat)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "More on Transitive Verbs",
+      "bullets": [
         "The object receives the action of the verb.",
-        "Ex. — Columbus discovered America.   Maria painted the fence.   The dog buried a bone.",
-        "Test — ask “verb + what?”  If there is an answer, it is transitive:  “discovered what? America.”",
-        "Rem. — The object is not always written out:  “The child reads.”  (reads what? — understood.)"
+        "Test — ask “verb + what?” or “verb + whom?”  If there is an answer, the verb is transitive:  “discovered what? America.”",
+        "Rem. — The object is not always expressed:  “The child reads.”  (reads what? — the object is understood.)",
+        "Even then, an object can always be supplied — some word other than the subject:  “The child reads [books].”",
+        "Caution — a describing word after a copulative verb answers “what?” too (“remains what? — open”), yet it is a predicate, not an object."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Intransitive Verb",
+      "text": "An Intransitive Verb does not require the addition of an object to complete its meaning.",
+      "examples": [
+        "Horses run.  (run what? — nothing)",
+        "Clarence walks.  (walks what? — nothing)",
+        "Viola blushed.",
+        "The engine hummed.",
+        "The children ran home.  (ran what? — nothing; “home” only tells where)"
       ]
     },
     {
       "type": "concept",
-      "heading": "Intransitive Verbs",
+      "heading": "More on Intransitive Verbs",
       "bullets": [
-        "An Intransitive Verb needs no object to complete its meaning.",
         "The action stops with the subject; nothing receives it.",
-        "Ex. — Horses run.   The baby smiled.   Snow falls.   The engine hummed.",
-        "Test — ask “verb + what?”  If there is no answer, it is intransitive:  “run what? — nothing.”",
-        "Rem. — Many verbs can be either:  “She reads books” (transitive) or “She reads well” (intransitive)."
+        "Test — ask “verb + what?”  If there is no answer, the verb is intransitive:  “run what? — nothing.”",
+        "Rem. — Some verbs are transitive in one sense and intransitive in another.",
+        "Ex. — “She reads books” (transitive) but “She reads well” (intransitive).",
+        "To be sure whether a verb may be used both ways, consult a dictionary.",
+        "Ex. — Houses stand.   Boys swim.   (nothing is acted upon)"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Copulative Verb",
+      "text": "A Copulative Verb is used to join a predicate to a subject, and to make an assertion.",
+      "examples": [
+        "Lambs are playful.  (joins “playful” to “lambs”)",
+        "Stephen was a martyr.",
+        "The soup tastes good.",
+        "She became a teacher.",
+        "The roses smell sweet."
       ]
     },
     {
       "type": "concept",
-      "heading": "Copulative (Linking) Verbs",
+      "heading": "The Copula Is Always a Verb",
       "bullets": [
-        "A Copulative Verb joins a predicate to the subject and makes an assertion.",
-        "It links the subject to a word that describes or renames it.",
-        "Ex. — Lambs are playful.   The weather was warm.   The soup tastes good.",
-        "Common linking verbs — am, is, are, was, were, seem, become, feel, taste, look.",
-        "The copula is always a verb."
+        "A copulative verb links the subject to a word that describes or renames it, and asserts it.",
+        "That word is the predicate, not an object — “The gate remains open”:  “open” describes the gate, so it is a predicate.",
+        "Recall Lesson 1:  the copula is the asserting word — “Iron | is : heavy.”",
+        "The copula is always a verb.",
+        "Common copulative verbs — am, is, are, was, were, be, become, seem, appear; and feel, taste, look, smell, sound when they link."
       ]
     },
     {
@@ -106,64 +196,103 @@
       "bullets": [
         "Transitive — passes the action to an object:   Dogs chase cats.",
         "Intransitive — the action has no object:   Dogs bark.",
-        "Copulative — links the subject to a describing word:   Dogs are loyal.",
+        "Copulative — links the subject to a describing word and asserts it:   Dogs are loyal.",
         "Notice: the same subject can take all three — it all depends on the verb."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Point Out the Verbs (Set 1)",
-      "instruction": "Point out the verb in each sentence, and tell whether it is transitive, intransitive, or copulative.",
+      "instruction": "Point out the verb and tell whether it is transitive, intransitive, or copulative.  (Look hard — some verbs change class, and length is no clue.)",
       "items": [
-        "The nights are chilly.",
-        "Corn grows.",
-        "Horses draw wagons.",
-        "Merchants sell goods.",
-        "Fishes swim.",
-        "James is sick.",
-        "Dogs kill sheep.",
-        "Henry struck William."
+        "The soup tastes salty.",
+        "The cook tastes the soup.",
+        "Wild geese fly south.",
+        "Time heals all wounds.",
+        "The old bridge collapsed.",
+        "The witness appeared nervous.",
+        "The storm damaged the barn.",
+        "The blanket feels soft."
       ],
       "answers": [
-        "are — copulative",
-        "grows — intransitive",
-        "draw — transitive (obj. wagons)",
-        "sell — transitive (obj. goods)",
-        "swim — intransitive",
-        "is — copulative",
-        "kill — transitive (obj. sheep)",
-        "struck — transitive (obj. William)"
+        "tastes — copulative (pred. salty)",
+        "tastes — transitive (obj. the soup)",
+        "fly — intransitive (“south” tells where)",
+        "heals — transitive (obj. wounds)",
+        "collapsed — intransitive",
+        "appeared — copulative (pred. nervous)",
+        "damaged — transitive (obj. the barn)",
+        "feels — copulative (pred. soft)"
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Point Out the Verbs (Set 2)",
-      "instruction": "Point out the verb in each sentence, and tell whether it is transitive, intransitive, or copulative.",
+      "instruction": "Point out the verb and tell whether it is transitive, intransitive, or copulative.  (The same verb can belong to different classes — decide from the work it does here.)",
       "items": [
-        "The sun shines.",
-        "Farmers plant corn.",
-        "The soup tastes good.",
-        "Children play games.",
-        "Birds build nests.",
-        "The river flows.",
-        "Mother is kind.",
-        "Bakers make bread."
+        "The dog smells the meat.",
+        "The bread smells fresh.",
+        "The children played outside.",
+        "The jury believed the witness.",
+        "He became angry.",
+        "The glass broke.",
+        "He broke the window.",
+        "The sky looks stormy."
       ],
       "answers": [
-        "shines — intransitive",
-        "plant — transitive (obj. corn)",
-        "tastes — copulative",
-        "play — transitive (obj. games)",
-        "build — transitive (obj. nests)",
-        "flows — intransitive",
-        "is — copulative",
-        "make — transitive (obj. bread)"
+        "smells — transitive (obj. the meat)",
+        "smells — copulative (pred. fresh)",
+        "played — intransitive (“outside” tells where)",
+        "believed — transitive (obj. the witness)",
+        "became — copulative (pred. angry)",
+        "broke — intransitive",
+        "broke — transitive (obj. the window)",
+        "looks — copulative (pred. stormy)"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Analyze — Copular Sentences {s,c,p}",
+      "instruction": "Model — “Iron | is : heavy.”  Split into subject | copula : predicate.  (Even tastes, became, and looks serve as copulas — the copula asserts, but is not itself the predicate.)",
+      "items": [
+        "Lambs are playful.",
+        "Stephen was a martyr.",
+        "The soup tastes good.",
+        "He became angry.",
+        "The sky looks stormy."
+      ],
+      "answers": [
+        {
+          "s": "Lambs",
+          "c": "are",
+          "p": "playful"
+        },
+        {
+          "s": "Stephen",
+          "c": "was",
+          "p": "a martyr"
+        },
+        {
+          "s": "soup",
+          "c": "tastes",
+          "p": "good"
+        },
+        {
+          "s": "He",
+          "c": "became",
+          "p": "angry"
+        },
+        {
+          "s": "sky",
+          "c": "looks",
+          "p": "stormy"
+        }
       ]
     },
     {
       "type": "practice",
       "heading": "Analyze — Diagram the Sentence (Set 1)",
-      "instruction": "Model — “Scholars learn lessons.”  Split it into subject | predicate | object.  The line between subject and predicate reaches below the baseline.",
+      "instruction": "Model — “Scholars | learn | lessons.”  Split it into subject | predicate | object.  The line between subject and predicate reaches below the baseline.",
       "items": [
         "Dogs hunt rabbits.",
         "Jane studies botany.",
@@ -204,7 +333,7 @@
       "heading": "Analyze — Diagram the Sentence (Set 2)",
       "instruction": "Split each sentence into subject | predicate | object.  Remember: the divider after the subject reaches below the baseline.",
       "items": [
-        "Bees make honey.",
+        "Soldiers fight battles.",
         "Carpenters build houses.",
         "Rain waters plants.",
         "Boys fly kites.",
@@ -212,9 +341,9 @@
       ],
       "answers": [
         {
-          "s": "Bees",
-          "p": "make",
-          "o": "honey"
+          "s": "Soldiers",
+          "p": "fight",
+          "o": "battles"
         },
         {
           "s": "Carpenters",
@@ -240,18 +369,19 @@
     },
     {
       "type": "concept",
-      "heading": "Common Mistakes with Verbs",
+      "heading": "Incorrect Language — Cautions",
       "bullets": [
-        "Use seen and gone only with a helper (has, have, had):  “I have seen it,” not “I have saw it.”",
-        "Use saw and went by themselves for past time:  “I saw a horse,” not “I seen a horse.”",
-        "Say did and came — not done and come — for past time:  “He did his work.”  “Father came home.”",
-        "With two or more subjects, use are or were:  “The horse and the cow are in the stable.”",
-        "With the subject you, always use were:  “You were there,” not “You was there.”"
+        "I. — After has, have, or had, use seen and gone — never saw or went:  “I have seen it.”",
+        "II. — For simple past time, use saw — never see or seen:  “I saw a dog.”",
+        "III. — For simple past time, use did and came — never done or come:  “He did his work.”  “Father came home.”",
+        "IV. — When the subject names more than one, use are or were — never is, was, or has been:  “The horse and the cow are in the stable.”",
+        "V. — When the subject is you, use were — never was:  “You were there.”"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Fix the Verb",
+      "heading": "Practice — Fix the Verb (Set 1)",
+      "answerInline": true,
       "instruction": "Each sentence has a verb mistake. Give the correct word.",
       "items": [
         "I have saw a fine horse today.",
@@ -275,23 +405,49 @@
       ]
     },
     {
+      "type": "practice",
+      "heading": "Practice — Fix the Verb (Set 2)",
+      "answerInline": true,
+      "instruction": "Each sentence has a verb mistake — one has two. Give the correct word(s).",
+      "items": [
+        "Have you saw Mr. Olds today?",
+        "It is the largest peach I ever see.",
+        "I done my task before Eli come.",
+        "Eliza and Sarah has been here.",
+        "We was very much surprised.",
+        "Perhaps you was trying to hide.",
+        "The little boy has went into the woods.",
+        "Hiram see a flock of wild turkeys yesterday."
+      ],
+      "answers": [
+        "seen",
+        "saw",
+        "did (and came)",
+        "have",
+        "were",
+        "were",
+        "gone",
+        "saw"
+      ]
+    },
+    {
       "type": "questions",
       "items": [
         "What is a verb?",
-        "What three things can a verb express?",
+        "What is an objective element?",
         "What is a transitive verb?",
         "What is an intransitive verb?",
         "What is a copulative verb?",
-        "Is a transitive verb's object always written out?",
+        "Is a transitive verb's object always expressed?",
         "When may we use “seen” and “gone”?"
       ],
       "answers": [
         "A word that expresses action, being, or state.",
-        "Action, being, or state.",
-        "One that needs an object to complete its meaning.",
-        "One that needs no object to complete its meaning.",
-        "One that links a predicate to the subject and makes an assertion.",
-        "No — “The child reads.”  (reads what? — the object is understood.)",
+        "A word or group of words which completes the meaning of a verb.",
+        "One that requires an object to complete its meaning.",
+        "One that does not require an object to complete its meaning.",
+        "One that joins a predicate to a subject and makes an assertion.",
+        "No — “The child reads.”  (the object is understood.)",
         "Only with a helping verb — has, have, or had."
       ]
     }

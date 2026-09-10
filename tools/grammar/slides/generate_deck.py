@@ -19,6 +19,7 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_CONNECTOR
 
 from themes import THEMES, get_theme
+from lesson_order import numbered_stem
 
 # ---- Theme (colors + brand set by apply_theme before a build) --------------
 INK = ACCENT = MUTED = PAPER = RULE = ANSWER = DIAGRAM = None
@@ -131,13 +132,27 @@ def _diag_word(slide, left, base_y, width, text):
     _run(p, text, size=18, color=DIAGRAM)
 
 
-def _draw_diagram(slide, left, top, s, p, o=None):
-    """Baseline with subject | predicate | object.
-    The subject/predicate divider crosses below the baseline; the
-    predicate/object divider stops at it. Returns the right edge (EMU)."""
+def _draw_diagram(slide, left, top, s, p, o=None, c=None):
+    """Baseline with subject | predicate | object, or Harvey's copular form
+    subject | copula : predicate when `c` is given.
+    The subject divider crosses below the baseline (the principal split); the
+    copula/predicate and predicate/object dividers stop at it. Returns the right edge (EMU)."""
     base = top + Inches(0.30)
     top_line = top + Inches(0.04)
     below = Inches(0.13)
+    if c:
+        # Harvey: "Iron | is : heavy" — copula set off from the predicate, not folded in.
+        ws, wc, wp = _slot_w(s), _slot_w(c), _slot_w(p)
+        x1 = left + ws
+        x2 = x1 + wc
+        xend = x2 + wp
+        _line(slide, left, base, xend, base)            # baseline
+        _line(slide, x1, top_line, x1, base + below)     # subject | (crosses, principal split)
+        _line(slide, x2, top_line, x2, base)             # copula : predicate (stops at baseline)
+        _diag_word(slide, left, base, ws, s)
+        _diag_word(slide, x1, base, wc, c)
+        _diag_word(slide, x2, base, wp, p)
+        return xend
     ws, wp = _slot_w(s), _slot_w(p)
     wo = _slot_w(o) if o else 0
     x1 = left + ws
@@ -305,7 +320,7 @@ def _practice_diagram_answers(slide, s, answers):
         _, tf = _box(slide, MARGIN, y - Inches(0.02), Inches(0.5), Inches(0.4))
         _run(tf.paragraphs[0], f"{i + 1}.", size=18, color=ACCENT, bold=True)
         _draw_diagram(slide, MARGIN + Inches(0.55), y,
-                      a["s"], a["p"], a.get("o"))
+                      a["s"], a["p"], a.get("o"), a.get("c"))
         y += row_h
 
 
@@ -340,12 +355,47 @@ def render_questions(slide, s, source, show_answers=False):
     _footer(slide, source)
 
 
+def render_table(slide, s, source):
+    """A classification table: a bold label column beside a description (and
+    optional examples), a light divider between the columns and a rule between
+    rows — a Harvey-style comparison of a handful of kinds."""
+    _bg(slide)
+    _heading(slide, s["heading"])
+    rows = s["rows"]
+    top = Inches(2.25)
+    row_h = Inches(1.4)
+    label_w = Inches(2.7)
+    gap = Inches(0.45)
+    desc_left = MARGIN + label_w + gap
+    desc_w = SLIDE_W - MARGIN - desc_left
+    div_x = MARGIN + label_w + Inches(0.225)
+    _line(slide, div_x, top + Inches(0.05),
+          div_x, top + row_h * len(rows) - Inches(0.1), color=MUTED, width=Pt(1))
+    for i, r in enumerate(rows):
+        y = top + row_h * i
+        _, tfl = _box(slide, MARGIN, y, label_w, row_h)
+        tfl.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _run(tfl.paragraphs[0], r["label"], size=27, color=ACCENT, bold=True, font=HEAD_FONT)
+        _, tfd = _box(slide, desc_left, y, desc_w, row_h)
+        tfd.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _run(tfd.paragraphs[0], r["text"], size=21, color=INK, font=BODY_FONT)
+        if r.get("examples"):
+            pe = tfd.add_paragraph()
+            pe.space_before = Pt(5)
+            _run(pe, r["examples"], size=17, color=MUTED, italic=True, font=BODY_FONT)
+        if i < len(rows) - 1:
+            _rule(slide, y + row_h, left=MARGIN, width=SLIDE_W - 2 * MARGIN,
+                  thickness=Pt(0.75), color=MUTED)
+    _footer(slide, source)
+
+
 RENDERERS = {
     "title": render_title,
     "definition": render_definition,
     "concept": render_concept,
     "practice": render_practice,
     "questions": render_questions,
+    "table": render_table,
 }
 
 
@@ -370,7 +420,7 @@ def build(lesson_path: Path, theme_name="light") -> Path:
     out_dir = Path(__file__).resolve().parent / "build"
     out_dir.mkdir(exist_ok=True)
     suffix = "" if theme_name == "light" else f"-{theme_name}"
-    out_path = out_dir / f"{data['lesson']}{suffix}.pptx"
+    out_path = out_dir / f"{numbered_stem(data['lesson'], suffix)}.pptx"
     prs.save(str(out_path))
     return out_path
 

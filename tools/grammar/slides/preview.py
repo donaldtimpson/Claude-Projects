@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 from themes import THEMES, get_theme
+from lesson_order import numbered_stem
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -98,6 +99,13 @@ ol.q li { counter-increment: q; font-size: 24px; line-height: 1.4; margin-bottom
 ol.q li:before { content: counter(q) "."; color: var(--accent); font-weight: 700;
                  position: absolute; left: 0; }
 ol.q.tight li { font-size: 22px; line-height: 1.2; margin-bottom: 5px; }
+.ctable { width:100%; border-collapse:collapse; margin-top:6px; }
+.ctable td { border-bottom:1px solid var(--rule); padding:16px 0; vertical-align:top; }
+.ctable tr:last-child td { border-bottom:0; }
+.ctable td.tlabel { width:24%; color:var(--accent); font-family:var(--head-font);
+                    font-weight:700; font-size:28px; padding-right:20px; }
+.ctable td.tdesc { font-size:22px; line-height:1.35; }
+.ctable .tex { color:var(--muted); font-style:italic; font-size:17px; margin-top:5px; }
 """
 
 
@@ -108,16 +116,34 @@ def esc(s):
     return html.escape(str(s))
 
 
-def diagram_svg(s, p, o=None):
-    """Reed-Kellogg baseline: subject | predicate | object. The
-    subject/predicate divider crosses below the baseline; the
-    predicate/object divider stops at it."""
+def diagram_svg(s, p, o=None, c=None):
+    """Reed-Kellogg baseline: subject | predicate | object, or Harvey's copular
+    form subject | copula : predicate when `c` is given. The subject divider
+    crosses below the baseline; the copula/predicate and predicate/object
+    dividers stop at it."""
     ch, pad = 9.8, 15
+    base, topln, below, texty = 30, 6, 13, 23
+    if c:
+        # Harvey: "Iron | is : heavy" — the copula is set off, not folded into the predicate.
+        ws = len(s) * ch + 2 * pad
+        wc = len(c) * ch + 2 * pad
+        wp = len(p) * ch + 2 * pad
+        total = ws + wc + wp
+        x1, x2 = ws, ws + wc
+        return "".join([
+            f'<svg class="diag" width="{total:.0f}" height="46" '
+            f'viewBox="0 0 {total:.0f} 46" xmlns="http://www.w3.org/2000/svg">',
+            f'<line x1="0" y1="{base}" x2="{total:.0f}" y2="{base}"/>',
+            f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>',
+            f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>',
+            f'<text x="{ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>',
+            f'<text x="{ws + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>',
+            f'<text x="{ws + wc + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>',
+            '</svg>'])
     ws = len(s) * ch + 2 * pad
     wp = len(p) * ch + 2 * pad
     wo = (len(o) * ch + 2 * pad) if o else 0
     total = ws + wp + wo
-    base, topln, below, texty = 30, 6, 13, 23
     x1, x2 = ws, ws + wp
     parts = [f'<svg class="diag" width="{total:.0f}" height="46" '
              f'viewBox="0 0 {total:.0f} 46" xmlns="http://www.w3.org/2000/svg">']
@@ -165,7 +191,7 @@ def render(slide, source, show_answers=False):
         if show_answers and is_diagram:
             rows = "".join(
                 f'<li><b style="color:var(--accent)">{i+1}.</b>'
-                f'{diagram_svg(a["s"], a["p"], a.get("o"))}</li>'
+                f'{diagram_svg(a["s"], a["p"], a.get("o"), a.get("c"))}</li>'
                 for i, a in enumerate(answers))
             body = f'<ul class="b diagrows" style="list-style:none">{rows}</ul>'
         else:
@@ -199,6 +225,14 @@ def render(slide, source, show_answers=False):
         qcls = "q tight" if show_answers else "q"
         return (f'<section class="slide">{tag}<h2 class="h">Questions</h2><hr class="dbl">'
                 f'<ol class="{qcls}">{lis}</ol>{foot}</section>')
+    if t == "table":
+        rows = ""
+        for r in slide["rows"]:
+            exs = f'<div class="tex">{esc(r["examples"])}</div>' if r.get("examples") else ""
+            rows += (f'<tr><td class="tlabel">{esc(r["label"])}</td>'
+                     f'<td class="tdesc">{esc(r["text"])}{exs}</td></tr>')
+        return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
+                f'<table class="ctable">{rows}</table>{foot}</section>')
     return ""
 
 
@@ -221,7 +255,7 @@ def build(lesson_path: Path, theme_name="light") -> Path:
     out_dir = Path(__file__).resolve().parent / "build"
     out_dir.mkdir(exist_ok=True)
     suffix = "" if theme_name == "light" else f"-{theme_name}"
-    out_path = out_dir / f"{data['lesson']}{suffix}.html"
+    out_path = out_dir / f"{numbered_stem(data['lesson'], suffix)}.html"
     out_path.write_text(doc)
     return out_path
 
