@@ -53,6 +53,19 @@ final class Listener {
         target = Self.normalize(word)
         self.onMatch = onMatch
 
+        // Claim the mic before touching the input node. Voice puts the shared
+        // session in .playback the first time a card is heard; under .playback the
+        // input node reports an invalid (0-channel) format, and installTap below
+        // then throws IsFormatSampleRateAndChannelCountValid — a hard crash, not a
+        // Swift error do/catch can see. Switching to .playAndRecord restores a real
+        // input format. (Repro before this: hear any card, then open Words.)
+        let session = AVAudioSession.sharedInstance()
+        do {
+            try session.setCategory(.playAndRecord, mode: .default,
+                                    options: [.duckOthers, .defaultToSpeaker])
+            try session.setActive(true)
+        } catch { return }
+
         let req = SFSpeechAudioBufferRecognitionRequest()
         req.shouldReportPartialResults = true
         // Constrain the recogniser toward the word we are hoping for.
@@ -61,8 +74,12 @@ final class Listener {
         request = req
 
         let input = engine.inputNode
+        // Belt-and-braces: if the route still hasn't given us a usable format,
+        // bail rather than crash. Listening simply stays off; nothing accuses.
+        let format = input.outputFormat(forBus: 0)
+        guard format.channelCount > 0, format.sampleRate > 0 else { request = nil; return }
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { [weak self] buf, _ in
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buf, _ in
             req.append(buf)
             self?.meter(buf)
         }
