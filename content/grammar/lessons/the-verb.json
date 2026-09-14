@@ -31,7 +31,7 @@
         {
           "label": "Being",
           "text": "The verb be — asserts that the subject exists, or links it to what it is.",
-          "examples": "is, was, am, be"
+          "examples": "be, am, is, are, was, were, being, been"
         },
         {
           "label": "State",
@@ -66,37 +66,47 @@
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Verb",
-      "answerInline": true,
-      "instruction": "Name the verb in each sentence.  (Just find it — don't worry about its class yet.)",
+      "heading": "Practice — Find & Classify (Set 1)",
+      "instruction": "Name the verb in each sentence, and tell whether it expresses action, being, or state.",
       "items": [
         "Birds fly.",
         "The baby sleeps.",
-        "Rain falls.",
+        "God is.",
         "Dogs bark loudly.",
+        "The old house stands.",
+        "Dinosaurs existed."
+      ],
+      "answers": [
+        "fly — action",
+        "sleeps — state",
+        "is — being",
+        "bark — action",
+        "stands — state",
+        "existed — being"
+      ],
+      "answerInline": true
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find & Classify (Set 2)",
+      "instruction": "Name the verb in each sentence, and tell whether it expresses action, being, or state.",
+      "items": [
         "She sings sweetly.",
-        "The fire burns.",
+        "The travelers rested.",
         "We are happy.",
-        "Snow melts quickly.",
-        "The old clock ticks.",
         "Children laugh.",
-        "Water freezes.",
+        "The cat waits by the door.",
         "The soldiers marched."
       ],
       "answers": [
-        "fly",
-        "sleeps",
-        "falls",
-        "bark",
-        "sings",
-        "burns",
-        "are",
-        "melts",
-        "ticks",
-        "laugh",
-        "freezes",
-        "marched"
-      ]
+        "sings — action",
+        "rested — state",
+        "are — being",
+        "laugh — action",
+        "waits — state",
+        "marched — action"
+      ],
+      "answerInline": true
     },
     {
       "type": "concept",

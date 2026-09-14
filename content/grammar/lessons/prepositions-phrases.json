@@ -21,12 +21,12 @@
     {
       "type": "definition",
       "term": "Preposition",
-      "text": "A Preposition is a word used to show the relation between its object and some other word.",
+      "text": "A Preposition is a word used to show the relation between a noun or pronoun and some other word.",
       "examples": [
         "the book on the table",
         "a man of wealth",
         "rode by the house",
-        "the noun after it is its object"
+        "the noun or pronoun it governs is its object"
       ]
     },
     {
@@ -68,7 +68,8 @@
       "type": "concept",
       "heading": "The Phrase",
       "bullets": [
-        "A Phrase is a group made of a preposition and its object:  of wealth, by our house.",
+        "A Phrase is a group of words, without a subject and predicate, used as a single part of speech.",
+        "The commonest kind is a preposition and its object:  of wealth, by our house.",
         "A phrase does the work of a single adjective or adverb.",
         "Adjective phrase — modifies a noun:  “a man of wealth” tells which man.",
         "Adverbial phrase — modifies a verb:  “rode by our house” tells where he rode."
@@ -226,9 +227,9 @@
         "Where should a modifier be placed?"
       ],
       "answers": [
-        "A word that shows the relation between its object and some other word.",
-        "The noun or pronoun that follows it.",
-        "A preposition and its object used together.",
+        "A word that shows the relation between a noun or pronoun and some other word.",
+        "The noun or pronoun it governs.",
+        "A group of words, without a subject and predicate, used as a single part of speech.",
         "An adjective phrase.",
         "A verb form, usually with “to,” that names an action without asserting it.",
         "The word “to.”",

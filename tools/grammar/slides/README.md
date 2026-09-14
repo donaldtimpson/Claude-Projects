@@ -11,8 +11,9 @@ styling, so it scales across the whole book and can later branch into worksheets
 ## Layout
 ```
 lessons/<name>.json   # lesson content (the source of truth)
-generate_deck.py      # lesson JSON -> build/<name>.pptx   (python-pptx)
-preview.py            # lesson JSON -> build/<name>.html    (visual review)
+generate_deck.py      # lesson JSON -> build/NN_<name>.pptx  (python-pptx)
+preview.py            # lesson JSON -> build/NN_<name>.html   (visual review)
+lesson_order.py       # slug -> lesson number (the NN_ filename prefix)
 build/                # generated output (gitignored)
 ```
 
@@ -23,11 +24,13 @@ python3 -m venv .venv
 ```
 
 ## Build
+Output files are prefixed with the lesson's number (from `lesson_order.py`) so they sort
+and are easy to find — e.g. `the-verb` → `03_the-verb.pptx`.
 ```bash
-./.venv/bin/python generate_deck.py the-verb          # -> build/the-verb.pptx          (light)
-./.venv/bin/python generate_deck.py the-verb lyceum   # -> build/the-verb-lyceum.pptx
-./.venv/bin/python preview.py the-verb                # -> build/the-verb.html
-./.venv/bin/python preview.py the-verb lyceum         # -> build/the-verb-lyceum.html
+./.venv/bin/python generate_deck.py the-verb          # -> build/03_the-verb.pptx          (light)
+./.venv/bin/python generate_deck.py the-verb lyceum   # -> build/03_the-verb-lyceum.pptx
+./.venv/bin/python preview.py the-verb                # -> build/03_the-verb.html
+./.venv/bin/python preview.py the-verb lyceum         # -> build/03_the-verb-lyceum.html
 ```
 
 ## Themes

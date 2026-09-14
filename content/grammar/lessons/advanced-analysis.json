@@ -43,16 +43,17 @@
       "type": "concept",
       "heading": "Simple & Complete Subject",
       "bullets": [
-        "The Grammatical (simple) Subject is the bare subject word, without modifiers.",
-        "The Logical (complete) Subject is the subject with all its modifiers.",
+        "“Subject” still names the notion the proposition is about (Lesson 1); “simple” and “complete” only say how much of the wording we point to.",
+        "The Simple Subject is the single word that names it, without modifiers.",
+        "The Complete Subject is that word together with all its modifiers.",
         "“A great storm is raging.” — simple subject: storm; complete subject: a great storm.",
-        "Find the simple subject by asking who or what the sentence is about."
+        "Find the simple subject by asking who or what the proposition is about."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Name the Simple Subject",
-      "instruction": "Name the grammatical (simple) subject — the bare subject word.",
+      "instruction": "Name the simple subject — the single word, without modifiers.",
       "items": [
         "A great storm is raging.",
         "The tall green trees swayed.",
@@ -74,16 +75,16 @@
       "type": "concept",
       "heading": "Simple & Complete Predicate",
       "bullets": [
-        "The Grammatical (simple) Predicate is the bare verb, without modifiers.",
-        "The Logical (complete) Predicate is the verb with all its modifiers.",
+        "The Simple Predicate is the bare verb, without modifiers; the Complete Predicate is that verb with all its modifiers.",
         "“The storm rages furiously.” — simple predicate: rages; complete predicate: rages furiously.",
+        "With a copula (is/are) the verb only asserts — the predicate is the word affirmed:  “Iron is heavy” → predicate heavy, copula is.",
         "Find the simple predicate by asking what the subject does or is."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Name the Simple Predicate",
-      "instruction": "Name the grammatical (simple) predicate — the bare verb.",
+      "instruction": "Name the simple predicate — the bare verb, without modifiers.",
       "items": [
         "The storm rages furiously.",
         "The boy ran quickly home.",
@@ -116,15 +117,15 @@
       "items": [
         "What is ellipsis?",
         "In “Shut the door,” what subject is understood?",
-        "What is the grammatical (simple) subject?",
-        "What is the logical (complete) subject?",
-        "What is the grammatical predicate?",
+        "What is the simple subject?",
+        "What is the complete subject?",
+        "What is the simple predicate?",
         "What is abridgment?"
       ],
       "answers": [
         "The leaving out of words that are understood.",
         "You.",
-        "The bare subject word, without modifiers.",
+        "The single word that names the subject, without modifiers.",
         "The subject with all its modifiers.",
         "The bare verb, without modifiers.",
         "Shortening a complex sentence by turning a clause into a phrase or word."

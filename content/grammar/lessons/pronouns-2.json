@@ -31,7 +31,7 @@
     {
       "type": "definition",
       "term": "Relative Pronoun",
-      "text": "A Relative Pronoun stands for a word before it and joins a modifying clause to that word.",
+      "text": "A Relative Pronoun stands for a word or expression before it, and joins a modifying clause to it.",
       "examples": [
         "the man who is rich  (who stands for man)",
         "the house which he bought",
@@ -45,7 +45,7 @@
       "bullets": [
         "A Relative Clause is a clause that begins with a relative pronoun:  “the boy who studies.”",
         "It modifies a noun, telling which one:  “who studies” tells which boy.",
-        "The word the relative stands for is its Antecedent:  in “the boy who studies,” boy is the antecedent."
+        "The word or expression the relative stands for is its Antecedent:  in “the boy who studies,” boy is the antecedent."
       ]
     },
     {
@@ -248,9 +248,9 @@
         "Which is correct: “Him and me went” or “He and I went”?"
       ],
       "answers": [
-        "A word that stands for a preceding word and joins a modifying clause.",
+        "A word that stands for a preceding word or expression and joins a modifying clause.",
         "Who, which, what, and that.",
-        "The word a relative pronoun stands for.",
+        "The word or expression a relative pronoun stands for.",
         "A clause introduced by a relative pronoun.",
         "A pronoun used in asking a question.",
         "Who, whose, whom, which, and what.",

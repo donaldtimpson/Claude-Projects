@@ -32,6 +32,26 @@
     },
     {
       "type": "concept",
+      "heading": "The Word and the Idea",
+      "bullets": [
+        "“Language is the expression of thought by means of words.” A word, then, is a sign — it is not the thought itself.",
+        "Three things stand apart: the word (the sign), the idea it calls to mind (the concept), and the thing the idea is true of.",
+        "“dog” — the word is three letters; the concept is “a four-footed domestic animal”; the thing is the animal in the yard.",
+        "The tie between a word and its concept is fixed by agreement, not by nature — so it can change.",
+        "We reason with the concepts, not the letters; so we must know which concept a word carries."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Word Shift Example",
+      "bullets": [
+        "Marriage:  “the legal union of a man and a woman for life, as husband and wife”  →  “a legal union between two people.”",
+        "Woman:  “an adult human female”  →  “an adult who lives and identifies as female, regardless of sex assigned at birth.”",
+        "Vaccine:  “a substance containing a killed or weakened pathogen that produces immunity to a specific disease”  →  “…that produces an immune response or protection to a specific disease.”"
+      ]
+    },
+    {
+      "type": "concept",
       "heading": "Common & Proper Nouns",
       "bullets": [
         "A Common Noun fits any one of a whole class:  boy, city, river, dog.",
@@ -70,46 +90,63 @@
       "type": "concept",
       "heading": "Number — One, or More Than One",
       "bullets": [
-        "Number tells whether a noun means one object or more than one.",
-        "Singular Number = one object:  fan, book, boy.",
-        "Plural Number = more than one:  fans, books, boys.",
-        "We change a noun from singular to plural to speak of many."
+        "Number is the property of a noun or pronoun that shows whether it stands for one, or for more than one.",
+        "Singular Number denotes but one object:  fan, book, boy.",
+        "Plural Number denotes more than one:  fans, books, boys.",
+        "It is a property of the word, not a count of the world:  class (singular) names many;  scissors (plural) names one.",
+        "A verb has no number of its own — it only agrees with its subject:  “The bird sings,” but “The birds sing.”"
       ]
     },
     {
       "type": "concept",
-      "heading": "Making Plurals",
+      "heading": "Making Plurals — the Main Rules",
       "bullets": [
-        "Most nouns — just add s:  book → books,  girl → girls.",
-        "After s, ch, sh, or x — add es:  church → churches,  box → boxes.",
+        "Most nouns — add s:  book → books,  girl → girls.",
+        "After s, ss, sh, ch, x, or z — add es:  church → churches,  box → boxes,  mass → masses.",
         "y after a consonant — change y to i, add es:  city → cities,  lady → ladies.",
-        "Ending in f or fe — often change to ves:  knife → knives,  calf → calves.",
-        "A few break the rules:  man → men,  woman → women,  ox → oxen,  sheep → sheep."
+        "y after a vowel — just add s:  monkey → monkeys,  day → days.",
+        "o after a consonant — add es:  potato → potatoes,  hero → heroes.  (But o after a vowel, and musical terms, add s:  cameo → cameos,  piano → pianos.)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Making Plurals — f, Irregulars & Special Cases",
+      "bullets": [
+        "f or fe → ves:  knife → knives,  calf → calves,  leaf → leaves.  (But some just add s:  roof → roofs,  chief → chiefs,  safe → safes.)",
+        "Irregular, by a change of form:  man → men,  woman → women,  foot → feet,  tooth → teeth,  goose → geese,  mouse → mice,  child → children,  ox → oxen.",
+        "The same in both numbers:  sheep,  deer,  trout,  swine,  vermin.",
+        "Letters, figures, and signs — add ’s:  two b’s,  three 7’s,  +’s.",
+        "Compound nouns — make the chief word plural:  spoonful → spoonfuls,  son-in-law → sons-in-law,  passer-by → passers-by."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Write the Plurals",
       "instruction": "Write the plural of each noun.",
+      "answerInline": true,
       "items": [
-        "Ox",
-        "City",
-        "Fish",
-        "Man",
         "Box",
-        "Knife",
+        "City",
+        "Monkey",
         "Potato",
-        "Monkey"
+        "Piano",
+        "Knife",
+        "Roof",
+        "Man",
+        "Deer",
+        "Son-in-law"
       ],
       "answers": [
-        "oxen",
-        "cities",
-        "fish",
-        "men",
         "boxes",
-        "knives",
+        "cities",
+        "monkeys",
         "potatoes",
-        "monkeys"
+        "pianos",
+        "knives",
+        "roofs",
+        "men",
+        "deer",
+        "sons-in-law"
       ]
     },
     {
@@ -117,10 +154,70 @@
       "heading": "Abbreviations",
       "bullets": [
         "An Abbreviation is a shortened way of writing a word.",
-        "Keep a few letters and put a period at the end:  Doctor → Dr.,  Mister → Mr.",
-        "Ex. — Gen. (General),  Mrs. (Mistress),  St. (Saint / Street),  Prof. (Professor).",
-        "Ex. — U.S. (United States),  A.M. (before noon),  P.M. (after noon),  No. (Number).",
-        "Most abbreviations begin with a capital letter."
+        "A period marks the shortening:  Doctor → Dr.,  Mister → Mr.,  Number → No.",
+        "Most abbreviations begin with a capital letter.",
+        "Many come from Latin:  A.M. (ante meridiem),  P.M. (post meridiem),  A.D.,  N.B.,  ult.,  prox.",
+        "Some use two or more capitals with periods:  U.S.,  P.O.,  C.O.D."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Abbreviations — Titles, Rank & Office",
+      "bullets": [
+        "Titles:  Dr. (Doctor),  Mr. (Mister),  Mrs. (Mistress),  Esq. (Esquire),  Rev. (Reverend),  Hon. (Honorable),  Prof. (Professor).",
+        "Rank & office:  Gen. (General),  Gov. (Governor),  Col. (Colonel),  Maj. (Major),  Capt. (Captain),  Supt. (Superintendent),  Atty. (Attorney),  Admr. (Administrator).",
+        "By initials:  M.C. (Member of Congress),  M.D. (Doctor of Medicine)."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Abbreviations — Places, Time & Commerce",
+      "bullets": [
+        "Places:  St. (Saint / Street),  Mt. (Mount),  Co. (Company),  P.O. (Post Office),  R.R. (Railroad),  U.S. (United States).",
+        "Time & Latin:  A.M. (forenoon),  M. (noon),  P.M. (afternoon),  A.D. (in the year of our Lord),  B.C. (before Christ),  N.B. (take notice),  ult. (last month),  prox. (next month).",
+        "Commerce & notes:  No. (Number),  Lb. (Pound),  Bbl. (Barrel),  C.O.D. (Collect on Delivery),  P.S. (Postscript)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Abbreviations: Titles",
+      "instruction": "Give the full word for each abbreviation.",
+      "items": [
+        "Dr.",
+        "Mrs.",
+        "Gen.",
+        "Rev.",
+        "Esq.",
+        "Hon."
+      ],
+      "answers": [
+        "Doctor",
+        "Mistress",
+        "General",
+        "Reverend",
+        "Esquire",
+        "Honorable"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Abbreviations: Places, Time & Notes",
+      "instruction": "Give the full word or words for each abbreviation.",
+      "items": [
+        "St.",
+        "U.S.",
+        "P.O.",
+        "A.D.",
+        "N.B.",
+        "No."
+      ],
+      "answers": [
+        "Saint / Street",
+        "United States",
+        "Post Office",
+        "in the year of our Lord",
+        "take notice (nota bene)",
+        "Number"
       ]
     },
     {
@@ -131,43 +228,51 @@
         "The apostrophe ( ’ ) marks the spot where letters are left out.",
         "do not → don’t   ·   we are → we’re   ·   I have → I’ve",
         "it is → it’s   ·   they are → they’re   ·   over → o’er",
-        "The apostrophe stands in for the missing letters."
+        "An abbreviation is shortened with a period; a contraction, with an apostrophe."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Shortened Words",
-      "instruction": "Give the full words for each shortened form.",
+      "heading": "Practice — Contractions",
+      "instruction": "Give the two full words each contraction stands for.",
       "items": [
-        "Dr.",
-        "Mr.",
-        "we’re",
         "don’t",
-        "U.S.",
+        "we’re",
         "I’ve",
-        "Gen.",
-        "they’re"
+        "they’re",
+        "it’s",
+        "o’er"
       ],
       "answers": [
-        "Doctor",
-        "Mister",
-        "we are",
         "do not",
-        "United States",
+        "we are",
         "I have",
-        "General",
-        "they are"
+        "they are",
+        "it is",
+        "over"
       ]
     },
     {
       "type": "concept",
       "heading": "The Parts of a Sentence",
       "bullets": [
-        "Every sentence affirms something about something.",
-        "The Subject is what the sentence is about:  “Ice is cold.” → Ice.",
-        "The Predicate is what is affirmed about it:  “Ice is cold.” → cold.",
-        "The Copula is the word that links them and makes the assertion:  is.",
-        "Copula means “link.” It is usually a form of the verb be — is, was, will be."
+        "Every declarative sentence asserts something about something; it encodes a proposition.",
+        "The Subject is that of which something is affirmed — what the proposition is about:  “Ice is cold.” → Ice.",
+        "The Predicate is that which is affirmed of the subject:  “Ice is cold.” → cold.",
+        "The Copula is the word that joins the predicate to the subject and makes the assertion:  is.",
+        "Copula means “link.” It is usually a form of the verb be — is, was, will be.",
+        "Note: when we analyze sentences, we will treat “sentence” as short for “declarative sentence.”"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Subject & Predicate — the Thing, Not the Word",
+      "bullets": [
+        "A sentence is the words; the proposition is the thought they express (Lesson 1).",
+        "The subject is that of which something is affirmed — the thing or notion spoken of, not the word that names it.",
+        "In “Ice is cold,” the subject is ice (the notion meant); the word “Ice” is only its sign.",
+        "It is the notion, not the object: “Unicorns are mythical” has a subject, though no unicorn exists.",
+        "So “Ice is the subject” is shorthand — we name the subject by the word that carries it."
       ]
     },
     {
@@ -206,16 +311,17 @@
       "heading": "Analysis",
       "bullets": [
         "An Element is one distinct part of a sentence.",
-        "The Subject and Predicate are the Principal Elements — no sentence can exist without them.",
-        "All other parts are Subordinate Elements. (The copula is not counted as an element.)",
-        "Analysis means separating a sentence into its elements.",
-        "Model — “Iron is heavy.” → Iron | is heavy  (subject | predicate)."
+        "The Subject and Predicate are the Principal Elements — no sentence can be formed without them.",
+        "All other parts are Subordinate Elements. The copula is not itself an element — it only asserts.",
+        "Analysis is the separation of a sentence into its elements.",
+        "Model — “Iron is heavy.” →  Iron | is : heavy   (subject | copula : predicate).",
+        "The divider after the subject crosses below the line; a lighter divider sets the copula off from the predicate."
       ]
     },
     {
       "type": "practice",
       "heading": "Analyze — Diagram the Sentence",
-      "instruction": "Split each sentence into subject | predicate. The divider after the subject reaches below the baseline.",
+      "instruction": "Separate each sentence into subject | copula : predicate. The divider after the subject crosses below the baseline; the copula is set off from the predicate, since it is not itself an element.",
       "items": [
         "Indigo is blue.",
         "Flies are insects.",
@@ -226,23 +332,67 @@
       "answers": [
         {
           "s": "Indigo",
-          "p": "is blue"
+          "c": "is",
+          "p": "blue"
         },
         {
           "s": "Flies",
-          "p": "are insects"
+          "c": "are",
+          "p": "insects"
         },
         {
           "s": "Boys",
-          "p": "will be playful"
+          "c": "will be",
+          "p": "playful"
         },
         {
           "s": "Roses",
-          "p": "are fragrant"
+          "c": "are",
+          "p": "fragrant"
         },
         {
           "s": "Julius",
-          "p": "should be diligent"
+          "c": "should be",
+          "p": "diligent"
+        }
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Analyze — More Sentences",
+      "instruction": "Separate each sentence into subject | copula : predicate. Note that the predicate may be a quality (adjective) or a class (noun) — the copula only asserts it of the subject.",
+      "items": [
+        "Gold is precious.",
+        "Whales are mammals.",
+        "Nero was cruel.",
+        "Children should be careful.",
+        "Robins are birds."
+      ],
+      "answers": [
+        {
+          "s": "Gold",
+          "c": "is",
+          "p": "precious"
+        },
+        {
+          "s": "Whales",
+          "c": "are",
+          "p": "mammals"
+        },
+        {
+          "s": "Nero",
+          "c": "was",
+          "p": "cruel"
+        },
+        {
+          "s": "Children",
+          "c": "should be",
+          "p": "careful"
+        },
+        {
+          "s": "Robins",
+          "c": "are",
+          "p": "birds"
         }
       ]
     },
@@ -252,17 +402,19 @@
         "What is a noun?",
         "What is the difference between a common and a proper noun?",
         "What does the plural number show?",
-        "What is an abbreviation?",
+        "How does an abbreviation differ from a contraction?",
         "What are the subject, predicate, and copula?",
+        "In analysis, is the copula an element?",
         "What is analysis?"
       ],
       "answers": [
         "A word that is a name.",
         "A common noun fits any of a class; a proper noun names one particular thing.",
         "That a noun means more than one object.",
-        "A shortened way of writing a word, ending with a period.",
-        "The subject is what is spoken of; the predicate is what is affirmed of it; the copula links them.",
-        "Separating a sentence into its elements."
+        "An abbreviation is shortened with a period; a contraction, with an apostrophe.",
+        "The subject is that of which something is affirmed; the predicate is that which is affirmed of it; the copula joins them and makes the assertion.",
+        "No — the copula asserts, but it is not counted as an element.",
+        "The separation of a sentence into its elements."
       ]
     }
   ]
