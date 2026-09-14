@@ -63,6 +63,9 @@ private struct RootView: View {
                 case "parent":     ParentGateView()
                 case "shapesheet": ShapeSheet()
                 case "colorsheet": ColourSheet()
+                // The living backdrop alone, for eyeballing a theme's scene without
+                // any cards or tiles over it.
+                case "scene":      ZStack { Skin.live.ground; Backdrop() }.ignoresSafeArea()
                 default:           HomeView()
                 }
             }

@@ -38,15 +38,22 @@ struct World: Identifiable, Hashable {
               accent: 0x5E6B73, onSky: 0x1B2A33, glow: nil),
         // Each one further from the plain default than the last, so unlocking is
         // visibly a step rather than a shuffle.
+        // A real sky over a real field: blue up top so the clouds read, greening
+        // toward the hills at the bottom. Pale green everywhere was what made it
+        // flat.
         World(id: "meadow", name: "Meadow", face: "🌱",
-              sky: [0xF2F8E4, 0xD3E7BC], card: 0xF7FCEC, band: 0xE4F2CD,
-              accent: 0x4F9440, onSky: 0x1E2A18, glow: 0xC9E7A6),
+              sky: [0xAEDCF0, 0xE9F5C6], card: 0xF7FCEC, band: 0xE4F2CD,
+              accent: 0x4F9440, onSky: 0x1E2A18, glow: 0xEAF0A8),
         World(id: "beach", name: "Beach", face: "🏖️",
               sky: [0xFFF3D9, 0xF8D69B], card: 0xFFF7E6, band: 0xFCE4B8,
               accent: 0xDD7F1E, onSky: 0x33240F, glow: 0xFFC978),
+        // A winter night rather than a white-out: on a pale sky the snow was
+        // invisible, so the sky drops to a deep twilight blue and the snow, moon and
+        // aurora light up against it. Cards stay bright, so words and pictures are
+        // unaffected — only the world outside the card turned to evening.
         World(id: "snow", name: "Snow", face: "❄️",
-              sky: [0xEFF8FE, 0xC9DFF2], card: 0xF6FBFF, band: 0xDCEAF8,
-              accent: 0x2E79C0, onSky: 0x142430, glow: 0xD6EBFC),
+              sky: [0x16233B, 0x35597F], card: 0xF6FBFF, band: 0xDCEAF8,
+              accent: 0x76C0F5, onSky: 0xEAF3FF, glow: 0x2C4A72),
         // Actually dark. A night sky is the whole idea, and the cards stay light
         // so the pictures and the words are unaffected by it.
         World(id: "space", name: "Space", face: "🚀",
