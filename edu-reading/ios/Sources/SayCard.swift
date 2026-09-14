@@ -13,39 +13,27 @@ struct SayCard: View {
     var caption: String? = nil
     var onSaid: (() -> Void)? = nil
 
-    @Environment(Settings.self) private var settings
-    @State private var listener = Listener()
-    @State private var celebrate = false
-
     private let sight = ReadingContent.shared.sightSet
+
+    /// A sentence is matched on its last word — that's the one being sounded out.
+    private var target: String {
+        let parts = text.split(separator: " ").map(String.init)
+        return parts.count > 1 ? (parts.last ?? text) : text
+    }
 
     var body: some View {
         VStack(spacing: 22) {
             Spacer()
-            ZStack {
-                if settings.listenForVoice {
-                    Circle()
-                        .stroke(accent.opacity(listener.state == .off ? 0.12 : 0.34),
-                                lineWidth: 3)
-                        // Fixed footprint, grown by scaleEffect not by frame: a
-                        // transform doesn't reflow, so a loud mic pulses the ring
-                        // without pushing the card's edge off screen.
-                        .frame(width: 250, height: 250)
-                        .scaleEffect(1 + CGFloat(listener.level) * 0.32)
-                        .animation(.easeOut(duration: 0.12), value: listener.level)
+            Group {
+                if sentence {
+                    phonicsSentence(text, size: size, sight: sight)
+                        .multilineTextAlignment(.center)
+                } else {
+                    phonics(text, size: size)
                 }
-                if celebrate { ReadItCelebration(accent: accent) }
-                Group {
-                    if sentence {
-                        phonicsSentence(text, size: size, sight: sight)
-                            .multilineTextAlignment(.center)
-                    } else {
-                        phonics(text, size: size)
-                    }
-                }
-                .scaleEffect(celebrate ? 1.18 : 1)
-                .padding(.horizontal, 10)
             }
+            .padding(.horizontal, 10)
+            .listensToSay(target, accent: accent, pop: 1.18) { onSaid?() }
             if let caption {
                 Text(caption).font(.andika(15)).foregroundStyle(Theme.inkSoft)
                     .multilineTextAlignment(.center)
@@ -53,29 +41,83 @@ struct SayCard: View {
             Spacer()
         }
         .padding(24)
+    }
+}
+
+/// Listen-and-celebrate, factored out of SayCard so ANY card can adopt it: the
+/// pulsing mic ring, the "you read it!" burst and sound, the success haptic, and
+/// the safe start/stop of the recogniser. Attach with `.listensToSay(word) { … }`.
+///
+/// It stays true to Listener's one rule — it can only ever say yes. A match
+/// celebrates and, after a beat for the moment to land, calls onMatch (turn a card,
+/// advance a deck). A non-match does nothing at all. Silent and inert when voice is
+/// off or unauthorised, so a card that adopts it is unchanged for anyone not using it.
+struct ListenToSay: ViewModifier {
+    let word: String
+    var accent: Color = Theme.go
+    /// How much the hosted content pops on a match — a big word wants more than a
+    /// whole card does.
+    var pop: CGFloat = 1.06
+    let onMatch: () -> Void
+
+    @Environment(Settings.self) private var settings
+    @State private var listener = Listener()
+    @State private var celebrate = false
+    @State private var hold: DispatchWorkItem?
+
+    func body(content: Content) -> some View {
+        ZStack {
+            if settings.listenForVoice {
+                Circle()
+                    .stroke(accent.opacity(listener.state == .off ? 0.12 : 0.34), lineWidth: 3)
+                    // Fixed footprint, grown by scaleEffect not by frame: a transform
+                    // doesn't reflow, so a loud mic pulses the ring without pushing
+                    // the card's edge off screen.
+                    .frame(width: 250, height: 250)
+                    .scaleEffect(1 + CGFloat(listener.level) * 0.32)
+                    .animation(.easeOut(duration: 0.12), value: listener.level)
+            }
+            if celebrate { ReadItCelebration(accent: accent) }
+            content.scaleEffect(celebrate ? pop : 1)
+        }
         .onAppear { start() }
-        .onDisappear { listener.stop() }
-        .onChange(of: text) { start() }
+        .onDisappear { stop() }
+        .onChange(of: word) { start() }
         .onChange(of: settings.listenForVoice) { start() }
     }
 
     private func start() {
+        stop()
         celebrate = false
-        listener.stop()
-        guard settings.listenForVoice, Listener.isAuthorized else { return }
-        let target = text.split(separator: " ").count > 1
-            ? text.split(separator: " ").map(String.init).last ?? text : text
-        listener.listen(for: target) {
-            // The whole reward, all at once: a felt yes (haptic), a heard yes
-            // (chime), and a seen yes (the burst + word pop). Never a "no" — see
-            // Listener: a non-match is silent, so this only ever congratulates.
-            Buzz.yes()
-            Voice.shared.celebrate()
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.45)) { celebrate = true }
-            // Let it land. Progressing instantly (flipping to the picture) is what
-            // made success feel like nothing happened; hold the moment, then move on.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { onSaid?() }
+        guard settings.listenForVoice, Listener.isAuthorized, !word.isEmpty else { return }
+        listener.listen(for: word) {
+            DispatchQueue.main.async {
+                // The whole reward at once: a felt yes (haptic), a heard yes (the
+                // fanfare), a seen yes (the burst + pop).
+                Buzz.yes()
+                Voice.shared.celebrate()
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.45)) { celebrate = true }
+                // Hold the moment before the caller moves on — progressing instantly
+                // is what made success feel like nothing happened.
+                let h = DispatchWorkItem { onMatch() }
+                hold = h
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: h)
+            }
         }
+    }
+
+    private func stop() {
+        hold?.cancel(); hold = nil
+        listener.stop()
+    }
+}
+
+extension View {
+    /// Listen for the child to say `word`, and celebrate + call `onMatch` when they
+    /// do. See ListenToSay.
+    func listensToSay(_ word: String, accent: Color = Theme.go, pop: CGFloat = 1.06,
+                      onMatch: @escaping () -> Void) -> some View {
+        modifier(ListenToSay(word: word, accent: accent, pop: pop, onMatch: onMatch))
     }
 }
 

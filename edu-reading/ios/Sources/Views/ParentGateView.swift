@@ -87,7 +87,7 @@ private struct AdultView: View {
                         })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Listen for their voice").font(.andika(16)).foregroundStyle(Theme.ink)
-                            Text("The card listens while it's up, and turns itself when they read it. It only ever says yes — it never tells a child they got it wrong.")
+                            Text("The card listens while it's up — for a read word, a number, a colour or a shape — and moves on when they say it. It only ever says yes; it never tells a child they got it wrong.")
                                 .font(.andika(12)).foregroundStyle(Theme.inkSoft)
                         }
                     }

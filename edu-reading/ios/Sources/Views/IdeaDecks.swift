@@ -21,9 +21,11 @@ struct ColorsView: View {
     private let accent = Color(hex: 0x4E8FBF)
     @State private var pool: [Int] = []
     @State private var index = 0
+    @State private var advanceReq = 0
 
     var body: some View {
-        DeckScreen(title: "Colours", count: pool.count, index: $index, accent: accent) { i in
+        DeckScreen(title: "Colours", count: pool.count, index: $index, accent: accent,
+                   advance: advanceReq) { i in
             let idx = pool[min(i, max(pool.count - 1, 0))]
             let swatch = c.colors[idx]
             let tint = Color(hexString: swatch.hex)
@@ -40,6 +42,10 @@ struct ColorsView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 CardTag(id: CardIds.colors + idx + 1).padding(14)
+            }
+            // Say the colour and the deck moves on, exactly like reading a word.
+            .listensToSay(swatch.word, accent: accent) {
+                progress.namedColour(swatch.word); advanceReq += 1
             }
         } onTap: { i in
             let w = c.colors[pool[min(i, pool.count - 1)]].word
@@ -78,11 +84,13 @@ struct ShapesView: View {
     private let accent = Color(hex: 0x6FA368)
     @State private var pool: [Int] = []
     @State private var index = 0
+    @State private var advanceReq = 0
     private let palette: [Color] = [Color(hex: 0xD93A32), Color(hex: 0x2F6FD0),
                                     Color(hex: 0xF0B429), Color(hex: 0x7A4FA3)]
 
     var body: some View {
-        DeckScreen(title: "Shapes", count: pool.count, index: $index, accent: accent) { i in
+        DeckScreen(title: "Shapes", count: pool.count, index: $index, accent: accent,
+                   advance: advanceReq) { i in
             let idx = pool[min(i, max(pool.count - 1, 0))]
             let name = c.shapes[idx].word
             AdaptiveCard {
@@ -114,6 +122,9 @@ struct ShapesView: View {
             .overlay(alignment: .bottomTrailing) {
                 CardTag(id: CardIds.shapes + idx + 1).padding(14)
             }
+            .listensToSay(name, accent: accent) {
+                progress.namedShape(name); advanceReq += 1
+            }
         } onTap: { i in
             let w = c.shapes[pool[min(i, pool.count - 1)]].word
             Voice.shared.say(w); progress.namedShape(w)
@@ -137,12 +148,13 @@ struct NumbersView: View {
     @State private var pool: [Int] = []
     @State private var index = 0
     @State private var ordered = true
+    @State private var advanceReq = 0
 
     private let tokens = ["🔵","🟠","🟣","🟢","🔴","🟡","⭐️","🍎","🐟","🌸"]
 
     var body: some View {
         DeckScreen(title: "Numbers", count: pool.count, index: $index, accent: accent,
-                   ordered: $ordered) { i in
+                   ordered: $ordered, advance: advanceReq) { i in
             let n = pool[min(i, max(pool.count - 1, 0))]
             AdaptiveCard {
                 ZStack {
@@ -168,6 +180,10 @@ struct NumbersView: View {
             }
             .overlay(alignment: .bottomTrailing) {
                 CardTag(id: CardIds.numbers + n).padding(14)
+            }
+            // Say the number — "seven" — and the deck counts on to the next.
+            .listensToSay(c.numbers.words[n - 1], accent: accent) {
+                progress.counted(n); advanceReq += 1
             }
         } onTap: { i in
             let n = pool[min(i, pool.count - 1)]
