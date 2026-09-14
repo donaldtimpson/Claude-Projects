@@ -44,7 +44,7 @@ struct ColorsView: View {
                 CardTag(id: CardIds.colors + idx + 1).padding(14)
             }
             // Say the colour and the deck moves on, exactly like reading a word.
-            .listensToSay(swatch.word, accent: accent) {
+            .listensToSay(swatch.word, accent: accent, inFront: true) {
                 progress.namedColour(swatch.word); advanceReq += 1
             }
         } onTap: { i in
@@ -122,7 +122,7 @@ struct ShapesView: View {
             .overlay(alignment: .bottomTrailing) {
                 CardTag(id: CardIds.shapes + idx + 1).padding(14)
             }
-            .listensToSay(name, accent: accent) {
+            .listensToSay(name, accent: accent, inFront: true) {
                 progress.namedShape(name); advanceReq += 1
             }
         } onTap: { i in
@@ -182,7 +182,7 @@ struct NumbersView: View {
                 CardTag(id: CardIds.numbers + n).padding(14)
             }
             // Say the number — "seven" — and the deck counts on to the next.
-            .listensToSay(c.numbers.words[n - 1], accent: accent) {
+            .listensToSay(c.numbers.words[n - 1], accent: accent, inFront: true) {
                 progress.counted(n); advanceReq += 1
             }
         } onTap: { i in

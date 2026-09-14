@@ -58,6 +58,10 @@ struct ListenToSay: ViewModifier {
     /// How much the hosted content pops on a match — a big word wants more than a
     /// whole card does.
     var pop: CGFloat = 1.06
+    /// Draw the ring and celebration OVER the content rather than behind it. A bare
+    /// word (SayCard) reads best with them behind; an opaque picture card would hide
+    /// them entirely, so those decks put the indicator in front.
+    var inFront: Bool = false
     let onMatch: () -> Void
 
     @Environment(Settings.self) private var settings
@@ -66,6 +70,24 @@ struct ListenToSay: ViewModifier {
     @State private var hold: DispatchWorkItem?
 
     func body(content: Content) -> some View {
+        Group {
+            if inFront {
+                content.scaleEffect(celebrate ? pop : 1).overlay { indicators }
+            } else {
+                ZStack {
+                    indicators
+                    content.scaleEffect(celebrate ? pop : 1)
+                }
+            }
+        }
+        .onAppear { start() }
+        .onDisappear { stop() }
+        .onChange(of: word) { start() }
+        .onChange(of: settings.listenForVoice) { start() }
+    }
+
+    /// The mic ring (breathing with the input level) and the match celebration.
+    @ViewBuilder private var indicators: some View {
         ZStack {
             if settings.listenForVoice {
                 Circle()
@@ -78,12 +100,8 @@ struct ListenToSay: ViewModifier {
                     .animation(.easeOut(duration: 0.12), value: listener.level)
             }
             if celebrate { ReadItCelebration(accent: accent) }
-            content.scaleEffect(celebrate ? pop : 1)
         }
-        .onAppear { start() }
-        .onDisappear { stop() }
-        .onChange(of: word) { start() }
-        .onChange(of: settings.listenForVoice) { start() }
+        .allowsHitTesting(false)
     }
 
     private func start() {
@@ -116,8 +134,8 @@ extension View {
     /// Listen for the child to say `word`, and celebrate + call `onMatch` when they
     /// do. See ListenToSay.
     func listensToSay(_ word: String, accent: Color = Theme.go, pop: CGFloat = 1.06,
-                      onMatch: @escaping () -> Void) -> some View {
-        modifier(ListenToSay(word: word, accent: accent, pop: pop, onMatch: onMatch))
+                      inFront: Bool = false, onMatch: @escaping () -> Void) -> some View {
+        modifier(ListenToSay(word: word, accent: accent, pop: pop, inFront: inFront, onMatch: onMatch))
     }
 }
 

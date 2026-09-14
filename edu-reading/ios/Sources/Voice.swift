@@ -80,28 +80,39 @@ final class Voice: NSObject {
         let notes: [(f: Double, start: Double)] = [
             (523.25, 0.00), (659.25, 0.10), (783.99, 0.20), (1046.50, 0.30),
         ]
-        let noteDur = 0.5
+        let noteDur = 0.9
         let total = Int(((notes.last?.start ?? 0) + noteDur) * sr)
         guard total > 0 else { return nil }
         var buf = [Double](repeating: 0, count: total)
-        for note in notes {
+        for (i, note) in notes.enumerated() {
             let start = Int(note.start * sr)
             let n = Int(noteDur * sr)
+            let amp = 0.9 - 0.12 * Double(i)                         // higher notes a touch softer
             for k in 0..<n {
-                let i = start + k
-                if i >= total { break }
+                let idx = start + k
+                if idx >= total { break }
                 let t = Double(k) / sr
-                let env = min(t / 0.008, 1) * exp(-t * 4.2)          // soft mallet, long ring
-                let wave = sin(2 * .pi * note.f * t)
-                         + 0.18 * sin(2 * .pi * note.f * 0.5 * t)    // sub-octave for body
-                         + 0.08 * sin(2 * .pi * note.f * 2 * t)      // a touch of presence
-                buf[i] += env * wave * 0.32
+                // A raised-cosine attack (no onset click — the click is what buzzed
+                // like a blown speaker), then a long smooth ring.
+                let attack = t < 0.012 ? 0.5 - 0.5 * cos(.pi * t / 0.012) : 1.0
+                let env = attack * exp(-t * 3.6)
+                // Fundamental plus a gentle octave — sweet, no harsh partials to
+                // rattle a small speaker.
+                let wave = sin(2 * .pi * note.f * t) + 0.25 * sin(2 * .pi * note.f * 2 * t)
+                buf[idx] += env * wave * amp
             }
         }
+        // Normalise to headroom, soft-clip with tanh so peaks round over instead of
+        // clipping, and fade the tail so it can't end on a click.
+        var peak = 1e-9
+        for v in buf { peak = max(peak, abs(v)) }
+        let norm = 0.72 / peak
+        let fadeN = Int(0.04 * sr)
         var pcm = [Int16](repeating: 0, count: total)
         for i in 0..<total {
-            let v = max(-1, min(1, buf[i]))                          // clamp overlaps
-            pcm[i] = Int16(v * 32_767)
+            var v = tanh(buf[i] * norm)
+            if i > total - fadeN { v *= Double(total - i) / Double(fadeN) }
+            pcm[i] = Int16(max(-1, min(1, v)) * 32_000)
         }
         return wav(pcm, sampleRate: Int(sr))
     }
