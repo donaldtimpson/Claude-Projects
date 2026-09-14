@@ -1,0 +1,6 @@
+# Never commit anything from the browser session or captured pages
+.session/
+output/
+.env
+auth.json
+mapping.json
