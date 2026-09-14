@@ -15,7 +15,10 @@ struct ParentGateView: View {
 
     var body: some View {
         Group { if open { AdultView() } else { gate } }
-            .background(Theme.ground)
+            // Fill the screen first, then paint — otherwise the Group hugs its
+            // content width and Theme.ground leaves white stripes down both sides.
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.ground.ignoresSafeArea())
             .navigationTitle("For grown-ups")
             .navigationBarTitleDisplayMode(.inline)
     }

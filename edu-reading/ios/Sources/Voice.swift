@@ -15,6 +15,7 @@ final class Voice: NSObject {
     static let shared = Voice()
     private let synth = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
+    private var fx: AVAudioPlayer?
     /// Called when the current utterance or recording finishes, so a caller can
     /// hold off on accepting input until the word has actually been said.
     private var onDone: (() -> Void)?
@@ -53,6 +54,74 @@ final class Voice: NSObject {
     func chime() {
         let n = 1
         AudioServicesPlaySystemSound(SystemSoundID(1103 + n))
+    }
+
+    /// The bigger "YOU READ IT!" flourish, for the one moment that earns it: a child
+    /// reading a word aloud. A rising four-note sparkle that rings into a chord —
+    /// loud and unmistakable on purpose. A beginning reader often has their mouth
+    /// right at the speaker with their eyes off the screen, so the reward has to be
+    /// something they HEAR, not only something they'd have to be looking to see.
+    func celebrate() {
+        guard let data = Self.fanfareWAV else { chime(); return }
+        fx = try? AVAudioPlayer(data: data)
+        fx?.volume = 1
+        fx?.play()
+    }
+
+    /// Rendered once to an in-memory WAV so it plays through whatever route is live —
+    /// including .playAndRecord while the mic is open — with no bundled asset needed.
+    private static let fanfareWAV: Data? = makeFanfare()
+
+    private static func makeFanfare() -> Data? {
+        let sr = 44_100.0
+        // C5 E5 G5 C6 — the same happy major arpeggio, but an octave lower than a
+        // first pass that sat up at C6–C7 and came out piercing. Struck a beat apart
+        // so they pile into a warm final chord, like a music box rather than a ping.
+        let notes: [(f: Double, start: Double)] = [
+            (523.25, 0.00), (659.25, 0.10), (783.99, 0.20), (1046.50, 0.30),
+        ]
+        let noteDur = 0.5
+        let total = Int(((notes.last?.start ?? 0) + noteDur) * sr)
+        guard total > 0 else { return nil }
+        var buf = [Double](repeating: 0, count: total)
+        for note in notes {
+            let start = Int(note.start * sr)
+            let n = Int(noteDur * sr)
+            for k in 0..<n {
+                let i = start + k
+                if i >= total { break }
+                let t = Double(k) / sr
+                let env = min(t / 0.008, 1) * exp(-t * 4.2)          // soft mallet, long ring
+                let wave = sin(2 * .pi * note.f * t)
+                         + 0.18 * sin(2 * .pi * note.f * 0.5 * t)    // sub-octave for body
+                         + 0.08 * sin(2 * .pi * note.f * 2 * t)      // a touch of presence
+                buf[i] += env * wave * 0.32
+            }
+        }
+        var pcm = [Int16](repeating: 0, count: total)
+        for i in 0..<total {
+            let v = max(-1, min(1, buf[i]))                          // clamp overlaps
+            pcm[i] = Int16(v * 32_767)
+        }
+        return wav(pcm, sampleRate: Int(sr))
+    }
+
+    private static func wav(_ pcm: [Int16], sampleRate: Int) -> Data {
+        let bytesPerSample = 2, channels = 1
+        let dataBytes = pcm.count * bytesPerSample
+        var d = Data()
+        func u32(_ v: UInt32) { var x = v.littleEndian; d.append(Data(bytes: &x, count: 4)) }
+        func u16(_ v: UInt16) { var x = v.littleEndian; d.append(Data(bytes: &x, count: 2)) }
+        d.append("RIFF".data(using: .ascii)!); u32(UInt32(36 + dataBytes))
+        d.append("WAVE".data(using: .ascii)!)
+        d.append("fmt ".data(using: .ascii)!); u32(16); u16(1); u16(UInt16(channels))
+        u32(UInt32(sampleRate))
+        u32(UInt32(sampleRate * channels * bytesPerSample))         // byte rate
+        u16(UInt16(channels * bytesPerSample))                      // block align
+        u16(16)                                                     // bits per sample
+        d.append("data".data(using: .ascii)!); u32(UInt32(dataBytes))
+        pcm.withUnsafeBytes { d.append(contentsOf: $0) }
+        return d
     }
 
     /// Calls back when whatever is playing finishes — or straight away if nothing

@@ -12,6 +12,10 @@ struct CardStack<Content: View>: View {
     var accent: Color
     var onTap: () -> Void
     var onAdvance: (() -> Void)? = nil
+    /// A forward step the deck did not ask for: bump this and the current card is
+    /// thrown and the next dealt, exactly as a swipe would. Used by the reading deck
+    /// to move on by itself once a read word's picture has been shown for a beat.
+    var advance: Int = 0
     /// False on decks with nothing to play. Two taps only make sense when the
     /// first one DOES something: with no audio the first tap is silently dead and
     /// the card feels broken, so a single tap moves on instead.
@@ -110,6 +114,7 @@ struct CardStack<Content: View>: View {
             }
             #endif
             .onChange(of: index) { spoke = false; armed = true; turnTask?.cancel() }
+            .onChange(of: advance) { step(1) }
             .onDisappear { turnTask?.cancel() }
         }
     }
@@ -261,6 +266,8 @@ struct DeckScreen<Content: View>: View {
     var ordered: Binding<Bool>? = nil
     /// See CardStack.speaks — decks with no audio advance on a single tap.
     var speaks: Bool = true
+    /// See CardStack.advance — bump to step the deck forward on its own.
+    var advance: Int = 0
     @ViewBuilder var content: (Int) -> Content
     var onTap: (Int) -> Void
     var onAdvance: (() -> Void)? = nil
@@ -277,7 +284,7 @@ struct DeckScreen<Content: View>: View {
         VStack(spacing: 0) {
             CardStack(count: count, index: $index, accent: accent,
                       onTap: { if count > 0 { onTap(index % count) } },
-                      onAdvance: onAdvance, speaks: speaks) { i in
+                      onAdvance: onAdvance, advance: advance, speaks: speaks) { i in
                 content(i)
             }
             Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)

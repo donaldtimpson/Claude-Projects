@@ -13,6 +13,9 @@ struct WordsView: View {
     private let accent = Color(hex: 0x3B7EA1)
     @State private var index = 0
     @State private var flipped = false
+    // Bumped to move the deck on by itself after a read word's picture has shown.
+    @State private var advanceReq = 0
+    @State private var pictureHold: DispatchWorkItem?
 
     // Levels keep their order — a child who has done "cat" is not ready for
     // "strength" — but the words inside a level are shuffled on every open.
@@ -28,7 +31,8 @@ struct WordsView: View {
     }
 
     var body: some View {
-        DeckScreen(title: "Words", count: pool.count, index: $index, accent: accent) { i in
+        DeckScreen(title: "Words", count: pool.count, index: $index, accent: accent,
+                   advance: advanceReq) { i in
             let w = pool[min(i, pool.count - 1)]
             ZStack {
                 if flipped {
@@ -48,6 +52,13 @@ struct WordsView: View {
                     SayCard(text: w.word, size: 118, accent: accent) {
                         progress.readWord( w.word)
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
+                        // Show the picture of what they read — the word/image link is
+                        // the point — but don't strand them on it: a card that just
+                        // sits there reads as "read it again". Move on after a beat,
+                        // unless they swipe first (onAdvance cancels this).
+                        let hold = DispatchWorkItem { advanceReq += 1 }
+                        pictureHold = hold
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.6, execute: hold)
                     }
                 }
             }
@@ -62,6 +73,7 @@ struct WordsView: View {
             progress.readWord( w.word)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
         } onAdvance: {
+            pictureHold?.cancel()
             flipped = false
         }
         .onAppear { if pool.isEmpty { pool = makePool() } }
