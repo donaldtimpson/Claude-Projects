@@ -56,7 +56,7 @@ struct LettersView: View {
                 // Aimed at the adult holding the phone: "buh-a-tuh" never blends
                 // into "bat", and that one habit stalls more readers than anything.
                 Text("say \(l.sound), not “\(l.avoid)”")
-                    .font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                    .font(.andika(13)).foregroundStyle(Skin.live.cardInkSoft)
             }
             .padding(24)
             .overlay(alignment: .bottomTrailing) {

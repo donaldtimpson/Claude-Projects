@@ -65,15 +65,15 @@ struct AwardToast: View {
         HStack(spacing: 12) {
             Text(award.face).font(.system(size: 34))
             VStack(alignment: .leading, spacing: 1) {
-                Text(award.name).font(.andika(18, bold: true)).foregroundStyle(Theme.ink)
-                Text(award.blurb).font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                Text(award.name).font(.andika(18, bold: true)).foregroundStyle(Skin.live.cardInk)
+                Text(award.blurb).font(.andika(13)).foregroundStyle(Skin.live.cardInkSoft)
             }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Theme.paper)
+                .fill(Skin.live.card)
                 .shadow(color: .black.opacity(0.16), radius: 14, y: 6)
         )
         .overlay(

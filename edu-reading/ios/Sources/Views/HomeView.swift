@@ -104,7 +104,7 @@ private struct WorldTile: View {
             Text(profiles.current?.face ?? "🌱").font(.system(size: 40))
             VStack(alignment: .leading, spacing: 2) {
                 Text(profiles.current?.name ?? "My World")
-                    .font(.andika(22, bold: true)).foregroundStyle(Theme.ink)
+                    .font(.andika(22, bold: true)).foregroundStyle(Skin.live.cardInk)
                 HStack(spacing: 10) {
                     tally("\(progress.readWords.count)", "words")
                     tally("\(progress.awards.count)", "badges")
@@ -112,7 +112,7 @@ private struct WorldTile: View {
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right").foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").foregroundStyle(Skin.live.cardInkSoft)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -126,7 +126,7 @@ private struct WorldTile: View {
     private func tally(_ n: String, _ label: String) -> some View {
         HStack(spacing: 3) {
             Text(n).font(.andika(15, bold: true)).foregroundStyle(Skin.live.accent)
-            Text(label).font(.andika(12)).foregroundStyle(Theme.inkSoft)
+            Text(label).font(.andika(12)).foregroundStyle(Skin.live.cardInkSoft)
         }
     }
 }
@@ -158,8 +158,8 @@ private struct DeckTile<Destination: View>: View {
                     .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
                     .shadow(color: colour.opacity(0.35), radius: 4, y: 2)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(name).font(.andika(20, bold: true)).foregroundStyle(Theme.ink)
-                    Text(blurb).font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                    Text(name).font(.andika(20, bold: true)).foregroundStyle(Skin.live.cardInk)
+                    Text(blurb).font(.andika(13)).foregroundStyle(Skin.live.cardInkSoft)
                 }
                 Spacer()
                 Image(systemName: "chevron.right")

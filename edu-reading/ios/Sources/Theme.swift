@@ -104,8 +104,9 @@ enum LetterFit {
 
 /// Builds a word with its vowels in red. Used by every deck.
 func phonics(_ s: String, size: CGFloat, bold: Bool = true) -> Text {
-    s.reduce(Text("")) { acc, ch in
-        acc + Text(String(ch)).foregroundColor(VOWELS.contains(ch) ? Theme.vowel : Theme.ink)
+    let ink = Skin.live.cardInk, vowel = Skin.live.vowel
+    return s.reduce(Text("")) { acc, ch in
+        acc + Text(String(ch)).foregroundColor(VOWELS.contains(ch) ? vowel : ink)
     }
     .font(.andika(size, bold: bold))
 }
@@ -113,11 +114,12 @@ func phonics(_ s: String, size: CGFloat, bold: Bool = true) -> Text {
 /// Builds a sentence: vowels red, and any sight word underlined in amber so the
 /// child can see at a glance which words are learned rather than sounded out.
 func phonicsSentence(_ s: String, size: CGFloat, sight: Set<String>) -> Text {
-    s.split(separator: " ", omittingEmptySubsequences: false).enumerated().reduce(Text("")) { acc, pair in
+    let ink = Skin.live.cardInk, vowel = Skin.live.vowel
+    return s.split(separator: " ", omittingEmptySubsequences: false).enumerated().reduce(Text("")) { acc, pair in
         let (i, token) = pair
         let bare = token.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".!?,"))
         var piece = String(token).reduce(Text("")) { a, ch in
-            a + Text(String(ch)).foregroundColor(VOWELS.contains(ch) ? Theme.vowel : Theme.ink)
+            a + Text(String(ch)).foregroundColor(VOWELS.contains(ch) ? vowel : ink)
         }
         if sight.contains(bare) { piece = piece.underline(true, color: Theme.heart) }
         return acc + (i == 0 ? Text("") : Text(" ")) + piece

@@ -56,58 +56,52 @@ final class Voice: NSObject {
         AudioServicesPlaySystemSound(SystemSoundID(1103 + n))
     }
 
-    /// The bigger "YOU READ IT!" flourish, for the one moment that earns it: a child
-    /// reading a word aloud. A rising four-note sparkle that rings into a chord —
-    /// loud and unmistakable on purpose. A beginning reader often has their mouth
-    /// right at the speaker with their eyes off the screen, so the reward has to be
-    /// something they HEAR, not only something they'd have to be looking to see.
+    /// The "YOU READ IT!" reward, for the one moment that earns it: a child saying a
+    /// word aloud. iOS system sound 1322 — chosen by ear from the audition (SoundLab):
+    /// cheerful, and it holds up to being heard over and over without grating. A
+    /// beginning reader often has their mouth at the speaker with eyes off the screen,
+    /// so the reward has to be heard, not only seen.
     func celebrate() {
-        guard let data = Self.fanfareWAV else { chime(); return }
+        AudioServicesPlaySystemSound(SystemSoundID(1322))
+    }
+
+    /// Play rendered audio through the live route (retained so it finishes even when
+    /// the mic session is open). Used by the sound audition (SoundLab).
+    func playEffect(_ data: Data) {
         fx = try? AVAudioPlayer(data: data)
         fx?.volume = 1
         fx?.play()
     }
 
-    /// Rendered once to an in-memory WAV so it plays through whatever route is live —
-    /// including .playAndRecord while the mic is open — with no bundled asset needed.
-    private static let fanfareWAV: Data? = makeFanfare()
+    /// One note struck at a time.
+    struct Tone { let f: Double; let start: Double; let dur: Double; let amp: Double }
 
-    private static func makeFanfare() -> Data? {
+    /// Additive synth shared by every candidate sound: a click-free raised-cosine
+    /// attack, a smooth exponential ring, then normalise-to-headroom + tanh soft-clip
+    /// + tail-fade so nothing rattles a phone speaker. Rendered to an in-memory WAV,
+    /// so it needs no bundled asset and plays on whatever route is live.
+    static func render(_ tones: [Tone], partials: [(Double, Double)] = [(1, 1), (2, 0.25)],
+                       decay: Double = 3.6) -> Data? {
         let sr = 44_100.0
-        // C5 E5 G5 C6 — the same happy major arpeggio, but an octave lower than a
-        // first pass that sat up at C6–C7 and came out piercing. Struck a beat apart
-        // so they pile into a warm final chord, like a music box rather than a ping.
-        let notes: [(f: Double, start: Double)] = [
-            (523.25, 0.00), (659.25, 0.10), (783.99, 0.20), (1046.50, 0.30),
-        ]
-        let noteDur = 0.9
-        let total = Int(((notes.last?.start ?? 0) + noteDur) * sr)
-        guard total > 0 else { return nil }
+        guard let end = tones.map({ $0.start + $0.dur }).max(), end > 0 else { return nil }
+        let total = Int(end * sr)
         var buf = [Double](repeating: 0, count: total)
-        for (i, note) in notes.enumerated() {
-            let start = Int(note.start * sr)
-            let n = Int(noteDur * sr)
-            let amp = 0.9 - 0.12 * Double(i)                         // higher notes a touch softer
+        for tone in tones {
+            let start = Int(tone.start * sr), n = Int(tone.dur * sr)
             for k in 0..<n {
-                let idx = start + k
-                if idx >= total { break }
+                let i = start + k
+                if i >= total { break }
                 let t = Double(k) / sr
-                // A raised-cosine attack (no onset click — the click is what buzzed
-                // like a blown speaker), then a long smooth ring.
                 let attack = t < 0.012 ? 0.5 - 0.5 * cos(.pi * t / 0.012) : 1.0
-                let env = attack * exp(-t * 3.6)
-                // Fundamental plus a gentle octave — sweet, no harsh partials to
-                // rattle a small speaker.
-                let wave = sin(2 * .pi * note.f * t) + 0.25 * sin(2 * .pi * note.f * 2 * t)
-                buf[idx] += env * wave * amp
+                let env = attack * exp(-t * decay)
+                var w = 0.0
+                for (h, a) in partials { w += a * sin(2 * .pi * tone.f * h * t) }
+                buf[i] += env * w * tone.amp
             }
         }
-        // Normalise to headroom, soft-clip with tanh so peaks round over instead of
-        // clipping, and fade the tail so it can't end on a click.
         var peak = 1e-9
         for v in buf { peak = max(peak, abs(v)) }
-        let norm = 0.72 / peak
-        let fadeN = Int(0.04 * sr)
+        let norm = 0.72 / peak, fadeN = Int(0.04 * sr)
         var pcm = [Int16](repeating: 0, count: total)
         for i in 0..<total {
             var v = tanh(buf[i] * norm)
@@ -115,6 +109,15 @@ final class Voice: NSObject {
             pcm[i] = Int16(max(-1, min(1, v)) * 32_000)
         }
         return wav(pcm, sampleRate: Int(sr))
+    }
+
+    /// A major-pentatonic run up just over an octave — the classic success sweep.
+    static func harpGliss() -> Data? {
+        let freqs = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.50, 1174.66, 1318.51]
+        let tones = freqs.enumerated().map { i, f in
+            Tone(f: f, start: Double(i) * 0.05, dur: 0.9, amp: 0.85)
+        }
+        return render(tones, partials: [(1, 1), (2, 0.2)], decay: 4.2)
     }
 
     private static func wav(_ pcm: [Int16], sampleRate: Int) -> Data {

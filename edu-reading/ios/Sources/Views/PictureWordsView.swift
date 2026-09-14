@@ -45,7 +45,7 @@ struct PictureWordsView: View {
                         // so a drawing card has the same weight as a photo card.
                         GeometryReader { geo in
                             ZStack {
-                                Theme.paper.mixed(with: accent, amount: 0.10)
+                                Skin.live.card.mixed(with: accent, amount: 0.10)
                                 Text(p.images[card.variant % p.images.count])
                                     .font(.system(size: min(geo.size.width, geo.size.height) * 0.62))
                             }

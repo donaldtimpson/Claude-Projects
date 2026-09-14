@@ -45,7 +45,7 @@ struct WorldView: View {
                                 Text(a.face).font(.system(size: 30))
                                     .grayscale(got ? 0 : 1).opacity(got ? 1 : 0.28)
                                 Text(a.name).font(.andika(11, bold: true))
-                                    .foregroundStyle(got ? Theme.ink : Theme.inkSoft)
+                                    .foregroundStyle(got ? Skin.live.cardInk : Skin.live.cardInkSoft)
                                     .multilineTextAlignment(.center)
                             }
                             .frame(maxWidth: .infinity)
@@ -147,7 +147,7 @@ struct ProfilePicker: View {
                         } label: {
                             VStack(spacing: 6) {
                                 Text(p.face).font(.system(size: 44))
-                                Text(p.name).font(.andika(15, bold: true)).foregroundStyle(Theme.ink)
+                                Text(p.name).font(.andika(15, bold: true)).foregroundStyle(Skin.live.cardInk)
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)

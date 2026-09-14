@@ -66,6 +66,7 @@ private struct RootView: View {
                 // The living backdrop alone, for eyeballing a theme's scene without
                 // any cards or tiles over it.
                 case "scene":      ZStack { Skin.live.ground; Backdrop() }.ignoresSafeArea()
+                case "sounds":     SoundLab()
                 default:           HomeView()
                 }
             }

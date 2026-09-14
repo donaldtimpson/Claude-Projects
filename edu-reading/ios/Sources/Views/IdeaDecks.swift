@@ -31,7 +31,7 @@ struct ColorsView: View {
             let tint = Color(hexString: swatch.hex)
             AdaptiveCard {
                 ZStack {
-                    Theme.paper
+                    Skin.live.card
                     GeometryReader { geo in
                         FourShapes(tint: tint, size: geo.size)
                             .frame(width: geo.size.width, height: geo.size.height)
@@ -95,7 +95,7 @@ struct ShapesView: View {
             let name = c.shapes[idx].word
             AdaptiveCard {
                 ZStack {
-                    Theme.paper
+                    Skin.live.card
                     GeometryReader { geo in
                         let s = min(geo.size.width, geo.size.height)
                         // One shape, four colours — the mirror of a colour card.
@@ -158,7 +158,7 @@ struct NumbersView: View {
             let n = pool[min(i, max(pool.count - 1, 0))]
             AdaptiveCard {
                 ZStack {
-                    Theme.paper
+                    Skin.live.card
                     GeometryReader { geo in
                         // The numeral means nothing to a pre-reader, so the count
                         // leads and the numeral supports it.
@@ -250,7 +250,7 @@ struct Swatch: View {
     let side: CGFloat
     var body: some View {
         shape.fill(tint)
-            .overlay(shape.stroke(Theme.ink.opacity(0.28), lineWidth: 1.2))
+            .overlay(shape.stroke(Skin.live.cardInk.opacity(0.28), lineWidth: 1.2))
             .frame(width: side, height: side)
     }
 }
@@ -434,7 +434,7 @@ struct ColourSheet: View {
             }
             .padding(16)
         }
-        .background(Theme.paper)
+        .background(Skin.live.card)
     }
 }
 
@@ -457,7 +457,7 @@ struct ShapeSheet: View {
             }
             .padding(16)
         }
-        .background(Theme.paper)
+        .background(Skin.live.card)
     }
 }
 #endif

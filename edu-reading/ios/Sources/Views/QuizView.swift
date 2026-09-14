@@ -120,7 +120,7 @@ struct QuizView: View {
                     .buttonStyle(.plain)
                 }
                 Text(reads ? "Find the picture" : "Tap to hear it again")
-                    .font(.andika(13)).foregroundStyle(Theme.inkSoft)
+                    .font(.andika(13)).foregroundStyle(Skin.live.onSkySoft)
             }
         }
     }
@@ -146,7 +146,7 @@ struct QuizView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(isRight ? Color(hex: 0x3E9B4F)
-                                    : (isWrong ? Color(hex: 0xD62828) : Theme.ink.opacity(0.10)),
+                                    : (isWrong ? Color(hex: 0xD62828) : Skin.live.cardInk.opacity(0.12)),
                             lineWidth: (isRight || isWrong) ? 4 : 1))
                 .overlay(alignment: .topTrailing) {
                     if isRight {

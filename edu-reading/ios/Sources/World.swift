@@ -49,16 +49,16 @@ struct World: Identifiable, Hashable {
               accent: 0xDD7F1E, onSky: 0x33240F, glow: 0xFFC978),
         // A winter night rather than a white-out: on a pale sky the snow was
         // invisible, so the sky drops to a deep twilight blue and the snow, moon and
-        // aurora light up against it. Cards stay bright, so words and pictures are
-        // unaffected — only the world outside the card turned to evening.
+        // aurora light up against it. A dark theme all through — the cards go dark too
+        // (see Skin2.cardInk), so white paper never glares against the night.
         World(id: "snow", name: "Snow", face: "❄️",
-              sky: [0x16233B, 0x35597F], card: 0xF6FBFF, band: 0xDCEAF8,
+              sky: [0x16233B, 0x35597F], card: 0x213A57, band: 0x18293F,
               accent: 0x76C0F5, onSky: 0xEAF3FF, glow: 0x2C4A72),
-        // Actually dark. A night sky is the whole idea, and the cards stay light
-        // so the pictures and the words are unaffected by it.
+        // Actually dark — a night sky is the whole idea, and now the cards are dark
+        // with it (see Skin2.cardInk) so nothing glares white against space.
         World(id: "space", name: "Space", face: "🚀",
-              sky: [0x0B1030, 0x241A4A], card: 0xF5F1FE, band: 0xE4DAF8,
-              accent: 0x8B6BE0, onSky: 0xEDE9FF, glow: 0x3A2C6E),
+              sky: [0x0B1030, 0x241A4A], card: 0x241E52, band: 0x191340,
+              accent: 0xB49BFF, onSky: 0xEDE9FF, glow: 0x3A2C6E),
     ]
     static func find(_ id: String) -> World { all.first { $0.id == id } ?? all[0] }
     static var free: String { "classroom" }
@@ -113,6 +113,16 @@ final class Skin2 {
     }
     var onSky: Color { Color(hex: world.onSky) }
     var onSkySoft: Color { Color(hex: world.onSky).opacity(0.65) }
+
+    // Ink and hairlines drawn ON a card. The day themes keep light cards with dark
+    // ink; the night themes (snow, space) have dark cards, so their ink flips to
+    // light. Every card-content view reads these instead of the fixed Theme.ink, so
+    // one world switch re-inks the whole app.
+    var cardInk: Color { isDark ? Color(hex: 0xEAF1FB) : Theme.ink }
+    var cardInkSoft: Color { isDark ? Color(hex: 0xEAF1FB).opacity(0.62) : Theme.inkSoft }
+    var cardEdge: Color { isDark ? .white.opacity(0.12) : Color(hex: 0x2B2018).opacity(0.10) }
+    /// Vowels stay red (the phonics convention), brightened on dark cards to read.
+    var vowel: Color { isDark ? Color(hex: 0xFF8A80) : Theme.vowel }
 }
 
 

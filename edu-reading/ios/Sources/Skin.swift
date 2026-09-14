@@ -15,7 +15,7 @@ struct Skin {
     var cardRadius: CGFloat { 30 }
     var contact: (Color, CGFloat, CGFloat) { (.black.opacity(0.16), 5, 2) }
     var ambient: (Color, CGFloat, CGFloat) { (.black.opacity(0.11), 26, 14) }
-    var cardEdge: Color { Color(hex: 0x2B2018).opacity(0.10) }
+    var cardEdge: Color { Skin.live.cardEdge }
     var stackTilt: Double { 1.6 }
     var stackDrop: CGFloat { 11 }
     func stackFill(_ accent: Color) -> Color {

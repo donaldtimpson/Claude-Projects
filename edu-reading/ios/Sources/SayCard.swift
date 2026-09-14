@@ -35,7 +35,7 @@ struct SayCard: View {
             .padding(.horizontal, 10)
             .listensToSay(target, accent: accent, pop: 1.18) { onSaid?() }
             if let caption {
-                Text(caption).font(.andika(15)).foregroundStyle(Theme.inkSoft)
+                Text(caption).font(.andika(15)).foregroundStyle(Skin.live.cardInkSoft)
                     .multilineTextAlignment(.center)
             }
             Spacer()
@@ -72,10 +72,23 @@ struct ListenToSay: ViewModifier {
     func body(content: Content) -> some View {
         Group {
             if inFront {
-                content.scaleEffect(celebrate ? pop : 1).overlay { indicators }
+                // Opaque picture cards can't show a ring behind them, and a ring
+                // drawn across the art looks wrong — so they get a compact listening
+                // pill at the top, with the celebration over the card on a match.
+                content.scaleEffect(celebrate ? pop : 1)
+                    .overlay(alignment: .top) {
+                        if settings.listenForVoice {
+                            ListeningPill(level: listener.level,
+                                          active: listener.state != .off, accent: accent)
+                                .padding(.top, 16)
+                        }
+                    }
+                    .overlay { if celebrate { ReadItCelebration(accent: accent).allowsHitTesting(false) } }
             } else {
+                // A bare word reads best with the ring breathing around it, behind.
                 ZStack {
-                    indicators
+                    if settings.listenForVoice { ring }
+                    if celebrate { ReadItCelebration(accent: accent) }
                     content.scaleEffect(celebrate ? pop : 1)
                 }
             }
@@ -86,22 +99,15 @@ struct ListenToSay: ViewModifier {
         .onChange(of: settings.listenForVoice) { start() }
     }
 
-    /// The mic ring (breathing with the input level) and the match celebration.
-    @ViewBuilder private var indicators: some View {
-        ZStack {
-            if settings.listenForVoice {
-                Circle()
-                    .stroke(accent.opacity(listener.state == .off ? 0.12 : 0.34), lineWidth: 3)
-                    // Fixed footprint, grown by scaleEffect not by frame: a transform
-                    // doesn't reflow, so a loud mic pulses the ring without pushing
-                    // the card's edge off screen.
-                    .frame(width: 250, height: 250)
-                    .scaleEffect(1 + CGFloat(listener.level) * 0.32)
-                    .animation(.easeOut(duration: 0.12), value: listener.level)
-            }
-            if celebrate { ReadItCelebration(accent: accent) }
-        }
-        .allowsHitTesting(false)
+    private var ring: some View {
+        Circle()
+            .stroke(accent.opacity(listener.state == .off ? 0.12 : 0.34), lineWidth: 3)
+            // Fixed footprint, grown by scaleEffect not by frame: a transform doesn't
+            // reflow, so a loud mic pulses the ring without pushing the card off screen.
+            .frame(width: 250, height: 250)
+            .scaleEffect(1 + CGFloat(listener.level) * 0.32)
+            .animation(.easeOut(duration: 0.12), value: listener.level)
+            .allowsHitTesting(false)
     }
 
     private func start() {
@@ -136,6 +142,36 @@ extension View {
     func listensToSay(_ word: String, accent: Color = Theme.go, pop: CGFloat = 1.06,
                       inFront: Bool = false, onMatch: @escaping () -> Void) -> some View {
         modifier(ListenToSay(word: word, accent: accent, pop: pop, inFront: inFront, onMatch: onMatch))
+    }
+}
+
+/// A quiet "I'm listening" badge — a mic and three little bars that rise with the
+/// input level. Sits at the top of a picture card, where a ring drawn across the art
+/// looked wrong, and gives the same "the mic hears you" feedback the ring gives words.
+struct ListeningPill: View {
+    let level: Double
+    let active: Bool
+    let accent: Color
+
+    var body: some View {
+        HStack(spacing: 3.5) {
+            Image(systemName: "mic.fill").font(.system(size: 12, weight: .bold))
+            ForEach(0..<3, id: \.self) { i in
+                Capsule().frame(width: 3, height: bar(i))
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 6)
+        .background(accent.opacity(active ? 0.9 : 0.5), in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 3, y: 1)
+        .animation(.easeOut(duration: 0.12), value: level)
+        .allowsHitTesting(false)
+    }
+
+    private func bar(_ i: Int) -> CGFloat {
+        let mult: [CGFloat] = [0.7, 1.0, 0.55]
+        return 5 + CGFloat(level) * 15 * mult[i]
     }
 }
 

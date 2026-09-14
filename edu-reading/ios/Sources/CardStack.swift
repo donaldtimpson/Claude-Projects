@@ -395,7 +395,7 @@ struct BackChevron: View {
         Button(action: action) {
             Image(systemName: "chevron.left")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Skin.live.cardInk)
                 .frame(width: 42, height: 42)      // a full touch target
                 .contentShape(Circle())
         }
@@ -429,7 +429,7 @@ struct OrderToggle: View {
         } label: {
             Image(systemName: ordered ? "list.number" : "shuffle")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Skin.live.cardInk)
                 .frame(width: 42, height: 42)
                 .contentShape(Circle())
         }
