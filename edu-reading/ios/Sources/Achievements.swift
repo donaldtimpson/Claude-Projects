@@ -53,6 +53,23 @@ enum Awards {
               face: "🎈", tint: 0x3E8FA8),
         Award(id: "quiz-twenty", name: "Sharp Eyes", blurb: "Twenty right in Find It",
               face: "👀", tint: 0x2E7D6E, unlocksWorld: "meadow"),
+        // Writing and spelling — doings, not sayings.
+        Award(id: "first-write", name: "First Letter Written", blurb: "You traced a letter",
+              face: "✏️", tint: 0x7A5EA8),
+        Award(id: "all-written", name: "Every Letter Written", blurb: "You traced all twenty-six",
+              face: "✍️", tint: 0x3E8FA8, unlocksWorld: "reef"),
+        Award(id: "first-spell", name: "First Word Built", blurb: "You spelled a word",
+              face: "🧩", tint: 0xC98A3E),
+        Award(id: "spell-ten", name: "Ten Words Built", blurb: "Ten words spelled",
+              face: "🔠", tint: 0x4E8FBF),
+        Award(id: "first-rhyme", name: "First Rhyme", blurb: "You found a rhyme",
+              face: "🎵", tint: 0x7A5EA8),
+        Award(id: "rhyme-ten", name: "Rhyme Time", blurb: "Ten rhymes found",
+              face: "🎶", tint: 0xD9646E),
+        Award(id: "first-match", name: "First Match", blurb: "You matched a pair",
+              face: "🃏", tint: 0x3E8FA8),
+        Award(id: "match-five", name: "Memory Master", blurb: "Five boards cleared",
+              face: "🧠", tint: 0x6FA368),
     ]
     static func find(_ id: String) -> Award? { all.first { $0.id == id } }
 }

@@ -11,7 +11,10 @@ struct ReadingContent: Codable {
     struct CV: Codable, Hashable { let text: String }
     struct Rime: Codable, Hashable { let rime: String; let words: [String] }
     struct Word: Codable, Hashable { let word: String; let level: String; let image: String? }
-    struct Sentence: Codable, Hashable { let text: String }
+    /// `level` ramps the deck the way word levels ramp Words: a CVC reader meets
+    /// CVC sentences first. Optional so a sentence saved before levels existed still
+    /// decodes (it sorts to the end).
+    struct Sentence: Codable, Hashable { let text: String; let level: Int? }
     struct HeartPart: Codable, Hashable { let grapheme: String; let regular: Bool }
     struct HeartWord: Codable, Hashable { let word: String; let parts: [HeartPart]; let sentence: String }
     struct Spell: Codable, Hashable { let text: String; let target: String; let effect: String }
@@ -24,6 +27,10 @@ struct ReadingContent: Codable {
     let rimes: [Rime]
     let words: [Word]
     let sentences: [Sentence]
+    /// The consonants the Blending deck pairs with each vowel (b→ba be bi bo bu …).
+    /// "qu" is one unit and gets a single sound-dot. Optional so older content
+    /// without the field still decodes, falling back to the default set.
+    let blendConsonants: [String]?
     let heartWords: [HeartWord]
     let world: World
     let sightWords: [String]
@@ -45,7 +52,19 @@ struct ReadingContent: Codable {
     }()
 
     var sightSet: Set<String> { Set(sightWords) }
-    var wordLevels: [String] { ["CVC", "Digraphs", "Blends", "SilentE"] }
+    /// The five short vowels, in teaching order, painted red everywhere in the app.
+    var blendVowels: [String] { ["a", "e", "i", "o", "u"] }
+    var syllableConsonants: [String] {
+        blendConsonants ?? ["b","d","f","g","h","j","k","l","m","n",
+                            "p","qu","r","s","t","v","w","y","z"]
+    }
+    /// The phonics ladder, in teaching order. Words and Sentences both order by a
+    /// word's position here, so a beginner never meets "strength" on card three.
+    /// Adding a stage is an edit to this list plus content tagged with its name.
+    var wordLevels: [String] {
+        ["CVC", "Digraphs", "Blends", "SilentE",
+         "VowelTeams", "RControlled", "Diphthongs", "Endings"]
+    }
     /// Deck order comes from the content file, so re-ordering the decks is an edit
     /// to content rather than to code.
     var pictureCategories: [String] {

@@ -59,6 +59,12 @@ struct World: Identifiable, Hashable {
         World(id: "space", name: "Space", face: "🚀",
               sky: [0x0B1030, 0x241A4A], card: 0x241E52, band: 0x191340,
               accent: 0xB49BFF, onSky: 0xEDE9FF, glow: 0x3A2C6E),
+        // Under the sea: a deep-water gradient going darker with depth. A dark theme
+        // all through — the cards go dark too (see Skin2.cardInk) so white paper never
+        // glares against the water. Earned by writing every letter.
+        World(id: "reef", name: "Reef", face: "🐠",
+              sky: [0x0E5A78, 0x041B2E], card: 0x0C3B52, band: 0x08293A,
+              accent: 0x5AD6E0, onSky: 0xEAFBFF, glow: 0x1C6E86),
     ]
     static func find(_ id: String) -> World { all.first { $0.id == id } ?? all[0] }
     static var free: String { "classroom" }

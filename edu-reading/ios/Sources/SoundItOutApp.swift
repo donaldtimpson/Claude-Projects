@@ -18,6 +18,16 @@ struct SoundItOutApp: App {
                 .onAppear {
                     progress.load(profile: profiles.currentID)
                     progress.openedToday()
+                    // Open into the current child's own world, if they have earned it.
+                    // Skipped when -world forces a theme for screenshots.
+                    var forced = false
+                    #if DEBUG
+                    forced = ProcessInfo.processInfo.arguments.contains("-world")
+                    #endif
+                    if !forced, let wid = profiles.current?.world {
+                        let w = World.find(wid)
+                        if progress.opened(w) { Skin.live.set(w) }
+                    }
                     #if DEBUG
                     Seed.applyIfAsked(progress)
                     #endif
@@ -49,6 +59,11 @@ private struct RootView: View {
                 switch name {
                 case "letters":    LettersView(start: Int(ProcessInfo.processInfo.arguments.last ?? "") ?? 0)
                 case "blending":   BlendingView()
+                case "wordblending": WordBlendingView()
+                case "trace":      TraceView()
+                case "spell":      SpellView()
+                case "rhyme":      RhymeView()
+                case "match":      MatchView()
                 case "words":      WordsView()
                 case "sentences":  SentencesView()
                 case "heart":      HeartWordsView()

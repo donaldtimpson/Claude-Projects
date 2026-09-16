@@ -112,30 +112,6 @@ private struct AdultView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Find It — how many pictures").font(.andika(16)).foregroundStyle(Theme.ink)
-                        Picker("", selection: Binding(
-                            get: { settings.quizChoices },
-                            set: { settings.quizChoices = $0; settings.save() })) {
-                            ForEach([2, 3, 4], id: \.self) { Text("\($0)").tag($0) }
-                        }
-                        .pickerStyle(.segmented)
-                        Text("Two is a real question for a two-year-old; four is not.")
-                            .font(.andika(12)).foregroundStyle(Theme.inkSoft)
-                    }
-
-                    Toggle(isOn: Binding(get: { settings.quizReads },
-                                         set: { settings.quizReads = $0; settings.save() })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Find It shows the word").font(.andika(16)).foregroundStyle(Theme.ink)
-                            Text(settings.quizReads
-                                 ? "The word is printed — this is the reading test."
-                                 : "The app says the word instead, so no reading is needed.")
-                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
-                        }
-                    }
-                    .tint(Theme.go)
-
-                    VStack(alignment: .leading, spacing: 6) {
                         Text("Numbers go up to").font(.andika(16)).foregroundStyle(Theme.ink)
                         Picker("", selection: Binding(
                             get: { settings.numberLevel },
@@ -161,18 +137,6 @@ private struct AdultView: View {
                     }
                     .tint(Theme.go)
 
-                    Toggle(isOn: Binding(get: { settings.rimeBlending },
-                                         set: { settings.rimeBlending = $0; settings.save() })) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Blend by word family").font(.andika(16)).foregroundStyle(Theme.ink)
-                            Text(settings.rimeBlending
-                                 ? "at → fat → sat. Stable in English."
-                                 : "fa, fe, fi. Works in Spanish; shakier in English.")
-                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
-                        }
-                    }
-                    .tint(Theme.go)
-
                     Toggle(isOn: Binding(get: { settings.showWordOnPictures },
                                          set: { settings.showWordOnPictures = $0; settings.save() })) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -182,6 +146,40 @@ private struct AdultView: View {
                         }
                     }
                     .tint(Theme.go)
+                }
+
+                section("GAMES") {
+                    gamePicker("Find It — how many pictures",
+                               "Two is a real question for a two-year-old; four is not.",
+                               [2, 3, 4], get: { settings.quizChoices },
+                               set: { settings.quizChoices = $0 })
+
+                    Toggle(isOn: Binding(get: { settings.quizReads },
+                                         set: { settings.quizReads = $0; settings.save() })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Find It shows the word").font(.andika(16)).foregroundStyle(Theme.ink)
+                            Text(settings.quizReads
+                                 ? "The word is printed — this is the reading test."
+                                 : "The app says the word instead, so no reading is needed.")
+                                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                    .tint(Theme.go)
+
+                    gamePicker("Build a Word — extra letters",
+                               "Decoy letters in the tray. None is an unscramble; more is a harder find.",
+                               [0, 2, 4], get: { settings.spellDecoys },
+                               set: { settings.spellDecoys = $0 })
+
+                    gamePicker("Rhyme Time — how many words",
+                               "How many words to choose the rhyme from.",
+                               [2, 3, 4], get: { settings.rhymeChoices },
+                               set: { settings.rhymeChoices = $0 })
+
+                    gamePicker("Match Up — how many matches",
+                               "Pairs on the board. More pairs is a longer, harder memory game.",
+                               [3, 4, 6], get: { settings.matchPairs },
+                               set: { settings.matchPairs = $0 })
                 }
 
                 section("THANK YOU") {
@@ -241,6 +239,18 @@ private struct AdultView: View {
             Text(k).font(.andika(16)).foregroundStyle(Theme.ink)
             Spacer()
             Text(v).font(.andika(16, bold: true)).foregroundStyle(Theme.go).monospacedDigit()
+        }
+    }
+    /// A titled segmented picker over integer options, saving on change.
+    private func gamePicker(_ title: String, _ blurb: String, _ options: [Int],
+                            get: @escaping () -> Int, set: @escaping (Int) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.andika(16)).foregroundStyle(Theme.ink)
+            Picker("", selection: Binding(get: get, set: { set($0); settings.save() })) {
+                ForEach(options, id: \.self) { Text("\($0)").tag($0) }
+            }
+            .pickerStyle(.segmented)
+            Text(blurb).font(.andika(12)).foregroundStyle(Theme.inkSoft)
         }
     }
     private func credit(_ name: String, _ what: String) -> some View {

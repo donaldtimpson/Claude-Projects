@@ -177,4 +177,7 @@ extension Voice: AVSpeechSynthesizerDelegate, AVAudioPlayerDelegate {
 enum Buzz {
     static func yes() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
     static func no()  { UIImpactFeedbackGenerator(style: .soft).impactOccurred() }
+    /// A small tick under the finger while choosing — a face, a colour. Lighter than
+    /// yes/no: it marks a choice, it does not judge it.
+    static func pick() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
 }

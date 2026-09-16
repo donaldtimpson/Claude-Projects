@@ -1,88 +1,18 @@
 import SwiftUI
 
 // A theme was only ever a palette, which is why "beach" had nothing beach-like
-// about it. Two surfaces fix that, and both are drawn rather than sourced — no
-// assets, no licences, correct at every size.
+// about it. A BACKDROP fixes that — once a faint still-life, now a living scene:
+// snow that falls, stars that twinkle, a sea that moves. Drawn rather than sourced
+// (no assets, no licences, correct at every size), it stays behind the card, which
+// keeps its own fill and shadow — so a photograph of a dog is still the loudest
+// thing on screen, but the world around it is finally alive.
 //
-//   • THE BACK OF THE CARD. The best surface in the app and it was blank: the two
-//     cards behind the top one are on screen the whole time, so a patterned back
-//     puts the theme in front of the child permanently. Playing cards have always
-//     carried their identity on the back.
-//   • A BACKDROP — once a faint still-life, now a living scene: snow that falls,
-//     stars that twinkle, a sea that moves. It stays behind the card, which keeps
-//     its own fill and shadow, so a photograph of a dog is still the loudest thing
-//     on screen — but the world around it is finally alive.
+// (A patterned card-back used to be the other themed surface, shown on two fanned
+// cards behind the top one. The living backdrop made those redundant, so both the
+// backs and their pattern were removed.)
 //
-// Classroom has neither beyond a plain rule — being the plainest is its whole job.
-
-// MARK: - card backs
-
-struct CardBack: View {
-    var world: World = Skin.live.world
-    var radius: CGFloat = 30
-
-    var body: some View {
-        ZStack {
-            Color(hex: world.card)
-            Canvas { ctx, size in Self.pattern(world, &ctx, size) }
-            // The double rule every playing card has.
-            RoundedRectangle(cornerRadius: radius - 8, style: .continuous)
-                .strokeBorder(Color(hex: world.accent).opacity(0.45), lineWidth: 1.5)
-                .padding(10)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous)
-            .strokeBorder(Color(hex: 0x2B2018).opacity(0.10), lineWidth: 1))
-    }
-
-    /// Emoji as the motif rather than abstract paths. It is the illustration
-    /// language the app already speaks — the drawings deck is entirely emoji — it
-    /// costs nothing, and a tiny shell reads as "beach" in a way a wavy line does
-    /// not. Faint and staggered, so it stays wallpaper rather than becoming a
-    /// picture that competes with the card in front of it.
-    static func pattern(_ w: World, _ ctx: inout GraphicsContext, _ size: CGSize) {
-        let motifs: [String]
-        let step: CGFloat
-        switch w.id {
-        case "meadow": motifs = ["🌿", "🌼", "🍃", "🌱"];      step = 46
-        case "beach":  motifs = ["🐚", "🌴", "⛱️", "🦀"];      step = 48
-        case "snow":   motifs = ["❄️", "⛄", "🌨️", "❄️"];      step = 46
-        case "space":  motifs = ["⭐️", "🪐", "🚀", "✨"];      step = 48
-        default:
-            // Classroom keeps a plain dotted rule: being the quiet one is its job.
-            let tint = Color(hex: w.accent)
-            grid(size, 26) { p, _ in
-                ctx.fill(Path(ellipseIn: CGRect(x: p.x - 1.2, y: p.y - 1.2,
-                                                width: 2.4, height: 2.4)),
-                         with: .color(tint.opacity(0.22)))
-            }
-            return
-        }
-        grid(size, step) { p, i in
-            var g = ctx
-            g.opacity = 0.26
-            g.translateBy(x: p.x, y: p.y)
-            // A little turn each, so a grid of stamps reads as a scattering.
-            g.rotate(by: .degrees(Double((i % 5) - 2) * 9))
-            g.draw(Text(motifs[i % motifs.count]).font(.system(size: step * 0.52)),
-                   at: .zero, anchor: .center)
-        }
-    }
-
-    /// A staggered grid, so patterns do not read as rows and columns.
-    private static func grid(_ size: CGSize, _ step: CGFloat,
-                             _ draw: (CGPoint, Int) -> Void) {
-        var i = 0, y: CGFloat = step / 2
-        while y < size.height {
-            var x: CGFloat = (i.isMultiple(of: 2) ? step / 2 : step)
-            while x < size.width {
-                draw(CGPoint(x: x, y: y), i &+ Int(x))
-                x += step
-            }
-            y += step; i += 1
-        }
-    }
-}
+// Classroom has none of this beyond a plain rule — being the plainest is its whole
+// job.
 
 // MARK: - backdrop (a living scene)
 
@@ -96,10 +26,18 @@ struct Backdrop: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { tl in
-            let t = reduceMotion ? 0 : tl.date.timeIntervalSinceReferenceDate
-            Canvas { ctx, size in
-                LivingScene.draw(world, t, size, &ctx)
+        Group {
+            // A still world — classroom — has nothing to animate, so driving a 30fps
+            // timeline over it just repaints an unchanging picture 30 times a second
+            // (idle CPU for no reward). Draw it once instead. Reduced motion makes
+            // every world still, so it takes the same quiet path.
+            if reduceMotion || !LivingScene.isAnimated(world) {
+                Canvas { ctx, size in LivingScene.draw(world, 0, size, &ctx) }
+            } else {
+                TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { tl in
+                    let t = tl.date.timeIntervalSinceReferenceDate
+                    Canvas { ctx, size in LivingScene.draw(world, t, size, &ctx) }
+                }
             }
         }
         .allowsHitTesting(false)
@@ -111,12 +49,17 @@ struct Backdrop: View {
 /// is a pure function of the timeline value and a seeded base, so nothing has to be
 /// stored between frames and the whole thing survives being rebuilt at any moment.
 enum LivingScene {
+    /// Classroom is deliberately still (a plain dotted rule), so it needs no
+    /// timeline. Every other world moves. Keep this in step with `draw`.
+    static func isAnimated(_ w: World) -> Bool { w.id != "classroom" }
+
     static func draw(_ w: World, _ t: Double, _ size: CGSize, _ ctx: inout GraphicsContext) {
         switch w.id {
         case "snow":   snow(t, size, &ctx)
         case "space":  space(t, size, &ctx)
         case "meadow": meadow(t, size, &ctx)
         case "beach":  beach(t, size, &ctx)
+        case "reef":   reef(t, size, &ctx)
         default:       classroom(w, size, &ctx)
         }
     }
@@ -543,6 +486,85 @@ enum LivingScene {
 
         // The palm, resting on the mound — its base just meets the sand line.
         emoji(&ctx, "🌴", at: CGPoint(x: crestX, y: crestY - H * 0.03), size: min(W, H) * 0.3, opacity: 0.95)
+    }
+
+    // MARK: reef
+
+    private static func reef(_ t: Double, _ s: CGSize, _ ctx: inout GraphicsContext) {
+        let W = s.width, H = s.height, m = min(W, H)
+
+        // Sunlight shafts slanting down from the surface, swaying slowly.
+        for k in 0..<5 {
+            let baseX = W * (0.1 + 0.2 * CGFloat(k)) + 24 * CGFloat(sin(t * 0.15 + Double(k)))
+            var p = Path()
+            let topW = m * 0.06, botW = m * 0.14
+            p.move(to: CGPoint(x: baseX - topW, y: 0))
+            p.addLine(to: CGPoint(x: baseX + topW, y: 0))
+            p.addLine(to: CGPoint(x: baseX + botW + 40, y: H))
+            p.addLine(to: CGPoint(x: baseX - botW + 40, y: H))
+            p.closeSubpath()
+            ctx.fill(p, with: .linearGradient(
+                Gradient(colors: [Color.white.opacity(0.10), Color.white.opacity(0)]),
+                startPoint: CGPoint(x: baseX, y: 0), endPoint: CGPoint(x: baseX, y: H * 0.9)))
+        }
+
+        // The sandy floor, with a soft crest.
+        var floor = Path()
+        let fy = H * 0.9
+        floor.move(to: CGPoint(x: 0, y: H))
+        floor.addLine(to: CGPoint(x: 0, y: fy))
+        floor.addQuadCurve(to: CGPoint(x: W, y: fy - 10), control: CGPoint(x: W * 0.5, y: fy - 40))
+        floor.addLine(to: CGPoint(x: W, y: H))
+        floor.closeSubpath()
+        ctx.fill(floor, with: .linearGradient(
+            Gradient(colors: [Color(hex: 0xE9D9A6), Color(hex: 0xCDB679)]),
+            startPoint: CGPoint(x: W / 2, y: fy - 30), endPoint: CGPoint(x: W / 2, y: H)))
+
+        // Seaweed swaying up from the floor.
+        for (i, bx) in [0.08, 0.2, 0.9, 0.78].enumerated() {
+            let x = W * CGFloat(bx)
+            var blade = Path()
+            blade.move(to: CGPoint(x: x, y: H))
+            let hgt = m * (0.24 + 0.06 * CGFloat(i % 2))
+            for seg in stride(from: 0.0, through: 1.0, by: 0.1) {
+                let yy = H - CGFloat(seg) * hgt
+                let sway = 18 * CGFloat(sin(t * 0.8 + Double(seg) * 3 + Double(i)))
+                blade.addLine(to: CGPoint(x: x + sway * CGFloat(seg), y: yy))
+            }
+            ctx.stroke(blade, with: .color(Color(hex: 0x2E8B6E).opacity(0.8)),
+                       style: StrokeStyle(lineWidth: m * 0.03, lineCap: .round))
+        }
+
+        // Coral clumps on the floor.
+        emoji(&ctx, "🪸", at: CGPoint(x: W * 0.3, y: H * 0.9), size: m * 0.16, opacity: 0.95)
+        emoji(&ctx, "🪸", at: CGPoint(x: W * 0.62, y: H * 0.92), size: m * 0.12, opacity: 0.85)
+
+        // Fish drifting across on their own clocks, facing the way they swim.
+        let fish: [(String, CGFloat, Double, Double)] = [
+            ("🐠", 0.30, 0.10, 0.0), ("🐟", 0.55, 0.07, 2.0),
+            ("🐡", 0.70, 0.05, 4.0), ("🐠", 0.44, 0.08, 1.0),
+        ]
+        // The fish emoji all face LEFT, so they swim right→left; going the other way
+        // reads as swimming backwards.
+        for (glyph, yFrac, speed, phase) in fish {
+            let span = W + m * 0.5
+            let x = (W + m * 0.25) - CGFloat((t * speed + phase).truncatingRemainder(dividingBy: 1)) * span
+            let y = H * yFrac + m * 0.05 * CGFloat(sin(t * 0.9 + phase))
+            emoji(&ctx, glyph, at: CGPoint(x: x, y: y), size: m * 0.11, opacity: 0.95)
+        }
+
+        // Bubbles rising and wobbling toward the surface.
+        var rng = SeededRandom2(seed: 42)
+        for _ in 0..<26 {
+            let bx = rng.next() * W
+            let r = 2 + rng.next() * 5
+            let ph = Double(rng.next()) * 6.28
+            let sp = 24 + Double(rng.next()) * 30
+            let y = H - CGFloat((t * sp).truncatingRemainder(dividingBy: Double(H + 40)))
+            let x = bx + 10 * CGFloat(sin(t * 1.2 + ph))
+            ctx.stroke(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                       with: .color(.white.opacity(0.35)), lineWidth: 1)
+        }
     }
 
     // MARK: classroom

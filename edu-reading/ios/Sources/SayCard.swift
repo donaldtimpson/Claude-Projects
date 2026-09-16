@@ -29,7 +29,11 @@ struct SayCard: View {
                     phonicsSentence(text, size: size, sight: sight)
                         .multilineTextAlignment(.center)
                 } else {
+                    // A word is always one line — a longer word (grape, jumping)
+                    // shrinks to fit rather than breaking across two lines.
                     phonics(text, size: size)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                 }
             }
             .padding(.horizontal, 10)

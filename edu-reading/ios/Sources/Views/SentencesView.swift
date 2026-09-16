@@ -24,7 +24,9 @@ struct SentencesView: View {
             Voice.shared.say(pool[min(i, pool.count - 1)].text)
             collect(i)
         }
-        .onAppear { if pool.isEmpty { pool = c.sentences.shuffled() } }
+        // Ramp like Words: shuffle within a level, never across it, so the deck gets
+        // harder as it goes. Unleveled sentences sort to the end.
+        .onAppear { if pool.isEmpty { pool = shuffledWithin(c.sentences) { $0.level ?? 99 } } }
     }
 
     private func collect(_ i: Int) {

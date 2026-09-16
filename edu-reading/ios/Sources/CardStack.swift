@@ -45,26 +45,17 @@ struct CardStack<Content: View>: View {
     var body: some View {
         GeometryReader { geo in
             ZStack {
-                skin.ground(accent).ignoresSafeArea()
-
-                // The card is visibly a DECK: two more behind it, peeking below and
-                // to the right. A child who taps and taps has usually just not been
-                // told there is anything else — a stack says so without words.
-                ForEach([2, 1], id: \.self) { back in
-                    // Face down, so the theme is on screen the whole time. This is
-                    // the biggest themeable surface in the app and it was blank.
-                    // Fanned rather than stacked square, so the patterned backs are
-                    // actually SEEN. Squared up they sat entirely behind the top
-                    // card and the theme they carry was invisible.
-                    CardBack(radius: skin.cardRadius)
-                        .shadow(color: .black.opacity(0.12), radius: 6, y: 3)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 18)
-                        .scaleEffect(1 - CGFloat(back) * 0.02)
-                        .rotationEffect(.degrees(Double(back) * (back == 1 ? 3.4 : -3.4)),
-                                        anchor: .bottom)
-                        .offset(y: CGFloat(back) * 5)
-                }
+                // No ground here: the enclosing DeckScreen already lays down one
+                // full-screen `skin.ground(accent)` (with its animated Backdrop)
+                // behind this whole view. Drawing it again meant two backdrops —
+                // two 30fps timelines animating at once (double idle CPU), and the
+                // second scene peeking below the dots row as a doubled horizon.
+                //
+                // There used to be two fanned card-backs behind the top card, for a
+                // sense of depth and to say "there is more here". The living backdrop
+                // now supplies the depth, and the dots row says how much more — so the
+                // backs had become themed clutter competing with the scene. Gone; the
+                // single card floats on the world.
 
                 if count > 0 {
                     // Two phases, both driven from step(): the old card is thrown
@@ -214,19 +205,64 @@ struct CardStack<Content: View>: View {
 
 /// A quiet page indicator. Kids don't read "7 / 22", but a row of dots shows there
 /// is more, and shows it shrinking.
+/// The progress indicator, and — for the bigger decks — a scrubber. A grown-up can
+/// press the row and drag to fly through the deck, watching the card change behind
+/// their finger, and release at the card they want to start practising from. A tap
+/// jumps straight to that point. It reads as a plain row of dots at rest; the drag
+/// is deliberate enough that a child tapping the card never triggers it.
 struct Dots: View {
-    let count: Int, index: Int, accent: Color
+    let count: Int
+    @Binding var index: Int
+    var accent: Color
+
+    @State private var scrubbing = false
+
+    /// The live position, folded into 0..<count however far `index` has wandered.
+    private var pos: Int { count > 0 ? ((index % count) + count) % count : 0 }
+
     var body: some View {
         let shown = min(count, 14)
-        HStack(spacing: 5) {
-            ForEach(0..<shown, id: \.self) { i in
-                let active = count <= 14 ? i == index : i == index * shown / max(count, 1)
-                Circle()
-                    .fill(active ? accent : accent.mixed(with: Theme.ground, amount: 0.62))
-                    .frame(width: active ? 8 : 6, height: active ? 8 : 6)
+        VStack(spacing: 6) {
+            // Where you are, shown only while scrubbing so it never clutters the card.
+            Text("\(pos + 1) / \(count)")
+                .font(.andika(12, bold: true)).monospacedDigit()
+                .foregroundStyle(.white)
+                .padding(.horizontal, 9).padding(.vertical, 3)
+                .background(accent, in: Capsule())
+                .opacity(scrubbing ? 1 : 0)
+
+            GeometryReader { geo in
+                HStack(spacing: 5) {
+                    ForEach(0..<shown, id: \.self) { i in
+                        let active = count <= 14 ? i == pos : i == pos * shown / max(count, 1)
+                        Circle()
+                            .fill(active ? accent : accent.mixed(with: Theme.ground, amount: 0.62))
+                            .frame(width: active ? 8 : 6, height: active ? 8 : 6)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())          // the whole strip is grabbable
+                .gesture(scrub(width: geo.size.width))
+                .animation(.spring(response: 0.3), value: pos)
             }
+            .frame(height: 26)
         }
-        .animation(.spring(response: 0.3), value: index)
+    }
+
+    private func scrub(width: CGFloat) -> some Gesture {
+        // A cushion at each end, so start and finish are reachable a thumb's width in
+        // from the screen edge rather than only by dragging fully into the corner.
+        let inset: CGFloat = 32
+        let usable = max(width - inset * 2, 1)
+        return DragGesture(minimumDistance: 0)
+            .onChanged { v in
+                guard count > 1 else { return }
+                let f = min(max((v.location.x - inset) / usable, 0), 1)
+                let target = Int((f * CGFloat(count - 1)).rounded())
+                if !scrubbing { withAnimation(.easeOut(duration: 0.12)) { scrubbing = true } }
+                if target != pos { index = target; Buzz.pick() }
+            }
+            .onEnded { _ in withAnimation(.easeOut(duration: 0.2)) { scrubbing = false } }
     }
 }
 
@@ -287,7 +323,7 @@ struct DeckScreen<Content: View>: View {
                       onAdvance: onAdvance, advance: advance, speaks: speaks) { i in
                 content(i)
             }
-            Dots(count: count, index: count > 0 ? index % count : 0, accent: accent)
+            Dots(count: count, index: $index, accent: accent)
                 .padding(.bottom, 10)
         }
         .background(skin.ground(accent).ignoresSafeArea())

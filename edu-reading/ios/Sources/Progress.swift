@@ -21,6 +21,10 @@ final class Progress {
     private(set) var worlds: Set<String> = [World.free]
     private(set) var finishedDecks: Set<String> = []
     private(set) var quizRight: Int = 0
+    private(set) var wroteLetters: Set<String> = []
+    private(set) var spelledWords: Set<String> = []
+    private(set) var rhymeRight: Int = 0
+    private(set) var matchWins: Int = 0
     private(set) var lastDay: String = ""
 
     /// Set by the engine when something is earned; the app shows it and clears it.
@@ -31,6 +35,9 @@ final class Progress {
         var colours: [String] = []; var shapes: [String] = []; var counted: [Int] = []
         var awards: [String] = []; var worlds: [String] = []; var decks: [String] = []
         var quizRight: Int = 0
+        // Optional so a save written before these decks existed still decodes.
+        var wrote: [String]?; var spelled: [String]?
+        var rhyme: Int?; var match: Int?
         var lastDay: String = ""
     }
 
@@ -40,13 +47,15 @@ final class Progress {
         profileID = profile
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
-        quizRight = 0
+        quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
         guard let d = UserDefaults.standard.data(forKey: key(profile)),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         readWords = Set(s.words); seenLetters = Set(s.letters); readSentences = Set(s.sentences)
         colours = Set(s.colours); shapes = Set(s.shapes); counted = Set(s.counted)
         awards = Set(s.awards); worlds = Set(s.worlds).union([World.free])
         finishedDecks = Set(s.decks); lastDay = s.lastDay; quizRight = s.quizRight
+        wroteLetters = Set(s.wrote ?? []); spelledWords = Set(s.spelled ?? [])
+        rhymeRight = s.rhyme ?? 0; matchWins = s.match ?? 0
     }
 
     private func save() {
@@ -63,6 +72,10 @@ final class Progress {
         s.decks = Array(finishedDecks)
         s.lastDay = lastDay
         s.quizRight = quizRight
+        s.wrote = Array(wroteLetters)
+        s.spelled = Array(spelledWords)
+        s.rhyme = rhymeRight
+        s.match = matchWins
         if let d = try? JSONEncoder().encode(s) {
             UserDefaults.standard.set(d, forKey: key(profileID))
         }
@@ -77,6 +90,12 @@ final class Progress {
     func namedShape(_ s: String)    { if shapes.insert(s).inserted { check() } }
     func counted(_ n: Int)          { if counted.insert(n).inserted { check() } }
     func finishedDeck(_ d: String)  { if finishedDecks.insert(d).inserted { check() } }
+    /// Traced a letter's shape with a finger; spelled a word from tiles. Both are
+    /// doings rather than sayings — the two active-recall decks.
+    func wroteLetter(_ l: String)   { if wroteLetters.insert(l.lowercased()).inserted { check() } }
+    func spelledWord(_ w: String)   { if spelledWords.insert(w.lowercased()).inserted { check() } }
+    func rhymeGot()                 { rhymeRight += 1; check() }
+    func matchWon()                 { matchWins += 1; check() }
     /// A right answer out of several is the one unambiguous signal in the app.
     func answeredQuiz()             { quizRight += 1; check() }
 
@@ -93,7 +112,16 @@ final class Progress {
     }
 
     func has(_ id: String) -> Bool { awards.contains(id) }
-    func opened(_ w: World) -> Bool { worlds.contains(w.id) }
+    /// Dev builds let every theme be browsed without grinding out its award — but
+    /// ephemerally: the unlocks are NOT written into `worlds`, so they never leak into
+    /// the saved snapshot (a Release build on the same device still earns them honestly).
+    func opened(_ w: World) -> Bool {
+        #if DEBUG
+        return true
+        #else
+        return worlds.contains(w.id)
+        #endif
+    }
     func knows(word: String) -> Bool { readWords.contains(word.lowercased()) }
 
     // MARK: granting
@@ -121,13 +149,21 @@ final class Progress {
         if !finishedDecks.isEmpty { grant("a-deck") }
         if quizRight >= 1  { grant("first-quiz") }
         if quizRight >= 20 { grant("quiz-twenty") }
+        if !wroteLetters.isEmpty { grant("first-write") }
+        if wroteLetters.count >= c.letters.count { grant("all-written") }
+        if !spelledWords.isEmpty { grant("first-spell") }
+        if spelledWords.count >= 10 { grant("spell-ten") }
+        if rhymeRight >= 1  { grant("first-rhyme") }
+        if rhymeRight >= 10 { grant("rhyme-ten") }
+        if matchWins >= 1 { grant("first-match") }
+        if matchWins >= 5 { grant("match-five") }
         save()
     }
 
     func reset() {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
-        quizRight = 0
+        quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
         save()
     }
 }

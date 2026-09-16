@@ -14,31 +14,21 @@ struct HomeView: View {
                     NavigationLink { WorldView() } label: { WorldTile() }
                         .buttonStyle(.plain)
 
-                    VStack(alignment: .leading, spacing: 9) {
-                        Text("A GAME")
-                            .font(.andika(12, bold: true)).kerning(1.4)
-                            .foregroundStyle(Skin.live.onSkySoft)
-                        DeckTile(step: "?", tint: 0x3E8FA8, name: "Find It",
-                                 blurb: settings.quizReads ? "Read the word, find the picture"
-                                                           : "Hear the word, find the picture")
-                            { QuizView() }
-                    }
+                    // Ordered as a child grows into it, top to bottom: naming the
+                    // world, then first whole words, then sounding words out, then
+                    // writing them, and finally games that play with all of it.
 
                     VStack(alignment: .leading, spacing: 9) {
-                        Text("LEARNING TO READ")
+                        Text("FIRST IDEAS")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Skin.live.onSkySoft)
-
-                        DeckTile(step: "1", tint: 0xE0A038, name: "Letters",
-                                 blurb: "\(c.letters.count) sounds, A to Z or shuffled") { LettersView() }
-                        DeckTile(step: "2", tint: 0x2E7D6E, name: "Blending",
-                                 blurb: "Glue two sounds into one") { BlendingView() }
-                        DeckTile(step: "3", tint: 0x3B7EA1, name: "Words",
-                                 blurb: "\(c.words.count) words, getting harder") { WordsView() }
-                        DeckTile(step: "4", tint: 0x7A5EA8, name: "Sentences",
-                                 blurb: "\(c.sentences.count) sentences you can sound out") { SentencesView() }
-                        DeckTile(step: "5", tint: 0xC8433A, name: "By Heart",
-                                 blurb: "The rule-breakers") { HeartWordsView() }
+                        DeckTile(step: "•", tint: 0x4E8FBF, name: "Colours",
+                                 blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
+                        DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
+                                 blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
+                        DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
+                                 blurb: "Counting, one to \(c.numbers.words[settings.numberLevel - 1])",
+                                 dashed: true) { NumbersView() }
                     }
 
                     VStack(alignment: .leading, spacing: 9) {
@@ -53,16 +43,46 @@ struct HomeView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 9) {
-                        Text("FIRST IDEAS")
+                        Text("LEARNING TO READ")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Skin.live.onSkySoft)
-                        DeckTile(step: "•", tint: 0x4E8FBF, name: "Colours",
-                                 blurb: "\(c.colors.count) colours", dashed: true) { ColorsView() }
-                        DeckTile(step: "•", tint: 0x6FA368, name: "Shapes",
-                                 blurb: "\(c.shapes.count) shapes", dashed: true) { ShapesView() }
-                        DeckTile(step: "•", tint: 0xC98A3E, name: "Numbers",
-                                 blurb: "Counting, one to \(c.numbers.words[settings.numberLevel - 1])",
-                                 dashed: true) { NumbersView() }
+
+                        DeckTile(step: "1", tint: 0xE0A038, name: "Letters",
+                                 blurb: "\(c.letters.count) sounds, A to Z or shuffled") { LettersView() }
+                        DeckTile(step: "2", tint: 0x2E7D6E, name: "Blending",
+                                 blurb: "Two sounds together: ba, be, bi") { BlendingView() }
+                        DeckTile(step: "3", tint: 0x3E9077, name: "Word Blending",
+                                 blurb: "Build a family: at → cat, hat") { WordBlendingView() }
+                        DeckTile(step: "4", tint: 0x3B7EA1, name: "Words",
+                                 blurb: "\(c.words.count) words, getting harder") { WordsView() }
+                        DeckTile(step: "5", tint: 0x7A5EA8, name: "Sentences",
+                                 blurb: "\(c.sentences.count) sentences you can sound out") { SentencesView() }
+                        DeckTile(step: "6", tint: 0xC8433A, name: "By Heart",
+                                 blurb: "The rule-breakers") { HeartWordsView() }
+                    }
+
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("WRITE IT")
+                            .font(.andika(12, bold: true)).kerning(1.4)
+                            .foregroundStyle(Skin.live.onSkySoft)
+                        DeckTile(step: "✏️", tint: 0x7A5EA8, name: "Trace",
+                                 blurb: "Draw each letter with your finger") { TraceView() }
+                    }
+
+                    VStack(alignment: .leading, spacing: 9) {
+                        Text("GAMES")
+                            .font(.andika(12, bold: true)).kerning(1.4)
+                            .foregroundStyle(Skin.live.onSkySoft)
+                        DeckTile(step: "?", tint: 0x3E8FA8, name: "Find It",
+                                 blurb: settings.quizReads ? "Read the word, find the picture"
+                                                           : "Hear the word, find the picture")
+                            { QuizView() }
+                        DeckTile(step: "🧩", tint: 0xC98A3E, name: "Build a Word",
+                                 blurb: "Spell the picture from letters") { SpellView() }
+                        DeckTile(step: "🎵", tint: 0x7A5EA8, name: "Rhyme Time",
+                                 blurb: "Find the word that rhymes") { RhymeView() }
+                        DeckTile(step: "🃏", tint: 0x3E8FA8, name: "Match Up",
+                                 blurb: "Match each word to its picture") { MatchView() }
                     }
 
                     NavigationLink { ProfilePicker() } label: {
