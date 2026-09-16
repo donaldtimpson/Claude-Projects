@@ -76,8 +76,9 @@ function mapRun(run: string, table: Record<string, string>): string | null {
   return out;
 }
 
-export function texToPlain(input: string): string {
-  let s = input;
+// Rewrites the CONTENTS of one math span. Never sees a "$".
+function convertMathSpan(body: string): string {
+  let s = body;
   // \frac{a}{b} -> a/b   (also \tfrac, \dfrac)
   s = s.replace(/\\[tdc]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "$1/$2");
   // \text{...}, \mathrm{...}, \mathbb{R} -> inner
@@ -87,18 +88,28 @@ export function texToPlain(input: string): string {
     s = s.split(k).join(CMD[k]);
   }
   // sub/superscripts: _{...} / ^{...} and single-char _x / ^2
-  s = s.replace(/([_^])\{([^{}]*)\}/g, (m, kind, body) =>
-    mapRun(body, kind === "_" ? SUB : SUP) ?? body);
+  s = s.replace(/([_^])\{([^{}]*)\}/g, (m, kind, inner) =>
+    mapRun(inner, kind === "_" ? SUB : SUP) ?? inner);
   s = s.replace(/([_^])(\w)/g, (m, kind, ch) =>
     mapRun(ch, kind === "_" ? SUB : SUP) ?? ch);
   // spacing macros and sizing wrappers
   s = s.replace(/\\(?:left|right|quad|qquad|,|;|:|!)/g, " ");
   // any leftover \command (\tan, \sin, \log, \lim, ...) -> its bare name
-  s = s.replace(/\\([a-zA-Z]+)/g, "$1");
-  // drop the math delimiters last, then tidy whitespace
-  s = s.replace(/\$\$?/g, "");
-  return s.replace(/[ \t]{2,}/g, " ").trim();
+  return s.replace(/\\([a-zA-Z]+)/g, "$1");
 }
+
+// A "$" in this catalog is not always math: College Algebra writes currency
+// ("invests $5,000") and Computation Theory uses a bare "$" as a PDA
+// bottom-of-stack marker. So only a PAIRED span whose body actually carries a
+// LaTeX marker (\ _ ^ {) is rewritten — everything else is left verbatim.
+// Under-converting is safe here; eating a dollar sign changes what a question
+// means. Quiz text is authored in plain unicode anyway, so this is a backstop.
+export function texToPlain(input: string): string {
+  const out = input.replace(/\$\$?([^$]+)\$\$?/g, (whole, body: string) =>
+    /[\\_^{]/.test(body) ? convertMathSpan(body) : whole);
+  return out.replace(/[ \t]{2,}/g, " ").trim();
+}
+
 
 // The post body IS the question — YouTube's quiz module holds only the answer
 // choices + explanation, so the prompt goes in the caption, followed by a
