@@ -3,8 +3,9 @@
 Paste these into App Store Connect. Nothing here is binding; tweak freely.
 
 ## Names
-- **App name** (30 char max): `Sound It Out`
-- **Subtitle** (30 char max): `Phonics reading for kids` (24)
+- **App name** (30 char max): `Sound It Out: Phonics` — "Sound It Out" alone was taken on the store
+- **Subtitle** (30 char max): `Learn to read, sound by sound` (29) — avoids echoing "Phonics" in the name
+- **Home-screen name** (`CFBundleDisplayName`): `Sound It Out` (a subset of the store name, which Apple allows)
 - **Developer / publisher name:** `Timpson Lyceum` (the "by …" line; groups future apps)
 - **Icon:** speech-bubble `a` on amber (`icon/bubble.png`, set via `tools/set-icon.sh bubble`)
 
@@ -42,7 +43,8 @@ collected, nothing is uploaded, nothing is stored off your device — ever. If y
 turn on voice, speech is recognized on the device and never recorded or sent.
 
 ## Keywords (100 char max, comma-separated, no spaces after commas)
-`phonics,learn to read,reading,letters,tracing,sight words,spelling,abc,preschool,kindergarten,decodable`
+`learn to read,reading,letters,tracing,sight words,spelling,abc,preschool,kindergarten,decodable`
+(dropped "phonics" — it's already in the app name, so Apple indexes it; don't waste a keyword slot on it)
 
 ## URLs
 - **Support URL** (required): a simple page or the Lyceum site — e.g. https://timpson-lyceum.vercel.app
