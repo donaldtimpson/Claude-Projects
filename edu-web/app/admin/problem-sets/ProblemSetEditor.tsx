@@ -153,7 +153,7 @@ export default function ProblemSetEditor({
     const fd = new FormData();
     fd.set("id", ps.id);
     await deleteProblemSet(fd);
-    router.push("/admin/problem-sets");
+    router.push(`/admin/courses/${courseId}/problem-sets`);
   }
 
   return (

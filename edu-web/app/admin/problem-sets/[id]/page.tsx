@@ -72,7 +72,7 @@ export default async function EditProblemSetPage({
     <main className="max-w-4xl mx-auto px-6 py-10 space-y-6">
       <div>
         <Link
-          href={`/admin/problem-sets/course/${ps.course.id}`}
+          href={`/admin/courses/${ps.course.id}/problem-sets`}
           className="text-sm text-parchment-dim hover:text-parchment transition-colors"
         >
           ← {ps.course.title}

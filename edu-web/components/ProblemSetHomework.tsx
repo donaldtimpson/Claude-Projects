@@ -12,7 +12,7 @@ export type ProblemSetAssignment = {
   dueAt: Date | null;
   sectionId: string;
   sectionName: string;
-  sub: { url: string; score: number | null; feedback: string | null } | null;
+  sub: { url: string | null; score: number | null; feedback: string | null } | null;
 };
 
 /** One-line "this is homework" strip for the top of the page, anchored to the form below. */

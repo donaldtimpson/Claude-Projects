@@ -35,7 +35,7 @@ export async function createProblemSet(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   if (!courseId || !title) throw new Error("Course and title are required");
   const ps = await db.problemSet.create({ data: { courseId, title } });
-  revalidatePath("/admin/problem-sets");
+  revalidatePath(`/admin/courses/${courseId}/problem-sets`);
   // Straight into the editor (edit mode — it's empty) to author problems + solution.
   redirect(`/admin/problem-sets/${ps.id}?mode=edit`);
 }
@@ -154,6 +154,34 @@ export async function setVideoLessons(formData: FormData) {
   ]);
   revalidatePath(`/admin/courses/${video.courseId}`);
   revalidatePath(`/courses/${video.courseId}/${videoId}`);
+}
+
+// Replace the set of problem sets that cover a lecture (many-to-many via
+// ProblemSetVideo), edited from the lecture side. The inverse of
+// setProblemSetVideos — same join table, so a lecture and a problem set stay in
+// sync no matter which side you link from. Sent as repeated "problemSetId".
+export async function setVideoProblemSets(formData: FormData) {
+  await assertAdmin();
+  const videoId = String(formData.get("videoId") ?? "");
+  if (!videoId) throw new Error("Missing video");
+  const psIds = [...new Set(formData.getAll("problemSetId").map(String))].filter(Boolean);
+  const video = await db.video.findUnique({ where: { id: videoId }, select: { courseId: true } });
+  if (!video) throw new Error("Video not found");
+
+  // Only problem sets from this lecture's own course may be tagged.
+  const valid = await db.problemSet.findMany({
+    where: { id: { in: psIds }, courseId: video.courseId },
+    select: { id: true },
+  });
+
+  await db.$transaction([
+    db.problemSetVideo.deleteMany({ where: { videoId } }),
+    db.problemSetVideo.createMany({ data: valid.map((p) => ({ problemSetId: p.id, videoId })) }),
+  ]);
+
+  revalidatePath(`/admin/courses/${video.courseId}`);
+  revalidatePath(`/courses/${video.courseId}/${videoId}`);
+  for (const p of valid) revalidatePath(`/courses/${video.courseId}/problems/${p.id}`);
 }
 
 // ---- Assignments (section-level) ----

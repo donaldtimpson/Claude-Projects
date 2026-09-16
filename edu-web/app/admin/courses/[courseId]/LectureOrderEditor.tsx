@@ -15,6 +15,7 @@ export default function LectureOrderEditor({
   lectures: Lecture[];
 }) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [manual, setManual] = useState(initialManualOrder);
   const [items, setItems] = useState<Lecture[]>(lectures);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
@@ -70,35 +71,58 @@ export default function LectureOrderEditor({
   }
 
   return (
-    <section className="border border-crimson-700 rounded-lg p-4 space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-sm tracking-[0.15em] uppercase text-parchment-dim">
-            Lecture order
-          </h2>
-          <p className="text-xs text-parchment-dim mt-1">
-            {manual
-              ? "Manual — drag to arrange. YouTube Sync won't reorder; new lectures append to the end."
-              : "Chronological — follows the YouTube playlist and self-heals on every Sync."}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={toggleManual}
-          aria-pressed={manual}
-          className={`shrink-0 text-xs font-display tracking-wider uppercase px-2.5 py-1 rounded border transition-colors ${
-            manual
-              ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
-              : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
+    <section className="border border-crimson-700 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-crimson-800/40 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <svg
+            className={`w-3 h-3 shrink-0 text-gold-400 transition-transform ${open ? "rotate-90" : ""}`}
+            fill="currentColor"
+            viewBox="0 0 20 20"
+            aria-hidden="true"
+          >
+            <path d="M6 6l8 4-8 4V6z" />
+          </svg>
+          <span className="text-sm font-medium text-parchment">Lecture order</span>
+        </span>
+        <span
+          className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+            manual ? "bg-gold-900/30 border-gold-700 text-gold-300" : "border-crimson-700 text-parchment-dim"
           }`}
         >
-          {manual ? "✓ Manual order" : "Manual order"}
-        </button>
-      </div>
+          {manual ? "Manual" : "Chronological"}
+        </span>
+      </button>
 
-      {manual && (
-        <>
-          <ul className="space-y-1.5">
+      {open && (
+        <div className="px-4 pb-4 pt-1 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-parchment-dim">
+              {manual
+                ? "Manual — drag to arrange. YouTube Sync won't reorder; new lectures append to the end."
+                : "Chronological — follows the YouTube playlist and self-heals on every Sync."}
+            </p>
+            <button
+              type="button"
+              onClick={toggleManual}
+              aria-pressed={manual}
+              className={`shrink-0 text-xs font-display tracking-wider uppercase px-2.5 py-1 rounded border transition-colors ${
+                manual
+                  ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
+                  : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
+              }`}
+            >
+              {manual ? "✓ Manual order" : "Manual order"}
+            </button>
+          </div>
+
+          {manual && (
+            <>
+              <ul className="space-y-1.5">
             {items.map((lec, idx) => (
               <li
                 key={lec.id}
@@ -156,7 +180,9 @@ export default function LectureOrderEditor({
               <span className="text-red-400">Couldn&apos;t save order — try again.</span>
             )}
           </p>
-        </>
+            </>
+          )}
+        </div>
       )}
     </section>
   );

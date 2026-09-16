@@ -39,9 +39,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     return NextResponse.json({ ok: true, reordered: ids.length });
   }
 
-  const data: { isCurrent?: boolean; manualOrder?: boolean } = {};
+  const data: { isCurrent?: boolean; manualOrder?: boolean; lessonBank?: string | null } = {};
   if (typeof body.isCurrent === "boolean") data.isCurrent = body.isCurrent;
   if (typeof body.manualOrder === "boolean") data.manualOrder = body.manualOrder;
+  // Which bundled lesson-drill bank this course links lectures to. Only known
+  // banks (or null to clear) are accepted.
+  if ("lessonBank" in body) {
+    const allowed = new Set(["grammar"]);
+    if (body.lessonBank === null || (typeof body.lessonBank === "string" && allowed.has(body.lessonBank))) {
+      data.lessonBank = body.lessonBank;
+    } else {
+      return NextResponse.json({ error: "Unknown lessonBank" }, { status: 400 });
+    }
+  }
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });

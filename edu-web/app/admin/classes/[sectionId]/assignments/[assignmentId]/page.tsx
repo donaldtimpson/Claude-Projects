@@ -63,7 +63,7 @@ export default async function GradeAssignmentPage({
                   <p className="text-parchment">{e.user.name ?? "—"}</p>
                   <p className="text-xs text-parchment-dim">{e.user.email}</p>
                 </div>
-                {sub ? (
+                {sub?.url ? (
                   <a
                     href={sub.url}
                     target="_blank"
@@ -72,6 +72,8 @@ export default async function GradeAssignmentPage({
                   >
                     open submission ↗
                   </a>
+                ) : sub ? (
+                  <span className="text-sm text-parchment-dim">entered in gradebook</span>
                 ) : (
                   <span className="text-sm text-parchment-dim">not submitted</span>
                 )}

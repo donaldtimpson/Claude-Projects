@@ -116,13 +116,6 @@ export default function AssignForm({
             className={`w-20 ${inputCls}`}
           />
         </label>
-        {/* Lessons have no due date (pass any time) — only problem sets/papers do. */}
-        {kind === "problemSet" && (
-          <label className="text-sm text-parchment-dim flex items-center gap-2">
-            Due
-            <input name="dueAt" type="datetime-local" className={inputCls} />
-          </label>
-        )}
         <button
           type="submit"
           className="sm:ml-auto font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"

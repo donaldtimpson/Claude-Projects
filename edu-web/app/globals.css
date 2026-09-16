@@ -29,6 +29,13 @@
   --text-xs--line-height: 1.4;
 }
 
+/* Site-wide zoom: bump the root font size so every rem-based size — text AND
+   spacing — scales up together, like a baked-in cmd-+. Dial this one number to
+   taste (100% = browser default 16px). */
+html {
+  font-size: 112.5%; /* 18px */
+}
+
 /* Used by the achievement toast (components/Toast.tsx) and the drill feedback
    toast (components/drills/DrillPlayer.tsx). Opacity-only so it never clashes with
    a positioning transform like -translate-x-1/2. */

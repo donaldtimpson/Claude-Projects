@@ -1,62 +1,55 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import CurrentToggle from "../../CurrentToggle";
 import SyllabusEditor from "../../SyllabusEditor";
 import LectureRow from "./LectureRow";
 import LectureOrderEditor from "./LectureOrderEditor";
+import LessonBankToggle from "./LessonBankToggle";
 import { grammarLessonDrills } from "@/lib/drills/grammar";
 
-export default async function AdminCourseHub({ params }: { params: Promise<{ courseId: string }> }) {
+// Lectures tab of the course hub. Header, title, Current toggle and the tab
+// bar are provided by the surrounding layout.tsx.
+export default async function AdminCourseLectures({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = await params;
   const course = await db.course.findUnique({
     where: { id: courseId },
-    include: {
-      videos: { orderBy: { position: "asc" } },
-      _count: { select: { quizQuestions: true, linksFrom: true, linksTo: true } },
-    },
+    include: { videos: { orderBy: { position: "asc" } } },
   });
   if (!course) notFound();
 
   const videoIds = course.videos.map((v) => v.id);
-  const [allQuestions, allNotes, allLessonLinks] = await Promise.all([
+  const [allQuestions, allNotes, allLessonLinks, problemSets, allPsLinks] = await Promise.all([
     db.quizQuestion.findMany({ where: { videoId: { in: videoIds } }, orderBy: { position: "asc" } }),
     db.lectureNote.findMany({ where: { videoId: { in: videoIds } } }),
     db.videoLesson.findMany({ where: { videoId: { in: videoIds } }, select: { videoId: true, lessonSlug: true } }),
+    db.problemSet.findMany({
+      where: { courseId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, title: true, isDraft: true },
+    }),
+    db.problemSetVideo.findMany({
+      where: { videoId: { in: videoIds } },
+      select: { videoId: true, problemSetId: true },
+    }),
   ]);
 
+  const grammarEnabled = course.lessonBank === "grammar";
   const lessonOptions = grammarLessonDrills.map((d) => ({ slug: d.slug, title: d.title }));
   const linkedByVideo = new Map<string, string[]>();
   for (const vl of allLessonLinks) {
     linkedByVideo.set(vl.videoId, [...(linkedByVideo.get(vl.videoId) ?? []), vl.lessonSlug]);
   }
-
-  const testCount = course._count.quizQuestions;
-  const connectionCount = course._count.linksFrom + course._count.linksTo;
-
-  const actionBtn =
-    "text-sm text-gold-400 hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors";
+  const psByVideo = new Map<string, string[]>();
+  for (const pv of allPsLinks) {
+    psByVideo.set(pv.videoId, [...(psByVideo.get(pv.videoId) ?? []), pv.problemSetId]);
+  }
 
   return (
-    <main className="max-w-3xl mx-auto px-6 py-10 space-y-8">
-      <div>
-        <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
-          ← Dashboard
-        </Link>
-        <div className="flex items-start justify-between gap-4 mt-3">
-          <h1 className="text-2xl font-bold text-parchment">{course.title}</h1>
-        </div>
-
-        {/* Top-level course actions */}
-        <div className="flex flex-wrap items-center gap-3 mt-4">
-          <CurrentToggle courseId={course.id} initial={course.isCurrent} />
-          <Link href={`/admin/links/${course.id}`} className={actionBtn}>
-            Connections{connectionCount > 0 ? ` (${connectionCount})` : ""} →
-          </Link>
-          <Link href={`/admin/test/${course.id}`} className={actionBtn}>
-            Edit Test{testCount > 0 ? ` (${testCount})` : ""} →
-          </Link>
-        </div>
+    <div className="space-y-8">
+      <div className="flex items-center gap-3 flex-wrap">
+        <LessonBankToggle courseId={course.id} initial={course.lessonBank} />
+        <span className="text-xs text-parchment-dim">
+          Show the Grammar lesson-drill linker on this course&apos;s lectures.
+        </span>
       </div>
 
       {course.videos.length > 1 && (
@@ -95,10 +88,13 @@ export default async function AdminCourseHub({ params }: { params: Promise<{ cou
               initialQuestions={questions}
               lessons={lessonOptions}
               linkedLessons={linkedByVideo.get(video.id) ?? []}
+              grammarEnabled={grammarEnabled}
+              problemSets={problemSets}
+              linkedProblemSets={psByVideo.get(video.id) ?? []}
             />
           );
         })}
       </section>
-    </main>
+    </div>
   );
 }

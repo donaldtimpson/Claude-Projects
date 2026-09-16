@@ -3,34 +3,18 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getSectionGradebook } from "@/lib/gradebook";
 import { deleteAssignment, updateAssignment } from "@/lib/assignments";
-import { setGradeWeights, setManualMarks } from "@/lib/grades";
+import { setGradeWeights } from "@/lib/grades";
+import { removeEnrollment } from "@/lib/classes";
 import { grammarLessonDrills } from "@/lib/drills/grammar";
-import { getAcedLessonSlugsForUsers } from "@/lib/lessons";
 import AssignForm from "./AssignForm";
-
-const fmtDue = (d: Date | null) =>
-  d ? new Date(d).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "no due date";
-
-// Prefill a <input type="datetime-local"> — "YYYY-MM-DDTHH:mm" (round-trips with parseDueAt's new Date()).
-const toDueInput = (d: Date | null) => (d ? new Date(d).toISOString().slice(0, 16) : "");
+import Gradebook from "./Gradebook";
+import SectionNameEditor from "./SectionNameEditor";
+import CategoryManager from "./CategoryManager";
+import ProblemSetToggles from "./ProblemSetToggles";
 
 export const dynamic = "force-dynamic";
 
-const pct = (v: number | null) => (v === null ? "—" : `${Math.round(v)}%`);
-
-// Color a percentage: green ≥90, gold ≥70, red below (matches the attempt-review scheme).
-function pctClass(v: number | null): string {
-  if (v === null) return "text-parchment-dim";
-  if (v >= 90) return "text-green-400";
-  if (v >= 70) return "text-gold-300";
-  return "text-red-400";
-}
-
-export default async function GradebookPage({
-  params,
-}: {
-  params: Promise<{ sectionId: string }>;
-}) {
+export default async function GradebookPage({ params }: { params: Promise<{ sectionId: string }> }) {
   const { sectionId } = await params;
   const gb = await getSectionGradebook(sectionId);
   if (!gb) notFound();
@@ -50,32 +34,38 @@ export default async function GradebookPage({
       where: { sectionId },
       orderBy: { createdAt: "asc" },
       include: {
-        problemSet: { select: { id: true, title: true, solutionsPublic: true } },
+        problemSet: {
+          select: {
+            id: true,
+            title: true,
+            solutionsPublic: true,
+            isDraft: true,
+            videos: { select: { video: { select: { id: true, title: true, position: true } } } },
+          },
+        },
         _count: { select: { submissions: true } },
       },
     }),
   ]);
 
-  // Lesson-drill assignments are auto-graded by an ace — resolve their titles and
-  // which enrolled students have passed each (for the completion view below).
   const lessons = grammarLessonDrills.map((d) => ({ slug: d.slug, title: d.title }));
   const lessonTitle = new Map(lessons.map((l) => [l.slug, l.title]));
-  const assignedLessonSlugs = assignments.map((a) => a.lessonSlug).filter((s): s is string => Boolean(s));
-  const acedByUser =
-    assignedLessonSlugs.length > 0
-      ? await getAcedLessonSlugsForUsers(gb.students.map((s) => s.userId), assignedLessonSlugs)
-      : new Map<string, Set<string>>();
-
+  const assignmentTitle = (a: (typeof assignments)[number]) =>
+    a.title ?? a.problemSet?.title ?? lessonTitle.get(a.lessonSlug ?? "") ?? a.lessonSlug ?? "";
+  assignments.sort((x, y) =>
+    assignmentTitle(x).localeCompare(assignmentTitle(y), undefined, { numeric: true, sensitivity: "base" }),
+  );
   const w = gb.config.weights;
-  const weightTotal = w.attendance + w.quizzes + w.test + w.homework + w.midterm + w.final;
+  const customWeight = gb.customCategories.reduce((s, c) => s + c.weight, 0);
+  const weightTotal = w.attendance + w.quizzes + w.test + w.homework + w.midterm + w.final + customWeight;
 
   return (
-    <main className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+    <main className="max-w-6xl mx-auto px-6 py-10 space-y-6">
       <div>
         <Link href="/admin/classes" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
           ← Classes
         </Link>
-        <h1 className="text-2xl font-bold text-parchment mt-2">{gb.section.name}</h1>
+        <SectionNameEditor sectionId={sectionId} initialName={gb.section.name} />
         <p className="text-sm text-parchment-dim mt-1">
           <Link href={`/courses/${gb.section.course.id}`} className="hover:text-gold-300 transition-colors">
             {gb.section.course.title}
@@ -84,12 +74,6 @@ export default async function GradebookPage({
           {gb.totalQuizzes} quizzes{gb.hasTest ? " · final test" : ""}
         </p>
       </div>
-
-      <p className="text-xs text-parchment-dim bg-crimson-900 border border-crimson-700 rounded-lg px-4 py-3">
-        Attendance, quizzes, homework, and the final test are auto-tracked; midterm, final, and any
-        attendance override are entered by you. <strong>Grade</strong> is the weighted average over the
-        categories that have data so far (a running grade).
-      </p>
 
       {/* Grade weights */}
       <details className="bg-crimson-900 border border-crimson-700 rounded-xl px-4 py-3">
@@ -120,26 +104,23 @@ export default async function GradebookPage({
             </label>
           ))}
           <span className="text-parchment-dim self-center">|</span>
-          <label className="text-xs text-parchment-dim flex flex-col gap-1">
-            Midterm max
-            <input
-              name="midtermMax"
-              type="number"
-              min={1}
-              defaultValue={gb.config.midtermMax}
-              className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
-            />
-          </label>
-          <label className="text-xs text-parchment-dim flex flex-col gap-1">
-            Final max
-            <input
-              name="finalMax"
-              type="number"
-              min={1}
-              defaultValue={gb.config.finalMax}
-              className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
-            />
-          </label>
+          {(
+            [
+              ["midtermMax", "Midterm max", gb.config.midtermMax],
+              ["finalMax", "Final max", gb.config.finalMax],
+            ] as const
+          ).map(([key, label, val]) => (
+            <label key={key} className="text-xs text-parchment-dim flex flex-col gap-1">
+              {label}
+              <input
+                name={key}
+                type="number"
+                min={1}
+                defaultValue={val}
+                className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+              />
+            </label>
+          ))}
           <button
             type="submit"
             className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
@@ -147,109 +128,16 @@ export default async function GradebookPage({
             Save weights
           </button>
         </form>
+        <CategoryManager
+          sectionId={sectionId}
+          categories={gb.customCategories.map((c) => ({ id: c.id, name: c.name, weight: c.weight }))}
+        />
       </details>
 
       {gb.students.length === 0 ? (
-        <p className="text-parchment-dim text-sm">No students registered yet.</p>
+        <p className="text-parchment-dim text-sm">No students registered yet — share the join code from Classes.</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-crimson-700">
-          {/* One hidden form per student — inputs/buttons in the table reference it
-              by id (HTML `form` attribute) so a whole row saves together. */}
-          {gb.students.map((s) => (
-            <form key={`f-${s.userId}`} id={`marks-${s.userId}`} action={setManualMarks}>
-              <input type="hidden" name="sectionId" value={sectionId} />
-              <input type="hidden" name="userId" value={s.userId} />
-            </form>
-          ))}
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-crimson-900 text-left">
-                <th className="px-3 py-3 font-medium text-parchment-dim">Student</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Attendance</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Quizzes</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Homework</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Test</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Midterm</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Final</th>
-                <th className="px-3 py-3 font-medium text-parchment-dim whitespace-nowrap">Grade</th>
-                <th className="px-3 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-crimson-800">
-              {gb.students.map((s) => {
-                const f = `marks-${s.userId}`;
-                const inputCls =
-                  "w-14 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded px-2 py-1 text-parchment text-sm transition-colors";
-                return (
-                  <tr key={s.userId} className="bg-crimson-950/40 align-top">
-                    <td className="px-3 py-3">
-                      <p className="text-parchment">{s.name ?? "—"}</p>
-                      <p className="text-xs text-parchment-dim">{s.email}</p>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <span className={pctClass(s.attendancePct)}>{pct(s.attendancePct)}</span>
-                      <span className="text-parchment-dim text-xs"> ({s.watchedCount}/{gb.totalLectures})</span>
-                      <input
-                        form={f}
-                        name="attendanceOverride"
-                        type="number"
-                        min={0}
-                        max={100}
-                        defaultValue={s.attendanceOverride ?? ""}
-                        placeholder="ovr"
-                        className={`${inputCls} block mt-1`}
-                        title="Attendance override %"
-                      />
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <span className={pctClass(s.quizAvgPct)}>{pct(s.quizAvgPct)}</span>
-                      <span className="text-parchment-dim text-xs"> ({s.quizzesTaken}/{gb.totalQuizzes})</span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <span className={pctClass(s.hwPct)}>{pct(s.hwPct)}</span>
-                      <span className="text-parchment-dim text-xs"> ({s.hwGradedCount}/{gb.totalAssignments})</span>
-                    </td>
-                    <td className={`px-3 py-3 whitespace-nowrap ${pctClass(s.testPct)}`}>{pct(s.testPct)}</td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <input
-                        form={f}
-                        name="midtermScore"
-                        type="number"
-                        min={0}
-                        defaultValue={s.midtermScore ?? ""}
-                        className={inputCls}
-                      />
-                      <span className="text-parchment-dim text-xs"> /{gb.config.midtermMax}</span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <input
-                        form={f}
-                        name="finalScore"
-                        type="number"
-                        min={0}
-                        defaultValue={s.finalScore ?? ""}
-                        className={inputCls}
-                      />
-                      <span className="text-parchment-dim text-xs"> /{gb.config.finalMax}</span>
-                    </td>
-                    <td className={`px-3 py-3 whitespace-nowrap font-semibold ${pctClass(s.currentGrade)}`}>
-                      {pct(s.currentGrade)}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      <button
-                        form={f}
-                        type="submit"
-                        className="text-xs text-gold-400 hover:text-gold-300 transition-colors"
-                      >
-                        Save
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <Gradebook gb={gb} sectionId={sectionId} />
       )}
 
       {/* Assignments */}
@@ -257,15 +145,15 @@ export default async function GradebookPage({
         <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
           Homework Assignments
         </h2>
-
         <AssignForm sectionId={sectionId} problemSets={problemSets} videos={videos} lessons={lessons} />
         {problemSets.length === 0 && (
           <p className="text-xs text-parchment-dim">
-            No published problem sets for this course yet — you can still assign grammar lessons above, or{" "}
-            <Link href="/admin/problem-sets" className="text-gold-400 hover:text-gold-300 transition-colors">
-              create &amp; publish a problem set
+            <Link
+              href={`/admin/courses/${gb.section.course.id}/problem-sets`}
+              className="text-gold-400 hover:text-gold-300 transition-colors"
+            >
+              Create &amp; publish a problem set →
             </Link>
-            .
           </p>
         )}
 
@@ -275,42 +163,50 @@ export default async function GradebookPage({
               const isLesson = Boolean(a.lessonSlug);
               const title =
                 a.title ?? a.problemSet?.title ?? lessonTitle.get(a.lessonSlug ?? "") ?? a.lessonSlug ?? "Assignment";
-              const acedCount = isLesson
-                ? gb.students.filter((s) => acedByUser.get(s.userId)?.has(a.lessonSlug!)).length
-                : 0;
+              const linkedLectures = (a.problemSet?.videos ?? [])
+                .map((pv) => pv.video)
+                .sort((x, y) => x.position - y.position);
               return (
-                <li
-                  key={a.id}
-                  className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3"
-                >
+                <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-parchment truncate">{title}</p>
                       <p className="text-xs text-parchment-dim mt-0.5">
                         {isLesson
-                          ? `Lesson drill · auto-graded (ace = full credit) · ${a.points} pts · ${acedCount}/${gb.students.length} aced`
-                          : `${a.title && a.problemSet ? `${a.problemSet.title} · ` : ""}Due ${fmtDue(a.dueAt)} · ${a.points} pts · ${a._count.submissions}/${gb.students.length} submitted`}
+                          ? `Lesson drill · auto-graded (ace = full credit) · ${a.points} pts`
+                          : `${a.problemSet ? "Problem set" : "Paper"} · ${a.points} pts · ${a._count.submissions}/${gb.students.length} submitted`}
                       </p>
+                      {a.problemSet &&
+                        (linkedLectures.length > 0 ? (
+                          <p
+                            className="text-xs text-parchment-dim mt-0.5 truncate"
+                            title={linkedLectures.map((v) => v.title).join(", ")}
+                          >
+                            ↔ {linkedLectures.map((v) => v.title).join(", ")}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-amber-300 mt-0.5">⚠ no lecture linked</p>
+                        ))}
                     </div>
                     <div className="flex items-center gap-3 shrink-0 text-sm">
                       {a.problemSet && (
-                        <Link
-                          href={`/admin/problem-sets/${a.problemSet.id}`}
-                          className={
-                            a.problemSet.solutionsPublic
-                              ? "text-green-400 hover:text-green-300 transition-colors"
-                              : "text-amber-400 hover:text-amber-300 transition-colors"
-                          }
-                          title="Solution visibility is set on the problem set — click to change it"
-                        >
-                          {a.problemSet.solutionsPublic ? "solutions: public ↗" : "solutions: withheld ↗"}
-                        </Link>
+                        <>
+                          <ProblemSetToggles
+                            problemSetId={a.problemSet.id}
+                            isDraft={a.problemSet.isDraft}
+                            solutionsPublic={a.problemSet.solutionsPublic}
+                          />
+                          <Link
+                            href={`/admin/problem-sets/${a.problemSet.id}`}
+                            className="text-parchment-dim hover:text-gold-300 transition-colors"
+                            title="Edit problem set"
+                          >
+                            edit ↗
+                          </Link>
+                        </>
                       )}
                       {isLesson ? (
-                        <Link
-                          href={`/drills/${a.lessonSlug}`}
-                          className="text-gold-400 hover:text-gold-300 transition-colors"
-                        >
+                        <Link href={`/drills/${a.lessonSlug}`} className="text-gold-400 hover:text-gold-300 transition-colors">
                           open drill →
                         </Link>
                       ) : (
@@ -318,7 +214,7 @@ export default async function GradebookPage({
                           href={`/admin/classes/${sectionId}/assignments/${a.id}`}
                           className="text-gold-400 hover:text-gold-300 transition-colors"
                         >
-                          Grade →
+                          submissions →
                         </Link>
                       )}
                       <form action={deleteAssignment}>
@@ -329,19 +225,6 @@ export default async function GradebookPage({
                       </form>
                     </div>
                   </div>
-
-                  {isLesson && gb.students.length > 0 && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs border-t border-crimson-800 pt-2">
-                      {gb.students.map((s) => {
-                        const done = acedByUser.get(s.userId)?.has(a.lessonSlug!) ?? false;
-                        return (
-                          <span key={s.userId} className={done ? "text-green-400" : "text-parchment-dim/70"}>
-                            {done ? "✦" : "○"} {s.name ?? s.email}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
 
                   <details className="text-sm">
                     <summary className="cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
@@ -368,15 +251,6 @@ export default async function GradebookPage({
                           className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
                         />
                       </label>
-                      <label className="flex flex-col gap-1 text-xs text-parchment-dim">
-                        Due date (empty = none)
-                        <input
-                          name="dueAt"
-                          type="datetime-local"
-                          defaultValue={toDueInput(a.dueAt)}
-                          className="bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
-                        />
-                      </label>
                       <button
                         type="submit"
                         className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
@@ -388,6 +262,34 @@ export default async function GradebookPage({
                 </li>
               );
             })}
+          </ul>
+        )}
+      </section>
+
+      {/* Roster */}
+      <section className="space-y-3 pt-4">
+        <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          Roster
+        </h2>
+        {gb.students.length === 0 ? (
+          <p className="text-xs text-parchment-dim">No students registered yet.</p>
+        ) : (
+          <ul className="divide-y divide-crimson-800 border border-crimson-700 rounded-xl overflow-hidden">
+            {gb.students.map((s) => (
+              <li key={s.userId} className="flex items-center justify-between gap-4 px-4 py-2.5 bg-crimson-900/40">
+                <div className="min-w-0">
+                  <p className="text-sm text-parchment truncate">{s.name ?? "—"}</p>
+                  <p className="text-xs text-parchment-dim truncate">{s.email}</p>
+                </div>
+                <form action={removeEnrollment} className="shrink-0">
+                  <input type="hidden" name="sectionId" value={sectionId} />
+                  <input type="hidden" name="userId" value={s.userId} />
+                  <button type="submit" className="text-xs text-parchment-dim hover:text-red-400 transition-colors">
+                    remove
+                  </button>
+                </form>
+              </li>
+            ))}
           </ul>
         )}
       </section>

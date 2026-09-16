@@ -20,6 +20,7 @@ model Course {
   videoCount        Int            @default(0)
   isCurrent         Boolean        @default(false)
   manualOrder       Boolean        @default(false) // true = lecture order is hand-arranged; YouTube sync won't reorder
+  lessonBank        String?        // which bundled lesson-drill bank this course links lectures to (e.g. "grammar"); null = none, hides the lesson linker
   publishedAt       DateTime?
   syncedAt          DateTime?
   createdAt         DateTime       @default(now())
@@ -108,6 +109,7 @@ model Video {
   assignments     Assignment[]
   problemSets     ProblemSetVideo[]
   lessons         VideoLesson[]
+  attendance      Attendance[]
 }
 
 model LectureNote {
@@ -174,6 +176,8 @@ model User {
   drillAttempts   DrillAttempt[]
   enrollments     Enrollment[]
   submissions     Submission[]
+  attendance      Attendance[]
+  gradeScores     GradeScore[]
   mobileRefreshTokens MobileRefreshToken[]
 }
 
@@ -223,8 +227,71 @@ model Section {
   course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
   enrollments Enrollment[]
   assignments Assignment[]
+  attendance  Attendance[]
+  gradeCategories GradeCategory[]
 
   @@index([courseId])
+}
+
+// Instructor-defined grade category for a section (e.g. "Tests" — in-class tests,
+// distinct from the auto Course Test). Each holds any number of items (columns).
+// Its weight sits alongside the built-in weights in the running grade.
+model GradeCategory {
+  id        String      @id @default(cuid())
+  sectionId String
+  name      String
+  weight    Int         @default(10)
+  position  Int         @default(0)
+  section   Section     @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  items     GradeItem[]
+
+  @@index([sectionId])
+}
+
+// One graded column within a custom category (e.g. "Test 1", max 100).
+model GradeItem {
+  id         String        @id @default(cuid())
+  categoryId String
+  name       String
+  maxPoints  Int           @default(100)
+  position   Int           @default(0)
+  category   GradeCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  scores     GradeScore[]
+
+  @@index([categoryId])
+}
+
+// A student's score on one custom-category item. No row = blank (uncounted); a
+// stored 0 counts. Mirrors the homework rule.
+model GradeScore {
+  itemId String
+  userId String
+  score  Int
+
+  item   GradeItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, userId])
+  @@index([userId])
+}
+
+// Per-lecture class attendance for one section. One row per (section, lecture,
+// student); no row = unmarked (uncounted). status ∈ present|absent|late|excused.
+// Replaces the old watch-derived attendance in the gradebook.
+model Attendance {
+  sectionId String
+  videoId   String
+  userId    String
+  status    String
+  markedAt  DateTime @default(now())
+
+  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([sectionId, videoId, userId])
+  @@index([userId])
+  @@index([sectionId])
 }
 
 // A student's registration in a Section (the roster). Created when a student enters
@@ -337,7 +404,7 @@ model Assignment {
 model Submission {
   assignmentId String
   userId       String
-  url          String
+  url          String?   // student's pasted link; null when the score is instructor-entered in the gradebook
   submittedAt  DateTime  @default(now())
   score        Int?
   feedback     String?

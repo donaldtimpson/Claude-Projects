@@ -80,6 +80,16 @@ export async function createSection(formData: FormData) {
   revalidatePath("/admin/classes");
 }
 
+export async function renameSection(formData: FormData) {
+  await assertAdmin();
+  const sectionId = String(formData.get("sectionId") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
+  if (!sectionId || !name) throw new Error("Missing section or name");
+  await db.section.update({ where: { id: sectionId }, data: { name } });
+  revalidatePath("/admin/classes");
+  revalidatePath(`/admin/classes/${sectionId}`);
+}
+
 export async function rotateJoinCode(formData: FormData) {
   await assertAdmin();
   const sectionId = String(formData.get("sectionId") ?? "");
