@@ -10,10 +10,14 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  // Close the drawer whenever we navigate to a new page.
-  useEffect(() => {
+  // Close the drawer whenever we navigate to a new page. Done during render (React's
+  // "reset state when a value changes" pattern) rather than in an effect, which avoids
+  // the cascading render that a synchronous setState-in-effect triggers.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Close on Escape, and lock background scroll while open.
   useEffect(() => {
@@ -76,6 +80,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
             <DrawerLink href="/map" label="Course Map" active={isActive("/map")} />
             <DrawerLink href="/drills" label="Practice Drills" active={isActive("/drills")} />
             <DrawerLink href="/leaderboard" label="Hall of Scholars" active={isActive("/leaderboard")} />
+            <DrawerLink href="/jr" label="Lyceum Jr" active={isActive("/jr")} />
             {session?.user && (
               <DrawerLink href="/dashboard" label="My Progress" active={isActive("/dashboard")} />
             )}
