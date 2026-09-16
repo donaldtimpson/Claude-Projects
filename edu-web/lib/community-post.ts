@@ -47,6 +47,59 @@ export type BuildOptions = {
   siteUrl?: string;
 };
 
+// ---- LaTeX -> plain text -------------------------------------------------
+// Quiz prompts/options/explanations are authored with KaTeX for the website.
+// YouTube community posts are PLAIN TEXT — a "$x_1$" would post literally, so
+// math is flattened to unicode here (and only here; the DB keeps the LaTeX).
+const SUB: Record<string, string> = { "0":"₀","1":"₁","2":"₂","3":"₃","4":"₄","5":"₅","6":"₆","7":"₇","8":"₈","9":"₉","+":"₊","-":"₋","=":"₌","(":"₍",")":"₎","a":"ₐ","e":"ₑ","h":"ₕ","i":"ᵢ","j":"ⱼ","k":"ₖ","l":"ₗ","m":"ₘ","n":"ₙ","o":"ₒ","p":"ₚ","r":"ᵣ","s":"ₛ","t":"ₜ","u":"ᵤ","v":"ᵥ","x":"ₓ" };
+const SUP: Record<string, string> = { "0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","+":"⁺","-":"⁻","=":"⁼","(":"⁽",")":"⁾","n":"ⁿ","i":"ⁱ" };
+const CMD: Record<string, string> = {
+  "\\cdot":"·", "\\times":"×", "\\div":"÷", "\\pm":"±", "\\mp":"∓",
+  "\\neq":"≠", "\\ne":"≠", "\\leq":"≤", "\\le":"≤", "\\geq":"≥", "\\ge":"≥",
+  "\\approx":"≈", "\\equiv":"≡", "\\sim":"~", "\\infty":"∞",
+  "\\to":"→", "\\rightarrow":"→", "\\Rightarrow":"⇒", "\\leftarrow":"←", "\\mapsto":"↦",
+  "\\in":"∈", "\\notin":"∉", "\\subset":"⊂", "\\subseteq":"⊆", "\\cup":"∪", "\\cap":"∩",
+  "\\emptyset":"∅", "\\forall":"∀", "\\exists":"∃", "\\sum":"∑", "\\prod":"∏", "\\int":"∫",
+  "\\sqrt":"√", "\\partial":"∂", "\\nabla":"∇", "\\dots":"…", "\\cdots":"…", "\\ldots":"…",
+  "\\alpha":"α","\\beta":"β","\\gamma":"γ","\\delta":"δ","\\epsilon":"ε","\\theta":"θ",
+  "\\lambda":"λ","\\mu":"μ","\\pi":"π","\\rho":"ρ","\\sigma":"σ","\\tau":"τ","\\phi":"φ",
+  "\\omega":"ω","\\Delta":"Δ","\\Sigma":"Σ","\\Omega":"Ω",
+};
+
+function mapRun(run: string, table: Record<string, string>): string | null {
+  let out = "";
+  for (const ch of run) {
+    const m = table[ch];
+    if (!m) return null; // not fully representable — leave the run alone
+    out += m;
+  }
+  return out;
+}
+
+export function texToPlain(input: string): string {
+  let s = input;
+  // \frac{a}{b} -> a/b   (also \tfrac, \dfrac)
+  s = s.replace(/\\[tdc]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, "$1/$2");
+  // \text{...}, \mathrm{...}, \mathbb{R} -> inner
+  s = s.replace(/\\(?:text|mathrm|mathbf|mathbb|operatorname)\s*\{([^{}]*)\}/g, "$1");
+  // named commands (longest first so \leq beats \le)
+  for (const k of Object.keys(CMD).sort((a, b) => b.length - a.length)) {
+    s = s.split(k).join(CMD[k]);
+  }
+  // sub/superscripts: _{...} / ^{...} and single-char _x / ^2
+  s = s.replace(/([_^])\{([^{}]*)\}/g, (m, kind, body) =>
+    mapRun(body, kind === "_" ? SUB : SUP) ?? body);
+  s = s.replace(/([_^])(\w)/g, (m, kind, ch) =>
+    mapRun(ch, kind === "_" ? SUB : SUP) ?? ch);
+  // spacing macros and sizing wrappers
+  s = s.replace(/\\(?:left|right|quad|qquad|,|;|:|!)/g, " ");
+  // any leftover \command (\tan, \sin, \log, \lim, ...) -> its bare name
+  s = s.replace(/\\([a-zA-Z]+)/g, "$1");
+  // drop the math delimiters last, then tidy whitespace
+  s = s.replace(/\$\$?/g, "");
+  return s.replace(/[ \t]{2,}/g, " ").trim();
+}
+
 // The post body IS the question — YouTube's quiz module holds only the answer
 // choices + explanation, so the prompt goes in the caption, followed by a
 // curiosity-gap CTA: pose the question, then dangle the "why" to drive the click.
@@ -88,27 +141,29 @@ export async function buildQuizPosts(
   const stepMs = intervalHours * 3_600_000;
 
   const posts: QuizPost[] = questions.map((q, i) => {
-    const options = (q.options as unknown[]).map((o) => String(o));
+    const prompt = texToPlain(q.prompt);
+    const options = (q.options as unknown[]).map((o) => texToPlain(String(o)));
+    const explanation = texToPlain(q.explanation ?? "");
     if (options.length < QUIZ_MIN_OPTIONS || options.length > QUIZ_MAX_OPTIONS) {
       throw new Error(`Q${i + 1}: ${options.length} options — YouTube quiz posts allow ${QUIZ_MIN_OPTIONS}–${QUIZ_MAX_OPTIONS}.`);
     }
     if (q.correctIndex < 0 || q.correctIndex >= options.length) {
       throw new Error(`Q${i + 1}: correctIndex ${q.correctIndex} out of range for ${options.length} options.`);
     }
-    if (q.prompt.length > SOFT_QUESTION_MAX) warnings.push(`Q${i + 1} prompt is ${q.prompt.length} chars (soft cap ${SOFT_QUESTION_MAX})`);
+    if (prompt.length > SOFT_QUESTION_MAX) warnings.push(`Q${i + 1} prompt is ${prompt.length} chars (soft cap ${SOFT_QUESTION_MAX})`);
     options.forEach((o, j) => {
       if (o.length > SOFT_OPTION_MAX) warnings.push(`Q${i + 1} option ${j + 1} is ${o.length} chars (soft cap ${SOFT_OPTION_MAX})`);
     });
-    const cap = caption(q.prompt, url);
+    const cap = caption(prompt, url);
     if (cap.length > SOFT_CAPTION_MAX) warnings.push(`Q${i + 1} caption is ${cap.length} chars (soft cap ${SOFT_CAPTION_MAX})`);
 
     return {
       index: i,
       caption: cap,
-      question: q.prompt,
+      question: prompt,
       options,
       correctIndex: q.correctIndex,
-      explanation: q.explanation ?? "",
+      explanation,
       scheduledFor: new Date(startMs + i * stepMs),
     };
   });
