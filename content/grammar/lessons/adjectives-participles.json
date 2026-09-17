@@ -5,17 +5,18 @@
   "slides": [
     {
       "type": "title",
-      "title": "Adjectives & Participles",
-      "subtitle": "Lesson 4 · Describing Words"
+      "title": "Adjectives, Articles & Participles",
+      "subtitle": "Lesson 4 · Describing & Defining Words"
     },
     {
       "type": "concept",
       "heading": "Oral Lesson",
       "bullets": [
-        "Some words describe a noun by telling its quality:  white chalk, sour apples, good boys.",
-        "Other words do not describe — they point out or count:  this book, that boy, two apples.",
-        "Both kinds are joined to a noun to change or limit its meaning.",
-        "Any word that describes a noun, points it out, or counts it is called an Adjective."
+        "In “The rose is red,” red is predicated of the rose by the copula is (Lesson 3).",
+        "Drop the copula and join it straight to the noun:  “a red rose.” Now red is not asserted — it limits the noun.",
+        "So a quality-word can be predicated of a noun, or attached to it directly.",
+        "Other words name no quality — they only point out or number:  this book, two apples.",
+        "Any word joined to a noun to describe, point out, or number it is an Adjective."
       ]
     },
     {
@@ -36,13 +37,14 @@
         "A Descriptive Adjective describes a noun by giving it a quality:  good, white, brave, ripe.",
         "A Definitive Adjective points out or counts a noun, without giving a quality:  this, that, two, few.",
         "Every quality-word is descriptive; pointing-out and number words are definitive.",
-        "An adjective made from a proper noun keeps its capital:  American cotton, French customs."
+        "Most adjectives derived from proper nouns should commence with capitals; as, American cotton, French customs."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Descriptive or Definitive?",
       "instruction": "Tell whether each adjective is descriptive (gives a quality) or definitive (points out or counts).",
+      "answerInline": true,
       "items": [
         "ripe",
         "four",
@@ -51,7 +53,9 @@
         "smooth",
         "either",
         "many",
-        "beautiful"
+        "beautiful",
+        "sundry",
+        "diligent"
       ],
       "answers": [
         "descriptive",
@@ -60,6 +64,8 @@
         "definitive",
         "descriptive",
         "definitive",
+        "definitive",
+        "descriptive",
         "definitive",
         "descriptive"
       ]
@@ -68,17 +74,18 @@
       "type": "concept",
       "heading": "The Article",
       "bullets": [
-        "A, an, and the are special definitive adjectives called Articles.",
-        "“A horse” means any one horse; “the horse” means one particular horse.",
-        "The is the Definite Article — it points out a definite object.",
-        "A / An is the Indefinite Article — it points out in a general way.",
-        "Use a before a consonant sound, an before a vowel sound:  a book, an apple, an hour, a university."
+        "A, an, and the are definitive adjectives called Articles.",
+        "The is the Definite Article — one particular object (“the horse”); a / an, the Indefinite Article — any one of a kind (“a horse”).",
+        "A and an are different forms of the same word: a before a subvocal or aspirate, an before a vocal.",
+        "A vocal is a vowel sound; a subvocal (b, d, g …) and an aspirate (p, t, h …) are consonant sounds — so an before a vowel, a before a consonant.",
+        "The sound decides, not the letter:  an hour  ·  a university  ·  an heir  ·  a European traveler."
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — A or An?",
       "instruction": "Choose a or an for each word — listen to its first sound, not just its first letter.",
+      "answerInline": true,
       "items": [
         "egg",
         "hour",
@@ -87,13 +94,17 @@
         "eagle",
         "house",
         "orange",
-        "university"
+        "university",
+        "heir",
+        "ewe"
       ],
       "answers": [
         "an",
         "an",
         "a",
         "an",
+        "an",
+        "a",
         "an",
         "a",
         "an",
@@ -104,10 +115,10 @@
       "type": "concept",
       "heading": "Common Mistakes with Adjectives",
       "bullets": [
-        "Use a before a consonant sound, an before a vowel sound:  “a banana,” “an apple.”",
-        "The sound is what matters, not the letter:  “an hour” (silent h), “a unicorn” (a “yoo” sound).",
-        "Do not use these or those before a singular noun:  “this kind of shoe,” not “these kind.”",
-        "Do not say them for those:  “those puppies,” not “them puppies.”"
+        "Some words surprise you — go by sound: a one-way street (“w” sound), an honest man (silent h), an X-ray (“eks”), a ukulele (“yoo”).",
+        "Use this / that with a singular noun, these / those with a plural: “this kind of shoe,” not “these kind.”",
+        "Say those before a noun, never them: “those puppies,” not “them puppies.”",
+        "Don’t slip an extra a into “kind of” or “sort of”: “that kind of book,” not “that kind of a book.”"
       ]
     },
     {
@@ -136,9 +147,66 @@
       ]
     },
     {
+      "type": "concept",
+      "heading": "Commas with Adjectives",
+      "bullets": [
+        "When two or more adjectives describe the same noun in the same way, separate them with commas:  a cold, dreary, endless night.",
+        "Never put a comma between the last adjective and its noun:  a kind, gentle man  (no comma after gentle).",
+        "Test — coordinate adjectives can take “and” between them or be reversed:  “a cold and dreary night”;  “a dreary, cold night.”",
+        "If you can’t insert “and” or reverse them, they aren’t coordinate but cumulative — so no commas:  “a little old wooden chair” (not “a wooden old little chair”)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Comma or No Comma?",
+      "instruction": "Add a comma between coordinate adjectives (those you could join with “and”); use none between cumulative adjectives. Write each phrase correctly.",
+      "items": [
+        "a cold dreary night",
+        "a big black dog",
+        "a brave honest man",
+        "an old stone bridge",
+        "a dark stormy sky",
+        "a tall wooden fence",
+        "a kind gentle teacher",
+        "a red silk dress"
+      ],
+      "answers": [
+        "a cold, dreary night",
+        "a big black dog  (no comma)",
+        "a brave, honest man",
+        "an old stone bridge  (no comma)",
+        "a dark, stormy sky",
+        "a tall wooden fence  (no comma)",
+        "a kind, gentle teacher",
+        "a red silk dress  (no comma)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "The Order of Cumulative Adjectives",
+      "bullets": [
+        "Recall “a little old wooden chair” — cumulative adjectives can’t be reordered. They follow a fixed sequence: OSASCOMP.",
+        "Opinion · Size · Age · Shape · Color · Origin · Material · Purpose — then the noun.",
+        "“a lovely little old round red French wooden writing desk” — each adjective in its slot.",
+        "Reorder them and it sounds foreign:  “a wooden red little lovely desk.”",
+        "A strong tendency, not a strict rule."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson",
+      "bullets": [
+        "James saw the man plowing.",
+        "The words we know fall into place: James and man are nouns; saw is the verb — transitive, with man as its object.",
+        "But what is plowing? Is it describing the man like an adjective, or telling an action like a verb?",
+        "Every word should fit one part of speech — but this one seems to be two at once.",
+        "Because it partakes of the properties of two parts of speech, it is called a Participle, which means “partaking of.”"
+      ]
+    },
+    {
       "type": "definition",
       "term": "Participle",
-      "text": "A Participle is a word made from a verb that also works like an adjective.",
+      "text": "A Participle is a word derived from a verb, and partakes of the properties of a verb, and of an adjective or a noun.",
       "examples": [
         "James saw the man plowing.  (plowing tells what he did, and describes him)",
         "The boy is writing.  (the action is going on)",
@@ -152,7 +220,7 @@
       "bullets": [
         "Present Participle — the action is going on; it ends in -ing:  loving, writing, twinkling.",
         "Perfect Participle — the action is finished; it ends in -ed, -d, -n, -en, or -t:  loved, written, built.",
-        "Compound Participle — the action finished before the main verb; formed with having:  having learned.",
+        "Compound Participle — the action finished before the main verb; formed with having:  having learned, having been called.",
         "A present participle can even describe like an adjective:  “twinkling stars,” “a running brook.”"
       ]
     },
@@ -187,7 +255,7 @@
         "Having eaten, the dog slept by the fire.",
         "The children ran home, shouting with joy.",
         "The broken cup lay upon the floor.",
-        "Having rested awhile, we set out again."
+        "Having been dismissed, the class hurried out."
       ],
       "answers": [
         "whistling — present",
@@ -195,7 +263,7 @@
         "having eaten — compound",
         "shouting — present",
         "broken — perfect",
-        "having rested — compound"
+        "having been dismissed — compound"
       ]
     },
     {
@@ -212,14 +280,14 @@
     {
       "type": "practice",
       "heading": "Practice — Participle or Participial Noun?",
-      "instruction": "Tell whether the verb-word describes (participle) or names an action (participial noun).",
+      "instruction": "Tell whether the -ing word names an action (participial noun) or describes (participle). Watch the pairs — the same word can do either.",
       "items": [
-        "I like skating.",
-        "The boy, laughing, ran off.",
-        "Miss Gray teaches writing.",
-        "Look at Dash playing.",
-        "He was in danger of losing his life.",
-        "The note, written in haste, arrived."
+        "Swimming is good exercise.",
+        "The boy, swimming across, grew tired.",
+        "Reading improves the mind.",
+        "She sat by the fire, reading.",
+        "He grew tired of waiting.",
+        "The hunters pressed on, hoping for game."
       ],
       "answers": [
         "participial noun",
@@ -228,6 +296,16 @@
         "participle",
         "participial noun",
         "participle"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Participles & the 8 Parts of Speech",
+      "bullets": [
+        "A participle is made from a verb — but in a sentence it settles into one of three parts of speech.",
+        "Participle (verb): does the verb’s work, telling an action:  Look at Dash playing.",
+        "Participial adjective: does the adjective’s work, describing a noun:  A rippling stream flows by the cottage.",
+        "Participial noun: does the noun’s work, naming an action:  Playing is fun."
       ]
     },
     {
@@ -246,7 +324,7 @@
         "Descriptive and definitive.",
         "A, an, or the — a definitive adjective that points out a noun.",
         "Before a word that begins with a vowel sound.",
-        "A word made from a verb that also works like an adjective.",
+        "A word derived from a verb, partaking of a verb and of an adjective or a noun.",
         "Present, perfect, and compound.",
         "A verb-made word used as the name of an action."
       ]

@@ -18,6 +18,18 @@ import {
 export type DrillMeta = { slug: string; title: string; blurb: string; icon: string };
 export type CategoryMeta = { slug: string; title: string; icon: string; drills: DrillMeta[] };
 
+// Printable worksheet generators — standalone tool pages (not interactive DrillDefs),
+// so they live here rather than in the drill registry. Listed in the hub for discovery.
+type WorksheetMeta = { href: string; title: string; blurb: string; icon: string };
+const WORKSHEETS: WorksheetMeta[] = [
+  {
+    href: "/worksheets/arithmetic",
+    title: "Arithmetic Worksheets",
+    blurb: "Printable +, −, ×, ÷ drills with an answer key — choose the operations and number range.",
+    icon: "🖨️",
+  },
+];
+
 // Bold + gold the case-insensitive matches of `query`, so the user sees why a result matched.
 function Highlight({ text, query }: { text: string; query: string }) {
   const q = query.trim();
@@ -59,6 +71,25 @@ function DrillRow({ d, aced, query = "" }: { d: DrillMeta; aced?: boolean; query
         {aced && (
           <span className="block text-xs font-semibold text-gold-300 mt-1">✦ Aced</span>
         )}
+      </span>
+    </Link>
+  );
+}
+
+function WorksheetRow({ w, query = "" }: { w: WorksheetMeta; query?: string }) {
+  return (
+    <Link
+      href={w.href}
+      className="flex items-start gap-3 bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-400 transition-colors"
+    >
+      <span className="text-3xl leading-none shrink-0" aria-hidden>{w.icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-display text-lg text-parchment">
+          <Highlight text={w.title} query={query} />
+        </span>
+        <span className="block text-sm text-parchment-dim">
+          <Highlight text={w.blurb} query={query} />
+        </span>
       </span>
     </Link>
   );
@@ -113,6 +144,9 @@ export default function DrillsHub({
         c.drills.filter((d) => `${d.title} ${d.blurb} ${c.title}`.toLowerCase().includes(q)),
       )
     : [];
+  const matchingWorksheets = q
+    ? WORKSHEETS.filter((w) => `${w.title} ${w.blurb} worksheet printable`.toLowerCase().includes(q))
+    : [];
 
   return (
     <div className="space-y-8">
@@ -129,7 +163,7 @@ export default function DrillsHub({
 
       {q ? (
         <div className="space-y-8">
-          {matchingCategories.length === 0 && matchingDrills.length === 0 && (
+          {matchingCategories.length === 0 && matchingDrills.length === 0 && matchingWorksheets.length === 0 && (
             <p className="text-parchment-dim py-10 text-center">No matches for “{query}”.</p>
           )}
 
@@ -161,6 +195,19 @@ export default function DrillsHub({
                 {matchingDrills.map((d) => (
                   <li key={d.slug}>
                     <DrillRow d={d} aced={aced.has(d.slug)} query={query} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {matchingWorksheets.length > 0 && (
+            <section className="space-y-4">
+              <SectionHeader>Printable Worksheets</SectionHeader>
+              <ul className="space-y-3">
+                {matchingWorksheets.map((w) => (
+                  <li key={w.href}>
+                    <WorksheetRow w={w} query={query} />
                   </li>
                 ))}
               </ul>
@@ -204,6 +251,17 @@ export default function DrillsHub({
                         : undefined
                     }
                   />
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="space-y-4">
+            <SectionHeader>Printable Worksheets</SectionHeader>
+            <ul className="space-y-3">
+              {WORKSHEETS.map((w) => (
+                <li key={w.href}>
+                  <WorksheetRow w={w} />
                 </li>
               ))}
             </ul>
