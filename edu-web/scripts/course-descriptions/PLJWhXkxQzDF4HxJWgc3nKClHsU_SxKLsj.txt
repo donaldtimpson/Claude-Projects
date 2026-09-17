@@ -1,0 +1,8 @@
+An introductory Discrete Mathematics course — the foundations a proof-based mathematical education is built on.
+
+We cover logic and the methods of proof, sets and functions, sequences, induction and recursion, counting and combinatorics, relations, and an introduction to graphs and trees.
+
+This is an earlier offering; see Discrete Math (2025) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3rk200pfynpw3d6jf5ps

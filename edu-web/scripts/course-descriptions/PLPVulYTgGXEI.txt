@@ -1,0 +1,6 @@
+An introductory English grammar course following Thomas W. Harvey's classic "Elementary Grammar and Composition" (1880).
+
+We start from the foundations — what language is made of, and how words come together into sentences — and then take the parts of speech one at a time: the noun, the verb, the adjective, the pronoun, and on through the rest, with sentence analysis and composition worked in throughout. Grammar is taught rigorously here, as a system of notions and relations rather than a list of rules to memorize.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmtacet7o0000ju04fnu0xdnc

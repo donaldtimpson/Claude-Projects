@@ -1,0 +1,6 @@
+A high-school-level Geometry course. We briefly cover Propositional and Predicate Logic with Identity and some basic Set Theory, and then begin Geometry proper using Hilbert's axioms.
+
+This is an earlier offering; see Geometry (2024) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t379y00a4ynpwwsxv2rgg

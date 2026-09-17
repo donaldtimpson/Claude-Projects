@@ -1,0 +1,8 @@
+A college-level Discrete Mathematics course.
+
+Starting from logic and careful reasoning, we work through methods of proof, sets and functions, sequences and induction, counting and combinatorics, relations, and graph theory — the toolkit for the rest of a mathematics education.
+
+This is an earlier offering; see Discrete Math (2025) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3mgt00lkynpw11dxaxby

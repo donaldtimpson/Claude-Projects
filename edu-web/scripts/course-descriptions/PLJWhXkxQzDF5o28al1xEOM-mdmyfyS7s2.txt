@@ -1,0 +1,6 @@
+A standard college-level University Physics I course, covering Newtonian and classical mechanics.
+
+Starting from units and vectors, we work through motion in one, two, and three dimensions, Newton's laws and their applications, work and kinetic energy, potential energy and conservation, momentum and collisions, rotational dynamics and angular momentum, static equilibrium, gravitation, and fluid mechanics, and then on into periodic motion, mechanical waves and sound, and thermodynamics. Calculus-based, with worked problems throughout.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t2tbl0000ynpwv9uoz9r2

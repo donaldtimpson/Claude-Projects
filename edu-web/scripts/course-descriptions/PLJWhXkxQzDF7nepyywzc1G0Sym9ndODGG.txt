@@ -1,0 +1,6 @@
+A first course in formal Logic — Propositional and First-Order Predicate Logic with Identity.
+
+We work through logical operators and truth tables, tautologies and the theory of inference, methods of proof including indirect proof, and then terms, predicates, quantifiers, and identity, with axiomatic systems as worked examples. No prior background is assumed. (The course proper begins at Lecture 2; Lecture 1 is a brief introduction.)
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3qa100oiynpwa23h2err

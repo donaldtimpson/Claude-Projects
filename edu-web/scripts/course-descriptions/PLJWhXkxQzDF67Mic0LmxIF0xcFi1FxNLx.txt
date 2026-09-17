@@ -1,0 +1,8 @@
+A first course in General (Point-Set) Topology.
+
+Beginning from set theory and a review of relations and functions, we develop topological spaces, open and closed sets and bases, continuity and homeomorphism, and the three C's of topology — continuity, connectedness, and compactness — along with the separation axioms.
+
+This is an earlier offering; see General Topology (Point Set Topology) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3koe00k5ynpwq97oq4zz

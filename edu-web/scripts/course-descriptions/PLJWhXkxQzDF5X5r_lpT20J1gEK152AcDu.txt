@@ -1,0 +1,6 @@
+A standard college-level Calculus 1 course, following Thomas' Calculus.
+
+After a review of the geometry, trigonometry, sets, relations, and functions the course depends on, we work through limits and continuity, the derivative and the differentiation rules, and applications of the derivative, before turning to the definite integral and the Fundamental Theorem of Calculus. Worked examples throughout.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t2zvx004qynpwgehbtpze

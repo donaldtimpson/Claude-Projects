@@ -1,0 +1,10 @@
+This course goes entirely through Propositional and First-Order Predicate Logic with Identity. Several examples of Axiomatic Systems are given along the way.
+
+There is NO prerequisite knowledge required!
+
+This course was developed with Mathematics and Philosophy majors in mind. The course continues into a completely rigorous Point Set Topology course that can be found here: https://www.youtube.com/playlist?list=PLJWhXkxQzDF79YNILTDtdtepY-nnfkKiT
+
+THANK YOU for your interest!
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3aer00ckynpwo2gghnas

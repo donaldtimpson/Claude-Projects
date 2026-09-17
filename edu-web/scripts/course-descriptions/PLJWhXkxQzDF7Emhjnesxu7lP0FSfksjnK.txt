@@ -5,3 +5,6 @@ The course opens with integers, rationals, order of operations, and the properti
 The second half turns to properties of exponents, operations on polynomials, factoring, rational expressions, and radicals — including radicals and exponents together — before taking up quadratic equations by radicals, by exponents, and by the quadratic formula, along with their applications. It closes with functions and function operations, logarithms, compound interest, and an introduction to the trigonometric functions.
 
 Every topic gets the time it needs, and the test and midterm reviews are included as their own lectures.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t35jv008vynpw02xvxqe5

@@ -5,3 +5,6 @@ We start with the tools: propositional and predicate logic, set theory and funct
 The last third is Turing machines and their variants, the Church-Turing thesis and what it means to define "algorithm" at all, decidable and undecidable languages, and reducibility — ending with proofs that particular problems cannot be solved by any machine whatsoever.
 
 No prior computer science is assumed. The logic and set theory you need are built in the opening lectures.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3dai00egynpwzpnhkpu9

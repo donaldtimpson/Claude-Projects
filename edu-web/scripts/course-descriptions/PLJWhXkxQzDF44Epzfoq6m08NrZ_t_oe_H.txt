@@ -1,0 +1,8 @@
+A first course in Real Analysis — the rigorous rebuilding of single-variable calculus from the axioms up.
+
+We develop the real numbers, sequences and convergence, continuity, differentiation, and integration, with full proofs throughout.
+
+This is an earlier offering; see Real Analysis (2020) for the most complete version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3tbx00qsynpwjao1pglt

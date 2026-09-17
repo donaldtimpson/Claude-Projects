@@ -1,0 +1,4 @@
+This course is intended as a high school-level Euclidean Geometry course. The course begins by briefly covering Propositional Logic, Predicate Logic with Identity, and Set Theory before beginning Geometry proper using Hilbert's axioms (or close approximations). Upon finishing Planar Geometry, we will briefly cover Solid Geometry and Analytic Geometry. Time permitting, I will then lay the foundations of Trigonometry, followed by briefly looking at the Axioms of Arithmetic.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t31k2005zynpwba6mdiu9

@@ -5,3 +5,6 @@ We open with preliminaries: logic, sets, functions, and then the field and posit
 From there the course follows the usual arc. Convergent sequences: the definition of convergence, sequences and sets, the Monotone Convergence Theorem, and the Sequential Compactness Theorem. Continuous functions: continuity, the Extreme Value and Intermediate Value Theorems, uniform continuity, the epsilon-delta criterion, images and inverses, monotone functions, and limits. Differentiation: the algebra of derivatives, differentiating inverses and compositions, the Mean Value Theorem and Cauchy's, and Leibniz notation. Integration: upper and lower integrals, the Archimedes-Riemann Theorem, additivity, monotonicity and linearity, continuity and integrability, and both Fundamental Theorems of Calculus.
 
 Proofs throughout — this is the course where the theorems from calculus finally get argued for.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3odh00n1ynpwxfxwauo8

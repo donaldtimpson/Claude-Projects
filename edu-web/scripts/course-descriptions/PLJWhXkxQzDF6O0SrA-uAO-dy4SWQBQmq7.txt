@@ -1,0 +1,4 @@
+This course goes entirely through Propositional and First-Order Predicate Logic with Identity. Several examples of Axiomatic Systems are given along the way. There is NO prerequisite knowledge required! This course was developed with Mathematics and Philosophy majors in mind. The course continues into Axiomatic Set Theory.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t2yl6003vynpwn7tpyg6v

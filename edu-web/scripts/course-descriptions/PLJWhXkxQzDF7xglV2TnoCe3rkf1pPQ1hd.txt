@@ -3,3 +3,6 @@ A college-level College Algebra course that does not start where most algebra co
 From there the course works through the standard material: real numbers and decimals, the four operations, absolute value, inequalities and the real number line, exponents, monomials and polynomials, products of binomials, factoring, rational expressions, radicals and rational exponents, and rationalizing denominators. It then takes up sets and linear inequalities in one variable, coordinates in the plane, inclination and slope, functions and relations, and equations of lines — with a look at the basics of trigonometry along the way.
 
 The course is in progress.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3eo300fhynpwnruwd2ew

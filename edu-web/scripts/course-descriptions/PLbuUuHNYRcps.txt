@@ -1,0 +1,6 @@
+A standard university-level Linear Algebra course.
+
+We begin with systems of linear equations and row reduction to echelon form, then build the core of the subject: vector and matrix equations, linear independence, and linear transformations. From there we move through matrix algebra and inverses, determinants, vector spaces and subspaces, eigenvalues and eigenvectors, and orthogonality and least squares — keeping sight of both the computations and the geometry behind them. The course is in progress.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmr6plbkh0000jg044yr526qd

@@ -3,3 +3,6 @@ This is intended as an undergraduate-level, first-semester, General Topology cou
 The course is a continuation of my Logic playlist, and so it starts with Set Theory and a review of Relations and Functions, then gets into Topology proper starting on Lecture 5.
 
 Logic playlist: https://www.youtube.com/playlist?list=PLJWhXkxQzDF58EHPCuxHS-iaMpom9qTqg
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t38sf00bbynpwzpph4rsd

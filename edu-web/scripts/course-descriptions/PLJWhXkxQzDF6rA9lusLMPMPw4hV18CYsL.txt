@@ -1,0 +1,8 @@
+A full single-variable Calculus course.
+
+We open with the precalculus the subject rests on — trigonometry and the unit circle, sets, relations, functions, logarithms and exponentials — and then take up the main ideas of calculus: limits and rates of change, the derivative and the rules of differentiation, applications of the derivative, and finally integration and both Fundamental Theorems of Calculus.
+
+This is an earlier offering; see Calculus 1 (2024) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3hhq00hlynpwad5uldh0

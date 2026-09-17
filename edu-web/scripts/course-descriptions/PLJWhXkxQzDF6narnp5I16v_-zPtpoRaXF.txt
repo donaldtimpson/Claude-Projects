@@ -1,0 +1,4 @@
+This is a standard college-level course in Discrete Mathematics. The course is being taught to high school students, and so an entire year is spent on the course (as opposed to a single semester), allowing more time to be spent on each topic.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t2v920019ynpw369wir47

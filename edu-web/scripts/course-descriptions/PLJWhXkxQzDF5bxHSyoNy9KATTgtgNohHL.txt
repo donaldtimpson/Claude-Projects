@@ -1,0 +1,8 @@
+A college-level Discrete Mathematics course.
+
+We begin with careful reasoning — definitions, theorems, proof, and counterexample — and build through Boolean algebra, lists, sets and quantifiers, combinatorics and the binomial theorem, relations and functions, permutations, and induction, before turning to probability and number theory. It closes with a review of trigonometry.
+
+This is an earlier offering; see Discrete Math (2025) for the most recent version.
+
+Follow along at The Timpson Lyceum — companion lecture notes, quizzes, and spaced-repetition review:
+https://timpson-lyceum.vercel.app/courses/cmo1t3bo900d9ynpwjg875grw
