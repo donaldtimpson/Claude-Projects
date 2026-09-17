@@ -5,20 +5,12 @@
 // with a code, but only while that course is `isCurrent`. Mirrors the auth/write
 // patterns in lib/actions.ts and app/admin/achievements/actions.ts.
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { randomInt } from "node:crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { checkAdminPassword } from "@/lib/admin-auth";
-
-async function assertAdmin() {
-  const store = await cookies();
-  if (!checkAdminPassword(store.get("admin_auth")?.value ?? null)) {
-    throw new Error("Unauthorized");
-  }
-}
+import { assertAdmin } from "@/lib/admin-auth";
 
 // Human-friendly join code: 6 chars, no ambiguous 0/O/1/I/L. crypto.randomInt so
 // codes aren't guessable (a valid code is the only thing gating registration).

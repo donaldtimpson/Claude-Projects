@@ -328,10 +328,9 @@ authored per `scripts/problem-sets-style.md`. Published sets render at
 
 **Solutions are public by default.** `ProblemSet.solutionsPublic` (default `true`) is the *single*
 source of truth for solution visibility — uncheck it in the set's admin editor to withhold a set's
-answers. There is deliberately no per-class override: `Assignment.solutionsReleased` is **retired**
-(nothing reads it; the column is kept only so retiring the feature didn't destroy its data, and is
-safe to drop). Two writable switches for one visible outcome meant the admin UI could disagree with
-what students actually saw.
+answers. There is deliberately no per-class override: the old `Assignment.solutionsReleased` column
+is **dropped** (nothing read it). Two writable switches for one visible outcome meant the admin UI
+could disagree with what students actually saw.
 
 **Solutions render inline with the problems they answer**, not as a blob at the bottom.
 `lib/problem-sets.ts` splits both halves into *numbered items* (`**1.**`, `**1. (2 pts ••)**`) and

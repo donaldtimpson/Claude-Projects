@@ -4,21 +4,14 @@
 // and link submissions (students). Mirrors the auth/write patterns in
 // lib/classes.ts and app/admin/achievements/actions.ts.
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { checkAdminPassword } from "@/lib/admin-auth";
+import { assertAdmin } from "@/lib/admin-auth";
 import { LESSON_SLUGS } from "@/lib/lessons";
-
-async function assertAdmin() {
-  const store = await cookies();
-  if (!checkAdminPassword(store.get("admin_auth")?.value ?? null)) {
-    throw new Error("Unauthorized");
-  }
-}
+import { submitAssignmentFor } from "@/lib/assignments-data";
 
 function parseDueAt(raw: FormDataEntryValue | null): Date | null {
   const s = String(raw ?? "").trim();
@@ -78,8 +71,8 @@ export async function setProblemSetDraft(formData: FormData) {
 }
 
 // "Public unless withheld": solutions ship with the problems by default. This
-// flips a single set's answers back to hidden (a section can still get them via
-// toggleSolutionsReleased).
+// flips a single set's answers back to hidden. ProblemSet.solutionsPublic is the
+// single source of truth for solution visibility.
 export async function toggleSolutionsPublic(formData: FormData) {
   await assertAdmin();
   const id = String(formData.get("id") ?? "");
@@ -269,34 +262,28 @@ export async function submitAssignment(_prev: SubmitState, formData: FormData): 
   const assignmentId = String(formData.get("assignmentId") ?? "");
   const url = String(formData.get("url") ?? "").trim();
   if (!assignmentId) return { error: "Missing assignment." };
-  if (!/^https?:\/\//i.test(url)) return { error: "Paste a link starting with http(s):// to your solution." };
+
+  // Validate + authorize + upsert via the shared helper (also used by the mobile
+  // API), so both surfaces enforce the same rules. The web action keeps its own
+  // path revalidation and its longer, form-oriented copy.
+  const result = await submitAssignmentFor(assignmentId, userId, url);
+  if (!result.ok) {
+    const error = result.status === 400 ? `${result.error} to your solution.` : result.error;
+    return { error };
+  }
 
   const assignment = await db.assignment.findUnique({
     where: { id: assignmentId },
     select: { sectionId: true, problemSetId: true, section: { select: { courseId: true } } },
   });
-  if (!assignment) return { error: "That assignment no longer exists." };
-
-  const enrollment = await db.enrollment.findUnique({
-    where: { sectionId_userId: { sectionId: assignment.sectionId, userId } },
-    select: { status: true },
-  });
-  if (!enrollment || enrollment.status !== "active") {
-    return { error: "You're not registered for this class." };
+  if (assignment) {
+    revalidatePath(`/courses/${assignment.section.courseId}`);
+    // The problem set page carries its own copy of this form.
+    if (assignment.problemSetId) {
+      revalidatePath(`/courses/${assignment.section.courseId}/problems/${assignment.problemSetId}`);
+    }
+    revalidatePath("/dashboard");
+    revalidatePath(`/dashboard/class/${assignment.sectionId}`);
   }
-
-  await db.submission.upsert({
-    where: { assignmentId_userId: { assignmentId, userId } },
-    create: { assignmentId, userId, url },
-    update: { url, submittedAt: new Date() },
-  });
-
-  revalidatePath(`/courses/${assignment.section.courseId}`);
-  // The problem set page carries its own copy of this form.
-  if (assignment.problemSetId) {
-    revalidatePath(`/courses/${assignment.section.courseId}/problems/${assignment.problemSetId}`);
-  }
-  revalidatePath("/dashboard");
-  revalidatePath(`/dashboard/class/${assignment.sectionId}`);
   return { success: "Submitted — your instructor can now see your link." };
 }

@@ -179,6 +179,9 @@ model User {
   attendance      Attendance[]
   gradeScores     GradeScore[]
   mobileRefreshTokens MobileRefreshToken[]
+  commentReports  CommentReport[]                     // reports this user filed
+  blocksMade      UserBlock[]     @relation("Blocker") // users this user has blocked
+  blocksReceived  UserBlock[]     @relation("Blocked") // users who have blocked this user
 }
 
 // Long-lived, revocable refresh token for the native mobile app (apps/mobile).
@@ -385,10 +388,6 @@ model Assignment {
   title        String? // instructor's label for this section (e.g. "Homework 1"); falls back to the problem set's / lesson's title
   points       Int          @default(100)
   dueAt        DateTime?
-  // RETIRED — solution visibility now lives solely on ProblemSet.solutionsPublic.
-  // Nothing reads this; kept so retiring the feature didn't also destroy its data.
-  // Safe to drop in a later migration.
-  solutionsReleased Boolean  @default(false)
   createdAt    DateTime     @default(now())
 
   section      Section      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
@@ -520,9 +519,70 @@ model Comment {
   video     Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
   parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
   replies   Comment[] @relation("Replies")
+  reports   CommentReport[]
 
   @@index([parentId])
   @@index([videoId])
+}
+
+// A user's report of a comment for moderation. Feeds the admin moderation queue
+// (the App Store Guideline 1.2 "report objectionable content" affordance for the
+// lecture discussion UGC). A user can only hold ONE open report per comment
+// (@@unique on (commentId, reporterId, status)); resolving/dismissing frees them
+// to report a re-offending comment again. Both FKs cascade so deleting a comment
+// or a user clears their reports.
+model CommentReport {
+  id         String              @id @default(cuid())
+  commentId  String
+  reporterId String
+  reason     CommentReportReason @default(OTHER)
+  note       String?             // optional free-text detail from the reporter
+  status     ReportStatus        @default(OPEN)
+  createdAt  DateTime            @default(now())
+  resolvedAt DateTime?
+
+  comment    Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reporter   User    @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // One live report per (comment, reporter): a user can't stack duplicate open
+  // reports. `status` is part of the key so a closed report doesn't block a fresh
+  // one if the comment offends again.
+  @@unique([commentId, reporterId, status])
+  @@index([status, createdAt])
+  @@index([commentId])
+}
+
+enum CommentReportReason {
+  SPAM
+  HARASSMENT
+  HATE
+  SEXUAL
+  VIOLENCE
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+// One user blocking another. The discussion listing (web + mobile) filters out
+// comments authored by anyone the viewer has blocked — the App Store Guideline
+// 1.2 "block abusive users" affordance. Unique on (blockerId, blockedId) so a
+// block is idempotent; both FKs cascade so a deleted account drops its blocks.
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
 }
 
 model Resource {

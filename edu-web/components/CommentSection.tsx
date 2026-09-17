@@ -36,6 +36,50 @@ export default function CommentSection({
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [replyError, setReplyError] = useState("");
 
+  // Per-comment moderation feedback ("Reported" / "Blocked") keyed by comment id,
+  // plus the id whose Report menu is currently open.
+  const [reportOpenId, setReportOpenId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<Record<string, string>>({});
+
+  const REPORT_REASONS: { value: string; label: string }[] = [
+    { value: "SPAM", label: "Spam" },
+    { value: "HARASSMENT", label: "Harassment" },
+    { value: "HATE", label: "Hate speech" },
+    { value: "SEXUAL", label: "Sexual content" },
+    { value: "VIOLENCE", label: "Violence" },
+    { value: "OTHER", label: "Other" },
+  ];
+
+  async function submitReport(commentId: string, reason: string) {
+    setReportOpenId(null);
+    const res = await fetch(`/api/comments/${commentId}/report`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason }),
+    });
+    setNotice((n) => ({
+      ...n,
+      [commentId]: res.ok ? "Reported. Thank you — we'll review it." : "Couldn't report. Try again.",
+    }));
+  }
+
+  // Block a user, then drop their comments from the current view (matches the
+  // server-side filter the next load applies).
+  async function blockUser(authorId: string, authorName: string) {
+    if (!window.confirm(`Block ${authorName}? You won't see their comments anymore.`)) return;
+    const res = await fetch("/api/blocks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ blockedId: authorId }),
+    });
+    if (!res.ok) return;
+    setComments((prev) =>
+      prev
+        .filter((c) => c.deleted || c.user.id !== authorId)
+        .map((c) => ({ ...c, replies: c.replies.filter((r) => r.deleted || r.user.id !== authorId) }))
+    );
+  }
+
   const count = comments.reduce(
     (n, c) => n + (c.deleted ? 0 : 1) + c.replies.filter((r) => !r.deleted).length,
     0
@@ -148,6 +192,23 @@ export default function CommentSection({
                   Delete
                 </button>
               )}
+              {/* Report + Block: only for other people's comments, signed in. */}
+              {userId && c.user.id !== userId && (
+                <>
+                  <button
+                    onClick={() => setReportOpenId(reportOpenId === c.id ? null : c.id)}
+                    className="text-xs text-parchment-dim hover:text-red-400 transition-colors"
+                  >
+                    Report
+                  </button>
+                  <button
+                    onClick={() => blockUser(c.user.id, c.user.name)}
+                    className="text-xs text-parchment-dim hover:text-red-400 transition-colors"
+                  >
+                    Block
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -158,6 +219,30 @@ export default function CommentSection({
         >
           {c.body}
         </p>
+        {/* Reason picker, shown when Report is tapped on this comment. */}
+        {reportOpenId === c.id && !c.deleted && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <span className="text-xs text-parchment-dim">Reason:</span>
+            {REPORT_REASONS.map((r) => (
+              <button
+                key={r.value}
+                onClick={() => submitReport(c.id, r.value)}
+                className="text-xs px-2 py-0.5 rounded-md bg-crimson-800 border border-crimson-600 text-parchment hover:border-gold-400 transition-colors"
+              >
+                {r.label}
+              </button>
+            ))}
+            <button
+              onClick={() => setReportOpenId(null)}
+              className="text-xs text-parchment-dim hover:text-parchment"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+        {notice[c.id] && (
+          <p className="text-xs text-gold-300 pt-1">{notice[c.id]}</p>
+        )}
       </>
     );
   }

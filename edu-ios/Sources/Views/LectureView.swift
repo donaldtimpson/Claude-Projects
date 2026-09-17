@@ -20,14 +20,17 @@ struct LectureView: View {
     @State private var showCompose = false
     @State private var composeReplyTo: CommentItem?
     @State private var pendingDelete: CommentItem?
+    @State private var pendingReport: CommentItem?
+    @State private var pendingBlock: CommentItem?
+    @State private var moderationNotice: String?
     @State private var activeDrill: ActiveDrill?
 
-    /// Lecture discussion is off for the 1.0 App Store submission. Comments are
-    /// user-generated content, and Guideline 1.2 requires a way to report
-    /// content and block users, which we don't have yet — App Review asked to
-    /// see exactly that. Flip this back on once moderation ships; nothing else
-    /// was removed, and the backend endpoints are untouched. See APP_STORE.md §10.
-    private let commentsEnabled = false
+    /// Lecture discussion. Re-enabled once comment moderation shipped: users can
+    /// now REPORT a comment and BLOCK an author (App Store Guideline 1.2 for
+    /// user-generated content — App Review asked to see exactly that), the report
+    /// feeds an admin moderation queue, and the listing filters out blocked
+    /// authors. See APP_STORE.md §10.
+    private let commentsEnabled = true
 
     enum QuizPhase { case idle, running, done }
     struct ScorePair { let score: Int; let total: Int }
@@ -63,6 +66,15 @@ struct LectureView: View {
                 }
                 Button("Cancel", role: .cancel) { pendingDelete = nil }
             }
+            // Report / Block / notice dialogs (App Store Guideline 1.2). Extracted
+            // into one modifier so the body stays inside the type-checker's budget.
+            .modifier(ModerationDialogs(
+                pendingReport: $pendingReport,
+                pendingBlock: $pendingBlock,
+                moderationNotice: $moderationNotice,
+                onReport: { comment, reason in Task { await reportComment(comment, reason: reason) } },
+                onBlock: { comment in Task { await blockUser(comment) } }
+            ))
             // Same presentation the drills hub uses, so a drill opened from a
             // lecture behaves identically to one opened from Practice Drills.
             .fullScreenCover(item: $activeDrill) { drill in
@@ -281,7 +293,9 @@ struct LectureView: View {
             currentUserId: auth.user?.id,
             onAdd: { composeReplyTo = nil; showCompose = true },
             onReply: { composeReplyTo = $0; showCompose = true },
-            onDelete: { pendingDelete = $0 }
+            onDelete: { pendingDelete = $0 },
+            onReport: { pendingReport = $0 },
+            onBlock: { pendingBlock = $0 }
         )
     }
 
@@ -334,6 +348,38 @@ struct LectureView: View {
         await reloadComments()
     }
 
+    /// Files a moderation report for a comment (App Store Guideline 1.2).
+    private func reportComment(_ comment: CommentItem, reason: String) async {
+        do {
+            let _: ModerationAck = try await APIClient.shared.post(
+                "/comments/\(comment.id)/report",
+                body: ReportCommentBody(reason: reason)
+            )
+            moderationNotice = "Reported. Thank you — we'll review it."
+        } catch {
+            moderationNotice = "Couldn't send the report. Please try again."
+        }
+    }
+
+    /// Blocks a comment's author, then drops their comments from the current view.
+    /// A reload would also exclude them (the listing filters blocked authors
+    /// server-side), but pruning locally makes the block feel immediate.
+    private func blockUser(_ comment: CommentItem) async {
+        do {
+            let _: ModerationAck = try await APIClient.shared.post(
+                "/blocks",
+                body: BlockUserBody(blockedId: comment.user.id)
+            )
+            let blockedId = comment.user.id
+            comments = comments.compactMap { top in
+                if !top.deleted && top.user.id == blockedId { return nil }
+                return top.withReplies(top.replies.filter { $0.deleted || $0.user.id != blockedId })
+            }
+        } catch {
+            moderationNotice = "Couldn't block this user. Please try again."
+        }
+    }
+
     private func load() async {
         do {
             let res: VideoDetailResponse = try await APIClient.shared.get(
@@ -353,5 +399,58 @@ struct LectureView: View {
             self.error = error.localizedDescription
         }
         loading = false
+    }
+}
+
+// The comment Report / Block / notice dialogs, factored out of LectureView.body so
+// the lecture screen's view expression stays inside the Swift type-checker's time
+// budget. Report offers a reason picker; Block confirms; a shared alert relays the
+// outcome. (App Store Guideline 1.2 moderation affordances.)
+private struct ModerationDialogs: ViewModifier {
+    @Binding var pendingReport: CommentItem?
+    @Binding var pendingBlock: CommentItem?
+    @Binding var moderationNotice: String?
+    let onReport: (CommentItem, String) -> Void
+    let onBlock: (CommentItem) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog(
+                "Report this comment",
+                isPresented: Binding(get: { pendingReport != nil }, set: { if !$0 { pendingReport = nil } }),
+                titleVisibility: .visible,
+                presenting: pendingReport
+            ) { target in
+                ForEach(ReportReason.all) { reason in
+                    Button(reason.label, role: .destructive) {
+                        onReport(target, reason.value)
+                        pendingReport = nil
+                    }
+                }
+                Button("Cancel", role: .cancel) { pendingReport = nil }
+            }
+            .confirmationDialog(
+                pendingBlock.map { "Block \($0.user.name)?" } ?? "Block user?",
+                isPresented: Binding(get: { pendingBlock != nil }, set: { if !$0 { pendingBlock = nil } }),
+                titleVisibility: .visible,
+                presenting: pendingBlock
+            ) { target in
+                Button("Block", role: .destructive) {
+                    onBlock(target)
+                    pendingBlock = nil
+                }
+                Button("Cancel", role: .cancel) { pendingBlock = nil }
+            } message: { _ in
+                Text("You won't see this person's comments anymore.")
+            }
+            .alert(
+                "Moderation",
+                isPresented: Binding(get: { moderationNotice != nil }, set: { if !$0 { moderationNotice = nil } }),
+                presenting: moderationNotice
+            ) { _ in
+                Button("OK", role: .cancel) { moderationNotice = nil }
+            } message: { note in
+                Text(note)
+            }
     }
 }

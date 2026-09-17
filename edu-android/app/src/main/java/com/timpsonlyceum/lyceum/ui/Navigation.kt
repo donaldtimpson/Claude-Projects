@@ -77,6 +77,14 @@ fun LyceumApp() {
     val loading by auth.loading.collectAsState()
     val nav = rememberNavController()
 
+    // Replay any writes stranded from a previous offline session, once on launch.
+    // Reconnect flushes are handled by the network callback WriteQueue registers;
+    // this covers the "came back online while the app was closed" case, matching
+    // iOS's onAppear flush.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.timpsonlyceum.lyceum.offline.WriteQueue.flush()
+    }
+
     if (loading) {
         SplashScreen()
         return

@@ -412,6 +412,74 @@ struct ProgressResponse: Codable {
     let completed: [CourseProgressItem]
 }
 
+// MARK: - Class homework (assignments + this student's submission)
+
+/// One homework assignment in an enrolled section, with this student's own
+/// submission folded in. Mirrors the shape the web class hub computes
+/// (app/(site)/dashboard/class/[sectionId]/page.tsx) and the intended
+/// GET /me/classes/{sectionId}/assignments mobile endpoint.
+///
+/// An assignment is EITHER a problem set (`problemSetId` set, URL-submitted,
+/// instructor-scored) OR a grammar lesson drill (`lessonSlug` set, auto-graded by
+/// acing the 30-run). Exactly one is non-nil — `kind` says which so the client
+/// never has to guess from which id is present.
+struct AssignmentItem: Codable, Identifiable, Hashable {
+    let id: String
+    /// "problemSet" | "lesson" — the discriminator the server sends explicitly.
+    let kind: String
+    /// Instructor's label for this section, or the problem set's / lesson's own title.
+    let title: String
+    let points: Int
+    /// ISO-8601, nil when no due date is set.
+    let dueAt: String?
+
+    // Problem-set assignments only (kind == "problemSet"): where the problems live.
+    var courseId: String?
+    var problemSetId: String?
+    /// Whether this set's worked solutions are public (so the detail can offer a link).
+    var solutionsAvailable: Bool?
+
+    // Lesson-drill assignments only (kind == "lesson").
+    var lessonSlug: String?
+
+    /// This student's own submission, nil until they submit (problem sets) or never
+    /// present for lesson drills (which are auto-graded, no URL submission).
+    var submission: SubmissionItem?
+
+    var isLesson: Bool { kind == "lesson" }
+
+    /// Where this assignment sits for the student, driving the status pill.
+    enum Status { case notSubmitted, submitted, graded }
+    var status: Status {
+        guard let sub = submission else { return .notSubmitted }
+        return sub.score != nil ? .graded : .submitted
+    }
+}
+
+/// The student's submission on one assignment: their pasted link, plus the
+/// instructor's score + feedback once graded. Mirrors the Submission model.
+struct SubmissionItem: Codable, Hashable {
+    var url: String?
+    var submittedAt: String?
+    var score: Int?
+    var feedback: String?
+    var gradedAt: String?
+}
+
+/// GET /me/classes/{sectionId}/assignments — the section's homework for this
+/// student. `courseId` lets the detail view link through to the problem set.
+struct ClassAssignmentsResponse: Codable {
+    let sectionName: String
+    let courseId: String
+    let courseTitle: String
+    let assignments: [AssignmentItem]
+}
+
+/// POST /assignments/{assignmentId}/submit — echoes back the stored submission.
+struct SubmitResponse: Codable {
+    let submission: SubmissionItem
+}
+
 struct HandleResponse: Codable {
     let user: AuthUser
 }
@@ -464,6 +532,15 @@ struct CommentItem: Codable, Identifiable, Hashable {
     let replies: [CommentItem]
 }
 
+extension CommentItem {
+    // Copy with a different reply list — used when a block prunes a blocked
+    // author's replies out of a thread client-side (all fields are `let`).
+    func withReplies(_ newReplies: [CommentItem]) -> CommentItem {
+        CommentItem(id: id, body: body, createdAt: createdAt, parentId: parentId,
+                    deleted: deleted, user: user, replies: newReplies)
+    }
+}
+
 struct CommentsResponse: Codable {
     let comments: [CommentItem]
 }
@@ -477,4 +554,31 @@ struct NewCommentBody: Encodable {
 struct DeleteCommentResult: Codable {
     let ok: Bool
     let mode: String  // "soft" (kept as placeholder) or "hard" (removed)
+}
+
+// Report + block endpoints return a small ack. Report may also carry
+// `alreadyReported` when the user had an open report on file; block/unblock carry
+// `blocked` (true after POST /blocks, false after DELETE /blocks). Both fields are
+// optional so one struct decodes every moderation ack.
+struct ModerationAck: Codable {
+    let ok: Bool
+    var alreadyReported: Bool? = nil
+    var blocked: Bool? = nil
+}
+
+// The comment-report reasons offered in the app, mirroring the server's
+// CommentReportReason enum. `value` is sent to the API; `label` is shown to users.
+struct ReportReason: Identifiable {
+    let value: String
+    let label: String
+    var id: String { value }
+
+    static let all: [ReportReason] = [
+        ReportReason(value: "SPAM", label: "Spam"),
+        ReportReason(value: "HARASSMENT", label: "Harassment"),
+        ReportReason(value: "HATE", label: "Hate speech"),
+        ReportReason(value: "SEXUAL", label: "Sexual content"),
+        ReportReason(value: "VIOLENCE", label: "Violence"),
+        ReportReason(value: "OTHER", label: "Other"),
+    ]
 }

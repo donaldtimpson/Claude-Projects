@@ -3645,7 +3645,7 @@
       "shelf"
      ],
      "answer": 1,
-     "explain": "“on” shows the relation of “shelf” to “Put” — the preposition."
+     "explain": "“on” shows the relation of “shelf” to “book” — where the book is put. That relating word is the preposition."
     },
     {
      "id": "l08-prep-07",
@@ -5220,7 +5220,7 @@
       "heroies"
      ],
      "answer": 1,
-     "explain": "o after a consonant → oes: hero → heroes."
+     "explain": "o after a consonant — add es: hero → heroes."
     },
     {
      "id": "l11-pl-03",
@@ -7765,10 +7765,10 @@
      "options": [
       "am",
       "is",
-      "was"
+      "be"
      ],
      "answer": 0,
-     "explain": "The comparison drops the verb: older than I [am]."
+     "explain": "The dropped verb matches the main verb “is” in person: older than I [am] — not “is” (wrong person) or “be” (not a finite form)."
     },
     {
      "id": "l16-el-03",

@@ -15,7 +15,15 @@ export default async function HomePage() {
       where: { canonicalCourseId: null },
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
       include: { _count: { select: { videos: true } } },
-    }),
+    }).then((cs) =>
+      // Keep empty ("Coming soon", 0-video) playlists in the grid — they're a
+      // deliberate teaser — but sort them last so a freshly-created empty course
+      // (recent publishedAt) can't jump ahead of courses that actually have
+      // lectures. Order within each group is preserved from the query above.
+      [...cs].sort(
+        (a, b) => Number(a._count.videos === 0) - Number(b._count.videos === 0),
+      ),
+    ),
     db.category.findMany({
       orderBy: { name: "asc" },
       // Count only canonical offerings, matching the category page's list.

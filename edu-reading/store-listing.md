@@ -66,3 +66,41 @@ Info.plist already sets `ITSAppUsesNonExemptEncryption = false` → no extra doc
 
 ## What's New (version 1.0.0)
 `First release. Sound out letters and words, trace them, and play — all offline.`
+
+## App Review Information
+
+- **Sign-in required?** No. There are no accounts — leave the sign-in box unchecked; no demo account needed.
+- **Contact:** Donald Timpson · `dt323259@gmail.com` · phone: _(add yours)_
+- **Attachment (recommended):** a 30–60s screen recording demoing the optional mic/speech
+  flow — launch → a few letter/word cards → open the grown-up gate → enable "Listen for
+  their voice" → allow the mic → say a word and the card advances (positive-only). Record on
+  a physical device with Control Center screen recording (Microphone ON), then upload the .mov.
+  Not required, but pre-empts the usual kids-app microphone questions.
+
+**Notes (paste into the Notes field):**
+
+Sound It Out: Phonics is a fully offline phonics app for young children, made by a
+teacher. There are no accounts and no sign-in — just open the app and use it.
+
+Privacy / Made for Kids:
+- No network connection of any kind. Nothing is collected, stored off-device, or transmitted.
+- No third-party SDKs, analytics, ads, or in-app purchases.
+- The one external link and all grown-up settings sit behind a parental gate
+  (a spelled-out multiplication question), per Guideline 1.3.
+
+Microphone / Speech — optional, OFF by default:
+- Voice is disabled by default. A grown-up can enable "Listen for their voice" only
+  from the Settings screen behind the parental gate; the microphone permission is
+  requested only from there.
+- When on, the app uses on-device speech recognition (SFSpeechRecognizer) so a child
+  can read a word, number, colour, or shape aloud and the card advances. It gives
+  positive feedback only and never tells a child they are wrong.
+- Audio is never recorded, saved, or sent anywhere.
+
+How to review:
+- Everything is usable immediately with no login.
+- To test voice: open the grown-up Settings gate, answer the multiplication question,
+  toggle "Listen for their voice," and allow the microphone when prompted.
+
+Export compliance: uses only Apple's on-device frameworks; Info.plist sets
+ITSAppUsesNonExemptEncryption = false.

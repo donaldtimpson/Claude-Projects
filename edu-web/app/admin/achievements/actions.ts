@@ -1,17 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { checkAdminPassword } from "@/lib/admin-auth";
+import { assertAdmin } from "@/lib/admin-auth";
 import { BADGE_CATALOG } from "@/lib/gamification/mock";
-
-async function assertAdmin() {
-  const store = await cookies();
-  if (!checkAdminPassword(store.get("admin_auth")?.value ?? null)) {
-    throw new Error("Unauthorized");
-  }
-}
 
 const VALID_KEYS = new Set(BADGE_CATALOG.map((b) => b.key));
 

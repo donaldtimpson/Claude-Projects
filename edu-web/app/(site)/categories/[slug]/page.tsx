@@ -31,6 +31,11 @@ export default async function CategoryPage({
     .map((cc) => cc.course)
     .filter((c) => c.canonicalCourseId === null) // representative offerings only
     .sort((a, b) => {
+      // Empty ("Coming soon", 0-video) courses sort last, matching the homepage
+      // grid, so a freshly-created empty playlist can't lead the category.
+      const aEmpty = a._count.videos === 0;
+      const bEmpty = b._count.videos === 0;
+      if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
       const aDate = a.publishedAt ?? a.createdAt;
       const bDate = b.publishedAt ?? b.createdAt;
       return bDate.getTime() - aDate.getTime();

@@ -37,6 +37,25 @@ struct DrillSessionBody: Encodable {
     let clientId: String
 }
 
+// Homework submission — a user-initiated, confirmed write (not offline-queued), so
+// no clientId: the student watches it succeed or sees the error and retries.
+struct SubmitAssignmentBody: Encodable {
+    let url: String
+}
+
+// Report a comment for moderation (App Store Guideline 1.2). `reason` is one of the
+// server's CommentReportReason enum values; the note is optional free text.
+struct ReportCommentBody: Encodable {
+    let reason: String
+    var note: String? = nil
+}
+
+// Block / unblock another user (App Store Guideline 1.2). POST /blocks blocks,
+// DELETE /blocks unblocks; both carry the target's id.
+struct BlockUserBody: Encodable {
+    let blockedId: String
+}
+
 struct CredentialsBody: Encodable {
     let email: String
     let password: String

@@ -25,6 +25,8 @@ struct ProfileView: View {
         // mode the same screen switches into.
         .navigationTitle(auth.isSignedIn ? "My Progress" : "Account")
         .navigationBarTitleDisplayMode(.inline)
+        // Into an enrolled class's homework (assignments + submission form).
+        .navigationDestination(for: ClassRoute.self) { ClassHubView(route: $0) }
     }
 
     private var earned: [Badge] { badges.filter { $0.unlocked } }
@@ -244,8 +246,22 @@ struct ProfileView: View {
                 }
             }
 
-            Text(open ? "Hide breakdown" : "Show breakdown")
-                .font(.caption).foregroundStyle(Theme.gold400)
+            HStack(spacing: 16) {
+                Text(open ? "Hide breakdown" : "Show breakdown")
+                    .font(.caption).foregroundStyle(Theme.gold400)
+                Spacer(minLength: 0)
+                // Into the class's homework: assignments, their status, and the
+                // submit form. Its own row so tapping it doesn't toggle the breakdown.
+                NavigationLink(value: ClassRoute(
+                    sectionId: c.sectionId, sectionName: c.sectionName, courseTitle: c.courseTitle
+                )) {
+                    HStack(spacing: 4) {
+                        Text("Homework").font(.caption).foregroundStyle(Theme.gold300)
+                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(Theme.gold400)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
         }
         .lyceumCard()
     }

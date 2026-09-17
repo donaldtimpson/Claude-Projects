@@ -6,17 +6,9 @@
 // row-level Save. The weighted grade itself is computed read-side in
 // lib/gradebook.ts.
 
-import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { checkAdminPassword } from "@/lib/admin-auth";
-
-async function assertAdmin() {
-  const store = await cookies();
-  if (!checkAdminPassword(store.get("admin_auth")?.value ?? null)) {
-    throw new Error("Unauthorized");
-  }
-}
+import { assertAdmin } from "@/lib/admin-auth";
 
 // Non-negative int from a form field, or null when blank/invalid.
 function intOrNull(v: FormDataEntryValue | null): number | null {

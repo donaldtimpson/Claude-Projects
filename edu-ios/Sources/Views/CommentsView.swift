@@ -26,6 +26,8 @@ struct DiscussionSection: View {
     let onAdd: () -> Void
     let onReply: (CommentItem) -> Void
     let onDelete: (CommentItem) -> Void
+    let onReport: (CommentItem) -> Void
+    let onBlock: (CommentItem) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -48,7 +50,9 @@ struct DiscussionSection: View {
                         isSignedIn: isSignedIn,
                         currentUserId: currentUserId,
                         onReply: onReply,
-                        onDelete: onDelete
+                        onDelete: onDelete,
+                        onReport: onReport,
+                        onBlock: onBlock
                     )
                 }
             }
@@ -63,25 +67,33 @@ private struct CommentThread: View {
     let currentUserId: String?
     let onReply: (CommentItem) -> Void
     let onDelete: (CommentItem) -> Void
+    let onReport: (CommentItem) -> Void
+    let onBlock: (CommentItem) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             CommentBody(
                 comment: comment,
+                isSignedIn: isSignedIn,
                 currentUserId: currentUserId,
                 canReply: isSignedIn,
                 onReply: { onReply(comment) },
-                onDelete: { onDelete(comment) }
+                onDelete: { onDelete(comment) },
+                onReport: { onReport(comment) },
+                onBlock: { onBlock(comment) }
             )
             if !comment.replies.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(comment.replies) { reply in
                         CommentBody(
                             comment: reply,
+                            isSignedIn: isSignedIn,
                             currentUserId: currentUserId,
                             canReply: false,
                             onReply: {},
-                            onDelete: { onDelete(reply) }
+                            onDelete: { onDelete(reply) },
+                            onReport: { onReport(reply) },
+                            onBlock: { onBlock(reply) }
                         )
                     }
                 }
@@ -95,13 +107,23 @@ private struct CommentThread: View {
 
 private struct CommentBody: View {
     let comment: CommentItem
+    let isSignedIn: Bool
     let currentUserId: String?
     let canReply: Bool
     let onReply: () -> Void
     let onDelete: () -> Void
+    let onReport: () -> Void
+    let onBlock: () -> Void
 
     private var isOwn: Bool {
         !comment.deleted && currentUserId != nil && comment.user.id == currentUserId
+    }
+
+    // Report + Block are offered on other people's live comments once signed in —
+    // the App Store Guideline 1.2 affordances. Never on your own comment or a
+    // deleted placeholder.
+    private var canModerate: Bool {
+        !comment.deleted && isSignedIn && currentUserId != nil && comment.user.id != currentUserId
     }
 
     var body: some View {
@@ -119,7 +141,7 @@ private struct CommentBody: View {
                 .foregroundStyle(comment.deleted ? Theme.inkSoft : Theme.ink)
                 .italic(comment.deleted)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            if !comment.deleted && (canReply || isOwn) {
+            if !comment.deleted && (canReply || isOwn || canModerate) {
                 HStack(spacing: 18) {
                     if canReply {
                         Button("Reply", action: onReply)
@@ -128,6 +150,18 @@ private struct CommentBody: View {
                     if isOwn {
                         Button("Delete", role: .destructive, action: onDelete)
                             .font(.caption)
+                    }
+                    if canModerate {
+                        // A small overflow menu keeps Report/Block discoverable
+                        // without cluttering the row.
+                        Menu {
+                            Button("Report comment", systemImage: "flag", role: .destructive, action: onReport)
+                            Button("Block \(comment.user.name)", systemImage: "hand.raised", role: .destructive, action: onBlock)
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .font(.caption).foregroundStyle(Theme.inkSoft)
+                                .accessibilityLabel("More actions")
+                        }
                     }
                     Spacer(minLength: 0)
                 }

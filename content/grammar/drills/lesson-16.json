@@ -9,7 +9,7 @@
   "tier": 1,
   "items": [
     { "id": "l16-el-01", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Shut the door.”", "options": ["you", "I", "he"], "answer": 0, "explain": "A command has the understood subject “you”: [You] shut the door." },
-    { "id": "l16-el-02", "level": 1, "prompt": "Which word is understood (left out)?\n\n“He is older than I ___.”", "options": ["am", "is", "was"], "answer": 0, "explain": "The comparison drops the verb: older than I [am]." },
+    { "id": "l16-el-02", "level": 1, "prompt": "Which word is understood (left out)?\n\n“He is older than I ___.”", "options": ["am", "is", "be"], "answer": 0, "explain": "The dropped verb matches the main verb “is” in person: older than I [am] — not “is” (wrong person) or “be” (not a finite form)." },
     { "id": "l16-el-03", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Run home!”", "options": ["you", "we", "they"], "answer": 0, "explain": "A command has the understood subject “you”: [You] run home." },
     { "id": "l16-el-04", "level": 1, "prompt": "Which word is understood (left out)?\n\n“She is taller than he ___.”", "options": ["am", "is", "are"], "answer": 1, "explain": "The comparison drops the verb: taller than he [is]." },
     { "id": "l16-el-05", "level": 1, "prompt": "Which word is understood (left out)?\n\n“Wait here.”", "options": ["you", "I", "we"], "answer": 0, "explain": "A command has the understood subject “you”: [You] wait here." },

@@ -65,8 +65,9 @@ export function parseGradeConfig(raw: unknown): GradeConfig {
 }
 
 // Weighted average over the categories that actually have data — a running grade,
-// so a not-yet-entered category doesn't read as a zero.
-function weightedGrade(cats: { pct: number | null; weight: number }[]): number | null {
+// so a not-yet-entered category doesn't read as a zero. Exported for unit tests;
+// callers within this module use it directly.
+export function weightedGrade(cats: { pct: number | null; weight: number }[]): number | null {
   let sum = 0;
   let wsum = 0;
   for (const c of cats) {

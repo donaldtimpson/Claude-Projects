@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { grammarLessonDrills } from "@/lib/drills/grammar";
 import { getAcedLessonSlugs } from "@/lib/lessons";
 import { nestComments } from "@/lib/comments";
+import { getBlockedUserIds } from "@/lib/moderation";
 import { saveQuizAttempt } from "@/lib/actions";
 import { getQuizAces } from "@/lib/gamification/engine";
 import QuizPlayer from "./QuizPlayer";
@@ -81,6 +82,11 @@ export default async function VideoPage({
 
   const userId = session?.user?.id ?? null;
 
+  // Comments authored by users the viewer has blocked are filtered out of the
+  // discussion (App Store Guideline 1.2 block affordance). Signed-out viewers
+  // block no one, so this is an empty list for them.
+  const blockedIds = await getBlockedUserIds(userId);
+
   const [questions, siblings, watched, comments, note] = await Promise.all([
     db.quizQuestion.findMany({ where: { videoId: video.id, isDraft: false }, orderBy: { position: "asc" } }),
     db.video.findMany({
@@ -94,7 +100,7 @@ export default async function VideoPage({
       ? db.videoProgress.findUnique({ where: { userId_videoId: { userId, videoId: video.id } } })
       : null,
     db.comment.findMany({
-      where: { videoId: video.id },
+      where: { videoId: video.id, ...(blockedIds.length ? { userId: { notIn: blockedIds } } : {}) },
       include: { user: { select: { id: true, name: true } } },
       orderBy: { createdAt: "asc" },
     }),

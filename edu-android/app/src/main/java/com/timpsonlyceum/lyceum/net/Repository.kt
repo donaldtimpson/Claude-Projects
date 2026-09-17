@@ -1,6 +1,7 @@
 package com.timpsonlyceum.lyceum.net
 
 import com.timpsonlyceum.lyceum.model.*
+import com.timpsonlyceum.lyceum.offline.WriteQueue
 import java.net.URLEncoder
 
 /**
@@ -97,23 +98,29 @@ object Repository {
     suspend fun lessons(): LessonsResponse = ApiClient.get("/me/lessons", LessonsResponse.serializer())
 
     // ---- writes ----
+    //
+    // Engagement writes go through [WriteQueue]: it posts now and, when offline or on
+    // a transient failure, persists the request to replay on reconnect. Each body
+    // carries its own clientId, so a replay is deduped server-side rather than
+    // double-counted. This closes the parity gap with iOS, where a drill finished
+    // offline is kept and replayed rather than dropped.
 
-    suspend fun recordQuizAttempt(body: QuizAttemptBody): WriteResult = ApiClient.post(
+    suspend fun recordQuizAttempt(body: QuizAttemptBody) = WriteQueue.submit(
         "/quiz/attempt",
         json.encodeToString(QuizAttemptBody.serializer(), body),
-        WriteResult.serializer(),
+        body.clientId,
     )
 
-    suspend fun recordVideoWatched(body: VideoWatchedBody): WriteResult = ApiClient.post(
+    suspend fun recordVideoWatched(body: VideoWatchedBody) = WriteQueue.submit(
         "/progress/video-watched",
         json.encodeToString(VideoWatchedBody.serializer(), body),
-        WriteResult.serializer(),
+        body.clientId,
     )
 
-    suspend fun recordDrillSession(body: DrillSessionBody): WriteResult = ApiClient.post(
+    suspend fun recordDrillSession(body: DrillSessionBody) = WriteQueue.submit(
         "/drills/session",
         json.encodeToString(DrillSessionBody.serializer(), body),
-        WriteResult.serializer(),
+        body.clientId,
     )
 
     // ---- spaced repetition ----
@@ -121,10 +128,10 @@ object Repository {
     suspend fun reviewDeck(): ReviewDeckResponse =
         ApiClient.get("/review/deck", ReviewDeckResponse.serializer())
 
-    suspend fun gradeReview(body: ReviewGradeBody): WriteResult = ApiClient.post(
+    suspend fun gradeReview(body: ReviewGradeBody) = WriteQueue.submit(
         "/review/grade",
         json.encodeToString(ReviewGradeBody.serializer(), body),
-        WriteResult.serializer(),
+        body.clientId,
     )
 
     suspend fun finishReview(): WriteResult =

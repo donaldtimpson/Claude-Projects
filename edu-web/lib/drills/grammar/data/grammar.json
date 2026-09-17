@@ -7131,6 +7131,535 @@
      "explain": "\"Had been rejected\" is past perfect passive: the subject \"manuscript\" receives the rejecting."
     }
    ]
+  },
+  {
+   "slug": "subject-predicate-copula",
+   "title": "Subject, Predicate, or Copula?",
+   "blurb": "Harvey's analysis: name the notion, the quality, and the asserting word.",
+   "icon": "🔗",
+   "layout": "grid",
+   "order": "shuffle",
+   "tier": 3,
+   "items": [
+    {
+     "id": "spc-01",
+     "level": 1,
+     "prompt": "In analysis, what is the subject of a proposition?",
+     "options": [
+      "That of which something is affirmed",
+      "That which is affirmed of something",
+      "The word that makes the assertion",
+      "The verb of the sentence"
+     ],
+     "answer": 0,
+     "explain": "The subject is the notion the proposition is about — that of which something is affirmed. The predicate is what is affirmed of it; the copula makes the assertion."
+    },
+    {
+     "id": "spc-02",
+     "level": 1,
+     "prompt": "In analysis, what is the copula?",
+     "options": [
+      "The word that joins the predicate to the subject and asserts it",
+      "The notion the sentence is about",
+      "The quality affirmed of the subject",
+      "Any object of the verb"
+     ],
+     "answer": 0,
+     "explain": "The copula is the asserting link — usually a form of 'be' (is, was, will be). In 'Iron | is : heavy,' 'is' is the copula: it joins 'heavy' to 'Iron' and affirms it."
+    },
+    {
+     "id": "spc-03",
+     "level": 1,
+     "prompt": "Name the subject.\n\n“Air is transparent.”",
+     "options": [
+      "Air",
+      "is",
+      "transparent"
+     ],
+     "answer": 0,
+     "explain": "The proposition is about air, so 'Air' names the subject. 'is' is the copula; 'transparent' is the predicate."
+    },
+    {
+     "id": "spc-04",
+     "level": 1,
+     "prompt": "Name the copula.\n\n“Air is transparent.”",
+     "options": [
+      "Air",
+      "is",
+      "transparent"
+     ],
+     "answer": 1,
+     "explain": "'is' joins the predicate to the subject and makes the assertion — it is the copula, not the predicate."
+    },
+    {
+     "id": "spc-05",
+     "level": 1,
+     "prompt": "Name the predicate.\n\n“Air is transparent.”",
+     "options": [
+      "Air",
+      "is",
+      "transparent"
+     ],
+     "answer": 2,
+     "explain": "'transparent' is the quality affirmed of the subject — the predicate. Remember: the copula 'is' asserts it but is not itself the predicate."
+    },
+    {
+     "id": "spc-06",
+     "level": 1,
+     "prompt": "Name the predicate.\n\n“Nero was cruel.”",
+     "options": [
+      "Nero",
+      "was",
+      "cruel"
+     ],
+     "answer": 2,
+     "explain": "'cruel' is affirmed of Nero — the predicate. 'was' is the copula that asserts it."
+    },
+    {
+     "id": "spc-07",
+     "level": 1,
+     "prompt": "Name the copula.\n\n“Mary should be kind.”",
+     "options": [
+      "Mary",
+      "should be",
+      "kind"
+     ],
+     "answer": 1,
+     "explain": "The whole verb-phrase 'should be' does the asserting here — it is the copula. 'kind' is the predicate."
+    },
+    {
+     "id": "spc-08",
+     "level": 1,
+     "prompt": "Name the predicate.\n\n“Whales are mammals.”",
+     "options": [
+      "Whales",
+      "are",
+      "mammals"
+     ],
+     "answer": 2,
+     "explain": "A predicate may be a class-noun, not only a quality: 'mammals' tells the class the subject belongs to. 'are' is the copula."
+    },
+    {
+     "id": "spc-09",
+     "level": 1,
+     "prompt": "The subject is the notion, not the word that names it. In “Unicorns are mythical,” does the sentence have a subject even though no unicorn exists?",
+     "options": [
+      "Yes — the subject is the notion 'unicorns,' whether or not any exist",
+      "No — there can be no subject without a real object",
+      "No — 'mythical' cancels the subject",
+      "Only if we change the wording"
+     ],
+     "answer": 0,
+     "explain": "The subject is the notion spoken of, not a thing in the world. 'Unicorns are mythical' affirms something of the notion 'unicorns,' so it has a subject."
+    },
+    {
+     "id": "spc-10",
+     "level": 1,
+     "prompt": "“Snow is white” and “Snow is a white thing” — how do these compare?",
+     "options": [
+      "They express the same proposition in different words",
+      "They express two different propositions",
+      "Only the first has a copula",
+      "Only the second has a subject"
+     ],
+     "answer": 0,
+     "explain": "A sentence is the words; the proposition is the thought. Both wordings affirm whiteness of snow, so they carry the same proposition."
+    },
+    {
+     "id": "spc-11",
+     "level": 1,
+     "prompt": "In analysis, is the copula counted as an element of the sentence?",
+     "options": [
+      "No — it asserts, but it is not itself an element",
+      "Yes — it is a principal element",
+      "Yes — it is a subordinate element",
+      "Only when it is 'is'"
+     ],
+     "answer": 0,
+     "explain": "The subject and predicate are the principal elements; all others are subordinate. The copula only makes the assertion, so it is not counted as an element."
+    },
+    {
+     "id": "spc-12",
+     "level": 1,
+     "prompt": "Which two are the principal elements — the parts no sentence can do without?",
+     "options": [
+      "Subject and predicate",
+      "Copula and object",
+      "Subject and copula",
+      "Predicate and modifier"
+     ],
+     "answer": 0,
+     "explain": "The subject and predicate are the principal elements; every proposition needs both. The copula asserts and modifiers add detail, but neither is a principal element."
+    },
+    {
+     "id": "spc-13",
+     "level": 1,
+     "prompt": "Which diagram of “Gold is precious” places the subject, copula, and predicate correctly?",
+     "options": [
+      "Gold | is : precious",
+      "Gold is | precious",
+      "Gold : is | precious",
+      "Gold | is precious"
+     ],
+     "answer": 0,
+     "explain": "The heavy divider follows the subject; the copula 'is' is then set off from the predicate 'precious' with the lighter divider, because the copula is not itself an element: Gold | is : precious. The common error 'Gold | is precious' wrongly folds the copula into the predicate."
+    },
+    {
+     "id": "spc-14",
+     "level": 1,
+     "prompt": "Name the predicate.\n\n“Roses are fragrant.”",
+     "options": [
+      "fragrant",
+      "are",
+      "Roses",
+      "are fragrant"
+     ],
+     "answer": 0,
+     "explain": "'fragrant' is the quality affirmed of roses — the predicate. 'are' is the copula, and 'are fragrant' is not the predicate because the copula is set apart from the predicate."
+    },
+    {
+     "id": "spc-15",
+     "level": 1,
+     "prompt": "In “Ice is cold,” what does the word “Ice” stand for in the analysis?",
+     "options": [
+      "The subject — the notion of ice, of which coldness is affirmed",
+      "The predicate — what is affirmed",
+      "The copula — the asserting word",
+      "An object of the verb"
+     ],
+     "answer": 0,
+     "explain": "'Ice' names the subject: the notion of which 'cold' is affirmed. The word is only the sign; the subject is the notion it carries."
+    }
+   ]
+  },
+  {
+   "slug": "verb-classes",
+   "title": "Transitive, Intransitive, or Copulative?",
+   "blurb": "Does the verb pass action to an object, stop with the subject, or link a predicate?",
+   "icon": "🔀",
+   "layout": "grid",
+   "order": "shuffle",
+   "tier": 3,
+   "items": [
+    {
+     "id": "vcl-01",
+     "level": 1,
+     "prompt": "Which class of verb requires an object to complete its meaning?",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative",
+      "Irregular"
+     ],
+     "answer": 0,
+     "explain": "A transitive verb passes its action to an object: 'Dogs chase cats.' Ask 'verb + what?' — if there is an answer, the verb is transitive."
+    },
+    {
+     "id": "vcl-02",
+     "level": 1,
+     "prompt": "Which class of verb links the subject to a word that describes or renames it, and asserts it?",
+     "options": [
+      "Copulative",
+      "Transitive",
+      "Intransitive",
+      "Auxiliary"
+     ],
+     "answer": 0,
+     "explain": "A copulative verb joins a predicate to the subject: 'Dogs are loyal.' The word after it (loyal) is a predicate, not an object."
+    },
+    {
+     "id": "vcl-03",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“Dogs chase cats.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 0,
+     "explain": "'chase' passes the action to the object 'cats' — chase what? cats. So it is transitive."
+    },
+    {
+     "id": "vcl-04",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“Dogs bark.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 1,
+     "explain": "'bark' takes no object — bark what? nothing. The action stops with the subject, so it is intransitive."
+    },
+    {
+     "id": "vcl-05",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The roses are fragrant.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 2,
+     "explain": "'are' links 'fragrant' to 'roses' and asserts it. 'fragrant' describes the subject — it is a predicate, not an object — so the verb is copulative."
+    },
+    {
+     "id": "vcl-06",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“Fire burns wood.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 0,
+     "explain": "'burns' passes its action to 'wood' — burns what? wood. So 'burns' is transitive here."
+    },
+    {
+     "id": "vcl-07",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The children slept.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 1,
+     "explain": "'slept' takes no object — slept what? nothing. The action ends with the subject, so it is intransitive."
+    },
+    {
+     "id": "vcl-08",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The gate remains open.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 2,
+     "explain": "'remains' can act as a copula: 'open' describes the gate. Though 'remains what? — open' seems to answer, 'open' is a predicate describing the subject, not an object, so the verb is copulative."
+    },
+    {
+     "id": "vcl-09",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The soup tastes salty.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 2,
+     "explain": "Here 'tastes' links 'salty' to the soup — 'salty' describes the subject, so 'tastes' is copulative. (In 'She tastes the soup,' the same verb is transitive.)"
+    },
+    {
+     "id": "vcl-10",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“She reads well.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 1,
+     "explain": "Here 'reads' has no object — 'well' tells how, not what. So 'reads' is intransitive. (In 'She reads books,' the same verb is transitive.)"
+    },
+    {
+     "id": "vcl-11",
+     "level": 1,
+     "prompt": "The word that completes a transitive verb's meaning is called what?",
+     "options": [
+      "The object",
+      "The copula",
+      "The predicate",
+      "The modifier"
+     ],
+     "answer": 0,
+     "explain": "The completing word is the object (objective element): 'Boys study grammar' — study what? grammar, the object."
+    },
+    {
+     "id": "vcl-12",
+     "level": 1,
+     "prompt": "After a copulative verb, what is the describing or renaming word called?",
+     "options": [
+      "The predicate",
+      "The object",
+      "The copula",
+      "The subject"
+     ],
+     "answer": 0,
+     "explain": "It is a predicate, not an object: 'The gate remains open' — 'open' describes the subject and is affirmed of it, so it is the predicate."
+    },
+    {
+     "id": "vcl-13",
+     "level": 1,
+     "prompt": "A verb may belong to more than one class depending on its use. In which sentence is “grew” copulative?",
+     "options": [
+      "The weather grew cold.",
+      "The farmer grew corn.",
+      "The seedlings grew in the shade.",
+      "The gardener grew roses by the gate."
+     ],
+     "answer": 0,
+     "explain": "In 'The weather grew cold,' 'grew' links the describing word 'cold' to the weather — copulative. In 'grew corn' and 'grew roses,' 'grew' takes an object (transitive); in 'grew in the shade,' it takes no object (intransitive)."
+    },
+    {
+     "id": "vcl-14",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The train arrived on time.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 1,
+     "explain": "'arrived' takes no object — arrived what? nothing; 'on time' only tells when. So it is intransitive."
+    },
+    {
+     "id": "vcl-15",
+     "level": 1,
+     "prompt": "What class is the verb?\n\n“The committee elected her president.”",
+     "options": [
+      "Transitive",
+      "Intransitive",
+      "Copulative"
+     ],
+     "answer": 0,
+     "explain": "'elected' passes its action to the object 'her' — elected whom? her. So it is transitive. ('president' renames the object, but the verb still governs an object, so it is not copulative.)"
+    }
+   ]
+  },
+  {
+   "slug": "predicate-nominative-case",
+   "title": "Nominative or Objective?",
+   "blurb": "After 'be,' the word renames the subject — so it stays nominative.",
+   "icon": "🪞",
+   "layout": "grid",
+   "order": "shuffle",
+   "tier": 3,
+   "items": [
+    {
+     "id": "pnc-01",
+     "level": 1,
+     "prompt": "A predicate noun after a copulative verb is in which case?",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "The copula does not act on an object; it renames the subject. So a predicate noun is nominative, like the subject: 'Horses are animals' — 'animals' is nominative."
+    },
+    {
+     "id": "pnc-02",
+     "level": 1,
+     "prompt": "What case is “animals”?\n\n“Horses are animals.”",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "'animals' is a predicate noun — it renames the subject after the copula 'are,' so it is nominative, not the object of the verb."
+    },
+    {
+     "id": "pnc-03",
+     "level": 1,
+     "prompt": "What case is “buffaloes”?\n\n“Indians hunt buffaloes.”",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 1,
+     "explain": "'hunt' is transitive; 'buffaloes' receives its action — hunt what? buffaloes. The object of a verb is in the objective case."
+    },
+    {
+     "id": "pnc-04",
+     "level": 1,
+     "prompt": "Choose the correct form.\n\n“The one who called was ___.”",
+     "options": [
+      "I",
+      "me"
+     ],
+     "answer": 0,
+     "explain": "After the copula 'was,' the word renames the subject 'one,' so it takes the nominative 'I': 'The one who called was I.' (Colloquial speech says 'me,' but the strict rule is 'I.')"
+    },
+    {
+     "id": "pnc-05",
+     "level": 1,
+     "prompt": "Choose the correct form.\n\n“The winners were ___.”",
+     "options": [
+      "they",
+      "them"
+     ],
+     "answer": 0,
+     "explain": "'were' is a copula; the pronoun renames the subject 'winners,' so it is nominative: 'The winners were they.'"
+    },
+    {
+     "id": "pnc-06",
+     "level": 1,
+     "prompt": "Choose the correct form.\n\n“The captain praised ___.”",
+     "options": [
+      "them",
+      "they"
+     ],
+     "answer": 0,
+     "explain": "'praised' is transitive and takes an object, so use the objective 'them': 'The captain praised them.' There is no copula here."
+    },
+    {
+     "id": "pnc-07",
+     "level": 1,
+     "prompt": "What case is “teacher”?\n\n“She became a teacher.”",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 0,
+     "explain": "'became' is copulative — it renames the subject 'She.' So 'teacher' is a predicate noun in the nominative case, not an object."
+    },
+    {
+     "id": "pnc-08",
+     "level": 1,
+     "prompt": "Choose the correct form.\n\n“Nobody knew that the stranger was ___.”",
+     "options": [
+      "he",
+      "him"
+     ],
+     "answer": 0,
+     "explain": "After the copula 'was,' the pronoun renames the subject 'stranger,' so it is nominative: 'the stranger was he.'"
+    },
+    {
+     "id": "pnc-09",
+     "level": 1,
+     "prompt": "What case is “president”?\n\n“They elected him president.”",
+     "options": [
+      "Nominative",
+      "Objective",
+      "Possessive",
+      "Absolute"
+     ],
+     "answer": 1,
+     "explain": "'elected' is transitive, not a copula; 'president' renames the object 'him,' so it stands in the objective case with it. (No form of 'be' links it to the subject.)"
+    },
+    {
+     "id": "pnc-10",
+     "level": 1,
+     "prompt": "Why is a predicate noun nominative rather than objective?",
+     "options": [
+      "Because the copula renames the subject instead of acting on an object",
+      "Because it always comes last in the sentence",
+      "Because 'be' is an irregular verb",
+      "Because it has no number"
+     ],
+     "answer": 0,
+     "explain": "A transitive verb's object receives action and is objective; but a copula asserts identity — it renames the subject — so the predicate noun matches the subject in the nominative case."
+    }
+   ]
   }
  ]
 }

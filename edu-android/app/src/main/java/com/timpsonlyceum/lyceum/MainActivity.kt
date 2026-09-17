@@ -20,6 +20,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TokenStore.init(applicationContext)
+        // The offline write queue registers a reconnect flush here and replays any
+        // writes stranded from a previous offline session on app start (below).
+        com.timpsonlyceum.lyceum.offline.WriteQueue.init(applicationContext)
         com.timpsonlyceum.lyceum.drills.DrillStore.init(applicationContext)
         com.timpsonlyceum.lyceum.drills.GrammarDrills.load(applicationContext)
         com.timpsonlyceum.lyceum.drills.GeoAtlas.load(applicationContext)

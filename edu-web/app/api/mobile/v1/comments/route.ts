@@ -1,13 +1,21 @@
 import { db } from "@/lib/db";
 import { getUserId } from "@/lib/current-user";
 import { nestComments, serializeComment } from "@/lib/comments";
+import { getBlockedUserIds } from "@/lib/moderation";
 import { ok, fail, badRequest, unauthorized } from "@/lib/mobile/respond";
 
 export async function GET(req: Request) {
   const videoId = new URL(req.url).searchParams.get("videoId");
   if (!videoId) return badRequest("videoId is required.");
+
+  // Filter out comments by users the viewer has blocked. The list is public
+  // (auth optional): a signed-in Bearer token yields a viewer whose block list
+  // applies; an anonymous read blocks no one.
+  const viewerId = await getUserId(req);
+  const blocked = await getBlockedUserIds(viewerId);
+
   const comments = await db.comment.findMany({
-    where: { videoId },
+    where: { videoId, ...(blocked.length ? { userId: { notIn: blocked } } : {}) },
     include: { user: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" },
   });

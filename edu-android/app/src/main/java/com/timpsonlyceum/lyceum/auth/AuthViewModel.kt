@@ -135,5 +135,8 @@ class AuthViewModel : ViewModel() {
 object LocalStores {
     fun purgeAll() {
         com.timpsonlyceum.lyceum.drills.DrillStore.purgeAll()
+        // Unsent engagement writes belong to the account being deleted; replaying
+        // them under the next sign-in on this device would misattribute them.
+        com.timpsonlyceum.lyceum.offline.WriteQueue.purgeAll()
     }
 }

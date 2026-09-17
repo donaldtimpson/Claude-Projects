@@ -18,7 +18,7 @@
     { "id": "l11-gen-08", "level": 1, "prompt": "What gender is this noun?\n\n“table”", "options": ["Masculine", "Feminine", "Common", "Neuter"], "answer": 3, "explain": "“table” has no sex — neuter." },
 
     { "id": "l11-pl-01", "level": 1, "prompt": "Which is the correct plural of “calf”?", "options": ["calfs", "calves", "calfes"], "answer": 1, "explain": "f → ves: calf → calves." },
-    { "id": "l11-pl-02", "level": 1, "prompt": "Which is the correct plural of “hero”?", "options": ["heros", "heroes", "heroies"], "answer": 1, "explain": "o after a consonant → oes: hero → heroes." },
+    { "id": "l11-pl-02", "level": 1, "prompt": "Which is the correct plural of “hero”?", "options": ["heros", "heroes", "heroies"], "answer": 1, "explain": "o after a consonant — add es: hero → heroes." },
     { "id": "l11-pl-03", "level": 1, "prompt": "Which is the correct plural of “goose”?", "options": ["gooses", "geese", "goeses"], "answer": 1, "explain": "“goose” is irregular: goose → geese." },
     { "id": "l11-pl-04", "level": 1, "prompt": "Which is the correct plural of “ox”?", "options": ["oxes", "oxen", "oxs"], "answer": 1, "explain": "“ox” is irregular: ox → oxen." },
     { "id": "l11-pl-05", "level": 1, "prompt": "Which is the correct plural of “mouse”?", "options": ["mouses", "mice", "meese"], "answer": 1, "explain": "“mouse” is irregular: mouse → mice." },

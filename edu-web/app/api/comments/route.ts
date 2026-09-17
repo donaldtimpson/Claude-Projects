@@ -3,14 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { nestComments, serializeComment } from "@/lib/comments";
+import { getBlockedUserIds } from "@/lib/moderation";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const videoId = searchParams.get("videoId");
   if (!videoId) return NextResponse.json({ error: "videoId required" }, { status: 400 });
 
+  // Hide comments authored by anyone the viewer has blocked (both top-level and
+  // replies, since the filter runs on the flat row set before nesting).
+  const session = await getServerSession(authOptions);
+  const blocked = await getBlockedUserIds(session?.user?.id ?? null);
+
   const comments = await db.comment.findMany({
-    where: { videoId },
+    where: { videoId, ...(blocked.length ? { userId: { notIn: blocked } } : {}) },
     include: { user: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" },
   });
