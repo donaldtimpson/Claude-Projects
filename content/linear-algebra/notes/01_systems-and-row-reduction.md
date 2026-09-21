@@ -1,0 +1,336 @@
+# Linear Algebra — Lecture Notes
+
+**Text:** Lay, *Linear Algebra and Its Applications*, 5th ed.
+**Chapter 1 — Linear Equations in Linear Algebra**
+**Sections covered:** 1.1 Systems of Linear Equations · 1.2 Row Reduction and Echelon Forms
+
+> *Chapter roadmap:* Systems of linear equations lie at the heart of linear algebra. §1.1–1.2 give a **systematic method for solving them** that is used for computations throughout the whole text. §1.3–1.4 recast a system as a *vector equation* and a *matrix equation*; the second half of the chapter builds spanning, linear independence, and linear transformations on top of this foundation.
+
+---
+
+## §1.1 — Systems of Linear Equations
+
+### Core Definitions
+
+**Linear equation.** An equation in the variables $x_1, \dots, x_n$ that can be written as
+
+$$a_1 x_1 + a_2 x_2 + \cdots + a_n x_n = b$$
+
+where $b$ and the **coefficients** $a_1, \dots, a_n$ are real or complex numbers, usually known in advance.
+
+- The subscript $n$ may be any positive integer. In textbook work $n$ is normally 2–5; in real problems $n$ might be 50 or 5000+.
+- **Test of linearity — variables appear only to the first power, never multiplied together and never inside roots/other functions.**
+
+| Linear | Not linear | Why not |
+|---|---|---|
+| $4x_1 - 5x_2 + 2 = x_1$  (i.e. $3x_1 - 5x_2 = -2$) | $4x_1 - 5x_2 = x_1 x_2$ | product $x_1x_2$ |
+| $x_2 = 2(\sqrt{6}-x_1)+x_3$ (i.e. $2x_1 + x_2 - x_3 = 2\sqrt6$) | $x_2 = 2\sqrt{x_1} - 6$ | $\sqrt{x_1}$ |
+
+> Note that $\sqrt 6$ as a *coefficient* is fine — constants may be any real number. It is $\sqrt{x_1}$ (a root **of a variable**) that breaks linearity.
+
+**System of linear equations (linear system).** A collection of one or more linear equations involving the same variables $x_1, \dots, x_n$.
+
+**Solution.** A list $(s_1, s_2, \dots, s_n)$ of numbers that makes *every* equation true when $s_1, \dots, s_n$ are substituted for $x_1, \dots, x_n$.
+
+**Solution set.** The set of *all* solutions of the system.
+
+**Equivalent systems.** Two systems are equivalent if they have the same solution set.
+
+### The three-outcomes fact
+
+Solving two equations in two variables = intersecting two lines. The lines meet in one point, are parallel (no meeting), or coincide (meet everywhere). This generalizes:
+
+> **📦 Key fact.** A system of linear equations has either
+> 1. **no solution**, or
+> 2. **exactly one solution**, or
+> 3. **infinitely many solutions.**
+>
+> A system is **consistent** if it has one or infinitely many solutions; **inconsistent** if it has none.
+
+*(This will be fully justified in §1.2.)*
+
+### Matrix Notation
+
+Given the system
+$$
+\begin{aligned}
+x_1 - 2x_2 + \phantom{-}x_3 &= 0\\
+2x_2 - 8x_3 &= 8\\
+5x_1 \phantom{-2x_2} - 5x_3 &= 10
+\end{aligned}
+$$
+
+- **Coefficient matrix** (coefficients only):
+$$\begin{bmatrix} 1 & -2 & 1 \\ 0 & 2 & -8 \\ 5 & 0 & -5 \end{bmatrix}$$
+
+- **Augmented matrix** (coefficients + the right-hand constants as a final column):
+$$\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 2 & -8 & 8 \\ 5 & 0 & -5 & 10 \end{bmatrix}$$
+
+**Size.** An $m \times n$ matrix has $m$ rows and $n$ columns (**rows always stated first**). The augmented matrix above is $3 \times 4$.
+
+### Solving a system — the strategy and the three operations
+
+> **Strategy:** replace a system with an *equivalent* system (same solution set) that is easier to solve — eliminate $x_1$ from all but the first equation, then $x_2$ from all below the second, and so on, until the system is "triangular."
+
+> **📦 Elementary Row Operations.**
+> 1. **(Replacement)** Replace a row by the sum of itself and a multiple of another row.
+> 2. **(Interchange)** Swap two rows.
+> 3. **(Scaling)** Multiply all entries of a row by a nonzero constant.
+
+- **Row equivalent** matrices: one can be turned into the other by a sequence of elementary row operations.
+- **Row operations are reversible** (a swap is undone by the same swap; a scaling by $c$ by scaling $1/c$; a replacement "add $c\cdot$row1 to row2" by "add $-c\cdot$row1 to row2"). This reversibility is *why* they preserve the solution set.
+
+> **📦 Fundamental link.** If the augmented matrices of two linear systems are **row equivalent**, then the two systems have the **same solution set.**
+
+#### Example 1 — full elimination (worked)
+
+Solve the system above. Reduce the augmented matrix:
+
+$$
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 2 & -8 & 8 \\ 5 & 0 & -5 & 10 \end{bmatrix}
+\xrightarrow{R_3 + (-5)R_1}
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 2 & -8 & 8 \\ 0 & 10 & -10 & 10 \end{bmatrix}
+\xrightarrow{\frac12 R_2}
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 1 & -4 & 4 \\ 0 & 10 & -10 & 10 \end{bmatrix}
+$$
+
+$$
+\xrightarrow{R_3 + (-10)R_2}
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 1 & -4 & 4 \\ 0 & 0 & 30 & -30 \end{bmatrix}
+\xrightarrow{\frac1{30} R_3}
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 1 & -4 & 4 \\ 0 & 0 & 1 & -1 \end{bmatrix}
+$$
+
+Now clear upward (using $x_3$, then $x_2$) to reach:
+
+$$
+\begin{bmatrix} 1 & 0 & 0 & 1 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & -1 \end{bmatrix}
+\quad\Longrightarrow\quad (x_1, x_2, x_3) = (1,\, 0,\, -1).
+$$
+
+**Check (strongly recommended as a guard against arithmetic errors):** substitute $(1,0,-1)$ into the *original* left sides:
+$1(1)-2(0)+1(-1)=0$ ✓,  $2(0)-8(-1)=8$ ✓,  $5(1)-5(-1)=10$ ✓.
+
+*Geometric reading:* each original equation is a plane in $\mathbb R^3$; the point $(1,0,-1)$ lies on all three.
+
+### Existence and Uniqueness
+
+> **📦 Two Fundamental Questions About a Linear System.**
+> 1. **Existence** — is the system consistent; does *at least one* solution exist?
+> 2. **Uniqueness** — if a solution exists, is it the *only* one?
+>
+> These two questions recur throughout the entire course, in many guises.
+
+#### Example 2 — consistent (triangular form)
+
+$$
+\begin{bmatrix} 1 & -2 & 1 & 0 \\ 0 & 1 & -4 & 4 \\ 0 & 0 & 1 & -1 \end{bmatrix}
+$$
+The bottom row gives $x_3 = -1$; back-substitution then pins down $x_2$ and $x_1$ uniquely. A solution **exists** and is **unique**.
+
+#### Example 3 — inconsistent (the tell-tale bottom row)
+
+$$
+\begin{aligned}
+x_2 - 4x_3 &= 8\\
+2x_1 - 3x_2 + 2x_3 &= 1\\
+4x_1 - 8x_2 + 12x_3 &= 1
+\end{aligned}
+\;\longrightarrow\;
+\begin{bmatrix} 2 & -3 & 2 & 1 \\ 0 & 1 & -4 & 8 \\ 0 & 0 & 0 & 15 \end{bmatrix}
+$$
+
+The last row means $0 = 15$, which is **never true**, so the system is **inconsistent** (no solution).
+
+> **⚠ Watch for this:** a bottom row of the form $[\,0\ \cdots\ 0\ \mid\ b\,]$ with $b \ne 0$ is the signature of an inconsistent system. *Geometrically:* the three planes have no common point.
+
+> **📝 Numerical Note.** In real-world problems, linear systems are solved by computer using this same elimination algorithm (slightly modified for accuracy). Machines use **floating-point arithmetic** — numbers like $1/3$ can't be stored exactly — so **round-off error** is introduced. It rarely causes trouble.
+
+---
+
+## §1.2 — Row Reduction and Echelon Forms
+
+This section refines §1.1 into a precise **algorithm** that analyzes *any* system and answers the existence/uniqueness questions. It applies to any rectangular matrix, not just augmented ones.
+
+**Vocabulary first:**
+- A **nonzero row/column** contains at least one nonzero entry.
+- The **leading entry** of a (nonzero) row is its leftmost nonzero entry.
+
+### Echelon and Reduced Echelon Form
+
+> **📗 DEFINITION.** A matrix is in **echelon form** (row echelon form) if:
+> 1. All nonzero rows are above any all-zero rows.
+> 2. Each leading entry is in a column **to the right** of the leading entry of the row above it.
+> 3. All entries in a column **below** a leading entry are zero.
+>
+> It is in **reduced echelon form** if additionally:
+> 4. The leading entry of each nonzero row is **1**.
+> 5. Each leading **1** is the *only* nonzero entry in its column.
+
+The leading entries form a "staircase" (echelon = step-like) descending to the right. (Property 3 follows from property 2.)
+
+Examples of the two forms (▪ = any nonzero leading value, ∗ = any value):
+$$
+\text{echelon: }
+\begin{bmatrix} ▪ & ∗ & ∗ & ∗ \\ 0 & ▪ & ∗ & ∗ \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+\qquad
+\text{reduced echelon: }
+\begin{bmatrix} 1 & 0 & ∗ & ∗ \\ 0 & 1 & ∗ & ∗ \\ 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+$$
+
+> **📐 THEOREM 1 — Uniqueness of the Reduced Echelon Form.** Each $m \times n$ matrix $A$ is row equivalent to **one and only one** reduced echelon matrix $U$.
+
+> **🔎 Proof.**
+> **Existence** is the row reduction algorithm, which terminates in a matrix in reduced echelon form. For **uniqueness** we induct on the number of columns $n$.
+>
+> *Base case $n=1$.* Let $A$ be an $m\times 1$ matrix. If $A$ is the zero column it is already in reduced echelon form. If $A$ has a nonzero entry, row operations produce the column with a $1$ in the top entry and $0$s below it. In both cases the reduced echelon form is forced by $A$, so it is unique.
+>
+> *Inductive step.* Assume uniqueness for matrices with $n-1$ columns. Let $A$ be $m\times n$, and suppose $B$ and $C$ are both in reduced echelon form and both row equivalent to $A$. Delete the last column of each to get $\hat B$ and $\hat C$. Deleting a fixed column commutes with row operations, so $\hat B$ and $\hat C$ are row equivalent to $A$ with its last column removed; and dropping a column leaves a matrix still in reduced echelon form. By the inductive hypothesis $\hat B = \hat C$ — that is, **$B$ and $C$ have identical first $n-1$ columns and can differ only in the last.**
+>
+> Suppose, for contradiction, $B \ne C$. Read each of $B$ and $C$ as the coefficient matrix of a homogeneous system — its rows set equal to $0$. Since $B$ and $C$ are row equivalent, these systems have the same solution set (row operations, carrying along a zero right-hand column, preserve it). Take any solution $(x_1,\dots,x_n)$; for each row $i$ both
+> $$b_{i1}x_1 + \cdots + b_{in}x_n = 0 \qquad\text{and}\qquad c_{i1}x_1 + \cdots + c_{in}x_n = 0$$
+> hold, and subtracting them cancels the first $n-1$ terms (those coefficients agree), leaving
+> $$(b_{in} - c_{in})\,x_n = 0 \qquad\text{for every row }i\text{ and every solution }(x_1,\dots,x_n). \tag{$\ast$}$$
+>
+> Look at the last column of $B$.
+> - *It is a non-pivot column,* so $x_n$ is a free variable and some solution has $x_n = 1$. Then $(\ast)$ gives $b_{in} - c_{in} = 0$ for every $i$: the last columns of $B$ and $C$ are equal — contradicting $B \ne C$.
+> - *It is a pivot column.* Let $p$ be the number of pivots in the shared first $n-1$ columns; the pivot in column $n$ is then the $(p+1)$-th. A pivot column of a reduced echelon matrix holds a single $1$ with $0$s elsewhere, so that pivot row reads simply $x_n = 0$, forcing **every** solution to have $x_n = 0$. The shared solution set then bars $x_n$ from being free in $C$, so column $n$ is a pivot column of $C$ too; as the $(p+1)$-th pivot in each, it is the column with a $1$ in row $p+1$ and $0$s elsewhere in both — so the last columns agree, again contradicting $B \ne C$.
+>
+> Both cases are impossible, so $B = C$. $\blacksquare$
+
+- A matrix can have *many* echelon forms (depending on the operations chosen), **but only one reduced echelon form.**
+- If $A$ is row equivalent to echelon matrix $U$, we call $U$ *an* echelon form of $A$; the reduced echelon form is *the* echelon form of $A$. Software abbreviates it **RREF** (some use REF for plain echelon form).
+
+### Pivots
+
+Because the reduced echelon form is unique, the *positions* of the leading entries are determined by $A$ alone — they are the same in every echelon form of $A$.
+
+> **📗 DEFINITION.** A **pivot position** in $A$ is a location that corresponds to a leading 1 in the reduced echelon form of $A$. A **pivot column** is a column containing a pivot position.
+> A **pivot** is a nonzero number in a pivot position used to create zeros via row operations.
+
+> **💡 Why this matters:** many fundamental concepts in the first four chapters connect back to pivot positions. Pivots are the through-line of the course.
+
+#### Example 2 — locate the pivot columns (worked)
+
+$$
+A=\begin{bmatrix} 0 & -3 & -6 & 4 & 9 \\ -1 & -2 & -1 & 3 & 1 \\ -2 & -3 & 0 & 3 & -1 \\ 1 & 4 & 5 & -9 & -7 \end{bmatrix}
+$$
+
+Leftmost nonzero column is column 1 → first pivot column. Interchange $R_1 \leftrightarrow R_4$ (puts a convenient $1$ on top, avoids fractions), clear below, then repeat on the submatrix. Reducing to echelon form reveals leading entries in **columns 1, 2, and 4** — those are the pivot columns:
+
+$$
+\begin{bmatrix} ▪ & ∗ & ∗ & ∗ & ∗ \\ 0 & ▪ & ∗ & ∗ & ∗ \\ 0 & 0 & 0 & ▪ & ∗ \\ 0 & 0 & 0 & 0 & 0 \end{bmatrix}
+$$
+
+> **⚠ Note:** the *pivots* used during reduction (here 1, 2, −5) are **not** the same as the original entries sitting in those highlighted positions of $A$. "Pivot position" is about *location*, not value.
+
+### The Row Reduction Algorithm
+
+Steps 1–4 produce an echelon form (the **forward phase**); step 5 produces the reduced echelon form (the **backward phase**).
+
+> **📦 Algorithm.**
+> **1.** Begin with the leftmost nonzero column — a pivot column. The pivot position is at the top.
+> **2.** Select a nonzero entry in the pivot column as pivot; if needed, interchange rows to move it into the pivot position.
+> **3.** Use row-replacement to create zeros in all positions below the pivot.
+> **4.** Cover the pivot row (and everything above it); apply steps 1–3 to the submatrix that remains. Repeat until no nonzero rows remain to modify.
+> **5. (Backward phase)** Beginning with the *rightmost* pivot and working up and left, create zeros above each pivot. Make each pivot a 1 by scaling.
+
+#### Example 3 — the algorithm end-to-end (worked)
+
+$$
+\begin{bmatrix} 0 & 3 & -6 & 6 & 4 & -5 \\ 3 & -7 & 8 & -5 & 8 & 9 \\ 3 & -9 & 12 & -9 & 6 & 15 \end{bmatrix}
+$$
+
+Forward phase (swap to get a pivot in column 1, clear down, move to the submatrix) reaches an **echelon form**:
+$$
+\begin{bmatrix} 3 & -9 & 12 & -9 & 6 & 15 \\ 0 & 2 & -4 & 4 & 2 & -6 \\ 0 & 0 & 0 & 0 & 1 & 4 \end{bmatrix}
+$$
+
+Backward phase (clear above each pivot from the right, then scale) reaches the **reduced echelon form**:
+$$
+\begin{bmatrix} 1 & 0 & -2 & 3 & 0 & -24 \\ 0 & 1 & -2 & 2 & 0 & -7 \\ 0 & 0 & 0 & 0 & 1 & 4 \end{bmatrix}
+$$
+
+> **📝 Numerical Note.** In software, step 2 usually picks the entry of **largest absolute value** in the column as the pivot — a strategy called **partial pivoting** — because it reduces round-off error. Also: the *forward* phase does far more work than the backward phase; for an $n\times(n{+}1)$ matrix, reduction to echelon form costs $\approx \tfrac{2}{3}n^3$ flops, while the extra reduction to *reduced* echelon form costs only $\le n^2$.
+
+### Solutions of Linear Systems — basic & free variables
+
+Once the augmented matrix is in reduced echelon form, read off the solution.
+
+> **📗 DEFINITIONS.**
+> - A **basic variable** corresponds to a **pivot column**.
+> - A **free variable** corresponds to a **non-pivot column** — you may assign it *any* value.
+
+**Method:** solve each equation for its basic variable in terms of the free variables.
+
+#### Example 4 — general solution with a free variable (worked)
+
+The problem hands us the augmented matrix already in echelon form:
+$$
+\begin{bmatrix} 1 & 6 & 2 & -5 & -2 & -4 \\ 0 & 0 & 2 & -8 & -1 & 3 \\ 0 & 0 & 0 & 0 & 1 & 7 \end{bmatrix}
+$$
+Row reducing to reduced echelon form (intermediate steps omitted):
+$$
+\begin{bmatrix} 1 & 6 & 2 & -5 & -2 & -4 \\ 0 & 0 & 2 & -8 & -1 & 3 \\ 0 & 0 & 0 & 0 & 1 & 7 \end{bmatrix}
+\;\;\longrightarrow\;\;
+\begin{bmatrix} 1 & 6 & 0 & 3 & 0 & 0 \\ 0 & 0 & 1 & -4 & 0 & 5 \\ 0 & 0 & 0 & 0 & 1 & 7 \end{bmatrix}
+$$
+Pivot columns are 1, 3, 5 → basic variables $x_1, x_3, x_5$; free variables $x_2, x_4$. General solution:
+$$
+\begin{cases}
+x_1 = -6x_2 - 3x_4 \\
+x_2 \text{ free} \\
+x_3 = 5 + 4x_4 \\
+x_4 \text{ free} \\
+x_5 = 7
+\end{cases}
+$$
+This is a **parametric description** — the free variables are the parameters.
+
+> **✋ Convention:** always use the *free* variables as the parameters. A consistent system with free variables has many parametric descriptions; we standardize on this one (and so does the answer key).
+
+> **⚠ Common mistake:** the general solution must describe *every* variable, with parameters clearly identified. Writing "$x_3 = 1 + x_2$" while also calling $x_2$ free implies *both* are free — wrong. Solve for each basic variable; leave each free variable free.
+
+### Existence & Uniqueness — the payoff theorem
+
+> **📐 THEOREM 2 — Existence and Uniqueness Theorem.**
+> A linear system is **consistent** iff the rightmost column of the augmented matrix is **not** a pivot column — equivalently, iff an echelon form has **no** row of the form $[\,0\ \cdots\ 0\ \mid\ b\,]$ with $b \ne 0$.
+> If consistent, the solution set is either
+> - **(i)** a **unique** solution (no free variables), or
+> - **(ii)** **infinitely many** solutions (at least one free variable).
+
+> **🔎 Proof.**
+> Row reduce the augmented matrix to an echelon form; call it $[\,B\mid \mathbf{d}\,]$. Because it is row equivalent to the original, it has the **same solution set**, so we may reason about it instead.
+>
+> **Consistency ⟺ no $[\,0\ \cdots\ 0\mid b\,]$ row, $b\ne0$.**
+> - *(If such a row is present.)* That row is the equation $0x_1 + \cdots + 0x_n = b$ with $b\ne0$, which no values of the variables can satisfy. The system has **no solution** — inconsistent. Note this row is exactly the case where the leading entry of some row sits in the augmented (rightmost) column, i.e. **the rightmost column is a pivot column.**
+> - *(If no such row is present.)* Then the rightmost column is not a pivot column, and every nonzero equation contains a **basic variable with nonzero coefficient.** Assign any values whatsoever to the free variables (if there are none, skip this) and back-solve each equation for its basic variable. This produces an actual solution, so the system is **consistent.**
+>
+> **Counting the solutions when consistent.** Continue to *reduced* echelon form, so each basic variable is the leading $1$ of exactly one equation and is expressed in terms of the free variables alone.
+> - *(No free variables.)* Every variable is a basic variable, each pinned to a single number by its equation. The solution is **unique** — case (i).
+> - *(At least one free variable.)* Each free variable ranges over all real numbers, and every choice yields a different solution (the free variable's own value already differs). So there are **infinitely many** solutions — case (ii). $\blacksquare$
+
+> **📦 Using Row Reduction to Solve a Linear System (boxed recipe).**
+> 1. Write the augmented matrix.
+> 2. Row-reduce to echelon form; decide if consistent. **If a $0=b$ row appears, stop — no solution.**
+> 3. Continue to reduced echelon form.
+> 4. Write the system for that matrix.
+> 5. Solve each nonzero equation for its basic variable in terms of the free variables.
+
+#### Example 5 — existence & uniqueness by inspection (worked)
+
+Start with the system:
+$$
+\begin{aligned}
+3x_2 - 6x_3 + 6x_4 + 4x_5 &= -5\\
+3x_1 - 7x_2 + 8x_3 - 5x_4 + 8x_5 &= 9\\
+3x_1 - 9x_2 + 12x_3 - 9x_4 + 6x_5 &= 15
+\end{aligned}
+$$
+Its augmented matrix is the one row-reduced back in Example 3, whose echelon form is (steps omitted):
+$$
+\begin{bmatrix} 0 & 3 & -6 & 6 & 4 & -5 \\ 3 & -7 & 8 & -5 & 8 & 9 \\ 3 & -9 & 12 & -9 & 6 & 15 \end{bmatrix}
+\;\;\longrightarrow\;\;
+\begin{bmatrix} 3 & -9 & 12 & -9 & 6 & 15 \\ 0 & 2 & -4 & 4 & 2 & -6 \\ 0 & 0 & 0 & 0 & 1 & 4 \end{bmatrix}
+$$
+Basic: $x_1, x_2, x_5$. Free: $x_3, x_4$. No $0=b$ row → **consistent**; free variables present → **infinitely many** solutions. (No need to finish solving to answer the existence/uniqueness question.)
