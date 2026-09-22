@@ -108,7 +108,8 @@ export type GbQuiz = { videoId: string; title: string };
 export type GbAssignment = {
   id: string;
   title: string;
-  points: number;
+  points: number; // graded denominator (copied from the problem set at assign time)
+  extraCreditPoints: number; // bonus beyond the denominator; 0 for lessons/papers
   kind: "problemSet" | "lesson" | "paper";
   problemSetId: string | null;
   lessonSlug: string | null;
@@ -163,7 +164,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   const sectionAssignments = await db.assignment.findMany({
     where: { sectionId: section.id },
     orderBy: { createdAt: "asc" },
-    include: { problemSet: { select: { title: true, solutionsPublic: true } } },
+    include: { problemSet: { select: { title: true, solutionsPublic: true, extraCreditPoints: true } } },
   });
 
   // Resolve display titles for lesson-drill assignments.
@@ -175,6 +176,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     title:
       a.title ?? a.problemSet?.title ?? (a.lessonSlug ? lessonTitle.get(a.lessonSlug) ?? a.lessonSlug : "Assignment"),
     points: a.points,
+    extraCreditPoints: a.problemSet?.extraCreditPoints ?? 0,
     kind: a.lessonSlug ? "lesson" : a.problemSetId ? "problemSet" : "paper",
     problemSetId: a.problemSetId,
     lessonSlug: a.lessonSlug,
@@ -217,7 +219,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   const [progress, attempts, submissions, attendance, gradeScores] = await Promise.all([
     db.videoProgress.findMany({
       where: { userId: { in: userIds }, videoId: { in: videoIds } },
-      select: { userId: true },
+      select: { userId: true, videoId: true },
     }),
     db.quizAttempt.findMany({
       where: {
@@ -275,8 +277,13 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
     m[a.videoId] = a.status as AttendanceStatus;
   }
 
-  const watched = new Map<string, number>();
-  for (const p of progress) watched.set(p.userId, (watched.get(p.userId) ?? 0) + 1);
+  // Which lectures each student has watched — the attendance signal.
+  const watchedByUser = new Map<string, Set<string>>();
+  for (const p of progress) {
+    let set = watchedByUser.get(p.userId);
+    if (!set) watchedByUser.set(p.userId, (set = new Set()));
+    set.add(p.videoId);
+  }
 
   const bestQuiz = new Map<string, Map<string, number>>();
   const bestTest = new Map<string, number>();
@@ -297,11 +304,19 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
   const students: StudentRow[] = section.enrollments.map((e) => {
     const uid = e.user.id;
 
-    // Attendance over marked lectures.
-    const attMap = attByUser.get(uid) ?? {};
+    // Attendance is watch-derived: watching a lecture (in class or the recording
+    // afterward) counts as present, not watching counts as absent — over every
+    // lecture that exists. A manual mark overrides the watch signal for that
+    // lecture (e.g. excused, or present for an in-person student who never opened
+    // the recording). Excused is excluded from the denominator.
+    const manualAtt = attByUser.get(uid) ?? {};
+    const watchedSet = watchedByUser.get(uid) ?? new Set<string>();
+    const attMap: Record<string, AttendanceStatus> = {};
     let attCredit = 0;
     let attCounted = 0;
-    for (const status of Object.values(attMap)) {
+    for (const v of videos) {
+      const status: AttendanceStatus = manualAtt[v.id] ?? (watchedSet.has(v.id) ? "present" : "absent");
+      attMap[v.id] = status;
       const credit = ATTENDANCE_CREDIT[status];
       if (credit === null) continue;
       attCredit += credit;
@@ -373,7 +388,7 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
       userId: uid,
       name: e.user.name,
       email: e.user.email,
-      watchedCount: watched.get(uid) ?? 0,
+      watchedCount: watchedSet.size,
       attendanceByVideo: attMap,
       attendancePct,
       attendanceOverride: e.attendanceOverride,
