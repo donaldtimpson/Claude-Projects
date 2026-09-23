@@ -188,6 +188,32 @@ export function pairProblemSet(
 }
 
 /**
+ * Estimate how many ruled work lines to leave under a problem on a printed
+ * worksheet, from its worked solution (a proxy for how much a student must
+ * write). Prose contributes by length; each displayed equation and each matrix
+ * needs extra vertical room. Returns a clamped line count so no single problem
+ * blows past a page and none is cramped. `null`/empty solution → a sane default.
+ */
+export function estimateWorkLines(solution: string | null | undefined): number {
+  const s = (solution ?? "").trim();
+  if (!s) return 5;
+
+  const displayMath = Math.floor((s.match(/\$\$/g)?.length ?? 0) / 2);
+  const matrices = s.match(/\\begin\{(?:bmatrix|pmatrix|vmatrix|array)\}/g)?.length ?? 0;
+  const alignments = s.match(/\\begin\{(?:aligned|align|cases)\}/g)?.length ?? 0;
+  // Prose length with math stripped out (math is counted separately below).
+  const prose = s.replace(/\$\$[\s\S]*?\$\$/g, "").replace(/\$[^$]*\$/g, "");
+
+  const lines =
+    Math.ceil(prose.length / 55) + // ~55 solution chars per handwritten line
+    displayMath * 3 + // each displayed equation ~3 lines of room
+    matrices * 2 + // matrices need extra 2-D room
+    alignments * 2;
+
+  return Math.max(4, Math.min(lines, 24)); // never cramped, never over ~a page
+}
+
+/**
  * Whether a viewer may see a set's worked solutions.
  *
  * `ProblemSet.solutionsPublic` is the single source of truth — a published

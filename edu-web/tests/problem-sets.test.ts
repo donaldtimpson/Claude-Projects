@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitAuthored, pairProblemSet, canSeeSolutions } from "@/lib/problem-sets";
+import { splitAuthored, pairProblemSet, canSeeSolutions, estimateWorkLines } from "@/lib/problem-sets";
 
 describe("splitAuthored", () => {
   it("keeps everything before the first numbered item as preamble", () => {
@@ -113,5 +113,27 @@ describe("canSeeSolutions", () => {
   it("mirrors the solutionsPublic flag", () => {
     expect(canSeeSolutions({ solutionsPublic: true })).toBe(true);
     expect(canSeeSolutions({ solutionsPublic: false })).toBe(false);
+  });
+});
+
+describe("estimateWorkLines", () => {
+  it("gives a sane default when there's no solution to gauge", () => {
+    expect(estimateWorkLines(null)).toBe(5);
+    expect(estimateWorkLines("")).toBe(5);
+    expect(estimateWorkLines("   ")).toBe(5);
+  });
+
+  it("never cramps and never overruns a page", () => {
+    expect(estimateWorkLines("x")).toBeGreaterThanOrEqual(4);
+    const huge = "word ".repeat(1000) + "$$\\begin{bmatrix}1\\end{bmatrix}$$".repeat(20);
+    expect(estimateWorkLines(huge)).toBeLessThanOrEqual(24);
+  });
+
+  it("leaves more room for a longer, matrix-heavy solution than a short one", () => {
+    const short = "**1.** The answer is $x = 2$.";
+    const long =
+      "**1.** Row reduce: $$\\begin{bmatrix}1&2\\\\3&4\\end{bmatrix} \\to \\begin{bmatrix}1&0\\\\0&1\\end{bmatrix}$$ " +
+      "so the pivots are in both columns and the system has a unique solution after back-substitution.";
+    expect(estimateWorkLines(long)).toBeGreaterThan(estimateWorkLines(short));
   });
 });

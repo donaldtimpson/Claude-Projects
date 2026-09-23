@@ -4,7 +4,20 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import MarkdownNotes from "@/components/MarkdownNotes";
 import PrintControls from "@/components/PrintControls";
-import { pairProblemSet, canSeeSolutions } from "@/lib/problem-sets";
+import { pairProblemSet, canSeeSolutions, splitAuthored, estimateWorkLines } from "@/lib/problem-sets";
+
+// Faint ruled lines for students to work the problem by hand on a printout.
+// Borders (not background gradients) so the rules actually print. Height is
+// gauged from the solution — more involved answers get more room.
+function WorkSpace({ lines }: { lines: number }) {
+  return (
+    <div aria-hidden className="mt-3">
+      {Array.from({ length: lines }).map((_, i) => (
+        <div key={i} style={{ height: "0.3in", borderBottom: "1px solid #e5e7eb" }} />
+      ))}
+    </div>
+  );
+}
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +67,14 @@ export default async function PrintProblemSetPage({
   const showSolutions = wantSolutions && allowed && ps.solution.trim().length > 0;
   const paired = pairProblemSet(ps.body, ps.solution, showSolutions);
 
+  // Worksheet mode (no solutions shown): leave ruled work space under each
+  // problem, sized from its solution. Keyed the same way as the parts, so we can
+  // gauge space per problem even though the solution text itself stays hidden.
+  const worksheet = !showSolutions;
+  const solutionByKey = new Map(
+    worksheet ? splitAuthored(ps.solution.trim()).chunks.map((c) => [c.key, c.content]) : []
+  );
+
   return (
     <main className="max-w-3xl mx-auto px-8 py-10">
       <PrintControls auto={!ps.isDraft} />
@@ -84,6 +105,7 @@ export default async function PrintProblemSetPage({
       {paired.mode === "blocks" ? (
         <>
           <MarkdownNotes content={paired.body} variant="print" />
+          {worksheet && <WorkSpace lines={estimateWorkLines(ps.solution)} />}
           {paired.solution && (
             <section className="mt-10 pt-6 border-t border-zinc-300">
               <h2 className="font-display text-sm tracking-[0.2em] uppercase text-zinc-500 mb-4">
@@ -100,10 +122,12 @@ export default async function PrintProblemSetPage({
           )}
           <ol className="list-none p-0 m-0">
             {paired.parts.map((p) => (
-              // break-inside-avoid keeps a problem and its answer on one page
-              // where it fits, instead of splitting across the fold.
-              <li key={p.key} className="mt-6 break-inside-avoid">
+              // In solutions mode, keep a problem and its answer together on one
+              // page. In worksheet mode the work space can be tall, so let it
+              // flow across the fold rather than leave big gaps.
+              <li key={p.key} className={`mt-6 ${worksheet ? "" : "break-inside-avoid"}`}>
                 <MarkdownNotes content={p.problem} variant="print" />
+                {worksheet && <WorkSpace lines={estimateWorkLines(solutionByKey.get(p.key))} />}
                 {p.solution && (
                   <div className="mt-2 pl-4 border-l-2 border-zinc-300">
                     <p className="font-display text-[0.6rem] tracking-[0.2em] uppercase text-zinc-400">
