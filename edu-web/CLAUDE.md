@@ -258,9 +258,12 @@ description.
 
 `scripts/transcripts-timed/` and `scripts/chapters/` are gitignored (derived/ephemeral).
 
-**Future:** extend `/current-quiz` to also draft chapters for the newest video (alongside the
-quiz + notes it already generates), and optionally persist chapters to render clickable seek
-points on the on-site lecture page.
+`/current-quiz` (`.claude/commands/current-quiz.md`) runs this end to end for the newest lecture —
+quiz, notes, transcript, chapters pushed live, and community quiz posts scheduled — publishing
+everything without a review gate (Donald's call, 2026-09-24). If captions aren't ready yet it sets a
+one-shot `CronCreate` check-in and re-runs itself later.
+
+**Future:** optionally persist chapters to render clickable seek points on the on-site lecture page.
 
 ## Course descriptions (`scripts/push-course-descriptions.ts`)
 

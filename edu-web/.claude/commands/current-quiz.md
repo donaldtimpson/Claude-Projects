@@ -1,74 +1,186 @@
 ---
-description: Generate a draft quiz, lecture notes, AND YouTube chapter timestamps for the latest video in the current course
+description: End-to-end for the newest lecture — quiz, lecture notes, transcript, YouTube chapters, and community quiz posts, all published
+argument-hint: "[course name, e.g. \"Grammar\" or \"Linear Algebra\"]"
 ---
 
 # /current-quiz
 
-For the newest video in Donald's currently-active course, generate a 10-question draft quiz, draft
-lecture notes, **and** draft YouTube chapter timestamps. The quiz and notes import as hidden drafts
-into the admin UI for review; the chapters are previewed with a dry-run and pushed live to the
-video's YouTube description **only on Donald's confirmation** (chapters have no hidden-draft state).
-Scheduling the quiz as YouTube Community Quiz posts is a **deferred** follow-on (step 10) that runs
-later — only after Donald has published the quiz — since it needs the published questions.
+For the newest video in one of Donald's current courses, run the **whole per-lecture pipeline and publish
+everything**:
 
-The "current course" is the `Course` row with `isCurrent: true`. The target video is the one in that
-course with the most recent `publishedAt`.
+1. a 10-question quiz — imported, then **published**
+2. lecture notes — imported, then **published**
+3. the transcript — imported into catalog search
+4. YouTube chapter timestamps — **pushed live** to the video description
+5. the quiz as 10 YouTube Community Quiz posts, 12h apart — **scheduled live**
+
+Donald has authorized this command to publish end to end (decided 2026-09-24). Don't stop to ask for
+review between steps. The dry-runs below are still mandatory, but they are **self-checks**: read the
+output or screenshot yourself, and continue unless something is actually wrong.
+
+**Choosing the course.** Several courses can be flagged `isCurrent: true` at once. If `$ARGUMENTS` names a
+course, match it against the titles of the `isCurrent` courses (case-insensitive substring, e.g.
+"grammar" → "Beginning Grammar (2026)"). If there is no argument and more than one course is current, ask
+Donald which one. The target video is that course's video with the most recent `publishedAt`.
+
+Run every `npx tsx` command from the **edu-web repo root**. The scripts use `process.cwd()`.
 
 ## Steps
 
-1. **Locate the target video.** Run a small Prisma query (e.g. via `npx tsx scripts/_one-off.ts`, then delete the file) that selects the `isCurrent: true` course and its newest video by `publishedAt desc`. Capture both the Prisma `Video.id` and `youtubeVideoId`. If multiple courses are flagged `isCurrent`, stop and ask Donald which one.
+1. **Locate the target video.** Run a small Prisma one-off (`scripts/_one-off.ts`, deleted afterwards)
+   that lists the `isCurrent: true` courses, picks one as described above, and selects its newest video
+   by `publishedAt desc`. Capture the course id, the Prisma `Video.id`, `youtubeVideoId`, the title, and
+   `durationSeconds`.
 
-2. **Pre-flight checks.** Check the quiz, notes, and chapters targets independently, and only generate the one(s) that don't already exist (report what you skip; if ALL THREE already exist, stop):
-   - **Quiz exists if:** `scripts/drafts/{videoId}.json` or `scripts/drafts/_imported/{videoId}.json` exists, OR the DB has any `QuizQuestion` rows for this video.
-   - **Notes exist if:** `scripts/notes/{videoId}.md` exists, OR the DB has a `LectureNote` row for this video.
-   - **Chapters exist if:** `scripts/chapters/{youtubeVideoId}.txt` exists (chapter files are keyed by **youtubeVideoId**, not the Prisma `Video.id`). Chapters aren't stored in the DB, so this file is the only local marker.
+2. **Pre-flight: skip what already exists.** Check each target on its own and only produce the missing
+   ones. Report what you skip. If every target already exists, stop.
+   - **Quiz exists if** `scripts/drafts/{videoId}.json` or `scripts/drafts/_imported/{videoId}.json`
+     exists, OR the DB has any `QuizQuestion` rows for this video. If the rows exist but are all still
+     `isDraft: true`, skip generation but still publish them (step 9) and post them (step 11).
+   - **Notes exist if** `scripts/notes/{videoId}.md` exists, OR the DB has a `LectureNote` row. Same
+     rule: publish an existing draft note.
+   - **Chapters exist if** `scripts/chapters/{youtubeVideoId}.txt` exists. The file is keyed by
+     **youtubeVideoId**, and chapters are not stored in the DB.
+   - **Community posts exist if** `scripts/community-posts/{youtubeVideoId}.json` exists.
 
-3. **Fetch the transcript(s).** Run `npx tsx scripts/fetch-transcripts.ts {courseId}` to cache the plaintext transcript (for the quiz + notes). Read `scripts/transcripts/{youtubeVideoId}.txt`. If empty or missing, stop and report. If generating chapters, ALSO run `npx tsx scripts/fetch-timed-transcripts.ts --video {youtubeVideoId}` to cache the TIMED transcript (`scripts/transcripts-timed/{youtubeVideoId}.json`, with cue start times) — chapter generation needs the timecodes that the plaintext transcript strips out. Both are idempotent.
+3. **Fetch the transcripts.** Run `npx tsx scripts/fetch-transcripts.ts {courseId}` (plaintext, used for
+   the quiz and notes) and `npx tsx scripts/fetch-timed-transcripts.ts --video {youtubeVideoId}` (with
+   cue start times, used for chapters). Both are idempotent.
+   - **Rate-limited (`HTTP Error 429` on the `en` track)?** Download the auto-caption track directly into
+     the scratchpad:
+     `yt-dlp --no-update --skip-download --write-auto-sub --sub-lang 'en-orig' --sub-format vtt --output '%(id)s.%(ext)s' 'https://www.youtube.com/watch?v={youtubeVideoId}'`
+     (quote the URL, because zsh globs the `?`). Then run it through the scripts' own parsers:
+     `stripVtt` from `fetch-transcripts.ts` writes `scripts/transcripts/{youtubeVideoId}.txt`, and
+     `parseVtt` from `fetch-timed-transcripts.ts` writes `scripts/transcripts-timed/{youtubeVideoId}.json`.
+     Copy those functions into a scratch script rather than importing them, because the scripts run
+     `main()` on import.
+   - **Captions not generated yet?** This is common for the first few hours after an upload. It shows up
+     as "no captions", an empty `.txt` or `[]` marker, or no subtitle track in yt-dlp's output. Do NOT
+     write anything. Instead, **set a check-in timer**:
+     - Use `CronCreate` with `recurring: false`, pinned about **2 hours** from now on an off-minute (not
+       :00 or :30). Set the prompt to `/current-quiz <the same course argument>`.
+     - Tell Donald the video, that captions aren't ready yet, and the exact time of the check-in.
+     - Stop there. The re-run starts again at step 1 and skips anything already done.
+     - If the check-in also finds no captions, set another timer, backing off to about 4 hours. After
+       about 24 hours with no captions, stop setting timers and tell Donald. Captions may be disabled on
+       the video.
+     - `CronCreate` jobs live only while this Claude session stays open. Say so, and mention that
+       `/schedule` can run a cloud routine if he's closing the session.
+   - Before relying on the plaintext transcript, remove the empty marker file if an earlier run left one.
 
-4. **Generate 10 quiz questions** following the house style in [[feedback-quiz-drafting]] (auto-memory):
-   - Mostly conceptual; numerical only when the lecture itself worked a clean example.
-   - **Distractor parity:** every option in a row should match the others in length, specificity, and grammatical shape. Read the four options as a row; if one stands out, normalize.
-   - **Length parity:** correct option must not be the longest. Target option lengths within ~15-20% of each other. Move nuance/caveats into the `explanation` field if the correct answer is getting too long.
-   - **Honest framing:** describe what happened/what is true, not what an action was "supposed" to accomplish.
-   - **No personal-name attribution.** Don't write "Donald says X" or "Per Donald, …" — restate as the position the course takes.
-   - **Pronoun convention.** Use **masculine** pronouns (he/him/his) for an arbitrary/generic individual ("a student", "a skater", "an observer"). Reserve the **feminine** for personification (Lady Justice, or a nation/city as *her* — e.g. "Rome") and for an actual specific woman (named or clearly real historical figure). Don't blind-replace — judge by context.
-   - **Dates use BC/AD**, never BCE/CE.
-   - Spread `correctIndex` across 0–3 (don't pile them all on one index).
-   - Match the tone of existing published questions for this course. For University Physics, `explanation` has been left empty — keep it `""` unless Donald asks for explanations.
+4. **Read the whole transcript and the references.** The transcript has very long lines, so page through
+   it until you know every topic covered. Also read, for tone and structure:
+   - the previous lecture's notes (`scripts/notes/`), quiz (`scripts/drafts/_imported/`), and chapters
+     (`scripts/chapters/`) for the same course;
+   - for **Grammar**, the lesson's source file `content/grammar/lessons/*.json` (Harvey's 1880 text: its
+     definitions, practice sets, and answers). Where the lecture and the source differ, follow the
+     lecture's terminology, e.g. "possessive case" versus the JSON's "possessive adjective". Mention the
+     alternate term in passing.
 
-5. **Generate the lecture notes.** Read `scripts/lecture-notes-style.md` and follow it EXACTLY (four sections `## Overview` / `## Key Concepts` / `## Worked Example` / `## Summary`; aligned equation blocks, never stacked `$$`; `\tan^{-1}` not `\arctan`; equation-first-then-substitution in the worked example; silently correct the speaker's verbal slips with no disclaimer; no instructor name / no meta-references). See also [[feedback_math_notation]] and [[feedback_transcript_corrections]]. Write the notes to `scripts/notes/{videoId}.md` (filename = Prisma `Video.id`).
-   - **Humanities caveat:** the style guide and the `## Worked Example` section assume a STEM/proof course. If the current course is a humanities course (e.g. History), the section template needs the discipline-adapted variant (Overview / Key Themes & Figures / Notable Episode / Summary) and `validate-notes.ts` must be relaxed first — stop and flag this rather than forcing a "Worked Example."
+5. **Generate 10 quiz questions** in the house style of [[feedback-quiz-drafting]] (auto-memory):
+   - Mostly conceptual. Use numbers only where the lecture itself worked a clean example.
+   - **Distractor parity:** all four options should match in length, specificity, and grammatical shape.
+     Read the four options as a row, and normalize any that stand out.
+   - **Length parity:** the correct option must never be the longest. Keep option lengths within about
+     15–20% of each other, and put nuance in `explanation`.
+   - **Honest framing.** Don't name the instructor ("Donald says…"); state the point as the course's
+     position.
+   - **Pronouns:** use masculine for an arbitrary individual. Use feminine for personification and for
+     real, specific women. Judge by context.
+   - Use **BC/AD**, never BCE/CE.
+   - **Plain unicode math, never `$…$`.** The quiz player doesn't render LaTeX. Grep the JSON for `$`
+     before importing; any hit is a bug.
+   - Spread `correctIndex` across 0–3.
+   - **Keep every prompt ≤ 140 characters.** Community posts carry the prompt in the caption, and the
+     scheduler warns above 140.
+   - Explanations: match the course. Linear Algebra and Grammar use them. University Physics leaves them
+     `""`.
 
-6. **Generate chapter timestamps.** Read `scripts/lecture-chapters-style.md` and follow it. From the TIMED transcript (`scripts/transcripts-timed/{youtubeVideoId}.json`), pick ~10–12 genuine topic-shift breakpoints (up to ~14–16 for long, example-dense lectures), in spoken order. First chapter MUST be `0:00`; titles terse (~2–6 words), sentence case, plain unicode math (e.g. `τ = Iα`, `r × F`) never LaTeX, drop "Worked example:" prefixes. Strictly ascending, each ≥ ~10s (aim ≥ ~45s), nothing in the last ~3 minutes. Base titles ONLY on what is actually said — **never** mirror the description's textbook `VIDEO CONTENTS` outline (it follows the book and often doesn't match the lecture's order/coverage). Write one `M:SS Title` / `H:MM:SS Title` per line to `scripts/chapters/{youtubeVideoId}.txt` (filename = **youtubeVideoId**). Unlike notes, chapters work for any discipline, so the humanities caveat in step 5 does NOT block them.
+6. **Generate the lecture notes.** This is always part of the run. Follow `scripts/lecture-notes-style.md`
+   exactly:
+   - the four sections `## Overview` / `## Key Concepts` / `## Worked Example` / `## Summary`;
+   - aligned equation blocks with `$$` at column 0, never stacked `$$`;
+   - `\tan^{-1}` rather than `\arctan`;
+   - in the worked example, the equation first, then the substitution;
+   - no instructor name and no meta-references.
+   See also [[feedback_math_notation]]. Write the notes to `scripts/notes/{videoId}.md`, named by the Prisma
+   `Video.id`.
+   - **Silently correct verbal and arithmetic slips** ([[feedback_transcript_corrections]]). Check every
+     worked computation yourself, because board arithmetic in the transcript is sometimes wrong. Say in the
+     final report what you corrected, but never in the notes.
+   - **Grammar** keeps the four headers. Its `## Worked Example` holds the lesson's practice sets, worked
+     with answers (`**Part (a): …**` numbered lists, as in earlier lessons).
+   - **Humanities (e.g. History):** "Worked Example" doesn't fit. Those courses need the adapted sections
+     (Overview / Key Themes & Figures / Notable Episode / Summary), and `validate-notes.ts` must be relaxed
+     first. Flag this and skip only the notes; carry on with everything else.
 
-7. **Write the quiz draft file** to `scripts/drafts/{videoId}.json` (videoId = Prisma `Video.id`, NOT the YouTube id):
+7. **Generate chapter timestamps.** Follow `scripts/lecture-chapters-style.md`, working from the TIMED
+   transcript.
+   - Choose about 10–12 genuine topic shifts. Long, example-dense lectures can use up to about 16.
+   - The first chapter is `0:00`. Every timestamp must snap to a real segment `start`, run strictly
+     ascending, sit at least about 45 seconds apart, and avoid the final ~3 minutes.
+   - Titles are terse (2–6 words), in sentence case, with plain unicode math.
+   - **Never** copy the description's `VIDEO CONTENTS` outline.
+   - Write to `scripts/chapters/{youtubeVideoId}.txt`. To find timestamps, grep phrases across adjacent
+     segments of the JSON and print the segments around each candidate.
+
+8. **Write the quiz draft file** to `scripts/drafts/{videoId}.json` (`videoId` is the Prisma `Video.id`):
    ```json
-   {
-     "scope": "video",
-     "videoId": "<Prisma Video.id>",
-     "questions": [
-       { "prompt": "...", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "" }
-     ]
-   }
+   { "scope": "video", "videoId": "<Prisma Video.id>",
+     "questions": [{ "prompt": "...", "options": ["A","B","C","D"], "correctIndex": 0, "explanation": "..." }] }
    ```
 
-8. **Validate, dry-run, and import/preview all three.** Run all `npx tsx` commands from the **edu-platform repo root** (the importers use `process.cwd()`):
-   - **Quiz:** `npx tsx scripts/import-drafts.ts --dry-run` (verify it validates and `would insert 10`), then `npx tsx scripts/import-drafts.ts` to commit (as `isDraft: true`), then `mv scripts/drafts/{videoId}.json scripts/drafts/_imported/{videoId}.json` so it isn't re-imported.
-   - **Notes:** `npx tsx scripts/validate-notes.ts` (structure check), then `npx tsx scripts/import-notes.ts` to insert the note (as `isDraft: true`). No move needed — `import-notes.ts` is idempotent against any existing `LectureNote` row, so the `.md` is simply skipped on future runs.
-   - **Chapters:** `npx tsx scripts/validate-chapters.ts` (YouTube-rules + duration check), then `npx tsx scripts/push-chapters.ts --video {youtubeVideoId} --dry-run` to preview the merged description. **Do NOT push live automatically** — chapters edit the public YouTube description with no hidden-draft state. Show Donald the dry-run output and the exact live command, and push (`npx tsx scripts/push-chapters.ts --video {youtubeVideoId}`) only after he confirms (or let him run it). Requires the one-time OAuth setup (`YOUTUBE_OAUTH_*` in `.env`); if it's missing, generate + validate the chapters and tell him to run `scripts/youtube-auth.ts` first.
-   - **Transcript (for search):** `npx tsx scripts/import-transcripts.ts --video {youtubeVideoId}` — upserts the plaintext (+ timed segments, if `fetch-timed-transcripts` ran) into the `Transcript` model so the new lecture shows up in catalog search. Idempotent, no review gate (captions are public); just needs the transcript fetched in step 3.
+9. **Validate, import, and publish.**
+   - **Quiz:** `npx tsx scripts/import-drafts.ts --dry-run`, which should report `would insert 10`. Then
+     run `npx tsx scripts/import-drafts.ts`, and afterwards
+     `mv scripts/drafts/{videoId}.json scripts/drafts/_imported/`.
+   - **Notes:** `npx tsx scripts/validate-notes.ts`, then `npx tsx scripts/import-notes.ts`.
+   - **Transcript:** `npx tsx scripts/import-transcripts.ts --video {youtubeVideoId}`, which makes the
+     lecture searchable.
+   - **Publish both:** run a one-off Prisma script that calls `quizQuestion.updateMany` and
+     `lectureNote.updateMany` with `{ where: { videoId, isDraft: true }, data: { isDraft: false } }`, then
+     delete the script. The lecture page reads the DB dynamically, so nothing needs revalidating.
 
-9. **Report back** with the course title, video title, quiz count inserted, notes status (inserted/skipped), chapters status (generated + dry-run shown, awaiting Donald's OK to push live — or pushed if he already confirmed), transcript imported (searchable: yes/no), and the admin URL to review/publish quiz + notes: `https://timpson-lyceum.vercel.app/admin/courses/{courseId}` (or `http://localhost:3000/admin/courses/{courseId}` for local). In the admin course hub, expand the lecture's row to find the Notes editor (with Edit/Preview) and the quiz editor. **Remind Donald** that once he publishes the quiz, step 10 (community quiz posts) is available.
+10. **Push the chapters live.**
+    - Run `npx tsx scripts/validate-chapters.ts`.
+    - Run `npx tsx scripts/push-chapters.ts --video {youtubeVideoId} --dry-run`. Check that the existing
+      description is untouched and the `Chapters` block is appended or replaced.
+    - Then run `npx tsx scripts/push-chapters.ts --video {youtubeVideoId}`.
+    - This needs `YOUTUBE_OAUTH_*` in `.env`. If it's missing, tell Donald to run
+      `scripts/youtube-auth.ts` and carry on with step 11.
 
-10. **(Deferred — only after the quiz is PUBLISHED) Schedule community quiz posts.** This step is outward-facing and reads the **published** quiz (`isDraft: false`), so it does NOT run in the same pass as the draft import above — the quiz is still a draft here. Once Donald has reviewed and **published** the quiz in admin, schedule its 10 questions as YouTube Community Quiz posts, 12h apart:
-   - **Dry-run first:** `npx tsx scripts/post-quiz-community.ts --video {youtubeVideoId} --dry-run` — composes the first post, sets its schedule, screenshots to `scripts/community-debug/`, and posts **nothing**. Show Donald the schedule plan + screenshot.
-   - **On his explicit OK, run live** (drop `--dry-run`) to schedule all 10. Posts are **scheduled**, so he reviews/deletes them in YouTube Studio (Content → Posts → Scheduled) before they publish. `--from <n>` resumes if it aborts mid-run (pin `--start "YYYY-MM-DD HH:mm"` to keep spacing aligned with already-scheduled posts); a marker `scripts/community-posts/{youtubeVideoId}.json` makes it idempotent (`--force` to override).
-   - Requires the one-time login `npx tsx scripts/yt-community-auth.ts`; if the session is missing, generate nothing and tell Donald to run that first. This is browser automation (no API for community posts) — selectors are fragile; see CLAUDE.md "Community quiz-post scheduler".
+11. **Schedule the community quiz posts.** The quiz is published by now, so run this in the same pass.
+    - **Avoid slot collisions.** Read the `scheduled[].when` values in every
+      `scripts/community-posts/*.json`. The default start is tomorrow 9:00 AM, with posts at 9 AM and
+      9 PM. If another lecture's posts overlap that window, offset the new set by 6 hours with
+      `--start "YYYY-MM-DD 15:00"` so the two sets alternate at 3 AM/3 PM. Precedent: Grammar Lesson 3
+      and Lesson 5.
+    - **Dry run:** `npx tsx scripts/post-quiz-community.ts --video {youtubeVideoId} [--start …] --dry-run`.
+      Check the printed plan, including any `warnings:` line (for example, a prompt over 140 characters).
+      Fix problems in the DB and in the `_imported` JSON, then re-run the dry run. Read the newest
+      screenshot in `scripts/community-debug/` to confirm the prompt, options, correct-answer mark,
+      explanation, and scheduled date.
+    - **Live:** run the same command without `--dry-run`, using `run_in_background` because it takes a few
+      minutes. It writes the marker `scripts/community-posts/{youtubeVideoId}.json`. If it aborts
+      partway, resume with `--from <n>` and the same `--start`.
+    - If the login session is missing, tell Donald to run `npx tsx scripts/yt-community-auth.ts`. Selectors
+      are fragile; see CLAUDE.md, "Community quiz-post scheduler".
+
+12. **Report back** with:
+    - the course and video;
+    - the quiz (10 published) and the notes (published);
+    - the transcript (searchable);
+    - the chapters (count, pushed);
+    - the community posts (first-to-last schedule, and any offset used);
+    - any slips you silently corrected in the notes;
+    - anything skipped, and why.
+    Include the lecture URL `https://timpson-lyceum.vercel.app/courses/{courseId}/{videoId}` and point to
+    YouTube Studio → Content → Posts → Scheduled for last-minute edits.
 
 ## Notes
 
-- Same pipelines documented in `edu-platform/CLAUDE.md` ("Quiz-draft generation pipeline", "Lecture-notes generation pipeline", "YouTube chapters pipeline", "Catalog search", and "Community quiz-post scheduler") — this command is the per-lecture autopilot for all of them (quiz + notes + chapters draft, plus the transcript import that makes the lecture searchable; community quiz posts are the deferred step 10).
+- This command is the per-lecture autopilot for the pipelines documented in `edu-web/CLAUDE.md`: the
+  quiz-draft, lecture-notes, YouTube chapters, catalog search, and community quiz-post scheduler sections.
 - `yt-dlp` must be installed (`brew install yt-dlp`).
-- Don't auto-commit the quiz/notes imports; Donald reviews and publishes from the admin UI before anything goes live to students (drafts are hidden from public reads).
-- **Chapters are the one outward-facing step:** they edit the public YouTube description directly. Always dry-run and get Donald's explicit OK before the live `push-chapters` (the push is idempotent — it replaces a managed `Chapters` block and leaves the rest of the description untouched).
-- **Community quiz posts (step 10) are deferred AND outward-facing:** they need the quiz *published* (not draft) and post to the public channel, so they never run automatically in the draft-generation pass — only later, after Donald publishes, and only on his explicit OK after a dry-run. Same caution as chapters.
+- The derived files (`scripts/drafts/`, `notes/`, `chapters/`, `transcripts*/`, `community-posts/`) are
+  gitignored, so a normal run has nothing to commit.
