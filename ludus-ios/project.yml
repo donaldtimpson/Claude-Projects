@@ -1,0 +1,46 @@
+name: Ludus
+options:
+  bundleIdPrefix: com.timpsonlyceum
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1,2" # 1 = iPhone, 2 = iPad (universal)
+    GENERATE_INFOPLIST_FILE: YES
+    # Reuses the same free Apple ID team as Lyceum so it builds straight to a device
+    # without re-selecting signing on every `xcodegen generate`.
+    DEVELOPMENT_TEAM: LGF933VBP2
+    CODE_SIGN_STYLE: Automatic
+
+targets:
+  Ludus:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.timpsonlyceum.Ludus
+        INFOPLIST_KEY_CFBundleDisplayName: Ludus
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        # The prototype game is designed portrait; lock it so the play field stays put.
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+
+schemes:
+  Ludus:
+    build:
+      targets:
+        Ludus: all
+    run:
+      config: Debug
