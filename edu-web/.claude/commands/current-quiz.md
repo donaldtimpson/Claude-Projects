@@ -90,6 +90,10 @@ Run every `npx tsx` command from the **edu-web repo root**. The scripts use `pro
    - Use **BC/AD**, never BCE/CE.
    - **Plain unicode math, never `$…$`.** The quiz player doesn't render LaTeX. Grep the JSON for `$`
      before importing; any hit is a bug.
+   - **Every question stands alone.** Questions get pulled at random for review and refreshers, so each
+     must make sense with no other question and no lecture context. Never refer to another question
+     ("the previous question", "the same matrix", "this circuit"). Restate any matrix, vector, or setup
+     inside the prompt, and define symbols like T, A, or u there too.
    - Spread `correctIndex` across 0–3.
    - **Keep every prompt ≤ 140 characters.** Community posts carry the prompt in the caption, and the
      scheduler warns above 140.
