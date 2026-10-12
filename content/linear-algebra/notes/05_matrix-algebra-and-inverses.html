@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Algebra — Lecture Notes</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+  :root{
+    --crimson:#8a1a2b; --gold:#b08a2e; --ink:#23201c; --parchment:#faf7f0;
+    --rule:#e4ddcf; --callout:#fbf4e6;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--parchment); color:var(--ink);
+    font-family:Georgia,'EB Garamond','Iowan Old Style',serif;
+    font-size:19px; line-height:1.62;
+  }
+  #wrap{max-width:820px; margin:0 auto; padding:56px 28px 120px}
+  h1,h2,h3{font-family:'Cinzel',Georgia,serif; line-height:1.2; color:var(--crimson)}
+  h1{font-size:2.05rem; margin:0 0 .2em; text-align:center; letter-spacing:.5px}
+  h2{font-size:1.5rem; margin:2.2em 0 .5em; padding-bottom:.22em; border-bottom:2px solid var(--gold)}
+  h3{font-size:1.16rem; color:#5a2530; margin:1.6em 0 .35em}
+  a{color:var(--crimson)}
+  hr{border:0; border-top:1px solid var(--rule); margin:2.4em 0}
+  strong{color:#1c1a17}
+  code{background:#efe9dc; padding:.08em .35em; border-radius:4px; font-size:.86em}
+  table{border-collapse:collapse; margin:1em 0; width:100%; font-size:.92em}
+  th,td{border:1px solid var(--rule); padding:.5em .7em; text-align:left; vertical-align:top}
+  th{background:#f0e9d9}
+  blockquote{
+    margin:1.1em 0; padding:.7em 1.1em; background:var(--callout);
+    border-left:4px solid var(--gold); border-radius:0 6px 6px 0;
+  }
+  blockquote p{margin:.4em 0}
+  blockquote strong{color:var(--crimson)}
+  mjx-container[display="true"]{overflow-x:auto; overflow-y:hidden; padding:2px 0}
+  .toolbar{
+    max-width:820px; margin:0 auto; padding:10px 28px 0; text-align:right;
+    font-family:system-ui,sans-serif; font-size:13px; color:#8a827200
+  }
+  @media print{ body{background:#fff} .toolbar{display:none} }
+  @media (max-width:640px){ body{font-size:17px} #wrap{padding:32px 16px 80px} }
+</style>
+</head>
+<body>
+<div id="wrap"><p style="text-align:center;color:#9a9384;font-family:system-ui,sans-serif">Rendering…</p></div>
+<script type="text/markdown" id="src"># Linear Algebra — Lecture Notes
+
+**Text:** Lay, *Linear Algebra and Its Applications*, 5th ed.
+**Chapter 2 — Matrix Algebra**
+**Sections covered:** 2.1 Matrix Operations · 2.2 The Inverse of a Matrix · 2.3 Characterizations of Invertible Matrices
+
+> *Chapter roadmap:* Chapter 1 used matrices as bookkeeping for linear systems. Chapter 2 makes them **algebraic objects** that can be added, scaled, multiplied, transposed, and (sometimes) inverted. §2.1 builds the arithmetic, with multiplication defined so that it **is** composition of linear transformations. §2.2 introduces the inverse, the matrix analogue of a reciprocal, and computes it by row reduction. §2.3 gathers almost all of Chapter 1 into one result for square matrices, the **Invertible Matrix Theorem**. §2.4–2.5 (partitioned matrices, LU factorization) build on this.
+
+---
+
+## §2.1 — Matrix Operations
+
+### Core Definitions
+
+**Entries and columns.** If $A$ is $m \times n$, the entry in row $i$, column $j$ is $a_{ij}$, the **$(i,j)$-entry**. Each column is a vector in $\mathbb R^m$, and we write
+
+$$A = \begin{bmatrix} \mathbf a_1 & \mathbf a_2 & \cdots & \mathbf a_n \end{bmatrix}.$$
+
+So $a_{ij}$ is the $i$th entry (from the top) of the column vector $\mathbf a_j$.
+
+- **Diagonal entries** of $A = [a_{ij}]$: $a_{11}, a_{22}, a_{33}, \dots$; together they form the **main diagonal**.
+- **Diagonal matrix:** a square $n \times n$ matrix whose non-diagonal entries are all zero (e.g. $I_n$).
+- **Zero matrix** $0$: every entry zero. Its size is read from context.
+
+### Sums and Scalar Multiples
+
+> **📗 DEFINITIONS.**
+> - $A$ and $B$ are **equal** if they have the same size and their corresponding columns (equivalently, corresponding entries) are equal.
+> - If $A$ and $B$ are both $m\times n$, the **sum** $A+B$ is the $m\times n$ matrix whose columns are the sums of the corresponding columns, so each entry is the sum of the corresponding entries. **$A+B$ is defined only when $A$ and $B$ have the same size.**
+> - The **scalar multiple** $rA$ is the matrix whose columns are $r$ times the corresponding columns of $A$. As with vectors, $-A$ means $(-1)A$, and $A - B$ means $A + (-1)B$.
+
+#### Example 1 — a sum, and an undefined sum (worked)
+
+$$
+A=\begin{bmatrix} 4 & 0 & 5\\ -1 & 3 & 2\end{bmatrix},\quad
+B=\begin{bmatrix} 1 & 1 & 1\\ 3 & 5 & 7\end{bmatrix},\quad
+C=\begin{bmatrix} 2 & -3\\ 0 & 1\end{bmatrix}
+$$
+
+$$A+B=\begin{bmatrix} 5 & 1 & 6\\ 2 & 8 & 9\end{bmatrix},$$
+
+but $A + C$ is **not defined**, because $A$ is $2\times3$ and $C$ is $2\times 2$.
+
+#### Example 2 — scalar multiple and difference (worked)
+
+With $A, B$ from Example 1:
+
+$$
+2B=\begin{bmatrix} 2 & 2 & 2\\ 6 & 10 & 14\end{bmatrix},\qquad
+A-2B=\begin{bmatrix} 4 & 0 & 5\\ -1 & 3 & 2\end{bmatrix}-\begin{bmatrix} 2 & 2 & 2\\ 6 & 10 & 14\end{bmatrix}
+=\begin{bmatrix} 2 & -2 & 3\\ -7 & -7 & -12\end{bmatrix}.
+$$
+
+There is no need to write this as $A + (-1)2B$, because the usual rules of algebra hold:
+
+> **📐 THEOREM 1.** Let $A, B, C$ be matrices of the same size, and let $r, s$ be scalars.
+>
+> - a. $A + B = B + A$
+> - b. $(A+B)+C = A+(B+C)$
+> - c. $A + 0 = A$
+> - d. $r(A+B) = rA + rB$
+> - e. $(r+s)A = rA + sA$
+> - f. $r(sA) = (rs)A$
+
+> **🔎 Proof.** In each equality, both sides have the same size, since $A, B, C$ share a size and scalar multiplication preserves size. So it is enough to show that **corresponding columns agree**. Let $\mathbf a_j, \mathbf b_j, \mathbf c_j$ be the $j$th columns of $A, B, C$. The operations act column by column, so the $j$th column of each side is the matching vector expression:
+> - (a) $\mathbf a_j + \mathbf b_j = \mathbf b_j + \mathbf a_j$
+> - (b) $(\mathbf a_j + \mathbf b_j) + \mathbf c_j = \mathbf a_j + (\mathbf b_j + \mathbf c_j)$
+> - (c) $\mathbf a_j + \mathbf 0 = \mathbf a_j$
+> - (d) $r(\mathbf a_j + \mathbf b_j) = r\mathbf a_j + r\mathbf b_j$
+> - (e) $(r+s)\mathbf a_j = r\mathbf a_j + s\mathbf a_j$
+> - (f) $r(s\mathbf a_j) = (rs)\mathbf a_j$
+>
+> Each of these is an algebraic property of vectors in $\mathbb R^m$ (§1.3). Since they hold for every $j$, the matrices are equal. $\blacksquare$
+
+Associativity means $A + B + C$ can be written without parentheses, and the same goes for sums of four or more matrices.
+
+### Matrix Multiplication
+
+**Motivation.** If $B$ multiplies $\mathbf x$ and then $A$ multiplies the result, we get $A(B\mathbf x)$, a *composition* of linear transformations. We want a single matrix $AB$ that does both at once:
+
+$$A(B\mathbf x) = (AB)\mathbf x. \tag{1}$$
+
+Let $A$ be $m\times n$ and $B$ be $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, and let $\mathbf x \in \mathbb R^p$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
+
+$$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x.$$
+
+That matrix is the one we were looking for.
+
+> **📗 DEFINITION.** If $A$ is $m\times n$ and $B$ is $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, then the product $AB$ is the $m\times p$ matrix whose columns are $A\mathbf b_1,\dots, A\mathbf b_p$:
+> $$AB = A\begin{bmatrix}\mathbf b_1 & \mathbf b_2 & \cdots & \mathbf b_p\end{bmatrix} = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}.$$
+
+> **💡 Why this matters:** this definition makes (1) true for every $\mathbf x$. So the composite map $\mathbf x \mapsto A(B\mathbf x)$ is a linear transformation whose standard matrix is $AB$. **Matrix multiplication *is* composition of linear transformations.** Every odd-looking property of the product traces back to this fact.
+
+#### Example 3 — the product, column by column (worked)
+
+$$A=\begin{bmatrix} 2 & 3\\ 1 & -5\end{bmatrix},\qquad B=\begin{bmatrix} 4 & 3 & 6\\ 1 & -2 & 3\end{bmatrix}.$$
+
+$$
+A\mathbf b_1=\begin{bmatrix} 2 & 3\\ 1 & -5\end{bmatrix}\begin{bmatrix} 4\\ 1\end{bmatrix}=\begin{bmatrix} 11\\ -1\end{bmatrix},\quad
+A\mathbf b_2=\begin{bmatrix} 2 & 3\\ 1 & -5\end{bmatrix}\begin{bmatrix} 3\\ -2\end{bmatrix}=\begin{bmatrix} 0\\ 13\end{bmatrix},\quad
+A\mathbf b_3=\begin{bmatrix} 2 & 3\\ 1 & -5\end{bmatrix}\begin{bmatrix} 6\\ 3\end{bmatrix}=\begin{bmatrix} 21\\ -9\end{bmatrix}
+$$
+
+$$AB = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & A\mathbf b_3\end{bmatrix} = \begin{bmatrix} 11 & 0 & 21\\ -1 & 13 & -9\end{bmatrix}.$$
+
+> **📦 Column view of $AB$.** Each column of $AB$ is a linear combination of the **columns of $A$**, using weights from the corresponding column of $B$.
+
+**Sizes.** $A\mathbf b_1$ is defined only when the number of columns of $A$ equals the number of rows of $B$. In that case **$AB$ has as many rows as $A$ and as many columns as $B$**:
+
+$$\underset{m\times n}{A}\;\underset{n\times p}{B} = \underset{m\times p}{AB}.$$
+
+The inner sizes must match, and the outer sizes give the size of the product.
+
+#### Example 4 — which products are defined? (worked)
+
+$A$ is $3\times 5$ and $B$ is $5\times 2$.
+- $AB$: the inner sizes $5 = 5$ match, so $AB$ is defined and is $3\times 2$.
+- $BA$: the inner sizes $2 \ne 3$, so $BA$ is **not defined**.
+
+### The Row–Column Rule
+
+> **📦 Row–Column Rule for Computing $AB$.** If $AB$ is defined, its $(i,j)$-entry is the sum of products of corresponding entries from **row $i$ of $A$** and **column $j$ of $B$**. If $A$ is $m\times n$:
+> $$(AB)_{ij} = a_{i1}b_{1j} + a_{i2}b_{2j} + \cdots + a_{in}b_{nj}.$$
+
+> **🔎 Proof.** Column $j$ of $AB$ is $A\mathbf b_j$, by the definition. By the row–vector rule for $A\mathbf x$ (§1.4), the $i$th entry of $A\mathbf b_j$ is the sum of products of corresponding entries of row $i$ of $A$ and the vector $\mathbf b_j$. That is $a_{i1}b_{1j} + \cdots + a_{in}b_{nj}$. $\blacksquare$
+
+#### Example 5 — two entries by the row–column rule (worked)
+
+Same $A, B$ as Example 3.
+- $(AB)_{13}$ uses row 1 of $A$ and column 3 of $B$: $2(6) + 3(3) = 21$.
+- $(AB)_{22}$ uses row 2 of $A$ and column 2 of $B$: $1(3) + (-5)(-2) = 13$.
+
+Both agree with the matrix computed column by column in Example 3.
+
+#### Example 6 — one row of a product (worked)
+
+$$A=\begin{bmatrix} 2 & -5 & 0\\ -1 & 3 & -4\\ 6 & -8 & -7\\ -3 & 0 & 9\end{bmatrix},\qquad B=\begin{bmatrix} 4 & -6\\ 7 & 1\\ 3 & 2\end{bmatrix}.$$
+
+Find the second row of $AB$. Only row 2 of $A$ is needed:
+
+$$\begin{bmatrix} -1 & 3 & -4\end{bmatrix}\begin{bmatrix} 4 & -6\\ 7 & 1\\ 3 & 2\end{bmatrix} = \begin{bmatrix} -4+21-12 & \;6+3-8\end{bmatrix} = \begin{bmatrix} 5 & 1\end{bmatrix}.$$
+
+This works for every row, by the row–column rule:
+
+$$\operatorname{row}_i(AB) = \operatorname{row}_i(A)\cdot B. \tag{2}$$
+
+> **📦 Row view of $AB$.** Each row of $AB$ is a linear combination of the **rows of $B$**, using weights from the corresponding row of $A$. This is the mirror image of the column view, and it is exactly why elementary matrices (§2.2) act on rows.
+
+### Properties of Matrix Multiplication
+
+$I_m$ is the $m\times m$ identity, and $I_m\mathbf x = \mathbf x$ for every $\mathbf x \in \mathbb R^m$.
+
+> **📐 THEOREM 2.** Let $A$ be $m\times n$, and let $B, C$ have sizes for which the indicated sums and products are defined.
+> - a. $A(BC) = (AB)C$  *(associative law of multiplication)*
+> - b. $A(B + C) = AB + AC$  *(left distributive law)*
+> - c. $(B + C)A = BA + CA$  *(right distributive law)*
+> - d. $r(AB) = (rA)B = A(rB)$ for any scalar $r$
+> - e. $I_mA = A = AI_n$  *(identity for matrix multiplication)*
+
+> **🔎 Proof.**
+> **(a)** Let $C = [\,\mathbf c_1 \ \cdots\ \mathbf c_p\,]$. By the definition of the product,
+> $$BC = [\,B\mathbf c_1\ \cdots\ B\mathbf c_p\,],\qquad A(BC) = [\,A(B\mathbf c_1)\ \cdots\ A(B\mathbf c_p)\,].$$
+> By (1), $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x$, so
+> $$A(BC) = [\,(AB)\mathbf c_1\ \cdots\ (AB)\mathbf c_p\,] = (AB)C.$$
+> (Equivalently, composition of functions is associative.)
+>
+> **(b)** The $j$th column of $B + C$ is $\mathbf b_j + \mathbf c_j$, so the $j$th column of $A(B+C)$ is $A(\mathbf b_j + \mathbf c_j)$. Matrix–vector multiplication is linear (§1.4), so this is $A\mathbf b_j + A\mathbf c_j$, the $j$th column of $AB + AC$.
+>
+> **(c)** Compare $(i,j)$-entries with the row–column rule. Here $B, C$ are $m'\times m$ and $A$ is $m\times n$:
+> $$\big((B+C)A\big)_{ij} = \sum_{k=1}^{m}(b_{ik}+c_{ik})a_{kj} = \sum_{k} b_{ik}a_{kj} + \sum_k c_{ik}a_{kj} = (BA)_{ij} + (CA)_{ij}.$$
+>
+> **(d)** The $j$th column of $r(AB)$ is $r(A\mathbf b_j)$. By linearity, $r(A\mathbf b_j) = A(r\mathbf b_j)$, which is the $j$th column of $A(rB)$. Also, row–column gives $r\sum_k a_{ik}b_{kj} = \sum_k (ra_{ik})b_{kj}$, the $(i,j)$-entry of $(rA)B$.
+>
+> **(e)** The $j$th column of $I_mA$ is $I_m\mathbf a_j = \mathbf a_j$. The $j$th column of $AI_n$ is $A\mathbf e_j = 0\mathbf a_1 + \cdots + 1\mathbf a_j + \cdots + 0\mathbf a_n = \mathbf a_j$. So both equal $A$. $\blacksquare$
+
+Because of the associative and distributive laws, parentheses can be inserted and deleted **as long as the left-to-right order is kept**. So $ABC$ makes sense, and $ABCD$ can be computed as $A(BCD)$, $(ABC)D$, $A(BC)D$, and so on.
+
+> **📝 Numerical Note.** When $B$ is square and $C$ has fewer columns than $A$ has rows, $A(BC)$ is cheaper to compute than $(AB)C$.
+
+**Order matters.** The columns of $AB$ are combinations of the columns of $A$, while the columns of $BA$ are combinations of the columns of $B$. In $AB$, $A$ is **right-multiplied** by $B$ (equivalently, $B$ is **left-multiplied** by $A$). If $AB = BA$, then $A$ and $B$ **commute**.
+
+#### Example 7 — matrices that do not commute (worked)
+
+$$A=\begin{bmatrix} 5 & 1\\ 3 & -2\end{bmatrix},\qquad B=\begin{bmatrix} 2 & 0\\ 4 & 3\end{bmatrix}$$
+
+$$AB = \begin{bmatrix} 14 & 3\\ -2 & -6\end{bmatrix},\qquad BA = \begin{bmatrix} 10 & 2\\ 29 & -2\end{bmatrix},$$
+
+so $AB \ne BA$.
+
+> **⚠ WARNINGS — where matrix algebra departs from ordinary algebra.**
+> 1. In general, $AB \ne BA$.
+> 2. The **cancellation laws fail**: $AB = AC$ does **not** in general imply $B = C$.
+> 3. If $AB = 0$, you **cannot** conclude that $A = 0$ or $B = 0$.
+>
+> Quick classroom examples. For (2), from Exercise 10: $A=\begin{bmatrix}2&-3\\-4&6\end{bmatrix}$, $B=\begin{bmatrix}8&4\\5&5\end{bmatrix}$, $C=\begin{bmatrix}5&-2\\3&1\end{bmatrix}$ give $AB = AC = \begin{bmatrix}1&-7\\-2&14\end{bmatrix}$ with $B \ne C$. For (3): $\begin{bmatrix}1&1\\1&1\end{bmatrix}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} = 0$.
+
+### Powers of a Matrix
+
+If $A$ is $n\times n$ and $k$ is a positive integer,
+
+$$A^k = \underbrace{A\cdots A}_{k}.$$
+
+If $A \neq 0$ and $\mathbf x\in\mathbb R^n$, then $A^k\mathbf x$ is $\mathbf x$ left-multiplied by $A$ repeatedly, $k$ times. For $k=0$, $A^0\mathbf x$ should be $\mathbf x$ itself, so **$A^0$ is interpreted as $I_n$**. Matrix powers return in §2.6, §4.9, and later.
+
+> **⚠ Watch for:** $A^k$ is only defined for **square** $A$, since $AA$ needs the column count to match the row count.
+
+### The Transpose of a Matrix
+
+> **📗 DEFINITION.** The **transpose** of an $m\times n$ matrix $A$ is the $n\times m$ matrix $A^T$ whose columns are the corresponding rows of $A$. Entrywise, $(A^T)_{ij} = a_{ji}$.
+
+#### Example 8 — transposes (worked)
+
+$$
+A=\begin{bmatrix} a & b\\ c & d\end{bmatrix},\quad
+B=\begin{bmatrix} -5 & 2\\ 1 & -3\\ 0 & 4\end{bmatrix},\quad
+C=\begin{bmatrix} 1 & 1 & 1 & 1\\ -3 & 5 & -2 & 7\end{bmatrix}
+$$
+
+$$
+A^T=\begin{bmatrix} a & c\\ b & d\end{bmatrix},\quad
+B^T=\begin{bmatrix} -5 & 1 & 0\\ 2 & -3 & 4\end{bmatrix},\quad
+C^T=\begin{bmatrix} 1 & -3\\ 1 & 5\\ 1 & -2\\ 1 & 7\end{bmatrix}
+$$
+
+> **📐 THEOREM 3.** Let $A$ and $B$ be matrices whose sizes are appropriate for the following sums and products.
+> - a. $(A^T)^T = A$
+> - b. $(A + B)^T = A^T + B^T$
+> - c. $(rA)^T = rA^T$ for any scalar $r$
+> - d. $(AB)^T = B^TA^T$
+
+> **🔎 Proof.** In each case the two sides have the same size, so compare $(i,j)$-entries using $(M^T)_{ij} = m_{ji}$.
+> - **(a)** $\big((A^T)^T\big)_{ij} = (A^T)_{ji} = a_{ij}$.
+> - **(b)** $\big((A+B)^T\big)_{ij} = (A+B)_{ji} = a_{ji} + b_{ji} = (A^T)_{ij} + (B^T)_{ij}$.
+> - **(c)** $\big((rA)^T\big)_{ij} = ra_{ji} = r(A^T)_{ij}$.
+> - **(d)** Let $A$ be $m\times n$ and $B$ be $n\times p$. Then $(AB)^T$ and $B^TA^T$ are both $p\times m$, and
+> $$\big((AB)^T\big)_{ij} = (AB)_{ji} = \sum_{k=1}^{n} a_{jk}b_{ki} = \sum_{k=1}^{n} b_{ki}\,a_{jk} = \sum_{k=1}^{n} (B^T)_{ik}(A^T)_{kj} = (B^TA^T)_{ij}. \qquad \blacksquare$$
+
+> **⚠ Watch for:** usually $(AB)^T \ne A^TB^T$, **even when $A^TB^T$ is defined**. With $A=\begin{bmatrix}0&1\\0&0\end{bmatrix}$ and $B=\begin{bmatrix}0&0\\1&0\end{bmatrix}$: $(AB)^T = B^TA^T = \begin{bmatrix}1&0\\0&0\end{bmatrix}$, but $A^TB^T = \begin{bmatrix}0&0\\0&1\end{bmatrix}$. For non-square factors $A^TB^T$ may not even be defined: with $A$ $2\times3$ and $B$ $3\times 4$, it is $(3\times2)(4\times3)$.
+
+> **📦 Generalization of 3(d).** The transpose of a product of matrices equals the product of their transposes in the **reverse** order: $(ABC)^T = C^TB^TA^T$. Apply 3(d) twice: $(A(BC))^T = (BC)^TA^T = C^TB^TA^T$. Induction gives any number of factors.
+
+> **💡 Vectors are matrices too.** An $\mathbf x \in \mathbb R^n$ is an $n\times 1$ matrix, so Theorem 3 applies. With $A = \begin{bmatrix}1&-3\\-2&4\end{bmatrix}$ and $\mathbf x = \begin{bmatrix}5\\3\end{bmatrix}$: $A\mathbf x = \begin{bmatrix}-4\\2\end{bmatrix}$, so $(A\mathbf x)^T = \mathbf x^TA^T = \begin{bmatrix}-4 & 2\end{bmatrix}$. Also $\mathbf x\mathbf x^T = \begin{bmatrix}25&15\\15&9\end{bmatrix}$ is $2\times 2$, while $\mathbf x^T\mathbf x = 34$ is $1\times 1$ and is written as a scalar. $A^T\mathbf x^T$ is *not* defined.
+
+> **📝 Numerical Notes.**
+> 1. The fastest way to compute $AB$ depends on how the computer stores matrices. LAPACK computes $AB$ **by columns**, as in our definition.
+> 2. The column definition parallelizes naturally: different processors compute different columns $A\mathbf b_j$ simultaneously.
+
+#### Practice Problem 2 — the cheapest way to compute $A^2\mathbf x$ (worked)
+
+Let $A$ be $4\times 4$ and $\mathbf x\in\mathbb R^4$. Compare the two groupings of $A^2\mathbf x$:
+
+- $A(A\mathbf x)$: $A\mathbf x$ costs $16$ multiplications (4 per entry), and $A(A\mathbf x)$ costs $16$ more, for a total of **32**.
+- $(A^2)\mathbf x$: $A^2$ costs $64$ multiplications (4 for each of 16 entries), and $A^2\mathbf x$ costs $16$ more, for a total of **80**.
+
+So compute $A(A\mathbf x)$. Associativity guarantees the same answer, but not the same cost.
+
+---
+
+## §2.2 — The Inverse of a Matrix
+
+The matrix analogue of a reciprocal. For numbers, $5^{-1}$ satisfies $5^{-1}\cdot 5 = 1$ **and** $5\cdot 5^{-1} = 1$. Matrix multiplication is not commutative, so the matrix version must demand **both** equations, and it avoids slash notation entirely. A full generalization is possible only for **square** matrices.
+
+### Definition and Uniqueness
+
+> **📗 DEFINITION.** An $n\times n$ matrix $A$ is **invertible** if there is an $n\times n$ matrix $C$ with
+> $$CA = I \quad\text{and}\quad AC = I,$$
+> where $I = I_n$. Such a $C$ is an **inverse** of $A$.
+> A matrix that is not invertible is called **singular**. An invertible matrix is called **nonsingular**.
+
+> **📐 The inverse is unique.** If $B$ and $C$ are both inverses of $A$, then $B = C$.
+>
+> **🔎 Proof.** $B = BI = B(AC) = (BA)C = IC = C$. $\blacksquare$
+
+So we can name *the* inverse $A^{-1}$:
+
+$$A^{-1}A = I \qquad\text{and}\qquad AA^{-1} = I.$$
+
+> **⚠ Why only square matrices?** One might call an $m\times n$ matrix $A$ invertible if $CA = I_n$ and $AD = I_m$ for some $n\times m$ matrices $C$ and $D$. But these force $m = n$ and $C = D$:
+> - $CA = I_n$ implies $A\mathbf x = \mathbf 0$ has only the trivial solution, because $\mathbf x = I_n\mathbf x = CA\mathbf x = C\mathbf 0 = \mathbf 0$. So there are no free variables, every column of $A$ is a pivot column, and $n \le m$.
+> - $AD = I_m$ implies $A\mathbf x = \mathbf b$ is solvable for every $\mathbf b$, because $A(D\mathbf b) = \mathbf b$. So $A$ has a pivot in every row (§1.4, Thm 4), and $m \le n$.
+>
+> Hence $m = n$, and then $C = C(AD) = (CA)D = D$.
+
+#### Example 1 — verifying an inverse (worked)
+
+$$A=\begin{bmatrix} 2 & 5\\ -3 & -7\end{bmatrix},\qquad C=\begin{bmatrix} -7 & -5\\ 3 & 2\end{bmatrix}$$
+
+$$AC=\begin{bmatrix} 2 & 5\\ -3 & -7\end{bmatrix}\begin{bmatrix} -7 & -5\\ 3 & 2\end{bmatrix}=\begin{bmatrix} 1 & 0\\ 0 & 1\end{bmatrix},\qquad
+CA=\begin{bmatrix} -7 & -5\\ 3 & 2\end{bmatrix}\begin{bmatrix} 2 & 5\\ -3 & -7\end{bmatrix}=\begin{bmatrix} 1 & 0\\ 0 & 1\end{bmatrix},$$
+
+so $C = A^{-1}$.
+
+### The 2×2 Inverse Formula
+
+> **📐 THEOREM 4.** Let $A = \begin{bmatrix} a & b\\ c & d\end{bmatrix}$. If $ad - bc \neq 0$, then $A$ is invertible and
+> $$A^{-1} = \frac{1}{ad-bc}\begin{bmatrix} d & -b\\ -c & a\end{bmatrix}.$$
+> If $ad - bc = 0$, then $A$ is not invertible.
+
+> **🔎 Proof.**
+> **The case $ad - bc \ne 0$.** Let $C = \frac{1}{ad-bc}\begin{bmatrix} d & -b\\ -c & a\end{bmatrix}$. Multiply directly:
+> $$
+> \begin{bmatrix} a & b\\ c & d\end{bmatrix}\begin{bmatrix} d & -b\\ -c & a\end{bmatrix} = \begin{bmatrix} ad-bc & -ab+ba\\ cd-dc & -cb+da\end{bmatrix} = (ad-bc)I,
+> \qquad
+> \begin{bmatrix} d & -b\\ -c & a\end{bmatrix}\begin{bmatrix} a & b\\ c & d\end{bmatrix} = \begin{bmatrix} da-bc & db-bd\\ -ca+ac & -cb+ad\end{bmatrix} = (ad-bc)I.
+> $$
+> Dividing by the nonzero scalar $ad-bc$ (Theorem 2(d)) gives $AC = I$ and $CA = I$.
+>
+> **The case $ad - bc = 0$.** We show that $A\mathbf x = \mathbf 0$ has a **nontrivial** solution. Then $A$ cannot be invertible: if it were, any solution would satisfy $\mathbf x = I\mathbf x = A^{-1}A\mathbf x = A^{-1}\mathbf 0 = \mathbf 0$. Consider
+> $$\mathbf u = \begin{bmatrix} d\\ -c\end{bmatrix},\qquad \mathbf v = \begin{bmatrix} -b\\ a\end{bmatrix}.$$
+> Then $A\mathbf u = \begin{bmatrix} ad - bc\\ cd - dc\end{bmatrix} = \mathbf 0$ and $A\mathbf v = \begin{bmatrix} -ab+ba\\ -cb+da\end{bmatrix} = \mathbf 0$, using $ad - bc = 0$.
+> - If not all of $a, b, c, d$ are zero, then $\mathbf u$ or $\mathbf v$ is a nonzero solution.
+> - If $a = b = c = d = 0$, then $A = 0$ and every $\mathbf x$, e.g. $\mathbf e_1$, is a nonzero solution.
+>
+> Either way $A$ is not invertible. $\blacksquare$
+
+> **📗 DEFINITION.** The quantity $ad - bc$ is the **determinant** of $A$: $\det A = ad - bc$. Theorem 4 says a $2\times 2$ matrix is invertible **iff $\det A \ne 0$**. (Chapter 3 extends this to $n\times n$.)
+
+#### Example 2 — inverse by the formula (worked)
+
+$$A=\begin{bmatrix} 3 & 4\\ 5 & 6\end{bmatrix}.$$
+
+$\det A = 3(6) - 4(5) = -2 \neq 0$, so $A$ is invertible and
+
+$$A^{-1} = \frac{1}{-2}\begin{bmatrix} 6 & -4\\ -5 & 3\end{bmatrix} = \begin{bmatrix} -3 & 2\\ 5/2 & -3/2\end{bmatrix}.$$
+
+> **⚠ Common slips:** swap the **diagonal** entries $a\leftrightarrow d$, negate the **off-diagonal** entries $b, c$ without swapping them, and divide by $\det A$, not multiply.
+
+### Solving $A\mathbf x = \mathbf b$ with $A^{-1}$
+
+> **📐 THEOREM 5.** If $A$ is an invertible $n\times n$ matrix, then for each $\mathbf b\in\mathbb R^n$ the equation $A\mathbf x = \mathbf b$ has the **unique** solution $\mathbf x = A^{-1}\mathbf b$.
+
+> **🔎 Proof.** *Existence:* substitute $\mathbf x = A^{-1}\mathbf b$: $A(A^{-1}\mathbf b) = (AA^{-1})\mathbf b = I\mathbf b = \mathbf b$.
+> *Uniqueness:* if $A\mathbf u = \mathbf b$, multiply on the left by $A^{-1}$: $A^{-1}A\mathbf u = A^{-1}\mathbf b$, so $I\mathbf u = A^{-1}\mathbf b$, so $\mathbf u = A^{-1}\mathbf b$. $\blacksquare$
+
+#### Example 3 — flexibility and stiffness (interpretation)
+
+A horizontal elastic beam, supported at both ends, carries downward forces $f_1, f_2, f_3$ at three points. Let $\mathbf f\in\mathbb R^3$ list the forces and $\mathbf y \in\mathbb R^3$ the deflections at those points. Hooke's law gives $\mathbf y = D\mathbf f$, where $D$ is the **flexibility matrix**. Its inverse $D^{-1}$ is the **stiffness matrix**.
+
+- **Columns of $D$.** $D = DI_3 = [\,D\mathbf e_1\ D\mathbf e_2\ D\mathbf e_3\,]$. Read $\mathbf e_1 = (1,0,0)$ as a unit force at point 1 and none elsewhere. Then **column 1 of $D$ lists the deflections caused by a unit force at point 1**, and likewise for columns 2 and 3.
+- **Columns of $D^{-1}$.** $\mathbf f = D^{-1}\mathbf y$, and $D^{-1} = [\,D^{-1}\mathbf e_1\ D^{-1}\mathbf e_2\ D^{-1}\mathbf e_3\,]$. Now read $\mathbf e_1$ as a *deflection*. Then **column 1 of $D^{-1}$ lists the forces needed to produce a unit deflection at point 1 and zero deflection at the other points.** In each column, one or two forces must be negative (pointing upward) to hold the other points at zero deflection.
+- Units: if flexibility is in inches per pound, stiffness entries are in pounds per inch.
+
+> **💡 Why this matters:** "$M\mathbf e_j$ is the $j$th column of $M$" turns abstract columns into physical answers. The columns of an inverse answer the reverse question.
+
+#### Example 4 — solving a 2×2 system by the inverse (worked)
+
+$$
+\begin{aligned}
+3x_1 + 4x_2 &= 3\\
+5x_1 + 6x_2 &= 7
+\end{aligned}
+$$
+
+This is $A\mathbf x = \mathbf b$ with $A$ from Example 2. So
+
+$$\mathbf x = A^{-1}\mathbf b = \begin{bmatrix} -3 & 2\\ 5/2 & -3/2\end{bmatrix}\begin{bmatrix} 3\\ 7\end{bmatrix} = \begin{bmatrix} 5\\ -3\end{bmatrix}.$$
+
+*Check:* $3(5) + 4(-3) = 3$ ✓ and $5(5) + 6(-3) = 7$ ✓.
+
+> **⚠ In practice:** the formula $\mathbf x = A^{-1}\mathbf b$ is **seldom** used numerically. Row reducing $[\,A\ \ \mathbf b\,]$ is nearly always faster and usually more accurate. The $2\times2$ case is the main exception, since the formula is easy to do mentally.
+
+### Algebra of Inverses
+
+> **📐 THEOREM 6.**
+> - **a.** If $A$ is invertible, then $A^{-1}$ is invertible and $(A^{-1})^{-1} = A$.
+> - **b.** If $A$ and $B$ are $n\times n$ invertible matrices, then so is $AB$, and its inverse is the product of the inverses **in the reverse order**: $(AB)^{-1} = B^{-1}A^{-1}$.
+> - **c.** If $A$ is invertible, then so is $A^T$, and $(A^T)^{-1} = (A^{-1})^T$.
+
+> **🔎 Proof.** Each part shows that a candidate matrix satisfies the **definition** of the inverse.
+> - **(a)** We need $C$ with $A^{-1}C = I$ and $CA^{-1} = I$. The matrix $C = A$ works, by the defining equations of $A^{-1}$. So $A^{-1}$ is invertible with inverse $A$.
+> - **(b)** $(AB)(B^{-1}A^{-1}) = A(BB^{-1})A^{-1} = AIA^{-1} = AA^{-1} = I$, and $(B^{-1}A^{-1})(AB) = B^{-1}(A^{-1}A)B = B^{-1}IB = B^{-1}B = I$.
+> - **(c)** By Theorem 3(d) read right to left, $(A^{-1})^TA^T = (AA^{-1})^T = I^T = I$ and $A^T(A^{-1})^T = (A^{-1}A)^T = I^T = I$. $\blacksquare$
+
+> **💡 Teaching point:** part (b) shows the role definitions play in proofs. We never "solve for" $(AB)^{-1}$. We **guess** $B^{-1}A^{-1}$ and verify that it satisfies the definition, multiplying on both sides. The reverse order is the "socks and shoes" rule: to undo putting on socks then shoes, take off the shoes first.
+
+> **📦 Generalization of 6(b).** A product of $n\times n$ invertible matrices is invertible, and its inverse is the product of their inverses **in reverse order**: $(A_1A_2\cdots A_k)^{-1} = A_k^{-1}\cdots A_2^{-1}A_1^{-1}$.
+>
+> **🔎 Proof.** Induct on $k$. The case $k=1$ is trivial and $k=2$ is Theorem 6(b). If the claim holds for $k-1$ factors, write $A_1\cdots A_k = (A_1\cdots A_{k-1})A_k$, a product of two invertible matrices by the inductive hypothesis. Theorem 6(b) gives the inverse $A_k^{-1}(A_1\cdots A_{k-1})^{-1} = A_k^{-1}A_{k-1}^{-1}\cdots A_1^{-1}$. $\blacksquare$
+
+#### Practice Problem 3 — $5A$ is invertible (worked)
+
+*Claim:* if $A$ is invertible, so is $5A$, with $(5A)^{-1} = \tfrac15 A^{-1}$.
+
+Guess the inverse and verify the definition, using Theorem 2(d) to move scalars:
+
+$$(5A)\left(\tfrac15 A^{-1}\right) = \left(5\cdot\tfrac15\right)AA^{-1} = I,\qquad \left(\tfrac15 A^{-1}\right)(5A) = \left(\tfrac15\cdot 5\right)A^{-1}A = I.$$
+
+### Elementary Matrices
+
+There is an important connection between invertible matrices and row operations: **$A$ is invertible exactly when it row reduces to $I$**, and we can find $A^{-1}$ by *watching* that reduction.
+
+> **📗 DEFINITION.** An **elementary matrix** is one obtained by performing a **single** elementary row operation on an identity matrix.
+
+#### Example 5 — the three kinds, acting on a matrix (worked)
+
+$$
+E_1=\begin{bmatrix} 1 & 0 & 0\\ 0 & 1 & 0\\ -4 & 0 & 1\end{bmatrix},\quad
+E_2=\begin{bmatrix} 0 & 1 & 0\\ 1 & 0 & 0\\ 0 & 0 & 1\end{bmatrix},\quad
+E_3=\begin{bmatrix} 1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 5\end{bmatrix},\quad
+A=\begin{bmatrix} a & b & c\\ d & e & f\\ g & h & i\end{bmatrix}
+$$
+
+$$
+E_1A=\begin{bmatrix} a & b & c\\ d & e & f\\ g-4a & h-4b & i-4c\end{bmatrix},\quad
+E_2A=\begin{bmatrix} d & e & f\\ a & b & c\\ g & h & i\end{bmatrix},\quad
+E_3A=\begin{bmatrix} a & b & c\\ d & e & f\\ 5g & 5h & 5i\end{bmatrix}
+$$
+
+- $E_1A$: add $-4\cdot$row 1 to row 3 (**replacement**).
+- $E_2A$: interchange rows 1 and 2 (**interchange**).
+- $E_3A$: scale row 3 by 5 (**scaling**).
+
+Since $E_1 I = E_1$, the matrix $E_1$ is itself the result of that same operation on $I$.
+
+> **📦 Fact.** If an elementary row operation is performed on an $m\times n$ matrix $A$, the result is $EA$, where the $m\times m$ matrix $E$ is created by performing **the same row operation on $I_m$**.
+
+> **🔎 Proof.** Each row operation builds every new row as a fixed linear combination of the old rows, with coefficients that depend only on the operation and not on the matrix:
+> - **Interchange** $i\leftrightarrow k$: the new row $i$ is old row $k$, the new row $k$ is old row $i$, and the other rows are unchanged.
+> - **Scaling** row $i$ by $c\ne0$: the new row $i$ is $c\cdot$(old row $i$), and the others are unchanged.
+> - **Replacement** "row $i$ + $c\cdot$row $k$": the new row $i$ is old row $i$ + $c\cdot$(old row $k$), and the others are unchanged.
+>
+> So there are scalars $e_{ik}$ with $\operatorname{row}_i(\text{result}) = \sum_k e_{ik}\operatorname{row}_k(A)$ for every $A$. Apply the operation to $I_m$, whose rows are $\mathbf e_1^T,\dots,\mathbf e_m^T$. Row $i$ of the result is $\sum_k e_{ik}\mathbf e_k^T$, so the result $E$ has $(i,k)$-entry exactly $e_{ik}$. Now by (2),
+> $$\operatorname{row}_i(EA) = \operatorname{row}_i(E)\,A = \sum_k e_{ik}\operatorname{row}_k(A),$$
+> which is row $i$ of the row-operated $A$. $\blacksquare$
+
+> **📦 Fact.** Each elementary matrix $E$ is invertible. Its inverse is the elementary matrix **of the same type** that transforms $E$ back into $I$.
+
+> **🔎 Proof.** Row operations are reversible (§1.1), and each is undone by an operation of the same type: an interchange by the same interchange, scaling by $c$ by scaling by $1/c$, and "add $c\cdot$row $k$ to row $i$" by "add $-c\cdot$row $k$ to row $i$." If $E$ comes from a row operation on $I$, let $F$ be the elementary matrix of the reverse operation. By the previous fact, $FE$ is the reverse operation applied to $E$, which returns $I$, so $FE = I$. Symmetrically, $E$'s operation reverses $F$'s, so $EF = I$. $\blacksquare$
+
+#### Example 6 — inverse of an elementary matrix (worked)
+
+$$E_1 = \begin{bmatrix} 1 & 0 & 0\\ 0 & 1 & 0\\ -4 & 0 & 1\end{bmatrix}.$$
+
+To turn $E_1$ back into $I$, add $+4\cdot$row 1 to row 3. The elementary matrix for that operation is
+
+$$E_1^{-1} = \begin{bmatrix} 1 & 0 & 0\\ 0 & 1 & 0\\ +4 & 0 & 1\end{bmatrix}.$$
+
+### The Key Theorem
+
+> **📐 THEOREM 7.** An $n\times n$ matrix $A$ is invertible **if and only if** $A$ is row equivalent to $I_n$. In that case, any sequence of elementary row operations that reduces $A$ to $I_n$ also transforms $I_n$ into $A^{-1}$.
+
+*"P iff Q"* means two statements: "if P then Q," and its **converse**, "if Q then P." The proof handles them in turn.
+
+> **🔎 Proof.**
+> **(⇒) Invertible implies $A\sim I_n$.** If $A$ is invertible, then $A\mathbf x = \mathbf b$ has a solution for every $\mathbf b$ (Theorem 5). By Theorem 4 of §1.4, $A$ has a pivot position in **every row**. $A$ is square, so it has $n$ pivots. In an echelon form the pivot columns strictly increase from row to row, $c_1 < c_2 < \cdots < c_n$, all in $\{1,\dots,n\}$, which forces $c_i = i$. So the pivots sit at positions $(i,i)$. In reduced echelon form each pivot is $1$ and is the only nonzero entry in its column, so column $i$ is $\mathbf e_i$ and the reduced echelon form of $A$ is $I_n$. That is, $A \sim I_n$.
+>
+> **(⇐) Conversely, $A\sim I_n$ implies invertible.** Each step of the row reduction is left-multiplication by an elementary matrix, so there are elementary $E_1,\dots,E_p$ with
+> $$A \sim E_1A \sim E_2(E_1A)\sim\cdots\sim E_p(E_{p-1}\cdots E_1A) = I_n,$$
+> that is,
+> $$E_p\cdots E_1A = I_n. \tag{3}$$
+> Each $E_i$ is invertible, so the product $E_p\cdots E_1$ is invertible (generalized 6(b)). Multiply (3) on the left by its inverse:
+> $$A = (E_p\cdots E_1)^{-1}.$$
+> So $A$ is the inverse of an invertible matrix, hence invertible (Theorem 6(a)), with
+> $$A^{-1} = \big[(E_p\cdots E_1)^{-1}\big]^{-1} = E_p\cdots E_1 = E_p\cdots E_1 \cdot I_n.$$
+> This says $A^{-1}$ is the result of applying $E_1,\dots,E_p$ in succession to $I_n$, the same sequence that reduced $A$ to $I_n$ in (3). $\blacksquare$
+
+### An Algorithm for Finding $A^{-1}$
+
+Row operations on the augmented matrix $[\,A\ \ I\,]$ act identically on $A$ and on $I$. By Theorem 7, either the operations take $A$ to $I_n$ and so take $I_n$ to $A^{-1}$, or $A$ is not invertible.
+
+> **📦 Algorithm for finding $A^{-1}$.** Row reduce $[\,A\ \ I\,]$. If $A$ is row equivalent to $I$, then $[\,A\ \ I\,]$ is row equivalent to $[\,I\ \ A^{-1}\,]$. Otherwise, $A$ does not have an inverse.
+
+#### Example 7 — inverse by row reduction (worked)
+
+$$A = \begin{bmatrix} 0 & 1 & 2\\ 1 & 0 & 3\\ 4 & -3 & 8\end{bmatrix}$$
+
+$$
+[\,A\ \ I\,]=\left[\begin{array}{ccc|ccc} 0 & 1 & 2 & 1 & 0 & 0\\ 1 & 0 & 3 & 0 & 1 & 0\\ 4 & -3 & 8 & 0 & 0 & 1\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & 0 & 3 & 0 & 1 & 0\\ 0 & 1 & 2 & 1 & 0 & 0\\ 4 & -3 & 8 & 0 & 0 & 1\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & 0 & 3 & 0 & 1 & 0\\ 0 & 1 & 2 & 1 & 0 & 0\\ 0 & -3 & -4 & 0 & -4 & 1\end{array}\right]
+$$
+
+$$
+\sim
+\left[\begin{array}{ccc|ccc} 1 & 0 & 3 & 0 & 1 & 0\\ 0 & 1 & 2 & 1 & 0 & 0\\ 0 & 0 & 2 & 3 & -4 & 1\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & 0 & 3 & 0 & 1 & 0\\ 0 & 1 & 2 & 1 & 0 & 0\\ 0 & 0 & 1 & 3/2 & -2 & 1/2\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & 0 & 0 & -9/2 & 7 & -3/2\\ 0 & 1 & 0 & -2 & 4 & -1\\ 0 & 0 & 1 & 3/2 & -2 & 1/2\end{array}\right]
+$$
+
+(Steps: $R_1\leftrightarrow R_2$; $R_3 - 4R_1$; $R_3 + 3R_2$; $\tfrac12 R_3$; then $R_1 - 3R_3$ and $R_2 - 2R_3$.) Since $A\sim I$, Theorem 7 says $A$ is invertible and
+
+$$A^{-1} = \begin{bmatrix} -9/2 & 7 & -3/2\\ -2 & 4 & -1\\ 3/2 & -2 & 1/2\end{bmatrix}.$$
+
+*Check:* $AA^{-1} = \begin{bmatrix} 0 & 1 & 2\\ 1 & 0 & 3\\ 4 & -3 & 8\end{bmatrix}\begin{bmatrix} -9/2 & 7 & -3/2\\ -2 & 4 & -1\\ 3/2 & -2 & 1/2\end{bmatrix} = I$. Checking $A^{-1}A = I$ is unnecessary once $A$ is known to be invertible (see *One-sided inverses are enough for square matrices* in §2.3).
+
+#### Practice Problem 2 — the algorithm detecting a singular matrix (worked)
+
+$$A = \begin{bmatrix} 1 & -2 & -1\\ -1 & 5 & 6\\ 5 & -4 & 5\end{bmatrix}$$
+
+$$
+[\,A\ \ I\,] = \left[\begin{array}{ccc|ccc} 1 & -2 & -1 & 1 & 0 & 0\\ -1 & 5 & 6 & 0 & 1 & 0\\ 5 & -4 & 5 & 0 & 0 & 1\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & -2 & -1 & 1 & 0 & 0\\ 0 & 3 & 5 & 1 & 1 & 0\\ 0 & 6 & 10 & -5 & 0 & 1\end{array}\right]
+\sim
+\left[\begin{array}{ccc|ccc} 1 & -2 & -1 & 1 & 0 & 0\\ 0 & 3 & 5 & 1 & 1 & 0\\ 0 & 0 & 0 & -7 & -2 & 1\end{array}\right]
+$$
+
+The left block has a **row of zeros**, so it has at most 2 pivots and can never become $I$. Stop: **$A$ is not invertible.**
+
+> **⚠ Watch for:** once the left half of $[\,A\ \ I\,]$ shows a zero row, stop. Further row operations cannot produce $I$ on the left.
+
+### Another View of Matrix Inversion
+
+Let $\mathbf e_1, \dots,\mathbf e_n$ be the columns of $I_n$. Row reducing $[\,A\ \ I\,]$ to $[\,I\ \ A^{-1}\,]$ solves the $n$ systems
+
+$$A\mathbf x = \mathbf e_1,\quad A\mathbf x = \mathbf e_2,\quad\dots,\quad A\mathbf x = \mathbf e_n$$
+
+**simultaneously**, since their augmented columns sit side by side in $[\,A\ \ \mathbf e_1\ \cdots\ \mathbf e_n\,]$. The equation $AA^{-1} = I$ and the column definition of the product say that **column $j$ of $A^{-1}$ is the solution of $A\mathbf x = \mathbf e_j$**. If an application needs only one or two columns of $A^{-1}$, solve only those systems.
+
+> **📝 Numerical Note.** In practical work, $A^{-1}$ is seldom computed unless its entries are actually needed. Computing $A^{-1}$ and then $A^{-1}\mathbf b$ takes about **three times** as many arithmetic operations as solving $A\mathbf x = \mathbf b$ by row reduction, and row reduction may be more accurate.
+
+---
+
+## §2.3 — Characterizations of Invertible Matrices
+
+This section reviews most of Chapter 1 for **$n$ equations in $n$ unknowns**, that is, for **square** matrices. The result is the single most-cited theorem of the course.
+
+**Notation.** "(a) ⇒ (j)" means: whenever statement (a) is true, statement (j) is true.
+
+> **📐 THEOREM 8 — The Invertible Matrix Theorem (IMT).** Let $A$ be a square $n\times n$ matrix. The following statements are equivalent: for a given $A$, they are either **all true or all false**.
+> - **a.** $A$ is an invertible matrix.
+> - **b.** $A$ is row equivalent to the $n\times n$ identity matrix.
+> - **c.** $A$ has $n$ pivot positions.
+> - **d.** The equation $A\mathbf x = \mathbf 0$ has only the trivial solution.
+> - **e.** The columns of $A$ form a linearly independent set.
+> - **f.** The linear transformation $\mathbf x\mapsto A\mathbf x$ is one-to-one.
+> - **g.** The equation $A\mathbf x = \mathbf b$ has at least one solution for each $\mathbf b$ in $\mathbb R^n$.
+> - **h.** The columns of $A$ span $\mathbb R^n$.
+> - **i.** The linear transformation $\mathbf x\mapsto A\mathbf x$ maps $\mathbb R^n$ onto $\mathbb R^n$.
+> - **j.** There is an $n\times n$ matrix $C$ such that $CA = I$.
+> - **k.** There is an $n\times n$ matrix $D$ such that $AD = I$.
+> - **l.** $A^T$ is an invertible matrix.
+
+> **🔎 Proof.** The strategy is to close a **circle of implications** (a) ⇒ (j) ⇒ (d) ⇒ (c) ⇒ (b) ⇒ (a), so any one of the five implies all the others. Then each remaining statement is linked to the circle.
+>
+> **The main circle.**
+> - **(a) ⇒ (j).** Take $C = A^{-1}$.
+> - **(j) ⇒ (d).** If $CA = I$ and $A\mathbf x = \mathbf 0$, then $\mathbf x = I\mathbf x = CA\mathbf x = C\mathbf 0 = \mathbf 0$. Only the trivial solution exists.
+> - **(d) ⇒ (c).** If $A\mathbf x = \mathbf 0$ has only the trivial solution, the system has **no free variables** (a free variable would give infinitely many solutions, Theorem 2 of §1.2). So every one of the $n$ columns is a pivot column, and $A$ has $n$ pivot positions.
+> - **(c) ⇒ (b).** With $n$ pivots in an $n\times n$ matrix, the pivot columns satisfy $c_1 < \cdots < c_n$ in $\{1,\dots,n\}$, so $c_i = i$ and the pivots lie on the main diagonal. In reduced echelon form, column $i$ is then $\mathbf e_i$, so the reduced echelon form is $I_n$ (as in the proof of Theorem 7).
+> - **(b) ⇒ (a).** Theorem 7.
+>
+> **Second circle: (a) ⇒ (k) ⇒ (g) ⇒ (a).**
+> - **(a) ⇒ (k).** Take $D = A^{-1}$.
+> - **(k) ⇒ (g).** If $AD = I$, then for any $\mathbf b$, $A(D\mathbf b) = I\mathbf b = \mathbf b$, so $\mathbf x = D\mathbf b$ is a solution.
+> - **(g) ⇒ (a).** If $A\mathbf x = \mathbf b$ is solvable for every $\mathbf b$, then $A$ has a pivot in every row (Theorem 4, §1.4). That is $n$ pivots, which is (c), and the main circle gives (a).
+>
+> **Linking (h) and (i).** For **any** matrix, (g) ⇔ (h) by Theorem 4 of §1.4, and (h) ⇔ (i) by Theorem 12(a) of §1.9 (a transformation is onto iff the columns of its standard matrix span the codomain). So (h) and (i) join the circle through (g).
+>
+> **Linking (e) and (f).** For **any** matrix, (d) ⇔ (e): the columns are independent iff $A\mathbf x = \mathbf 0$ has only the trivial solution (§1.7). Also (e) ⇔ (f) by Theorem 12(b) of §1.9 (a transformation is one-to-one iff the columns of its standard matrix are independent). So (e) and (f) join through (d).
+>
+> **Linking (l).** (a) ⇒ (l) by Theorem 6(c). Conversely, apply Theorem 6(c) to $A^T$: if $A^T$ is invertible, then so is $(A^T)^T = A$. So (l) ⇒ (a). $\blacksquare$
+
+> **💡 The upgrade from Theorem 5.** For square $A$, statement (g) may be strengthened to *"$A\mathbf x = \mathbf b$ has a **unique** solution for each $\mathbf b$."* Theorem 5 gives (a) ⇒ unique solutions, and "unique solution for each $\mathbf b$" certainly implies (g), hence (a).
+
+> **📦 One-sided inverses are enough for square matrices.** Let $A$ and $B$ be square. If $AB = I$, then $A$ and $B$ are both invertible, with $B = A^{-1}$ and $A = B^{-1}$.
+>
+> **🔎 Proof.** $AB = I$ is statement (k) for $A$ with $D = B$, so $A$ is invertible. Then $B = IB = (A^{-1}A)B = A^{-1}(AB) = A^{-1}I = A^{-1}$. So $B$ is invertible (Theorem 6(a)), and $A = (A^{-1})^{-1} = B^{-1}$. $\blacksquare$
+>
+> This is why one check, $AA^{-1} = I$, was enough in Example 7 of §2.2.
+
+**The IMT splits all $n\times n$ matrices into two disjoint classes**: the invertible (nonsingular) matrices and the singular ones. Each statement describes every invertible matrix, and the **negation** of each statement describes every singular matrix. For example, an $n\times n$ singular matrix is *not* row equivalent to $I_n$, does *not* have $n$ pivot positions, and has linearly **dependent** columns.
+
+#### Example 1 — invertibility by counting pivots (worked)
+
+$$A = \begin{bmatrix} 1 & 0 & -2\\ 3 & 1 & -2\\ -5 & -1 & 9\end{bmatrix}
+\;\sim\;
+\begin{bmatrix} 1 & 0 & -2\\ 0 & 1 & 4\\ 0 & -1 & -1\end{bmatrix}
+\;\sim\;
+\begin{bmatrix} 1 & 0 & -2\\ 0 & 1 & 4\\ 0 & 0 & 3\end{bmatrix}$$
+
+There are three pivot positions, so **$A$ is invertible** by IMT statement (c). There is no need to compute $A^{-1}$.
+
+#### Practice Problem 1 — an instant "no" (worked)
+
+$$A = \begin{bmatrix} 2 & 3 & 4\\ 2 & 3 & 4\\ 2 & 3 & 4\end{bmatrix}$$
+
+The columns are multiples of one another (each is a multiple of $(1,1,1)$), so they are linearly **dependent**. By the negation of (e), **$A$ is not invertible**. Equivalently, $A \sim \begin{bmatrix} 2 & 3 & 4\\ 0&0&0\\0&0&0\end{bmatrix}$ has only one pivot.
+
+> **⚠ The IMT applies ONLY to square matrices.** If the columns of a $4\times 3$ matrix are linearly independent, the IMT says **nothing** about whether $A\mathbf x = \mathbf b$ is solvable. Before invoking it, check that the matrix is square.
+
+> **💡 Why this matters:** the power of the IMT lies in its connections. One cheap fact about a square matrix, such as a pivot count, an independence check, or a $2\times2$ determinant, delivers **all twelve** conclusions at once.
+
+### Invertible Linear Transformations
+
+Matrix multiplication is composition, so $A^{-1}A\mathbf x = \mathbf x$ says that **multiplication by $A^{-1}$ transforms $A\mathbf x$ back to $\mathbf x$**.
+
+> **📗 DEFINITION.** A linear transformation $T:\mathbb R^n\to\mathbb R^n$ is **invertible** if there is a function $S:\mathbb R^n\to\mathbb R^n$ such that
+> $$S(T(\mathbf x)) = \mathbf x\quad\text{for all }\mathbf x\in\mathbb R^n, \tag{4}$$
+> $$T(S(\mathbf x)) = \mathbf x\quad\text{for all }\mathbf x\in\mathbb R^n. \tag{5}$$
+> Such an $S$ is unique and linear (Theorem 9). It is called the **inverse** of $T$, written $T^{-1}$.
+
+> **📐 THEOREM 9.** Let $T:\mathbb R^n\to\mathbb R^n$ be a linear transformation with standard matrix $A$. Then $T$ is invertible **if and only if** $A$ is an invertible matrix. In that case, the linear transformation $S(\mathbf x) = A^{-1}\mathbf x$ is the **unique** function satisfying (4) and (5).
+
+> **🔎 Proof.**
+> **(⇒)** Suppose $T$ is invertible, with $S$ satisfying (4) and (5). Given any $\mathbf b\in\mathbb R^n$, set $\mathbf x = S(\mathbf b)$. Then $T(\mathbf x) = T(S(\mathbf b)) = \mathbf b$ by (5), so every $\mathbf b$ is in the range of $T$. So $T$ maps $\mathbb R^n$ **onto** $\mathbb R^n$, and $A$ is invertible by IMT statement (i).
+>
+> **(⇐)** Suppose $A$ is invertible, and let $S(\mathbf x) = A^{-1}\mathbf x$. This is a matrix transformation, hence linear. It satisfies (4) and (5):
+> $$S(T(\mathbf x)) = A^{-1}(A\mathbf x) = (A^{-1}A)\mathbf x = \mathbf x,\qquad T(S(\mathbf x)) = A(A^{-1}\mathbf x) = \mathbf x.$$
+> So $T$ is invertible.
+>
+> **Uniqueness.** Suppose $U:\mathbb R^n\to\mathbb R^n$ is any function satisfying (4), $U(T(\mathbf x)) = \mathbf x$ for all $\mathbf x$. We show $U = S$. Let $\mathbf v \in\mathbb R^n$. Since $S$ satisfies (5), $T$ is onto (as in the (⇒) argument), so $\mathbf v = T(\mathbf x)$ for some $\mathbf x$. Then
+> $$U(\mathbf v) = U(T(\mathbf x)) = \mathbf x = S(T(\mathbf x)) = S(\mathbf v).$$
+> So $U = S$. Any function satisfying (4), and in particular any satisfying both (4) and (5), equals $\mathbf x\mapsto A^{-1}\mathbf x$. $\blacksquare$
+
+#### Example 2 — one-to-one forces invertible, for $\mathbb R^n\to\mathbb R^n$ (worked)
+
+*What can you say about a one-to-one linear transformation $T:\mathbb R^n\to\mathbb R^n$?*
+
+- Start: $T$ is one-to-one, so the columns of its standard matrix $A$ are linearly independent (Theorem 12, §1.9).
+- $A$ is $n\times n$, so by the IMT, (e) ⇒ (a): **$A$ is invertible**, and also (i): **$T$ maps $\mathbb R^n$ onto $\mathbb R^n$**.
+- Result: by Theorem 9, **$T$ is invertible**, with $T^{-1}(\mathbf x) = A^{-1}\mathbf x$.
+
+> **⚠ Watch for:** this works **only** because the domain and codomain are the same $\mathbb R^n$. A one-to-one $T:\mathbb R^3\to\mathbb R^4$ cannot be onto.
+
+> **📝 Numerical Notes — ill-conditioning.** In practice you may meet a **nearly singular** or **ill-conditioned** matrix: an invertible matrix that becomes singular if some entries change ever so slightly. Row reduction may then find fewer than $n$ pivots because of roundoff, and roundoff can also make a singular matrix *appear* invertible. Software reports a **condition number** for square matrices. The larger it is, the closer the matrix is to singular. The condition number of $I$ is $1$, and a singular matrix has an infinite condition number. In extreme cases, software cannot tell a singular matrix from an ill-conditioned one.
+>
+> *Rule of thumb (Exercises 42–44):* if the data are accurate to about $r$ significant digits and the condition number is about $10^k$, expect the computed solution of $A\mathbf x = \mathbf b$ to be accurate to at least about $r - k$ digits.
+</script>
+<script>
+  (function(){
+    var raw = document.getElementById('src').textContent;
+    // Protect math so the markdown parser can't mangle underscores/backslashes.
+    var store = [], i = 0;
+    raw = raw.replace(/\$\$[\s\S]+?\$\$/g, function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    raw = raw.replace(/\$[^\$\n]+?\$/g,   function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    var html = marked.parse(raw);
+    html = html.replace(/@@M(\d+)@@/g, function(_, n){ return store[+n]; });
+    document.getElementById('wrap').innerHTML = html;
+    var go = function(){ MathJax.typesetPromise(); };
+    if (window.MathJax && MathJax.typesetPromise) go();
+    else { var t=setInterval(function(){ if(window.MathJax&&MathJax.typesetPromise){clearInterval(t);go();} },80); }
+  })();
+</script>
+</body>
+</html>
