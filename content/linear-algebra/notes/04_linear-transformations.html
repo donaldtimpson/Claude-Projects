@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Algebra — Lecture Notes</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+  :root{
+    --crimson:#8a1a2b; --gold:#b08a2e; --ink:#23201c; --parchment:#faf7f0;
+    --rule:#e4ddcf; --callout:#fbf4e6;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--parchment); color:var(--ink);
+    font-family:Georgia,'EB Garamond','Iowan Old Style',serif;
+    font-size:19px; line-height:1.62;
+  }
+  #wrap{max-width:820px; margin:0 auto; padding:56px 28px 120px}
+  h1,h2,h3{font-family:'Cinzel',Georgia,serif; line-height:1.2; color:var(--crimson)}
+  h1{font-size:2.05rem; margin:0 0 .2em; text-align:center; letter-spacing:.5px}
+  h2{font-size:1.5rem; margin:2.2em 0 .5em; padding-bottom:.22em; border-bottom:2px solid var(--gold)}
+  h3{font-size:1.16rem; color:#5a2530; margin:1.6em 0 .35em}
+  a{color:var(--crimson)}
+  hr{border:0; border-top:1px solid var(--rule); margin:2.4em 0}
+  strong{color:#1c1a17}
+  code{background:#efe9dc; padding:.08em .35em; border-radius:4px; font-size:.86em}
+  table{border-collapse:collapse; margin:1em 0; width:100%; font-size:.92em}
+  th,td{border:1px solid var(--rule); padding:.5em .7em; text-align:left; vertical-align:top}
+  th{background:#f0e9d9}
+  blockquote{
+    margin:1.1em 0; padding:.7em 1.1em; background:var(--callout);
+    border-left:4px solid var(--gold); border-radius:0 6px 6px 0;
+  }
+  blockquote p{margin:.4em 0}
+  blockquote strong{color:var(--crimson)}
+  mjx-container[display="true"]{overflow-x:auto; overflow-y:hidden; padding:2px 0}
+  .toolbar{
+    max-width:820px; margin:0 auto; padding:10px 28px 0; text-align:right;
+    font-family:system-ui,sans-serif; font-size:13px; color:#8a827200
+  }
+  @media print{ body{background:#fff} .toolbar{display:none} }
+  @media (max-width:640px){ body{font-size:17px} #wrap{padding:32px 16px 80px} }
+</style>
+</head>
+<body>
+<div id="wrap"><p style="text-align:center;color:#9a9384;font-family:system-ui,sans-serif">Rendering…</p></div>
+<script type="text/markdown" id="src"># Linear Algebra — Lecture Notes
+
+**Text:** Lay, *Linear Algebra and Its Applications*, 5th ed.
+**Chapter 1 — Linear Equations in Linear Algebra**
+**Sections covered:** 1.8 Introduction to Linear Transformations · 1.9 The Matrix of a Linear Transformation · 1.10 Linear Models in Business, Science, and Engineering
+
+> *Where this sits:* Chapter 1 so far has read $A\mathbf x=\mathbf b$ *statically* — a question about which $\mathbf b$ are reachable (§1.4 span) and how many $\mathbf x$ reach them (§1.5, §1.7 independence). This lecture flips to the **dynamic** view: the matrix $A$ is an *object that acts*, sending each input vector $\mathbf x$ to an output $A\mathbf x$. §1.8 names this a **linear transformation** and isolates the two defining properties. §1.9 proves the converse — *every* linear transformation from $\mathbb R^n$ to $\mathbb R^m$ is multiplication by one **standard matrix** — and recasts existence/uniqueness as **onto / one-to-one**, tying them straight back to span and independence. §1.10 cashes it all out in three real models (diet, circuits, population), including the **difference equation** $\mathbf x_{k+1}=A\mathbf x_k$ that drives the dynamical systems of Chapters 4–5.
+
+---
+
+## §1.8 — Introduction to Linear Transformations
+
+The difference between the matrix equation $A\mathbf x=\mathbf b$ and the vector equation $x_1\mathbf a_1+\cdots+x_n\mathbf a_n=\mathbf b$ is only notation. But $A\mathbf x=\mathbf b$ invites a genuinely new idea: regard $A$ as an **object that acts on** $\mathbf x$ by multiplication, producing a new vector $A\mathbf x$. Solving $A\mathbf x=\mathbf b$ then means finding every $\mathbf x$ that $A$ *transforms into* $\mathbf b$.
+
+For instance, with $A=\begin{bmatrix}4 & -3 & 1 & 3\\ 2 & 0 & 5 & 1\end{bmatrix}$,
+$$
+A\begin{bmatrix}1\\1\\1\\1\end{bmatrix}=\begin{bmatrix}5\\8\end{bmatrix},
+\qquad
+A\begin{bmatrix}1\\4\\-1\\3\end{bmatrix}=\begin{bmatrix}0\\0\end{bmatrix}.
+$$
+Multiplication by $A$ carries a vector in $\mathbb R^4$ to one in $\mathbb R^2$ — it *transforms* $\mathbb R^4$ into $\mathbb R^2$.
+
+### Core Definitions
+
+> **📗 DEFINITION.** A **transformation** (or **function**, or **mapping**) $T$ from $\mathbb R^n$ to $\mathbb R^m$ is a rule that assigns to each vector $\mathbf x$ in $\mathbb R^n$ a vector $T(\mathbf x)$ in $\mathbb R^m$.
+> - $\mathbb R^n$ is the **domain** of $T$; $\mathbb R^m$ is the **codomain**.
+> - The notation $T:\mathbb R^n\to\mathbb R^m$ says domain $=\mathbb R^n$, codomain $=\mathbb R^m$.
+> - $T(\mathbf x)$ is the **image** of $\mathbf x$; the set of all images $T(\mathbf x)$ is the **range** of $T$.
+
+This generalizes the familiar notion of a function of one real variable to a rule transforming one *vector* into another.
+
+> **📗 DEFINITION.** A **matrix transformation** is a mapping $\mathbf x\mapsto A\mathbf x$ where $A$ is $m\times n$: for each $\mathbf x$ in $\mathbb R^n$, $T(\mathbf x)=A\mathbf x$.
+
+- The domain is $\mathbb R^n$ because $A$ has $n$ columns; the codomain is $\mathbb R^m$ because each column has $m$ entries.
+- The **range of $T$ is the set of all linear combinations of the columns of $A$**, since every image $T(\mathbf x)=A\mathbf x$ is such a combination.
+
+> **⚠ Codomain vs. range.** The codomain is *where outputs are allowed to live* ($\mathbb R^m$, fixed by the shape of $A$). The range is *where they actually land* (the span of the columns). The range can be a small part of the codomain — that gap is exactly the "onto" question of §1.9.
+
+#### Example 1 — one matrix, four questions (worked)
+
+Let
+$$
+A=\begin{bmatrix}1 & -3\\ 3 & 5\\ -1 & 7\end{bmatrix},\quad
+\mathbf u=\begin{bmatrix}2\\-1\end{bmatrix},\quad
+\mathbf b=\begin{bmatrix}3\\2\\-5\end{bmatrix},\quad
+\mathbf c=\begin{bmatrix}3\\2\\5\end{bmatrix},
+$$
+and define $T:\mathbb R^2\to\mathbb R^3$ by $T(\mathbf x)=A\mathbf x$.
+
+**(a) Find $T(\mathbf u)$.**
+$$
+T(\mathbf u)=A\mathbf u=\begin{bmatrix}1 & -3\\ 3 & 5\\ -1 & 7\end{bmatrix}\begin{bmatrix}2\\-1\end{bmatrix}=\begin{bmatrix}5\\1\\-9\end{bmatrix}.
+$$
+
+**(b) Find an $\mathbf x$ with $T(\mathbf x)=\mathbf b$.** Solve $A\mathbf x=\mathbf b$ by row reducing $[\,A\ \mathbf b\,]$ from start to reduced echelon form:
+$$
+\begin{bmatrix}1 & -3 & 3\\ 3 & 5 & 2\\ -1 & 7 & -5\end{bmatrix}
+\longrightarrow
+\begin{bmatrix}1 & 0 & 1.5\\ 0 & 1 & -.5\\ 0 & 0 & 0\end{bmatrix}
+\quad\Longrightarrow\quad
+\mathbf x=\begin{bmatrix}1.5\\-.5\end{bmatrix}.
+$$
+
+**(c) Is that $\mathbf x$ unique?** From (b) the system has **no free variable**, so the solution is unique — exactly one $\mathbf x$ maps to $\mathbf b$. *(This is a uniqueness question, dressed as transformations.)*
+
+**(d) Is $\mathbf c$ in the range of $T$?** This asks whether $A\mathbf x=\mathbf c$ is consistent. Row reduce $[\,A\ \mathbf c\,]$:
+$$
+\begin{bmatrix}1 & -3 & 3\\ 3 & 5 & 2\\ -1 & 7 & 5\end{bmatrix}
+\longrightarrow
+\begin{bmatrix}1 & -3 & 3\\ 0 & 1 & 2\\ 0 & 0 & -35\end{bmatrix}.
+$$
+The bottom row reads $0=-35$ → **inconsistent**, so $\mathbf c$ is **not** in the range of $T$. *(An existence question.)*
+
+> **💡 The dictionary.** "Is $\mathbf b$ the image of a *unique* $\mathbf x$?" = uniqueness. "Does there *exist* an $\mathbf x$ whose image is $\mathbf c$?" = existence. Transformations give these old questions a geometric voice.
+
+#### Example 2 — a projection (worked)
+
+If $A=\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 0\end{bmatrix}$, then $\mathbf x\mapsto A\mathbf x$ **projects points of $\mathbb R^3$ onto the $x_1x_2$-plane**:
+$$
+\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}\longmapsto
+\begin{bmatrix}1 & 0 & 0\\ 0 & 1 & 0\\ 0 & 0 & 0\end{bmatrix}\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}=\begin{bmatrix}x_1\\x_2\\0\end{bmatrix}.
+$$
+The third coordinate is flattened to $0$.
+
+#### Example 3 — a shear (worked)
+
+Let $A=\begin{bmatrix}1 & 3\\ 0 & 1\end{bmatrix}$. The map $T(\mathbf x)=A\mathbf x$ is a **shear**. Acting on the $2\times2$ square with corners $\mathbf 0,\ \mathbf e_1,\ \mathbf e_2,\ \mathbf e_1+\mathbf e_2$ scaled to side $2$, it sends e.g.
+$$
+\begin{bmatrix}0\\2\end{bmatrix}\mapsto\begin{bmatrix}1 & 3\\ 0 & 1\end{bmatrix}\begin{bmatrix}0\\2\end{bmatrix}=\begin{bmatrix}6\\2\end{bmatrix},
+\qquad
+\begin{bmatrix}2\\2\end{bmatrix}\mapsto\begin{bmatrix}1 & 3\\ 0 & 1\end{bmatrix}\begin{bmatrix}2\\2\end{bmatrix}=\begin{bmatrix}8\\2\end{bmatrix}.
+$$
+Points at height $x_2$ slide right by $3x_2$: the square becomes a parallelogram, as if the top were pushed right while the base stayed fixed. Shears appear in physics, geology, and crystallography.
+
+### Linear Transformations
+
+Theorem 5 of §1.4 showed that for any $m\times n$ matrix $A$,
+$$A(\mathbf u+\mathbf v)=A\mathbf u+A\mathbf v\qquad\text{and}\qquad A(c\mathbf u)=cA\mathbf u.$$
+Written in function notation, these two properties single out the central class of transformations.
+
+> **📗 DEFINITION.** A transformation $T$ is **linear** if
+> 1. $T(\mathbf u+\mathbf v)=T(\mathbf u)+T(\mathbf v)$ for all $\mathbf u,\mathbf v$ in the domain of $T$;
+> 2. $T(c\mathbf u)=cT(\mathbf u)$ for all scalars $c$ and all $\mathbf u$ in the domain of $T$.
+
+So a linear transformation **preserves vector addition and scalar multiplication**. Every matrix transformation is linear. (Linear transformations that are *not* matrix transformations appear in Chapters 4–5.)
+
+> **📦 Immediate consequences.** If $T$ is linear, then
+> $$T(\mathbf 0)=\mathbf 0, \tag{3}$$
+> $$T(c\mathbf u+d\mathbf v)=cT(\mathbf u)+dT(\mathbf v) \tag{4}$$
+> for all $\mathbf u,\mathbf v$ and all scalars $c,d$.
+
+> **🔎 Proof.** For (3), use property (2) with $c=0$: $T(\mathbf 0)=T(0\,\mathbf u)=0\,T(\mathbf u)=\mathbf 0$. For (4), apply property (1) to $c\mathbf u$ and $d\mathbf v$, then property (2) to each piece:
+> $$T(c\mathbf u+d\mathbf v)=T(c\mathbf u)+T(d\mathbf v)=cT(\mathbf u)+dT(\mathbf v).\qquad\blacksquare$$
+
+> **💡 Property (4) is the whole definition in one line.** Conversely, *if a transformation satisfies (4) for all $\mathbf u,\mathbf v,c,d$, it is automatically linear* — set $c=d=1$ to recover addition, set $d=0$ to recover scaling. When you need to *check* linearity, verifying (4) does both jobs at once.
+
+Iterating (4) gives the form we use constantly:
+$$T(c_1\mathbf v_1+\cdots+c_p\mathbf v_p)=c_1T(\mathbf v_1)+\cdots+c_pT(\mathbf v_p). \tag{5}$$
+
+> **💡 Superposition principle.** In engineering and physics, (5) is the *superposition principle*: think of $\mathbf v_1,\dots,\mathbf v_p$ as input signals and $T(\mathbf v_1),\dots,T(\mathbf v_p)$ as the system's responses. A linear system's response to a combination of inputs is the *same* combination of the individual responses.
+
+#### Example 4 — contraction / dilation is linear (worked)
+
+Given a scalar $r$, define $T:\mathbb R^2\to\mathbb R^2$ by $T(\mathbf x)=r\mathbf x$ (a **contraction** when $0\le r\le1$, a **dilation** when $r>1$). Take $r=3$ and verify linearity via (4). For $\mathbf u,\mathbf v$ in $\mathbb R^2$ and scalars $c,d$:
+$$
+T(c\mathbf u+d\mathbf v)=3(c\mathbf u+d\mathbf v)=c(3\mathbf u)+d(3\mathbf v)=cT(\mathbf u)+dT(\mathbf v).
+$$
+Since $T$ satisfies (4), it is a linear transformation.
+
+#### Example 5 — a rotation (worked)
+
+Define $T:\mathbb R^2\to\mathbb R^2$ by $T(\mathbf x)=\begin{bmatrix}0 & -1\\ 1 & 0\end{bmatrix}\mathbf x=\begin{bmatrix}-x_2\\x_1\end{bmatrix}$. With $\mathbf u=\begin{bmatrix}4\\1\end{bmatrix},\ \mathbf v=\begin{bmatrix}2\\3\end{bmatrix}$ (so $\mathbf u+\mathbf v=\begin{bmatrix}6\\4\end{bmatrix}$):
+$$
+T(\mathbf u)=\begin{bmatrix}-1\\4\end{bmatrix},\qquad
+T(\mathbf v)=\begin{bmatrix}-3\\2\end{bmatrix},\qquad
+T(\mathbf u+\mathbf v)=\begin{bmatrix}-4\\6\end{bmatrix}.
+$$
+Indeed $T(\mathbf u+\mathbf v)=T(\mathbf u)+T(\mathbf v)$. Geometrically $T$ rotates every vector $90^\circ$ counterclockwise about the origin, carrying the parallelogram on $\mathbf u,\mathbf v$ to the one on $T(\mathbf u),T(\mathbf v)$.
+
+#### Example 6 — a linear model in dollars (worked)
+
+A company makes two products, B and C, with a **unit cost matrix** $U=[\,\mathbf b\ \ \mathbf c\,]$ whose columns are the cost per dollar of output:
+$$
+U=\begin{bmatrix}.45 & .40\\ .25 & .30\\ .15 & .15\end{bmatrix}
+\begin{array}{l}\leftarrow\text{Materials}\\ \leftarrow\text{Labor}\\ \leftarrow\text{Overhead}\end{array}
+$$
+For a **production vector** $\mathbf x=(x_1,x_2)$ ($x_1$ dollars of B, $x_2$ of C), define $T:\mathbb R^2\to\mathbb R^3$ by $T(\mathbf x)=U\mathbf x$:
+$$
+T(\mathbf x)=x_1\begin{bmatrix}.45\\.25\\.15\end{bmatrix}+x_2\begin{bmatrix}.40\\.30\\.15\end{bmatrix}=\begin{bmatrix}\text{total materials cost}\\ \text{total labor cost}\\ \text{total overhead cost}\end{bmatrix}.
+$$
+$T$ turns a list of production amounts into a list of total costs. Linearity shows twice over: scaling production by $4$ scales costs from $T(\mathbf x)$ to $4T(\mathbf x)$, and the cost of combined production $\mathbf x+\mathbf y$ is $T(\mathbf x)+T(\mathbf y)$.
+
+---
+
+## §1.9 — The Matrix of a Linear Transformation
+
+Whenever a linear transformation arises geometrically or is described in words, we want a **formula** for $T(\mathbf x)$. The key: *$T$ is completely determined by what it does to the columns of the identity matrix $I_n$.*
+
+#### Example 1 — recover the formula from two images (worked)
+
+The columns of $I_2$ are $\mathbf e_1=\begin{bmatrix}1\\0\end{bmatrix},\ \mathbf e_2=\begin{bmatrix}0\\1\end{bmatrix}$. Suppose $T:\mathbb R^2\to\mathbb R^3$ is linear with
+$$
+T(\mathbf e_1)=\begin{bmatrix}5\\-7\\2\end{bmatrix},\qquad T(\mathbf e_2)=\begin{bmatrix}-3\\8\\0\end{bmatrix}.
+$$
+Any $\mathbf x=\begin{bmatrix}x_1\\x_2\end{bmatrix}=x_1\mathbf e_1+x_2\mathbf e_2$. By linearity (property (5)),
+$$
+T(\mathbf x)=x_1T(\mathbf e_1)+x_2T(\mathbf e_2)
+=x_1\begin{bmatrix}5\\-7\\2\end{bmatrix}+x_2\begin{bmatrix}-3\\8\\0\end{bmatrix}
+=\begin{bmatrix}5x_1-3x_2\\-7x_1+8x_2\\2x_1\end{bmatrix}.
+$$
+Writing the two image vectors as the columns of a matrix gives $T(\mathbf x)=[\,T(\mathbf e_1)\ \ T(\mathbf e_2)\,]\,\mathbf x=A\mathbf x$ with $A=\begin{bmatrix}5 & -3\\ -7 & 8\\ 2 & 0\end{bmatrix}$.
+
+### The standard matrix
+
+> **📐 THEOREM 10 — Matrix of a Linear Transformation.** Let $T:\mathbb R^n\to\mathbb R^m$ be a linear transformation. Then there exists a **unique** matrix $A$ such that
+> $$T(\mathbf x)=A\mathbf x\qquad\text{for all }\mathbf x\text{ in }\mathbb R^n.$$
+> In fact $A$ is the $m\times n$ matrix whose $j$-th column is the vector $T(\mathbf e_j)$, where $\mathbf e_j$ is the $j$-th column of $I_n$:
+> $$A=[\,T(\mathbf e_1)\ \ \cdots\ \ T(\mathbf e_n)\,]. \tag{3}$$
+
+> **🔎 Proof.**
+> **Existence of $A$.** Write $\mathbf x=I_n\mathbf x=[\,\mathbf e_1\ \cdots\ \mathbf e_n\,]\mathbf x=x_1\mathbf e_1+\cdots+x_n\mathbf e_n$, and use the linearity of $T$ (property (5)):
+> $$T(\mathbf x)=T(x_1\mathbf e_1+\cdots+x_n\mathbf e_n)=x_1T(\mathbf e_1)+\cdots+x_nT(\mathbf e_n)
+> =[\,T(\mathbf e_1)\ \cdots\ T(\mathbf e_n)\,]\begin{bmatrix}x_1\\\vdots\\x_n\end{bmatrix}=A\mathbf x,$$
+> where $A$ is the matrix in (3). So $A$ works.
+>
+> **Uniqueness of $A$.** Suppose $T(\mathbf x)=A\mathbf x=B\mathbf x$ for all $\mathbf x$. Evaluate at $\mathbf x=\mathbf e_j$: since $A\mathbf e_j$ is the $j$-th column of $A$ and $B\mathbf e_j$ the $j$-th column of $B$, the two matrices have identical columns, so $A=B$. $\blacksquare$
+
+The matrix $A$ in (3) is the **standard matrix for the linear transformation $T$**. We now know: *every* linear transformation from $\mathbb R^n$ to $\mathbb R^m$ is a matrix transformation, and vice versa. "Linear transformation" names the mapping property; "matrix transformation" names how it is implemented.
+
+#### Example 2 — dilation as a standard matrix (worked)
+
+For the dilation $T(\mathbf x)=3\mathbf x$ on $\mathbb R^2$: $T(\mathbf e_1)=3\mathbf e_1=\begin{bmatrix}3\\0\end{bmatrix}$ and $T(\mathbf e_2)=3\mathbf e_2=\begin{bmatrix}0\\3\end{bmatrix}$, so
+$$A=\begin{bmatrix}3 & 0\\ 0 & 3\end{bmatrix}.$$
+
+#### Example 3 — rotation by an angle $\varphi$ (worked)
+
+Let $T:\mathbb R^2\to\mathbb R^2$ rotate each point counterclockwise through angle $\varphi$ about the origin. (Such a rotation is linear — it carries the parallelogram law and scaling with it; cf. Example 5 of §1.8.) Find its standard matrix. Rotating the basis vectors:
+$$
+\mathbf e_1=\begin{bmatrix}1\\0\end{bmatrix}\mapsto\begin{bmatrix}\cos\varphi\\\sin\varphi\end{bmatrix},
+\qquad
+\mathbf e_2=\begin{bmatrix}0\\1\end{bmatrix}\mapsto\begin{bmatrix}-\sin\varphi\\\cos\varphi\end{bmatrix}.
+$$
+By Theorem 10 these images are the columns of $A$:
+$$A=\begin{bmatrix}\cos\varphi & -\sin\varphi\\ \sin\varphi & \cos\varphi\end{bmatrix}.$$
+The $90^\circ$ rotation of §1.8 Example 5 is the case $\varphi=\pi/2$: $A=\begin{bmatrix}0 & -1\\ 1 & 0\end{bmatrix}$.
+
+### Geometric linear transformations of $\mathbb R^2$
+
+Reading a transformation off its effect on the two columns of $I_2$ (equivalently, on the **unit square**) gives the standard matrices for the common geometric maps of the plane. $k$ is any real scalar.
+
+**Reflections**
+
+| Reflection through | Standard matrix |
+|---|---|
+| the $x_1$-axis | $\begin{bmatrix}1 & 0\\ 0 & -1\end{bmatrix}$ |
+| the $x_2$-axis | $\begin{bmatrix}-1 & 0\\ 0 & 1\end{bmatrix}$ |
+| the line $x_2=x_1$ | $\begin{bmatrix}0 & 1\\ 1 & 0\end{bmatrix}$ |
+| the line $x_2=-x_1$ | $\begin{bmatrix}0 & -1\\ -1 & 0\end{bmatrix}$ |
+| the origin | $\begin{bmatrix}-1 & 0\\ 0 & -1\end{bmatrix}$ |
+
+**Contractions / expansions and shears**
+
+| Transformation | Standard matrix |
+|---|---|
+| Horizontal contraction/expansion | $\begin{bmatrix}k & 0\\ 0 & 1\end{bmatrix}$ |
+| Vertical contraction/expansion | $\begin{bmatrix}1 & 0\\ 0 & k\end{bmatrix}$ |
+| Horizontal shear | $\begin{bmatrix}1 & k\\ 0 & 1\end{bmatrix}$ |
+| Vertical shear | $\begin{bmatrix}1 & 0\\ k & 1\end{bmatrix}$ |
+
+**Projections**
+
+| Projection onto | Standard matrix |
+|---|---|
+| the $x_1$-axis | $\begin{bmatrix}1 & 0\\ 0 & 0\end{bmatrix}$ |
+| the $x_2$-axis | $\begin{bmatrix}0 & 0\\ 0 & 1\end{bmatrix}$ |
+
+> **💡 Read the columns.** Each column is where a basis vector lands. Horizontal shear fixes $\mathbf e_1$ (column 1 is $\mathbf e_1$) and tilts $\mathbf e_2$ to $\begin{bmatrix}k\\1\end{bmatrix}$, so the higher a point sits, the farther right it slides. Reflection across $x_2=x_1$ swaps $\mathbf e_1\leftrightarrow\mathbf e_2$, which is why its matrix swaps the columns of $I_2$. New transformations are built by composing these (e.g. shear, then reflect) — composition is treated in §2.1.
+
+### Existence and uniqueness, as properties of a mapping
+
+The transformation viewpoint renames the two fundamental questions.
+
+> **📗 DEFINITION.** A mapping $T:\mathbb R^n\to\mathbb R^m$ is **onto** $\mathbb R^m$ if each $\mathbf b$ in $\mathbb R^m$ is the image of **at least one** $\mathbf x$ in $\mathbb R^n$.
+
+Equivalently, the range of $T$ is *all* of the codomain $\mathbb R^m$. "Is $T$ onto?" is an **existence** question: does $T(\mathbf x)=\mathbf b$ have a solution for *every* $\mathbf b$?
+
+> **📗 DEFINITION.** A mapping $T:\mathbb R^n\to\mathbb R^m$ is **one-to-one** if each $\mathbf b$ in $\mathbb R^m$ is the image of **at most one** $\mathbf x$ in $\mathbb R^n$.
+
+Equivalently, for each $\mathbf b$ the equation $T(\mathbf x)=\mathbf b$ has either a unique solution or none. "Is $T$ one-to-one?" is a **uniqueness** question.
+
+> **⚠ "At least one" vs. "at most one."** *Onto* = every target is hit (**≥ 1** preimage each). *One-to-one* = no target is hit twice (**≤ 1** preimage each). They are independent: a map can be one but not the other, both, or neither. The projections in Table 4 are *neither* onto $\mathbb R^2$ nor one-to-one; the reflections, shears, and expansions are *both*.
+
+#### Example 4 — onto but not one-to-one (worked)
+
+Let $T$ have standard matrix $A=\begin{bmatrix}1 & -4 & 8 & 1\\ 0 & 2 & -1 & 3\\ 0 & 0 & 0 & 5\end{bmatrix}$, so $T:\mathbb R^4\to\mathbb R^3$. The matrix is already in echelon form with a **pivot in each of the three rows**. By Theorem 4 (§1.4), $A\mathbf x=\mathbf b$ is consistent for every $\mathbf b$ in $\mathbb R^3$, so $T$ maps $\mathbb R^4$ **onto** $\mathbb R^3$. But $A$ has four columns and only three pivots, so $A\mathbf x=\mathbf b$ always has a **free variable** — each $\mathbf b$ is the image of more than one $\mathbf x$. Thus $T$ is **not one-to-one**.
+
+### The three characterization theorems
+
+> **📐 THEOREM 11.** Let $T:\mathbb R^n\to\mathbb R^m$ be linear. Then $T$ is **one-to-one if and only if the equation $T(\mathbf x)=\mathbf 0$ has only the trivial solution.**
+
+> **🔎 Proof.** Since $T$ is linear, $T(\mathbf 0)=\mathbf 0$.
+> **($\Rightarrow$)** If $T$ is one-to-one, then $T(\mathbf x)=\mathbf 0$ has *at most* one solution; $\mathbf x=\mathbf 0$ is one, so it is the *only* one — the trivial solution.
+> **($\Leftarrow$)** We prove the contrapositive: if $T$ is **not** one-to-one, then $T(\mathbf x)=\mathbf 0$ has a nontrivial solution. Not one-to-one means some $\mathbf b$ is the image of two *different* vectors $\mathbf u\ne\mathbf v$: $T(\mathbf u)=\mathbf b$ and $T(\mathbf v)=\mathbf b$. By linearity,
+> $$T(\mathbf u-\mathbf v)=T(\mathbf u)-T(\mathbf v)=\mathbf b-\mathbf b=\mathbf 0.$$
+> Since $\mathbf u\ne\mathbf v$, the vector $\mathbf u-\mathbf v$ is nonzero, so $T(\mathbf x)=\mathbf 0$ has a solution other than $\mathbf 0$. Hence the two conditions are true together or false together. $\blacksquare$
+
+> **📐 THEOREM 12.** Let $T:\mathbb R^n\to\mathbb R^m$ be linear with standard matrix $A$. Then:
+> **(a)** $T$ maps $\mathbb R^n$ **onto** $\mathbb R^m$ **iff the columns of $A$ span $\mathbb R^m$**;
+> **(b)** $T$ is **one-to-one** **iff the columns of $A$ are linearly independent.**
+
+> **🔎 Proof.**
+> **(a)** By Theorem 4 (§1.4), the columns of $A$ span $\mathbb R^m$ iff $A\mathbf x=\mathbf b$ is consistent for every $\mathbf b$ in $\mathbb R^m$ — i.e. iff for every $\mathbf b$ the equation $T(\mathbf x)=\mathbf b$ has at least one solution. That is exactly the statement that $T$ maps $\mathbb R^n$ onto $\mathbb R^m$.
+> **(b)** The equations $T(\mathbf x)=\mathbf 0$ and $A\mathbf x=\mathbf 0$ are the same. By Theorem 11, $T$ is one-to-one iff $A\mathbf x=\mathbf 0$ has only the trivial solution — which (§1.7) holds iff the columns of $A$ are linearly independent. $\blacksquare$
+
+> **💡 The whole chapter in two lines.** *Onto ↔ span ↔ a pivot in every **row**.* *One-to-one ↔ independence ↔ a pivot in every **column**.* Existence and uniqueness, the questions since §1.1, are now four equivalent phrasings each.
+
+#### Example 5 — read onto/one-to-one off the formula (worked)
+
+Let $T(x_1,x_2)=(3x_1+x_2,\ 5x_1+7x_2,\ x_1+3x_2)$. Writing input and output as columns, read the standard matrix straight off the coefficients:
+$$
+T(\mathbf x)=\begin{bmatrix}3x_1+x_2\\ 5x_1+7x_2\\ x_1+3x_2\end{bmatrix}
+=\begin{bmatrix}3 & 1\\ 5 & 7\\ 1 & 3\end{bmatrix}\begin{bmatrix}x_1\\x_2\end{bmatrix},
+\qquad A=\begin{bmatrix}3 & 1\\ 5 & 7\\ 1 & 3\end{bmatrix}.
+$$
+- **One-to-one?** The two columns are not multiples of each other, so they are linearly independent. By Theorem 12(b), $T$ **is one-to-one**.
+- **Onto $\mathbb R^3$?** $A$ is $3\times2$, so it has at most $2$ pivots — it cannot have a pivot in all three rows, so the columns do **not** span $\mathbb R^3$. By Theorem 12(a), $T$ is **not onto** $\mathbb R^3$.
+
+> **⚠ Shape sets a ceiling.** A linear map $\mathbb R^n\to\mathbb R^m$ can be onto only if $n\ge m$ (need $m$ pivots across $n$ columns) and one-to-one only if $n\le m$ (need $n$ pivots down $m$ rows). So $\mathbb R^2\to\mathbb R^3$ is **never** onto, and $\mathbb R^4\to\mathbb R^3$ is **never** one-to-one — before computing anything.
+
+---
+
+## §1.10 — Linear Models in Business, Science, and Engineering
+
+Three models, each a linear equation in vector or matrix form. Watch how the linearity reflects a real property of the system: *proportionality* (an effect scales with its cause) plus *additivity* (combined causes add their effects).
+
+### A nutrition model (the Cambridge Diet)
+
+To hit target amounts of several nutrients using a few foodstuffs, build a **nutrient vector** for each foodstuff and solve one vector equation.
+
+#### Example 1 — mixing foods to hit nutrient targets (worked)
+
+Amounts (g) of each nutrient supplied per 100 g of ingredient, and the one-day targets:
+
+| Nutrient | Nonfat milk | Soy flour | Whey | Target |
+|---|---|---|---|---|
+| Protein | 36 | 51 | 13 | 33 |
+| Carbohydrate | 52 | 34 | 74 | 45 |
+| Fat | 0 | 7 | 1.1 | 3 |
+
+Let $x_1,x_2,x_3$ be the number of units (100 g) of nonfat milk, soy flour, and whey. The nutrients supplied by $x_1$ units of nonfat milk are $x_1\mathbf a_1$, where $\mathbf a_1$ is the first column; similarly $x_2\mathbf a_2,\ x_3\mathbf a_3$. The mixture must meet the target vector $\mathbf b$:
+$$
+x_1\begin{bmatrix}36\\52\\0\end{bmatrix}+x_2\begin{bmatrix}51\\34\\7\end{bmatrix}+x_3\begin{bmatrix}13\\74\\1.1\end{bmatrix}=\begin{bmatrix}33\\45\\3\end{bmatrix},
+\qquad\text{i.e.}\quad x_1\mathbf a_1+x_2\mathbf a_2+x_3\mathbf a_3=\mathbf b.
+$$
+Row reduce the augmented matrix (start → reduced echelon form):
+$$
+\begin{bmatrix}36 & 51 & 13 & 33\\ 52 & 34 & 74 & 45\\ 0 & 7 & 1.1 & 3\end{bmatrix}
+\longrightarrow
+\begin{bmatrix}1 & 0 & 0 & .277\\ 0 & 1 & 0 & .392\\ 0 & 0 & 1 & .233\end{bmatrix}.
+$$
+To three significant digits the diet needs **.277 units of nonfat milk, .392 units of soy flour, .233 units of whey** to supply exactly the required protein, carbohydrate, and fat.
+
+> **⚠ Nonnegativity is a real constraint, not a formality.** A solution is physically feasible only if every $x_i\ge0$ — you cannot add $-.233$ units of whey. With many nutrient requirements one often needs *more* foodstuffs than nutrients to find a system with a nonnegative solution. (The real Cambridge Diet supplied 31 nutrients in exact amounts using 33 ingredients.)
+
+### An electrical-network model
+
+Current in a resistive network obeys two linear laws:
+
+> **📦 Ohm's law & Kirchhoff's voltage law.** Across a resistor the **voltage drop** is $V=RI$ ($R$ in ohms $\Omega$, $I$ in amps). **Kirchhoff's voltage law:** around any closed loop, the algebraic sum of the $RI$ voltage drops equals the algebraic sum of the voltage sources.
+
+We use **loop currents** $I_1,I_2,\dots$ (one per independent loop). A loop current direction is chosen in advance; a negative answer just means the true current runs the other way.
+
+#### Example 2 — loop currents (worked)
+
+A network has three loops with currents $I_1,I_2,I_3$. Applying Kirchhoff's law to each loop — summing $R I$ over the resistors in the loop, subtracting the share a *neighboring* loop's current contributes through a shared branch, and equating to the loop's net source voltage — gives the system
+$$
+\begin{aligned}
+11I_1 - 3I_2\phantom{{}+3I_3} &= 30\\
+-3I_1 + 6I_2 - I_3 &= 5\\
+\phantom{-3I_1+{}}-I_2 + 3I_3 &= -25
+\end{aligned}
+$$
+Row reducing the augmented matrix yields
+$$
+I_1=3\ \text{amps},\qquad I_2=1\ \text{amp},\qquad I_3=-8\ \text{amps}.
+$$
+The negative $I_3$ means the actual current in loop 3 flows opposite to the chosen direction.
+
+It is instructive to read the system as a **vector/matrix equation**:
+$$
+I_1\begin{bmatrix}11\\-3\\0\end{bmatrix}+I_2\begin{bmatrix}-3\\6\\-1\end{bmatrix}+I_3\begin{bmatrix}0\\-1\\3\end{bmatrix}=\begin{bmatrix}30\\5\\-25\end{bmatrix},
+\qquad\text{i.e.}\quad R\mathbf i=\mathbf v,
+$$
+with resistance matrix $R=\begin{bmatrix}11 & -3 & 0\\ -3 & 6 & -1\\ 0 & -1 & 3\end{bmatrix}$ and $\mathbf i=\begin{bmatrix}I_1\\I_2\\I_3\end{bmatrix}$. This is a **matrix Ohm's law**. (When all loop currents are taken in the same direction, every off-diagonal entry of $R$ is negative.)
+
+From the loop currents, the **branch** currents follow by Kirchhoff's current law: where only one loop current passes a branch, the branch current *is* that loop current; where two loop currents share a branch, take their algebraic difference. So branch $AB$ carries $I_1-I_2=3-1=2$ amps (in the direction of $I_1$), and branch $CD$ carries $I_2-I_3=1-(-8)=9$ amps.
+
+> **💡 Superposition, physically.** $R\mathbf i=\mathbf v$ is linear, so doubling the source vector $\mathbf v$ doubles the current vector $\mathbf i$, and the solution for several sources is the sum of the solutions for each source acting alone — Ohm's and Kirchhoff's laws are both linear, so the whole model is.
+
+### A difference-equation model (dynamical systems)
+
+To model a system that changes in discrete time, track a **state vector** $\mathbf x_k$ and relate each step to the next by one matrix.
+
+> **📗 DEFINITION.** If a matrix $A$ relates consecutive states by
+> $$\mathbf x_{k+1}=A\mathbf x_k\qquad(k=0,1,2,\dots), \tag{5}$$
+> this is a **linear difference equation** (or **recurrence relation**). Given $\mathbf x_0$, it generates $\mathbf x_1,\mathbf x_2,\dots$ in turn.
+
+> **💡 Why this is the hinge to Chapters 4–5.** $\mathbf x_{k+1}=A\mathbf x_k$ means $\mathbf x_k=A^k\mathbf x_0$: the long-run behavior of the system is governed by the *powers* of $A$. Understanding what $A^k\mathbf x_0$ does as $k\to\infty$ is exactly what eigenvalues and eigenvectors (Chapter 5) are built to answer.
+
+#### Example 3 — city/suburb migration (worked)
+
+Each year $5\%$ of the city population moves to the suburbs ($95\%$ stays) and $3\%$ of the suburban population moves to the city ($97\%$ stays). With state vector $\mathbf x_k=\begin{bmatrix}\text{city}\\\text{suburbs}\end{bmatrix}$ in year $k$, the counts after one year are
+$$
+\mathbf x_{k+1}=\begin{bmatrix}.95 & .03\\ .05 & .97\end{bmatrix}\mathbf x_k=M\mathbf x_k,
+$$
+where $M$ is the **migration matrix** (each column says where one group's people go; columns sum to 1). Starting from a 2014 population of $600{,}000$ city and $400{,}000$ suburbs, $\mathbf x_0=\begin{bmatrix}600{,}000\\400{,}000\end{bmatrix}$:
+$$
+\mathbf x_1=M\mathbf x_0=\begin{bmatrix}.95 & .03\\ .05 & .97\end{bmatrix}\begin{bmatrix}600{,}000\\400{,}000\end{bmatrix}=\begin{bmatrix}582{,}000\\418{,}000\end{bmatrix},
+$$
+$$
+\mathbf x_2=M\mathbf x_1=\begin{bmatrix}.95 & .03\\ .05 & .97\end{bmatrix}\begin{bmatrix}582{,}000\\418{,}000\end{bmatrix}=\begin{bmatrix}565{,}440\\434{,}560\end{bmatrix}.
+$$
+So the model predicts $565{,}440$ in the city and $434{,}560$ in the suburbs by 2016. The map $\mathbf x_k\mapsto\mathbf x_{k+1}$ is linear because the number who move is *proportional* to each population and the effects *add*.
+
+---
+
+### One-page recap
+
+- **§1.8** A **transformation** $T:\mathbb R^n\to\mathbb R^m$ assigns each input $\mathbf x$ an output $T(\mathbf x)$; **domain** $\mathbb R^n$, **codomain** $\mathbb R^m$, **range** = all images. A **matrix transformation** $\mathbf x\mapsto A\mathbf x$ has range = span of $A$'s columns. $T$ is **linear** iff $T(\mathbf u+\mathbf v)=T(\mathbf u)+T(\mathbf v)$ and $T(c\mathbf u)=cT(\mathbf u)$ — equivalently iff $T(c\mathbf u+d\mathbf v)=cT(\mathbf u)+dT(\mathbf v)$; then $T(\mathbf 0)=\mathbf 0$ and (5) holds.
+- **§1.9 / Theorem 10** Every linear $T$ equals $\mathbf x\mapsto A\mathbf x$ for the **unique standard matrix** $A=[\,T(\mathbf e_1)\ \cdots\ T(\mathbf e_n)\,]$. Geometric maps of $\mathbb R^2$ (reflection, contraction/expansion, shear, projection) are read off the columns $T(\mathbf e_1),T(\mathbf e_2)$.
+- **Onto / one-to-one (Thms 11, 12).** $T$ **onto** $\mathbb R^m$ ↔ columns of $A$ **span** $\mathbb R^m$ ↔ pivot in every **row**. $T$ **one-to-one** ↔ $T(\mathbf x)=\mathbf 0$ only trivially ↔ columns **independent** ↔ pivot in every **column**. Shape caps it: onto needs $n\ge m$, one-to-one needs $n\le m$.
+- **§1.10** Linear models are *proportional + additive*. **Diet:** $x_1\mathbf a_1+\cdots=\mathbf b$, feasible only with nonnegative amounts. **Circuits:** matrix Ohm's law $R\mathbf i=\mathbf v$. **Dynamics:** the difference equation $\mathbf x_{k+1}=A\mathbf x_k$ (so $\mathbf x_k=A^k\mathbf x_0$) — the gateway to eigenvalues in Chapter 5.
+</script>
+<script>
+  (function(){
+    var raw = document.getElementById('src').textContent;
+    // Protect math so the markdown parser can't mangle underscores/backslashes.
+    var store = [], i = 0;
+    raw = raw.replace(/\$\$[\s\S]+?\$\$/g, function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    raw = raw.replace(/\$[^\$\n]+?\$/g,   function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    var html = marked.parse(raw);
+    html = html.replace(/@@M(\d+)@@/g, function(_, n){ return store[+n]; });
+    document.getElementById('wrap').innerHTML = html;
+    var go = function(){ MathJax.typesetPromise(); };
+    if (window.MathJax && MathJax.typesetPromise) go();
+    else { var t=setInterval(function(){ if(window.MathJax&&MathJax.typesetPromise){clearInterval(t);go();} },80); }
+  })();
+</script>
+</body>
+</html>

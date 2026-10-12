@@ -23,6 +23,9 @@ syllabus under `edu-web/scripts/syllabi/`).
 | Lecture | Sections | File |
 |---|---|---|
 | 01 | 1.1 Systems of Linear Equations · 1.2 Row Reduction & Echelon Forms | `notes/01_systems-and-row-reduction.md` |
+| 02 | 1.3 Vector Equations · 1.4 The Matrix Equation Ax = b | `notes/02_vector-and-matrix-equations.md` |
+| 03 | 1.5 Solution Sets · 1.7 Linear Independence · 1.6 Applications | `notes/03_solution-sets-and-independence.md` |
+| 04 | 1.8 Introduction to Linear Transformations · 1.9 The Matrix of a Linear Transformation · 1.10 Linear Models | `notes/04_linear-transformations.md` |
 
 ## How it's consumed (generator lives in `tools/linear-algebra/`)
 

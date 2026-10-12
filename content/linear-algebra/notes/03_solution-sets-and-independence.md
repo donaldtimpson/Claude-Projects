@@ -1,0 +1,378 @@
+# Linear Algebra — Lecture Notes
+
+**Text:** Lay, *Linear Algebra and Its Applications*, 5th ed.
+**Chapter 1 — Linear Equations in Linear Algebra**
+**Sections covered:** 1.5 Solution Sets of Linear Systems · 1.7 Linear Independence · 1.6 Applications of Linear Systems
+
+> *Where this sits (and why this order):* §1.1–1.4 turned a system into the three interchangeable forms — system, vector equation, matrix equation $A\mathbf x=\mathbf b$. This lecture describes the **solution set itself** as a geometric object. §1.5 writes every solution set in **parametric vector form** and shows the solutions of $A\mathbf x=\mathbf b$ are a *translate* of the solutions of $A\mathbf x=\mathbf 0$. We then teach **§1.7 next, out of book order**, because §1.7 opens by re-reading those very homogeneous equations "from a different perspective": the question "does $A\mathbf x=\mathbf 0$ have a nontrivial solution?" becomes "are the columns **linearly independent**?" — so 1.5 → 1.7 is one continuous thread. We close with **§1.6**, the payoff: it shows *where* systems with infinitely many solutions come from in the wild (economies, chemistry, traffic), applying the parametric-vector machinery of §1.5 to real models.
+
+---
+
+## §1.5 — Solution Sets of Linear Systems
+
+The goal: describe the *entire* solution set of a system **explicitly and geometrically**, using vectors.
+
+### Homogeneous systems
+
+> **📗 DEFINITION.** A system is **homogeneous** if it can be written $A\mathbf x=\mathbf 0$, where $A$ is $m\times n$ and $\mathbf 0$ is the zero vector in $\mathbb R^m$.
+
+Every homogeneous system has **at least one** solution: $\mathbf x=\mathbf 0$ (the zero vector in $\mathbb R^n$), called the **trivial solution**. So for a homogeneous system the existence question is settled — the real question is *uniqueness*: is there a **nontrivial** solution, a nonzero $\mathbf x$ with $A\mathbf x=\mathbf 0$?
+
+> **📦 Key fact.** The homogeneous equation $A\mathbf x=\mathbf 0$ has a **nontrivial solution iff the system has at least one free variable.**
+
+> **🔎 Why.** $A\mathbf x=\mathbf 0$ is always consistent ($\mathbf x=\mathbf 0$ works). By the Existence & Uniqueness Theorem (§1.2, Thm 2), a consistent system has a **unique** solution exactly when it has **no** free variables — and then that unique solution must be the trivial one. If instead there is a free variable, the solution set is infinite, so some solution is nonzero. Hence: free variable present $\iff$ a nontrivial solution exists. $\blacksquare$
+
+#### Example 1 — a solution set that is a line (worked)
+
+Determine whether the homogeneous system has a nontrivial solution, then describe the solution set:
+$$
+\begin{aligned}
+3x_1 + 5x_2 - 4x_3 &= 0\\
+-3x_1 - 2x_2 + 4x_3 &= 0\\
+6x_1 + x_2 - 8x_3 &= 0
+\end{aligned}
+$$
+Row reduce $[\,A\ \mathbf 0\,]$ to echelon form, then to reduced echelon form:
+$$
+\begin{bmatrix} 3 & 5 & -4 & 0 \\ -3 & -2 & 4 & 0 \\ 6 & 1 & -8 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 3 & 5 & -4 & 0 \\ 0 & 3 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 0 & -\tfrac43 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+$$
+$x_3$ is free, so nontrivial solutions **exist**. The basic variables are $x_1=\tfrac43x_3$, $x_2=0$. Write a typical solution as a vector and **factor out the free variable**:
+$$
+\mathbf x=\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}
+=\begin{bmatrix}\tfrac43 x_3\\0\\x_3\end{bmatrix}
+=x_3\begin{bmatrix}\tfrac43\\0\\1\end{bmatrix}=x_3\mathbf v,
+\qquad \mathbf v=\begin{bmatrix}\tfrac43\\0\\1\end{bmatrix}.
+$$
+Every solution is a scalar multiple of $\mathbf v$; the solution set is $\text{Span}\{\mathbf v\}$ — a **line through the origin** in $\mathbb R^3$. (The trivial solution is $x_3=0$.)
+
+> **⚠ Watch for this:** a nontrivial solution may have *some* zero entries (here $x_2=0$). "Nontrivial" means **not all** entries zero — not "all entries nonzero."
+
+#### Example 2 — a solution set that is a plane (worked)
+
+A single equation is a very simple system. Describe all solutions of
+$$10x_1 - 3x_2 - 2x_3 = 0.\tag{1}$$
+No matrix needed: solve for the basic variable $x_1$ in terms of the free variables $x_2,x_3$: $x_1=.3x_2+.2x_3$. As a vector,
+$$
+\mathbf x=\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}
+=\begin{bmatrix}.3x_2+.2x_3\\x_2\\x_3\end{bmatrix}
+=x_2\begin{bmatrix}.3\\1\\0\end{bmatrix}+x_3\begin{bmatrix}.2\\0\\1\end{bmatrix}
+=x_2\mathbf u+x_3\mathbf v.\tag{2}
+$$
+Every solution is a linear combination of $\mathbf u$ and $\mathbf v$, so the solution set is $\text{Span}\{\mathbf u,\mathbf v\}$. Since neither is a multiple of the other, this is a **plane through the origin**.
+
+> **💡 The general pattern.** The solution set of *any* homogeneous $A\mathbf x=\mathbf 0$ can be written $\text{Span}\{\mathbf v_1,\dots,\mathbf v_p\}$ for suitable $\mathbf v_i$ — one $\mathbf v_i$ per free variable. Zero free variables → $\text{Span}\{\mathbf 0\}=\{\mathbf 0\}$; one → a line through $\mathbf 0$; two or more → (mentally) a plane through $\mathbf 0$.
+
+### Parametric vector form
+
+Equation (1) is an *implicit* description of the plane (a condition its points satisfy); equation (2) is an *explicit* one (a recipe generating its points). Equation (2), $\mathbf x = x_2\mathbf u + x_3\mathbf v$, is a **parametric vector equation**; written $\mathbf x=s\mathbf u+t\mathbf v$ $(s,t\in\mathbb R)$ it stresses that the parameters range over all reals. In Example 1, $\mathbf x=t\mathbf v$ $(t\in\mathbb R)$ is the parametric vector equation of a line. A solution set given this way — as vectors, with free variables as parameters — is said to be in **parametric vector form**.
+
+### Solutions of nonhomogeneous systems
+
+> **📦 The structure.** When a *nonhomogeneous* system has many solutions, its general solution is **one particular solution plus** an arbitrary solution of the corresponding homogeneous system.
+
+#### Example 3 — $A\mathbf x=\mathbf b$ is a translated line (worked)
+
+Describe all solutions of $A\mathbf x=\mathbf b$ with the **same** $A$ as Example 1 and
+$$
+A=\begin{bmatrix} 3 & 5 & -4 \\ -3 & -2 & 4 \\ 6 & 1 & -8 \end{bmatrix},\qquad
+\mathbf b=\begin{bmatrix}7\\-1\\-4\end{bmatrix}.
+$$
+Row reduce $[\,A\ \mathbf b\,]$ from start to reduced echelon form:
+$$
+\begin{bmatrix} 3 & 5 & -4 & 7 \\ -3 & -2 & 4 & -1 \\ 6 & 1 & -8 & -4 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 0 & -\tfrac43 & -1 \\ 0 & 1 & 0 & 2 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+$$
+So $x_1=-1+\tfrac43x_3$, $x_2=2$, $x_3$ free. As a vector,
+$$
+\mathbf x=\begin{bmatrix}x_1\\x_2\\x_3\end{bmatrix}
+=\begin{bmatrix}-1+\tfrac43x_3\\2\\x_3\end{bmatrix}
+=\underbrace{\begin{bmatrix}-1\\2\\0\end{bmatrix}}_{\mathbf p}
++x_3\underbrace{\begin{bmatrix}\tfrac43\\0\\1\end{bmatrix}}_{\mathbf v}
+=\mathbf p+x_3\mathbf v.
+$$
+Writing $t$ for the parameter,
+$$\mathbf x=\mathbf p+t\mathbf v\quad(t\in\mathbb R)\tag{3}$$
+is the solution set in parametric vector form. Compare with Example 1, whose solution set was $\mathbf x=t\mathbf v$ $(t\in\mathbb R)$ — **the same $\mathbf v$**. So the solutions of $A\mathbf x=\mathbf b$ are exactly the solutions of $A\mathbf x=\mathbf 0$ **shifted by $\mathbf p$**; the particular solution $\mathbf p$ corresponds to $t=0$.
+
+> **💡 Geometric reading.** Adding $\mathbf p$ **translates**: it slides each point of a set in the direction of $\mathbf p$. Translating the line $A\mathbf x=\mathbf 0$ (through the origin) by $\mathbf p$ gives the parallel line $A\mathbf x=\mathbf b$ through $\mathbf p$. So the solution set of $A\mathbf x=\mathbf b$ is a **line through $\mathbf p$ parallel to** the solution set of $A\mathbf x=\mathbf 0$.
+
+> **📐 THEOREM 6.** Suppose $A\mathbf x=\mathbf b$ is consistent for a given $\mathbf b$, and let $\mathbf p$ be a solution. Then the solution set of $A\mathbf x=\mathbf b$ is the set of all vectors of the form $\mathbf w=\mathbf p+\mathbf v_h$, where $\mathbf v_h$ is **any** solution of the homogeneous equation $A\mathbf x=\mathbf 0$.
+
+> **🔎 Proof.** We show the two sets are equal by proving each contains the other, using the linearity of $\mathbf x\mapsto A\mathbf x$ (Theorem 5, §1.4).
+>
+> **($\supseteq$) Every $\mathbf p+\mathbf v_h$ is a solution.** Let $\mathbf v_h$ satisfy $A\mathbf v_h=\mathbf 0$ and put $\mathbf w=\mathbf p+\mathbf v_h$. Then
+> $$A\mathbf w=A(\mathbf p+\mathbf v_h)=A\mathbf p+A\mathbf v_h=\mathbf b+\mathbf 0=\mathbf b,$$
+> so $\mathbf w$ solves $A\mathbf x=\mathbf b$.
+>
+> **($\subseteq$) Every solution has that form.** Let $\mathbf w$ be *any* solution, so $A\mathbf w=\mathbf b$. Define $\mathbf v_h=\mathbf w-\mathbf p$. Then
+> $$A\mathbf v_h=A(\mathbf w-\mathbf p)=A\mathbf w-A\mathbf p=\mathbf b-\mathbf b=\mathbf 0,$$
+> so $\mathbf v_h$ solves the homogeneous equation, and $\mathbf w=\mathbf p+\mathbf v_h$.
+>
+> The two inclusions give equality: the solution set of $A\mathbf x=\mathbf b$ is exactly $\{\,\mathbf p+\mathbf v_h : A\mathbf v_h=\mathbf 0\,\}$. $\blacksquare$
+
+> **⚠ Warning.** Theorem 6 needs $A\mathbf x=\mathbf b$ to be **consistent** (it requires an actual solution $\mathbf p$). If $A\mathbf x=\mathbf b$ has no solution, the solution set is empty — there is nothing to translate. Also, the geometric picture ("translate of a line/plane through $\mathbf 0$") holds for any consistent system; with several free variables the set is larger than a line, but still a *shifted* span.
+
+> **📦 Writing a consistent system's solution set in parametric vector form.**
+> 1. Row reduce the augmented matrix to reduced echelon form.
+> 2. Express each basic variable in terms of the free variables.
+> 3. Write a typical solution $\mathbf x$ as a vector whose entries depend on the free variables.
+> 4. Decompose $\mathbf x$ into a constant vector plus a linear combination of constant vectors, using the free variables as parameters.
+
+---
+
+## §1.7 — Linear Independence
+
+**The shift in viewpoint.** §1.5 asked about the *solutions* $\mathbf x$ of $A\mathbf x=\mathbf 0$. Rewrite that same equation as a **vector equation** in the columns:
+$$x_1\mathbf a_1+x_2\mathbf a_2+\cdots+x_n\mathbf a_n=\mathbf 0.$$
+Now the attention moves from the unknowns to the **vectors** $\mathbf a_1,\dots,\mathbf a_n$ themselves: do they admit a nontrivial way of combining to $\mathbf 0$?
+
+### Core Definitions
+
+> **📗 DEFINITION.** An indexed set $\{\mathbf v_1,\dots,\mathbf v_p\}$ in $\mathbb R^n$ is **linearly independent** if the vector equation
+> $$x_1\mathbf v_1+x_2\mathbf v_2+\cdots+x_p\mathbf v_p=\mathbf 0$$
+> has **only the trivial solution** $x_1=\cdots=x_p=0$.
+> The set is **linearly dependent** if there exist weights $c_1,\dots,c_p$, **not all zero**, with
+> $$c_1\mathbf v_1+c_2\mathbf v_2+\cdots+c_p\mathbf v_p=\mathbf 0.\tag{2}$$
+
+Such an equation (2) with not-all-zero weights is a **linear dependence relation** among $\mathbf v_1,\dots,\mathbf v_p$. A set is dependent iff it is *not* independent. (We often say "$\mathbf v_1,\dots,\mathbf v_p$ are linearly independent" to mean the *set* is.)
+
+#### Example 1 — test independence, then exhibit a relation (worked)
+
+Let $\mathbf v_1=\begin{bmatrix}1\\2\\3\end{bmatrix},\ \mathbf v_2=\begin{bmatrix}4\\5\\6\end{bmatrix},\ \mathbf v_3=\begin{bmatrix}2\\1\\0\end{bmatrix}$.
+
+**(a) Independent?** Row reduce the augmented matrix of $x_1\mathbf v_1+x_2\mathbf v_2+x_3\mathbf v_3=\mathbf 0$:
+$$
+\begin{bmatrix} 1 & 4 & 2 & 0 \\ 2 & 5 & 1 & 0 \\ 3 & 6 & 0 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 4 & 2 & 0 \\ 0 & -3 & -3 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}.
+$$
+$x_1,x_2$ are basic and $x_3$ is free, so a nontrivial solution exists: $\{\mathbf v_1,\mathbf v_2,\mathbf v_3\}$ is **linearly dependent**.
+
+**(b) A dependence relation.** Finish reducing:
+$$
+\begin{bmatrix} 1 & 4 & 2 & 0 \\ 0 & -3 & -3 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 0 & -2 & 0 \\ 0 & 1 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+$$
+gives $x_1=2x_3$, $x_2=-x_3$, $x_3$ free. Pick a nonzero value, say $x_3=5$: then $x_1=10,\ x_2=-5$, so
+$$10\mathbf v_1-5\mathbf v_2+5\mathbf v_3=\mathbf 0.$$
+**Check:** $10\begin{bmatrix}1\\2\\3\end{bmatrix}-5\begin{bmatrix}4\\5\\6\end{bmatrix}+5\begin{bmatrix}2\\1\\0\end{bmatrix}=\begin{bmatrix}10-20+10\\20-25+5\\30-30+0\end{bmatrix}=\begin{bmatrix}0\\0\\0\end{bmatrix}$ ✓. This is one of infinitely many dependence relations.
+
+### Linear independence of matrix columns
+
+If $A=[\,\mathbf a_1\ \cdots\ \mathbf a_n\,]$, then $A\mathbf x=\mathbf 0$ *is* the vector equation $x_1\mathbf a_1+\cdots+x_n\mathbf a_n=\mathbf 0$. Every dependence relation among the columns is a nontrivial solution of $A\mathbf x=\mathbf 0$, and conversely. Hence:
+
+> **📦 Column independence.** The columns of a matrix $A$ are **linearly independent iff the equation $A\mathbf x=\mathbf 0$ has only the trivial solution.** (Equivalently, iff $A$ has **no free variables** — a pivot in every column.)
+
+#### Example 2 — independent columns (worked)
+
+Are the columns of $A=\begin{bmatrix}0 & 1 & 4\\1 & 2 & -1\\5 & 8 & 0\end{bmatrix}$ independent? Row reduce $[\,A\ \mathbf 0\,]$ (swap $R_1\leftrightarrow R_2$ for a top pivot):
+$$
+\begin{bmatrix}0 & 1 & 4 & 0\\1 & 2 & -1 & 0\\5 & 8 & 0 & 0\end{bmatrix}
+\longrightarrow
+\begin{bmatrix}1 & 2 & -1 & 0\\0 & 1 & 4 & 0\\0 & 0 & 13 & 0\end{bmatrix}.
+$$
+Three basic variables, no free variable → only the trivial solution → the columns are **linearly independent**.
+
+### Sets of one or two vectors
+
+- **One vector** $\{\mathbf v\}$ is independent **iff $\mathbf v\ne\mathbf 0$**: for $\mathbf v\ne\mathbf 0$, $x_1\mathbf v=\mathbf 0$ forces $x_1=0$. The set $\{\mathbf 0\}$ is dependent, since $1\cdot\mathbf 0=\mathbf 0$ is a nontrivial relation.
+
+#### Example 3 — two vectors, by inspection (worked)
+
+**(a)** $\mathbf v_1=\begin{bmatrix}3\\1\end{bmatrix},\ \mathbf v_2=\begin{bmatrix}6\\2\end{bmatrix}$: here $\mathbf v_2=2\mathbf v_1$, so $2\mathbf v_1-\mathbf v_2=\mathbf 0$ — a nontrivial relation. **Dependent.**
+
+**(b)** $\mathbf v_1=\begin{bmatrix}3\\2\end{bmatrix},\ \mathbf v_2=\begin{bmatrix}6\\2\end{bmatrix}$: not multiples of each other. Suppose $c\mathbf v_1+d\mathbf v_2=\mathbf 0$. If $c\ne0$ then $\mathbf v_1=(-d/c)\mathbf v_2$, impossible since $\mathbf v_1$ is not a multiple of $\mathbf v_2$; so $c=0$, and likewise $d=0$. Only the trivial solution → **independent.**
+
+> **📦 Two-vector test.** A set $\{\mathbf v_1,\mathbf v_2\}$ is **linearly dependent iff at least one vector is a multiple of the other** — equivalently, iff the two lie on the same line through the origin. (This shortcut applies **only** to sets of *two* vectors.)
+
+### Sets of two or more vectors
+
+> **📐 THEOREM 7 — Characterization of Linearly Dependent Sets.** An indexed set $S=\{\mathbf v_1,\dots,\mathbf v_p\}$ of **two or more** vectors is linearly dependent **iff at least one** of the vectors is a linear combination of the others. In fact, if $S$ is dependent and $\mathbf v_1\ne\mathbf 0$, then some $\mathbf v_j$ (with $j>1$) is a linear combination of the **preceding** vectors $\mathbf v_1,\dots,\mathbf v_{j-1}$.
+
+> **🔎 Proof.**
+> **($\Leftarrow$) If some vector is a combination of the others, $S$ is dependent.** Suppose $\mathbf v_j=c_1\mathbf v_1+\cdots+c_{j-1}\mathbf v_{j-1}+c_{j+1}\mathbf v_{j+1}+\cdots+c_p\mathbf v_p$. Subtract $\mathbf v_j$ from both sides to get
+> $$c_1\mathbf v_1+\cdots+c_{j-1}\mathbf v_{j-1}+(-1)\mathbf v_j+c_{j+1}\mathbf v_{j+1}+\cdots+c_p\mathbf v_p=\mathbf 0,$$
+> a dependence relation with weight $-1\ne0$ on $\mathbf v_j$. So $S$ is linearly dependent.
+>
+> **($\Rightarrow$) If $S$ is dependent, some vector is a combination of the others.** Because $S$ is dependent there are weights $c_1,\dots,c_p$, not all zero, with $c_1\mathbf v_1+\cdots+c_p\mathbf v_p=\mathbf 0$. If $\mathbf v_1=\mathbf 0$, then $\mathbf v_1$ is (trivially) the linear combination $0\mathbf v_2+\cdots+0\mathbf v_p$ of the others, and we are done. Otherwise $\mathbf v_1\ne\mathbf 0$. Let $j$ be the **largest** subscript with $c_j\ne0$. If $j=1$, then $c_1\mathbf v_1=\mathbf 0$ with $c_1\ne0$, forcing $\mathbf v_1=\mathbf 0$ — impossible. So $j>1$, and since all higher weights vanish,
+> $$c_1\mathbf v_1+\cdots+c_j\mathbf v_j=\mathbf 0\ \Longrightarrow\ c_j\mathbf v_j=-c_1\mathbf v_1-\cdots-c_{j-1}\mathbf v_{j-1}.$$
+> Dividing by $c_j\ne0$,
+> $$\mathbf v_j=\left(-\tfrac{c_1}{c_j}\right)\mathbf v_1+\cdots+\left(-\tfrac{c_{j-1}}{c_j}\right)\mathbf v_{j-1},$$
+> expressing $\mathbf v_j$ as a combination of the **preceding** vectors. $\blacksquare$
+
+> **⚠ Warning.** Theorem 7 does **not** say every vector in a dependent set is a combination of the others — only that *at least one* is. A particular vector in a dependent set may fail to be a combination of the rest (e.g. a vector pointing "off" the span of the others while the dependence lives among those others).
+
+#### Example 4 — dependence ⟷ landing in a span (worked)
+
+Let $\mathbf u=\begin{bmatrix}3\\1\\0\end{bmatrix},\ \mathbf v=\begin{bmatrix}1\\6\\0\end{bmatrix}$. Describe $\text{Span}\{\mathbf u,\mathbf v\}$ and explain why $\mathbf w\in\text{Span}\{\mathbf u,\mathbf v\}$ **iff** $\{\mathbf u,\mathbf v,\mathbf w\}$ is linearly dependent.
+
+$\mathbf u,\mathbf v$ are independent (neither a multiple of the other), so they span a **plane** — here the $x_1x_2$-plane ($x_3=0$). Now:
+- **If** $\mathbf w\in\text{Span}\{\mathbf u,\mathbf v\}$, then $\mathbf w$ is a combination of $\mathbf u,\mathbf v$, so $\{\mathbf u,\mathbf v,\mathbf w\}$ is dependent by Theorem 7.
+- **Conversely, if** $\{\mathbf u,\mathbf v,\mathbf w\}$ is dependent, Theorem 7 (with $\mathbf u\ne\mathbf 0$) says some vector is a combination of the *preceding* ones. It cannot be $\mathbf v$ (not a multiple of $\mathbf u$), so it must be $\mathbf w$ — i.e. $\mathbf w\in\text{Span}\{\mathbf u,\mathbf v\}$.
+
+Geometrically: with $\mathbf u,\mathbf v$ independent, $\{\mathbf u,\mathbf v,\mathbf w\}$ is dependent exactly when $\mathbf w$ lies **in the plane** spanned by $\mathbf u$ and $\mathbf v$.
+
+### Two automatic-dependence theorems
+
+> **📐 THEOREM 8.** If a set contains **more vectors than there are entries in each vector**, the set is linearly dependent. That is, any set $\{\mathbf v_1,\dots,\mathbf v_p\}$ in $\mathbb R^n$ is dependent whenever $p>n$.
+
+> **🔎 Proof.** Let $A=[\,\mathbf v_1\ \cdots\ \mathbf v_p\,]$, an $n\times p$ matrix. Then $A\mathbf x=\mathbf 0$ is a system of $n$ equations in $p$ unknowns. Since $p>n$, there are more variables than equations, so an echelon form of $A$ cannot have a pivot in every column — there is at least one **free variable**. Hence $A\mathbf x=\mathbf 0$ has a nontrivial solution, and the columns $\mathbf v_1,\dots,\mathbf v_p$ are linearly dependent. $\blacksquare$
+
+> **⚠ Warning.** Theorem 8 says nothing when $p\le n$. If the number of vectors does *not* exceed the number of entries, the set may be independent or dependent — you must check.
+
+#### Example 5 — three vectors in $\mathbb R^2$ (worked)
+
+The vectors $\begin{bmatrix}2\\1\end{bmatrix},\begin{bmatrix}4\\-1\end{bmatrix},\begin{bmatrix}-2\\2\end{bmatrix}$ are linearly dependent by Theorem 8: **three** vectors, only **two** entries each ($p=3>2=n$). Note that *none* of them is a multiple of another — dependence here comes from the count, not from any pair being parallel.
+
+> **📐 THEOREM 9.** If a set $S=\{\mathbf v_1,\dots,\mathbf v_p\}$ in $\mathbb R^n$ **contains the zero vector**, then $S$ is linearly dependent.
+
+> **🔎 Proof.** Renumber so $\mathbf v_1=\mathbf 0$. Then $1\mathbf v_1+0\mathbf v_2+\cdots+0\mathbf v_p=\mathbf 0$ is a dependence relation with a nonzero weight (the $1$ on $\mathbf v_1$). So $S$ is dependent. $\blacksquare$
+
+#### Example 6 — dependence by inspection (worked)
+
+**(a)** $\begin{bmatrix}1\\7\\6\end{bmatrix},\begin{bmatrix}2\\0\\9\end{bmatrix},\begin{bmatrix}3\\1\\5\end{bmatrix},\begin{bmatrix}4\\1\\8\end{bmatrix}$ — four vectors, three entries each → **dependent** by Theorem 8.
+
+**(b)** $\begin{bmatrix}2\\3\\5\end{bmatrix},\begin{bmatrix}0\\0\\0\end{bmatrix},\begin{bmatrix}1\\1\\8\end{bmatrix}$ — Theorem 8 does not apply ($p=3=n$), but the set contains $\mathbf 0$ → **dependent** by Theorem 9.
+
+**(c)** $\begin{bmatrix}-2\\4\\6\\10\end{bmatrix},\begin{bmatrix}3\\-6\\-9\\15\end{bmatrix}$ — two vectors, so use the two-vector test. The second looks like $-\tfrac32$ times the first: $-\tfrac32(-2)=3$ ✓, $-\tfrac32(4)=-6$ ✓, $-\tfrac32(6)=-9$ ✓, but $-\tfrac32(10)=-15\ne15$ ✗ at the fourth entry. Neither is a multiple of the other → **independent.**
+
+> **💡 Why §1.7 matters.** "Linearly independent columns" is the clean way to say "$A\mathbf x=\mathbf 0$ has only $\mathbf x=\mathbf 0$" — the *uniqueness* half of the two fundamental questions, now phrased about the vectors. By Theorem 6, uniqueness of solutions of *any* consistent $A\mathbf x=\mathbf b$ hinges on exactly this: the homogeneous set $\{\mathbf v_h\}$ collapses to $\{\mathbf 0\}$ precisely when the columns are independent. This concept threads through bases, dimension, and rank in Chapters 2 and 4.
+
+---
+
+## §1.6 — Applications of Linear Systems
+
+One might expect a real problem to have a single solution or none. This section shows the opposite: **linear systems with infinitely many solutions arise naturally**, and the parametric-vector machinery of §1.5 is exactly what describes the family of outcomes. Three settings: economics, chemistry, network flow.
+
+### A homogeneous system in economics (Leontief exchange model)
+
+Divide an economy into sectors. For each sector we know how its total output is distributed among the sectors. Call the total dollar value of a sector's output its **price**. Leontief's result:
+
+> **📦 Equilibrium prices exist.** Prices can be assigned to the sectors' total outputs so that each sector's **income exactly balances its expenses**.
+
+#### Example 1 — equilibrium prices (worked)
+
+Coal, Electric, Steel exchange output by the fractions in the table (each **column** shows where a sector's output goes; columns sum to 1):
+
+| Distribution of output from → | Coal | Electric | Steel | *Purchased by* |
+|---|---|---|---|---|
+| | .0 | .4 | .6 | Coal |
+| | .6 | .1 | .2 | Electric |
+| | .4 | .5 | .2 | Steel |
+
+Let $p_C,p_E,p_S$ be the sector prices. A sector reads **across its row** to total what it must pay. Setting each sector's income equal to its expenses:
+$$
+\begin{aligned}
+p_C &= .4p_E + .6p_S\\
+p_E &= .6p_C + .1p_E + .2p_S\\
+p_S &= .4p_C + .5p_E + .2p_S
+\end{aligned}
+$$
+Move all unknowns left and combine like terms (e.g. $p_E-.1p_E=.9p_E$) to get a **homogeneous** system, then row reduce (decimals rounded to two places):
+$$
+\begin{bmatrix} 1 & -.4 & -.6 & 0 \\ -.6 & .9 & -.2 & 0 \\ -.4 & -.5 & .8 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 0 & -.94 & 0 \\ 0 & 1 & -.85 & 0 \\ 0 & 0 & 0 & 0 \end{bmatrix}.
+$$
+General solution: $p_C=.94\,p_S$, $p_E=.85\,p_S$, with $p_S$ **free**:
+$$
+\mathbf p=\begin{bmatrix}p_C\\p_E\\p_S\end{bmatrix}
+=p_S\begin{bmatrix}.94\\.85\\1\end{bmatrix}.
+$$
+Any nonnegative choice of $p_S$ gives equilibrium prices. E.g. $p_S=100$ (\$100 million) → $p_C=94$, $p_E=85$: pricing Coal at \$94M, Electric at \$85M, Steel at \$100M balances every sector.
+
+> **💡 The free variable is the point.** A homogeneous exchange model is expected to have a whole *line* of solutions — equilibrium is a set of **relative** prices, fixed only up to an overall scale (the choice of $p_S$, or the currency unit). No free variable would mean no nonzero equilibrium at all.
+
+### Balancing chemical equations
+
+A balanced equation must have the **same number of atoms of each element** on both sides (atoms are conserved). Encode each molecule as a vector of atom counts, then solve.
+
+#### Example 2 — combustion of propane (worked)
+
+Balance $\ (x_1)\mathrm{C_3H_8}+(x_2)\mathrm{O_2}\to(x_3)\mathrm{CO_2}+(x_4)\mathrm{H_2O}.$
+List atoms per molecule as vectors in $\mathbb R^3$ (carbon, hydrogen, oxygen):
+$$
+\mathrm{C_3H_8}\!:\begin{bmatrix}3\\8\\0\end{bmatrix},\quad
+\mathrm{O_2}\!:\begin{bmatrix}0\\0\\2\end{bmatrix},\quad
+\mathrm{CO_2}\!:\begin{bmatrix}1\\0\\2\end{bmatrix},\quad
+\mathrm{H_2O}\!:\begin{bmatrix}0\\2\\1\end{bmatrix}.
+$$
+Balance ⟺ $x_1\begin{bmatrix}3\\8\\0\end{bmatrix}+x_2\begin{bmatrix}0\\0\\2\end{bmatrix}=x_3\begin{bmatrix}1\\0\\2\end{bmatrix}+x_4\begin{bmatrix}0\\2\\1\end{bmatrix}$. Move everything to the left (flip signs of the products) to get a homogeneous system:
+$$
+x_1\begin{bmatrix}3\\8\\0\end{bmatrix}+x_2\begin{bmatrix}0\\0\\2\end{bmatrix}+x_3\begin{bmatrix}-1\\0\\-2\end{bmatrix}+x_4\begin{bmatrix}0\\-2\\-1\end{bmatrix}=\begin{bmatrix}0\\0\\0\end{bmatrix}.
+$$
+Row reduce its augmented matrix:
+$$
+\begin{bmatrix} 3 & 0 & -1 & 0 & 0 \\ 8 & 0 & 0 & -2 & 0 \\ 0 & 2 & -2 & -1 & 0 \end{bmatrix}
+\longrightarrow
+\begin{bmatrix} 1 & 0 & 0 & -\tfrac14 & 0 \\ 0 & 1 & 0 & -\tfrac54 & 0 \\ 0 & 0 & 1 & -\tfrac34 & 0 \end{bmatrix},
+$$
+giving $x_1=\tfrac14x_4,\ x_2=\tfrac54x_4,\ x_3=\tfrac34x_4$, with $x_4$ free. Coefficients must be whole numbers, so take the smallest that clears denominators, $x_4=4$: then $x_1=1,\ x_2=5,\ x_3=3$. The balanced equation is
+$$\mathrm{C_3H_8}+5\,\mathrm{O_2}\to 3\,\mathrm{CO_2}+4\,\mathrm{H_2O}.$$
+
+> **⚠ The free variable is a scaling, not slack.** The system is homogeneous, so the solution is a line — doubling every coefficient still balances. Chemists pick $x_4$ to give the **smallest positive integers**; that is a convention on top of the math, not something the linear algebra decides.
+
+### Network flow
+
+A **network** is junctions (nodes) joined by directed branches carrying a flow. The governing principle:
+
+> **📦 Conservation of flow.** Total flow **into** the network = total flow **out**; and at **each junction**, flow in = flow out. Each junction gives one linear equation; network analysis solves for the branch flows from partial information.
+
+#### Example 2 — downtown traffic (worked)
+
+A grid of one-way streets carries the flows (vehicles/hour) shown, with unknown branch flows $x_1,\dots,x_5$ and known inflows/outflows. Balance each junction (flow in = flow out):
+
+| Junction | Flow in | Flow out |
+|---|---|---|
+| A | $300+500$ | $x_1+x_2$ |
+| B | $x_2+x_4$ | $300+x_3$ |
+| C | $100+400$ | $x_4+x_5$ |
+| D | $x_1+x_5$ | $600$ |
+
+The whole-network balance ($500{+}300{+}100{+}400 = 300{+}x_3{+}600$) gives $x_3=400$. Collecting the equations:
+$$
+\begin{aligned}
+x_1+x_2 &= 800\\
+x_2-x_3+x_4 &= 300\\
+x_4+x_5 &= 500\\
+x_1+x_5 &= 600\\
+x_3 &= 400
+\end{aligned}
+$$
+Row reducing the augmented matrix yields the equivalent system
+$$
+\begin{aligned}
+x_1 + x_5 &= 600\\
+x_2 - x_5 &= 200\\
+x_3 &= 400\\
+x_4 + x_5 &= 500
+\end{aligned}
+$$
+so the **general flow pattern** is
+$$
+\begin{cases}
+x_1 = 600 - x_5\\
+x_2 = 200 + x_5\\
+x_3 = 400\\
+x_4 = 500 - x_5\\
+x_5\ \text{free}.
+\end{cases}
+$$
+
+> **💡 Free variable = an unmetered loop; nonnegativity constrains it.** A branch flow can't be negative on a one-way street, so each equation caps the free variable: $x_4\ge0$ forces $x_5\le500$, $x_1\ge0$ forces $x_5\le600$, and $x_5\ge0$ from its own branch. The math gives a whole family; the physics of the problem trims it to a realistic range. This is the recurring lesson of §1.6 — **many solutions is the normal, informative case**, and §1.5's parametric vector form is how we hold the whole family at once.
+
+---
+
+### One-page recap
+
+- **§1.5** Every solution set is a **span** (homogeneous, through $\mathbf 0$) or a **translate of a span** (consistent nonhomogeneous). Write it in **parametric vector form**: one constant vector $\mathbf p$ plus one direction vector per free variable. $A\mathbf x=\mathbf 0$ has a nontrivial solution **iff** there is a free variable.
+- **Theorem 6:** solutions of a consistent $A\mathbf x=\mathbf b$ = $\mathbf p + \{\text{solutions of }A\mathbf x=\mathbf 0\}$.
+- **§1.7** $\{\mathbf v_1,\dots,\mathbf v_p\}$ is **independent** iff $x_1\mathbf v_1+\cdots+x_p\mathbf v_p=\mathbf 0$ forces all $x_i=0$; equivalently the columns of $A=[\mathbf v_1\ \cdots\ \mathbf v_p]$ are independent iff $A\mathbf x=\mathbf 0$ has only the trivial solution (a pivot in every column).
+- **Shortcuts:** two vectors — dependent iff one is a multiple of the other (Ex. 3); **Thm 7** — dependent iff one vector is a combination of the others; **Thm 8** — more vectors than entries ($p>n$) ⇒ dependent; **Thm 9** — a set containing $\mathbf 0$ ⇒ dependent.
+- **§1.6** Real models (Leontief exchange, chemical balancing, network flow) routinely produce systems with **free variables**; the free parameters carry real meaning (price scale, coefficient scale, unmetered flow), and nonnegativity/integrality constraints then select the admissible solutions.
