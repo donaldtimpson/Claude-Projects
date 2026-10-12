@@ -138,7 +138,7 @@ $$A(B\mathbf x) = (AB)\mathbf x. \tag{1}$$
 > **📗 DEFINITION.** If $A$ is $m\times n$ and $B$ is $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, then the product $AB$ is the $m\times p$ matrix whose columns are $A\mathbf b_1,\dots, A\mathbf b_p$:
 > $$AB = A\begin{bmatrix}\mathbf b_1 & \mathbf b_2 & \cdots & \mathbf b_p\end{bmatrix} = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}.$$
 
-> **📐 Multiplication is composition.** If $A$ is $m\times n$ and $B$ is $n\times p$, then $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x \in \mathbb R^p$.
+> **📐 Matrix multiplication is associative.** If $A$ is $m\times n$ and $B$ is $n\times p$, then $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x \in \mathbb R^p$. (Theorem 2(a) extends this, column by column, to $A(BC) = (AB)C$.)
 
 > **🔎 Proof.** Let $\mathbf b_1,\dots,\mathbf b_p$ be the columns of $B$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
 > $$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x = (AB)\mathbf x. \quad\blacksquare$$
