@@ -135,16 +135,15 @@ Associativity means $A + B + C$ can be written without parentheses, and the same
 
 $$A(B\mathbf x) = (AB)\mathbf x. \tag{1}$$
 
-Let $A$ be $m\times n$ and $B$ be $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, and let $\mathbf x \in \mathbb R^p$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
-
-$$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x.$$
-
-That matrix is the one we were looking for.
-
 > **📗 DEFINITION.** If $A$ is $m\times n$ and $B$ is $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, then the product $AB$ is the $m\times p$ matrix whose columns are $A\mathbf b_1,\dots, A\mathbf b_p$:
 > $$AB = A\begin{bmatrix}\mathbf b_1 & \mathbf b_2 & \cdots & \mathbf b_p\end{bmatrix} = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}.$$
 
-> **💡 Why this matters:** this definition makes (1) true for every $\mathbf x$. So the composite map $\mathbf x \mapsto A(B\mathbf x)$ is a linear transformation whose standard matrix is $AB$. **Matrix multiplication *is* composition of linear transformations.** Every odd-looking property of the product traces back to this fact.
+> **📐 Multiplication is composition.** If $A$ is $m\times n$ and $B$ is $n\times p$, then $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x \in \mathbb R^p$.
+
+> **🔎 Proof.** Let $\mathbf b_1,\dots,\mathbf b_p$ be the columns of $B$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
+> $$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x = (AB)\mathbf x. \quad\blacksquare$$
+
+> **💡 Why this matters:** (1) holds for every $\mathbf x$. So the composite map $\mathbf x \mapsto A(B\mathbf x)$ is a linear transformation whose standard matrix is $AB$. **Matrix multiplication *is* composition of linear transformations.** Every odd-looking property of the product traces back to this fact.
 
 #### Example 3 — the product, column by column (worked)
 
