@@ -80,15 +80,24 @@ Associativity means $A + B + C$ can be written without parentheses, and the same
 
 $$A(B\mathbf x) = (AB)\mathbf x. \tag{1}$$
 
+Let $A$ be $m\times n$ and $B$ be $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, and let $\mathbf x \in \mathbb R^p$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
+
+$$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x.$$
+
+That matrix is the one we were looking for.
+
 > **📗 DEFINITION.** If $A$ is $m\times n$ and $B$ is $n\times p$ with columns $\mathbf b_1,\dots,\mathbf b_p$, then the product $AB$ is the $m\times p$ matrix whose columns are $A\mathbf b_1,\dots, A\mathbf b_p$:
 > $$AB = A\begin{bmatrix}\mathbf b_1 & \mathbf b_2 & \cdots & \mathbf b_p\end{bmatrix} = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}.$$
 
-> **📐 Matrix multiplication is associative.** If $A$ is $m\times n$ and $B$ is $n\times p$, then $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x \in \mathbb R^p$. (Theorem 2(a) extends this, column by column, to $A(BC) = (AB)C$.)
+> **💡 Why this matters:** this definition makes (1) true for every $\mathbf x$. So the composite map $\mathbf x \mapsto A(B\mathbf x)$ is a linear transformation whose standard matrix is $AB$. **Matrix multiplication *is* composition of linear transformations.** Every odd-looking property of the product traces back to this fact.
 
-> **🔎 Proof.** Let $\mathbf b_1,\dots,\mathbf b_p$ be the columns of $B$. Then $B\mathbf x = x_1\mathbf b_1 + \cdots + x_p \mathbf b_p$. Multiplication by $A$ is linear, so
-> $$A(B\mathbf x) = x_1 A\mathbf b_1 + \cdots + x_p A\mathbf b_p = \begin{bmatrix} A\mathbf b_1 & A\mathbf b_2 & \cdots & A\mathbf b_p\end{bmatrix}\mathbf x = (AB)\mathbf x. \quad\blacksquare$$
+> **📐 THEOREM 2(a) — Associativity.** If $A$ is $m\times n$, $B$ is $n\times p$, and $C$ is $p\times q$, then $A(BC) = (AB)C$.
 
-> **💡 Why this matters:** (1) holds for every $\mathbf x$. So the composite map $\mathbf x \mapsto A(B\mathbf x)$ is a linear transformation whose standard matrix is $AB$. **Matrix multiplication *is* composition of linear transformations.** Every odd-looking property of the product traces back to this fact.
+> **🔎 Proof.** Let $C = [\,\mathbf c_1 \ \cdots\ \mathbf c_q\,]$. By the definition of the product,
+> $$BC = [\,B\mathbf c_1\ \cdots\ B\mathbf c_q\,],\qquad A(BC) = [\,A(B\mathbf c_1)\ \cdots\ A(B\mathbf c_q)\,].$$
+> By (1), $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x$, so
+> $$A(BC) = [\,(AB)\mathbf c_1\ \cdots\ (AB)\mathbf c_q\,] = (AB)C. \quad\blacksquare$$
+> (Equivalently: matrix multiplication is composition, and composition of functions is associative.)
 
 #### Example 3 — the product, column by column (worked)
 
@@ -150,19 +159,13 @@ $$\operatorname{row}_i(AB) = \operatorname{row}_i(A)\cdot B. \tag{2}$$
 $I_m$ is the $m\times m$ identity, and $I_m\mathbf x = \mathbf x$ for every $\mathbf x \in \mathbb R^m$.
 
 > **📐 THEOREM 2.** Let $A$ be $m\times n$, and let $B, C$ have sizes for which the indicated sums and products are defined.
-> - a. $A(BC) = (AB)C$  *(associative law of multiplication)*
+> - a. $A(BC) = (AB)C$  *(associative law of multiplication; proved above)*
 > - b. $A(B + C) = AB + AC$  *(left distributive law)*
 > - c. $(B + C)A = BA + CA$  *(right distributive law)*
 > - d. $r(AB) = (rA)B = A(rB)$ for any scalar $r$
 > - e. $I_mA = A = AI_n$  *(identity for matrix multiplication)*
 
-> **🔎 Proof.**
-> **(a)** Let $C = [\,\mathbf c_1 \ \cdots\ \mathbf c_p\,]$. By the definition of the product,
-> $$BC = [\,B\mathbf c_1\ \cdots\ B\mathbf c_p\,],\qquad A(BC) = [\,A(B\mathbf c_1)\ \cdots\ A(B\mathbf c_p)\,].$$
-> By (1), $A(B\mathbf x) = (AB)\mathbf x$ for every $\mathbf x$, so
-> $$A(BC) = [\,(AB)\mathbf c_1\ \cdots\ (AB)\mathbf c_p\,] = (AB)C.$$
-> (Equivalently, composition of functions is associative.)
->
+> **🔎 Proof of (b)–(e).**
 > **(b)** The $j$th column of $B + C$ is $\mathbf b_j + \mathbf c_j$, so the $j$th column of $A(B+C)$ is $A(\mathbf b_j + \mathbf c_j)$. Matrix–vector multiplication is linear (§1.4), so this is $A\mathbf b_j + A\mathbf c_j$, the $j$th column of $AB + AC$.
 >
 > **(c)** Compare $(i,j)$-entries with the row–column rule. Here $B, C$ are $m'\times m$ and $A$ is $m\times n$:
