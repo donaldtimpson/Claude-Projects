@@ -17,7 +17,6 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
-from pptx.enum.shapes import MSO_CONNECTOR
 from pptx.enum.dml import MSO_LINE_DASH_STYLE
 
 from themes import THEMES, get_theme
@@ -126,7 +125,12 @@ def _double_rule(slide, top, left=MARGIN, width=None):
 
 
 def _line(slide, x1, y1, x2, y2, color=None, width=Pt(1.5), dashed=False):
-    cn = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x2, y2)
+    # A freeform, not a connector: Google Slides fails to import python-pptx
+    # connector shapes (<p:cxnSp>), while Keynote/PowerPoint accept them.
+    ff = slide.shapes.build_freeform(x1, y1, scale=1.0)
+    ff.add_line_segments([(x2, y2)], close=False)
+    cn = ff.convert_to_shape()
+    cn.fill.background()
     cn.line.color.rgb = color if color is not None else DIAGRAM
     cn.line.width = width
     if dashed:
