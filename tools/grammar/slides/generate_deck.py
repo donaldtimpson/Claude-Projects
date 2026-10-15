@@ -9,6 +9,7 @@ Usage:
     python generate_deck.py lessons/the-verb.json
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.enum.shapes import MSO_CONNECTOR
+from pptx.enum.dml import MSO_LINE_DASH_STYLE
 
 from themes import THEMES, get_theme
 from lesson_order import numbered_stem
@@ -76,6 +78,29 @@ def _run(p, text, *, size, color=None, bold=False, italic=False, font=None):
     return r
 
 
+_EMPH = re.compile(r"\*\*([^*]+)\*\*|\*([^*]+)\*")
+
+
+def _richrun(p, text, *, size, color=None, bold=False, italic=False, font=None):
+    """Add runs for `text`, rendering *word* spans in italic and **word** spans
+    in bold accent. House rules: a word referred to as a word (use-mention) is
+    wrapped in *asterisks*; **double asterisks** highlight the word an example
+    sentence is showing (e.g. the relative pronoun)."""
+    text = str(text)
+    pos = 0
+    for m in _EMPH.finditer(text):
+        if m.start() > pos:
+            _run(p, text[pos:m.start()], size=size, color=color, bold=bold,
+                 italic=italic, font=font)
+        if m.group(1) is not None:
+            _run(p, m.group(1), size=size, color=ACCENT, bold=True, italic=italic, font=font)
+        else:
+            _run(p, m.group(2), size=size, color=color, bold=bold, italic=True, font=font)
+        pos = m.end()
+    if pos < len(text) or pos == 0:
+        _run(p, text[pos:], size=size, color=color, bold=bold, italic=italic, font=font)
+
+
 def _hanging_indent(p, amount):
     """Give a paragraph a hanging indent (wrapped lines indent by `amount` EMU)."""
     pPr = p._p.get_or_add_pPr()
@@ -100,10 +125,12 @@ def _double_rule(slide, top, left=MARGIN, width=None):
     _rule(slide, top + Pt(5), left=left, width=width, thickness=Pt(1), color=RULE)
 
 
-def _line(slide, x1, y1, x2, y2, color=None, width=Pt(1.5)):
+def _line(slide, x1, y1, x2, y2, color=None, width=Pt(1.5), dashed=False):
     cn = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x1, y1, x2, y2)
     cn.line.color.rgb = color if color is not None else DIAGRAM
     cn.line.width = width
+    if dashed:
+        cn.line.dash_style = MSO_LINE_DASH_STYLE.DASH
     cn.shadow.inherit = False
     return cn
 
@@ -132,40 +159,167 @@ def _diag_word(slide, left, base_y, width, text):
     _run(p, text, size=18, color=DIAGRAM)
 
 
-def _draw_diagram(slide, left, top, s, p, o=None, c=None):
-    """Baseline with subject | predicate | object, or Harvey's copular form
-    subject | copula : predicate when `c` is given.
-    The subject divider crosses below the baseline (the principal split); the
-    copula/predicate and predicate/object dividers stop at it. Returns the right edge (EMU)."""
+def _mlist(m):
+    """Normalize a modifier field (None | str | list) to a list of words."""
+    if not m:
+        return []
+    return [m] if isinstance(m, str) else list(m)
+
+
+def _appo(a):
+    """Normalize an appositive field (None | str | {"word", "mod"}) to a dict."""
+    if not a:
+        return None
+    if isinstance(a, str):
+        return {"word": a, "mod": []}
+    return {"word": a["word"], "mod": _mlist(a.get("mod"))}
+
+
+def _draw_mods(slide, cx, base_y, words):
+    """Hang one or more adjective-element modifiers — articles, adjectives,
+    possessives, demonstratives — on down-right slants beneath a word centered
+    at cx. Several modifiers step to the right, the way Harvey stacks them
+    (e.g. 'an' and 'easy' both under 'task')."""
+    dx, dy, gap, spread = Inches(0.24), Inches(0.34), Inches(0.06), Inches(0.09)
+    n = len(words)
+    wx = cx + dx
+    prev = 0
+    for i, word in enumerate(words):
+        w = _slot_w(word)
+        if i:
+            wx += prev / 2 + w / 2 + gap
+        anchor = cx + int((i - (n - 1) / 2) * spread)   # slant tops fan under the noun
+        _line(slide, anchor, base_y, wx, base_y + dy)
+        _diag_word(slide, wx - w / 2, base_y + dy + Inches(0.30), w, word)
+        prev = w
+
+
+CLAUSE_DROP = Inches(0.92)      # main baseline -> top of a hanging clause's diagram
+CLAUSE_INSET = Inches(0.12)     # where a dashed connector meets its antecedent word
+
+
+def _slot_layout(s, p, o=None, c=None, sappo=None):
+    """(left edge, width) of the subject, predicate, and object slots, relative to
+    the diagram's left — the same geometry _draw_diagram lays out."""
+    ap = _appo(sappo)
+    ws = _slot_w(s)
+    sreg = ws + (_slot_w(f"({ap['word']})") if ap else 0)
+    if c:
+        wc, wp = _slot_w(c), _slot_w(p)
+        return {"s": (0, ws), "c": (sreg, wc), "p": (sreg + wc, wp)}
+    wp = _slot_w(p)
+    out = {"s": (0, ws), "p": (sreg, wp)}
+    if o:
+        out["o"] = (sreg + wp, _slot_w(o))
+    return out
+
+
+def _clause_rel(cl):
+    """Center of a clause's relative pronoun (the slot named by cl["rel"]),
+    relative to the clause diagram's left edge."""
+    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"))
+    rl, rw = slots[cl.get("rel", "s")]
+    return rl + rw / 2
+
+
+def _clause_shift(s, p, o, c, sappo, clauses):
+    """How far to push the main line right so each hanging clause can sit with
+    its relative straight beneath the antecedent's left end."""
+    slots = _slot_layout(s, p, o, c, sappo)
+    need = [_clause_rel(cl) - (slots[k][0] + CLAUSE_INSET)
+            for k, cl in clauses.items() if cl and k in slots]
+    return int(max([0] + need))
+
+
+def _draw_clause(slide, left, base, ante, cl):
+    """Hang a relative clause beneath its antecedent (modern Reed-Kellogg): the
+    clause on its own baseline — its own subject | predicate — with a dashed line
+    dropping straight from the antecedent's left end to the relative pronoun.
+    `ante` is the antecedent's (left, width) relative to `left`. Returns the
+    clause's right edge (EMU)."""
+    anchor = left + ante[0] + CLAUSE_INSET
+    cl_left = int(anchor - _clause_rel(cl))
+    ctop = base + CLAUSE_DROP
+    right = _draw_diagram(slide, cl_left, ctop, cl["s"], cl.get("p", ""), cl.get("o"),
+                          cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
+                          omod=cl.get("omod"))
+    _line(slide, int(anchor), base, int(anchor), ctop + Inches(0.02), dashed=True)
+    return right
+
+
+def _draw_diagram(slide, left, top, s, p, o=None, c=None,
+                  smod=None, pmod=None, omod=None, sappo=None,
+                  sclause=None, pclause=None, oclause=None):
+    """Baseline subject | predicate | object, or Harvey's copular form
+    subject | copula : predicate when `c` is given. `smod`/`pmod`/`omod` hang
+    adjective-element modifiers on slants beneath the subject, predicate-noun,
+    or object (each a word or a list). `sappo` sets an appositive, drawn in
+    parentheses on the baseline beside the subject (modern Reed-Kellogg), with
+    its own modifier on a slant. `sclause`/`pclause`/`oclause` hang a relative
+    clause beneath that slot (see _draw_clause); the main line shifts right to
+    make room for it. Returns the right edge (EMU)."""
+    left += _clause_shift(s, p, o, c, sappo, {"s": sclause, "p": pclause, "o": oclause})
     base = top + Inches(0.30)
     top_line = top + Inches(0.04)
     below = Inches(0.13)
+    sm, pm, om = _mlist(smod), _mlist(pmod), _mlist(omod)
+    ap = _appo(sappo)
+    ws = _slot_w(s)
+    appo_text = f"({ap['word']})" if ap else ""
+    wappo = _slot_w(appo_text) if ap else 0
+    sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
+
+    def draw_subject():
+        _diag_word(slide, left, base, ws, s)
+        if sm:
+            _draw_mods(slide, left + ws / 2, base, sm)
+        if ap:
+            _diag_word(slide, left + ws, base, wappo, appo_text)
+            if ap["mod"]:
+                _draw_mods(slide, left + ws + wappo / 2, base, ap["mod"])
+
     if c:
         # Harvey: "Iron | is : heavy" — copula set off from the predicate, not folded in.
-        ws, wc, wp = _slot_w(s), _slot_w(c), _slot_w(p)
-        x1 = left + ws
+        wc, wp = _slot_w(c), _slot_w(p)
+        x1 = left + sreg
         x2 = x1 + wc
         xend = x2 + wp
         _line(slide, left, base, xend, base)            # baseline
         _line(slide, x1, top_line, x1, base + below)     # subject | (crosses, principal split)
         _line(slide, x2, top_line, x2, base)             # copula : predicate (stops at baseline)
-        _diag_word(slide, left, base, ws, s)
+        draw_subject()
         _diag_word(slide, x1, base, wc, c)
         _diag_word(slide, x2, base, wp, p)
-        return xend
-    ws, wp = _slot_w(s), _slot_w(p)
+        if pm:
+            _draw_mods(slide, x2 + wp / 2, base, pm)
+        return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
+                             sclause, pclause, oclause)
+    wp = _slot_w(p)
     wo = _slot_w(o) if o else 0
-    x1 = left + ws
+    x1 = left + sreg
     x2 = x1 + wp
     xend = x2 + wo
     _line(slide, left, base, xend, base)               # baseline
     _line(slide, x1, top_line, x1, base + below)        # subject | predicate (crosses)
     if o:
         _line(slide, x2, top_line, x2, base)            # predicate | object (stops)
-    _diag_word(slide, left, base, ws, s)
+    draw_subject()
     _diag_word(slide, x1, base, wp, p)
     if o:
         _diag_word(slide, x2, base, wo, o)
+    if pm:
+        _draw_mods(slide, x1 + wp / 2, base, pm)
+    if om and o:
+        _draw_mods(slide, x2 + wo / 2, base, om)
+    return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
+                         sclause, pclause, oclause)
+
+
+def _hang_clauses(slide, left, base, xend, s, p, o, c, sappo, sclause, pclause, oclause):
+    slots = _slot_layout(s, p, o, c, sappo)
+    for key, cl in (("s", sclause), ("p", pclause), ("o", oclause)):
+        if cl and key in slots:
+            xend = max(xend, _draw_clause(slide, left, base, slots[key], cl))
     return xend
 
 
@@ -223,7 +377,7 @@ def render_definition(slide, s, source):
     _, tf = _box(slide, MARGIN, Inches(2.1),
                  SLIDE_W - 2 * MARGIN, Inches(1.6))
     p = tf.paragraphs[0]
-    _run(p, s["text"], size=30, color=INK, italic=True, font=BODY_FONT)
+    _richrun(p, s["text"], size=30, color=INK, italic=True, font=BODY_FONT)
 
     if s.get("examples"):
         _, tf2 = _box(slide, MARGIN, Inches(3.9),
@@ -234,7 +388,7 @@ def render_definition(slide, s, source):
             p = tf2.add_paragraph()
             p.space_before = Pt(6)
             _run(p, "•  ", size=22, color=ACCENT, bold=True)
-            _run(p, ex, size=22, color=INK)
+            _richrun(p, ex, size=22, color=INK)
     _footer(slide, source)
 
 
@@ -249,7 +403,7 @@ def render_concept(slide, s, source):
         first = False
         p.space_after = Pt(12)
         _run(p, "•  ", size=24, color=ACCENT, bold=True)
-        _run(p, b, size=24, color=INK)
+        _richrun(p, b, size=24, color=INK)
     _footer(slide, source)
 
 
@@ -266,7 +420,7 @@ def render_practice(slide, s, source, show_answers=False):
     _, tf = _box(slide, MARGIN, Inches(1.95),
                  SLIDE_W - 2 * MARGIN, Inches(1.1))
     p = tf.paragraphs[0]
-    _run(p, s["instruction"], size=18, color=MUTED, italic=True)
+    _richrun(p, s["instruction"], size=18, color=MUTED, italic=True)
 
     answers = s.get("answers") or []
     is_diagram = bool(answers) and isinstance(answers[0], dict)
@@ -299,16 +453,16 @@ def _practice_item_columns(slide, s, answers):
             first = False
             p.space_after = Pt(10 if (not answers or inline) else 4)
             _run(p, f"{n}.  ", size=22, color=ACCENT, bold=True)
-            _run(p, it, size=22, color=INK)
+            _richrun(p, it, size=22, color=INK)
             if answers and n - 1 < len(answers):
                 if inline:
                     _run(p, "   ", size=22, color=ANSWER)
-                    _run(p, answers[n - 1], size=22, color=ANSWER, bold=True)
+                    _richrun(p, answers[n - 1], size=22, color=ANSWER, bold=True)
                 else:
                     pa = tf.add_paragraph()
                     pa.space_after = Pt(14)
                     _run(pa, "     ", size=20, color=ANSWER)   # small hanging indent
-                    _run(pa, answers[n - 1], size=20, color=ANSWER, bold=True)
+                    _richrun(pa, answers[n - 1], size=20, color=ANSWER, bold=True)
 
 
 def _practice_diagram_answers(slide, s, answers):
@@ -346,12 +500,12 @@ def render_questions(slide, s, source, show_answers=False):
         if show_answers:
             p.line_spacing = 0.9
         _run(p, f"{i}.  ", size=22, color=ACCENT, bold=True)
-        _run(p, q, size=22, color=INK)
+        _richrun(p, q, size=22, color=INK)
         # Answer runs inline on the same line; hanging indent keeps a wrap aligned.
         if show_answers and i - 1 < len(answers):
             _hanging_indent(p, int(Inches(0.42)))
             _run(p, "   ", size=20, color=INK)
-            _run(p, answers[i - 1], size=20, color=ANSWER, bold=True)
+            _richrun(p, answers[i - 1], size=20, color=ANSWER, bold=True)
     _footer(slide, source)
 
 
@@ -363,7 +517,7 @@ def render_table(slide, s, source):
     _heading(slide, s["heading"])
     rows = s["rows"]
     top = Inches(2.25)
-    row_h = Inches(1.4)
+    row_h = min(Inches(1.4), int((Inches(6.8) - top) / len(rows)))
     label_w = Inches(2.7)
     gap = Inches(0.45)
     desc_left = MARGIN + label_w + gap
@@ -378,14 +532,53 @@ def render_table(slide, s, source):
         _run(tfl.paragraphs[0], r["label"], size=27, color=ACCENT, bold=True, font=HEAD_FONT)
         _, tfd = _box(slide, desc_left, y, desc_w, row_h)
         tfd.vertical_anchor = MSO_ANCHOR.MIDDLE
-        _run(tfd.paragraphs[0], r["text"], size=21, color=INK, font=BODY_FONT)
+        _richrun(tfd.paragraphs[0], r["text"], size=21, color=INK, font=BODY_FONT)
         if r.get("examples"):
             pe = tfd.add_paragraph()
             pe.space_before = Pt(5)
-            _run(pe, r["examples"], size=17, color=MUTED, italic=True, font=BODY_FONT)
+            _richrun(pe, r["examples"], size=17, color=MUTED, italic=True, font=BODY_FONT)
         if i < len(rows) - 1:
             _rule(slide, y + row_h, left=MARGIN, width=SLIDE_W - 2 * MARGIN,
                   thickness=Pt(0.75), color=MUTED)
+    _footer(slide, source)
+
+
+def render_analysis(slide, s, source):
+    """A single teaching slide: each sentence's diagram beside a note naming how
+    its pronouns function — no prompt/answer split."""
+    _bg(slide)
+    _heading(slide, s["heading"])
+    y = Inches(1.95)
+    if s.get("intro"):
+        _, tfi = _box(slide, MARGIN, Inches(1.75), SLIDE_W - 2 * MARGIN, Inches(0.55))
+        _run(tfi.paragraphs[0], s["intro"], size=18, color=MUTED, italic=True)
+        y = Inches(2.5)
+    rows = s["rows"]
+    # A row with a hanging clause needs room for a second baseline.
+    heights = [Inches(2.2) if any(r.get(k) for k in ("sclause", "pclause", "oclause"))
+               else Inches(1.5) for r in rows]
+    avail = Inches(6.8) - y
+    if sum(heights) > avail:
+        heights = [int(h * avail / sum(heights)) for h in heights]
+    note_x = MARGIN + Inches(5.3)
+    note_w = SLIDE_W - MARGIN - note_x
+    top = y
+    for r, row_h in zip(rows, heights):
+        _draw_diagram(slide, MARGIN + Inches(0.2), top + Inches(0.1),
+                      r["s"], r.get("p", ""), r.get("o"), r.get("c"),
+                      smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
+                      sappo=r.get("sappo"), sclause=r.get("sclause"),
+                      pclause=r.get("pclause"), oclause=r.get("oclause"))
+        _, tfn = _box(slide, note_x, top - Inches(0.1), note_w, row_h)
+        tfn.vertical_anchor = MSO_ANCHOR.MIDDLE
+        if r.get("sentence"):
+            ps = tfn.paragraphs[0]
+            ps.space_after = Pt(5)
+            _richrun(ps, r["sentence"], size=17, color=ACCENT, bold=True)
+            _richrun(tfn.add_paragraph(), r["note"], size=15, color=INK)
+        else:
+            _richrun(tfn.paragraphs[0], r["note"], size=16, color=INK)
+        top += row_h
     _footer(slide, source)
 
 
@@ -396,6 +589,7 @@ RENDERERS = {
     "practice": render_practice,
     "questions": render_questions,
     "table": render_table,
+    "analysis": render_analysis,
 }
 
 

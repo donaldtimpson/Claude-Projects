@@ -9,6 +9,7 @@ Usage:
 import base64
 import html
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -88,6 +89,7 @@ ul.b li:before { content: "•"; color: var(--accent); font-weight: 700;
           font-weight: 700; font-size: 14px; letter-spacing: .18em;
           text-transform: uppercase; }
 .diagrows { }
+strong.hl { color: var(--accent); }
 .diagrows li { margin-bottom: 16px; display: flex; align-items: center; gap: 14px; }
 svg.diag { display: block; }
 svg.diag text { font-family: var(--body-font); font-size: 18px; fill: var(--diagram); }
@@ -102,10 +104,16 @@ ol.q.tight li { font-size: 22px; line-height: 1.2; margin-bottom: 5px; }
 .ctable { width:100%; border-collapse:collapse; margin-top:6px; }
 .ctable td { border-bottom:1px solid var(--rule); padding:16px 0; vertical-align:top; }
 .ctable tr:last-child td { border-bottom:0; }
+.ctable.dense td { padding:6px 0; }
 .ctable td.tlabel { width:24%; color:var(--accent); font-family:var(--head-font);
                     font-weight:700; font-size:28px; padding-right:20px; }
 .ctable td.tdesc { font-size:22px; line-height:1.35; }
 .ctable .tex { color:var(--muted); font-style:italic; font-size:17px; margin-top:5px; }
+.arows { display:flex; flex-direction:column; gap:26px; margin-top:10px; }
+.arow { display:flex; align-items:center; gap:32px; }
+.adiag { flex:0 0 390px; }
+.anote { font-size:19px; line-height:1.4; }
+.anote .asent { color:var(--accent); font-weight:700; margin-bottom:5px; }
 """
 
 
@@ -116,47 +124,168 @@ def esc(s):
     return html.escape(str(s))
 
 
-def diagram_svg(s, p, o=None, c=None):
-    """Reed-Kellogg baseline: subject | predicate | object, or Harvey's copular
-    form subject | copula : predicate when `c` is given. The subject divider
-    crosses below the baseline; the copula/predicate and predicate/object
-    dividers stop at it."""
-    ch, pad = 9.8, 15
-    base, topln, below, texty = 30, 6, 13, 23
+_STRONG = re.compile(r"\*\*([^*]+)\*\*")
+_EMPH = re.compile(r"\*([^*]+)\*")
+
+
+def fmt(s):
+    """Escape, then render **word** spans as accent bold (the word an example is
+    showing) and *word* spans as <em> — the house use-mention rule (a word
+    referred to as a word is wrapped in *asterisks* in the lesson JSON)."""
+    s = _STRONG.sub(r'<strong class="hl">\1</strong>', esc(s))
+    return _EMPH.sub(r"<em>\1</em>", s)
+
+
+def _mlist(m):
+    """Normalize a modifier field (None | str | list) to a list of words."""
+    if not m:
+        return []
+    return [m] if isinstance(m, str) else list(m)
+
+
+def _mods_svg(cx, base, words, ch, pad):
+    """Slanted adjective-element modifiers beneath a word centered at cx; several
+    step to the right. Returns (svg fragments, rightmost x reached)."""
+    dx, dy, gap, spread = 15, 20, 6, 9
+    n = len(words)
+    out, wx, prev, rightmost = [], cx + dx, 0, cx
+    for i, word in enumerate(words):
+        wd = len(word) * ch + 2 * pad
+        if i:
+            wx += prev / 2 + wd / 2 + gap
+        anchor = cx + (i - (n - 1) / 2) * spread   # slant tops fan under the noun
+        out += [f'<line x1="{anchor:.0f}" y1="{base}" x2="{wx:.0f}" y2="{base + dy}"/>',
+                f'<text x="{wx:.0f}" y="{base + dy + 17:.0f}" text-anchor="middle">{esc(word)}</text>']
+        rightmost = max(rightmost, wx + wd / 2)
+        prev = wd
+    return out, rightmost
+
+
+def _appo(a):
+    """Normalize an appositive field (None | str | {"word", "mod"}) to a dict."""
+    if not a:
+        return None
+    if isinstance(a, str):
+        return {"word": a, "mod": []}
+    return {"word": a["word"], "mod": _mlist(a.get("mod"))}
+
+
+_CH, _PAD = 9.8, 15
+
+
+def _w(t):
+    return len(t) * _CH + 2 * _PAD
+
+
+def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
+                sappo=None):
+    """One baseline's SVG fragments, drawn from x0 at baseline y `base`.
+    Returns (lines, texts, mods, right edge, {slot: (left, width)}, has_mods)."""
+    topln, below, texty = base - 24, 13, base - 7
+    ap = _appo(sappo)
+    ws = _w(s)
+    appo_text = f"({ap['word']})" if ap else ""
+    wappo = _w(appo_text) if ap else 0
+    sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
+
+    lines, texts, mods = [], [], []
+    right = x0
+    slots = {"s": (x0, ws)}
+
+    def add_mods(cx, words):
+        nonlocal right
+        if words:
+            frag, rmost = _mods_svg(cx, base, words, _CH, _PAD)
+            mods.extend(frag)
+            right = max(right, rmost)
+
+    texts.append(f'<text x="{x0 + ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>')
+    add_mods(x0 + ws / 2, _mlist(smod))
+    if ap:
+        texts.append(f'<text x="{x0 + ws + wappo/2:.0f}" y="{texty}" text-anchor="middle">{esc(appo_text)}</text>')
+        add_mods(x0 + ws + wappo / 2, ap["mod"])
+
     if c:
         # Harvey: "Iron | is : heavy" — the copula is set off, not folded into the predicate.
-        ws = len(s) * ch + 2 * pad
-        wc = len(c) * ch + 2 * pad
-        wp = len(p) * ch + 2 * pad
-        total = ws + wc + wp
-        x1, x2 = ws, ws + wc
-        return "".join([
-            f'<svg class="diag" width="{total:.0f}" height="46" '
-            f'viewBox="0 0 {total:.0f} 46" xmlns="http://www.w3.org/2000/svg">',
-            f'<line x1="0" y1="{base}" x2="{total:.0f}" y2="{base}"/>',
-            f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>',
-            f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>',
-            f'<text x="{ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>',
-            f'<text x="{ws + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>',
-            f'<text x="{ws + wc + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>',
-            '</svg>'])
-    ws = len(s) * ch + 2 * pad
-    wp = len(p) * ch + 2 * pad
-    wo = (len(o) * ch + 2 * pad) if o else 0
-    total = ws + wp + wo
-    x1, x2 = ws, ws + wp
-    parts = [f'<svg class="diag" width="{total:.0f}" height="46" '
-             f'viewBox="0 0 {total:.0f} 46" xmlns="http://www.w3.org/2000/svg">']
-    parts.append(f'<line x1="0" y1="{base}" x2="{total:.0f}" y2="{base}"/>')
-    parts.append(f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>')
-    if o:
-        parts.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
-    parts.append(f'<text x="{ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>')
-    parts.append(f'<text x="{ws + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>')
-    if o:
-        parts.append(f'<text x="{ws + wp + wo/2:.0f}" y="{texty}" text-anchor="middle">{esc(o)}</text>')
-    parts.append('</svg>')
-    return "".join(parts)
+        wc, wp = _w(c), _w(p)
+        total = sreg + wc + wp
+        x1, x2 = x0 + sreg, x0 + sreg + wc
+        lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
+                  f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>',
+                  f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>']
+        texts += [f'<text x="{x1 + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>',
+                  f'<text x="{x2 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>']
+        add_mods(x2 + wp / 2, _mlist(pmod))
+        slots.update(c=(x1, wc), p=(x2, wp))
+    else:
+        wp = _w(p)
+        wo = _w(o) if o else 0
+        total = sreg + wp + wo
+        x1, x2 = x0 + sreg, x0 + sreg + wp
+        lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
+                  f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>']
+        texts.append(f'<text x="{x1 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>')
+        add_mods(x1 + wp / 2, _mlist(pmod))
+        slots["p"] = (x1, wp)
+        if o:
+            lines.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
+            texts.append(f'<text x="{x2 + wo/2:.0f}" y="{texty}" text-anchor="middle">{esc(o)}</text>')
+            add_mods(x2 + wo / 2, _mlist(omod))
+            slots["o"] = (x2, wo)
+
+    right = max(right, x0 + total)
+    return lines, texts, mods, right, slots, bool(mods)
+
+
+def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=None,
+                sclause=None, pclause=None, oclause=None):
+    """Reed-Kellogg baseline: subject | predicate | object, or Harvey's copular
+    form subject | copula : predicate when `c` is given. `smod`/`pmod`/`omod`
+    hang adjective-element modifiers (articles, adjectives, possessives,
+    demonstratives) on slants beneath the subject, predicate-noun, or object —
+    each a word or a list. `sappo` sets an appositive, drawn in parentheses on
+    the baseline beside the subject (modern Reed-Kellogg), with its own modifier
+    on a slant. `sclause`/`pclause`/`oclause` hang a relative clause on its own
+    baseline beneath that slot, a dashed line running from the relative pronoun
+    (the clause slot named by "rel") up to its antecedent."""
+    base = 30
+    drop, inset = 80, 10          # clause baseline below the main one; connector inset
+    clauses = {"s": sclause, "p": pclause, "o": oclause}
+
+    def rel_cx(cl):
+        *_, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"))
+        rl, rw = cslots[cl.get("rel", "s")]
+        return rl + rw / 2
+
+    # Shift the main line right so each clause's relative sits straight beneath
+    # its antecedent's left end (the clause may reach left of the main line).
+    *_, slots0, _ = _diag_parts(0, base, s, p, o, c, sappo=sappo)
+    shift = max([0] + [rel_cx(cl) - (slots0[k][0] + inset)
+                       for k, cl in clauses.items() if cl and k in slots0])
+    lines, texts, mods, right, slots, has_mods = _diag_parts(
+        shift, base, s, p, o, c, smod, pmod, omod, sappo)
+    bottom = 70 if has_mods else 46
+    for key, cl in clauses.items():
+        if not cl or key not in slots:
+            continue
+        anchor = slots[key][0] + inset
+        cl_left = anchor - rel_cx(cl)
+        cbase = base + drop
+        l2, t2, m2, r2, _, hm2 = _diag_parts(
+            cl_left, cbase, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+            cl.get("smod"), cl.get("pmod"), cl.get("omod"))
+        lines += l2 + [f'<line x1="{anchor:.0f}" y1="{base}" x2="{anchor:.0f}" '
+                       f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
+        texts += t2
+        mods += m2
+        right = max(right, r2)
+        bottom = max(bottom, cbase + (40 if hm2 else 16))
+    minx = -6 if (mods or bottom > 70) else 0
+    width = right + (6 if minx else 0) - minx
+    return "".join([
+        f'<svg class="diag" width="{width:.0f}" height="{bottom}" '
+        f'viewBox="{minx:.0f} 0 {width:.0f} {bottom}" xmlns="http://www.w3.org/2000/svg">',
+        *lines, *mods, *texts, '</svg>'])
 
 
 def render(slide, source, show_answers=False):
@@ -173,12 +302,12 @@ def render(slide, source, show_answers=False):
     if t == "definition":
         exs = ""
         if slide.get("examples"):
-            lis = "".join(f"<li>{esc(e)}</li>" for e in slide["examples"])
+            lis = "".join(f"<li>{fmt(e)}</li>" for e in slide["examples"])
             exs = f'<p class="exlabel">Examples</p><ul class="b ex">{lis}</ul>'
         return (f'<section class="slide"><h2 class="h">{esc(slide["term"])}</h2><hr class="dbl">'
-                f'<div class="defn">{esc(slide["text"])}</div>{exs}{foot}</section>')
+                f'<div class="defn">{fmt(slide["text"])}</div>{exs}{foot}</section>')
     if t == "concept":
-        lis = "".join(f"<li>{esc(b)}</li>" for b in slide["bullets"])
+        lis = "".join(f"<li>{fmt(b)}</li>" for b in slide["bullets"])
         return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
                 f'<ul class="b">{lis}</ul>{foot}</section>')
     if t == "practice":
@@ -187,7 +316,7 @@ def render(slide, source, show_answers=False):
         is_diagram = bool(answers) and isinstance(answers[0], dict)
         tag = '<div class="anskey">Answer Key</div>' if show_answers else ''
         head = (f'<h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
-                f'<p class="instr">{esc(slide["instruction"])}</p>')
+                f'<p class="instr">{fmt(slide["instruction"])}</p>')
         if show_answers and is_diagram:
             rows = "".join(
                 f'<li><b style="color:var(--accent)">{i+1}.</b>'
@@ -204,15 +333,28 @@ def render(slide, source, show_answers=False):
                     ans = ""
                     if show_answers and not is_diagram and n - 1 < len(answers):
                         if inline:
-                            ans = f' <span class="ansinline">{esc(answers[n-1])}</span>'
+                            ans = f' <span class="ansinline">{fmt(answers[n-1])}</span>'
                         else:
-                            ans = f'<div class="ansline">{esc(answers[n-1])}</div>'
-                    out += f'<li><b style="color:var(--accent)">{n}.</b> {esc(it)}{ans}</li>'
+                            ans = f'<div class="ansline">{fmt(answers[n-1])}</div>'
+                    out += f'<li><b style="color:var(--accent)">{n}.</b> {fmt(it)}{ans}</li>'
                 return out
             left = f'<ul class="b" style="list-style:none">{col(1, items[:mid])}</ul>'
             right = f'<ul class="b" style="list-style:none">{col(mid+1, items[mid:])}</ul>'
             body = f'<div class="cols">{left}{right}</div>'
         return f'<section class="slide">{tag}{head}{body}{foot}</section>'
+    if t == "analysis":
+        intro = f'<p class="instr">{fmt(slide["intro"])}</p>' if slide.get("intro") else ""
+        rows = ""
+        for r in slide["rows"]:
+            svg = diagram_svg(r["s"], r.get("p", ""), r.get("o"), r.get("c"),
+                              smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
+                              sappo=r.get("sappo"), sclause=r.get("sclause"),
+                              pclause=r.get("pclause"), oclause=r.get("oclause"))
+            sent = f'<div class="asent">{fmt(r["sentence"])}</div>' if r.get("sentence") else ""
+            rows += (f'<div class="arow"><div class="adiag">{svg}</div>'
+                     f'<div class="anote">{sent}<div>{fmt(r["note"])}</div></div></div>')
+        return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
+                f'{intro}<div class="arows">{rows}</div>{foot}</section>')
     if t == "questions":
         answers = slide.get("answers") or []
         tag = '<div class="anskey">Answer Key</div>' if show_answers else ''
@@ -220,19 +362,19 @@ def render(slide, source, show_answers=False):
         for i, q in enumerate(slide["items"]):
             ans = ""
             if show_answers and i < len(answers):
-                ans = f' <span class="qans">{esc(answers[i])}</span>'
-            lis += f"<li>{esc(q)}{ans}</li>"
+                ans = f' <span class="qans">{fmt(answers[i])}</span>'
+            lis += f"<li>{fmt(q)}{ans}</li>"
         qcls = "q tight" if show_answers else "q"
         return (f'<section class="slide">{tag}<h2 class="h">Questions</h2><hr class="dbl">'
                 f'<ol class="{qcls}">{lis}</ol>{foot}</section>')
     if t == "table":
         rows = ""
         for r in slide["rows"]:
-            exs = f'<div class="tex">{esc(r["examples"])}</div>' if r.get("examples") else ""
+            exs = f'<div class="tex">{fmt(r["examples"])}</div>' if r.get("examples") else ""
             rows += (f'<tr><td class="tlabel">{esc(r["label"])}</td>'
-                     f'<td class="tdesc">{esc(r["text"])}{exs}</td></tr>')
+                     f'<td class="tdesc">{fmt(r["text"])}{exs}</td></tr>')
         return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
-                f'<table class="ctable">{rows}</table>{foot}</section>')
+                f'<table class="ctable{" dense" if len(slide["rows"]) > 3 else ""}">{rows}</table>{foot}</section>')
     return ""
 
 

@@ -53,6 +53,20 @@ and default conversion on — it lands as an editable Google Slides deck.
 Copy `lessons/the-verb.json` and edit. Slide `type`s available:
 `title`, `definition`, `concept`, `practice`, `questions`. Both generators read the same file.
 
+## Words-as-words (house rule)
+Any time the text *talks about* a word rather than *using* it (the use-mention
+distinction), wrap that word in `*asterisks*` in the lesson JSON — it renders as
+*italic* in the `.pptx` and as `<em>` in the HTML preview. Reading a bare word in
+running prose ("The word his is used…") forces a re-read; the italic fixes it
+("The word *his* is used…"). Apply it to word-mentions embedded in sentences; skip
+dedicated example/word-list blocks (after `EXAMPLES` or a colon), where layout
+already marks the tokens as words. Both generators parse `*…*` via the same rule
+(`_richrun` in `generate_deck.py`, `fmt` in `preview.py`).
+
+**Highlight** (`**double asterisks**`) sets a word in bold accent color — use it to
+point at the word an example sentence is demonstrating ("The man **who** is rich…").
+Examples are full sentences where that doesn't muddy the point.
+
 ## Design
 Warm paper `#F5EFE3`, ink `#23201B`, deep-claret accent `#7B2233`, Georgia throughout (renders
 reliably in both PowerPoint and Google Slides), thick-thin double rules echoing Harvey's
