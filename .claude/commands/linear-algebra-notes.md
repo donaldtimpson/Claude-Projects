@@ -54,4 +54,4 @@ next lecture's sections in Lay's order.
    `python3 tools/linear-algebra/notes/render_html.py content/linear-algebra/notes/NN_<slug>.md`
 7. **Update** the lecture table in `content/linear-algebra/README.md`.
 8. **Report** the sections covered, the review corrections you applied, and the two output paths.
-   Do not commit/push unless asked (or on an explicit "sync").
+   Then commit and push to `main` — no need to ask.

@@ -51,4 +51,4 @@ followed by a rebuild. Author a brand-new lesson only if one is explicitly reque
    apps' lesson/drill content, also run `tools/grammar/build_app_content.py`.
 6. **Report** the lesson, the review findings you applied, and the rebuilt file paths. To publish,
    upload the `.pptx` through the Google Drive connection with conversion on (see the slides
-   README). Don't commit/push unless asked (or on an explicit "sync").
+   README). Then commit and push to `main` — no need to ask.
