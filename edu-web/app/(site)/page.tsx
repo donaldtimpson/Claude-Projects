@@ -76,13 +76,10 @@ export default async function HomePage() {
             >
               {currentCourses.map((course) => {
                 const latest = course.videos[0];
-                const href = latest
-                  ? `/courses/${course.id}/${latest.id}`
-                  : `/courses/${course.id}`;
                 return (
                   <Link
                     key={course.id}
-                    href={href}
+                    href={`/courses/${course.id}`}
                     className="group bg-crimson-900 border-2 border-gold-500 rounded-lg overflow-hidden hover:border-gold-300 transition-colors shadow-lg shadow-gold-500/10"
                   >
                     <div className="relative">
