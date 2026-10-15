@@ -31,6 +31,7 @@ struct AmbientMap: View {
     var body: some View {
         ZStack {
             if layerOn("water")  { WaterRipple(w: w, h: h, paused: paused) }
+            if layerOn("river")  { RiverRipple(w: w, h: h, paused: paused) }
             if layerOn("ships")  { RockingShips(w: w, h: h, paused: paused) }
             if layerOn("smoke")  { VolcanoSmoke(w: w, h: h, paused: paused) }
             if layerOn("clouds") { DriftingClouds(w: w, h: h, paused: paused) }
@@ -90,6 +91,23 @@ private struct WaterRipple: View {
     }
 }
 
+// MARK: River — the same ripple shader on the painted river, masked to RiverMask (gentler than the sea).
+
+private struct RiverRipple: View {
+    let w: CGFloat; let h: CGFloat; var paused: Bool
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: paused)) { tl in
+                let t = Float(tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000))
+                Image("ProvinceBase").resizable().frame(width: w, height: h)
+                    .distortionEffect(ShaderLibrary.waterRipple(.float(t)),
+                                      maxSampleOffset: CGSize(width: 2.5, height: 2.5))
+                    .mask(Image("RiverMask").resizable().frame(width: w, height: h))
+            }
+        }
+    }
+}
+
 // MARK: Smoke — a Metal billow that flows the REAL painted plume upward (iOS 17+), masked to the
 // crater column so only the smoke moves.
 
@@ -99,7 +117,7 @@ private struct VolcanoSmoke: View {
         if #available(iOS 17.0, *) {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: paused)) { tl in
                 let t = Float(tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000))
-                let anchorY = Float(0.30 * h)   // crater y, in the layer's coordinate space
+                let anchorY = Float(0.3071 * h)   // crater y, in the layer's coordinate space
                 Image("ProvinceBase").resizable().frame(width: w, height: h)
                     .distortionEffect(ShaderLibrary.smokeBillow(.float(t), .float(anchorY)),
                                       maxSampleOffset: CGSize(width: 14, height: 14))

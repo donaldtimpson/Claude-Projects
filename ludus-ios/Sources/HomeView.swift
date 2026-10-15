@@ -64,18 +64,18 @@ private struct Landmark: Identifiable {
 // visible above it; arriveAt is his BLUE traveler-stop mark projected onto the road (that's where
 // the "you are here" token rests, on the road, not under the building).
 private let landmarks: [Landmark] = [
-    .init(subject: "Math",                name: "The Temple",     symbol: "building.columns.fill", x: 0.36,  y: 0.135, arriveAt: 0.0791),
-    .init(subject: "Geography",           name: "The Lighthouse", symbol: "globe",                 x: 0.805, y: 0.195, arriveAt: 0.1776),
-    .init(subject: "History",             name: "The Forum",      symbol: "building.columns",      x: 0.30,  y: 0.235, arriveAt: 0.2028),
-    .init(subject: "Science",             name: "Mount Vesuvius", symbol: "flame.fill",            x: 0.34,  y: 0.335, arriveAt: 0.3632),
-    .init(subject: "Logic & Puzzles",     name: "The Colosseum",  symbol: "puzzlepiece.fill",      x: 0.35,  y: 0.465, arriveAt: 0.4999),
-    .init(subject: "Language Arts",       name: "The Library",    symbol: "book.fill",             x: 0.40,  y: 0.550, arriveAt: 0.5991),
-    .init(subject: "Money & Life Skills", name: "The Market",     symbol: "dollarsign",            x: 0.40,  y: 0.655, arriveAt: 0.7025),
-    .init(subject: "Music",               name: "The Theatre",    symbol: "music.note",            x: 0.38,  y: 0.755, arriveAt: 0.8369),
+    .init(subject: "Math",                name: "The Temple",     symbol: "building.columns.fill", x: 0.36,  y: 0.1480, arriveAt: 0.0791),
+    .init(subject: "Geography",           name: "The Lighthouse", symbol: "globe",                 x: 0.805, y: 0.2058, arriveAt: 0.1776),
+    .init(subject: "History",             name: "The Forum",      symbol: "building.columns",      x: 0.30,  y: 0.2444, arriveAt: 0.2028),
+    .init(subject: "Science",             name: "Mount Vesuvius", symbol: "flame.fill",            x: 0.34,  y: 0.3409, arriveAt: 0.3632),
+    .init(subject: "Logic & Puzzles",     name: "The Colosseum",  symbol: "puzzlepiece.fill",      x: 0.35,  y: 0.4662, arriveAt: 0.4999),
+    .init(subject: "Language Arts",       name: "The Library",    symbol: "book.fill",             x: 0.40,  y: 0.5482, arriveAt: 0.5991),
+    .init(subject: "Money & Life Skills", name: "The Market",     symbol: "dollarsign",            x: 0.40,  y: 0.6495, arriveAt: 0.7025),
+    .init(subject: "Music",               name: "The Theatre",    symbol: "music.note",            x: 0.38,  y: 0.7459, arriveAt: 0.8369),
 ]
 
-// The painted map's pixel aspect (724 × 2172).
-private let mapAspect: CGFloat = 2172.0 / 724.0
+// The painted map's pixel aspect. Extended with +40px parchment top & bottom → 724 × 2252.
+private let mapAspect: CGFloat = 2252.0 / 724.0
 
 // Seal (x,y) is now pinned to the building center, so no extra drop is needed.
 private let markerDrop: CGFloat = 0
@@ -84,31 +84,31 @@ private let markerDrop: CGFloat = 0
 // path), normalized, dense (100 pts) so the traveler hugs every wind instead of cutting across.
 // Re-trace via scratchpad/trace_road.py when the map art changes.
 private let roadPoints: [CGPoint] = [
-    .init(x: 0.5028, y: 0.0732), .init(x: 0.524, y: 0.0804), .init(x: 0.5442, y: 0.0878), .init(x: 0.5514, y: 0.0951),
-    .init(x: 0.5421, y: 0.1025), .init(x: 0.5259, y: 0.1106), .init(x: 0.5146, y: 0.1197), .init(x: 0.5026, y: 0.1284),
-    .init(x: 0.484, y: 0.1355), .init(x: 0.4679, y: 0.1423), .init(x: 0.4679, y: 0.1499), .init(x: 0.4755, y: 0.1589),
-    .init(x: 0.4764, y: 0.1675), .init(x: 0.4681, y: 0.177), .init(x: 0.4663, y: 0.1859), .init(x: 0.4778, y: 0.1946),
-    .init(x: 0.4989, y: 0.2024), .init(x: 0.5205, y: 0.2102), .init(x: 0.5326, y: 0.2185), .init(x: 0.5311, y: 0.2272),
-    .init(x: 0.5146, y: 0.2349), .init(x: 0.4971, y: 0.2424), .init(x: 0.491, y: 0.2498), .init(x: 0.5022, y: 0.2572),
-    .init(x: 0.5227, y: 0.2645), .init(x: 0.5409, y: 0.2723), .init(x: 0.5459, y: 0.2813), .init(x: 0.5361, y: 0.2894),
-    .init(x: 0.5148, y: 0.2966), .init(x: 0.498, y: 0.3033), .init(x: 0.498, y: 0.3104), .init(x: 0.5119, y: 0.318),
-    .init(x: 0.5296, y: 0.3262), .init(x: 0.5405, y: 0.3357), .init(x: 0.5437, y: 0.3457), .init(x: 0.5364, y: 0.355),
-    .init(x: 0.518, y: 0.3617), .init(x: 0.495, y: 0.3675), .init(x: 0.4793, y: 0.3742), .init(x: 0.4803, y: 0.3826),
-    .init(x: 0.4955, y: 0.3911), .init(x: 0.5181, y: 0.3988), .init(x: 0.5416, y: 0.4063), .init(x: 0.5637, y: 0.4141),
-    .init(x: 0.5797, y: 0.4228), .init(x: 0.5852, y: 0.4323), .init(x: 0.5793, y: 0.4419), .init(x: 0.5638, y: 0.4504),
-    .init(x: 0.5426, y: 0.4577), .init(x: 0.5179, y: 0.4641), .init(x: 0.4985, y: 0.4709), .init(x: 0.4939, y: 0.4783),
-    .init(x: 0.5047, y: 0.4864), .init(x: 0.5247, y: 0.4945), .init(x: 0.5408, y: 0.5031), .init(x: 0.5528, y: 0.5124),
-    .init(x: 0.5599, y: 0.5223), .init(x: 0.5641, y: 0.5325), .init(x: 0.5588, y: 0.5419), .init(x: 0.5429, y: 0.5497),
-    .init(x: 0.5219, y: 0.5566), .init(x: 0.5113, y: 0.5638), .init(x: 0.5175, y: 0.5717), .init(x: 0.5344, y: 0.5801),
-    .init(x: 0.5451, y: 0.5889), .init(x: 0.5441, y: 0.5983), .init(x: 0.5315, y: 0.6074), .init(x: 0.5139, y: 0.6158),
-    .init(x: 0.4974, y: 0.6242), .init(x: 0.4898, y: 0.6331), .init(x: 0.4931, y: 0.6427), .init(x: 0.5038, y: 0.6522),
-    .init(x: 0.5089, y: 0.6616), .init(x: 0.5037, y: 0.6706), .init(x: 0.4875, y: 0.6793), .init(x: 0.473, y: 0.6881),
-    .init(x: 0.4699, y: 0.6972), .init(x: 0.4812, y: 0.7059), .init(x: 0.5006, y: 0.7139), .init(x: 0.5203, y: 0.7219),
-    .init(x: 0.5355, y: 0.7307), .init(x: 0.5416, y: 0.7401), .init(x: 0.5344, y: 0.7484), .init(x: 0.52, y: 0.7558),
-    .init(x: 0.5128, y: 0.763), .init(x: 0.5156, y: 0.7716), .init(x: 0.5194, y: 0.7813), .init(x: 0.5118, y: 0.7908),
-    .init(x: 0.4952, y: 0.7993), .init(x: 0.4769, y: 0.8075), .init(x: 0.4653, y: 0.8164), .init(x: 0.4655, y: 0.8259),
-    .init(x: 0.4749, y: 0.8354), .init(x: 0.4893, y: 0.8443), .init(x: 0.4994, y: 0.8537), .init(x: 0.5002, y: 0.8631),
-    .init(x: 0.4909, y: 0.8725), .init(x: 0.4805, y: 0.8819), .init(x: 0.4774, y: 0.8915), .init(x: 0.482, y: 0.9015),
+    .init(x: 0.5028, y: 0.0884), .init(x: 0.524, y: 0.0953), .init(x: 0.5442, y: 0.1024), .init(x: 0.5514, y: 0.1095),
+    .init(x: 0.5421, y: 0.1166), .init(x: 0.5259, y: 0.1244), .init(x: 0.5146, y: 0.1332), .init(x: 0.5026, y: 0.1416),
+    .init(x: 0.484, y: 0.1484), .init(x: 0.4679, y: 0.155), .init(x: 0.4679, y: 0.1623), .init(x: 0.4755, y: 0.171),
+    .init(x: 0.4764, y: 0.1793), .init(x: 0.4681, y: 0.1885), .init(x: 0.4663, y: 0.1971), .init(x: 0.4778, y: 0.2054),
+    .init(x: 0.4989, y: 0.213), .init(x: 0.5205, y: 0.2205), .init(x: 0.5326, y: 0.2285), .init(x: 0.5311, y: 0.2369),
+    .init(x: 0.5146, y: 0.2443), .init(x: 0.4971, y: 0.2516), .init(x: 0.491, y: 0.2587), .init(x: 0.5022, y: 0.2658),
+    .init(x: 0.5227, y: 0.2729), .init(x: 0.5409, y: 0.2804), .init(x: 0.5459, y: 0.2891), .init(x: 0.5361, y: 0.2969),
+    .init(x: 0.5148, y: 0.3038), .init(x: 0.498, y: 0.3103), .init(x: 0.498, y: 0.3171), .init(x: 0.5119, y: 0.3245),
+    .init(x: 0.5296, y: 0.3324), .init(x: 0.5405, y: 0.3415), .init(x: 0.5437, y: 0.3512), .init(x: 0.5364, y: 0.3602),
+    .init(x: 0.518, y: 0.3666), .init(x: 0.495, y: 0.3722), .init(x: 0.4793, y: 0.3787), .init(x: 0.4803, y: 0.3868),
+    .init(x: 0.4955, y: 0.395), .init(x: 0.5181, y: 0.4024), .init(x: 0.5416, y: 0.4096), .init(x: 0.5637, y: 0.4172),
+    .init(x: 0.5797, y: 0.4255), .init(x: 0.5852, y: 0.4347), .init(x: 0.5793, y: 0.444), .init(x: 0.5638, y: 0.4522),
+    .init(x: 0.5426, y: 0.4592), .init(x: 0.5179, y: 0.4654), .init(x: 0.4985, y: 0.4719), .init(x: 0.4939, y: 0.4791),
+    .init(x: 0.5047, y: 0.4869), .init(x: 0.5247, y: 0.4947), .init(x: 0.5408, y: 0.503), .init(x: 0.5528, y: 0.512),
+    .init(x: 0.5599, y: 0.5215), .init(x: 0.5641, y: 0.5313), .init(x: 0.5588, y: 0.5404), .init(x: 0.5429, y: 0.5479),
+    .init(x: 0.5219, y: 0.5546), .init(x: 0.5113, y: 0.5615), .init(x: 0.5175, y: 0.5692), .init(x: 0.5344, y: 0.5773),
+    .init(x: 0.5451, y: 0.5857), .init(x: 0.5441, y: 0.5948), .init(x: 0.5315, y: 0.6036), .init(x: 0.5139, y: 0.6117),
+    .init(x: 0.4974, y: 0.6198), .init(x: 0.4898, y: 0.6284), .init(x: 0.4931, y: 0.6376), .init(x: 0.5038, y: 0.6468),
+    .init(x: 0.5089, y: 0.6559), .init(x: 0.5037, y: 0.6645), .init(x: 0.4875, y: 0.6729), .init(x: 0.473, y: 0.6814),
+    .init(x: 0.4699, y: 0.6902), .init(x: 0.4812, y: 0.6986), .init(x: 0.5006, y: 0.7063), .init(x: 0.5203, y: 0.714),
+    .init(x: 0.5355, y: 0.7225), .init(x: 0.5416, y: 0.7316), .init(x: 0.5344, y: 0.7396), .init(x: 0.52, y: 0.7467),
+    .init(x: 0.5128, y: 0.7537), .init(x: 0.5156, y: 0.762), .init(x: 0.5194, y: 0.7713), .init(x: 0.5118, y: 0.7805),
+    .init(x: 0.4952, y: 0.7887), .init(x: 0.4769, y: 0.7966), .init(x: 0.4653, y: 0.8052), .init(x: 0.4655, y: 0.8143),
+    .init(x: 0.4749, y: 0.8235), .init(x: 0.4893, y: 0.8321), .init(x: 0.4994, y: 0.8411), .init(x: 0.5002, y: 0.8502),
+    .init(x: 0.4909, y: 0.8593), .init(x: 0.4805, y: 0.8683), .init(x: 0.4774, y: 0.8776), .init(x: 0.482, y: 0.8872),
 ]
 private let ludusRoad = RoadPath(roadPoints, aspect: mapAspect)
 
@@ -142,7 +142,8 @@ struct HomeView: View {
     private let topInset: CGFloat = 150
     private let cardBand: CGFloat = 280   // reserved bottom band (card + legend) used for framing
     private let travelPad: CGFloat = 56   // tiny over-scroll so the bottom node clears the card
-    private let bottomPad: CGFloat = 150  // blank-parchment scroll room past the map's bottom edge
+    private let bottomPad: CGFloat = 80   // = legend-bar height, so max scroll stops with the map's
+                                          // bottom edge at the legend top (no parchment gap below)
     private let topPad: CGFloat = 150     // parchment margin above the map top, so the painting rests
                                           // below the LVDVS banner and top landmarks clear it
 
@@ -151,21 +152,15 @@ struct HomeView: View {
             GeometryReader { geo in
                 let w = geo.size.width
                 let h = w * mapAspect
-                let safeTop = geo.safeAreaInsets.top
-                let safeBottom = geo.safeAreaInsets.bottom
-                // Camera viewport = the FULL physical screen: the map bleeds under the status bar
-                // and behind the legend, edge to edge, instead of being cropped to the safe area.
-                let vh = geo.size.height + safeTop + safeBottom
-                let minIdle = min(0, vh - h - bottomPad)   // free-scroll: map + parchment tail
-                let minTravel = min(0, vh - h - travelPad) // travel/card: small over-scroll for the last node
-                // While traveling or showing a card, clamp to the travel bound. Otherwise the
-                // camera IS manualCamY (updated live in the drag), already rubber-banded there.
+                // The map bleeds edge-to-edge over the FULL physical screen (under the status bar and
+                // behind the legend). The safe-area GeometryReader can't report that height, so use the
+                // screen's own height directly. Chrome (banner + legend) stays in the safe area.
+                let vh = UIScreen.main.bounds.height
+                let minIdle = min(0, vh - h - bottomPad)     // free-scroll bottom bound
+                let minTravel = min(0, vh - h - travelPad)   // travel/card over-scroll
                 let off = (isTraveling || showCard)
                     ? clampCG(manualCamY, minTravel, topPad)
                     : manualCamY
-                // Chrome (banner + legend/card) stays sized to the SAFE AREA; the painted world is
-                // its full-bleed background. A background doesn't enlarge its owner, so the legend
-                // stays pinned to the bottom while the map still reaches every edge of the phone.
                 ZStack(alignment: .top) {
                     topBanner
                     VStack(spacing: 0) {
@@ -181,8 +176,6 @@ struct HomeView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(alignment: .top) {
-                    // Parchment the whole world rests on — fills the status-bar area and any
-                    // over-scroll past the map's torn edge, so there's never a flat void.
                     ZStack(alignment: .top) {
                         ParchmentBackground()
                         mapLayer(w: w, h: h)
@@ -195,9 +188,7 @@ struct HomeView: View {
                     .ignoresSafeArea()
                 }
                 .onAppear { setup(CGSize(width: w, height: vh)) }
-                .onChange(of: geo.size) { newSize in
-                    setup(CGSize(width: newSize.width, height: newSize.height + safeTop + safeBottom))
-                }
+                .onChange(of: geo.size) { _ in setup(CGSize(width: w, height: vh)) }
             }
             .navigationBarHidden(true)
             .navigationDestination(for: LudusWorld.self) { WorldView(world: $0) }
