@@ -69,6 +69,12 @@ final class QuickFireEngine: ArcadeModel {
         }
     }
 
+    override func botAct(correct: Bool) {
+        guard !revealed, !question.options.isEmpty else { return }
+        let wrong = question.options.indices.filter { $0 != question.correct }
+        choose(correct || wrong.isEmpty ? question.correct : wrong.randomElement()!)
+    }
+
     private func nextQuestion() {
         question = make(level)
         revealed = false; chosen = nil

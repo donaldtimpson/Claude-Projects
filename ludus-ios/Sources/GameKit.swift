@@ -137,6 +137,12 @@ class ArcadeModel: ObservableObject {
     /// Called right after the level goes up (e.g. to rebuild a board at the new difficulty).
     func onLevelUp() {}
 
+    /// DEBUG autoplayer hook: make ONE move — the right one if `correct`, else a wrong one — the
+    /// way a child's tap/drag would (go through the same code path as the gesture). Called by the
+    /// shell every `LUDUS_BOT_EVERY` s while playing when `LUDUS_BOT=<accuracy 0…1>` is set, so a
+    /// game can be checked end to end (levels climb, laurels land, the run ends) without touching.
+    func botAct(correct: Bool) {}
+
     /// A correct answer. `points` is the base value; the combo multiplies it (capped so a long
     /// streak doesn't dwarf everything). Returns true if this answer climbed a level.
     @discardableResult
@@ -252,10 +258,23 @@ struct ArcadeShell<Model: ArcadeModel, Content: View>: View {
         }
         .onAppear {
             #if DEBUG
-            if ProcessInfo.processInfo.environment["LUDUS_AUTOPLAY"] != nil { model.begin() }
+            let env = ProcessInfo.processInfo.environment
+            if env["LUDUS_AUTOPLAY"] != nil || env["LUDUS_BOT"] != nil { model.begin() }
             #endif
         }
+        #if DEBUG
+        .onReceive(botClock) { _ in
+            guard model.phase == .playing, let acc = Double(ProcessInfo.processInfo.environment["LUDUS_BOT"] ?? "") else { return }
+            model.botAct(correct: Double.random(in: 0..<1) < acc)
+        }
+        #endif
     }
+
+    #if DEBUG
+    private let botClock = Timer.publish(
+        every: Double(ProcessInfo.processInfo.environment["LUDUS_BOT_EVERY"] ?? "") ?? 1.2, on: .main, in: .common
+    ).autoconnect()
+    #endif
 
     private var hud: some View {
         VStack {
