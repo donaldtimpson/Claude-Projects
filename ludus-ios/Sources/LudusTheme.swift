@@ -46,6 +46,24 @@ func luSerif(_ size: CGFloat, _ weight: Font.Weight = .heavy) -> Font {
     .system(size: size, weight: weight, design: .serif)
 }
 
+/// The home map's inscription voice: bundled Cinzel (static Black/Bold instances of the Lyceum's
+/// variable font) at a fixed size, so baked chrome and live text line up.
+func luCinzel(_ size: CGFloat, bold: Bool = false) -> Font {
+    .custom(bold ? "CinzelRoman-Bold" : "CinzelRoman-Black", fixedSize: size)
+}
+
+/// Bundled EB Garamond (Medium / SemiBold) for the scrolls' small print.
+func luGaramond(_ size: CGFloat, semibold: Bool = false) -> Font {
+    .custom(semibold ? "EBGaramond-SemiBold" : "EBGaramond-Medium", fixedSize: size)
+}
+
+/// Registers the bundled TTFs (Resources/Fonts) with the process — call once at launch.
+func luRegisterFonts() {
+    for url in Bundle.main.urls(forResourcesWithExtension: "ttf", subdirectory: nil) ?? [] {
+        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+    }
+}
+
 /// Roman numerals for small counts (I, II, III …). Digits above 39.
 func romanNumeral(_ n: Int) -> String {
     guard n > 0 && n < 40 else { return "\(n)" }

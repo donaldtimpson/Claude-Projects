@@ -23,13 +23,30 @@ import SwiftUI
 
 private enum Prov {
     static let red     = Color(hex: 0x9e2b25)
-    static let redDeep = Color(hex: 0x7d211c)
-    static let gold    = Color(hex: 0xc99a3a)
-    static let goldHi  = Color(hex: 0xe6c15f)
-    static let cream   = Color(hex: 0xfbe7bf)
-    static let inkDim  = Color(hex: 0xeec98f)
-    static let plate   = Color(hex: 0xf4ebd2)
-    static let plateInk = Color(hex: 0x3a2a15)
+    static let ink     = Color(hex: 0x3a2412)   // scroll ink
+    static let tint    = Color(hex: 0x6a1a16)   // the red wash behind the plaque (and its echo at the bar)
+    static let coinInk = Color(hex: 0xfdf0d2)
+    static let rule    = Color(hex: 0x9a7a3c)
+}
+
+/// The baked chrome's geometry (pt). Mirrors tools/chrome/chrome_build.py — change both together.
+private enum Chrome {
+    static let barW: CGFloat = 440, barSide: CGFloat = 42, barTab: CGFloat = 68, barShadow: CGFloat = 8
+    static let plaque = CGSize(width: 262, height: 72)
+    static let rank = CGSize(width: 180, height: 44)
+    static let coin: CGFloat = 25
+    static let sealBox: CGFloat = 84                  // seal/ring/halo images are drawn in this square…
+    static let mapSeal: CGFloat = 0.85, cardSeal: CGFloat = 1.06   // …shown at these scales
+    static let cardW: CGFloat = 344, cardH: CGFloat = 150, cardRod: CGFloat = 13
+    static let plateH: CGFloat = 31, plateRod: CGFloat = 5
+    static let play = CGSize(width: 308, height: 54)  // PLAY plaque image incl. its 6-pt shadow margin
+    static let standard = CGSize(width: 42, height: 62), standardFoot: CGFloat = 58, standardScale: CGFloat = 0.92
+}
+
+/// Darken a packed-hex colour by `pct` percent (matches the bake's `shade(c, -pct)`).
+private func waxInk(_ hex: UInt, _ pct: Double) -> Color {
+    func ch(_ s: UInt) -> Double { Double((hex >> s) & 0xff) / 255 * (1 - pct / 100) }
+    return Color(.sRGB, red: ch(16), green: ch(8), blue: ch(0))
 }
 
 /// A world on the map. Two DISTINCT authored places (do not conflate): the seal `x,y` is his BLUE
@@ -37,7 +54,8 @@ private enum Prov {
 private struct Landmark: Identifiable {
     let subject: String     // matches a LudusWorld.subject
     let name: String        // the landmark's own name (the hero label)
-    let symbol: String      // SF Symbol for the seal
+    let key: String         // chrome asset key: Seal<key> (tools/chrome/chrome_build.py)
+    let wax: UInt           // the seal's wax colour (also tints its subject label)
     let x: CGFloat          // seal center: 0…1 across the image (blue mark)
     let y: CGFloat          // seal center: 0…1 down the image (blue mark)
     let stop: Int           // index into `roadXY` points of the traveler's rest (green mark)
@@ -49,14 +67,14 @@ private struct Landmark: Identifiable {
 
 // Mediterranean map (Oct 2026), ordered top→bottom along the road.
 private let landmarks: [Landmark] = [
-    .init(subject: "Language Arts",       name: "The Library",    symbol: "book.fill",             x: 0.5683, y: 0.1835, stop: 11, labelDX: 32),
-    .init(subject: "History",             name: "The Forum",      symbol: "building.columns",      x: 0.2754, y: 0.2965, stop: 79),
-    .init(subject: "Science",             name: "Mount Vesuvius", symbol: "flame.fill",            x: 0.6700, y: 0.3554, stop: 124),
-    .init(subject: "Logic & Puzzles",     name: "The Colosseum",  symbol: "puzzlepiece.fill",      x: 0.2785, y: 0.4367, stop: 164),
-    .init(subject: "Math",                name: "The Temple",     symbol: "building.columns.fill", x: 0.5005, y: 0.5075, stop: 211),
-    .init(subject: "Money & Life Skills", name: "The Market",     symbol: "dollarsign",            x: 0.7406, y: 0.5886, stop: 269),
-    .init(subject: "Geography",           name: "The Lighthouse", symbol: "globe",                 x: 0.2583, y: 0.6605, stop: 289),
-    .init(subject: "Music",               name: "The Theatre",    symbol: "music.note",            x: 0.7019, y: 0.8018, stop: 334),
+    .init(subject: "Language Arts",       name: "The Library",    key: "Library",    wax: 0x3f8a4a, x: 0.5683, y: 0.1835, stop: 11, labelDX: 32),
+    .init(subject: "History",             name: "The Forum",      key: "Forum",      wax: 0x8a5a34, x: 0.2754, y: 0.2965, stop: 79),
+    .init(subject: "Science",             name: "Mount Vesuvius", key: "Vesuvius",   wax: 0xc8642a, x: 0.6700, y: 0.3554, stop: 124),
+    .init(subject: "Logic & Puzzles",     name: "The Colosseum",  key: "Colosseum",  wax: 0x7a4aa8, x: 0.2785, y: 0.4367, stop: 164),
+    .init(subject: "Math",                name: "The Temple",     key: "Temple",     wax: 0xb8402e, x: 0.5005, y: 0.5075, stop: 211),
+    .init(subject: "Money & Life Skills", name: "The Market",     key: "Market",     wax: 0x1f7a6a, x: 0.7406, y: 0.5886, stop: 269),
+    .init(subject: "Geography",           name: "The Lighthouse", key: "Lighthouse", wax: 0x2f7fae, x: 0.2583, y: 0.6605, stop: 289),
+    .init(subject: "Music",               name: "The Theatre",    key: "Theatre",    wax: 0xa63a6a, x: 0.7019, y: 0.8018, stop: 334),
 ]
 
 // The painted map's pixel aspect: 724 × 2272 — the 2172-px art plus 100 px of extra top parchment
@@ -136,6 +154,19 @@ private let ludusRoad = RoadPath(roadPoints, aspect: mapAspect)
 
 private func clampCG(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat { max(lo, min(hi, v)) }
 
+
+/// A world's progress as its seal shows it: `n` ring segments (one per game in that world, ≤ 6
+/// baked), `done` of them gilded (games the child has scored in). All done = the laurel crown.
+private struct SealProgress {
+    let n: Int, done: Int
+    var ringAsset: String? {
+        guard n > 0 else { return nil }
+        if done >= n { return "RingCrown" }
+        let segs = min(n, 6)
+        return "Ring\(segs)_\(min(segs - 1, done * segs / n))"
+    }
+}
+
 struct HomeView: View {
     @AppStorage(LudusStore.denariiKey) private var denarii = 0
     @AppStorage("ludus_last_world") private var lastSubject = ""
@@ -147,50 +178,51 @@ struct HomeView: View {
     @State private var dragStartCam: CGFloat = 0     // camera offset at the start of a drag
     @State private var selected: Landmark?
     @State private var isTraveling = false
-    @State private var showCard = false
-    @State private var faceLeft = false
     @State private var travelSeq = 0
     @State private var didInit = false
     @State private var canvas: CGSize = .zero        // latest viewport size (for travel math)
+    // The arrival card: a scroll that rises furled onto the bar's tab, then its top rod rolls up.
+    @State private var cardLM: Landmark?             // non-nil while the card is on screen
+    @State private var cardRise: CGFloat = 1         // 1 = lowered + transparent, 0 = docked on the tab
+    @State private var cardOpen: CGFloat = 0         // 0 = furled, 1 = unrolled
+    @State private var cardSeq = 0
+    @State private var plateOpen: CGFloat = 0        // the selected seal's hanging name scroll
 
     // Floating chrome the camera must keep the traveler clear of.
     private let topInset: CGFloat = 150
-    private let cardBand: CGFloat = 280   // reserved bottom band (card + legend) used for framing
-    private let travelPad: CGFloat = 56   // tiny over-scroll so the bottom node clears the card
-    private let bottomPad: CGFloat = 80   // = legend-bar height, so max scroll stops with the map's
-                                          // bottom edge at the legend top
+    private let cardBand: CGFloat = 280   // reserved bottom band (card + bar) used for framing
+    private let travelPad: CGFloat = Chrome.barSide   // over-scroll for the bottom node — never past
+                                                      // the bar beside the tab, or the void shows
+    private let bottomPad: CGFloat = Chrome.barSide   // max scroll stops with the map's bottom edge
+                                                      // at the bar's top (beside the tab)
     // The camera never scrolls past the map's top edge (offset ≤ 0) — the art's own parchment border
     // is the margin, so nothing but the painting is ever on screen.
 
     var body: some View {
         NavigationStack(path: $navPath) {
             GeometryReader { geo in
-                let w = geo.size.width
-                let h = w * mapAspect
                 // The map bleeds edge-to-edge over the FULL physical screen (under the status bar and
-                // behind the legend). The safe-area GeometryReader can't report that height, so use the
-                // screen's own height directly. Chrome (banner + legend) stays in the safe area.
+                // behind the bar). The safe-area GeometryReader can't report that height, so use the
+                // screen's own height directly — and its width whenever the reader reports none yet
+                // (on iPhone SE its first sizes arrive 0 wide, so setup would never run).
+                let w = geo.size.width > 0 ? geo.size.width : UIScreen.main.bounds.width
+                let h = w * mapAspect
                 let vh = UIScreen.main.bounds.height
                 let minIdle = min(0, vh - h - bottomPad)     // free-scroll bottom bound
                 let minTravel = min(0, vh - h - travelPad)   // travel/card over-scroll
-                let off = (isTraveling || showCard)
+                let off = (isTraveling || cardLM != nil)
                     ? clampCG(manualCamY, minTravel, 0)
                     : manualCamY
                 ZStack(alignment: .top) {
-                    topBanner
-                    VStack(spacing: 0) {
-                        Spacer(minLength: 0)
-                        if showCard, let lm = selected, let world = lm.world {
-                            DestinationCard(landmark: lm, world: world,
-                                            onPlay: { navPath.append(world) },
-                                            onClose: { dismissCard() })
-                                .transition(.move(edge: .bottom).combined(with: .opacity))
-                        }
-                        legendBar
-                    }
+                    Image("TopPlaque").resizable()
+                        .frame(width: Chrome.plaque.width, height: Chrome.plaque.height)
+                        .padding(.top, -4)
+                        .accessibilityLabel("Ludus")
+                    cardLayer(w: w)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(alignment: .top) {
+                    // Physical-screen layer: the map, then the static chrome painted over it.
                     ZStack(alignment: .top) {
                         mapLayer(w: w, h: h)
                             .offset(y: off)
@@ -198,6 +230,9 @@ struct HomeView: View {
                             .clipped()
                             .contentShape(Rectangle())
                             .gesture(panGesture(minIdle: minIdle))
+                        topTint
+                        bottomBar(w: w)
+                            .frame(width: w, height: vh, alignment: .bottom)
                     }
                     .ignoresSafeArea()
                 }
@@ -210,35 +245,64 @@ struct HomeView: View {
         .tint(Prov.red)
     }
 
-    // The scrolling world: painted map, the eight seals on their road stops, and the traveler.
+    // The scrolling world: painted map, the eight seals on their buildings, and the traveler.
     private func mapLayer(w: CGFloat, h: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
             // Static art; motion is added selectively and only via Core Animation (no per-frame app work).
             Image("ProvinceMap").resizable().frame(width: w, height: h)
             MapAmbience(w: w, h: h)
-            ForEach(landmarks) { lm in
+            ForEach(Array(landmarks.enumerated()), id: \.element.id) { i, lm in
                 if let world = lm.world {
+                    let isSel = selected?.id == lm.id
                     Button { travel(to: lm) } label: {
-                        LandmarkSeal(name: lm.name, subject: world.subject, symbol: lm.symbol,
-                                     colorHex: world.colorHex, highlighted: selected?.id == lm.id,
-                                     labelDX: lm.labelDX)
+                        // Selection changes ONLY the halo's opacity — never any geometry. A geometry
+                        // change tied to `selected` gets animated by the tap's ambient transaction on
+                        // its own timeline, making the selected seal slide ahead of the map pan.
+                        SealStack(key: lm.key, progress: progress(world, index: i), halo: isSel)
+                            .frame(width: Chrome.sealBox * Chrome.mapSeal, height: Chrome.sealBox * Chrome.mapSeal)
+                            .frame(width: 48, height: 48)
+                            .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("\(lm.name), \(world.subject)")
+                    // The name hangs below the seal on a little scroll (overlay: never moves the seal).
+                    // It unrolls on tap and furls back up as the arrival card unrolls.
+                    .overlay(alignment: .top) {
+                        NamePlate(name: lm.name, subject: world.subject, wax: lm.wax,
+                                  open: isSel ? plateOpen * (1 - cardOpen) : 0)
+                            .offset(x: lm.labelDX, y: 47)
+                            .allowsHitTesting(false)
+                    }
                     // Seal on the building (blue mark); the traveler rests at the green mark (stop).
                     .position(x: lm.x * w, y: lm.y * h)
                 }
             }
-            // Chip CENTER sits on the road point — no stand offset, so it rests exactly on the green mark.
-            Traveler(walking: isTraveling, faceLeft: faceLeft)
-                .modifier(AlongRoad(t: travelerT, road: ludusRoad, w: w, h: h))
+            // The standard's FOOT stands on the road point, so it rests exactly on the green mark.
+            Traveler(walking: isTraveling, rank: rankIndex)
+                .modifier(AlongRoad(t: travelerT, road: ludusRoad, w: w, h: h, dy: Traveler.centerToFoot))
         }
         .frame(width: w, height: h, alignment: .top)
+    }
+
+    private var rankIndex: Int {
+        ["Tiro", "Legionary", "Centurion", "Consul"].firstIndex(of: ludusRank(forDenarii: denarii)) ?? 0
+    }
+
+    /// Games in a world vs. games the child has a score in (re-read whenever the view updates, e.g.
+    /// on returning from a game).
+    private func progress(_ world: LudusWorld, index: Int = 0) -> SealProgress {
+        let n = world.games.count
+        var done = world.games.filter { g in g.game.map { LudusStore.best($0.rawValue) > 0 } ?? false }.count
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["LUDUS_DEMO_PROGRESS"] != nil { done = (index * 2) % (n + 1) }
+        #endif
+        return SealProgress(n: n, done: done)
     }
 
     // MARK: Travel
 
     /// GO THERE: walk the traveler along the road to the landmark's stop, panning the camera on the
-    /// SAME timeline, then open its parchment card on arrival.
+    /// SAME timeline, then raise its arrival card.
     @discardableResult
     private func travel(to lm: Landmark) -> Double {
         guard let world = lm.world, canvas.width > 0 else { return 0 }
@@ -247,14 +311,15 @@ struct HomeView: View {
         let minCam = min(0, vh - h - travelPad)
 
         Haptics.tap()
-        if showCard { withAnimation(.easeIn(duration: 0.15)) { showCard = false } }
+        if cardLM != nil { hideCard() }
         // Set selection WITHOUT animation: any animated transaction on `selected` gets applied to the
         // selected seal's position too (it's in the same update as the pan), making it jump ahead of
-        // the scroll. Instant highlight pop is fine; only the pan should animate.
-        selected = lm
+        // the scroll. Only the pan (and the name scroll's own unroll) animate.
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) { selected = lm; plateOpen = 0 }
+        DispatchQueue.main.async { withAnimation(.easeOut(duration: 0.32)) { plateOpen = 1 } }
 
         let target = lm.arriveAt
-        faceLeft = ludusRoad.point(at: target).x < ludusRoad.point(at: travelerT).x
         let dist = abs(target - travelerT)
         let dur = Double(0.5 + 2.0 * dist)
         let camTarget = clampCG(desiredY - ludusRoad.point(at: target).y * h, minCam, 0)
@@ -271,13 +336,45 @@ struct HomeView: View {
             isTraveling = false
             lastSubject = world.subject
             Haptics.light()
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.82)) { showCard = true }
+            showCard(lm)
         }
         return dur
     }
 
+    /// The card rises furled onto the bar's tab, then unrolls upward (title first, PLAY last) while
+    /// the seal's name scroll furls away — the name hands off to the card.
+    private func showCard(_ lm: Landmark) {
+        cardSeq += 1
+        let seq = cardSeq
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) { cardLM = lm; cardRise = 1; cardOpen = 0 }
+        DispatchQueue.main.async {
+            guard seq == cardSeq else { return }
+            withAnimation(.easeOut(duration: 0.22)) { cardRise = 0 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+                guard seq == cardSeq else { return }
+                withAnimation(.easeOut(duration: 0.36)) { cardOpen = 1 }
+            }
+        }
+    }
+
+    /// Reverse: roll the card back down onto its bottom rod, then sink it away.
+    private func hideCard() {
+        cardSeq += 1
+        let seq = cardSeq
+        withAnimation(.easeIn(duration: 0.2)) { cardOpen = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16) {
+            guard seq == cardSeq else { return }
+            withAnimation(.easeIn(duration: 0.18)) { cardRise = 1 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                guard seq == cardSeq else { return }
+                cardLM = nil
+            }
+        }
+    }
+
     private func dismissCard() {
-        withAnimation(.easeIn(duration: 0.2)) { showCard = false }
+        hideCard()
         selected = nil
         // If we were parked in the travel-only pad zone (last node), settle back into free-scroll bounds.
         let minIdle = min(0, canvas.height - canvas.width * mapAspect - bottomPad)
@@ -292,12 +389,12 @@ struct HomeView: View {
     private func panGesture(minIdle: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 8)
             .onChanged { v in
-                guard !isTraveling, !showCard else { return }
+                guard !isTraveling, cardLM == nil else { return }
                 if !dragging { dragging = true; dragStartCam = manualCamY }
                 manualCamY = clampCG(dragStartCam + v.translation.height, minIdle, 0)
             }
             .onEnded { v in
-                guard !isTraveling, !showCard else { return }
+                guard !isTraveling, cardLM == nil else { return }
                 dragging = false
                 let end = clampCG(dragStartCam + v.predictedEndTranslation.height, minIdle, 0)
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) { manualCamY = end }
@@ -327,7 +424,7 @@ struct HomeView: View {
     /// Validation hook: launch with env LUDUS_TOUR = comma-separated subjects (or "all" = every stop
     /// top→bottom then back up) and the traveler walks the route unattended, holding at each stop
     /// (LUDUS_TOUR_HOLD seconds, default 1.5), so a screen recording can be checked against the
-    /// traced road and the map ambience.
+    /// traced road and the map ambience. LUDUS_DEMO_PROGRESS fakes varied seal progress.
     private func startDebugTour() {
         let env = ProcessInfo.processInfo.environment
         guard let spec = env["LUDUS_TOUR"], !spec.isEmpty else { return }
@@ -344,211 +441,240 @@ struct HomeView: View {
     }
     #endif
 
-    // MARK: Chrome
+    // MARK: Chrome — every piece is a baked image (tools/chrome/chrome_build.py); only text is live.
 
-    // The LVDVS cartouche, floating on a red scrim that also darkens the status-bar area.
-    private var topBanner: some View {
-        LaurelFrame(color: 0xe6c15f, size: 20, spacing: 9) {
-            VStack(spacing: 1) {
-                Text("LVDVS").font(luSerif(30, .black)).tracking(4)
-                    .foregroundStyle(LinearGradient(colors: [.white, Prov.cream, Prov.gold],
-                                                    startPoint: .top, endPoint: .bottom))
-                Text("Disce Ludendo").font(luSerif(9, .bold)).textCase(.uppercase).tracking(3)
-                    .foregroundStyle(Prov.inkDim)
-            }
-        }
-        .padding(.vertical, 9).padding(.horizontal, 20)
-        .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(LinearGradient(colors: [Prov.red, Prov.redDeep], startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Prov.gold, lineWidth: 1.5))
-                .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
-        )
-        .padding(12).drawingGroup().padding(-12)            // flatten: static, so its shadow isn't re-blurred every frame
-        .padding(.top, 6)
-        .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(colors: [Prov.redDeep.opacity(0.9), .clear],
-                           startPoint: .top, endPoint: .bottom)
-                .frame(height: 150).ignoresSafeArea(edges: .top),
-            alignment: .top
-        )
+    // The red wash the plaque hovers over (also darkens the status-bar area).
+    private var topTint: some View {
+        LinearGradient(stops: [.init(color: Prov.tint.opacity(0.92), location: 0),
+                               .init(color: Prov.tint.opacity(0.61), location: 0.25),
+                               .init(color: Prov.tint.opacity(0.35), location: 0.5),
+                               .init(color: Prov.tint.opacity(0.13), location: 0.75),
+                               .init(color: Prov.tint.opacity(0), location: 1)],
+                       startPoint: .top, endPoint: .bottom)
+            .frame(height: 158)
+            .allowsHitTesting(false)
     }
 
-    // Rank + coinage, styled as a map legend along the foot.
-    private var legendBar: some View {
-        HStack(spacing: 6) {
-            legendStat(emoji: "🥈", value: "\(denarii)", label: "DENARII")
-            Rectangle().fill(Prov.gold.opacity(0.4)).frame(width: 1, height: 30)
-            LaurelFrame(color: 0xe6c15f, size: 16, spacing: 5) {
-                VStack(spacing: 0) {
-                    Text(ludusRank(forDenarii: denarii)).font(luSerif(16, .black))
-                        .textCase(.uppercase).tracking(1).foregroundStyle(Prov.goldHi)
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                    Text("RANK").font(luFont(7.5, .heavy)).tracking(1.5).foregroundStyle(Prov.inkDim)
-                }
-            }
-            Rectangle().fill(Prov.gold.opacity(0.4)).frame(width: 1, height: 30)
-            legendStat(emoji: "🥇", value: "\(denarii / 25)", label: "AVREI")
-        }
-        .padding(.horizontal, 18).padding(.top, 10).padding(.bottom, 6)
-        .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(colors: [Prov.red, Prov.redDeep], startPoint: .top, endPoint: .bottom)
-                .overlay(Rectangle().fill(Prov.gold).frame(height: 2), alignment: .top)
-                .ignoresSafeArea(edges: .bottom)
-        )
-    }
-
-    private func legendStat(emoji: String, value: String, label: String) -> some View {
+    // The slim lacquer bar: a raised centre tab carrying the rank, coin totals in the corners, and
+    // the same gilt moulding as the plaque along its top edge. Baked 440 pt wide and centre-cropped.
+    private func bottomBar(w: CGFloat) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 4) {
-                Text(emoji).font(.system(size: 13))
-                Text(value).font(luSerif(16, .black)).monospacedDigit().foregroundStyle(Prov.cream)
+            // a short whisper of the top's tint, just above the bar
+            LinearGradient(stops: [.init(color: Prov.tint.opacity(0), location: 0),
+                                   .init(color: Prov.tint.opacity(0.1), location: 0.5),
+                                   .init(color: Prov.tint.opacity(0.3), location: 1)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: 46)
+                .padding(.bottom, -(Chrome.barTab + Chrome.barShadow - Chrome.barSide))
+            ZStack(alignment: .top) {
+                Image("BottomBar").resizable()
+                    .frame(width: Chrome.barW, height: Chrome.barTab + Chrome.barShadow)
+                Image("Rank\(rankIndex)").resizable()
+                    .frame(width: Chrome.rank.width, height: Chrome.rank.height)
+                    .padding(.top, Chrome.barShadow)
+                    .accessibilityLabel("Rank: \(ludusRank(forDenarii: denarii))")
             }
-            Text(label).font(luFont(7.5, .heavy)).tracking(1.5).foregroundStyle(Prov.inkDim)
+            .frame(width: w, height: Chrome.barTab + Chrome.barShadow)
+            .clipped()
+            .overlay(alignment: .bottom) {
+                HStack(spacing: 5.5) {
+                    Image("CoinSilver").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                    coinText("\(denarii)")
+                    Spacer(minLength: 0)
+                    coinText("\(denarii / 25)")
+                    Image("CoinGold").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                }
+                .padding(.horizontal, 25.5)
+                .frame(height: Chrome.coin)
+                .padding(.bottom, 12.5)
+            }
         }
-        .frame(maxWidth: .infinity)
+        .allowsHitTesting(false)
+    }
+
+    private func coinText(_ v: String) -> some View {
+        ZStack {
+            Text(v).foregroundStyle(Color(.sRGB, red: 40 / 255, green: 6 / 255, blue: 4 / 255).opacity(0.6)).offset(y: 1)
+            Text(v).foregroundStyle(Prov.coinInk)
+        }
+        .font(luCinzel(17)).tracking(0.4).monospacedDigit()
+    }
+
+    // The arrival card, laid out against the PHYSICAL screen bottom so its bottom rod rests on the tab.
+    @ViewBuilder private func cardLayer(w: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            if let lm = cardLM, let world = lm.world {
+                DestinationCard(landmark: lm, world: world, progress: progress(world, index: landmarks.firstIndex { $0.id == lm.id } ?? 0),
+                                width: min(Chrome.cardW, w - 58), open: cardOpen,
+                                onPlay: { navPath.append(world) },
+                                onClose: { dismissCard() })
+                    .opacity(1 - cardRise)
+                    .offset(y: cardRise * 36)
+                    // bottom rod centre = the tab's top edge (+0.5): container bottom sits a rod-half lower
+                    .padding(.bottom, Chrome.barTab - 0.5 - DestinationCard.rodH / 2)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 
-// MARK: - A landmark seal: coloured wax disc + emblem, with a quiet nameplate
+// MARK: - A landmark seal: wax body + progress ring (+ selection halo), all baked
 
-private struct LandmarkSeal: View {
-    let name: String
-    let subject: String
-    let symbol: String
-    let colorHex: UInt
-    var highlighted: Bool = false
-    var labelDX: CGFloat = 0
+private struct SealStack: View {
+    let key: String
+    let progress: SealProgress
+    var halo: Bool = false
 
     var body: some View {
-        // The DISC is the anchored element — `.position` in the map centers it on the building.
-        // The nameplate is an overlay that hangs below WITHOUT enlarging the layout footprint, so
-        // its width/height never shift where the disc lands.
         ZStack {
-            // Soft drop shadow as a gradient, not `.shadow`: a blurred shadow is re-blurred offscreen
-            // by the render server every frame while the map ambience animates.
-            SoftShadow(opacity: 0.45).frame(width: 50, height: 50).offset(y: 3)
-            Circle()
-                .fill(RadialGradient(colors: [luShade(colorHex, 46), Color(hex: colorHex)],
-                                     center: UnitPoint(x: 0.38, y: 0.32), startRadius: 1, endRadius: 24))
-                .overlay(Circle().stroke(Prov.cream, lineWidth: 2))
-                .overlay(Circle().stroke(luShade(colorHex, -60), lineWidth: 0.5).padding(4))
-            Image(systemName: symbol)
-                .font(.system(size: 17, weight: .black))
-                .foregroundStyle(.white)
-        }
-        .frame(width: 38, height: 38)
-        .overlay(
-            Circle().stroke(Prov.goldHi, lineWidth: 3)
-                .frame(width: 46, height: 46)
-                .opacity(highlighted ? 1 : 0)
-        )
-        // Selection changes ONLY this ring's opacity — never any geometry (no scale, no size).
-        // A geometry change tied to `selected` gets animated by the tap's ambient transaction on
-        // its own timeline, making the selected seal slide ahead of the map pan. Opacity is safe.
-        .overlay(alignment: .top) {
-            VStack(spacing: 1) {
-                Text(name).font(luSerif(11, .black)).foregroundStyle(Prov.plateInk)
-                Text(subject.uppercased()).font(luFont(6.5, .heavy)).tracking(0.9)
-                    .foregroundStyle(luShade(colorHex, -60))
-            }
-            .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(LinearGradient(colors: [luShade(0xf4ebd2, 12), luShade(0xf4ebd2, -14)],
-                                         startPoint: .top, endPoint: .bottom).opacity(0.94))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .strokeBorder(luShade(0xc99a3a, 20).opacity(0.7), lineWidth: 0.8)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .strokeBorder(luShade(0xc99a3a, -30).opacity(0.35), lineWidth: 0.5)
-                            .padding(1.5)
-                    )
-                    .shadow(color: .black.opacity(0.3), radius: 2.5, x: 0, y: 1.5)
-            )
-            .fixedSize()
-            .padding(5).drawingGroup().padding(-5)          // flatten (shadow) into one texture
-            // Hidden by default so the map art breathes — only the tapped (selected) landmark
-            // reveals its name, and it stays through the walk until the card is dismissed. Opacity
-            // + a small rise/scale are safe (overlay never affects where the disc lands).
-            .opacity(highlighted ? 1 : 0)
-            .scaleEffect(highlighted ? 1 : 0.9, anchor: .top)
-            .offset(x: labelDX, y: highlighted ? 44 : 38)
-            .animation(.spring(response: 0.3, dampingFraction: 0.75), value: highlighted)
-            .allowsHitTesting(false)
+            Image("SealHalo").resizable().opacity(halo ? 1 : 0)
+            if let ring = progress.ringAsset { Image(ring).resizable() }
+            Image("Seal" + key).resizable()
         }
     }
 }
 
-// MARK: - The parchment destination card shown on arrival
+// MARK: - Scroll rods (F): a wooden roller whose finials + cord wraps stay put as it stretches
+
+private struct ScrollRod: View {
+    let asset: String
+    let d: CGFloat          // rod diameter (pt); the image is (shaft + 2d) × 1.6d
+    var body: some View {
+        Image(asset)
+            .resizable(capInsets: EdgeInsets(top: 0, leading: 2 * d, bottom: 0, trailing: 2 * d))
+            .frame(height: 1.6 * d)
+            .padding(.horizontal, -d)
+    }
+}
+
+// MARK: - The name scroll that hangs under the selected seal
+
+private struct NamePlate: View {
+    let name: String
+    let subject: String
+    let wax: UInt
+    var open: CGFloat        // 0 = rolled into its rod (hidden), 1 = hanging open
+
+    var body: some View {
+        let rodH = Chrome.plateRod * 1.6
+        VStack(spacing: 0) {
+            Text(name.uppercased()).font(luCinzel(11)).tracking(0.5).foregroundStyle(Prov.ink)
+            Text(subject).font(luGaramond(11.5, semibold: true)).foregroundStyle(waxInk(wax, 25))
+        }
+        .fixedSize()
+        .padding(.horizontal, 13)
+        .frame(height: Chrome.plateH)
+        .background(Image("PlateParchment")
+            .resizable(capInsets: EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12)))
+        // Text rides the top rod; the bottom rod drops to unroll (the frame grows downward).
+        .frame(height: Chrome.plateH * open, alignment: .top)
+        .clipped()
+        .overlay(alignment: .top) { ScrollRod(asset: "PlateRod", d: Chrome.plateRod).offset(y: -rodH / 2) }
+        .overlay(alignment: .bottom) { ScrollRod(asset: "PlateRod", d: Chrome.plateRod).offset(y: rodH / 2) }
+        .padding(.vertical, rodH / 2)
+        .opacity(open > 0.01 ? 1 : 0)
+    }
+}
+
+// MARK: - The arrival card: an F scroll docked on the bar's tab
 
 private struct DestinationCard: View {
     let landmark: Landmark
     let world: LudusWorld
+    let progress: SealProgress
+    let width: CGFloat       // parchment width; the rods' finials reach ~13 pt further
+    var open: CGFloat        // 0 = furled (rods together), 1 = unrolled
     let onPlay: () -> Void
     let onClose: () -> Void
 
+    static let rodH = Chrome.cardRod * 1.6
+
     var body: some View {
-        VStack(spacing: 14) {
-            HStack(alignment: .top, spacing: 13) {
-                ZStack {
-                    Circle()
-                        .fill(RadialGradient(colors: [luShade(world.colorHex, 46), Color(hex: world.colorHex)],
-                                             center: UnitPoint(x: 0.38, y: 0.32), startRadius: 1, endRadius: 30))
-                        .overlay(Circle().stroke(Prov.cream, lineWidth: 2))
-                        .overlay(Circle().stroke(luShade(world.colorHex, -60), lineWidth: 0.5).padding(3))
-                        .shadow(color: .black.opacity(0.3), radius: 3, x: 0, y: 2)
-                    Image(systemName: landmark.symbol)
-                        .font(.system(size: 22, weight: .black)).foregroundStyle(.white)
-                }
-                .frame(width: 52, height: 52)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(world.subject.uppercased()).font(luFont(10, .heavy)).tracking(1.6)
-                        .foregroundStyle(luShade(world.colorHex, -55))
-                    Text(landmark.name).font(luSerif(23, .black)).foregroundStyle(Prov.plateInk)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                    Text("\(world.playableCount) game\(world.playableCount == 1 ? "" : "s")")
-                        .font(luFont(11, .semibold)).foregroundStyle(Prov.plateInk.opacity(0.55))
-                }
-                Spacer(minLength: 4)
-                Button(action: onClose) {
-                    Image(systemName: "xmark").font(.system(size: 13, weight: .heavy))
-                        .foregroundStyle(Prov.plateInk.opacity(0.55))
-                        .frame(width: 30, height: 30)
-                        .background(
-                            Circle().fill(luShade(0xf4ebd2, -12))
-                                .overlay(Circle().strokeBorder(Prov.gold.opacity(0.4), lineWidth: 0.8))
-                        )
-                }
-                .buttonStyle(.plain)
+        let vis = Chrome.cardH * open
+        sheet
+            .frame(width: width, height: Chrome.cardH, alignment: .top)
+            // Content rides the TOP rod as it rolls up, so the title shows first and PLAY last.
+            .frame(height: vis, alignment: .top)
+            .clipped()
+            .overlay(alignment: .bottom) {       // curl shade where the sheet meets the bottom rod
+                LinearGradient(colors: [Color(hex: 0x3c230a).opacity(0), Color(hex: 0x3c230a).opacity(0.43)],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: min(6, vis))
             }
-            // Thin gold rule separating header from the primary action.
-            LinearGradient(colors: [Prov.gold.opacity(0), luShade(0xc99a3a, 15).opacity(0.7), Prov.gold.opacity(0)],
-                           startPoint: .leading, endPoint: .trailing)
-                .frame(height: 1)
-            LudusButton(title: "Play", fullWidth: true, action: onPlay)
+            .padding(.vertical, Chrome.cardRod / 2)          // rod centres sit half a rod outside the sheet
+            .background(
+                Image("CardShadow")
+                    .resizable(capInsets: EdgeInsets(top: 40, leading: 40, bottom: 40, trailing: 40))
+                    .padding(-16).offset(y: 6)
+            )
+            .overlay(alignment: .top) { ScrollRod(asset: "CardRod", d: Chrome.cardRod).offset(y: -Self.rodH / 2) }
+            .overlay(alignment: .bottom) { ScrollRod(asset: "CardRod", d: Chrome.cardRod).offset(y: Self.rodH / 2) }
+            .padding(.vertical, Self.rodH / 2)
+    }
+
+    private var sheet: some View {
+        let colX: CGFloat = 104
+        let colW = width - colX - 40                          // clear of the close button
+        let k = width / Chrome.cardW
+        let n = progress.n, done = min(progress.done, progress.n)
+        return ZStack(alignment: .topLeading) {
+            Image("CardParchment").resizable()
+            // the selected seal, larger, with its ring — the same object as on the map
+            SealStack(key: landmark.key, progress: progress)
+                .frame(width: Chrome.sealBox * Chrome.cardSeal, height: Chrome.sealBox * Chrome.cardSeal)
+                .position(x: 52, y: 47)
+            Text(world.subject.uppercased())
+                .font(luCinzel(10, bold: true)).tracking(1.6).foregroundStyle(waxInk(landmark.wax, 35))
+                .lineLimit(1)
+                .frame(width: colW, alignment: .leading).position(x: colX + colW / 2, y: 24)
+            ZStack {
+                Text(landmark.name.uppercased()).foregroundStyle(Color(hex: 0xfff5dc).opacity(0.55)).offset(y: 0.7)
+                Text(landmark.name.uppercased()).foregroundStyle(Prov.ink)
+            }
+            .font(luCinzel(22)).tracking(0.6).lineLimit(1).minimumScaleFactor(0.68)
+            .frame(width: colW, alignment: .leading).position(x: colX + colW / 2, y: 46)
+            Text("\(done) of \(n) game\(n == 1 ? "" : "s") played")
+                .font(luGaramond(14)).foregroundStyle(Prov.ink.opacity(0.62))
+                .frame(width: colW, alignment: .leading).position(x: colX + colW / 2, y: 70)
+            Button(action: onClose) {
+                Image(systemName: "xmark").font(.system(size: 10, weight: .heavy))
+                    .foregroundStyle(Prov.ink.opacity(0.55))
+                    .frame(width: 26, height: 26)
+                    .background(Circle().fill(Color(hex: 0x78501e).opacity(0.10))
+                        .overlay(Circle().strokeBorder(Color(hex: 0xc99a3a).opacity(0.45), lineWidth: 0.8)))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Close")
+            .position(x: width - 22, y: 22)
+            // inked rule with a crimson lozenge between the header and PLAY
+            HStack(spacing: 16) {
+                Rectangle().fill(Prov.rule.opacity(0.8)).frame(height: 0.7)
+                Rectangle().fill(Prov.rule.opacity(0.8)).frame(height: 0.7)
+            }
+            .overlay(Rectangle().fill(Color(hex: 0x9e2b25)).frame(width: 4.8, height: 4.8).rotationEffect(.degrees(45)))
+            .frame(width: width - 52).position(x: width / 2, y: 92)
+            Button(action: onPlay) {
+                Image("PlayPlaque").resizable()
+                    .frame(width: Chrome.play.width * k, height: Chrome.play.height * k)
+            }
+            .buttonStyle(PlaqueButtonStyle())
+            .accessibilityLabel("Play")
+            .position(x: width / 2, y: 94 + Chrome.play.height * k / 2)
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(LinearGradient(colors: [luShade(0xf4ebd2, 10), luShade(0xf4ebd2, -12)],
-                                     startPoint: .top, endPoint: .bottom))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .strokeBorder(luShade(0xc99a3a, 15).opacity(0.7), lineWidth: 1.5)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(luShade(0xc99a3a, -30).opacity(0.3), lineWidth: 0.75)
-                        .padding(4)
-                )
-                .shadow(color: .black.opacity(0.4), radius: 14, x: 0, y: 6)
-        )
-        .padding(.horizontal, 16).padding(.bottom, 8)
-        .padding(.top, 20).drawingGroup().padding(.top, -20)   // flatten the card + its shadows into one texture
+        .frame(width: width, height: Chrome.cardH)
+    }
+}
+
+/// A baked plaque button: dips and darkens a touch while pressed.
+private struct PlaqueButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .brightness(configuration.isPressed ? -0.08 : 0)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 }

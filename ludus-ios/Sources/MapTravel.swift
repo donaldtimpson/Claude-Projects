@@ -92,33 +92,28 @@ struct SoftShadow: View {
     }
 }
 
-/// The child, as a small gilt traveler-token that stands on the road and bobs while walking.
-/// A deliberate placeholder — no frame-by-frame character art yet — but distinct from the
-/// coloured landmark seals so it never reads as another destination.
+/// The child: a crimson standard (signum) planted on the road, one gilt honour disc per rank above
+/// Tiro (Consul's is wreathed) — the same discs as the bar's rank pips. Baked art (Standard0…3); it
+/// sways about its foot while walking. Never mirrored (the "L" on the cloth would read backwards).
 struct Traveler: View {
     var walking: Bool
-    var faceLeft: Bool = false
-    @State private var bob = false
+    var rank: Int
+    @State private var sway = false
+
+    static let size = CGSize(width: 42 * 0.92, height: 62 * 0.92)
+    static let foot: CGFloat = 58.0 / 62.0              // road-contact point, as a fraction of the height
+    /// AlongRoad offset that puts the foot (not the center) on the road point.
+    static let centerToFoot: CGFloat = -(foot - 0.5) * size.height
 
     var body: some View {
-        ZStack {
-            SoftShadow(opacity: 0.35).frame(width: 28, height: 9).offset(y: 17)
-            Image(systemName: "figure.walk")
-                .font(.system(size: 20, weight: .black))
-                .foregroundStyle(Color(hex: 0x3a2708))
-                .frame(width: 34, height: 34)
-                .background(
-                    Circle().fill(RadialGradient(
-                        colors: [Color(hex: 0xf7d774), Color(hex: 0xc9922f)],
-                        center: UnitPoint(x: 0.38, y: 0.32), startRadius: 1, endRadius: 22))
-                        .overlay(Circle().stroke(.white.opacity(0.85), lineWidth: 2))
-                        .overlay(Circle().stroke(Color(hex: 0x8a6a22), lineWidth: 0.5).padding(3))
-                        .background(SoftShadow(opacity: 0.45).frame(width: 44, height: 44).offset(y: 2)))
-                .scaleEffect(x: faceLeft ? -1 : 1)
-                .offset(y: bob ? -3 : 0)
-        }
-        .onChange(of: walking) { bob = $0 }
-        .animation(walking ? .easeInOut(duration: 0.26).repeatForever(autoreverses: true)
-                           : .easeOut(duration: 0.15), value: bob)
+        Image("Standard\(min(max(rank, 0), 3))").resizable()
+            .frame(width: Self.size.width, height: Self.size.height)
+            .rotationEffect(.degrees(walking ? (sway ? 4 : -4) : 0), anchor: UnitPoint(x: 0.5, y: Self.foot))
+            .offset(y: walking && sway ? -1.5 : 0)
+            .onChange(of: walking) { sway = $0 }
+            .animation(walking ? .easeInOut(duration: 0.3).repeatForever(autoreverses: true)
+                               : .easeOut(duration: 0.15), value: sway)
+            .animation(.easeOut(duration: 0.15), value: walking)
+            .allowsHitTesting(false)
     }
 }

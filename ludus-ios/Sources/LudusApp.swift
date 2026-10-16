@@ -21,6 +21,8 @@ extension Color {
 
 @main
 struct LudusApp: App {
+    init() { luRegisterFonts() }
+
     var body: some Scene {
         WindowGroup {
             HomeView()
