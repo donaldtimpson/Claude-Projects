@@ -492,10 +492,10 @@ private struct ArcadeOverView: View {
                         .font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
                         .multilineTextAlignment(.center)
                 }
-                HStack(spacing: 12) {
-                    ResultCard(label: "SCORE", value: "\(result.score)", hex: Lu.gold)
-                    ResultCard(label: "BEST", value: "\(result.best)", hex: Lu.mint)
-                    ResultCard(label: "DENARII", value: "🪙\(result.den)", hex: Lu.silver)
+                HStack(spacing: 8) {          // flexible cards: never wider than the screen
+                    OverStat(label: "SCORE", value: "\(result.score)", hex: Lu.gold)
+                    OverStat(label: "BEST", value: "\(result.best)", hex: Lu.mint)
+                    OverStat(label: "DENARII", value: "🪙\(result.den)", hex: Lu.silver)
                 }
                 .padding(.top, 4)
                 if result.newBest && !result.newMedal {
@@ -508,10 +508,27 @@ private struct ArcadeOverView: View {
                 }
                 .font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim)).padding(.top, 4)
             }
-            .padding(24)
+            .padding(20)
+            .frame(maxWidth: 440)
         }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.55).delay(0.15)) { pop = true }
         }
+    }
+}
+
+/// A result figure on the game-over card (flexible width, unlike the fixed-min `ResultCard`).
+private struct OverStat: View {
+    let label: String, value: String
+    var hex: UInt = Lu.ink
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(label).font(luFont(10, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
+            Text(value).font(luFont(26)).monospacedDigit().foregroundStyle(Color(hex: hex))
+                .lineLimit(1).minimumScaleFactor(0.5)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(luPanelShape(16))
     }
 }
