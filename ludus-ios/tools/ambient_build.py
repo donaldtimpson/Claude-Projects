@@ -35,7 +35,14 @@ ap.add_argument('--check', help='write preview mp4s / check images here')
 A = ap.parse_args()
 ART = np.asarray(Image.open(A.art).convert('RGB'))
 CONST = {}
-SMOKE_SEED, SMOKE_PUFF_R, SMOKE_EMIT, SMOKE_LIFE, SMOKE_VENT = 4, 11, 0.4, 5.5, (492, 706)
+SMOKE_SEED, SMOKE_PUFF_R, SMOKE_EMIT, SMOKE_LIFE, SMOKE_VENT = 4, 11, 0.13, 7.0, (492, 706)
+SMOKE_GROW, SMOKE_JITTER, SMOKE_FADE = 2.8, 9.0, 0.8
+SMOKE_ALPHA, SMOKE_LIGHTEN, SMOKE_LIGHT_RGB = 0.78, 0.22, np.array([214, 208, 198], np.float32)   # painted highlight tone
+# Plume streams (map px from the vent) traced from the painted smoke: column, main drift right, left spill.
+SMOKE_STREAMS = [([(492, 706), (497, 676), (510, 648), (528, 628)], 0.25),
+                 ([(492, 706), (506, 703), (535, 702), (568, 699), (598, 692)], 0.30),
+                 ([(492, 706), (505, 692), (535, 682), (570, 674), (600, 664)], 0.25),
+                 ([(492, 706), (486, 692), (474, 676), (466, 660)], 0.20)]
 LAVA_PERIOD = 3.2                          # must match the LavaGlow period in MapAmbience.swift
 SMOKE_LOOP = 3 * LAVA_PERIOD               # 9.6 s: puffs stay in step with the lava pulse
 # Waterfall: ~19 px/s steady downhill flow + foam clumps riding down with it. (Earlier tries: 8 cycles ×
@@ -125,7 +132,7 @@ def smoke():
     (same CA clock: loop = 3 lava periods). Earlier version (texture flowing inside a frozen outline)
     measured 'blocky' — fine-scale change 23x the coarse; puffs ~2.4x. Prototypes compared: fluid sim
     (foggier), curl swirl (streaky)."""
-    X0, Y0, H, W = 430, 550, 180, 260
+    X0, Y0, H, W = 410, 550, 185, 300
     rng = np.random.default_rng(SMOKE_SEED)
     pl = ART.astype(np.float32)
     # painted plume mask (map region 420..700 × 560..740)
@@ -139,11 +146,19 @@ def smoke():
         my, mx = cy_[k] + 560, cx_[k] + 420
         noise = ndi.gaussian_filter(rng.random((S, S)), 2.0); noise = (noise - noise.min()) / np.ptp(noise)
         a = np.clip(1 - (np.hypot(xx, yy) / r) ** 2 * (0.75 + 0.5 * noise), 0, 1) ** 1.3    # soft, irregular edge
-        sprites.append(np.dstack([pl[my - r:my + r + 1, mx - r:mx + r + 1], a]).astype(np.float32))
+        patch = pl[my - r:my + r + 1, mx - r:mx + r + 1]
+        patch = patch + (SMOKE_LIGHT_RGB - patch) * SMOKE_LIGHTEN          # dense overlap reads darker than the paint
+        sprites.append(np.dstack([patch, a]).astype(np.float32))
     T = SMOKE_LOOP; N = int(round(T * 15)); life = SMOKE_LIFE
     cx, cy = SMOKE_VENT[0] - X0, SMOKE_VENT[1] - Y0
     ne = int(round(T / SMOKE_EMIT)); t0s = (np.arange(ne) * T / ne + rng.uniform(-0.15, 0.15, ne)) % T
     jit = rng.normal(0, 1, (ne, 4))
+    # puffs follow the painted plume's streams (map px polylines from the vent), chosen by weight
+    def polyline(pts):
+        pts = np.array(pts, float); seg = np.hypot(*np.diff(pts, axis=0).T); cum = np.r_[0, np.cumsum(seg)] / seg.sum()
+        return lambda q: (np.interp(q, cum, pts[:, 0]), np.interp(q, cum, pts[:, 1]))
+    paths = [polyline(p_) for p_, _ in SMOKE_STREAMS]
+    wts = np.array([w_ for _, w_ in SMOKE_STREAMS]); stream = rng.choice(len(paths), ne, p=wts / wts.sum())
     def surge(t0):                                   # thicker just after each lava-glow peak (lava/2 + k·lava)
         ph = ((t0 - LAVA_PERIOD / 2 - 0.3) % LAVA_PERIOD) / LAVA_PERIOD; ph = min(ph, 1 - ph)
         return 1 + 0.6 * np.exp(-(ph / 0.12) ** 2)
@@ -154,10 +169,12 @@ def smoke():
         items = sorted([((t - t0) % T + wrap * T, i) for i, t0 in enumerate(t0s) for wrap in (0, 1) if 0 <= (t - t0) % T + wrap * T < life], reverse=True)
         for age, i in items:                         # oldest first (painter's order)
             s_ = age / life; k_ = surge(t0s[i])
-            px = cx + 95 * s_ ** 1.7 + jit[i, 0] * 4 * s_ - 16 * s_ * (1 - s_)
-            py = cy - 78 * np.sin(np.pi / 2 * min(1, s_ * 1.3)) + jit[i, 1] * 4 * s_
-            sc = (0.55 + 1.9 * s_ ** 0.8) * (0.85 + 0.15 * k_); ang = jit[i, 2] * 25 * s_
-            al = min(0.97, 0.85 * k_ ** 0.5) * min(1, age / 0.5) * (1 - s_) ** 1.2
+            path = paths[stream[i]]
+            q = 1 - (1 - s_) ** 1.6                       # fast out of the vent, slowing as it spreads
+            px, py = path(q)
+            px = px - X0 + jit[i, 0] * SMOKE_JITTER * s_; py = py - Y0 + jit[i, 1] * SMOKE_JITTER * s_
+            sc = (0.55 + SMOKE_GROW * s_ ** 0.8) * (0.85 + 0.15 * k_); ang = jit[i, 2] * 25 * s_
+            al = min(0.95, SMOKE_ALPHA * k_ ** 0.5) * min(1, age / 0.5) * (1 - s_) ** SMOKE_FADE
             M = cv2.getRotationMatrix2D((r, r), ang, sc); M[0, 2] += px - r; M[1, 2] += py - r
             w = cv2.warpAffine(sprites[i % len(sprites)], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
             a = w[..., 3] * al

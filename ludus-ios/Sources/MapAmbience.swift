@@ -35,8 +35,8 @@ private struct Ship {
 
 private let flipbooks: [Flipbook] = Flipbook.surf + [
     // Volcano: painted-smoke puffs billowing out of the crater; loop = 3 lava periods (puffs swell after each glow).
-    .init(image: "SmokeSheet", frames: 144, cols: 10, cellW: 131, cellH: 120, gutter: 2,
-          frameW: 127, frameH: 116, mapX: 482, mapY: 596, loop: 9.6),
+    .init(image: "SmokeSheet", frames: 144, cols: 10, cellW: 243, cellH: 159, gutter: 2,
+          frameW: 239, frameH: 155, mapX: 412, mapY: 580, loop: 9.6),
     .init(image: "WaterfallSheet", frames: 60, cols: 10, cellW: 119, cellH: 109, gutter: 2,
           frameW: 115, frameH: 105, mapX: 310, mapY: 1616, loop: 4),
     .init(image: "RiverSheet", frames: 60, cols: 10, cellW: 116, cellH: 146, gutter: 2,
