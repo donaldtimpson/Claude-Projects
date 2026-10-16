@@ -11,6 +11,7 @@ import UIKit
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
 //   • sea glitter      — groups of the painting's own light flecks, twinkling in turn
 //   • sheens           — sunlight sweeping across the landmarks' marble now and then
+//   • clouds           — the painting's clouds drifting right, behind the peaks, wrapping at the tear
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`);
 //                        two of them sail off the map and back (`voyages`)
 // Everything is laid out in ProvinceMap pixels (724 wide) scaled to the rendered map width.
@@ -86,6 +87,11 @@ private let sheens: [Sheen] = [
 ]
 private let sheenPeriod: CFTimeInterval = 30, sheenSweep: CFTimeInterval = 2.8
 
+/// One of the painting's clouds drifting right (tools/ambient_build.py → MapAmbienceClouds.swift). It
+/// travels from just off the left of `cloudClip` to just off its right and wraps, inside a clip of the
+/// painted sky above the skyline — so it passes behind the peaks and disappears behind the tear.
+struct CloudDrift { let image: String; let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat; let period: Double, start: Double, flip: Bool }
+
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
 /// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first comes about
 /// (narrows to 45% width, mirrors at the narrowest instant, widens — see `turnFacing`) or comes back about after returning. The direction flip
@@ -146,6 +152,16 @@ private final class AmbienceView: UIView {
         band.startPoint = CGPoint(x: 0, y: 0.2); band.endPoint = CGPoint(x: 1, y: 0.8)
         l.mask = band; return l
     }
+    private let cloudClipLayer: CALayer = {
+        let c = CALayer(), m = CALayer()
+        m.contents = UIImage(named: "CloudClip")?.cgImage; m.contentsGravity = .resize
+        c.mask = m; return c
+    }()
+    private let cloudLayers = cloudDrifts.map { d -> CALayer in
+        let l = CALayer(); l.contents = UIImage(named: d.image)?.cgImage
+        if d.flip { l.setAffineTransform(CGAffineTransform(scaleX: -1, y: 1)) }
+        return l
+    }
     private let clipLayers = voyages.map { v -> CALayer in
         let c = CALayer(), m = CALayer()
         m.contents = UIImage(named: v.clip)?.cgImage; m.contentsGravity = .resize
@@ -155,6 +171,8 @@ private final class AmbienceView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
+        cloudLayers.forEach(cloudClipLayer.addSublayer)
+        layer.addSublayer(cloudClipLayer)                                  // sky: beneath everything else
         (flipLayers + glowLayers + glintLayers + sheenLayers).forEach(layer.addSublayer)
         for (i, l) in shipLayers.enumerated() where !voyages.contains(where: { $0.ship == i }) {
             layer.addSublayer(l)                                            // ships above the glows
@@ -181,6 +199,12 @@ private final class AmbienceView: UIView {
         }
         for (l, g) in zip(glowLayers, glows) {
             l.frame = CGRect(x: g.mapX * k, y: g.mapY * k, width: g.w * k, height: g.h * k)
+        }
+        cloudClipLayer.frame = CGRect(x: cloudClip.minX * k, y: cloudClip.minY * k, width: cloudClip.width * k, height: cloudClip.height * k)
+        cloudClipLayer.mask?.frame = cloudClipLayer.bounds
+        for (l, d) in zip(cloudLayers, cloudDrifts) {
+            l.bounds = CGRect(x: 0, y: 0, width: d.w * k, height: d.h * k)
+            l.position = CGPoint(x: (d.mapX - cloudClip.minX + d.w / 2) * k, y: (d.mapY - cloudClip.minY + d.h / 2) * k)
         }
         for (l, s) in zip(sheenLayers, sheens) {
             l.frame = CGRect(x: s.mapX * k, y: s.mapY * k, width: s.w * k, height: s.h * k)
@@ -212,7 +236,7 @@ private final class AmbienceView: UIView {
     // animations start on the next layout pass, once the map scale (for the ships' bob) is known.
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        (flipLayers + glowLayers + glintLayers + shipLayers).forEach { $0.removeAllAnimations() }
+        (flipLayers + glowLayers + glintLayers + shipLayers + cloudLayers).forEach { $0.removeAllAnimations() }
         sheenLayers.forEach { $0.mask?.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
         (flipLayers + glowLayers + glintLayers + sheenLayers).forEach { $0.isHidden = still }
@@ -238,6 +262,12 @@ private final class AmbienceView: UIView {
             start(stepped("opacity", period: g.period) { t in
                 Self.eased(g.opacity.map(Double.init), g.keyTimes.map(\.doubleValue), t)
             }, on: l, "glow")
+        }
+        for (l, d) in zip(cloudLayers, cloudDrifts) {
+            // Linear drift across the clip plus one cloud-width either side, wrapping off-map.
+            let from = Double(-d.w / 2), to = Double(cloudClip.width + d.w / 2)
+            let a = stepped("position.x", period: d.period) { t in Double(k) * (from + (to - from) * (t + d.start).truncatingRemainder(dividingBy: 1)) }
+            start(a, on: l, "drift")
         }
         for (l, s) in zip(sheenLayers, sheens) {
             // The band rests off the left edge, then sweeps across (eased) once per period.

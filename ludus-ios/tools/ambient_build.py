@@ -14,6 +14,7 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
   Surf0…SurfN    surf tiles: waves rolling in at all coastal whitewater (3 s, 45 frames) → MapAmbienceSurf.swift
+  Cloud0…CloudN, CloudClip  the painting's clouds, drifting right and wrapping behind the tear → MapAmbienceClouds.swift
   RiverSheet, SpringSheet, SailClip*  river, spring-pool ripples, sailing ships' clip masks
 
 Cinemagraph flow: the region's texture is advected along a flow field inside its fixed
@@ -72,6 +73,7 @@ SHEENS = [('SheenLibrary', (288, 318, 528, 432), 'stone'),
 SHEEN_SNOW_EXCLUDE = [(285, 315, 530, 460)]     # the Library sits in front of the range
 SHEEN_TREELINE = 388
 SHEEN_LIFT, SHEEN_GAIN = 0.35, 1.2
+CLOUD_SPEED = (3.0, 6.0)   # map px/s drift (a cloud takes ~2-4 min to cross)
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
 SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
@@ -331,6 +333,92 @@ def glints():
             save_asset(f'{name}{g}', np.dstack([rgb, a * 255]).round().astype(np.uint8))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0, groups=GLINT_GROUPS, flecks=int(((fleck)[y0:y1, x0:x1]).sum()))
 
+# ---------------------------------------------------------------- drifting clouds
+def clouds():
+    """The painting's own clouds drift slowly right and wrap round behind the torn edge.
+    Markup (tools/art/clouds_markup.png, Donald's, on the unpadded art): BLUE = skyline (mountains
+    below are in front of the clouds), RED = cloud outlines / where a cloud runs off the map, GREEN =
+    a blob inside each cloud. Each green blob is flood-filled up to the ink to get the cloud's region;
+    within it, alpha = how cloud-like each pixel is (white/grey/cream, not saturated sky blue). The
+    sky behind is filled from nearby real sky so nothing ghosts when a cloud moves. Clouds draw inside
+    a clip of the painted sky above the skyline, so they pass behind the peaks and the tear."""
+    global PLATE
+    Mk = np.asarray(Image.open(os.path.join(HERE, 'art', 'clouds_markup.png')).convert('RGB'))
+    if Mk.shape[0] == ART.shape[0] - 100:                           # unpadded markup → pad like the art
+        Mk = np.concatenate([Mk[:20], Mk[20:70], Mk[20:70][::-1], Mk[20:]])
+    O = ART.astype(np.float32); Mi = Mk.astype(int); H, W = O.shape[:2]
+    ink = np.abs(Mi - ART.astype(int)).sum(2) > 60
+    R_, G_, B_ = Mi[..., 0], Mi[..., 1], Mi[..., 2]
+    red = ink & (R_ > 150) & (G_ < 130) & (B_ < 130); blue = ink & (B_ > 140) & (R_ < 120) & (G_ < 150)
+    green = ink & (G_ > 140) & (R_ < 140) & (B_ < 140)
+    bl, nb = ndi.label(ndi.binary_closing(blue, iterations=2))       # the skyline = the main blue stroke(s);
+    bsz = ndi.sum(blue, bl, range(1, nb + 1))                          # drop stray blue-ish specks
+    blue = np.isin(bl, 1 + np.nonzero(bsz >= 0.05 * bsz.max())[0]) & blue
+    xs_b = np.nonzero(blue.any(0))[0]
+    # top edge of the hand-drawn line (conservative: never eats into the mountains), smoothed so steep
+    # slopes don't step column to column
+    sky_row = np.array([np.nonzero(blue[:, x])[0].min() if blue[:, x].any() else np.nan for x in range(W)])
+    skyline = np.interp(np.arange(W), xs_b, sky_row[xs_b])
+    skyline = ndi.gaussian_filter1d(ndi.median_filter(skyline, 5), 1.5) - 1
+    yy, xx = np.mgrid[:H, :W]; above = yy < skyline[None, :]
+    free = ~ndi.binary_dilation(red | blue, iterations=2) & above
+    flab, _ = ndi.label(free); slab, ns = ndi.label(ndi.binary_dilation(green, iterations=1))
+    h = hsv(O); Hh, S, V = h[..., 0], h[..., 1], h[..., 2]
+    cl = np.clip((105 - S) / 45, 0, 1) * np.clip((V - 120) / 50, 0, 1)
+    cl = np.maximum(cl, ((Hh >= 6) & (Hh <= 34) & (S > 20)) * np.clip((V - 120) / 50, 0, 1))
+    # A cloud = an ink-enclosed region with a green blob, OR any enclosed region that is mostly cloud
+    # (some outlined pieces have no blob). The open sky is one big, mostly-blue region and fails that.
+    seeded = {flab[int(y), int(x)] for y, x in ndi.center_of_mass(slab > 0, slab, range(1, ns + 1))} - {0}
+    nf = flab.max(); area = ndi.sum(np.ones_like(flab), flab, range(1, nf + 1)); cloudy = ndi.mean(cl, flab, range(1, nf + 1))
+    keep = [L for L in range(1, nf + 1) if (L in seeded and area[L - 1] >= 100) or (area[L - 1] >= 40 and cloudy[L - 1] > 0.45 and area[L - 1] < 8000)]
+    # merge pieces that touch (a cloud split by a stray line moves as one)
+    km = ndi.binary_dilation(np.isin(flab, keep), iterations=3) & above
+    mlab, mn = ndi.label(km)
+    regions = [(mlab == j) & np.isin(flab, keep) for j in range(1, mn + 1)]
+    regions = [r for r in regions if r.sum() >= 60]
+    skyblue = (Hh > 88) & (Hh < 130) & (S > 45) & above
+    union = np.zeros((H, W), bool); alphas = []
+    for reg in regions:
+        Rg = ndi.binary_dilation(reg, iterations=3) & above
+        al = np.clip(ndi.gaussian_filter(cl * Rg, 0.8) * 1.15, 0, 1) * ndi.gaussian_filter(Rg.astype(np.float32), 1.2)
+        alphas.append(al); union |= al > 0.03
+    draw = ndi.binary_fill_holes(ndi.binary_closing(skyblue | union, iterations=3)) & above
+    lab, n = ndi.label(draw); sz = ndi.sum(draw, lab, range(1, n + 1)); draw = np.isin(lab, 1 + np.nonzero(sz > 2000)[0])
+    # sky fill: every cloud-ish pixel in the sky (incl. stray wisps outside the marked clouds)
+    hole = ndi.binary_dilation(union, iterations=2) & draw
+    donor = (skyblue & ~ndi.binary_dilation(hole, iterations=1)).astype(np.float32)
+    def nconv(sig):
+        return ndi.gaussian_filter(O * donor[..., None], (sig, sig, 0)), ndi.gaussian_filter(donor, sig)[..., None]
+    n1, d1 = nconv(8); n2, d2 = nconv(30)
+    near, far = n1 / np.maximum(d1, 1e-6), n2 / np.maximum(d2, 1e-6)
+    wgt = np.clip(d1 / 0.15, 0, 1)                                   # trust the local fill only where sky is near
+    fill = near * wgt + far * (1 - wgt)
+    fill = fill * (1 + 0.035 * ndi.gaussian_filter(np.random.default_rng(9).normal(0, 1, (H, W)), 1.0))[..., None]   # faint brush grain
+    plate = PLATE.astype(np.float32).copy(); plate[hole] = np.clip(fill[hole], 0, 255)
+    PLATE = plate.round().astype(np.uint8); save_asset('ProvinceMap', PLATE)
+    # clip mask (feathered painted sky above the skyline) and cloud sprites (original pixels)
+    ys, xs = np.nonzero(draw); cx0, cx1, cy0, cy1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+    clip = np.clip(ndi.gaussian_filter(draw.astype(np.float32), 0.8), 0, 1)[cy0:cy1, cx0:cx1]
+    save_asset('CloudClip', np.dstack([np.full(clip.shape + (3,), 255, np.uint8), (clip * 255).round().astype(np.uint8)]))
+    rng = np.random.default_rng(17); rows = []
+    for k, al in enumerate(alphas):
+        ys, xs = np.nonzero(al > 0.01); x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+        a = al[y0:y1, x0:x1]
+        save_asset(f'Cloud{k}', np.dstack([ART[y0:y1, x0:x1] * (a[..., None] > 0), (a * 255).round()]).astype(np.uint8))
+        speed = rng.uniform(*CLOUD_SPEED)                            # map px / s
+        span = (cx1 - cx0) + (x1 - x0)                               # off the right edge → back from the left
+        period = round(span / speed * 15) / 15
+        start = (x0 - (cx0 - (x1 - x0))) / span                        # begin where it's painted
+        rows.append(f'    .init(image: "Cloud{k}", mapX: {x0}, mapY: {y0}, w: {x1 - x0}, h: {y1 - y0}, period: {period:.4f}, start: {start:.4f}, flip: false),')
+        # a mirrored twin half a lap behind keeps the sky about as full as the painting while one is off-map
+        rows.append(f'    .init(image: "Cloud{k}", mapX: {x0}, mapY: {y0}, w: {x1 - x0}, h: {y1 - y0}, period: {period:.4f}, start: {(start + 0.5) % 1:.4f}, flip: true),')
+    open(os.path.join(HERE, '..', 'Sources', 'MapAmbienceClouds.swift'), 'w').write(
+        '// GENERATED by tools/ambient_build.py — drifting clouds. Do not edit by hand; re-run the tool.\n\n'
+        'import CoreGraphics\n\n'
+        f'let cloudClip = CGRect(x: {cx0}, y: {cy0}, width: {cx1 - cx0}, height: {cy1 - cy0})\n'
+        'let cloudDrifts: [CloudDrift] = [\n' + '\n'.join(rows) + '\n]\n')
+    CONST['clouds'] = dict(n=len(alphas), clip=[int(cx0), int(cy0), int(cx1), int(cy1)], hole=int(hole.sum()))
+
 # ---------------------------------------------------------------- sheens (sunlight sweeping over snow/marble)
 def sheens():
     """A soft band of sunlight sweeping now and then across the snowy peaks and the landmarks' marble
@@ -556,7 +644,7 @@ def ships():
         save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
-ships(); smoke(); waterfall(); river(); spring(); surf(); glints(); sheens()
+ships(); clouds(); smoke(); waterfall(); river(); spring(); surf(); glints(); sheens()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))
