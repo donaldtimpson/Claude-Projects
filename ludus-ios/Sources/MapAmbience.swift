@@ -74,8 +74,8 @@ private let glintRegions: [GlintRegion] = [
 private let glintGroups = 6, glintLoop: CFTimeInterval = 16
 
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
-/// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first swings
-/// round (scale.x through 0 — reads as turning) or swings back after returning. The direction flip
+/// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first comes about
+/// (narrows to 45% width, mirrors at the narrowest instant, widens — see `turnFacing`) or comes back about after returning. The direction flip
 /// between legs happens off-map, unseen. It's drawn inside a clip of the painted area (`clip`), so it
 /// disappears behind the torn edge and never draws on the parchment (tools/ambient_build.py checks
 /// every visible hull pixel along both legs is over open sea).
@@ -85,7 +85,7 @@ private struct Voyage {
     let out: CGPoint, back: CGPoint                 // off-map points it sails to / returns from
     let outFacing: CGFloat, backFacing: CGFloat
     let rest: Double, sailOut: Double, hidden: Double, sailBack: Double, after: Double, offset: Double
-    static let turn = 1.2
+    static let turn = 1.6
 }
 private let voyages: [Voyage] = [
     // Right-hand sea: swings round, sails out to the east, slips back in from higher up.
@@ -241,11 +241,23 @@ private final class AmbienceView: UIView {
             func at(_ t: Double) -> (CGPoint, CGFloat) {
                 var t = t
                 if t < v.rest { return (home, 1) }; t -= v.rest
-                if t < turnOut { return (home, CGFloat(cos(.pi * t / turnOut))) }; t -= turnOut
-                if t < v.sailOut { return (lerp(home, v.out, ease(t / v.sailOut)), v.outFacing) }; t -= v.sailOut
+                // Turning: the hull narrows (never below `minWidth`, so it's never paper-thin), swaps to
+                // its mirror image at the narrowest instant, and widens again — while it glides a few px
+                // along its new course, the way a ship comes about in an arc.
+                let lead: CGFloat = 0.03                                     // fraction of the leg spent in the turn arc
+                if t < turnOut {
+                    let u = t / turnOut
+                    return (lerp(home, v.out, lead * CGFloat(u * u)), Self.turnFacing(from: 1, u))
+                }; t -= turnOut
+                let start = turnOut > 0 ? lerp(home, v.out, lead) : home
+                if t < v.sailOut { return (lerp(start, v.out, ease(t / v.sailOut)), v.outFacing) }; t -= v.sailOut
                 if t < v.hidden { return (v.back, v.backFacing) }; t -= v.hidden          // flips off-map
-                if t < v.sailBack { return (lerp(v.back, home, ease(t / v.sailBack)), v.backFacing) }; t -= v.sailBack
-                if t < turnBack { return (home, CGFloat(-cos(.pi * t / turnBack))) }
+                let end = turnBack > 0 ? lerp(v.back, home, 1 - lead) : home
+                if t < v.sailBack { return (lerp(v.back, end, ease(t / v.sailBack)), v.backFacing) }; t -= v.sailBack
+                if t < turnBack {
+                    let u = t / turnBack
+                    return (lerp(end, home, CGFloat(1 - (1 - u) * (1 - u))), Self.turnFacing(from: -1, u))
+                }
                 return (home, 1)
             }
             let samples = (0..<n).map { at(Double($0) / 15) }
@@ -278,6 +290,13 @@ private final class AmbienceView: UIView {
         let u = (t - times[i]) / (times[i + 1] - times[i])
         let e = u * u * (3 - 2 * u)
         return values[i] + (values[i + 1] - values[i]) * e
+    }
+
+    /// Horizontal scale through a turn (u: 0…1) starting from facing `from` (±1): the width eases down
+    /// to `minWidth`, the sprite mirrors at the midpoint, and eases back out — a 2D stand-in for a yaw.
+    private static func turnFacing(from: CGFloat, _ u: Double) -> CGFloat {
+        let minWidth = 0.45, c = cos(.pi * u)
+        return from * CGFloat((c >= 0 ? 1 : -1) * (minWidth + (1 - minWidth) * abs(c)))
     }
 
     private func forever(_ a: CAAnimation) -> CAAnimation {

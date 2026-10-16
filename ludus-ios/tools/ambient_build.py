@@ -50,6 +50,7 @@ LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 # Surf: every coastal whitewater cluster (≥ SURF_MIN_FOAM foam px), rendered as one field, tiled.
 SURF_FRAMES, SURF_TILE, SURF_TOP, SURF_MIN_FOAM = 36, 40, 520, 100         # 2.4 s loop, one wave per loop
 SURF_WASH, SURF_FOAM, SURF_SPRAY, SURF_REACH = 3.0, 0.9, 0.5, 18.0
+SURF_DESYNC_SCALE, SURF_DESYNC_CYCLES = 22.0, 3.0   # phase-field smoothness (px) and spread (wave cycles)
 SURF_EXCLUDE = [(300, 1580, 460, 1740), (300, 1840, 460, 2010), (340, 2040, 460, 2110), (440, 600, 650, 750)]  # falls, river, spring, smoke
 GLINT_GROUPS, GLINT_TOP = 6, 520          # sea-glitter groups; skip the hazy distant sea above this row
 GLINT_REGIONS = {'GlintEast': (470, 520, 720, 2110), 'GlintWest': (5, 1240, 270, 1960)}
@@ -279,6 +280,14 @@ def surf():
     foam[:SURF_TOP] = False
     for (x0, y0, x1, y1) in SURF_EXCLUDE: foam[y0:y1, x0:x1] = False
     cl, n = ndi.label(ndi.binary_dilation(foam, iterations=10)); cnt = ndi.sum(foam, cl, range(1, n + 1))
+    # Break the coast out of sync: a smooth random phase field (map space, so tiles still join) makes
+    # neighbouring stretches of shore break at different moments — waves read as running along the
+    # coast — and a second field varies the size of each set.
+    rng = np.random.default_rng(21)
+    PHI = ndi.gaussian_filter(rng.random(ART.shape[:2]), SURF_DESYNC_SCALE, mode='reflect')
+    PHI = (PHI - PHI.min()) / (PHI.max() - PHI.min()) * SURF_DESYNC_CYCLES
+    AMP = ndi.gaussian_filter(rng.random(ART.shape[:2]), SURF_DESYNC_SCALE * 0.7, mode='reflect')
+    AMP = 0.55 + 0.45 * (AMP - AMP.min()) / (AMP.max() - AMP.min())
     tiles = []
     for ci in np.argsort(cnt)[::-1]:
         if cnt[ci] < SURF_MIN_FOAM: break
@@ -296,13 +305,13 @@ def surf():
         foamz = np.clip(ndi.gaussian_filter(((h[y0:y1, x0:x1, 1] < 80) & (h[y0:y1, x0:x1, 2] > 165) & wat).astype(np.float32), 1.2) * 2.0, 0, 1)
         m = wat.astype(np.float32); num = ndi.gaussian_filter(art * m[..., None], (3, 3, 0)); den = ndi.gaussian_filter(m, 3)[..., None]
         src = art * m[..., None] + (num / np.maximum(den, 1e-4)) * (1 - m[..., None])
-        phase = (len(tiles) * 0.29) % 1
+        phase = PHI[y0:y1, x0:x1]; amp = AMP[y0:y1, x0:x1]
         frames = []
         for f in range(SURF_FRAMES):                               # one wave per loop
             s_ = np.sin(2 * np.pi * (f / SURF_FRAMES + phase - d / 16.0))
-            disp = SURF_WASH * s_ * near
+            disp = SURF_WASH * s_ * near * amp
             fr = cv2.remap(src, (xx - nx * disp).astype(np.float32), (yy - ny * disp).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
-            crest = np.clip(s_, 0, 1) ** 2 * near
+            crest = np.clip(s_, 0, 1) ** 2 * near * amp
             spray = crest * np.clip(1 - d / 4.0, 0, 1)                  # flare where it meets the rocks
             k = np.clip(SURF_FOAM * crest * np.maximum(foamz, 0.3 * near) + SURF_SPRAY * spray, 0, 0.95)[..., None]
             frames.append(np.clip(np.where(wat[..., None], fr * (1 - k) + np.array([240, 247, 251]) * k, art), 0, 255).astype(np.uint8))
