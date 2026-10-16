@@ -289,6 +289,7 @@ private final class DressModel: ArcadeModel {
     @Published var bubble: String?
     @Published var wrongID: Int?
     @Published var cheers = 0              // bumps on each finished outfit (sparkle puff)
+    var dropFrames: [Int: CGRect] = [:]    // Marcus's drop zone (kept current by the view)
     private var locked = false
     private var served = 0
     private let clock = VesRunClock()
@@ -337,6 +338,12 @@ private final class DressModel: ArcadeModel {
         return true
     }
 
+    /// A drag of `item` released at `p`: it counts only on Marcus.
+    @discardableResult
+    func release(_ item: DMItem, at p: CGPoint) -> Bool {
+        vesZoneHit(p, zones: dropFrames) == 0 && dress(item)
+    }
+
     private func fail(_ item: DMItem) {
         locked = true
         wrongID = item.id
@@ -374,8 +381,11 @@ private final class DressModel: ArcadeModel {
     override func botAct(correct: Bool) {
         guard !locked else { return }
         let open = round.items.filter { !placed.contains($0.id) }
-        if correct, let r = open.first(where: \.right) { dress(r) }
-        else if let w = open.first(where: { !$0.right }) { dress(w) }
+        // Release over Marcus's middle, through the same hit test a finger uses.
+        guard let f = dropFrames[0] else { return }
+        let p = CGPoint(x: f.midX, y: f.midY)
+        if correct, let r = open.first(where: \.right) { release(r, at: p) }
+        else if let w = open.first(where: { !$0.right }) { release(w, at: p) }
     }
 }
 
@@ -384,7 +394,6 @@ private final class DressModel: ArcadeModel {
 struct DressMarcusView: View {
     let onClose: () -> Void
     @StateObject private var model = DressModel()
-    @State private var zones: [Int: CGRect] = [:]
     private let space = "dressMarcus"
 
     var body: some View {
@@ -405,7 +414,7 @@ struct DressMarcusView: View {
             }
             .padding(.horizontal, 14).padding(.bottom, 6)
             .coordinateSpace(name: space)
-            .onPreferenceChange(VesDropZones.self) { zones = $0 }
+            .onPreferenceChange(VesDropZones.self) { model.dropFrames = $0 }
         }
     }
 
@@ -462,7 +471,7 @@ struct DressMarcusView: View {
             ForEach(items) { item in
                 let used = model.placed.contains(item.id) || (model.revealing && item.right)
                 VesDragToken(space: space, enabled: !used,
-                             onRelease: { p in vesZoneHit(p, zones: zones) == 0 && model.dress(item) },
+                             onRelease: { p in model.release(item, at: p) },
                              onTap: { model.dress(item) }) {
                     GearCard(item: item, big: big, showLabel: model.level >= 2 || item.shirt != nil,
                              wrong: model.wrongID == item.id)
