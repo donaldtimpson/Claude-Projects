@@ -4,8 +4,8 @@ import SwiftUI
 //
 // The home map is "the world" and the child is a traveler who walks its road between landmark
 // worlds. The road and each landmark's stop are AUTHORED data (traced from a hand-drawn overlay),
-// not derived by geometry — so arrival is always exact and the path never mis-projects. When the
-// map art changes, re-trace `roadPoints` + the per-landmark `arriveAt` (in HomeView); nothing here
+// not derived by geometry — each stop is a road vertex, so arrival is exact and never projected.
+// When the map art changes, re-trace `roadXY` + each landmark's `stop` (in HomeView); nothing here
 // moves.
 //
 // Two rules make the motion smooth (learned the hard way):
@@ -48,6 +48,8 @@ struct RoadPath {
         }
         return points.last!
     }
+    /// The arc-length fraction of vertex `i` — so a stop authored as a vertex is hit exactly.
+    func t(atVertex i: Int) -> CGFloat { cum[min(max(i, 0), cum.count - 1)] }
 }
 
 /// Places a view's center on the road at arc-length `t`, scaled to the map, plus a small stand
