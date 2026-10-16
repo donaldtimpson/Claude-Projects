@@ -6,7 +6,7 @@ import UIKit
 // Every effect moves the art's OWN pixels and is played by Core Animation (the render server drives
 // it; the app does no per-frame work — the old TimelineView/Metal layers over the whole map idled at
 // ~75% CPU). All assets + the constants below come from tools/ambient_build.py:
-//   • smoke, waterfall — cinemagraph loops (texture flowing inside a fixed silhouette), played as
+//   • smoke, waterfall, river, spring — cinemagraph loops (the art's own pixels in motion), played as
 //     flipbooks by stepping `contentsRect` over a sprite sheet
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`)
@@ -36,6 +36,10 @@ private let flipbooks: [Flipbook] = [
           frameW: 130, frameH: 101, mapX: 466, mapY: 612, loop: 6),
     .init(image: "WaterfallSheet", frames: 60, cols: 10, cellW: 119, cellH: 109, gutter: 2,
           frameW: 115, frameH: 105, mapX: 310, mapY: 1616, loop: 4),
+    .init(image: "RiverSheet", frames: 60, cols: 10, cellW: 116, cellH: 146, gutter: 2,
+          frameW: 112, frameH: 142, mapX: 322, mapY: 1862, loop: 4),
+    .init(image: "SpringSheet", frames: 60, cols: 10, cellW: 89, cellH: 44, gutter: 2,
+          frameW: 85, frameH: 40, mapX: 354, mapY: 2062, loop: 4),
 ]
 private let glows: [Glow] = [
     // Lighthouse: a beacon — quick bright flash, slow fade, dark pause.

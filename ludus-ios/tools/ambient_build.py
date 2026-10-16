@@ -40,6 +40,9 @@ WATERFALL_CYCLES, WATERFALL_D, WATERFALL_FOAM = 6, 13.3, 0.45
 # Faster water without churn: fine streaks slide down at 3× the foam's loop rate (~34 px/s measured).
 # Speeding up the cross-fade flow itself aliases at 15 fps (texture reads as moving up) — don't.
 WATERFALL_STREAK, WATERFALL_STREAK_WRAPS = 0.15, 3
+# River: calmer than the falls (~55% of its motion), sparser foam; still clearly flowing downstream.
+RIVER_CYCLES, RIVER_D, RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS = 6, 12.0, 0.50, 0.18, 2
+SPRING, SPRING_RIPPLE, SPRING_BOIL = (380, 2071), 0.16, 0.25
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 
 def save_asset(name, rgb_or_rgba):
@@ -116,39 +119,90 @@ def smoke():
     pure = flow_frames(art, alpha, vx, vy, frames=90, cycles=3, D=16.0, layers=3, sway=sway)
     pack_sheet('SmokeSheet', pure, env, X0, Y0, 6.0); preview('smoke', art, pure, env, 15)
 
-# ---------------------------------------------------------------- waterfall
-def waterfall():
-    X0, Y0 = 310, 1590
-    art = ART.astype(np.float32)[Y0:Y0 + 140, X0:X0 + 140]
+# ---------------------------------------------------------------- moving water (waterfall, river)
+def water_px(art):
     h = hsv(art)
-    water = ((h[..., 0] > 85) & (h[..., 0] < 125) & (h[..., 1] > 60)) | ((h[..., 1] < 60) & (h[..., 2] > 190))
-    water = ndi.binary_fill_holes(ndi.binary_opening(largest(ndi.binary_closing(water, iterations=2)), iterations=1))
+    return ((h[..., 0] > 85) & (h[..., 0] < 125) & (h[..., 1] > 60)) | ((h[..., 1] < 60) & (h[..., 2] > 190))
+
+def stream(name, X0, Y0, W, H, water, src, gap_cost, cycles, D, foam, streak, streak_wraps,
+           foam_sparsity=0.55, loop=4.0):
+    """Water flowing down a channel: cross-fade flow along the channel + foam clumps riding the flow
+    + fine streaks sliding faster. Direction = gradient of geodesic distance from `src` through the
+    water (`gap_cost` lets the path pass under a bridge where the water is hidden)."""
+    art = ART.astype(np.float32)[Y0:Y0 + H, X0:X0 + W]
     alpha = np.clip(ndi.gaussian_filter(water.astype(np.float32), 1.2) * 1.15, 0, 1)
-    # downstream = gradient of geodesic distance from the channel's source (top of the water)
-    ys, xs = np.nonzero(water); src = (ys.min(), int(np.median(xs[ys < ys.min() + 4])))
-    dist, _ = MCP_Geometric(np.where(water, 1.0, 50.0)).find_costs([src])
+    dist, _ = MCP_Geometric(np.where(water, 1.0, gap_cost)).find_costs([src])
     dist = ndi.gaussian_filter(np.minimum(dist, dist[water].max() + 5), 3)
     gy, gx = np.gradient(dist); n = np.hypot(gx, gy) + 1e-6
     vx = ndi.gaussian_filter(gx / n, 2); vy = ndi.gaussian_filter(gy / n, 2); n = np.hypot(vx, vy) + 1e-6; vx /= n; vy /= n
     env = np.clip(ndi.gaussian_filter(alpha, 1.0) * 1.05, 0, 1)
-    pure = flow_frames(art, alpha, vx, vy, frames=60, cycles=WATERFALL_CYCLES, D=WATERFALL_D, layers=4)
+    pure = flow_frames(art, alpha, vx, vy, frames=int(loop * 15), cycles=cycles, D=D, layers=4)
     # foam: sparse bright clumps from periodic noise in (x, s), s = distance along the flow, sampled
     # at s − v·t with v = period / loop, so they ride down the water and the loop stays seamless
-    H, W = alpha.shape; xi = np.mgrid[:H, :W][1]; Pn = 80
+    xi = np.mgrid[:H, :W][1]; Pn = 80
     nz = ndi.gaussian_filter(np.random.default_rng(7).random((Pn, W)), (3.0, 4.8), mode='wrap')
-    foam = np.clip(((nz - nz.min()) / (nz.max() - nz.min()) - 0.55) / 0.45, 0, 1) ** 1.5
+    fz = np.clip(((nz - nz.min()) / (nz.max() - nz.min()) - foam_sparsity) / round(1 - foam_sparsity, 6), 0, 1) ** 1.5
     for f in range(len(pure)):
         si = (dist - f / len(pure) * Pn) % Pn; i0 = np.floor(si).astype(int); fr = si - i0
-        fm = foam[i0, xi] * (1 - fr) + foam[(i0 + 1) % Pn, xi] * fr
-        k = (WATERFALL_FOAM * fm * alpha)[..., None]
+        fm = fz[i0, xi] * (1 - fr) + fz[(i0 + 1) % Pn, xi] * fr
+        k = (foam * fm * alpha)[..., None]
         pure[f] = np.clip(pure[f] * (1 - k) + np.array([235, 245, 250]) * k, 0, 255).astype(np.uint8)
     # streaks: noise elongated along the flow, modulating brightness of the real water ±, no cross-fade
     nz = ndi.gaussian_filter(np.random.default_rng(11).random((Pn, W)), (2.0, 0.7), mode='wrap'); nz = (nz - nz.mean()) / nz.std()
     for f in range(len(pure)):
-        si = (dist - f / len(pure) * Pn * WATERFALL_STREAK_WRAPS) % Pn; i0 = np.floor(si).astype(int); fr = si - i0
+        si = (dist - f / len(pure) * Pn * streak_wraps) % Pn; i0 = np.floor(si).astype(int); fr = si - i0
         m = nz[i0, xi] * (1 - fr) + nz[(i0 + 1) % Pn, xi] * fr
-        pure[f] = np.clip(pure[f].astype(np.float32) * (1 + WATERFALL_STREAK * m * alpha)[..., None], 0, 255).astype(np.uint8)
-    pack_sheet('WaterfallSheet', pure, env, X0, Y0, 4.0); preview('waterfall', art, pure, env, 15)
+        pure[f] = np.clip(pure[f].astype(np.float32) * (1 + streak * m * alpha)[..., None], 0, 255).astype(np.uint8)
+    pack_sheet(name, pure, env, X0, Y0, loop); preview(name, art, pure, env, 15)
+
+def waterfall():
+    X0, Y0 = 310, 1590
+    water = water_px(ART.astype(np.float32)[Y0:Y0 + 140, X0:X0 + 140])
+    water = ndi.binary_fill_holes(ndi.binary_opening(largest(ndi.binary_closing(water, iterations=2)), iterations=1))
+    ys, xs = np.nonzero(water); src = (ys.min(), int(np.median(xs[ys < ys.min() + 4])))   # top of the channel
+    stream('WaterfallSheet', X0, Y0, 140, 140, water, src, 50.0, WATERFALL_CYCLES, WATERFALL_D,
+           WATERFALL_FOAM, WATERFALL_STREAK, WATERFALL_STREAK_WRAPS)
+
+def river():
+    """The stream below the theatre: rises at (322, 1855), runs under the bridge, out to the cove."""
+    X0, Y0, W, H = 300, 1840, 150, 165
+    art = ART.astype(np.float32)[Y0:Y0 + H, X0:X0 + W]
+    yy, xx = np.mgrid[:H, :W]
+    water = ndi.binary_opening(ndi.binary_closing(water_px(art), iterations=1), iterations=1)
+    water &= ~((xx + X0 > 432) & (yy + Y0 > 1985))                 # stop where it meets the sea cove
+    # keep the channel: water pieces lying along the river's course (source → bridge → mouth)
+    course = np.zeros_like(water)
+    for (ax, ay), (bx, by) in [((322, 1852), (347, 1905)), ((347, 1905), (378, 1940)), ((378, 1940), (400, 1962)), ((400, 1962), (432, 1992))]:
+        for u in np.linspace(0, 1, 60): course[int(ay + (by - ay) * u) - Y0, int(ax + (bx - ax) * u) - X0] = True
+    near = ndi.binary_dilation(course, iterations=12)
+    lab, n = ndi.label(water)
+    water = np.isin(lab, [i for i in range(1, n + 1) if ((lab == i) & near).any()]) & near
+    stream('RiverSheet', X0, Y0, W, H, water, (1855 - Y0, 322 - X0), 6.0, RIVER_CYCLES, RIVER_D,
+           RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS, foam_sparsity=0.65)
+
+def spring():
+    """The little pool at the bottom: ripples spread out from the white splash, which shimmers."""
+    X0, Y0, W, H = 320, 2040, 130, 65
+    art = ART.astype(np.float32)[Y0:Y0 + H, X0:X0 + W]
+    yy, xx = np.mgrid[:H, :W].astype(np.float32)
+    h = hsv(art)                                                   # deep blue + pale turquoise shallows
+    water = (h[..., 0] > 62) & (h[..., 0] < 120) & (h[..., 1] > 30) & (h[..., 2] > 100) & (yy > 10) & (yy < 62)
+    water = ndi.binary_opening(ndi.binary_closing(water, iterations=2), iterations=1)
+    lab, n = ndi.label(water); sz = ndi.sum(water, lab, range(1, n + 1))
+    water = ndi.binary_fill_holes(np.isin(lab, 1 + np.nonzero(sz > 40)[0]))   # holes = the white splash
+    alpha = np.clip(ndi.gaussian_filter(water.astype(np.float32), 1.0) * 1.2, 0, 1)
+    cx, cy = SPRING[0] - X0, SPRING[1] - Y0
+    r = np.hypot(xx - cx, (yy - cy) * 1.8)                          # flattened: the pool is seen at an angle
+    N = 60; frames = []
+    near = np.exp(-(r / 7.0) ** 2)
+    for f in range(N):
+        t = f / N
+        rings = np.sin(2 * np.pi * (r / 9.0 - 3 * t)) * np.exp(-r / 45.0) * (r > 4)       # rings moving outward
+        boil = (np.sin(2 * np.pi * (2 * t + xx / 5.0)) * np.sin(2 * np.pi * (3 * t + yy / 4.0))) * near
+        g = 1 + SPRING_RIPPLE * rings * alpha + SPRING_BOIL * boil
+        frames.append(np.clip(art * g[..., None], 0, 255).astype(np.uint8))
+    env = np.clip(np.maximum(alpha, near * 1.2), 0, 1)
+    pack_sheet('SpringSheet', frames, env, X0, Y0, 4.0); preview('spring', art, frames, env, 15)
 
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
 def glow(name, x0, y0, x1, y1, mask_fn, gain, warm, bloom=None):
@@ -223,7 +277,7 @@ def ships():
                          ax=round(float((xs.mean() - x0) / (x1 - x0)), 3), ay=round(float((wl - y0) / (y1 - y0)), 3)))
     CONST['ships'] = meta
 
-ships(); smoke(); waterfall()
+ships(); smoke(); waterfall(); river(); spring()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))
