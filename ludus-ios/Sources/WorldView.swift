@@ -34,6 +34,7 @@ private enum Page {
 
 struct WorldView: View {
     let world: LudusWorld
+    var onBack: (() -> Void)? = nil               // nil = pushed in a NavigationStack (pop instead)
     @State private var active: GameID?
     @State private var shown = false
     @State private var refresh = 0                 // bumps when a game closes, to re-read laurels
@@ -125,7 +126,7 @@ struct WorldView: View {
     }
 
     private var backButton: some View {
-        Button { dismiss() } label: {
+        Button { if let onBack { onBack() } else { dismiss() } } label: {
             Image(systemName: "chevron.left").font(.system(size: 17, weight: .bold))
                 .foregroundStyle(Color(hex: 0xfff3d6))
                 .frame(width: 42, height: 42)

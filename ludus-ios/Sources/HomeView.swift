@@ -172,7 +172,6 @@ struct HomeView: View {
     @AppStorage(LudusStore.denariiKey) private var denarii = 0
     @AppStorage("ludus_last_world") private var lastSubject = ""
 
-    @State private var navPath: [LudusWorld] = []
     @State private var travelerT: CGFloat = 0        // arc-length position on the road
     @State private var manualCamY: CGFloat = 0       // vertical camera offset (≤ 0); updated live while dragging
     @State private var dragging = false
@@ -188,6 +187,11 @@ struct HomeView: View {
     @State private var cardOpen: CGFloat = 0         // 0 = furled, 1 = unrolled
     @State private var cardSeq = 0
     @State private var plateOpen: CGFloat = 0        // the selected seal's hanging name scroll
+    // Entering a landmark: the map zooms into its building, then the landing page fades up over it.
+    @State private var entered: LudusWorld?
+    @State private var zoom: CGFloat = 0             // 0 = map, 1 = zoomed into the landmark
+    @State private var zoomAnchor = UnitPoint.center
+    @State private var mapHidden = false             // map + its ambience off while a landing page covers it
 
     // Floating chrome the camera must keep the traveler clear of.
     private let topInset: CGFloat = 150
@@ -200,7 +204,7 @@ struct HomeView: View {
     // is the margin, so nothing but the painting is ever on screen.
 
     var body: some View {
-        NavigationStack(path: $navPath) {
+        NavigationStack {
             GeometryReader { geo in
                 // The map bleeds edge-to-edge over the FULL physical screen (under the status bar and
                 // behind the bar). The safe-area GeometryReader can't report that height, so use the
@@ -221,6 +225,7 @@ struct HomeView: View {
                         .accessibilityLabel("Ludus")
                     cardLayer(w: w)
                 }
+                .opacity(1 - zoom)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(alignment: .top) {
                     // Physical-screen layer: the map, then the static chrome painted over it.
@@ -228,20 +233,28 @@ struct HomeView: View {
                         mapLayer(w: w, h: h)
                             .offset(y: off)
                             .frame(width: w, height: vh, alignment: .top)
+                            .scaleEffect(1 + zoom * 1.6, anchor: zoomAnchor)
                             .clipped()
                             .contentShape(Rectangle())
                             .gesture(panGesture(minIdle: minIdle))
-                        topTint
+                        topTint.opacity(1 - zoom)
                         bottomBar(w: w)
                             .frame(width: w, height: vh, alignment: .bottom)
+                            .opacity(1 - zoom)
                     }
+                    .opacity(mapHidden ? 0 : 1)          // fully covered: let the render server skip it
                     .ignoresSafeArea()
+                }
+                .overlay {
+                    if let world = entered {
+                        WorldView(world: world, onBack: { leave() })
+                            .transition(.opacity)
+                    }
                 }
                 .onAppear { setup(CGSize(width: w, height: vh)) }
                 .onChange(of: geo.size) { _ in setup(CGSize(width: w, height: vh)) }
             }
             .navigationBarHidden(true)
-            .navigationDestination(for: LudusWorld.self) { WorldView(world: $0) }
         }
         .tint(Prov.red)
     }
@@ -404,6 +417,27 @@ struct HomeView: View {
     /// Track the viewport size and, once it's valid, run one-time setup: stand the traveler where
     /// the child last was and frame that place. (GeometryReader reports .zero at first onAppear, so
     /// this must also run from onChange when the real size arrives.)
+    /// PLAY: zoom the camera into the landmark's building, then fade its landing page up over it.
+    private func enter(_ world: LudusWorld, at lm: Landmark) {
+        guard entered == nil, canvas.width > 0 else { return }
+        let h = canvas.width * mapAspect
+        let minTravel = min(0, canvas.height - h - travelPad)
+        let sy = lm.y * h + clampCG(manualCamY, minTravel, 0) - 40     // aim at the building, above its seal
+        zoomAnchor = UnitPoint(x: lm.x, y: clampCG(sy / canvas.height, 0.05, 0.95))
+        withAnimation(.easeIn(duration: 0.42)) { zoom = 1 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation(.easeOut(duration: 0.3)) { entered = world }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { if entered != nil { mapHidden = true } }
+        }
+    }
+
+    /// Back from a landing page: fade it out and pull the camera back out to the map.
+    private func leave() {
+        mapHidden = false
+        withAnimation(.easeIn(duration: 0.22)) { entered = nil }
+        withAnimation(.easeOut(duration: 0.5).delay(0.12)) { zoom = 0 }
+    }
+
     private func setup(_ size: CGSize) {
         canvas = size
         guard !didInit, size.width > 0 else { return }
@@ -427,6 +461,14 @@ struct HomeView: View {
     /// traced road and the map ambience. LUDUS_DEMO_PROGRESS fakes varied seal progress.
     private func startDebugTour() {
         let env = ProcessInfo.processInfo.environment
+        // LUDUS_ENTER=<subject>: walk there, then press PLAY (zoom in); back out after 4 s.
+        if let sub = env["LUDUS_ENTER"], let lm = landmarks.first(where: { $0.subject == sub }), let w = lm.world {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                let dur = travel(to: lm)
+                DispatchQueue.main.asyncAfter(deadline: .now() + dur + 1.6) { enter(w, at: lm) }
+                DispatchQueue.main.asyncAfter(deadline: .now() + dur + 6) { leave() }
+            }
+        }
         guard let spec = env["LUDUS_TOUR"], !spec.isEmpty else { return }
         let hold = Double(env["LUDUS_TOUR_HOLD"] ?? "") ?? 1.5
         let stops: [Landmark] = spec == "all"
@@ -507,7 +549,7 @@ struct HomeView: View {
             if let lm = cardLM, let world = lm.world {
                 DestinationCard(landmark: lm, world: world, progress: progress(world, index: landmarks.firstIndex { $0.id == lm.id } ?? 0),
                                 width: min(Chrome.cardW, w - 58), open: cardOpen,
-                                onPlay: { navPath.append(world) },
+                                onPlay: { enter(world, at: lm) },
                                 onClose: { dismissCard() })
                     .opacity(1 - cardRise)
                     .offset(y: cardRise * 36)
