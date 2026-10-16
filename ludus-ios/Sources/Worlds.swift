@@ -57,7 +57,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .caesarWheel:     ComingSoonGame(id: id, onClose: onClose)
     case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        FigStallView(onClose: onClose)
-    case .porcus:          ComingSoonGame(id: id, onClose: onClose)
+    case .porcus:          PorcusView(onClose: onClose)
     case .pianoMouse:      ComingSoonGame(id: id, onClose: onClose)
     case .maestroMouse:    ComingSoonGame(id: id, onClose: onClose)
     case .comedyTragedy:   ComingSoonGame(id: id, onClose: onClose)
@@ -171,8 +171,8 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "The Money Stall", subject: "Money & Life Skills", emoji: "🪙", colorHex: Lu.gold, games: [
         .init(title: "The Fig Stall", mechanic: "shop", premise: "Bag exactly what each customer asks for.", game: .figStall,
               icon: "🧺", howTo: how(("👵", "Look at the order"), ("🍎", "Tap fruit into the bag"), ("🤝", "Give it to them!"))),
-        .init(title: "Porcus the Piggy Bank", mechanic: "save", premise: "Save up with Porcus to buy the prize.", game: nil,
-              icon: "🐷", howTo: how(("🪙", "Feed Porcus your coins"), ("🎁", "Save enough for the prize"))),
+        .init(title: "Porcus the Piggy Bank", mechanic: "save", premise: "Save up with Porcus to buy the prize.", game: .porcus,
+              icon: "🐷", howTo: how(("🪙", "Drag coins into Porcus"), ("🔢", "Count up to the price"), ("🪁", "Then buy the prize!"))),
         .init(title: "Coin Count", mechanic: "count", premise: "Add up the coins — how much?", game: .coinCount,
               icon: "🪙", howTo: how(("👀", "Count the coins"), ("👆", "Tap how much money"))),
     ]),
