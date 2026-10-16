@@ -44,6 +44,8 @@ WATERFALL_STREAK, WATERFALL_STREAK_WRAPS = 0.15, 3
 RIVER_CYCLES, RIVER_D, RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS = 6, 12.0, 0.50, 0.18, 2
 SPRING, SPRING_RIPPLE, SPRING_BOIL = (380, 2071), 0.16, 0.25
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
+SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
+SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
 def save_asset(name, rgb_or_rgba):
     d = os.path.join(A.assets, f'{name}.imageset'); os.makedirs(d, exist_ok=True)
@@ -264,6 +266,33 @@ def ships():
     found.sort(key=lambda m: np.nonzero(m)[0].min())
     allm = np.any(found, axis=0)
     plate = cv2.inpaint(cv2.cvtColor(ART, cv2.COLOR_RGB2BGR), ndi.binary_dilation(allm, iterations=3).astype(np.uint8) * 255, 7, cv2.INPAINT_TELEA)
+    # Sailing ships leave their spot, so the smeared inpaint there would show. Refill each sailing
+    # ship's spot (+ its painted reflection below) with real sea texture from nearby open water,
+    # Poisson-blended so the colours meet seamlessly.
+    for k in SAILING:
+        m = found[k]; ys, xs = np.nonzero(m)
+        hole = ndi.binary_dilation(m, iterations=3)
+        rows = m[ys.min():ys.max() + 1].sum(1); wl = ys.min() + int(np.nonzero(rows >= 0.5 * rows.max())[0].max())
+        hole[wl:wl + 30, xs.min() - 2:xs.max() + 3] = True            # the reflection under the hull
+        hy, hx = np.nonzero(hole); y0, y1, x0, x1 = hy.min() - 4, hy.max() + 5, hx.min() - 4, hx.max() + 5
+        ring = ndi.binary_dilation(hole, iterations=4) & ~hole
+        target = ART[ring].mean(0)
+        best = None
+        for dy in range(-160, 161, 8):
+            for dx in range(-100, 101, 8):
+                if abs(dy) < (y1 - y0) and abs(dx) < (x1 - x0): continue    # must not overlap the hole
+                Y0, X0 = y0 + dy, x0 + dx
+                if Y0 < 0 or X0 < 0 or Y0 + (y1 - y0) > ART.shape[0] or X0 + (x1 - x0) > ART.shape[1]: continue
+                win = (slice(Y0, Y0 + (y1 - y0)), slice(X0, X0 + (x1 - x0)))
+                if sea[win].mean() < 0.97 or ndi.binary_dilation(allm, iterations=6)[win].any(): continue   # open sea (wave flecks OK), no ships
+                d = np.abs(ART[Y0:Y0 + (y1 - y0), X0:X0 + (x1 - x0)].reshape(-1, 3).mean(0) - target).sum()
+                if best is None or d < best[0]: best = (d, Y0, X0)
+        assert best is not None, f'no clean sea donor for ship {k}'
+        _, Y0, X0 = best
+        src = cv2.cvtColor(ART[Y0:Y0 + (y1 - y0), X0:X0 + (x1 - x0)], cv2.COLOR_RGB2BGR)
+        msk = (hole[y0:y1, x0:x1] * 255).astype(np.uint8)
+        plate = cv2.seamlessClone(src, plate, msk, (int((x0 + x1) // 2), int((y0 + y1) // 2)), cv2.NORMAL_CLONE)
+        CONST.setdefault('sailDonors', {})[k] = dict(hole=[int(x0), int(y0), int(x1), int(y1)], donor=[int(X0), int(Y0)])
     global PLATE; PLATE = cv2.cvtColor(plate, cv2.COLOR_BGR2RGB)
     save_asset('ProvinceMap', PLATE)
     meta = []
@@ -276,6 +305,20 @@ def ships():
         meta.append(dict(mapX=int(x0), mapY=int(y0), w=int(x1 - x0), h=int(y1 - y0),
                          ax=round(float((xs.mean() - x0) / (x1 - x0)), 3), ay=round(float((wl - y0) / (y1 - y0)), 3)))
     CONST['ships'] = meta
+    # Clip masks for the sailing ships' containers: alpha = the painted area (row-wise left/right torn
+    # edge), so a ship sailing off the map disappears behind the edge and never draws on parchment.
+    tan = ndi.binary_closing((h[..., 0] >= 8) & (h[..., 0] <= 28) & (h[..., 1] > 60) & (h[..., 2] > 90), iterations=1)
+    L = np.zeros(ART.shape[0], int); R = np.zeros(ART.shape[0], int)
+    for y in range(ART.shape[0]):
+        idx = np.nonzero(np.convolve((~tan[y]).astype(int), np.ones(4, int), 'valid') >= 4)[0]
+        L[y], R[y] = (idx[0], idx[-1] + 3) if len(idx) else (ART.shape[1], -1)
+    L = ndi.median_filter(L, 5); R = ndi.median_filter(R, 5)
+    # inset 4 px: the tear's thin grey-brown rim is part of the boundary — ships vanish where the blue ends
+    painted = (np.arange(ART.shape[1])[None, :] >= L[:, None] + 4) & (np.arange(ART.shape[1])[None, :] <= R[:, None] - 4)
+    for name, (x0, y0, x1, y1) in SAIL_CLIPS.items():
+        a = np.clip(ndi.gaussian_filter(painted[y0:y1, x0:x1].astype(np.float32), 0.7), 0, 1)
+        save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
+        CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
 ships(); smoke(); waterfall(); river(); spring()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)

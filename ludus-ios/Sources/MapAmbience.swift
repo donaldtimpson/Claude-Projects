@@ -9,7 +9,8 @@ import UIKit
 //   • smoke, waterfall, river, spring — cinemagraph loops (the art's own pixels in motion), played as
 //     flipbooks by stepping `contentsRect` over a sprite sheet
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
-//   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`)
+//   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`);
+//                        two of them sail off the map and back (`voyages`)
 // Everything is laid out in ProvinceMap pixels (724 wide) scaled to the rendered map width.
 
 private struct Flipbook {
@@ -62,6 +63,31 @@ private let ships: [Ship] = [
     .init(mapX: 620, mapY: 1972, w: 35, h: 63, ax: 0.476, ay: 0.825, degrees: 5.0, period: 2.9, phase: 0.35),
 ]
 
+/// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
+/// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first swings
+/// round (scale.x through 0 — reads as turning) or swings back after returning. The direction flip
+/// between legs happens off-map, unseen. It's drawn inside a clip of the painted area (`clip`), so it
+/// disappears behind the torn edge and never draws on the parchment (tools/ambient_build.py checks
+/// every visible hull pixel along both legs is over open sea).
+private struct Voyage {
+    let ship: Int
+    let clip: String, clipX: CGFloat, clipY: CGFloat, clipW: CGFloat, clipH: CGFloat
+    let out: CGPoint, back: CGPoint                 // off-map points it sails to / returns from
+    let outFacing: CGFloat, backFacing: CGFloat
+    let rest: Double, sailOut: Double, hidden: Double, sailBack: Double, after: Double, offset: Double
+    static let turn = 1.2
+}
+private let voyages: [Voyage] = [
+    // Right-hand sea: swings round, sails out to the east, slips back in from higher up.
+    .init(ship: 2, clip: "SailClipRight", clipX: 590, clipY: 860, clipW: 134, clipH: 220,
+          out: CGPoint(x: 742, y: 1003), back: CGPoint(x: 742, y: 925), outFacing: -1, backFacing: 1,
+          rest: 8, sailOut: 10, hidden: 3, sailBack: 10, after: 4, offset: 0),
+    // Lighthouse bay: sails out to the west as painted, returns from higher up and swings back round.
+    .init(ship: 4, clip: "SailClipLeft", clipX: 0, clipY: 1360, clipW: 150, clipH: 200,
+          out: CGPoint(x: -28, y: 1500), back: CGPoint(x: -28, y: 1420), outFacing: 1, backFacing: -1,
+          rest: 12, sailOut: 11, hidden: 3, sailBack: 11, after: 6, offset: 20),
+]
+
 /// Overlay sized to the whole rendered map (`w` × `h`), above the art and below the seals.
 struct MapAmbience: View {
     let w: CGFloat, h: CGFloat
@@ -87,11 +113,20 @@ private final class AmbienceView: UIView {
         let l = CALayer(); l.contents = UIImage(named: "Ship\(i)")?.cgImage
         l.anchorPoint = CGPoint(x: ships[i].ax, y: ships[i].ay); return l
     }
+    private let clipLayers = voyages.map { v -> CALayer in
+        let c = CALayer(), m = CALayer()
+        m.contents = UIImage(named: v.clip)?.cgImage; m.contentsGravity = .resize
+        c.mask = m; return c
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
-        (flipLayers + glowLayers + shipLayers).forEach(layer.addSublayer)   // ships above the glows
+        (flipLayers + glowLayers).forEach(layer.addSublayer)
+        for (i, l) in shipLayers.enumerated() where !voyages.contains(where: { $0.ship == i }) {
+            layer.addSublayer(l)                                            // ships above the glows
+        }
+        for (c, v) in zip(clipLayers, voyages) { c.addSublayer(shipLayers[v.ship]); layer.addSublayer(c) }
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -117,6 +152,12 @@ private final class AmbienceView: UIView {
         for (l, s) in zip(shipLayers, ships) {
             l.bounds = CGRect(x: 0, y: 0, width: s.w * k, height: s.h * k)
             l.position = CGPoint(x: (s.mapX + s.ax * s.w) * k, y: (s.mapY + s.ay * s.h) * k)
+        }
+        for (c, v) in zip(clipLayers, voyages) {                 // sailing ships live in clip space
+            c.frame = CGRect(x: v.clipX * k, y: v.clipY * k, width: v.clipW * k, height: v.clipH * k)
+            c.mask?.frame = c.bounds
+            let l = shipLayers[v.ship]
+            l.position = CGPoint(x: l.position.x - v.clipX * k, y: l.position.y - v.clipY * k)
         }
         CATransaction.commit()
         if needsStart, window != nil, k > 0 { needsStart = false; startAnimations(k: k) }
@@ -162,6 +203,36 @@ private final class AmbienceView: UIView {
             let heave = stepped("transform.translation.y", period: s.period) { t in -b * sin(2 * .pi * t) }
             for a in [roll, heave] { a.timeOffset = (s.phase * a.duration * 15).rounded() / 15 }
             start(roll, on: l, "roll"); start(heave, on: l, "heave")
+        }
+        for v in voyages {
+            let s = ships[v.ship], l = shipLayers[v.ship]
+            let home = CGPoint(x: s.mapX + s.ax * s.w, y: s.mapY + s.ay * s.h)
+            let turnOut = v.outFacing < 0 ? Voyage.turn : 0, turnBack = v.backFacing < 0 ? Voyage.turn : 0
+            let marks = [v.rest, turnOut, v.sailOut, v.hidden, v.sailBack, turnBack, v.after]
+            let T = marks.reduce(0, +), n = Int((T * 15).rounded())
+            func ease(_ u: Double) -> CGFloat { CGFloat(u * u * (3 - 2 * u)) }
+            func lerp(_ a: CGPoint, _ b: CGPoint, _ u: CGFloat) -> CGPoint { CGPoint(x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u) }
+            // (map-px position, facing) at time t along: rest, turn, out, hidden, back, turn, rest
+            func at(_ t: Double) -> (CGPoint, CGFloat) {
+                var t = t
+                if t < v.rest { return (home, 1) }; t -= v.rest
+                if t < turnOut { return (home, CGFloat(cos(.pi * t / turnOut))) }; t -= turnOut
+                if t < v.sailOut { return (lerp(home, v.out, ease(t / v.sailOut)), v.outFacing) }; t -= v.sailOut
+                if t < v.hidden { return (v.back, v.backFacing) }; t -= v.hidden          // flips off-map
+                if t < v.sailBack { return (lerp(v.back, home, ease(t / v.sailBack)), v.backFacing) }; t -= v.sailBack
+                if t < turnBack { return (home, CGFloat(-cos(.pi * t / turnBack))) }
+                return (home, 1)
+            }
+            let samples = (0..<n).map { at(Double($0) / 15) }
+            let pos = CAKeyframeAnimation(keyPath: "position")
+            pos.values = samples.map { NSValue(cgPoint: CGPoint(x: ($0.0.x - v.clipX) * k, y: ($0.0.y - v.clipY) * k)) }
+            let face = CAKeyframeAnimation(keyPath: "transform.scale.x")
+            face.values = samples.map { Double($0.1) }
+            for a in [pos, face] {
+                a.calculationMode = .discrete; a.duration = Double(n) / 15
+                a.timeOffset = (v.offset * 15).rounded() / 15
+                start(a, on: l, a === pos ? "sail" : "face")
+            }
         }
     }
 
