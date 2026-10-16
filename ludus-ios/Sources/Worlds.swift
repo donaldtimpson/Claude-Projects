@@ -38,7 +38,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .omnibus:         ComingSoonGame(id: id, onClose: onClose)
     case .flagFrenzy:      FlagFrenzyView(onClose: onClose)
     case .nameCountry:     NameCountryView(onClose: onClose)
-    case .pharosBeam:      ComingSoonGame(id: id, onClose: onClose)
+    case .pharosBeam:      PharosBeamView(onClose: onClose)
     case .zooFerry:        ComingSoonGame(id: id, onClose: onClose)
     case .wordSort:        WordSortView(onClose: onClose)
     case .synonymSnake:    SynonymSnakeView(onClose: onClose)
@@ -121,8 +121,8 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🧱", howTo: how(("🔢", "Tap the right answer"), ("🧱", "Each one stacks a block"))),
     ]),
     LudusWorld(name: "Globe Trotters", subject: "Geography", emoji: "🌍", colorHex: Lu.sky, games: [
-        .init(title: "Pharos Beam", mechanic: "spinner", premise: "Swing the lighthouse beam to the ship that calls.", game: nil,
-              icon: "🔦", howTo: how(("⛵️", "A ship calls from a direction"), ("👆", "Turn the beam to it"))),
+        .init(title: "Pharos Beam", mechanic: "spinner", premise: "Swing the lighthouse beam to the ship that calls.", game: .pharosBeam,
+              icon: "🔦", howTo: how(("⛵️", "A ship calls for light"), ("👆", "Drag the beam to it"), ("📯", "Let go — toot toot!"))),
         .init(title: "Lost Zoo Ferry", mechanic: "ferry", premise: "Sail each animal home to the right land.", game: nil,
               icon: "🦒", howTo: how(("🦘", "An animal is lost"), ("⛴️", "Take it to its home land"))),
         .init(title: "Flag Frenzy", mechanic: "pop", premise: "Tap the flags from the called-out continent.", game: .flagFrenzy,
