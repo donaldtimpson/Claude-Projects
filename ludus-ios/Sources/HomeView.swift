@@ -212,8 +212,9 @@ struct HomeView: View {
     // The scrolling world: painted map, the eight seals on their road stops, and the traveler.
     private func mapLayer(w: CGFloat, h: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            // Static art — no ambient layers (they idled at ~75% CPU). Light motion gets re-added selectively.
+            // Static art; motion is added selectively and only via Core Animation (no per-frame app work).
             Image("ProvinceMap").resizable().frame(width: w, height: h)
+            VolcanoSmoke(w: w)
             ForEach(landmarks) { lm in
                 if let world = lm.world {
                     Button { travel(to: lm) } label: {
