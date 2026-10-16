@@ -11,8 +11,8 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   Ship0…Ship8    ship cutouts (alpha), rocked about their waterline
   SmokeSheet     volcano plume cinemagraph — texture streams up out of the crater (6 s, 90 frames)
   WaterfallSheet waterfall cinemagraph — texture streams down the channel (4 s, 60 frames)
-  LampGlow       lighthouse lantern + rays, brightened; faded in/out as a beacon flash
-  LavaGlow       lava streaks, brightened; faded with an irregular breathing rhythm
+  LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
+  LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
 
 Cinemagraph flow: the region's texture is advected along a flow field inside its fixed
 silhouette; several phase-staggered copies are blended with sin² weights and a variance-preserving
@@ -33,6 +33,8 @@ ap.add_argument('--check', help='write preview mp4s / check images here')
 A = ap.parse_args()
 ART = np.asarray(Image.open(A.art).convert('RGB'))
 CONST = {}
+WATERFALL_CYCLES, WATERFALL_D = 6, 10.0   # 15 px/s; the earlier faster flow (fallback) was 8, 15.0 = 30 px/s
+LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 
 def save_asset(name, rgb_or_rgba):
     d = os.path.join(A.assets, f'{name}.imageset'); os.makedirs(d, exist_ok=True)
@@ -123,29 +125,52 @@ def waterfall():
     gy, gx = np.gradient(dist); n = np.hypot(gx, gy) + 1e-6
     vx = ndi.gaussian_filter(gx / n, 2); vy = ndi.gaussian_filter(gy / n, 2); n = np.hypot(vx, vy) + 1e-6; vx /= n; vy /= n
     env = np.clip(ndi.gaussian_filter(alpha, 1.0) * 1.05, 0, 1)
-    pure = flow_frames(art, alpha, vx, vy, frames=60, cycles=8, D=15.0, layers=4)
+    pure = flow_frames(art, alpha, vx, vy, frames=60, cycles=WATERFALL_CYCLES, D=WATERFALL_D, layers=4)
     pack_sheet('WaterfallSheet', pure, env, X0, Y0, 4.0); preview('waterfall', art, pure, env, 15)
 
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
-def glow(name, x0, y0, x1, y1, mask_fn, gain, warm):
-    a = ART.astype(np.float32)[y0:y1, x0:x1]
+def glow(name, x0, y0, x1, y1, mask_fn, gain, warm, bloom=None):
+    a = PLATE.astype(np.float32)[y0:y1, x0:x1]   # ship-free art: ships draw above the glows
+    global ORIGIN; ORIGIN = (x0, y0)        # lets the mask/bloom functions work in map px
     m = mask_fn(a)
     lit = np.clip(a * gain + np.array(warm) * m[..., None], 0, 255)
+    if bloom is not None:                     # soft light halo, screen-blended so it reads as light
+        b, color = bloom(a)
+        lit = 255 - (255 - lit) * (255 - np.array(color) * b[..., None]) / 255
+        m = np.maximum(m, b)
     ys, xs = np.nonzero(m > 0.01); bx0, bx1, by0, by1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     save_asset(name, np.dstack([lit[by0:by1, bx0:bx1], m[by0:by1, bx0:bx1] * 255]).round().astype(np.uint8))
     CONST[name] = dict(mapX=int(x0 + bx0), mapY=int(y0 + by0), w=int(bx1 - bx0), h=int(by1 - by0))
 
 def lamp_mask(a):
     H, W = a.shape[:2]; yy, xx = np.mgrid[:H, :W]; h = hsv(a)
-    r = np.hypot(xx - 86, (yy - 70) * 1.4)                    # lantern centre (186, 1360) in map px
+    r = np.hypot(xx - (LANTERN[0] - ORIGIN[0]), (yy - (LANTERN[1] - ORIGIN[1])) * 1.4)
     warm = ((h[..., 0] > 12) & (h[..., 0] < 40)).astype(np.float32)
     bright = np.clip((h[..., 2] - 150) / 80, 0, 1) * warm * np.clip(1 - r / 95, 0, 1)
     return np.clip(ndi.gaussian_filter(np.maximum(bright, np.clip(1 - r / 22, 0, 1) * 0.9), 1.5) * 1.2, 0, 1)
 
+def lamp_bloom(a):
+    H, W = a.shape[:2]; yy, xx = np.mgrid[:H, :W]
+    r = np.hypot(xx - (LANTERN[0] - ORIGIN[0]), (yy - (LANTERN[1] - ORIGIN[1])) * 1.15)
+    return np.clip(np.exp(-(r / 30.0) ** 2) * 0.95 + np.exp(-(r / 70.0) ** 2) * 0.35, 0, 1), (255, 214, 140)
+
+def lava_bloom(a):
+    m = lava_mask(a)
+    return np.clip(ndi.gaussian_filter(m, 4.0) * 1.4, 0, 1), (255, 125, 25)
+
 def lava_mask(a):
+    """Hysteresis: bright saturated lava (strong) seeds; weaker red-orange pixels (the dim lower
+    channel, the right-hand streak) are kept only if they lie close to a seed — so ochre rock and
+    grass elsewhere never glow."""
     h = hsv(a)
-    lava = ((h[..., 0] < 11) | (h[..., 0] > 172)) & (h[..., 1] > 150) & (h[..., 2] > 120)
-    lava = ndi.binary_opening(lava, iterations=1).astype(np.float32)
+    strong = ((h[..., 0] < 11) | (h[..., 0] > 172)) & (h[..., 1] > 150) & (h[..., 2] > 120)   # hot red-orange only
+    strong = ndi.binary_opening(strong, iterations=1)
+    weak = ((h[..., 0] < 16) | (h[..., 0] > 170)) & (h[..., 1] > 110) & (h[..., 2] > 70)
+    weak = ndi.binary_opening(weak, iterations=1)
+    near = ndi.distance_transform_edt(~strong) < 30
+    lab, n = ndi.label(weak)
+    keep = [i for i in range(1, n + 1) if ((lab == i) & near).any()]
+    lava = (np.isin(lab, keep) & near | strong).astype(np.float32)
     return np.clip(ndi.gaussian_filter(lava, 1.0) * 1.3 + ndi.gaussian_filter(lava, 4.0) * 0.6, 0, 1)
 
 # ---------------------------------------------------------------- ships (cutouts + painted-out base)
@@ -163,7 +188,8 @@ def ships():
     found.sort(key=lambda m: np.nonzero(m)[0].min())
     allm = np.any(found, axis=0)
     plate = cv2.inpaint(cv2.cvtColor(ART, cv2.COLOR_RGB2BGR), ndi.binary_dilation(allm, iterations=3).astype(np.uint8) * 255, 7, cv2.INPAINT_TELEA)
-    save_asset('ProvinceMap', cv2.cvtColor(plate, cv2.COLOR_BGR2RGB))
+    global PLATE; PLATE = cv2.cvtColor(plate, cv2.COLOR_BGR2RGB)
+    save_asset('ProvinceMap', PLATE)
     meta = []
     for k, m in enumerate(found):
         ys, xs = np.nonzero(m); P = 4
@@ -175,8 +201,7 @@ def ships():
                          ax=round(float((xs.mean() - x0) / (x1 - x0)), 3), ay=round(float((wl - y0) / (y1 - y0)), 3)))
     CONST['ships'] = meta
 
-smoke(); waterfall()
-glow('LampGlow', 100, 1290, 300, 1430, lamp_mask, 1.28, (60, 40, 5))
-glow('LavaGlow', 460, 700, 530, 775, lava_mask, 1.15, (70, 45, 0))
-ships()
+ships(); smoke(); waterfall()
+glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
+glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))

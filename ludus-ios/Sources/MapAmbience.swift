@@ -8,7 +8,7 @@ import UIKit
 // ~75% CPU). All assets + the constants below come from tools/ambient_build.py:
 //   • smoke, waterfall — cinemagraph loops (texture flowing inside a fixed silhouette), played as
 //     flipbooks by stepping `contentsRect` over a sprite sheet
-//   • lamp, lava       — a brightened copy of the lit pixels, faded in and out
+//   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`)
 // Everything is laid out in ProvinceMap pixels (724 wide) scaled to the rendered map width.
 
@@ -28,6 +28,7 @@ private struct Ship {
     let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat
     let ax: CGFloat, ay: CGFloat              // waterline pivot, unit coords within the sprite
     let degrees: Double, period: CFTimeInterval, phase: Double
+    var bob: CGFloat = 1.5                    // heave, map px (a quarter-cycle off the roll)
 }
 
 private let flipbooks: [Flipbook] = [
@@ -38,24 +39,23 @@ private let flipbooks: [Flipbook] = [
 ]
 private let glows: [Glow] = [
     // Lighthouse: a beacon — quick bright flash, slow fade, dark pause.
-    .init(image: "LampGlow", mapX: 112, mapY: 1294, w: 168, h: 134,
+    .init(image: "LampGlow", mapX: 55, mapY: 1246, w: 263, h: 229,
           opacity: [0.1, 0.1, 1, 0.35, 0.1], keyTimes: [0, 0.45, 0.55, 0.75, 1], period: 4),
-    // Lava: an irregular, breathing glow.
-    .init(image: "LavaGlow", mapX: 472, mapY: 704, w: 34, h: 33,
-          opacity: [0.2, 0.65, 0.4, 0.95, 0.55, 0.85, 0.3, 0.2],
-          keyTimes: [0, 0.14, 0.27, 0.43, 0.57, 0.71, 0.86, 1], period: 7),
+    // Lava: an even pulse — on and off for equal time.
+    .init(image: "LavaGlow", mapX: 446, mapY: 675, w: 75, h: 92,
+          opacity: [0, 1, 0], keyTimes: [0, 0.5, 1], period: 3.2),
 ]
 // Top→bottom. The two docked in the market harbour (3, 5) rock less.
 private let ships: [Ship] = [
-    .init(mapX: 656, mapY: 551,  w: 27, h: 41, ax: 0.491, ay: 0.854, degrees: 2.0, period: 3.6, phase: 0.10),
-    .init(mapX: 644, mapY: 673,  w: 34, h: 48, ax: 0.515, ay: 0.896, degrees: 2.2, period: 4.2, phase: 0.55),
-    .init(mapX: 670, mapY: 926,  w: 29, h: 44, ax: 0.510, ay: 0.841, degrees: 1.8, period: 3.3, phase: 0.30),
-    .init(mapX: 621, mapY: 1363, w: 70, h: 66, ax: 0.385, ay: 0.833, degrees: 0.9, period: 4.8, phase: 0.80),
-    .init(mapX: 51,  mapY: 1410, w: 37, h: 63, ax: 0.478, ay: 0.778, degrees: 2.0, period: 3.9, phase: 0.45),
-    .init(mapX: 513, mapY: 1421, w: 57, h: 51, ax: 0.468, ay: 0.824, degrees: 1.0, period: 4.4, phase: 0.15),
-    .init(mapX: 648, mapY: 1531, w: 37, h: 50, ax: 0.473, ay: 0.820, degrees: 2.0, period: 3.5, phase: 0.65),
-    .init(mapX: 55,  mapY: 1822, w: 45, h: 66, ax: 0.493, ay: 0.879, degrees: 1.9, period: 4.0, phase: 0.95),
-    .init(mapX: 620, mapY: 1972, w: 35, h: 63, ax: 0.476, ay: 0.825, degrees: 2.1, period: 3.7, phase: 0.35),
+    .init(mapX: 656, mapY: 551,  w: 27, h: 41, ax: 0.491, ay: 0.854, degrees: 5.0, period: 2.8, phase: 0.10),
+    .init(mapX: 644, mapY: 673,  w: 34, h: 48, ax: 0.515, ay: 0.896, degrees: 5.0, period: 3.2, phase: 0.55),
+    .init(mapX: 670, mapY: 926,  w: 29, h: 44, ax: 0.510, ay: 0.841, degrees: 4.5, period: 2.6, phase: 0.30),
+    .init(mapX: 621, mapY: 1363, w: 70, h: 66, ax: 0.385, ay: 0.833, degrees: 3.0, period: 3.6, phase: 0.80, bob: 1),
+    .init(mapX: 51,  mapY: 1410, w: 37, h: 63, ax: 0.478, ay: 0.778, degrees: 5.0, period: 3.0, phase: 0.45),
+    .init(mapX: 513, mapY: 1421, w: 57, h: 51, ax: 0.468, ay: 0.824, degrees: 3.0, period: 3.4, phase: 0.15, bob: 1),
+    .init(mapX: 648, mapY: 1531, w: 37, h: 50, ax: 0.473, ay: 0.820, degrees: 5.0, period: 2.7, phase: 0.65),
+    .init(mapX: 55,  mapY: 1822, w: 45, h: 66, ax: 0.493, ay: 0.879, degrees: 4.5, period: 3.1, phase: 0.95),
+    .init(mapX: 620, mapY: 1972, w: 35, h: 63, ax: 0.476, ay: 0.825, degrees: 5.0, period: 2.9, phase: 0.35),
 ]
 
 /// Overlay sized to the whole rendered map (`w` × `h`), above the art and below the seals.
@@ -87,7 +87,7 @@ private final class AmbienceView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
-        (shipLayers + flipLayers + glowLayers).forEach(layer.addSublayer)
+        (flipLayers + glowLayers + shipLayers).forEach(layer.addSublayer)   // ships above the glows
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -115,18 +115,24 @@ private final class AmbienceView: UIView {
             l.position = CGPoint(x: (s.mapX + s.ax * s.w) * k, y: (s.mapY + s.ay * s.h) * k)
         }
         CATransaction.commit()
+        if needsStart, window != nil, k > 0 { needsStart = false; startAnimations(k: k) }
     }
 
+    private var needsStart = false
+
     // Animate only while on screen (UIKit detaches the home view while a game is pushed). Under
-    // Reduce Motion the painting stays still: overlays hidden, ships shown but not rocking.
+    // Reduce Motion the painting stays still: overlays hidden, ships shown but not rocking. The
+    // animations start on the next layout pass, once the map scale (for the ships' bob) is known.
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        let all = flipLayers + glowLayers + shipLayers
-        all.forEach { $0.removeAllAnimations() }
+        (flipLayers + glowLayers + shipLayers).forEach { $0.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
         (flipLayers + glowLayers).forEach { $0.isHidden = still }
-        guard window != nil, !still else { return }
+        needsStart = window != nil && !still
+        setNeedsLayout()
+    }
 
+    private func startAnimations(k: CGFloat) {
         // One shared 15 fps clock: every animation starts at the same instant and every step lands
         // on the same 1/15 s grid, so the screen changes at most 15 times a second in total.
         // (Unaligned clocks made the effects' steps interleave into ~60 redraws/s — 8x the cost.)
@@ -146,10 +152,12 @@ private final class AmbienceView: UIView {
             }, on: l, "glow")
         }
         for (l, s) in zip(shipLayers, ships) {
-            let r = s.degrees * .pi / 180
-            let a = stepped("transform.rotation.z", period: s.period) { t in -r * cos(2 * .pi * t) }
-            a.timeOffset = (s.phase * a.duration * 15).rounded() / 15
-            start(a, on: l, "rock")
+            // Roll about the waterline, plus a heave a quarter-cycle behind it (rises as it levels).
+            let r = s.degrees * .pi / 180, b = Double(s.bob * k)
+            let roll = stepped("transform.rotation.z", period: s.period) { t in -r * cos(2 * .pi * t) }
+            let heave = stepped("transform.translation.y", period: s.period) { t in -b * sin(2 * .pi * t) }
+            for a in [roll, heave] { a.timeOffset = (s.phase * a.duration * 15).rounded() / 15 }
+            start(roll, on: l, "roll"); start(heave, on: l, "heave")
         }
     }
 
