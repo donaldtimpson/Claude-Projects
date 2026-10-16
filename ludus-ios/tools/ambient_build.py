@@ -37,6 +37,9 @@ CONST = {}
 # 15 px churned up and down and read as too fast; 6 × 10 px flowed, but the painted falls are vertical
 # streaks, so streaks sliding along themselves read as not moving — the foam is what makes it visible.)
 WATERFALL_CYCLES, WATERFALL_D, WATERFALL_FOAM = 6, 13.3, 0.45
+# Faster water without churn: fine streaks slide down at 3× the foam's loop rate (~34 px/s measured).
+# Speeding up the cross-fade flow itself aliases at 15 fps (texture reads as moving up) — don't.
+WATERFALL_STREAK, WATERFALL_STREAK_WRAPS = 0.15, 3
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 
 def save_asset(name, rgb_or_rgba):
@@ -139,6 +142,12 @@ def waterfall():
         fm = foam[i0, xi] * (1 - fr) + foam[(i0 + 1) % Pn, xi] * fr
         k = (WATERFALL_FOAM * fm * alpha)[..., None]
         pure[f] = np.clip(pure[f] * (1 - k) + np.array([235, 245, 250]) * k, 0, 255).astype(np.uint8)
+    # streaks: noise elongated along the flow, modulating brightness of the real water ±, no cross-fade
+    nz = ndi.gaussian_filter(np.random.default_rng(11).random((Pn, W)), (2.0, 0.7), mode='wrap'); nz = (nz - nz.mean()) / nz.std()
+    for f in range(len(pure)):
+        si = (dist - f / len(pure) * Pn * WATERFALL_STREAK_WRAPS) % Pn; i0 = np.floor(si).astype(int); fr = si - i0
+        m = nz[i0, xi] * (1 - fr) + nz[(i0 + 1) % Pn, xi] * fr
+        pure[f] = np.clip(pure[f].astype(np.float32) * (1 + WATERFALL_STREAK * m * alpha)[..., None], 0, 255).astype(np.uint8)
     pack_sheet('WaterfallSheet', pure, env, X0, Y0, 4.0); preview('waterfall', art, pure, env, 15)
 
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
