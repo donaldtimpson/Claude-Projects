@@ -65,13 +65,13 @@ private let ships: [Ship] = [
 ]
 
 /// Sea glitter: the painting's own light flecks, split into groups (tools/ambient_build.py); each
-/// group twinkles twice per 4 s loop at its own moments, so some part of the sea always catches light.
+/// group twinkles twice per 16 s loop at its own moments (slow fades), so some part of the sea always catches light.
 private struct GlintRegion { let name: String; let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat }
 private let glintRegions: [GlintRegion] = [
     .init(name: "GlintEast", mapX: 470, mapY: 520, w: 250, h: 1590),
     .init(name: "GlintWest", mapX: 5, mapY: 1240, w: 265, h: 720),
 ]
-private let glintGroups = 6, glintLoop: CFTimeInterval = 4
+private let glintGroups = 6, glintLoop: CFTimeInterval = 16
 
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
 /// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first swings
