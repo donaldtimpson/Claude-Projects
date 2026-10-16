@@ -12,6 +12,7 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   SmokeSheet     volcano plume: painted-smoke puffs billowing out of the crater, lava-synced (9.6 s, 144 frames)
   WaterfallSheet waterfall cinemagraph — texture + foam clumps stream down the channel (4 s, 60 frames)
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
+  RayGlow        the painted light rays alone, flaring outward with each beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
   Surf0…SurfN    surf tiles: waves rolling in at all coastal whitewater (3 s, 45 frames) → MapAmbienceSurf.swift
   Cloud0…CloudN, CloudClip  the painting's clouds, drifting right and wrapping behind the tear → MapAmbienceClouds.swift
@@ -424,6 +425,32 @@ def clouds():
         'let cloudDrifts: [CloudDrift] = [\n' + '\n'.join(rows) + '\n]\n')
     CONST['clouds'] = dict(n=len(alphas), clip=[int(cx0), int(cy0), int(cx1), int(cy1)], hole=int(hole.sum()))
 
+# ---------------------------------------------------------------- lighthouse rays
+def rays():
+    """The painted light rays around the lantern, isolated so they can flare with the beacon. In polar
+    coordinates about the lantern a ray is a line along the radius: average the fine detail along each
+    angle, keep angles where a streak runs most of the way out (and only within the painted fan — out
+    over the sea and short to the right; elsewhere it's tree texture), map back and keep the streak
+    pixels. Tower and spire excluded. → RayGlow (brightened toward warm light)."""
+    CX, CY = LANTERN[0], LANTERN[1] + 1; R = 130; x0, y0 = CX - R, CY - R; N = 2 * R
+    a = PLATE.astype(np.float32)[y0:CY + R, x0:CX + R]
+    L = a.mean(2); hp = L - ndi.gaussian_filter(L, 2.5)
+    P = cv2.warpPolar(hp, (R, 720), (R, R), R, cv2.WARP_POLAR_LINEAR)
+    Ps = ndi.gaussian_filter1d(P, 6, axis=1); Ps = Ps - ndi.gaussian_filter1d(Ps, 6, axis=0, mode='wrap')
+    score = ndi.gaussian_filter1d((Ps[:, 16:100] > 1.0).mean(1), 1.0, mode='wrap')
+    deg = np.arange(720) / 2.0
+    keep = (score > 0.45) & (((deg >= 140) & (deg <= 222)) | (deg >= 338) | (deg <= 30))
+    ray = np.clip(Ps / 3.5, 0, 1) * ndi.gaussian_filter1d(keep.astype(float), 1.0, mode='wrap')[:, None]
+    ray[:, :14] = 0; ray *= np.clip((112 - np.arange(R)) / 25, 0, 1)[None, :]
+    M = cv2.warpPolar(ray.astype(np.float32), (N, N), (R, R), R, cv2.WARP_POLAR_LINEAR | cv2.WARP_INVERSE_MAP)
+    yy, xx = np.mgrid[:N, :N]
+    M = np.nan_to_num(M) * (np.hypot(yy - R, xx - R) < R - 1) * np.clip(hp / 6 + 0.3, 0, 1)
+    M[((np.abs(xx - R) < 22) & (yy > R - 6)) | ((np.abs(xx - R) < 6) & (yy < R))] = 0
+    M = np.clip(ndi.gaussian_filter(M, 0.6) * 1.4, 0, 1)
+    lit = np.clip(a * 1.3 + np.array([70, 50, 10]), 0, 255)
+    save_asset('RayGlow', np.dstack([lit * (M[..., None] > 0.004), M * 255]).round().astype(np.uint8))
+    CONST['RayGlow'] = dict(mapX=int(x0), mapY=int(y0), w=N, h=N, px=int((M > 0.3).sum()))
+
 # ---------------------------------------------------------------- sheens (sunlight sweeping over snow/marble)
 def sheens():
     """A soft band of sunlight sweeping now and then across the snowy peaks and the landmarks' marble
@@ -649,7 +676,7 @@ def ships():
         save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
-ships(); clouds(); smoke(); waterfall(); river(); spring(); surf(); glints(); sheens()
+ships(); clouds(); smoke(); waterfall(); river(); spring(); surf(); glints(); sheens(); rays()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))

@@ -148,6 +148,12 @@ private final class AmbienceView: UIView {
     private let glintLayers = glintRegions.flatMap { r in (0..<glintGroups).map { g -> CALayer in
         let l = CALayer(); l.contents = UIImage(named: "\(r.name)\(g)")?.cgImage; l.opacity = 0; return l
     } }
+    // Lighthouse rays: flare in step with the LampGlow beacon (same period/keys, same clock) and reach
+    // outward a little at the flash — scaled about the lantern.
+    private let rayLayer: CALayer = {
+        let l = CALayer(); l.contents = UIImage(named: "RayGlow")?.cgImage; l.opacity = 0; return l
+    }()
+    private static let rayRect = CGRect(x: 56, y: 1231, width: 260, height: 260)   // lantern at its centre
     private let sheenLayers = sheens.map { s -> CALayer in
         let l = CALayer(); l.contents = UIImage(named: s.image)?.cgImage
         let band = CAGradientLayer()                                  // soft diagonal band of light
@@ -178,7 +184,7 @@ private final class AmbienceView: UIView {
         isUserInteractionEnabled = false
         cloudLayers.forEach(cloudClipLayer.addSublayer)
         layer.addSublayer(cloudClipLayer)                                  // sky: beneath everything else
-        (flipLayers + glowLayers + glintLayers + sheenLayers).forEach(layer.addSublayer)
+        (flipLayers + glowLayers + [rayLayer] + glintLayers + sheenLayers).forEach(layer.addSublayer)
         for (i, l) in shipLayers.enumerated() where !voyages.contains(where: { $0.ship == i }) {
             layer.addSublayer(l)                                            // ships above the glows
         }
@@ -205,6 +211,7 @@ private final class AmbienceView: UIView {
         for (l, g) in zip(glowLayers, glows) {
             l.frame = CGRect(x: g.mapX * k, y: g.mapY * k, width: g.w * k, height: g.h * k)
         }
+        rayLayer.frame = CGRect(x: Self.rayRect.minX * k, y: Self.rayRect.minY * k, width: Self.rayRect.width * k, height: Self.rayRect.height * k)
         cloudClipLayer.frame = CGRect(x: cloudClip.minX * k, y: cloudClip.minY * k, width: cloudClip.width * k, height: cloudClip.height * k)
         cloudClipLayer.mask?.frame = cloudClipLayer.bounds
         for (l, d) in zip(cloudLayers, cloudDrifts) {
@@ -241,10 +248,10 @@ private final class AmbienceView: UIView {
     // animations start on the next layout pass, once the map scale (for the ships' bob) is known.
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        (flipLayers + glowLayers + glintLayers + shipLayers + cloudLayers).forEach { $0.removeAllAnimations() }
+        (flipLayers + glowLayers + glintLayers + shipLayers + cloudLayers + [rayLayer]).forEach { $0.removeAllAnimations() }
         sheenLayers.forEach { $0.mask?.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
-        (flipLayers + glowLayers + glintLayers + sheenLayers).forEach { $0.isHidden = still }
+        (flipLayers + glowLayers + glintLayers + sheenLayers + [rayLayer]).forEach { $0.isHidden = still }
         needsStart = window != nil && !still
         setNeedsLayout()
     }
@@ -267,6 +274,13 @@ private final class AmbienceView: UIView {
             start(stepped("opacity", period: g.period) { t in
                 Self.eased(g.opacity.map(Double.init), g.keyTimes.map(\.doubleValue), t)
             }, on: l, "glow")
+        }
+        if let lamp = glows.first(where: { $0.image == "LampGlow" }) {
+            let v = lamp.opacity.map(Double.init), kt = lamp.keyTimes.map(\.doubleValue)
+            let lo = v.min() ?? 0, hi = v.max() ?? 1
+            func flare(_ t: Double) -> Double { (Self.eased(v, kt, t) - lo) / max(hi - lo, 1e-6) }   // 0…1 with the flash
+            start(stepped("opacity", period: lamp.period) { flare($0) }, on: rayLayer, "flare")
+            start(stepped("transform.scale", period: lamp.period) { 1 + 0.08 * flare($0) }, on: rayLayer, "reach")
         }
         for (l, d) in zip(cloudLayers, cloudDrifts) {
             // Linear drift across the clip plus one cloud-width either side, wrapping off-map.
