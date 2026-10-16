@@ -74,6 +74,24 @@ struct AlongRoad: GeometryEffect {
     }
 }
 
+/// A drop shadow drawn as a radial gradient (no blur filter), so the render server composites it as
+/// an ordinary layer instead of re-blurring it offscreen every frame while the map animates.
+struct SoftShadow: View {
+    var opacity: Double
+    var body: some View {
+        GeometryReader { g in
+            let r = max(g.size.width, g.size.height) / 2
+            Circle()
+                .fill(RadialGradient(colors: [.black.opacity(opacity), .black.opacity(opacity * 0.45), .clear],
+                                     center: .center, startRadius: 0, endRadius: r))
+                .frame(width: 2 * r, height: 2 * r)
+                .scaleEffect(x: g.size.width / (2 * r), y: g.size.height / (2 * r))
+                .frame(width: g.size.width, height: g.size.height)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 /// The child, as a small gilt traveler-token that stands on the road and bobs while walking.
 /// A deliberate placeholder — no frame-by-frame character art yet — but distinct from the
 /// coloured landmark seals so it never reads as another destination.
@@ -84,8 +102,7 @@ struct Traveler: View {
 
     var body: some View {
         ZStack {
-            Ellipse().fill(.black.opacity(0.3)).frame(width: 24, height: 7)
-                .offset(y: 17).blur(radius: 1.5)
+            SoftShadow(opacity: 0.35).frame(width: 28, height: 9).offset(y: 17)
             Image(systemName: "figure.walk")
                 .font(.system(size: 20, weight: .black))
                 .foregroundStyle(Color(hex: 0x3a2708))
@@ -96,7 +113,7 @@ struct Traveler: View {
                         center: UnitPoint(x: 0.38, y: 0.32), startRadius: 1, endRadius: 22))
                         .overlay(Circle().stroke(.white.opacity(0.85), lineWidth: 2))
                         .overlay(Circle().stroke(Color(hex: 0x8a6a22), lineWidth: 0.5).padding(3))
-                        .shadow(color: .black.opacity(0.45), radius: 3, x: 0, y: 2))
+                        .background(SoftShadow(opacity: 0.45).frame(width: 44, height: 44).offset(y: 2)))
                 .scaleEffect(x: faceLeft ? -1 : 1)
                 .offset(y: bob ? -3 : 0)
         }

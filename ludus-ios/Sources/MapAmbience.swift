@@ -108,6 +108,7 @@ private struct Voyage {
     let outFacing: CGFloat, backFacing: CGFloat
     let rest: Double, sailOut: Double, hidden: Double, sailBack: Double, after: Double, offset: Double
     static let turn = 1.6
+    static let edgeMargin: CGFloat = 24     // map px: switch to the clipped copy this close to the torn edge
 }
 private let voyages: [Voyage] = [
     // Right-hand sea: swings round, sails out to the east, slips back in from higher up.
@@ -176,7 +177,14 @@ private final class AmbienceView: UIView {
     private let clipLayers = voyages.map { v -> CALayer in
         let c = CALayer(), m = CALayer()
         m.contents = UIImage(named: v.clip)?.cgImage; m.contentsGravity = .resize
-        c.mask = m; return c
+        c.mask = m; c.opacity = 0; return c          // hidden unless the voyage animation needs it
+    }
+    // An unmasked twin of each sailing ship, shown whenever the hull is well inside the painting; the
+    // masked (clip) copy is shown only near the torn edge. A mask costs an offscreen pass every frame
+    // even with the ship at rest, so this keeps that pass to the few seconds it's actually needed.
+    private let freeShipLayers = voyages.map { v -> CALayer in
+        let l = CALayer(); l.contents = UIImage(named: "Ship\(v.ship)")?.cgImage
+        l.anchorPoint = CGPoint(x: ships[v.ship].ax, y: ships[v.ship].ay); return l
     }
 
     override init(frame: CGRect) {
@@ -189,6 +197,7 @@ private final class AmbienceView: UIView {
             layer.addSublayer(l)                                            // ships above the glows
         }
         for (c, v) in zip(clipLayers, voyages) { c.addSublayer(shipLayers[v.ship]); layer.addSublayer(c) }
+        freeShipLayers.forEach(layer.addSublayer)
     }
     required init?(coder: NSCoder) { fatalError() }
 
@@ -237,6 +246,11 @@ private final class AmbienceView: UIView {
             let l = shipLayers[v.ship]
             l.position = CGPoint(x: l.position.x - v.clipX * k, y: l.position.y - v.clipY * k)
         }
+        for (f, v) in zip(freeShipLayers, voyages) {
+            let s = ships[v.ship]
+            f.bounds = CGRect(x: 0, y: 0, width: s.w * k, height: s.h * k)
+            f.position = CGPoint(x: (s.mapX + s.ax * s.w) * k, y: (s.mapY + s.ay * s.h) * k)
+        }
         CATransaction.commit()
         if needsStart, window != nil, k > 0 { needsStart = false; startAnimations(k: k) }
     }
@@ -248,7 +262,7 @@ private final class AmbienceView: UIView {
     // animations start on the next layout pass, once the map scale (for the ships' bob) is known.
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        (flipLayers + glowLayers + glintLayers + shipLayers + cloudLayers + [rayLayer]).forEach { $0.removeAllAnimations() }
+        (flipLayers + glowLayers + glintLayers + shipLayers + cloudLayers + [rayLayer] + freeShipLayers + clipLayers + sheenLayers).forEach { $0.removeAllAnimations() }
         sheenLayers.forEach { $0.mask?.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
         (flipLayers + glowLayers + glintLayers + sheenLayers + [rayLayer]).forEach { $0.isHidden = still }
@@ -298,6 +312,11 @@ private final class AmbienceView: UIView {
                 return from + (to - from) * u * u * (3 - 2 * u)
             }
             start(a, on: band, "sweep")
+            // Hidden while the band is parked: a masked layer costs an offscreen pass even when the
+            // band shows nothing, so only draw it during its 2.8 s sweep.
+            start(stepped("opacity", period: sheenPeriod) { t in
+                let u = (t * sheenPeriod - s.offset) / sheenSweep; return (u > -0.05 && u < 1.05) ? 1 : 0
+            }, on: l, "visible")
         }
         for (i, l) in glintLayers.enumerated() {
             // Two quick twinkles per loop; groups (and the two seas) staggered so it never pulses as one.
@@ -314,9 +333,12 @@ private final class AmbienceView: UIView {
             let heave = stepped("transform.translation.y", period: s.period) { t in -b * sin(2 * .pi * t) }
             for a in [roll, heave] { a.timeOffset = (s.phase * a.duration * 15).rounded() / 15 }
             start(roll, on: l, "roll"); start(heave, on: l, "heave")
+            if let vi = voyages.firstIndex(where: { $0.ship == ships.firstIndex(where: { $0.mapX == s.mapX && $0.mapY == s.mapY }) }) {
+                start(roll.copy() as! CAAnimation, on: freeShipLayers[vi], "roll"); start(heave.copy() as! CAAnimation, on: freeShipLayers[vi], "heave")
+            }
         }
-        for v in voyages {
-            let s = ships[v.ship], l = shipLayers[v.ship]
+        for (vi, v) in voyages.enumerated() {
+            let s = ships[v.ship], l = shipLayers[v.ship], free = freeShipLayers[vi], clip = clipLayers[vi]
             let home = CGPoint(x: s.mapX + s.ax * s.w, y: s.mapY + s.ay * s.h)
             let turnOut = v.outFacing < 0 ? Voyage.turn : 0, turnBack = v.backFacing < 0 ? Voyage.turn : 0
             let marks = [v.rest, turnOut, v.sailOut, v.hidden, v.sailBack, turnBack, v.after]
@@ -351,10 +373,20 @@ private final class AmbienceView: UIView {
             pos.values = samples.map { NSValue(cgPoint: CGPoint(x: ($0.0.x - v.clipX) * k, y: ($0.0.y - v.clipY) * k)) }
             let face = CAKeyframeAnimation(keyPath: "transform.scale.x")
             face.values = samples.map { Double($0.1) }
-            for a in [pos, face] {
+            // Same path for the unmasked twin, in map space.
+            let freePos = CAKeyframeAnimation(keyPath: "position")
+            freePos.values = samples.map { NSValue(cgPoint: CGPoint(x: $0.0.x * k, y: $0.0.y * k)) }
+            let freeFace = face.copy() as! CAKeyframeAnimation
+            // Which copy is drawn: the masked one only while any part of the hull is near the tear.
+            let lo = s.ax * s.w + Voyage.edgeMargin, hi = 724 - (1 - s.ax) * s.w - Voyage.edgeMargin
+            let nearEdge = samples.map { $0.0.x < lo || $0.0.x > hi }
+            let clipVis = CAKeyframeAnimation(keyPath: "opacity"); clipVis.values = nearEdge.map { $0 ? 1.0 : 0.0 }
+            let freeVis = CAKeyframeAnimation(keyPath: "opacity"); freeVis.values = nearEdge.map { $0 ? 0.0 : 1.0 }
+            for (a, layer_, key) in [(pos, l, "sail"), (face, l, "face"), (freePos, free, "sail"), (freeFace, free, "face"),
+                                     (clipVis, clip, "visible"), (freeVis, free, "visible")] as [(CAKeyframeAnimation, CALayer, String)] {
                 a.calculationMode = .discrete; a.duration = Double(n) / 15
                 a.timeOffset = (v.offset * 15).rounded() / 15
-                start(a, on: l, a === pos ? "sail" : "face")
+                start(a, on: layer_, key)
             }
         }
     }

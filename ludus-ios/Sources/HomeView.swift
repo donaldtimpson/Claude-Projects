@@ -364,6 +364,7 @@ struct HomeView: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Prov.gold, lineWidth: 1.5))
                 .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 3)
         )
+        .padding(12).drawingGroup().padding(-12)            // flatten: static, so its shadow isn't re-blurred every frame
         .padding(.top, 6)
         .frame(maxWidth: .infinity)
         .background(
@@ -426,12 +427,14 @@ private struct LandmarkSeal: View {
         // The nameplate is an overlay that hangs below WITHOUT enlarging the layout footprint, so
         // its width/height never shift where the disc lands.
         ZStack {
+            // Soft drop shadow as a gradient, not `.shadow`: a blurred shadow is re-blurred offscreen
+            // by the render server every frame while the map ambience animates.
+            SoftShadow(opacity: 0.45).frame(width: 50, height: 50).offset(y: 3)
             Circle()
                 .fill(RadialGradient(colors: [luShade(colorHex, 46), Color(hex: colorHex)],
                                      center: UnitPoint(x: 0.38, y: 0.32), startRadius: 1, endRadius: 24))
                 .overlay(Circle().stroke(Prov.cream, lineWidth: 2))
                 .overlay(Circle().stroke(luShade(colorHex, -60), lineWidth: 0.5).padding(4))
-                .shadow(color: .black.opacity(0.45), radius: 4, x: 0, y: 3)
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .black))
                 .foregroundStyle(.white)
@@ -468,6 +471,7 @@ private struct LandmarkSeal: View {
                     .shadow(color: .black.opacity(0.3), radius: 2.5, x: 0, y: 1.5)
             )
             .fixedSize()
+            .padding(5).drawingGroup().padding(-5)          // flatten (shadow) into one texture
             // Hidden by default so the map art breathes — only the tapped (selected) landmark
             // reveals its name, and it stays through the walk until the card is dismissed. Opacity
             // + a small rise/scale are safe (overlay never affects where the disc lands).
@@ -545,5 +549,6 @@ private struct DestinationCard: View {
                 .shadow(color: .black.opacity(0.4), radius: 14, x: 0, y: 6)
         )
         .padding(.horizontal, 16).padding(.bottom, 8)
+        .padding(.top, 20).drawingGroup().padding(.top, -20)   // flatten the card + its shadows into one texture
     }
 }
