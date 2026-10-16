@@ -16,9 +16,10 @@ import SwiftUI
 // chip, so the two never fight. Free exploration is a drag pan.
 //
 // Re-tuning for new art: mark up the ORIGINAL art (red road, blue seals, green stops), run
-//   tools/map_trace.py CLEAN.png MARKED.png --pad-top 100 --write-padded province.png
-// and paste its `roadXY` + seal/stop values (the padded art goes in the asset catalog). Nothing else
-// moves. Validate with a LUDUS_TOUR=all screen recording (see `startDebugTour`).
+//   tools/map_trace.py CLEAN.png MARKED.png --pad-top 100 --write-padded tools/art/province_original.png
+// and paste its `roadXY` + seal/stop values. Then `tools/ambient_build.py` builds `ProvinceMap` (ships
+// painted out) and the ambience assets (MapAmbience.swift). Nothing else moves. Validate with a
+// LUDUS_TOUR=all screen recording (see `startDebugTour`).
 
 private enum Prov {
     static let red     = Color(hex: 0x9e2b25)
@@ -214,7 +215,7 @@ struct HomeView: View {
         ZStack(alignment: .topLeading) {
             // Static art; motion is added selectively and only via Core Animation (no per-frame app work).
             Image("ProvinceMap").resizable().frame(width: w, height: h)
-            VolcanoSmoke(w: w)
+            MapAmbience(w: w, h: h)
             ForEach(landmarks) { lm in
                 if let world = lm.world {
                     Button { travel(to: lm) } label: {
@@ -324,17 +325,20 @@ struct HomeView: View {
 
     #if DEBUG
     /// Validation hook: launch with env LUDUS_TOUR = comma-separated subjects (or "all" = every stop
-    /// top→bottom then back up) and the traveler walks the route unattended, holding at each stop,
-    /// so a screen recording can be checked against the traced road.
+    /// top→bottom then back up) and the traveler walks the route unattended, holding at each stop
+    /// (LUDUS_TOUR_HOLD seconds, default 1.5), so a screen recording can be checked against the
+    /// traced road and the map ambience.
     private func startDebugTour() {
-        guard let spec = ProcessInfo.processInfo.environment["LUDUS_TOUR"], !spec.isEmpty else { return }
+        let env = ProcessInfo.processInfo.environment
+        guard let spec = env["LUDUS_TOUR"], !spec.isEmpty else { return }
+        let hold = Double(env["LUDUS_TOUR_HOLD"] ?? "") ?? 1.5
         let stops: [Landmark] = spec == "all"
             ? landmarks + landmarks.reversed().dropFirst()
             : spec.split(separator: ",").compactMap { s in landmarks.first { $0.subject == s } }
         func step(_ i: Int) {
             guard i < stops.count else { return }
             let dur = travel(to: stops[i])
-            DispatchQueue.main.asyncAfter(deadline: .now() + dur + 1.5) { step(i + 1) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + dur + hold) { step(i + 1) }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { step(0) }
     }
