@@ -13,7 +13,7 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   WaterfallSheet waterfall cinemagraph — texture + foam clumps stream down the channel (4 s, 60 frames)
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
-  Surf0…Surf5    waves rolling in at the painted whitewater (6 s, 90 frames)
+  Surf0…SurfN    surf tiles: waves rolling in at all coastal whitewater (3 s, 45 frames) → MapAmbienceSurf.swift
   RiverSheet, SpringSheet, SailClip*  river, spring-pool ripples, sailing ships' clip masks
 
 Cinemagraph flow: the region's texture is advected along a flow field inside its fixed
@@ -47,9 +47,10 @@ RIVER_CYCLES, RIVER_D, RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS = 6, 12.0, 0
 SPRING = (380, 2071)
 SPRING_RIPPLE, SPRING_WASH, SPRING_GLINT, SPRING_FOAM, SPRING_WELL = 0.18, 1.4, 0.55, 0.75, 11.0
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
-# Painted whitewater spots (map px box, wave phase): Lighthouse cliffs, harbour beach, right-coast rocks ×3, west cliff.
-SURF_SPOTS = [((110, 1690, 240, 1760), 0.0), ((455, 1360, 545, 1420), 0.37), ((605, 1590, 675, 1660), 0.71),
-              ((650, 1775, 724, 1845), 0.18), ((610, 1890, 680, 1960), 0.55), ((10, 1560, 80, 1625), 0.9)]
+# Surf: every coastal whitewater cluster (≥ SURF_MIN_FOAM foam px), rendered as one field, tiled.
+SURF_FRAMES, SURF_TILE, SURF_TOP, SURF_MIN_FOAM = 36, 40, 520, 100         # 2.4 s loop, one wave per loop
+SURF_WASH, SURF_FOAM, SURF_SPRAY, SURF_REACH = 3.0, 0.9, 0.5, 18.0
+SURF_EXCLUDE = [(300, 1580, 460, 1740), (300, 1840, 460, 2010), (340, 2040, 460, 2110), (440, 600, 650, 750)]  # falls, river, spring, smoke
 GLINT_GROUPS, GLINT_TOP = 6, 520          # sea-glitter groups; skip the hazy distant sea above this row
 GLINT_REGIONS = {'GlintEast': (470, 520, 720, 2110), 'GlintWest': (5, 1240, 270, 1960)}
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
@@ -260,32 +261,68 @@ def glints():
 
 # ---------------------------------------------------------------- surf (shoreline wash)
 def surf():
-    """Waves rolling in at the painted whitewater: crests travel toward the shore (phase = waves·t −
-    d/λ, d = distance to land), the water near shore washes in and out along the shore normal, and
-    the foam whitens as each crest arrives. Water-only source, so rock/sand never drags into the sea."""
-    for i, ((x0, y0, x1, y1), phase) in enumerate(SURF_SPOTS):
-        x0, y0, x1, y1 = max(0, x0 - 8), max(0, y0 - 8), min(ART.shape[1], x1 + 8), min(ART.shape[0], y1 + 8)
+    """Waves rolling in wherever the painting has coastal whitewater. Each coastal region is rendered
+    as ONE continuous wave field — crests travel toward the shore (phase = t − d/λ, d = distance to
+    land), the water washes in and out along the shore normal, foam whitens as each crest arrives,
+    and spray flares where it meets the rocks — then cut into small tiles, keeping only tiles the
+    waves touch. Tiles share the render and the clock, so they join seamlessly; the regions' outer
+    edges taper to zero. Water-only source: rock/sand never drags into the sea. Writes the tile
+    table to Sources/MapAmbienceSurf.swift."""
+    h = hsv(PLATE)
+    water = ((h[..., 0] > 80) & (h[..., 0] < 128) & (h[..., 1] > 45)) | ((h[..., 1] < 70) & (h[..., 2] > 170))
+    water = ndi.binary_opening(ndi.binary_closing(water, iterations=1), iterations=1)
+    sea = ndi.binary_closing((h[..., 0] > 85) & (h[..., 0] < 128) & (h[..., 1] > 60), iterations=3)
+    lab, n = ndi.label(sea); sz = ndi.sum(sea, lab, range(1, n + 1)); sea = np.isin(lab, 1 + np.nonzero(sz > 20000)[0])
+    seaw = ndi.binary_dilation(sea, iterations=4) & water & PAINTED
+    dshore = ndi.distance_transform_edt(seaw)
+    foam = (h[..., 1] < 80) & (h[..., 2] > 165) & seaw & (dshore < 16)
+    foam[:SURF_TOP] = False
+    for (x0, y0, x1, y1) in SURF_EXCLUDE: foam[y0:y1, x0:x1] = False
+    cl, n = ndi.label(ndi.binary_dilation(foam, iterations=10)); cnt = ndi.sum(foam, cl, range(1, n + 1))
+    tiles = []
+    for ci in np.argsort(cnt)[::-1]:
+        if cnt[ci] < SURF_MIN_FOAM: break
+        ys, xs = np.nonzero((cl == ci + 1) & foam)
+        x0, y0 = max(0, xs.min() - 30), max(0, ys.min() - 30); x1, y1 = min(ART.shape[1], xs.max() + 31), min(ART.shape[0], ys.max() + 31)
         art = PLATE.astype(np.float32)[y0:y1, x0:x1]; H, W = art.shape[:2]
-        yy, xx = np.mgrid[:H, :W].astype(np.float32); h = hsv(art)
-        water = ((h[..., 0] > 80) & (h[..., 0] < 128) & (h[..., 1] > 45)) | ((h[..., 1] < 70) & (h[..., 2] > 170))
-        water = ndi.binary_opening(ndi.binary_closing(water, iterations=1), iterations=1)
-        lab, n = ndi.label(water); sz = ndi.sum(water, lab, range(1, n + 1)); water = np.isin(lab, 1 + np.nonzero(sz > 150)[0])
-        d = ndi.gaussian_filter(ndi.distance_transform_edt(water), 1.5)          # distance to shore
-        gy, gx = np.gradient(d); n = np.hypot(gx, gy) + 1e-6; nx, ny = -gx / n, -gy / n
-        edge = np.clip(np.minimum.reduce([xx, W - 1 - xx, yy, H - 1 - yy]) / 8.0, 0, 1)
-        near = np.clip(1 - d / 22.0, 0, 1) * water * edge * edge * (3 - 2 * edge)   # fades out at the box edge
-        foamz = np.clip(ndi.gaussian_filter(((h[..., 1] < 80) & (h[..., 2] > 165) & water).astype(np.float32), 1.2) * 2.0, 0, 1)
-        m = water.astype(np.float32); num = ndi.gaussian_filter(art * m[..., None], (3, 3, 0)); den = ndi.gaussian_filter(m, 3)[..., None]
+        yy, xx = np.mgrid[:H, :W].astype(np.float32)
+        wat = seaw[y0:y1, x0:x1]
+        d = ndi.gaussian_filter(ndi.distance_transform_edt(wat), 1.5)
+        gy, gx = np.gradient(d); nn = np.hypot(gx, gy) + 1e-6; nx, ny = -gx / nn, -gy / nn
+        edge = np.clip(np.minimum.reduce([xx, W - 1 - xx, yy, H - 1 - yy]) / 12.0, 0, 1)
+        # only near the foam of THIS cluster (so the band hugs the painted whitewater)
+        zone = ndi.gaussian_filter(ndi.binary_dilation(((cl == ci + 1) & foam)[y0:y1, x0:x1], iterations=6).astype(np.float32), 4)
+        near = np.clip(1 - d / SURF_REACH, 0, 1) * wat * edge * edge * (3 - 2 * edge) * np.clip(zone * 1.5, 0, 1)
+        foamz = np.clip(ndi.gaussian_filter(((h[y0:y1, x0:x1, 1] < 80) & (h[y0:y1, x0:x1, 2] > 165) & wat).astype(np.float32), 1.2) * 2.0, 0, 1)
+        m = wat.astype(np.float32); num = ndi.gaussian_filter(art * m[..., None], (3, 3, 0)); den = ndi.gaussian_filter(m, 3)[..., None]
         src = art * m[..., None] + (num / np.maximum(den, 1e-4)) * (1 - m[..., None])
+        phase = (len(tiles) * 0.29) % 1
         frames = []
-        for f in range(90):                                                      # 6 s loop, 2 waves
-            s_ = np.sin(2 * np.pi * (2 * f / 90 + phase - d / 16.0))
-            disp = 1.6 * s_ * near
+        for f in range(SURF_FRAMES):                               # one wave per loop
+            s_ = np.sin(2 * np.pi * (f / SURF_FRAMES + phase - d / 16.0))
+            disp = SURF_WASH * s_ * near
             fr = cv2.remap(src, (xx - nx * disp).astype(np.float32), (yy - ny * disp).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
-            k = (0.55 * np.clip(s_, 0, 1) ** 2 * near * np.maximum(foamz, 0.25 * near))[..., None]
-            frames.append(np.clip(np.where(water[..., None], fr * (1 - k) + np.array([238, 246, 250]) * k, art), 0, 255).astype(np.uint8))
-        env = np.clip(ndi.gaussian_filter(near, 1.0) * 1.3, 0, 1) * water
-        pack_sheet(f'Surf{i}', frames, env, x0, y0, 6.0); preview(f'surf{i}', art, frames, env, 15)
+            crest = np.clip(s_, 0, 1) ** 2 * near
+            spray = crest * np.clip(1 - d / 4.0, 0, 1)                  # flare where it meets the rocks
+            k = np.clip(SURF_FOAM * crest * np.maximum(foamz, 0.3 * near) + SURF_SPRAY * spray, 0, 0.95)[..., None]
+            frames.append(np.clip(np.where(wat[..., None], fr * (1 - k) + np.array([240, 247, 251]) * k, art), 0, 255).astype(np.uint8))
+        env = np.clip(ndi.gaussian_filter(near, 1.0) * 1.4, 0, 1) * wat
+        # tile, keeping only tiles the waves touch
+        T = SURF_TILE
+        for ty in range(0, H, T):
+            for tx in range(0, W, T):
+                e = env[ty:ty + T, tx:tx + T]
+                if e.max() < 0.02: continue
+                name = f'Surf{len(tiles)}'
+                pack_sheet(name, [fr_[ty:ty + T, tx:tx + T] for fr_ in frames], np.pad(e, ((0, 0), (0, 0))), x0 + tx, y0 + ty, SURF_FRAMES / 15)
+                tiles.append(name)
+    lines = [f'    .init(image: "{t}", frames: {CONST[t]["frames"]}, cols: {CONST[t]["cols"]}, cellW: {CONST[t]["cellW"]}, cellH: {CONST[t]["cellH"]}, gutter: 2, '
+             f'frameW: {CONST[t]["frameW"]}, frameH: {CONST[t]["frameH"]}, mapX: {CONST[t]["mapX"]}, mapY: {CONST[t]["mapY"]}, loop: {CONST[t]["loop"]}),' for t in tiles]
+    open(os.path.join(HERE, '..', 'Sources', 'MapAmbienceSurf.swift'), 'w').write(
+        '// GENERATED by tools/ambient_build.py — surf tiles (waves rolling in at the painted whitewater).\n'
+        '// Do not edit by hand; re-run the tool.\n\n'
+        'extension Flipbook {\n    static let surf: [Flipbook] = [\n' + '\n'.join('    ' + l for l in lines) + '\n    ]\n}\n')
+    CONST['surfTiles'] = len(tiles)
 
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
 def glow(name, x0, y0, x1, y1, mask_fn, gain, warm, bloom=None):
