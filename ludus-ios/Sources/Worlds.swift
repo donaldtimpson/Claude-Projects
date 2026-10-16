@@ -47,8 +47,8 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .trueFalseBlitz:  TrueFalseBlitzView(onClose: onClose)
     case .oddOneOut:       OddOneOutView(onClose: onClose)
     case .patternPop:      PatternPopView(onClose: onClose)
-    case .portaCustos:     ComingSoonGame(id: id, onClose: onClose)
-    case .torches:         ComingSoonGame(id: id, onClose: onClose)
+    case .portaCustos:     PortaCustosView(onClose: onClose)
+    case .torches:         TorchesView(onClose: onClose)
     case .critterSort:     CritterSortView(onClose: onClose)
     case .dressMarcus:     ComingSoonGame(id: id, onClose: onClose)
     case .zookeeper:       ComingSoonGame(id: id, onClose: onClose)
@@ -141,10 +141,10 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🐍", howTo: how(("👆", "Swipe to steer"), ("😋", "Eat words that mean the same"))),
     ]),
     LudusWorld(name: "Brain Benders", subject: "Logic & Puzzles", emoji: "🧩", colorHex: Lu.grape, games: [
-        .init(title: "Porta Custos", mechanic: "gatekeeper", premise: "Only gladiators who follow the rule may enter.", game: nil,
-              icon: "🛡️", howTo: how(("📜", "Read the rule"), ("🚪", "Open the gate or keep it shut"))),
-        .init(title: "Torches of the Arena", mechanic: "lights-out", premise: "Light every torch — but each tap flips its neighbours.", game: nil,
-              icon: "🔥", howTo: how(("👆", "Tap a torch to flip it"), ("🔥", "Its neighbours flip too"), ("✨", "Light them all!"))),
+        .init(title: "Porta Custos", mechanic: "gatekeeper", premise: "Only gladiators who follow the rule may enter.", game: .portaCustos,
+              icon: "🛡️", howTo: how(("🛡️", "Look at the rule"), ("🚪", "OPEN if he fits it"), ("✋", "SHUT if he doesn't"))),
+        .init(title: "Torches of the Arena", mechanic: "lights-out", premise: "Light every torch — but each tap flips its neighbours.", game: .torches,
+              icon: "🔥", howTo: how(("👆", "Tap a torch"), ("↔️", "Its neighbours flip too"), ("🔥", "Light them all!"))),
         .init(title: "True / False Blitz", mechanic: "quick-fire", premise: "Snap-judge each statement, true or false.", game: .trueFalseBlitz,
               icon: "⚖️", howTo: how(("📖", "Read the sentence"), ("✅", "Is it true or false?"))),
         .init(title: "Odd One Out", mechanic: "quick-fire", premise: "Tap the one that doesn't belong.", game: .oddOneOut,
