@@ -54,7 +54,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .zookeeper:       ComingSoonGame(id: id, onClose: onClose)
     case .timeline:        TimeOrderView(onClose: onClose)
     case .timeGuard:       TimeGuardView(onClose: onClose)
-    case .caesarWheel:     ComingSoonGame(id: id, onClose: onClose)
+    case .caesarWheel:     CaesarWheelView(onClose: onClose)
     case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        ComingSoonGame(id: id, onClose: onClose)
     case .porcus:          ComingSoonGame(id: id, onClose: onClose)
@@ -163,8 +163,8 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Time Travelers", subject: "History", emoji: "🏛️", colorHex: Lu.gold, games: [
         .init(title: "Time Guard", mechanic: "spot", premise: "Something in old Rome doesn't belong. Catch it!", game: .timeGuard,
               icon: "⏳", howTo: how(("👀", "Look at the old scene"), ("📱", "Tap the wrong-time thing"), ("🌀", "Zap it home!"))),
-        .init(title: "Caesar's Wheel", mechanic: "cipher", premise: "Turn Caesar's secret wheel to read the message.", game: nil,
-              icon: "🔐", howTo: how(("🎡", "Turn the wheel"), ("🔤", "Swap each letter"), ("📜", "Read the secret!"))),
+        .init(title: "Caesar's Wheel", mechanic: "cipher", premise: "Turn Caesar's secret wheel to read the message.", game: .caesarWheel,
+              icon: "🔐", howTo: how(("🔄", "Turn the wheel"), ("🔤", "Watch the word appear"), ("👆", "Tap what it says!"))),
         .init(title: "Timeline", mechanic: "order", premise: "Which came first? Put history in order.", game: .timeline,
               icon: "🏺", howTo: how(("👀", "Look at the events"), ("👆", "Tap the oldest one"))),
     ]),
