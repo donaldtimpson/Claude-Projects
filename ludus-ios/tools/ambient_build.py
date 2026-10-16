@@ -74,6 +74,7 @@ SHEEN_SNOW_EXCLUDE = [(285, 315, 530, 460)]     # the Library sits in front of t
 SHEEN_TREELINE = 388
 SHEEN_LIFT, SHEEN_GAIN = 0.35, 1.2
 CLOUD_SPEED = (3.0, 6.0)   # map px/s drift (a cloud takes ~2-4 min to cross)
+CLOUD_FILL_SKY, CLOUD_START_SHIFT, CLOUD_LIFT = False, 0.31, 6
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
 SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
@@ -394,8 +395,11 @@ def clouds():
     wgt = np.clip(d1 / 0.15, 0, 1)                                   # trust the local fill only where sky is near
     fill = near * wgt + far * (1 - wgt)
     fill = fill * (1 + 0.035 * ndi.gaussian_filter(np.random.default_rng(9).normal(0, 1, (H, W)), 1.0))[..., None]   # faint brush grain
-    plate = PLATE.astype(np.float32).copy(); plate[hole] = np.clip(fill[hole], 0, 255)
-    PLATE = plate.round().astype(np.uint8); save_asset('ProvinceMap', PLATE)
+    # The painted clouds stay in the map (a static back layer); the drifting copies pass over them,
+    # faded (MapAmbience). Set CLOUD_FILL_SKY to paint them out instead (the earlier version).
+    if CLOUD_FILL_SKY:
+        plate = PLATE.astype(np.float32).copy(); plate[hole] = np.clip(fill[hole], 0, 255)
+        PLATE = plate.round().astype(np.uint8); save_asset('ProvinceMap', PLATE)
     # clip mask (feathered painted sky above the skyline) and cloud sprites (original pixels)
     ys, xs = np.nonzero(draw); cx0, cx1, cy0, cy1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     clip = np.clip(ndi.gaussian_filter(draw.astype(np.float32), 0.8), 0, 1)[cy0:cy1, cx0:cx1]
@@ -408,8 +412,9 @@ def clouds():
         speed = rng.uniform(*CLOUD_SPEED)                            # map px / s
         span = (cx1 - cx0) + (x1 - x0)                               # off the right edge → back from the left
         period = round(span / speed * 15) / 15
-        start = (x0 - (cx0 - (x1 - x0))) / span                        # begin where it's painted
-        rows.append(f'    .init(image: "Cloud{k}", mapX: {x0}, mapY: {y0}, w: {x1 - x0}, h: {y1 - y0}, period: {period:.4f}, start: {start:.4f}, flip: false),')
+        start = ((x0 - (cx0 - (x1 - x0))) / span + CLOUD_START_SHIFT) % 1   # begin away from its painted twin
+        # nudged up a few px so even when it passes its painted twin they never line up exactly
+        rows.append(f'    .init(image: "Cloud{k}", mapX: {x0}, mapY: {y0 - CLOUD_LIFT}, w: {x1 - x0}, h: {y1 - y0}, period: {period:.4f}, start: {start:.4f}, flip: false),')
         # a mirrored twin half a lap behind keeps the sky about as full as the painting while one is off-map
         rows.append(f'    .init(image: "Cloud{k}", mapX: {x0}, mapY: {y0}, w: {x1 - x0}, h: {y1 - y0}, period: {period:.4f}, start: {(start + 0.5) % 1:.4f}, flip: true),')
     open(os.path.join(HERE, '..', 'Sources', 'MapAmbienceClouds.swift'), 'w').write(

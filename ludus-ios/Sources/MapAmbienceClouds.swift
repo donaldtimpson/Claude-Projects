@@ -4,12 +4,12 @@ import CoreGraphics
 
 let cloudClip = CGRect(x: 5, y: 275, width: 713, height: 123)
 let cloudDrifts: [CloudDrift] = [
-    .init(image: "Cloud0", mapX: 28, mapY: 281, w: 133, h: 50, period: 152.8667, start: 0.1844, flip: false),
-    .init(image: "Cloud0", mapX: 28, mapY: 281, w: 133, h: 50, period: 152.8667, start: 0.6844, flip: true),
-    .init(image: "Cloud1", mapX: 488, mapY: 284, w: 230, h: 115, period: 270.7333, start: 0.7561, flip: false),
-    .init(image: "Cloud1", mapX: 488, mapY: 284, w: 230, h: 115, period: 270.7333, start: 0.2561, flip: true),
-    .init(image: "Cloud2", mapX: 170, mapY: 289, w: 42, h: 28, period: 161.5333, start: 0.2742, flip: false),
-    .init(image: "Cloud2", mapX: 170, mapY: 289, w: 42, h: 28, period: 161.5333, start: 0.7742, flip: true),
-    .init(image: "Cloud3", mapX: 5, mapY: 315, w: 129, h: 68, period: 205.1333, start: 0.1532, flip: false),
-    .init(image: "Cloud3", mapX: 5, mapY: 315, w: 129, h: 68, period: 205.1333, start: 0.6532, flip: true),
+    .init(image: "Cloud0", mapX: 28, mapY: 275, w: 133, h: 50, period: 152.8667, start: 0.4944, flip: false),
+    .init(image: "Cloud0", mapX: 28, mapY: 281, w: 133, h: 50, period: 152.8667, start: 0.9944, flip: true),
+    .init(image: "Cloud1", mapX: 488, mapY: 278, w: 230, h: 115, period: 270.7333, start: 0.0661, flip: false),
+    .init(image: "Cloud1", mapX: 488, mapY: 284, w: 230, h: 115, period: 270.7333, start: 0.5661, flip: true),
+    .init(image: "Cloud2", mapX: 170, mapY: 283, w: 42, h: 28, period: 161.5333, start: 0.5842, flip: false),
+    .init(image: "Cloud2", mapX: 170, mapY: 289, w: 42, h: 28, period: 161.5333, start: 0.0842, flip: true),
+    .init(image: "Cloud3", mapX: 5, mapY: 309, w: 129, h: 68, period: 205.1333, start: 0.4632, flip: false),
+    .init(image: "Cloud3", mapX: 5, mapY: 315, w: 129, h: 68, period: 205.1333, start: 0.9632, flip: true),
 ]

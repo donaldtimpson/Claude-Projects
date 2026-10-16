@@ -90,6 +90,9 @@ private let sheenPeriod: CFTimeInterval = 30, sheenSweep: CFTimeInterval = 2.8
 /// One of the painting's clouds drifting right (tools/ambient_build.py → MapAmbienceClouds.swift). It
 /// travels from just off the left of `cloudClip` to just off its right and wraps, inside a clip of the
 /// painted sky above the skyline — so it passes behind the peaks and disappears behind the tear.
+/// The painted clouds stay put in the map; this drifting layer passes over them at this opacity.
+private let cloudOpacity: Float = 0.6
+
 struct CloudDrift { let image: String; let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat; let period: Double, start: Double, flip: Bool }
 
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
@@ -155,7 +158,9 @@ private final class AmbienceView: UIView {
     private let cloudClipLayer: CALayer = {
         let c = CALayer(), m = CALayer()
         m.contents = UIImage(named: "CloudClip")?.cgImage; m.contentsGravity = .resize
-        c.mask = m; return c
+        c.mask = m
+        c.opacity = cloudOpacity                     // drifting layer faded over the painted clouds
+        return c
     }()
     private let cloudLayers = cloudDrifts.map { d -> CALayer in
         let l = CALayer(); l.contents = UIImage(named: d.image)?.cgImage
