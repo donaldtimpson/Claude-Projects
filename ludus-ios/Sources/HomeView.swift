@@ -38,7 +38,7 @@ private enum Chrome {
     static let sealBox: CGFloat = 84                  // seal/ring/halo images are drawn in this square…
     static let mapSeal: CGFloat = 0.85, cardSeal: CGFloat = 1.06   // …shown at these scales
     static let cardW: CGFloat = 344, cardH: CGFloat = 150, cardRod: CGFloat = 13
-    static let plateH: CGFloat = 31, plateRod: CGFloat = 5
+    static let plateH: CGFloat = 40, plateRod: CGFloat = 5
     static let play = CGSize(width: 308, height: 54)  // PLAY plaque image incl. its 6-pt shadow margin
     static let standard = CGSize(width: 42, height: 62), standardFoot: CGFloat = 58, standardScale: CGFloat = 0.92
 }
@@ -558,12 +558,13 @@ private struct NamePlate: View {
 
     var body: some View {
         let rodH = Chrome.plateRod * 1.6
-        VStack(spacing: 0) {
+        VStack(spacing: 2) {
             Text(name.uppercased()).font(luCinzel(11)).tracking(0.5).foregroundStyle(Prov.ink)
             Text(subject).font(luGaramond(11.5, semibold: true)).foregroundStyle(waxInk(wax, 25))
         }
         .fixedSize()
-        .padding(.horizontal, 13)
+        .padding(.horizontal, 20)
+        .padding(.top, 1)                       // optical: clear of the top rod's curl shade
         .frame(height: Chrome.plateH)
         .background(Image("PlateParchment")
             .resizable(capInsets: EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12)))

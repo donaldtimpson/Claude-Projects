@@ -49,7 +49,7 @@ BAR_SHADOW = 8             # room above the tab for the bar's upward shadow
 FRAME_W = 4.2              # gilt moulding width — identical to the plaque's
 FILLET_AT = 7.0            # engraved gilt fillet line, inside the moulding — identical to the plaque's
 CARD_W, CARD_H, CARD_ROD = 344, 150, 13
-PLATE_W, PLATE_H, PLATE_ROD = 170, 31, 5
+PLATE_W, PLATE_H, PLATE_ROD = 190, 40, 5
 PLAY_W, PLAY_H = 296, 42
 RANK_PT = 15.5             # rank lettering size
 RANK_W = 220               # rank image width; its height = the tab (BAR_TAB)
