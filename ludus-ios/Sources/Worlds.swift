@@ -34,7 +34,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .bubbleEvens:     BubbleEvensView(onClose: onClose)
     case .timesTableNinja: TimesTableNinjaView(onClose: onClose)
     case .stackAttack:     StackAttackView(onClose: onClose)
-    case .lupaChomp:       ComingSoonGame(id: id, onClose: onClose)
+    case .lupaChomp:       LupaChompView(onClose: onClose)
     case .omnibus:         ComingSoonGame(id: id, onClose: onClose)
     case .flagFrenzy:      FlagFrenzyView(onClose: onClose)
     case .nameCountry:     NameCountryView(onClose: onClose)
@@ -109,7 +109,7 @@ private func how(_ pairs: (String, String)...) -> [HowTo] { pairs.map { HowTo(ic
 
 let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Number Crunchers", subject: "Math", emoji: "🔢", colorHex: Lu.coral, games: [
-        .init(title: "Lupa Chomp", mechanic: "compare", premise: "The she-wolf always eats the bigger pile.", game: nil,
+        .init(title: "Lupa Chomp", mechanic: "compare", premise: "The she-wolf always eats the bigger pile.", game: .lupaChomp,
               icon: "🐺", howTo: how(("👀", "Look at the two piles"), ("👆", "Tap the BIGGER one"), ("🐺", "Feed the wolf!"))),
         .init(title: "Omnibus Driver", mechanic: "story-sum", premise: "Passengers hop on and off — how many are riding?", game: nil,
               icon: "🚌", howTo: how(("👀", "Watch who gets on and off"), ("🔢", "Tap how many are riding"))),
