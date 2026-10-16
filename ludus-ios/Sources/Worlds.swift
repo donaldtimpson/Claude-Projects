@@ -35,7 +35,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .timesTableNinja: TimesTableNinjaView(onClose: onClose)
     case .stackAttack:     StackAttackView(onClose: onClose)
     case .lupaChomp:       LupaChompView(onClose: onClose)
-    case .omnibus:         ComingSoonGame(id: id, onClose: onClose)
+    case .omnibus:         OmnibusView(onClose: onClose)
     case .flagFrenzy:      FlagFrenzyView(onClose: onClose)
     case .nameCountry:     NameCountryView(onClose: onClose)
     case .pharosBeam:      ComingSoonGame(id: id, onClose: onClose)
@@ -111,8 +111,8 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Number Crunchers", subject: "Math", emoji: "🔢", colorHex: Lu.coral, games: [
         .init(title: "Lupa Chomp", mechanic: "compare", premise: "The she-wolf always eats the bigger pile.", game: .lupaChomp,
               icon: "🐺", howTo: how(("👀", "Look at the two piles"), ("👆", "Tap the BIGGER one"), ("🐺", "Feed the wolf!"))),
-        .init(title: "Omnibus Driver", mechanic: "story-sum", premise: "Passengers hop on and off — how many are riding?", game: nil,
-              icon: "🚌", howTo: how(("👀", "Watch who gets on and off"), ("🔢", "Tap how many are riding"))),
+        .init(title: "Omnibus Driver", mechanic: "story-sum", premise: "Passengers hop on and off — how many are riding?", game: .omnibus,
+              icon: "🚌", howTo: how(("🫏", "Watch the bus stop"), ("👀", "Who gets on? Who gets off?"), ("🔢", "Tap how many are riding"))),
         .init(title: "Bubble Evens", mechanic: "pop", premise: "Pop the evens before they escape.", game: .bubbleEvens,
               icon: "🫧", howTo: how(("👆", "Pop the EVEN numbers"), ("🙅", "Let the odd ones float away"))),
         .init(title: "Times Table Ninja", mechanic: "slash", premise: "Slice the correct multiples, dodge the bombs.", game: .timesTableNinja,
