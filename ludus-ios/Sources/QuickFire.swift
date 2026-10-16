@@ -269,15 +269,15 @@ struct NameCountryView: View {
 // True / False: picture facts and tiny sums first; capitals and times tables later.
 private let tfPictureFacts: [(String, Bool)] = [
     ("🐟 can swim", true), ("🐘 can fly", false), ("🐦 has wings", true), ("🐄 says moo", true),
-    ("🐱 has 4 legs", true), ("🐍 has legs", false), ("🌙 comes out at night", true), ("☀️ is cold", false),
+    ("🐱 has 4 legs", true), ("🐍 has legs", false), ("🦉 is awake at night", true), ("☀️ is cold", false),
     ("🍌 is yellow", true), ("🍎 is blue", false), ("🐢 is very fast", false), ("❄️ is cold", true),
     ("🐶 says meow", false), ("🐝 makes honey", true), ("🌳 is a tree", true), ("🐸 can jump", true),
 ]
 private let tfFacts: [(String, Bool)] = [
     ("A spider has 8 legs", true), ("Whales are fish", false), ("Bats are mammals", true),
-    ("The Sun is a star", true), ("Penguins can fly", false), ("Water freezes at 0 °C", true),
-    ("A triangle has 4 sides", false), ("Plants need sunlight", true), ("The Moon makes its own light", false),
-    ("There are 7 days in a week", true), ("A year has 10 months", false), ("Ice is lighter than water", true),
+    ("The Sun is a star", true), ("Penguins can fly", false), ("Water freezes at 0 °C (32 °F)", true),
+    ("A triangle has 4 sides", false), ("Plants use sunlight to make food", true), ("The Moon makes its own light", false),
+    ("There are 7 days in a week", true), ("A year has 10 months", false), ("Ice floats on water", true),
 ]
 
 private func trueFalseQuestion(_ level: Int) -> QFQuestion {
@@ -301,7 +301,7 @@ private func trueFalseQuestion(_ level: Int) -> QFQuestion {
         if Bool.random() { return sum(level >= 7 ? 12 : 9, "×") }
         let c = Geo.famous.randomElement() ?? Geo.countries[0]
         let cap = Bool.random() ? c.capital : (Geo.famous.randomElement() ?? Geo.countries[0]).capital
-        return QFQuestion(topLabel: "TRUE OR FALSE?", big: "\(c.flag)  \(cap) is the capital of \(c.name)",
+        return QFQuestion(topLabel: "TRUE OR FALSE?", big: "\(c.flag)  \(cap) is the capital of \(["United States", "United Kingdom"].contains(c.name) ? "the " : "")\(c.name)",
                           options: ["TRUE ✓", "FALSE ✗"], correct: cap == c.capital ? 0 : 1)
     }
 }
@@ -321,8 +321,8 @@ private let oooPictures: [(String, [String])] = [
 ]
 private let oooWords: [(String, [String])] = [
     ("animals", ["dog", "cat", "horse", "cow", "tiger", "rabbit", "bear"]),
-    ("fruit", ["apple", "banana", "grape", "orange", "mango", "cherry"]),
-    ("colours", ["red", "blue", "green", "yellow", "purple", "orange"]),
+    ("fruit", ["apple", "banana", "grape", "mango", "pear", "melon"]),
+    ("colors", ["red", "blue", "green", "yellow", "purple", "pink"]),
     ("numbers", ["one", "two", "three", "five", "seven", "ten"]),
     ("body parts", ["hand", "foot", "nose", "ear", "knee", "elbow"]),
 ]
@@ -332,7 +332,7 @@ private let oooHard: [(String, [String], [String])] = [
     ("Which is NOT a country?", ["France", "Japan", "Brazil", "Kenya", "Canada", "Egypt"], ["Paris", "London", "Rome", "Tokyo"]),
     ("Which is NOT a planet?", ["Mars", "Venus", "Jupiter", "Saturn", "Neptune", "Mercury"], ["the Moon", "the Sun"]),
     ("Which is NOT a shape with 4 sides?", ["square", "rectangle", "rhombus", "trapezoid"], ["triangle", "circle", "pentagon"]),
-    ("Which is NOT a verb?", ["run", "jump", "swim", "write", "sing", "climb"], ["chair", "happy", "blue", "river"]),
+    ("Which is NOT a verb?", ["run", "jump", "swim", "write", "sing", "climb"], ["happy", "slowly", "river", "under"]),
 ]
 
 private func oddOneOutQuestion(_ level: Int) -> QFQuestion {
@@ -364,18 +364,18 @@ struct OddOneOutView: View {
 
 // (event, year, emoji). Level I compares only things ages apart; later levels bring them closer.
 private let timelineEvents: [(String, Int, String)] = [
-    ("Dinosaurs", -66_000_000, "🦖"), ("The Pyramids", -2560, "🔺"), ("First Olympics", -776, "🏅"),
-    ("Rome is founded", -753, "🏛️"), ("The Great Wall", -220, "🧱"), ("Julius Caesar", -50, "👑"),
-    ("Printing press", 1440, "📜"), ("Columbus sails", 1492, "⛵️"), ("The Pilgrims", 1620, "🦃"),
-    ("USA is founded", 1776, "🇺🇸"), ("Steam trains", 1825, "🚂"), ("The light bulb", 1879, "💡"),
+    ("Dinosaurs roam", -150_000_000, "🦕"), ("The Great Pyramid", -2560, "🔺"), ("First Olympics", -776, "🏅"),
+    ("Rome builds the Colosseum", 80, "🏟️"), ("First Great Wall built", -220, "🧱"), ("Caesar rules Rome", -46, "🦅"),
+    ("Gutenberg's printing press", 1440, "📖"), ("Columbus sails", 1492, "⛵️"), ("Pilgrims reach America", 1620, "🦃"),
+    ("USA is founded", 1776, "🇺🇸"), ("First public railway", 1825, "🚂"), ("Edison's light bulb", 1879, "💡"),
     ("First airplane", 1903, "✈️"), ("Titanic sinks", 1912, "🚢"), ("First TV", 1927, "📺"),
-    ("Moon landing", 1969, "🌕"), ("The Internet", 1983, "🌐"), ("First iPhone", 2007, "📱"),
+    ("Moon landing", 1969, "🌕"), ("World Wide Web", 1991, "🌐"), ("First iPhone", 2007, "📱"),
 ]
 
 private func timelineQuestion(_ level: Int) -> QFQuestion {
     let n = qfChoices(level)
     // The smallest gap allowed between any two choices shrinks with level.
-    let minGap: Int = level <= 1 ? 1500 : level == 2 ? 500 : level <= 4 ? 150 : level <= 6 ? 40 : 10
+    let minGap: Int = level <= 1 ? 1500 : level == 2 ? 500 : level <= 4 ? 150 : level <= 6 ? 40 : 25
     var picks: [(String, Int, String)] = []
     for _ in 0..<400 {
         picks = []
@@ -427,7 +427,7 @@ struct CoinCountView: View {
 
 // MARK: Logic — "Pattern Pop" (what comes next)
 
-private let patternEmoji = ["🍎", "🍌", "🐶", "🐱", "⭐️", "🌙", "🔴", "🔵", "🟢", "🟡"]
+private let patternEmoji = ["🍎", "🍌", "🐶", "🐱", "⭐️", "🌙", "🚗", "🔵", "🟢", "🌸"]
 
 // I: AB picture patterns · II: ABC / AAB · III: count by 1s and 2s · IV: 5s and 10s ·
 // V: any step from any start · VI: counting down · VII+: doubling and growing steps.
@@ -454,7 +454,7 @@ private func patternQuestion(_ level: Int) -> QFQuestion {
         else { let a = Int.random(in: 1...5); seq = (0..<5).map { a + $0 * ($0 + 1) / 2 } }   // +1, +2, +3, …
     }
     let answer = seq.removeLast()
-    let pool = [1, -1, 2, -2, 3, 5, -5, 10].map { "\(answer + $0)" }
+    let pool = [1, -1, 2, -2, 3, 5, -5, 10].map { answer + $0 }.filter { $0 >= 0 }.map(String.init)
     let (opts, c) = qfOptions("\(answer)", pool, n)
     return QFQuestion(topLabel: "WHAT COMES NEXT?",
                       big: seq.map(String.init).joined(separator: ",  ") + ",  ?",

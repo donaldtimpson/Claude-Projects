@@ -305,7 +305,7 @@ struct HomeView: View {
     /// Games in a world vs. games the child has WON (reached the bronze-laurel level) (re-read whenever the view updates, e.g.
     /// on returning from a game).
     private func progress(_ world: LudusWorld, index: Int = 0) -> SealProgress {
-        let n = world.games.count
+        let n = world.games.filter(\.playable).count
         var done = world.games.filter(\.won).count
         #if DEBUG
         if ProcessInfo.processInfo.environment["LUDUS_DEMO_PROGRESS"] != nil { done = (index * 2) % (n + 1) }
