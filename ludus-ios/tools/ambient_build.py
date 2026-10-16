@@ -13,6 +13,8 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   WaterfallSheet waterfall cinemagraph — texture + foam clumps stream down the channel (4 s, 60 frames)
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
+  Surf0…Surf5    waves rolling in at the painted whitewater (6 s, 90 frames)
+  RiverSheet, SpringSheet, SailClip*  river, spring-pool ripples, sailing ships' clip masks
 
 Cinemagraph flow: the region's texture is advected along a flow field inside its fixed
 silhouette; several phase-staggered copies are blended with sin² weights and a variance-preserving
@@ -44,6 +46,9 @@ WATERFALL_STREAK, WATERFALL_STREAK_WRAPS = 0.15, 3
 RIVER_CYCLES, RIVER_D, RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS = 6, 12.0, 0.50, 0.18, 2
 SPRING, SPRING_RIPPLE, SPRING_BOIL = (380, 2071), 0.16, 0.25
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
+# Painted whitewater spots (map px box, wave phase): Lighthouse cliffs, harbour beach, right-coast rocks ×3, west cliff.
+SURF_SPOTS = [((110, 1690, 240, 1760), 0.0), ((455, 1360, 545, 1420), 0.37), ((605, 1590, 675, 1660), 0.71),
+              ((650, 1775, 724, 1845), 0.18), ((610, 1890, 680, 1960), 0.55), ((10, 1560, 80, 1625), 0.9)]
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
 SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
@@ -206,6 +211,35 @@ def spring():
     env = np.clip(np.maximum(alpha, near * 1.2), 0, 1)
     pack_sheet('SpringSheet', frames, env, X0, Y0, 4.0); preview('spring', art, frames, env, 15)
 
+# ---------------------------------------------------------------- surf (shoreline wash)
+def surf():
+    """Waves rolling in at the painted whitewater: crests travel toward the shore (phase = waves·t −
+    d/λ, d = distance to land), the water near shore washes in and out along the shore normal, and
+    the foam whitens as each crest arrives. Water-only source, so rock/sand never drags into the sea."""
+    for i, ((x0, y0, x1, y1), phase) in enumerate(SURF_SPOTS):
+        x0, y0, x1, y1 = max(0, x0 - 8), max(0, y0 - 8), min(ART.shape[1], x1 + 8), min(ART.shape[0], y1 + 8)
+        art = PLATE.astype(np.float32)[y0:y1, x0:x1]; H, W = art.shape[:2]
+        yy, xx = np.mgrid[:H, :W].astype(np.float32); h = hsv(art)
+        water = ((h[..., 0] > 80) & (h[..., 0] < 128) & (h[..., 1] > 45)) | ((h[..., 1] < 70) & (h[..., 2] > 170))
+        water = ndi.binary_opening(ndi.binary_closing(water, iterations=1), iterations=1)
+        lab, n = ndi.label(water); sz = ndi.sum(water, lab, range(1, n + 1)); water = np.isin(lab, 1 + np.nonzero(sz > 150)[0])
+        d = ndi.gaussian_filter(ndi.distance_transform_edt(water), 1.5)          # distance to shore
+        gy, gx = np.gradient(d); n = np.hypot(gx, gy) + 1e-6; nx, ny = -gx / n, -gy / n
+        edge = np.clip(np.minimum.reduce([xx, W - 1 - xx, yy, H - 1 - yy]) / 8.0, 0, 1)
+        near = np.clip(1 - d / 22.0, 0, 1) * water * edge * edge * (3 - 2 * edge)   # fades out at the box edge
+        foamz = np.clip(ndi.gaussian_filter(((h[..., 1] < 80) & (h[..., 2] > 165) & water).astype(np.float32), 1.2) * 2.0, 0, 1)
+        m = water.astype(np.float32); num = ndi.gaussian_filter(art * m[..., None], (3, 3, 0)); den = ndi.gaussian_filter(m, 3)[..., None]
+        src = art * m[..., None] + (num / np.maximum(den, 1e-4)) * (1 - m[..., None])
+        frames = []
+        for f in range(90):                                                      # 6 s loop, 2 waves
+            s_ = np.sin(2 * np.pi * (2 * f / 90 + phase - d / 16.0))
+            disp = 1.6 * s_ * near
+            fr = cv2.remap(src, (xx - nx * disp).astype(np.float32), (yy - ny * disp).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+            k = (0.55 * np.clip(s_, 0, 1) ** 2 * near * np.maximum(foamz, 0.25 * near))[..., None]
+            frames.append(np.clip(np.where(water[..., None], fr * (1 - k) + np.array([238, 246, 250]) * k, art), 0, 255).astype(np.uint8))
+        env = np.clip(ndi.gaussian_filter(near, 1.0) * 1.3, 0, 1) * water
+        pack_sheet(f'Surf{i}', frames, env, x0, y0, 6.0); preview(f'surf{i}', art, frames, env, 15)
+
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
 def glow(name, x0, y0, x1, y1, mask_fn, gain, warm, bloom=None):
     a = PLATE.astype(np.float32)[y0:y1, x0:x1]   # ship-free art: ships draw above the glows
@@ -320,7 +354,7 @@ def ships():
         save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
-ships(); smoke(); waterfall(); river(); spring()
+ships(); smoke(); waterfall(); river(); spring(); surf()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))

@@ -6,7 +6,7 @@ import UIKit
 // Every effect moves the art's OWN pixels and is played by Core Animation (the render server drives
 // it; the app does no per-frame work — the old TimelineView/Metal layers over the whole map idled at
 // ~75% CPU). All assets + the constants below come from tools/ambient_build.py:
-//   • smoke, waterfall, river, spring — cinemagraph loops (the art's own pixels in motion), played as
+//   • smoke, waterfall, river, spring, surf — cinemagraph loops (the art's own pixels in motion), played as
 //     flipbooks by stepping `contentsRect` over a sprite sheet
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`);
@@ -41,6 +41,19 @@ private let flipbooks: [Flipbook] = [
           frameW: 112, frameH: 142, mapX: 322, mapY: 1862, loop: 4),
     .init(image: "SpringSheet", frames: 60, cols: 10, cellW: 89, cellH: 44, gutter: 2,
           frameW: 85, frameH: 40, mapX: 354, mapY: 2062, loop: 4),
+    // Surf: waves rolling in at the painted whitewater (Lighthouse cliffs, harbour, coast rocks).
+    .init(image: "Surf0", frames: 90, cols: 10, cellW: 148, cellH: 88, gutter: 2,
+          frameW: 144, frameH: 84, mapX: 103, mapY: 1683, loop: 6),
+    .init(image: "Surf1", frames: 90, cols: 10, cellW: 108, cellH: 78, gutter: 2,
+          frameW: 104, frameH: 74, mapX: 448, mapY: 1353, loop: 6),
+    .init(image: "Surf2", frames: 90, cols: 10, cellW: 88, cellH: 88, gutter: 2,
+          frameW: 84, frameH: 84, mapX: 598, mapY: 1583, loop: 6),
+    .init(image: "Surf3", frames: 90, cols: 10, cellW: 75, cellH: 88, gutter: 2,
+          frameW: 71, frameH: 84, mapX: 643, mapY: 1768, loop: 6),
+    .init(image: "Surf4", frames: 90, cols: 10, cellW: 88, cellH: 88, gutter: 2,
+          frameW: 84, frameH: 84, mapX: 603, mapY: 1883, loop: 6),
+    .init(image: "Surf5", frames: 90, cols: 10, cellW: 59, cellH: 83, gutter: 2,
+          frameW: 55, frameH: 79, mapX: 9, mapY: 1553, loop: 6),
 ]
 private let glows: [Glow] = [
     // Lighthouse: a beacon — quick bright flash, slow fade, dark pause.
