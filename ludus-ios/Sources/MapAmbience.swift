@@ -10,6 +10,7 @@ import UIKit
 //     flipbooks by stepping `contentsRect` over a sprite sheet
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
 //   • sea glitter      — groups of the painting's own light flecks, twinkling in turn
+//   • sheens           — sunlight sweeping across the landmarks' marble now and then
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`);
 //                        two of them sail off the map and back (`voyages`)
 // Everything is laid out in ProvinceMap pixels (724 wide) scaled to the rendered map width.
@@ -74,6 +75,17 @@ private let glintRegions: [GlintRegion] = [
 ]
 private let glintGroups = 6, glintLoop: CFTimeInterval = 16
 
+/// Sunlight now and then sweeping across a landmark's marble and gold: a static highlight image of
+/// its own bright stone (tools/ambient_build.py), revealed through a soft gradient band that slides
+/// across it once per period. Staggered so only one landmark gleams at a time.
+private struct Sheen { let image: String; let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat; let offset: Double }
+private let sheens: [Sheen] = [
+    .init(image: "SheenLibrary",   mapX: 288, mapY: 318,  w: 240, h: 114, offset: 4),
+    .init(image: "SheenColosseum", mapX: 98,  mapY: 866,  w: 210, h: 128, offset: 14),
+    .init(image: "SheenTemple",    mapX: 292, mapY: 1022, w: 171, h: 90,  offset: 24),
+]
+private let sheenPeriod: CFTimeInterval = 30, sheenSweep: CFTimeInterval = 2.8
+
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
 /// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first comes about
 /// (narrows to 45% width, mirrors at the narrowest instant, widens — see `turnFacing`) or comes back about after returning. The direction flip
@@ -127,6 +139,13 @@ private final class AmbienceView: UIView {
     private let glintLayers = glintRegions.flatMap { r in (0..<glintGroups).map { g -> CALayer in
         let l = CALayer(); l.contents = UIImage(named: "\(r.name)\(g)")?.cgImage; l.opacity = 0; return l
     } }
+    private let sheenLayers = sheens.map { s -> CALayer in
+        let l = CALayer(); l.contents = UIImage(named: s.image)?.cgImage
+        let band = CAGradientLayer()                                  // soft diagonal band of light
+        band.colors = [UIColor(white: 1, alpha: 0).cgColor, UIColor(white: 1, alpha: 1).cgColor, UIColor(white: 1, alpha: 0).cgColor]
+        band.startPoint = CGPoint(x: 0, y: 0.2); band.endPoint = CGPoint(x: 1, y: 0.8)
+        l.mask = band; return l
+    }
     private let clipLayers = voyages.map { v -> CALayer in
         let c = CALayer(), m = CALayer()
         m.contents = UIImage(named: v.clip)?.cgImage; m.contentsGravity = .resize
@@ -136,7 +155,7 @@ private final class AmbienceView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
-        (flipLayers + glowLayers + glintLayers).forEach(layer.addSublayer)
+        (flipLayers + glowLayers + glintLayers + sheenLayers).forEach(layer.addSublayer)
         for (i, l) in shipLayers.enumerated() where !voyages.contains(where: { $0.ship == i }) {
             layer.addSublayer(l)                                            // ships above the glows
         }
@@ -162,6 +181,11 @@ private final class AmbienceView: UIView {
         }
         for (l, g) in zip(glowLayers, glows) {
             l.frame = CGRect(x: g.mapX * k, y: g.mapY * k, width: g.w * k, height: g.h * k)
+        }
+        for (l, s) in zip(sheenLayers, sheens) {
+            l.frame = CGRect(x: s.mapX * k, y: s.mapY * k, width: s.w * k, height: s.h * k)
+            l.mask?.bounds = CGRect(x: 0, y: 0, width: l.bounds.width * 0.55, height: l.bounds.height)
+            l.mask?.position = CGPoint(x: -l.bounds.width * 0.3, y: l.bounds.height / 2)   // parked off the left
         }
         for (i, l) in glintLayers.enumerated() {
             let r = glintRegions[i / glintGroups]
@@ -189,8 +213,9 @@ private final class AmbienceView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         (flipLayers + glowLayers + glintLayers + shipLayers).forEach { $0.removeAllAnimations() }
+        sheenLayers.forEach { $0.mask?.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
-        (flipLayers + glowLayers + glintLayers).forEach { $0.isHidden = still }
+        (flipLayers + glowLayers + glintLayers + sheenLayers).forEach { $0.isHidden = still }
         needsStart = window != nil && !still
         setNeedsLayout()
     }
@@ -213,6 +238,17 @@ private final class AmbienceView: UIView {
             start(stepped("opacity", period: g.period) { t in
                 Self.eased(g.opacity.map(Double.init), g.keyTimes.map(\.doubleValue), t)
             }, on: l, "glow")
+        }
+        for (l, s) in zip(sheenLayers, sheens) {
+            // The band rests off the left edge, then sweeps across (eased) once per period.
+            guard let band = l.mask else { continue }
+            let W = Double(l.bounds.width), from = -W * 0.3, to = W * 1.3
+            let a = stepped("position.x", period: sheenPeriod) { t in
+                let u = (t * sheenPeriod - s.offset) / sheenSweep
+                guard u > 0, u < 1 else { return from }
+                return from + (to - from) * u * u * (3 - 2 * u)
+            }
+            start(a, on: band, "sweep")
         }
         for (i, l) in glintLayers.enumerated() {
             // Two quick twinkles per loop; groups (and the two seas) staggered so it never pulses as one.

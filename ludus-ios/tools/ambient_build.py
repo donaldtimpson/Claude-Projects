@@ -65,6 +65,13 @@ SURF_DESYNC_SCALE, SURF_DESYNC_CYCLES = 22.0, 3.0   # phase-field smoothness (px
 SURF_EXCLUDE = [(300, 1580, 460, 1740), (300, 1840, 460, 2010), (340, 2040, 460, 2110), (440, 600, 650, 750)]  # falls, river, spring, smoke
 GLINT_GROUPS, GLINT_TOP = 6, 520          # sea-glitter groups; skip the hazy distant sea above this row
 GLINT_REGIONS = {'GlintEast': (470, 520, 720, 2110), 'GlintWest': (5, 1240, 270, 1960)}
+# ('SheenSnow', (8, 262, 700, 398), 'snow') is parked: snow, pale sky and cloud share colours too closely for an
+# automatic mask in this painting — needs a hand markup of the snow.
+SHEENS = [('SheenLibrary', (288, 318, 528, 432), 'stone'),
+          ('SheenColosseum', (98, 866, 308, 994), 'stone'), ('SheenTemple', (292, 1022, 463, 1112), 'stone')]
+SHEEN_SNOW_EXCLUDE = [(285, 315, 530, 460)]     # the Library sits in front of the range
+SHEEN_TREELINE = 388
+SHEEN_LIFT, SHEEN_GAIN = 0.35, 1.2
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
 SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
@@ -324,6 +331,43 @@ def glints():
             save_asset(f'{name}{g}', np.dstack([rgb, a * 255]).round().astype(np.uint8))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0, groups=GLINT_GROUPS, flecks=int(((fleck)[y0:y1, x0:x1]).sum()))
 
+# ---------------------------------------------------------------- sheens (sunlight sweeping over snow/marble)
+def sheens():
+    """A soft band of sunlight sweeping now and then across the snowy peaks and the landmarks' marble
+    and gold. Each is a static image of its own bright pixels, lifted toward warm white, with alpha
+    = how strongly that pixel should catch the light (snow: bluish/neutral whites only, so cream
+    clouds and the Library are left out; landmarks: brightness-weighted stone, no sky or foliage).
+    Core Animation reveals it through a moving gradient-band mask — no flipbook memory."""
+    for name, (x0, y0, x1, y1), kind in SHEENS:
+        a = PLATE.astype(np.float32)[y0:y1, x0:x1]; h = hsv(a); H, W = a.shape[:2]
+        yy, xx = np.mgrid[:H, :W].astype(np.float32)
+        if kind == 'snow':
+            # The sky is saturated blue; the range (snow + blue-grey rock) is DESATURATED blue. White
+            # snow counts if it touches that rock; cream clouds and parchment are warm and are excluded.
+            V, Sat, Hue = h[..., 2], h[..., 1], h[..., 0]
+            rock = (Hue > 88) & (Hue < 135) & (Sat > 12) & (Sat < 92) & (V > 105)
+            warm = (Hue >= 6) & (Hue <= 34) & (Sat > 22)
+            white = (Sat < 35) & (V > 195) & ~warm
+            body = ndi.binary_opening(rock, iterations=1)
+            body = body | (white & ndi.binary_dilation(body, iterations=3))
+            body &= ~ndi.binary_dilation(warm, iterations=2)
+            lab, n = ndi.label(body); sz = ndi.sum(body, lab, range(1, n + 1))
+            mountain = np.isin(lab, 1 + np.nonzero(sz > 60)[0]) & (yy + y0 < SHEEN_TREELINE)
+            for (bx0, by0, bx1, by1) in SHEEN_SNOW_EXCLUDE: mountain[max(0, by0 - y0):by1 - y0, max(0, bx0 - x0):bx1 - x0] = False
+            m = mountain * np.clip((V - 165) / 55, 0, 1)
+            m = ndi.gaussian_filter(m, 0.8)
+        else:
+            lum = a.mean(2); warm_or_grey = ~(((h[..., 0] > 85) & (h[..., 0] < 135) & (h[..., 1] > 50)) | ((h[..., 0] > 30) & (h[..., 0] < 85) & (h[..., 1] > 60)))
+            m = np.clip((lum - 105) / 80, 0, 1) * warm_or_grey
+            m = ndi.gaussian_filter(m, 0.8)
+        edge = np.clip(np.minimum.reduce([xx, W - 1 - xx, yy, H - 1 - yy]) / 6.0, 0, 1)
+        m = np.clip(m * edge, 0, 1)
+        lit = np.clip(a * SHEEN_GAIN + np.array([40, 30, 8]), 0, 255)                # warm gleam
+        lit = lit + (np.array([255, 250, 232]) - lit) * SHEEN_LIFT
+        rgb = lit * (m[..., None] > 0.004)
+        save_asset(name, np.dstack([rgb, m * 255]).round().astype(np.uint8))
+        CONST[name] = dict(mapX=x0, mapY=y0, w=W, h=H, px=int((m > 0.3).sum()))
+
 # ---------------------------------------------------------------- surf (shoreline wash)
 def surf():
     """Waves rolling in wherever the painting has coastal whitewater. Each coastal region is rendered
@@ -512,7 +556,7 @@ def ships():
         save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
-ships(); smoke(); waterfall(); river(); spring(); surf(); glints()
+ships(); smoke(); waterfall(); river(); spring(); surf(); glints(); sheens()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))
