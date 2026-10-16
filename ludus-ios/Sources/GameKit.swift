@@ -461,7 +461,7 @@ private struct ArcadeOverView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.62).ignoresSafeArea()
+            Color.black.opacity(0.8).ignoresSafeArea()
             VStack(spacing: 10) {
                 Text(result.reason.uppercased()).font(luFont(12, .heavy)).tracking(3)
                     .foregroundStyle(Color(hex: Lu.grape))
