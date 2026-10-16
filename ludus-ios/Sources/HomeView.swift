@@ -31,9 +31,9 @@ private enum Prov {
 
 /// The baked chrome's geometry (pt). Mirrors tools/chrome/chrome_build.py — change both together.
 private enum Chrome {
-    static let barW: CGFloat = 440, barSide: CGFloat = 42, barTab: CGFloat = 68, barShadow: CGFloat = 8
+    static let barW: CGFloat = 440, barSide: CGFloat = 52, barTab: CGFloat = 76, barShadow: CGFloat = 8
     static let plaque = CGSize(width: 262, height: 72)
-    static let rank = CGSize(width: 180, height: 44)
+    static let rank = CGSize(width: 220, height: 76)   // spans the whole tab; rank block centred in it
     static let coin: CGFloat = 25
     static let sealBox: CGFloat = 84                  // seal/ring/halo images are drawn in this square…
     static let mapSeal: CGFloat = 0.85, cardSeal: CGFloat = 1.06   // …shown at these scales
@@ -266,10 +266,10 @@ struct HomeView: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("\(lm.name), \(world.subject)")
                     // The name hangs below the seal on a little scroll (overlay: never moves the seal).
-                    // It unrolls on tap and furls back up as the arrival card unrolls.
+                    // It unrolls on tap and stays open while the traveler is there.
                     .overlay(alignment: .top) {
                         NamePlate(name: lm.name, subject: world.subject, wax: lm.wax,
-                                  open: isSel ? plateOpen * (1 - cardOpen) : 0)
+                                  open: isSel ? plateOpen : 0)
                             .offset(x: lm.labelDX, y: 47)
                             .allowsHitTesting(false)
                     }
@@ -341,8 +341,7 @@ struct HomeView: View {
         return dur
     }
 
-    /// The card rises furled onto the bar's tab, then unrolls upward (title first, PLAY last) while
-    /// the seal's name scroll furls away — the name hands off to the card.
+    /// The card rises furled onto the bar's tab, then unrolls upward (title first, PLAY last).
     private func showCard(_ lm: Landmark) {
         cardSeq += 1
         let seq = cardSeq
@@ -486,7 +485,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 25.5)
                 .frame(height: Chrome.coin)
-                .padding(.bottom, 12.5)
+                .padding(.bottom, 14)       // coin row centred in the side's lacquer, under its fillet
             }
         }
         .allowsHitTesting(false)

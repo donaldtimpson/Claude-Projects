@@ -44,13 +44,16 @@ K = E.K                    # E's working px/pt (6 = 3x supersampled 2x)
 
 # ---- shared geometry (pt) — mirrored in HomeView.swift
 BAR_W = 440                # baked wider than any phone; the app centre-crops it
-BAR_SIDE, BAR_TAB, BAR_TAB_W, BAR_SHOULDER = 42, 68, 150, 26
+BAR_SIDE, BAR_TAB, BAR_TAB_W, BAR_SHOULDER = 52, 76, 170, 26
 BAR_SHADOW = 8             # room above the tab for the bar's upward shadow
 FRAME_W = 4.2              # gilt moulding width — identical to the plaque's
 FILLET_AT = 7.0            # engraved gilt fillet line, inside the moulding — identical to the plaque's
 CARD_W, CARD_H, CARD_ROD = 344, 150, 13
 PLATE_W, PLATE_H, PLATE_ROD = 170, 31, 5
 PLAY_W, PLAY_H = 296, 42
+RANK_PT = 15.5             # rank lettering size
+RANK_W = 220               # rank image width; its height = the tab (BAR_TAB)
+HOME_BAND = 8              # keep the rank block clear of the home indicator
 
 
 def save(name, im, scale='3x'):
@@ -109,42 +112,46 @@ def rank_tab(idx, name):
     and three honour pips — filled = the discs on the child's standard."""
     from eparts import gilt_text, rivet
     from eparts import laurel_leaf
-    Wpt, Hpt = 180, 44
+    Wpt, Hpt = RANK_W, BAR_TAB
+    s = RANK_PT / 12.5                                        # scale of the sprigs/pips with the type
     W, Hh = Wpt * K, Hpt * K
     out = E.blank(W, Hh)
-    cy = 14 * K                                               # text centre: 14 pt below the tab top
-    f = E.font('cinzel', 12.5 * K, 900)
-    tm = E.text_mask(W, Hh, name.upper(), f, W / 2, cy, tracking=1.6 * K)
+    # the rank + its pips sit centred in the tab, between the fillet line and the home-indicator band
+    mid = (FILLET_AT + 1.5 + BAR_TAB - HOME_BAND) / 2
+    gap = 7.5 * s
+    cy = (mid - gap) * K                                      # text centre
+    f = E.font('cinzel', RANK_PT * K, 900)
+    tm = E.text_mask(W, Hh, name.upper(), f, W / 2, cy, tracking=1.8 * K)
     cols = np.where(tm.max(axis=0) > 0.3)[0]
     tw = (cols[-1] - cols[0]) if len(cols) else 0
-    gilt_text(out, name.upper(), f, W / 2, cy, tracking=1.6 * K, relief=1.2)
+    gilt_text(out, name.upper(), f, W / 2, cy, tracking=1.8 * K, relief=1.2)
     x, y = E.grid(W, Hh)
     for side in (-1, 1):                                      # the plaque's sprig, scaled to the label
         hm = np.zeros((Hh, W))
-        bx = W / 2 + side * (tw / 2 + 7 * K)
-        by = cy + 5 * K
+        bx = W / 2 + side * (tw / 2 + 7 * s * K)
+        by = cy + 5 * s * K
         for i in range(4):
             tt = i / 3
-            px, py = bx + side * tt * 4.5 * K, by - tt * 9 * K
+            px, py = bx + side * tt * 4.5 * s * K, by - tt * 9 * s * K
             for off in (-1, 1):
                 a = -np.pi / 2 + side * 0.35 + off * 0.8 * side
-                laurel_leaf(hm, x, y, px + np.cos(a) * 1.5 * K, py + np.sin(a) * 1.5 * K, a,
-                            2.0 * K * (1 - 0.2 * tt), 0.8 * K)
-        hm = np.maximum(hm, np.exp(-((x - (bx + side * (by - y) / 9 * 4.5)) / (0.35 * K)) ** 2)
-                        * (y < by + 0.5 * K) * (y > by - 9.5 * K) * 0.4 * K)
+                laurel_leaf(hm, x, y, px + np.cos(a) * 1.5 * s * K, py + np.sin(a) * 1.5 * s * K, a,
+                            2.0 * s * K * (1 - 0.2 * tt), 0.8 * s * K)
+        hm = np.maximum(hm, np.exp(-((x - (bx + side * (by - y) / 9 * 4.5)) / (0.35 * s * K)) ** 2)
+                        * (y < by + 0.5 * K) * (y > by - 9.5 * s * K) * 0.4 * s * K)
         la = np.clip(hm * 2, 0, 1)
         sh = ndi.shift(E.blur(la, 0.6 * K), (0.8 * K, 0.3 * K), order=1) * 0.5
         out = E.over(out, np.dstack([np.zeros((Hh, W, 3)) + [0.12, 0, 0], sh]))
         out = E.over(out, E.rgba(E.metal(hm, k=0.9, gloss=50, contrast=1.3), la))
-    py = cy + 12.5 * K                                        # pips, clear of the side moulding
+    py = (mid + gap) * K                                      # pips
     rh = np.zeros((Hh, W)); ring = np.zeros((Hh, W))
     for i in range(3):
-        px = W / 2 + (i - 1) * 10 * K
+        px = W / 2 + (i - 1) * 11 * s * K
         if i < idx:
-            rivet(rh, x, y, px, py, 2.9 * K)
+            rivet(rh, x, y, px, py, 2.9 * s * K)
         else:
             rr = np.hypot(x - px, y - py)
-            ring = np.maximum(ring, np.clip(1 - np.abs(rr - 2.5 * K) / (0.45 * K), 0, 1))
+            ring = np.maximum(ring, np.clip(1 - np.abs(rr - 2.5 * s * K) / (0.45 * K), 0, 1))
     ra = np.clip(rh * 2, 0, 1)
     sh = ndi.shift(E.blur(ra, 0.6 * K), (0.7 * K, 0.2 * K), order=1) * 0.55
     out = E.over(out, np.dstack([np.zeros((Hh, W, 3)) + [0.12, 0, 0], sh]))
