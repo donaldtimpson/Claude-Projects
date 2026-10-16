@@ -44,7 +44,8 @@ WATERFALL_CYCLES, WATERFALL_D, WATERFALL_FOAM = 6, 13.3, 0.45
 WATERFALL_STREAK, WATERFALL_STREAK_WRAPS = 0.15, 3
 # River: calmer than the falls (~55% of its motion), sparser foam; still clearly flowing downstream.
 RIVER_CYCLES, RIVER_D, RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS = 6, 12.0, 0.50, 0.18, 2
-SPRING, SPRING_RIPPLE, SPRING_BOIL = (380, 2071), 0.16, 0.25
+SPRING = (380, 2071)
+SPRING_RIPPLE, SPRING_WASH, SPRING_GLINT, SPRING_FOAM, SPRING_WELL = 0.18, 1.4, 0.55, 0.75, 11.0
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 # Painted whitewater spots (map px box, wave phase): Lighthouse cliffs, harbour beach, right-coast rocks ×3, west cliff.
 SURF_SPOTS = [((110, 1690, 240, 1760), 0.0), ((455, 1360, 545, 1420), 0.37), ((605, 1590, 675, 1660), 0.71),
@@ -188,7 +189,9 @@ def river():
            RIVER_FOAM, RIVER_STREAK, RIVER_STREAK_WRAPS, foam_sparsity=0.65)
 
 def spring():
-    """The little pool at the bottom: ripples spread out from the white splash, which shimmers."""
+    """The little pool at the bottom, as a bubbling spring: foam clumps well up at the white splash
+    and spread outward; ripple rings physically wash the water in and out (like the surf) and catch
+    glints on their crests."""
     X0, Y0, W, H = 320, 2040, 130, 65
     art = ART.astype(np.float32)[Y0:Y0 + H, X0:X0 + W]
     yy, xx = np.mgrid[:H, :W].astype(np.float32)
@@ -199,16 +202,33 @@ def spring():
     water = ndi.binary_fill_holes(np.isin(lab, 1 + np.nonzero(sz > 40)[0]))   # holes = the white splash
     alpha = np.clip(ndi.gaussian_filter(water.astype(np.float32), 1.0) * 1.2, 0, 1)
     cx, cy = SPRING[0] - X0, SPRING[1] - Y0
-    r = np.hypot(xx - cx, (yy - cy) * 1.8)                          # flattened: the pool is seen at an angle
+    dx_, dy_ = xx - cx, (yy - cy) * 1.8                            # flattened: the pool is seen at an angle
+    r = np.hypot(dx_, dy_); ang = np.arctan2(dy_, dx_)
+    ux, uy = dx_ / (r + 1e-6), dy_ / (r + 1e-6) / 1.8               # outward direction in image space
+    # pool-only source so the wash never drags the bank into the water
+    m = water.astype(np.float32); num = ndi.gaussian_filter(art * m[..., None], (3, 3, 0)); den = ndi.gaussian_filter(m, 3)[..., None]
+    src = art * m[..., None] + (num / np.maximum(den, 1e-4)) * (1 - m[..., None])
+    # foam: periodic noise over (angle, r) sampled at r − v·t so clumps well up and spread outward
+    Pr, Pa = 24, 64
+    nz = ndi.gaussian_filter(np.random.default_rng(5).random((Pr, Pa)), (1.6, 2.2), mode='wrap')
+    fz = np.clip(((nz - nz.min()) / (nz.max() - nz.min()) - 0.45) / 0.55, 0, 1) ** 1.3
+    ai = ((ang + np.pi) / (2 * np.pi) * Pa).astype(int) % Pa
+    well = np.exp(-(r / SPRING_WELL) ** 2)                          # foam lives near the source, fading out
     N = 60; frames = []
-    near = np.exp(-(r / 7.0) ** 2)
     for f in range(N):
         t = f / N
-        rings = np.sin(2 * np.pi * (r / 9.0 - 3 * t)) * np.exp(-r / 45.0) * (r > 4)       # rings moving outward
-        boil = (np.sin(2 * np.pi * (2 * t + xx / 5.0)) * np.sin(2 * np.pi * (3 * t + yy / 4.0))) * near
-        g = 1 + SPRING_RIPPLE * rings * alpha + SPRING_BOIL * boil
-        frames.append(np.clip(art * g[..., None], 0, 255).astype(np.uint8))
-    env = np.clip(np.maximum(alpha, near * 1.2), 0, 1)
+        ph = 2 * np.pi * (r / 9.0 - 3 * t)                          # rings moving outward
+        ring = np.sin(ph) * np.exp(-r / 40.0) * (r > 3)
+        disp = SPRING_WASH * ring * alpha
+        fr = cv2.remap(src, (xx - ux * disp).astype(np.float32), (yy - uy * disp).astype(np.float32), cv2.INTER_CUBIC, borderMode=cv2.BORDER_REFLECT)
+        fr = fr * (1 + SPRING_RIPPLE * ring * alpha)[..., None]
+        glint = (np.clip(ring, 0, 1) ** 6 * alpha * SPRING_GLINT)[..., None]
+        ri = ((r - 6 * t * Pr) % Pr).astype(int)                      # 6 radial wraps per loop
+        foam = (fz[ri, ai] * well * SPRING_FOAM)[..., None]
+        fr = fr * (1 - glint) + np.array([250, 252, 255]) * glint
+        fr = fr * (1 - foam) + np.array([240, 248, 252]) * foam
+        frames.append(np.clip(np.where(water[..., None] | (well[..., None] > 0.3), fr, art), 0, 255).astype(np.uint8))
+    env = np.clip(np.maximum(alpha, well * 1.3), 0, 1)
     pack_sheet('SpringSheet', frames, env, X0, Y0, 4.0); preview('spring', art, frames, env, 15)
 
 # ---------------------------------------------------------------- surf (shoreline wash)

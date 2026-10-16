@@ -39,8 +39,8 @@ private let flipbooks: [Flipbook] = [
           frameW: 115, frameH: 105, mapX: 310, mapY: 1616, loop: 4),
     .init(image: "RiverSheet", frames: 60, cols: 10, cellW: 116, cellH: 146, gutter: 2,
           frameW: 112, frameH: 142, mapX: 322, mapY: 1862, loop: 4),
-    .init(image: "SpringSheet", frames: 60, cols: 10, cellW: 89, cellH: 44, gutter: 2,
-          frameW: 85, frameH: 40, mapX: 354, mapY: 2062, loop: 4),
+    .init(image: "SpringSheet", frames: 60, cols: 10, cellW: 89, cellH: 49, gutter: 2,
+          frameW: 85, frameH: 45, mapX: 354, mapY: 2057, loop: 4),
     // Surf: waves rolling in at the painted whitewater (Lighthouse cliffs, harbour, coast rocks).
     .init(image: "Surf0", frames: 90, cols: 10, cellW: 148, cellH: 88, gutter: 2,
           frameW: 144, frameH: 84, mapX: 103, mapY: 1683, loop: 6),
