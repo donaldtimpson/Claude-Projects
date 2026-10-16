@@ -9,7 +9,7 @@ All motion uses the painting's OWN pixels, and every effect is played by Core An
 per-frame app work). Every loop runs at 15 fps so all effects step on one shared clock. Outputs (asset-catalog image sets) + the constants for MapAmbience.swift:
   ProvinceMap    the art with the 9 ships painted out (they become rocking sprites)
   Ship0…Ship8    ship cutouts (alpha), rocked about their waterline
-  SmokeSheet     volcano plume cinemagraph — texture streams up out of the crater (6 s, 90 frames)
+  SmokeSheet     volcano plume: painted-smoke puffs billowing out of the crater, lava-synced (9.6 s, 144 frames)
   WaterfallSheet waterfall cinemagraph — texture + foam clumps stream down the channel (4 s, 60 frames)
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
@@ -35,6 +35,9 @@ ap.add_argument('--check', help='write preview mp4s / check images here')
 A = ap.parse_args()
 ART = np.asarray(Image.open(A.art).convert('RGB'))
 CONST = {}
+SMOKE_SEED, SMOKE_PUFF_R, SMOKE_EMIT, SMOKE_LIFE, SMOKE_VENT = 4, 11, 0.4, 5.5, (492, 706)
+LAVA_PERIOD = 3.2                          # must match the LavaGlow period in MapAmbience.swift
+SMOKE_LOOP = 3 * LAVA_PERIOD               # 9.6 s: puffs stay in step with the lava pulse
 # Waterfall: ~19 px/s steady downhill flow + foam clumps riding down with it. (Earlier tries: 8 cycles ×
 # 15 px churned up and down and read as too fast; 6 × 10 px flowed, but the painted falls are vertical
 # streaks, so streaks sliding along themselves read as not moving — the foam is what makes it visible.)
@@ -115,21 +118,64 @@ def preview(name, art, pure, env, fps):
 
 # ---------------------------------------------------------------- volcano smoke
 def smoke():
-    X0, Y0, X1, Y1, CY = 440, 610, 640, 740, 97
-    art = ART.astype(np.float32)[Y0:Y1, X0:X1]; H, W = art.shape[:2]
-    yy, xx = np.mgrid[:H, :W].astype(np.float32)
-    h = hsv(art); S, V = h[..., 1], h[..., 2]
-    sm = ndi.gaussian_filter(np.clip((70 - S) / 40, 0, 1) * np.clip((V - 60) / 30, 0, 1) * np.clip((215 - V) / 30, 0, 1), 1.0)
-    m = ndi.binary_fill_holes(largest(ndi.binary_closing(sm > 0.35, iterations=3)))
-    m &= ~(yy > CY); m = largest(ndi.binary_opening(m, iterations=2))
-    alpha = np.clip(ndi.gaussian_filter(m.astype(np.float32), 2.0) * 1.15, 0, 1)
-    up = np.clip((CY - yy) / 40.0, 0, 1)                      # up out of the crater, bending downwind
-    vx = 0.85 * up; vy = -(1 - 0.6 * up); n = np.hypot(vx, vy); vx /= n; vy /= n
-    vx = ndi.gaussian_filter(vx, 3); vy = ndi.gaussian_filter(vy, 3)
-    env = np.clip(ndi.gaussian_filter(alpha, 2.0) * 1.1, 0, 1) * np.clip((CY - yy) / 12.0 + 0.5, 0, 1)
-    sway = lambda t: 1.5 * up * np.sin(2 * np.pi * yy / 70.0 + 2 * np.pi * t)
-    pure = flow_frames(art, alpha, vx, vy, frames=90, cycles=3, D=16.0, layers=3, sway=sway)
-    pack_sheet('SmokeSheet', pure, env, X0, Y0, 6.0); preview('smoke', art, pure, env, 15)
+    """Billowing plume built from the painting's own smoke: soft puffs cut from the painted plume rise
+    out of the crater, grow, turn and fade along the plume's course (up, then drifting right), so the
+    outline itself billows. The painted plume stays underneath as a floor (it can't be cleanly painted
+    out), so the puffs only ever add to it. Puffs born just after each lava-glow peak are thicker
+    (same CA clock: loop = 3 lava periods). Earlier version (texture flowing inside a frozen outline)
+    measured 'blocky' — fine-scale change 23x the coarse; puffs ~2.4x. Prototypes compared: fluid sim
+    (foggier), curl swirl (streaky)."""
+    X0, Y0, H, W = 430, 550, 180, 260
+    rng = np.random.default_rng(SMOKE_SEED)
+    pl = ART.astype(np.float32)
+    # painted plume mask (map region 420..700 × 560..740)
+    c = ART[560:740, 420:700]; h = hsv(c)
+    sm = ndi.gaussian_filter(np.clip((70 - h[..., 1]) / 40, 0, 1) * np.clip((h[..., 2] - 60) / 30, 0, 1) * np.clip((215 - h[..., 2]) / 30, 0, 1), 1.0)
+    big = largest(ndi.binary_closing(sm > 0.35, iterations=3))
+    r = SMOKE_PUFF_R; S = 2 * r + 1; yy, xx = np.mgrid[-r:r + 1, -r:r + 1]
+    cy_, cx_ = np.nonzero(ndi.distance_transform_edt(big) >= r * 0.9)
+    sprites = []
+    for k in rng.choice(len(cy_), 12, replace=False):
+        my, mx = cy_[k] + 560, cx_[k] + 420
+        noise = ndi.gaussian_filter(rng.random((S, S)), 2.0); noise = (noise - noise.min()) / np.ptp(noise)
+        a = np.clip(1 - (np.hypot(xx, yy) / r) ** 2 * (0.75 + 0.5 * noise), 0, 1) ** 1.3    # soft, irregular edge
+        sprites.append(np.dstack([pl[my - r:my + r + 1, mx - r:mx + r + 1], a]).astype(np.float32))
+    T = SMOKE_LOOP; N = int(round(T * 15)); life = SMOKE_LIFE
+    cx, cy = SMOKE_VENT[0] - X0, SMOKE_VENT[1] - Y0
+    ne = int(round(T / SMOKE_EMIT)); t0s = (np.arange(ne) * T / ne + rng.uniform(-0.15, 0.15, ne)) % T
+    jit = rng.normal(0, 1, (ne, 4))
+    def surge(t0):                                   # thicker just after each lava-glow peak (lava/2 + k·lava)
+        ph = ((t0 - LAVA_PERIOD / 2 - 0.3) % LAVA_PERIOD) / LAVA_PERIOD; ph = min(ph, 1 - ph)
+        return 1 + 0.6 * np.exp(-(ph / 0.12) ** 2)
+    frames, alphas = [], []
+    for f in range(N):
+        t = f / 15
+        acc = np.zeros((H, W, 3), np.float32); A_ = np.zeros((H, W), np.float32)
+        items = sorted([((t - t0) % T + wrap * T, i) for i, t0 in enumerate(t0s) for wrap in (0, 1) if 0 <= (t - t0) % T + wrap * T < life], reverse=True)
+        for age, i in items:                         # oldest first (painter's order)
+            s_ = age / life; k_ = surge(t0s[i])
+            px = cx + 95 * s_ ** 1.7 + jit[i, 0] * 4 * s_ - 16 * s_ * (1 - s_)
+            py = cy - 78 * np.sin(np.pi / 2 * min(1, s_ * 1.3)) + jit[i, 1] * 4 * s_
+            sc = (0.55 + 1.9 * s_ ** 0.8) * (0.85 + 0.15 * k_); ang = jit[i, 2] * 25 * s_
+            al = min(0.97, 0.85 * k_ ** 0.5) * min(1, age / 0.5) * (1 - s_) ** 1.2
+            M = cv2.getRotationMatrix2D((r, r), ang, sc); M[0, 2] += px - r; M[1, 2] += py - r
+            w = cv2.warpAffine(sprites[i % len(sprites)], M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+            a = w[..., 3] * al
+            acc = acc * (1 - a[..., None]) + w[..., :3] * a[..., None]; A_ = A_ * (1 - a) + a
+        frames.append(np.clip(np.where(A_[..., None] > 1e-4, acc / np.maximum(A_[..., None], 1e-4), 0), 0, 255).astype(np.uint8))
+        alphas.append(A_)
+    # pack_sheet takes one envelope; puffs need per-frame alpha, so pack here
+    env = np.max(alphas, axis=0)
+    ys, xs = np.nonzero(env > 0.004); bx0, bx1, by0, by1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
+    fw, fh, G, cols = bx1 - bx0, by1 - by0, 2, 10; rows = (N + cols - 1) // cols; cw, ch = fw + 2 * G, fh + 2 * G
+    sheet = np.zeros((rows * ch, cols * cw, 4), np.uint8)
+    for i in range(N):
+        rr, cc = divmod(i, cols)
+        sheet[rr*ch+G:rr*ch+G+fh, cc*cw+G:cc*cw+G+fw, :3] = frames[i][by0:by1, bx0:bx1]
+        sheet[rr*ch+G:rr*ch+G+fh, cc*cw+G:cc*cw+G+fw, 3] = (np.clip(alphas[i][by0:by1, bx0:bx1], 0, 1) * 255).round().astype(np.uint8)
+    save_asset('SmokeSheet', sheet)
+    CONST['SmokeSheet'] = dict(frames=N, cols=cols, cellW=int(cw), cellH=int(ch), gutter=G, frameW=int(fw), frameH=int(fh),
+                               mapX=int(X0 + bx0), mapY=int(Y0 + by0), loop=T)
 
 # ---------------------------------------------------------------- moving water (waterfall, river)
 def water_px(art):
