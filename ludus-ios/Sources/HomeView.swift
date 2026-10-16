@@ -27,21 +27,9 @@ private enum Prov {
     static let plateInk = Color(hex: 0x3a2a15)
 }
 
-/// Aged-parchment field the whole home rests on: a warm vellum wash, a lighter aged center, and a
-/// worn edge vignette. Fills the status-bar area and any over-scroll so nothing ever reads as a
-/// flat void behind the painted map.
-struct ParchmentBackground: View {
-    var body: some View {
-        ZStack {
-            LinearGradient(colors: [Color(hex: 0xe9d3a3), Color(hex: 0xd8bd88), Color(hex: 0xc2a878)],
-                           startPoint: .top, endPoint: .bottom)
-            RadialGradient(colors: [Color(hex: 0xf3e5c2).opacity(0.75), .clear],
-                           center: .center, startRadius: 20, endRadius: 480)
-            RadialGradient(colors: [.clear, Color(hex: 0x8a6f42).opacity(0.38)],
-                           center: .center, startRadius: 240, endRadius: 640)
-        }
-    }
-}
+/// Parchment fill behind the map (status bar + over-scroll). The art carries its own parchment
+/// border now, so this is just a flat match of its edge color — no drawn texture.
+private let parchmentFill = Color(hex: 0xe8c084)
 
 /// A world on the map. Three DISTINCT authored things (do not conflate): the seal `x,y` is centered
 /// UNDER the building (straddling its base so the destination shows above it); `arriveAt` is the
@@ -74,8 +62,8 @@ private let landmarks: [Landmark] = [
     .init(subject: "Music",               name: "The Theatre",    symbol: "music.note",            x: 0.38,  y: 0.7459, arriveAt: 0.8369),
 ]
 
-// The painted map's pixel aspect. Extended with +40px parchment top & bottom → 724 × 2252.
-private let mapAspect: CGFloat = 2252.0 / 724.0
+// The painted map's pixel aspect (724 × 2172, parchment border baked into the art).
+private let mapAspect: CGFloat = 2172.0 / 724.0
 
 // Seal (x,y) is now pinned to the building center, so no extra drop is needed.
 private let markerDrop: CGFloat = 0
@@ -144,8 +132,8 @@ struct HomeView: View {
     private let travelPad: CGFloat = 56   // tiny over-scroll so the bottom node clears the card
     private let bottomPad: CGFloat = 80   // = legend-bar height, so max scroll stops with the map's
                                           // bottom edge at the legend top (no parchment gap below)
-    private let topPad: CGFloat = 150     // parchment margin above the map top, so the painting rests
-                                          // below the LVDVS banner and top landmarks clear it
+    private let topPad: CGFloat = 60      // over-scroll above the map top; with the art's own parchment
+                                          // border this rests the painting below the LVDVS banner
 
     var body: some View {
         NavigationStack(path: $navPath) {
@@ -177,7 +165,7 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(alignment: .top) {
                     ZStack(alignment: .top) {
-                        ParchmentBackground()
+                        parchmentFill
                         mapLayer(w: w, h: h)
                             .offset(y: off)
                             .frame(width: w, height: vh, alignment: .top)
@@ -199,10 +187,8 @@ struct HomeView: View {
     // The scrolling world: painted map, the eight seals on their road stops, and the traveler.
     private func mapLayer(w: CGFloat, h: CGFloat) -> some View {
         ZStack(alignment: .topLeading) {
-            // Clean base = the painting with the ships removed + water restored; the ambient layer
-            // re-adds the real ship cutouts (rocking) and a drifting cloud haze over the art.
-            Image("ProvinceBase").resizable().frame(width: w, height: h)
-            AmbientMap(w: w, h: h, paused: !navPath.isEmpty)
+            // Static art — no ambient layers (they idled at ~75% CPU). Light motion gets re-added selectively.
+            Image("ProvinceMap").resizable().frame(width: w, height: h)
             ForEach(landmarks) { lm in
                 if let world = lm.world {
                     Button { travel(to: lm) } label: {
