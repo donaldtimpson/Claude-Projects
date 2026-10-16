@@ -10,7 +10,7 @@ per-frame app work). Every loop runs at 15 fps so all effects step on one shared
   ProvinceMap    the art with the 9 ships painted out (they become rocking sprites)
   Ship0…Ship8    ship cutouts (alpha), rocked about their waterline
   SmokeSheet     volcano plume cinemagraph — texture streams up out of the crater (6 s, 90 frames)
-  WaterfallSheet waterfall cinemagraph — texture streams down the channel (4 s, 60 frames)
+  WaterfallSheet waterfall cinemagraph — texture + foam clumps stream down the channel (4 s, 60 frames)
   LampGlow       lighthouse lantern + rays brightened, plus a screen-blended light halo; beacon flash
   LavaGlow       lava flows brightened toward hot orange, plus a soft halo; even on/off pulse
 
@@ -33,7 +33,10 @@ ap.add_argument('--check', help='write preview mp4s / check images here')
 A = ap.parse_args()
 ART = np.asarray(Image.open(A.art).convert('RGB'))
 CONST = {}
-WATERFALL_CYCLES, WATERFALL_D = 6, 10.0   # 15 px/s; the earlier faster flow (fallback) was 8, 15.0 = 30 px/s
+# Waterfall: ~19 px/s steady downhill flow + foam clumps riding down with it. (Earlier tries: 8 cycles ×
+# 15 px churned up and down and read as too fast; 6 × 10 px flowed, but the painted falls are vertical
+# streaks, so streaks sliding along themselves read as not moving — the foam is what makes it visible.)
+WATERFALL_CYCLES, WATERFALL_D, WATERFALL_FOAM = 6, 13.3, 0.45
 LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 
 def save_asset(name, rgb_or_rgba):
@@ -126,6 +129,16 @@ def waterfall():
     vx = ndi.gaussian_filter(gx / n, 2); vy = ndi.gaussian_filter(gy / n, 2); n = np.hypot(vx, vy) + 1e-6; vx /= n; vy /= n
     env = np.clip(ndi.gaussian_filter(alpha, 1.0) * 1.05, 0, 1)
     pure = flow_frames(art, alpha, vx, vy, frames=60, cycles=WATERFALL_CYCLES, D=WATERFALL_D, layers=4)
+    # foam: sparse bright clumps from periodic noise in (x, s), s = distance along the flow, sampled
+    # at s − v·t with v = period / loop, so they ride down the water and the loop stays seamless
+    H, W = alpha.shape; xi = np.mgrid[:H, :W][1]; Pn = 80
+    nz = ndi.gaussian_filter(np.random.default_rng(7).random((Pn, W)), (3.0, 4.8), mode='wrap')
+    foam = np.clip(((nz - nz.min()) / (nz.max() - nz.min()) - 0.55) / 0.45, 0, 1) ** 1.5
+    for f in range(len(pure)):
+        si = (dist - f / len(pure) * Pn) % Pn; i0 = np.floor(si).astype(int); fr = si - i0
+        fm = foam[i0, xi] * (1 - fr) + foam[(i0 + 1) % Pn, xi] * fr
+        k = (WATERFALL_FOAM * fm * alpha)[..., None]
+        pure[f] = np.clip(pure[f] * (1 - k) + np.array([235, 245, 250]) * k, 0, 255).astype(np.uint8)
     pack_sheet('WaterfallSheet', pure, env, X0, Y0, 4.0); preview('waterfall', art, pure, env, 15)
 
 # ---------------------------------------------------------------- glows (brightened art, faded by CA)
