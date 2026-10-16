@@ -21,7 +21,7 @@ import SwiftUI
 // painted out) and the ambience assets (MapAmbience.swift). Nothing else moves. Validate with a
 // LUDUS_TOUR=all screen recording (see `startDebugTour`).
 
-private enum Prov {
+enum Prov {
     static let red     = Color(hex: 0x9e2b25)
     static let ink     = Color(hex: 0x3a2412)   // scroll ink
     static let tint    = Color(hex: 0x6a1a16)   // the red wash behind the plaque (and its echo at the bar)
@@ -30,7 +30,7 @@ private enum Prov {
 }
 
 /// The baked chrome's geometry (pt). Mirrors tools/chrome/chrome_build.py — change both together.
-private enum Chrome {
+enum Chrome {
     static let barW: CGFloat = 440, barSide: CGFloat = 52, barTab: CGFloat = 76, barShadow: CGFloat = 8
     static let plaque = CGSize(width: 262, height: 72)
     static let rank = CGSize(width: 220, height: 76)   // spans the whole tab; rank block centred in it
@@ -44,7 +44,7 @@ private enum Chrome {
 }
 
 /// Darken a packed-hex colour by `pct` percent (matches the bake's `shade(c, -pct)`).
-private func waxInk(_ hex: UInt, _ pct: Double) -> Color {
+func waxInk(_ hex: UInt, _ pct: Double) -> Color {
     func ch(_ s: UInt) -> Double { Double((hex >> s) & 0xff) / 255 * (1 - pct / 100) }
     return Color(.sRGB, red: ch(16), green: ch(8), blue: ch(0))
 }
@@ -156,8 +156,9 @@ private func clampCG(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat { ma
 
 
 /// A world's progress as its seal shows it: `n` ring segments (one per game in that world, ≤ 6
-/// baked), `done` of them gilded (games the child has scored in). All done = the laurel crown.
-private struct SealProgress {
+/// baked), `done` of them gilded (games the child has won — GameKit's bronze laurel). All won = the
+/// laurel crown.
+struct SealProgress {
     let n: Int, done: Int
     var ringAsset: String? {
         guard n > 0 else { return nil }
@@ -288,11 +289,11 @@ struct HomeView: View {
         ["Tiro", "Legionary", "Centurion", "Consul"].firstIndex(of: ludusRank(forDenarii: denarii)) ?? 0
     }
 
-    /// Games in a world vs. games the child has a score in (re-read whenever the view updates, e.g.
+    /// Games in a world vs. games the child has WON (reached the bronze-laurel level) (re-read whenever the view updates, e.g.
     /// on returning from a game).
     private func progress(_ world: LudusWorld, index: Int = 0) -> SealProgress {
         let n = world.games.count
-        var done = world.games.filter { g in g.game.map { LudusStore.best($0.rawValue) > 0 } ?? false }.count
+        var done = world.games.filter(\.won).count
         #if DEBUG
         if ProcessInfo.processInfo.environment["LUDUS_DEMO_PROGRESS"] != nil { done = (index * 2) % (n + 1) }
         #endif
@@ -521,7 +522,7 @@ struct HomeView: View {
 
 // MARK: - A landmark seal: wax body + progress ring (+ selection halo), all baked
 
-private struct SealStack: View {
+struct SealStack: View {
     let key: String
     let progress: SealProgress
     var halo: Bool = false
@@ -635,7 +636,7 @@ private struct DestinationCard: View {
             }
             .font(luCinzel(22)).tracking(0.6).lineLimit(1).minimumScaleFactor(0.68)
             .frame(width: colW, alignment: .leading).position(x: colX + colW / 2, y: 46)
-            Text("\(done) of \(n) game\(n == 1 ? "" : "s") played")
+            Text(done == 0 ? "\(n) game\(n == 1 ? "" : "s") to win" : "\(done) of \(n) game\(n == 1 ? "" : "s") won")
                 .font(luGaramond(14)).foregroundStyle(Prov.ink.opacity(0.62))
                 .frame(width: colW, alignment: .leading).position(x: colX + colW / 2, y: 70)
             Button(action: onClose) {
@@ -670,7 +671,7 @@ private struct DestinationCard: View {
 }
 
 /// A baked plaque button: dips and darkens a touch while pressed.
-private struct PlaqueButtonStyle: ButtonStyle {
+struct PlaqueButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)

@@ -25,8 +25,24 @@ struct LudusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .preferredColorScheme(.dark)
+            root.preferredColorScheme(.dark)
         }
+    }
+
+    @ViewBuilder private var root: some View {
+        #if DEBUG
+        // LUDUS_GAME=<GameID raw value> opens straight into that game (for checks and screenshots);
+        // LUDUS_WORLD=<subject> opens straight onto that world's landing page.
+        let env = ProcessInfo.processInfo.environment
+        if let g = env["LUDUS_GAME"], let id = GameID(rawValue: g) {
+            ludusGame(id, onClose: {})
+        } else if let sub = env["LUDUS_WORLD"], let w = ludusWorlds.first(where: { $0.subject == sub }) {
+            NavigationStack { WorldView(world: w) }
+        } else {
+            HomeView()
+        }
+        #else
+        HomeView()
+        #endif
     }
 }
