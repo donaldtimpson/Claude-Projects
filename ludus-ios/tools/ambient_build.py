@@ -50,6 +50,8 @@ LANTERN = (186, 1360)     # lighthouse lantern centre, map px
 # Painted whitewater spots (map px box, wave phase): Lighthouse cliffs, harbour beach, right-coast rocks ×3, west cliff.
 SURF_SPOTS = [((110, 1690, 240, 1760), 0.0), ((455, 1360, 545, 1420), 0.37), ((605, 1590, 675, 1660), 0.71),
               ((650, 1775, 724, 1845), 0.18), ((610, 1890, 680, 1960), 0.55), ((10, 1560, 80, 1625), 0.9)]
+GLINT_GROUPS, GLINT_TOP = 6, 520          # sea-glitter groups; skip the hazy distant sea above this row
+GLINT_REGIONS = {'GlintEast': (470, 520, 720, 2110), 'GlintWest': (5, 1240, 270, 1960)}
 SAILING = (2, 4)          # ships that sail off the map and back (right-hand sea, Lighthouse bay)
 SAIL_CLIPS = {'SailClipRight': (590, 860, 724, 1080), 'SailClipLeft': (0, 1360, 150, 1560)}
 
@@ -231,6 +233,31 @@ def spring():
     env = np.clip(np.maximum(alpha, well * 1.3), 0, 1)
     pack_sheet('SpringSheet', frames, env, X0, Y0, 4.0); preview('spring', art, frames, env, 15)
 
+# ---------------------------------------------------------------- sea glitter
+def glints():
+    """The painting's own light flecks on the open sea (pixels clearly brighter than the water
+    around them), split into GLINT_GROUPS random groups; each group is a brightened image that
+    Core Animation twinkles on its own schedule, so the sea glitters. Near-shore flecks are left to
+    the surf, and the hazy distant sea (tiny far-off boats) is skipped."""
+    h = hsv(PLATE); V = h[..., 2]
+    sea = (h[..., 0] > 85) & (h[..., 0] < 128) & (h[..., 1] > 60)
+    sea = ndi.binary_closing(sea, iterations=3)
+    lab, n = ndi.label(sea); sz = ndi.sum(sea, lab, range(1, n + 1)); sea = np.isin(lab, 1 + np.nonzero(sz > 20000)[0])
+    fleck = (V - ndi.gaussian_filter(V, 4) > 22) & sea & (ndi.distance_transform_edt(sea) > 12)
+    fleck &= ndi.binary_erosion(PAINTED, iterations=6)
+    fleck[:GLINT_TOP] = False
+    lab, n = ndi.label(fleck)
+    group = np.random.default_rng(13).integers(0, GLINT_GROUPS, n + 1)
+    art = PLATE.astype(np.float32)
+    lit = art + (255 - art) * 0.75                                 # toward white
+    for name, (x0, y0, x1, y1) in GLINT_REGIONS.items():
+        for g in range(GLINT_GROUPS):
+            m = (fleck & (group[lab] == g))[y0:y1, x0:x1].astype(np.float32)
+            a = np.clip(np.maximum(m, ndi.gaussian_filter(m, 1.2) * 1.6 * 0.5), 0, 1)   # fleck + soft halo
+            rgb = lit[y0:y1, x0:x1] * (a[..., None] > 0)                    # zero where transparent: tiny PNGs
+            save_asset(f'{name}{g}', np.dstack([rgb, a * 255]).round().astype(np.uint8))
+        CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0, groups=GLINT_GROUPS, flecks=int(((fleck)[y0:y1, x0:x1]).sum()))
+
 # ---------------------------------------------------------------- surf (shoreline wash)
 def surf():
     """Waves rolling in at the painted whitewater: crests travel toward the shore (phase = waves·t −
@@ -369,12 +396,13 @@ def ships():
     L = ndi.median_filter(L, 5); R = ndi.median_filter(R, 5)
     # inset 4 px: the tear's thin grey-brown rim is part of the boundary — ships vanish where the blue ends
     painted = (np.arange(ART.shape[1])[None, :] >= L[:, None] + 4) & (np.arange(ART.shape[1])[None, :] <= R[:, None] - 4)
+    global PAINTED; PAINTED = painted
     for name, (x0, y0, x1, y1) in SAIL_CLIPS.items():
         a = np.clip(ndi.gaussian_filter(painted[y0:y1, x0:x1].astype(np.float32), 0.7), 0, 1)
         save_asset(name, np.dstack([np.full((y1 - y0, x1 - x0, 3), 255, np.uint8), (a * 255).round().astype(np.uint8)]))
         CONST[name] = dict(mapX=x0, mapY=y0, w=x1 - x0, h=y1 - y0)
 
-ships(); smoke(); waterfall(); river(); spring(); surf()
+ships(); smoke(); waterfall(); river(); spring(); surf(); glints()
 glow('LampGlow', 25, 1215, 350, 1505, lamp_mask, 1.45, (80, 55, 10), lamp_bloom)
 glow('LavaGlow', 425, 675, 570, 805, lava_mask, 1.45, (160, 70, 0), lava_bloom)
 print(json.dumps(CONST, indent=1))

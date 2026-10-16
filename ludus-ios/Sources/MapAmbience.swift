@@ -9,6 +9,7 @@ import UIKit
 //   • smoke, waterfall, river, spring, surf — cinemagraph loops (the art's own pixels in motion), played as
 //     flipbooks by stepping `contentsRect` over a sprite sheet
 //   • lamp, lava       — a brightened copy of the lit pixels (+ a light halo), faded in and out
+//   • sea glitter      — groups of the painting's own light flecks, twinkling in turn
 //   • ships            — cutouts rocked about their waterline (painted out of `ProvinceMap`);
 //                        two of them sail off the map and back (`voyages`)
 // Everything is laid out in ProvinceMap pixels (724 wide) scaled to the rendered map width.
@@ -76,6 +77,15 @@ private let ships: [Ship] = [
     .init(mapX: 620, mapY: 1972, w: 35, h: 63, ax: 0.476, ay: 0.825, degrees: 5.0, period: 2.9, phase: 0.35),
 ]
 
+/// Sea glitter: the painting's own light flecks, split into groups (tools/ambient_build.py); each
+/// group twinkles twice per 4 s loop at its own moments, so some part of the sea always catches light.
+private struct GlintRegion { let name: String; let mapX: CGFloat, mapY: CGFloat, w: CGFloat, h: CGFloat }
+private let glintRegions: [GlintRegion] = [
+    .init(name: "GlintEast", mapX: 470, mapY: 520, w: 250, h: 1590),
+    .init(name: "GlintWest", mapX: 5, mapY: 1240, w: 265, h: 720),
+]
+private let glintGroups = 6, glintLoop: CFTimeInterval = 4
+
 /// A ship that sails off the map and back, bow-first. Points are its waterline pivot in map px. It
 /// rests at home facing as painted (+1, bow down-left); a mirrored leg (-1) means it first swings
 /// round (scale.x through 0 — reads as turning) or swings back after returning. The direction flip
@@ -126,6 +136,9 @@ private final class AmbienceView: UIView {
         let l = CALayer(); l.contents = UIImage(named: "Ship\(i)")?.cgImage
         l.anchorPoint = CGPoint(x: ships[i].ax, y: ships[i].ay); return l
     }
+    private let glintLayers = glintRegions.flatMap { r in (0..<glintGroups).map { g -> CALayer in
+        let l = CALayer(); l.contents = UIImage(named: "\(r.name)\(g)")?.cgImage; l.opacity = 0; return l
+    } }
     private let clipLayers = voyages.map { v -> CALayer in
         let c = CALayer(), m = CALayer()
         m.contents = UIImage(named: v.clip)?.cgImage; m.contentsGravity = .resize
@@ -135,7 +148,7 @@ private final class AmbienceView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
-        (flipLayers + glowLayers).forEach(layer.addSublayer)
+        (flipLayers + glowLayers + glintLayers).forEach(layer.addSublayer)
         for (i, l) in shipLayers.enumerated() where !voyages.contains(where: { $0.ship == i }) {
             layer.addSublayer(l)                                            // ships above the glows
         }
@@ -162,6 +175,10 @@ private final class AmbienceView: UIView {
         for (l, g) in zip(glowLayers, glows) {
             l.frame = CGRect(x: g.mapX * k, y: g.mapY * k, width: g.w * k, height: g.h * k)
         }
+        for (i, l) in glintLayers.enumerated() {
+            let r = glintRegions[i / glintGroups]
+            l.frame = CGRect(x: r.mapX * k, y: r.mapY * k, width: r.w * k, height: r.h * k)
+        }
         for (l, s) in zip(shipLayers, ships) {
             l.bounds = CGRect(x: 0, y: 0, width: s.w * k, height: s.h * k)
             l.position = CGPoint(x: (s.mapX + s.ax * s.w) * k, y: (s.mapY + s.ay * s.h) * k)
@@ -183,9 +200,9 @@ private final class AmbienceView: UIView {
     // animations start on the next layout pass, once the map scale (for the ships' bob) is known.
     override func didMoveToWindow() {
         super.didMoveToWindow()
-        (flipLayers + glowLayers + shipLayers).forEach { $0.removeAllAnimations() }
+        (flipLayers + glowLayers + glintLayers + shipLayers).forEach { $0.removeAllAnimations() }
         let still = UIAccessibility.isReduceMotionEnabled
-        (flipLayers + glowLayers).forEach { $0.isHidden = still }
+        (flipLayers + glowLayers + glintLayers).forEach { $0.isHidden = still }
         needsStart = window != nil && !still
         setNeedsLayout()
     }
@@ -208,6 +225,14 @@ private final class AmbienceView: UIView {
             start(stepped("opacity", period: g.period) { t in
                 Self.eased(g.opacity.map(Double.init), g.keyTimes.map(\.doubleValue), t)
             }, on: l, "glow")
+        }
+        for (i, l) in glintLayers.enumerated() {
+            // Two quick twinkles per loop; groups (and the two seas) staggered so it never pulses as one.
+            let g = i % glintGroups, region = i / glintGroups
+            let centers = [0.0, 0.5].map { ($0 + (Double(g) + 0.37 * Double(region)) / Double(glintGroups)).truncatingRemainder(dividingBy: 1) }
+            start(stepped("opacity", period: glintLoop) { t in
+                centers.map { c -> Double in let d = min(abs(t - c), 1 - abs(t - c)); return exp(-pow(d / 0.06, 2)) }.max() ?? 0
+            }, on: l, "twinkle")
         }
         for (l, s) in zip(shipLayers, ships) {
             // Roll about the waterline, plus a heave a quarter-cycle behind it (rises as it levels).
