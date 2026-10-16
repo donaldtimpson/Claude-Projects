@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Trace the Ludus home-map road + landmark marks from Donald's markup.
 
-Usage:  map_trace.py CLEAN.png MARKED.png [--preview out.png]
+Usage:  map_trace.py CLEAN.png MARKED.png [--pad-top N] [--preview out.png] [--write-padded out.png]
         (needs numpy scipy scikit-image pillow)
 
 The markup is the SAME image as the clean art with:
@@ -14,6 +14,11 @@ The road is the skeleton centerline of the red stroke (longest path). At each gr
 detours to the green CENTER along a geodesic that stays inside the drawn ink, and that point becomes a
 road VERTEX, so the app's stop is exact (no projection). Prints the Swift `landmarks` stop/seal values
 and the `roadXY` literal for HomeView.swift.
+
+--pad-top N adds N px of top parchment cushion to both images the way the shipped `ProvinceMap` is
+built: keep the torn top edge (first 20 rows), then mirror the parchment below it so every join is a
+reflection (no seam). The shipped Mediterranean map uses --pad-top 100; --write-padded saves the
+padded clean art for the asset catalog.
 """
 import sys, heapq, argparse
 import numpy as np
@@ -24,9 +29,17 @@ from skimage.graph import route_through_array
 
 ap = argparse.ArgumentParser()
 ap.add_argument('clean'); ap.add_argument('marked'); ap.add_argument('--preview')
+ap.add_argument('--pad-top', type=int, default=0); ap.add_argument('--write-padded')
 a = ap.parse_args()
-A = np.asarray(Image.open(a.clean).convert('RGB')).astype(int)
-B = np.asarray(Image.open(a.marked).convert('RGB')).astype(int)
+def pad(img, n, edge=20):
+    if n == 0: return img
+    assert n % 2 == 0, '--pad-top must be even'
+    k = n // 2
+    return np.concatenate([img[:edge], img[edge:edge + k], img[edge:edge + k][::-1], img[edge:]])
+A = pad(np.asarray(Image.open(a.clean).convert('RGB')), a.pad_top)
+B = pad(np.asarray(Image.open(a.marked).convert('RGB')), a.pad_top)
+if a.write_padded: Image.fromarray(A).save(a.write_padded)
+A, B = A.astype(int), B.astype(int)
 H, W = A.shape[:2]
 
 # 1) marks = pixels that differ from the clean art, classified by color
