@@ -35,14 +35,15 @@ ap.add_argument('--check', help='write preview mp4s / check images here')
 A = ap.parse_args()
 ART = np.asarray(Image.open(A.art).convert('RGB'))
 CONST = {}
-SMOKE_SEED, SMOKE_PUFF_R, SMOKE_EMIT, SMOKE_LIFE, SMOKE_VENT = 4, 11, 0.13, 7.0, (492, 706)
+SMOKE_SEED, SMOKE_PUFF_R, SMOKE_EMIT, SMOKE_LIFE, SMOKE_VENT = 4, 11, 0.2, 10.5, (492, 706)   # slow drift: 1.5x life, same puffs alive
 SMOKE_GROW, SMOKE_JITTER, SMOKE_FADE = 2.8, 9.0, 0.8
 SMOKE_ALPHA, SMOKE_LIGHTEN, SMOKE_LIGHT_RGB = 0.78, 0.22, np.array([214, 208, 198], np.float32)   # painted highlight tone
 # Plume streams (map px from the vent) traced from the painted smoke: column, main drift right, left spill.
-SMOKE_STREAMS = [([(492, 706), (497, 676), (510, 648), (528, 628)], 0.25),
-                 ([(492, 706), (506, 703), (535, 702), (568, 699), (598, 692)], 0.30),
-                 ([(492, 706), (505, 692), (535, 682), (570, 674), (600, 664)], 0.25),
-                 ([(492, 706), (486, 692), (474, 676), (466, 660)], 0.20)]
+SMOKE_STREAMS = [([(492, 706), (497, 676), (510, 648), (528, 628)], 0.20),
+                 ([(492, 706), (500, 684), (518, 660), (545, 643), (574, 633)], 0.20),
+                 ([(492, 706), (506, 703), (535, 702), (568, 699), (598, 692)], 0.25),
+                 ([(492, 706), (505, 692), (535, 682), (570, 674), (600, 664)], 0.20),
+                 ([(492, 706), (486, 692), (474, 676), (466, 660)], 0.15)]
 LAVA_PERIOD = 3.2                          # must match the LavaGlow period in MapAmbience.swift
 SMOKE_LOOP = 3 * LAVA_PERIOD               # 9.6 s: puffs stay in step with the lava pulse
 # Waterfall: ~19 px/s steady downhill flow + foam clumps riding down with it. (Earlier tries: 8 cycles ×
