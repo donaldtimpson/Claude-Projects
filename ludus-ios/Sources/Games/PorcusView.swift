@@ -44,7 +44,7 @@ let pWants: [PItem] = [
 
 // MARK: Rounds
 
-struct PRound {
+struct PorcusRound {
     enum Kind { case fill, tempt, sort, choice }
     var kind: Kind
     var prize: PItem
@@ -76,14 +76,14 @@ private func pOptions(_ ans: Int, _ cands: [Int], _ n: Int, _ fmt: (Int) -> Stri
 
 private func pChoices(_ level: Int) -> Int { level >= 7 ? 4 : 3 }
 
-private func pFill() -> PRound {
+private func pFill() -> PorcusRound {
     let c = Int.random(in: 3...5)
-    return PRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, feed: c, shelf: "")
+    return PorcusRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, feed: c, shelf: "")
 }
 
 /// "Buy the treat and still get the prize by Day 7?" — balanced YES/NO, and the prize is always
 /// reachable if you skip the treat (so NO only ever means "the treat costs the prize").
-private func pTempt(perDay: Int) -> PRound {
+private func pTempt(perDay: Int) -> PorcusRound {
     let wantYes = Bool.random()
     for _ in 0..<2000 {
         let d = Int.random(in: 1...6), r = 7 - d
@@ -93,7 +93,7 @@ private func pTempt(perDay: Int) -> PRound {
         let end = h - c + r * perDay
         guard h >= c, h + r * perDay >= k, h < k, (end >= k) == wantYes, h + r * perDay <= 20 else { continue }
         let prize = pPrizes.randomElement()!, treat = pTreats.randomElement()!
-        return PRound(kind: .tempt, prize: prize, cost: k, startCoins: h - perDay, feed: perDay, perDay: perDay, day: d,
+        return PorcusRound(kind: .tempt, prize: prize, cost: k, startCoins: h - perDay, feed: perDay, perDay: perDay, day: d,
                       treat: treat, treatCost: c,
                       prompt: "Buy the \(treat.emoji) and still get the \(prize.emoji) by Day 7?",
                       options: ["✅ YES", "❌ NO"], correct: wantYes ? 0 : 1,
@@ -103,24 +103,24 @@ private func pTempt(perDay: Int) -> PRound {
     return pFill()
 }
 
-private func pSort() -> PRound {
+private func pSort() -> PorcusRound {
     let need = Bool.random()
     let it = (need ? pNeeds : pWants).randomElement()!
-    return PRound(kind: .sort, prize: it, prompt: it.name, options: ["NEED", "WANT"], correct: need ? 0 : 1,
+    return PorcusRound(kind: .sort, prize: it, prompt: it.name, options: ["NEED", "WANT"], correct: need ? 0 : 1,
                   explain: "\(it.emoji) \(it.name) is a \(need ? "NEED" : "WANT")", shelf: it.emoji)
 }
 
 private func pWeeks(_ n: Int) -> String { plural(n, "week", "weeks") }
 
-private func pPlanExact(_ level: Int) -> PRound {
+private func pPlanExact(_ level: Int) -> PorcusRound {
     let a = Int.random(in: 2...5), w = Int.random(in: 2...6), p = pPrizes.randomElement()!
     let (o, c) = pOptions(w, [w - 1, w + 1, w + 2].shuffled(), pChoices(level), pWeeks)
-    return PRound(kind: .choice, prize: p,
+    return PorcusRound(kind: .choice, prize: p,
                   prompt: "You get \(a) 🪙 every week.\nThe \(p.emoji) costs \(a * w) 🪙.\nHow many weeks to save?",
                   options: o, correct: c, explain: "\(a) × \(w) = \(a * w) → \(pWeeks(w))", shelf: p.emoji)
 }
 
-private func pPlanRemainder(_ level: Int) -> PRound {
+private func pPlanRemainder(_ level: Int) -> PorcusRound {
     for _ in 0..<500 {
         let h = Int.random(in: 1...9), a = Int.random(in: 2...6)
         let cost = Int.random(in: (h + a + 1)...(level >= 8 ? 60 : 40))
@@ -128,7 +128,7 @@ private func pPlanRemainder(_ level: Int) -> PRound {
         guard (2...8).contains(w), need % a != 0 || Bool.random() else { continue }
         let p = pPrizes.randomElement()!
         let (o, c) = pOptions(w, [w - 1, w + 1, w + 2].shuffled(), pChoices(level), pWeeks)
-        return PRound(kind: .choice, prize: p, startCoins: h,
+        return PorcusRound(kind: .choice, prize: p, startCoins: h,
                       prompt: "Porcus has \(h) 🪙. You get \(a) 🪙 a week.\nThe \(p.emoji) costs \(cost) 🪙.\nHow many weeks until you can buy it?",
                       options: o, correct: c,
                       explain: "Need \(need) more · \(w - 1) × \(a) = \((w - 1) * a) is short · \(w) × \(a) = \(w * a) ✓",
@@ -137,19 +137,19 @@ private func pPlanRemainder(_ level: Int) -> PRound {
     return pPlanExact(level)
 }
 
-private func pJarsHalf(_ level: Int) -> PRound {
+private func pJarsHalf(_ level: Int) -> PorcusRound {
     let t = [6, 8, 10, 12, 14, 16, 18, 20].randomElement()!, g = Int.random(in: 1...2)
     let save = t / 2, spend = t - save - g
     let askSave = Bool.random()
     let ans = askSave ? save : spend
     let (o, c) = pOptions(ans, [askSave ? spend : save, ans + 1, ans - 1, ans + 2, ans - 2], pChoices(level), { "\($0) 🪙" })
-    return PRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
+    return PorcusRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
                   prompt: "You got \(t) 🪙!\nHALF go in SAVE, \(g) in GIVE,\nthe rest in SPEND.\nHow many go in \(askSave ? "SAVE" : "SPEND")?",
                   options: o, correct: c,
                   explain: "Half of \(t) = \(save) SAVE · \(t) − \(save) − \(g) = \(spend) SPEND", shelf: "🫙")
 }
 
-private func pJarsPercent(_ level: Int) -> PRound {
+private func pJarsPercent(_ level: Int) -> PorcusRound {
     let splits = [(50, 40, 10), (60, 30, 10), (70, 20, 10), (50, 30, 20), (60, 20, 20)]
     let s = splits.randomElement()!
     let t = 10 * Int.random(in: 1...(level >= 8 ? 20 : 10))
@@ -158,53 +158,53 @@ private func pJarsPercent(_ level: Int) -> PRound {
     let tenth = t / 10, ans = t * ask.1 / 100
     let others = jars.filter { $0.0 != ask.0 }.map { t * $0.1 / 100 }
     let (o, c) = pOptions(ans, [ask.1 == 10 ? 0 : ask.1] + others + [ans + tenth, ans - tenth], pChoices(level), { "\($0) 🪙" })
-    return PRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
+    return PorcusRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
                   prompt: "Share out \(t) 🪙:\nSAVE \(s.0)% · SPEND \(s.1)% · GIVE \(s.2)%\nHow many go in \(ask.0)?",
                   options: o, correct: c,
                   explain: "10% of \(t) = \(tenth) → \(ask.1)% = \(ask.1 / 10) × \(tenth) = \(ans)", shelf: "🫙")
 }
 
-private func pInterest1(_ level: Int) -> PRound {
+private func pInterest1(_ level: Int) -> PorcusRound {
     let h = 10 * Int.random(in: 2...20), i = h / 10
     if Bool.random() {
         let (o, c) = pOptions(h + i, [h + 10, h + 1, h + i + 1, h + 2 * i, h + i - 1].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
+        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
                       prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow many after 1 week?",
                       options: o, correct: c, explain: "10% of \(h) = \(i) → \(h) + \(i) = \(h + i)", shelf: "💰")
     }
     let (o, c) = pOptions(i, [10, i + 1, i * 2, i - 1, i + 10].shuffled(), pChoices(level), { "\($0) 🪙" })
-    return PRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
+    return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
                   prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow much does he pay you this week?",
                   options: o, correct: c, explain: "10% of \(h) = \(h) ÷ 10 = \(i)", shelf: "💰")
 }
 
-private func pInterestTop(_ level: Int) -> PRound {
+private func pInterestTop(_ level: Int) -> PorcusRound {
     switch Int.random(in: 0..<3) {
     case 0:     // two weeks of 10% — the second week pays interest on the interest too
         let h = 100 * Int.random(in: 1...5), w1 = h + h / 10, w2 = w1 + w1 / 10
         let (o, c) = pOptions(w2, [h + 2 * (h / 10), w1, w2 + 1, w2 - 1].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
+        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
                       prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow many after 2 weeks?",
                       options: o, correct: c, explain: "\(h) → +\(h / 10) = \(w1) → +\(w1 / 10) = \(w2)", shelf: "💰")
     case 1:     // other rates, chosen so the interest is whole
         let (r, step) = [(5, 20), (20, 5), (25, 4)].randomElement()!
         let h = step * Int.random(in: 2...(200 / step)), i = h * r / 100
         let (o, c) = pOptions(h + i, [h + r, h + i + 1, h + 2 * i, h + i - 1, h + h / 10].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
+        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
                       prompt: "Porcus pays \(r)% this week.\nHe holds \(h) 🪙.\nHow many after 1 week?",
                       options: o, correct: c, explain: "\(r)% of \(h) = \(i) → \(h) + \(i) = \(h + i)", shelf: "💰")
     default:    // save now or later?
         let x = 100 * Int.random(in: 1...2), y = x + 10 * Int.random(in: 0...4)
         let a = x + x / 10 + (x + x / 10) / 10, b = y + y / 10
         let correct = a > b ? 0 : a < b ? 1 : 2
-        return PRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: x,
+        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: x,
                       prompt: "Porcus pays 10% a week.\nA: put in \(x) 🪙 now, wait 2 weeks.\nB: put in \(y) 🪙 next week, wait 1 week.\nWhich ends with more?",
                       options: ["Plan A", "Plan B", "The same"], correct: correct,
                       explain: "A: \(x) → \(x + x / 10) → \(a) · B: \(y) → \(b)", shelf: "💰")
     }
 }
 
-func porcusRound(_ level: Int) -> PRound {
+func porcusRound(_ level: Int) -> PorcusRound {
     let r = Int.random(in: 0..<20)
     switch level {
     case 1: return pFill()
@@ -578,7 +578,7 @@ struct PorcusView: View {
         }
     }
 
-    private func calendar(_ r: PRound) -> some View {
+    private func calendar(_ r: PorcusRound) -> some View {
         HStack(spacing: 4) {
             ForEach(1...7, id: \.self) { d in
                 VStack(spacing: 2) {
@@ -600,7 +600,7 @@ struct PorcusView: View {
 
     /// Gradus II's counting aid: the coins left if you buy the treat (the treat's coins crossed
     /// out) plus the coins still to come — count the gold ones and compare with the prize.
-    private func ifYouBuy(_ r: PRound) -> some View {
+    private func ifYouBuy(_ r: PorcusRound) -> some View {
         let h = r.startCoins + r.feed, left = h - r.treatCost, future = 7 - r.day
         return HStack(spacing: 3) {
             ForEach(0..<max(0, left), id: \.self) { _ in PCoin(size: 26) }
