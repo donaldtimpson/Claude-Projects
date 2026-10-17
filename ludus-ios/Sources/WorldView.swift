@@ -167,10 +167,14 @@ private struct GameTablet: View {
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                         .multilineTextAlignment(.leading)
                     HStack(spacing: 6) {
-                        ForEach([Medal.bronze, .silver, .gold], id: \.self) { m in
-                            LaurelMedal(medal: m, earned: medal >= m, size: 13)
-                                .opacity(medal >= m ? 1 : 0.35)
-                                .colorMultiply(medal >= m ? .white : Color(hex: 0x8a6a3a))
+                        // metals tuned to read on parchment (the in-game silver is too pale here)
+                        ForEach([(Medal.bronze, 0xa8612a), (.silver, 0x7f8b97), (.gold, 0xc28a12)], id: \.0) { m, hex in
+                            HStack(spacing: -2.5) {
+                                Image(systemName: "laurel.leading")
+                                Image(systemName: "laurel.trailing")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color(hex: medal >= m ? UInt(hex) : 0xc4ad80))
                         }
                         if reached > 0 {
                             Text("Gradus \(romanNumeral(reached))").font(luCinzel(11, bold: true))
