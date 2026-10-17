@@ -59,7 +59,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .figStall:        ComingSoonGame(id: id, onClose: onClose)
     case .porcus:          ComingSoonGame(id: id, onClose: onClose)
     case .pianoMouse:      PianoMouseView(onClose: onClose)
-    case .maestroMouse:    ComingSoonGame(id: id, onClose: onClose)
+    case .maestroMouse:    MaestroMouseView(onClose: onClose)
     case .comedyTragedy:   ComingSoonGame(id: id, onClose: onClose)
     }
 }
@@ -179,8 +179,8 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Sound Lab", subject: "Music", emoji: "🎵", colorHex: Lu.coral, games: [
         .init(title: "Piano Mouse", mechanic: "keyboard", premise: "Find the key where the mouse hid her cheese.", game: .pianoMouse,
               icon: "🐭", howTo: how(("✨", "Look for the shiny key"), ("👆", "Tap it to play it"), ("🧀", "Find the mouse's cheese!"))),
-        .init(title: "Maestro Mouse", mechanic: "conduct", premise: "Conduct the animal band: loud, soft, fast, slow.", game: nil,
-              icon: "🎼", howTo: how(("🦁", "Read the sign"), ("👆", "Swipe up for LOUD, down for soft"))),
+        .init(title: "Maestro Mouse", mechanic: "conduct", premise: "Conduct the animal band: loud, soft, fast, slow.", game: .maestroMouse,
+              icon: "🎼", howTo: how(("🪧", "Look at the sign"), ("⬆️", "🦁 Swipe UP for LOUD"), ("⬇️", "🐭 Swipe DOWN for soft"))),
         .init(title: "Comedy & Tragedy", mechanic: "ear", premise: "Is the music happy or sad? Catch it with the mask.", game: nil,
               icon: "🎭", howTo: how(("👂", "Listen to the music"), ("😀", "Happy or sad? Pick the mask"))),
     ]),
