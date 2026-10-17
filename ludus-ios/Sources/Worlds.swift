@@ -58,9 +58,9 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        FigStallView(onClose: onClose)
     case .porcus:          PorcusView(onClose: onClose)
-    case .pianoMouse:      ComingSoonGame(id: id, onClose: onClose)
-    case .maestroMouse:    ComingSoonGame(id: id, onClose: onClose)
-    case .comedyTragedy:   ComingSoonGame(id: id, onClose: onClose)
+    case .pianoMouse:      PianoMouseView(onClose: onClose)
+    case .maestroMouse:    MaestroMouseView(onClose: onClose)
+    case .comedyTragedy:   ComedyTragedyView(onClose: onClose)
     }
 }
 
@@ -177,11 +177,11 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🪙", howTo: how(("👀", "Count the coins"), ("👆", "Tap how much money"))),
     ]),
     LudusWorld(name: "Sound Lab", subject: "Music", emoji: "🎵", colorHex: Lu.coral, games: [
-        .init(title: "Piano Mouse", mechanic: "keyboard", premise: "Find the key where the mouse hid her cheese.", game: nil,
-              icon: "🐭", howTo: how(("🎹", "Listen to the mouse"), ("👆", "Tap the right key"))),
-        .init(title: "Maestro Mouse", mechanic: "conduct", premise: "Conduct the animal band: loud, soft, fast, slow.", game: nil,
-              icon: "🎼", howTo: how(("🦁", "Read the sign"), ("👆", "Swipe up for LOUD, down for soft"))),
-        .init(title: "Comedy & Tragedy", mechanic: "ear", premise: "Is the music happy or sad? Catch it with the mask.", game: nil,
-              icon: "🎭", howTo: how(("👂", "Listen to the music"), ("😀", "Happy or sad? Pick the mask"))),
+        .init(title: "Piano Mouse", mechanic: "keyboard", premise: "Find the key where the mouse hid her cheese.", game: .pianoMouse,
+              icon: "🐭", howTo: how(("✨", "Look for the shiny key"), ("👆", "Tap it to play it"), ("🧀", "Find the mouse's cheese!"))),
+        .init(title: "Maestro Mouse", mechanic: "conduct", premise: "Conduct the animal band: loud, soft, fast, slow.", game: .maestroMouse,
+              icon: "🎼", howTo: how(("🪧", "Look at the sign"), ("⬆️", "🦁 Swipe UP for LOUD"), ("⬇️", "🐭 Swipe DOWN for soft"))),
+        .init(title: "Comedy & Tragedy", mechanic: "ear", premise: "Is the music happy or sad? Pick the mask that fits.", game: .comedyTragedy,
+              icon: "🎭", howTo: how(("👂", "Listen to the music"), ("😀", "Happy? Tap the happy mask"), ("😢", "Sad? Tap the sad mask"))),
     ]),
 ]
