@@ -118,7 +118,7 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🦅", name: "Bald eagle", continent: "North America", country: "United States", also: ["Canada", "Mexico"]),
     .init(emoji: "🐊", name: "American alligator", continent: "North America", country: "United States"),
     .init(emoji: "🐐", name: "Mountain goat", continent: "North America", biome: .mountains, also: ["Canada"]),
-    .init(emoji: "🦙", name: "Llama", continent: "South America", biome: .mountains, famous: true),
+    .init(emoji: "🦙", name: "Guanaco", continent: "South America", biome: .mountains, famous: true),
     .init(emoji: "🦥", name: "Sloth", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🦜", name: "Scarlet macaw", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🐸", name: "Poison dart frog", continent: "South America", biome: .rainforest, also: ["North America"]),

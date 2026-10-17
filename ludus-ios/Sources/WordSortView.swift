@@ -9,7 +9,7 @@ import SwiftUI
 //   I    NOUN vs VERB, every word with a picture (🐱 cat / 🏃 run) — very slow fall (15 s)
 //   II   NOUN vs VERB, short words, no pictures
 //   III  + ADJECTIVE ("a describing word": big, sleepy, fluffy)
-//   IV   + ADVERB ("how? when?": quickly, softly, never) and some longer words
+//   IV   + ADVERB ("how? when? how much?": quickly, softly, never, very) and some longer words
 //   V    words that can be either, decided by a short phrase: "a *run* in the park" → NOUN
 //   VI+  phrases + tricky endings (friendly = adjective, belly = noun, apply = verb); faster
 //
@@ -17,14 +17,14 @@ import SwiftUI
 // words with two common uses only appear inside a phrase that decides them.
 
 private let wsBins: [SortBin] = [
-    SortBin(id: "noun", title: "NOUN", icon: "🧸", tint: Lu.sky, hint: "a thing"),
+    SortBin(id: "noun", title: "NOUN", icon: "🧸", tint: Lu.sky, hint: "person, place, thing"),
     SortBin(id: "verb", title: "VERB", icon: "🤸", tint: Lu.mint, hint: "doing"),
     SortBin(id: "adj", title: "ADJECTIVE", icon: "🌈", tint: Lu.tangerine, hint: "what kind?"),
-    SortBin(id: "adv", title: "ADVERB", icon: "⏱️", tint: Lu.grape, hint: "how? when?"),
+    SortBin(id: "adv", title: "ADVERB", icon: "⏱️", tint: Lu.grape, hint: "how? when? how much?"),
 ]
 
 private let wsNames = ["noun": "noun", "verb": "verb", "adj": "adjective", "adv": "adverb"]
-private let wsHints = ["noun": "a thing", "verb": "a doing word", "adj": "a describing word", "adv": "how or when"]
+private let wsHints = ["noun": "a person, place or thing", "verb": "a doing word", "adj": "a describing word", "adv": "how, when or how much"]
 
 // Level I — with pictures.
 private let wsPictures: [(String, String, String)] = [
@@ -35,14 +35,14 @@ private let wsPictures: [(String, String, String)] = [
     ("🏃", "run", "verb"), ("🏊", "swim", "verb"), ("🧗", "climb", "verb"), ("💃", "dance", "verb"),
     ("😴", "sleep", "verb"), ("😢", "cry", "verb"), ("😂", "laugh", "verb"), ("👏", "clap", "verb"),
     ("✍️", "write", "verb"), ("😋", "eat", "verb"), ("🥱", "yawn", "verb"), ("🤔", "think", "verb"),
-    ("🎤", "sing", "verb"), ("🤧", "sneeze", "verb"), ("🚴", "ride", "verb"), ("🙈", "hide", "verb"),
+    ("🧎", "kneel", "verb"), ("🤧", "sneeze", "verb"), ("🚴", "ride", "verb"), ("🙈", "hide", "verb"),
 ]
 
 // Plain words (II+).
 private let wsNouns1 = ["cat", "girl", "boy", "desk", "apple", "bird", "lamp", "car", "frog", "hen", "hat",
                         "sofa", "lion", "zoo", "tooth", "ear", "bee", "ant", "owl", "goat", "door", "uncle", "aunt"]
-private let wsVerbs1 = ["eat", "sing", "dig", "go", "see", "give", "take", "come", "say", "make", "write",
-                        "sit", "bring", "read", "think", "jump", "run", "swim", "laugh", "throw"]
+private let wsVerbs1 = ["eat", "sing", "lend", "sell", "see", "give", "obey", "come", "agree", "enjoy", "write",
+                        "sit", "bring", "pretend", "think", "teach", "speak", "tell", "learn", "fetch"]
 private let wsAdjs1 = ["big", "tiny", "happy", "sad", "tall", "soft", "hot", "funny", "sleepy", "shiny",
                        "fluffy", "angry", "hungry", "noisy", "huge", "sticky", "lazy", "silly", "grumpy", "scary"]
 private let wsAdvs1 = ["quickly", "slowly", "softly", "loudly", "happily", "sadly", "gently", "quietly",

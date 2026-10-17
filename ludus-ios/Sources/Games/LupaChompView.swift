@@ -73,6 +73,10 @@ private func lcSwap3() -> (Int, Int) {
     }
 }
 
+/// "BIGGER" for the young levels; from VII (where negatives arrive, and −3 is not "bigger" in
+/// size than −7) the honest word is GREATER.
+private func lcWord(_ level: Int) -> String { level >= 7 ? "GREATER" : "BIGGER" }
+
 private func lcRound(_ level: Int) -> [LCPile] {
     let food = ["🍖", "🍗", "🐟"].randomElement()!
     func dots(_ n: Int) -> LCPile { LCPile(show: .dots(n, food), value: Double(n), note: "\(n)") }
@@ -292,7 +296,7 @@ private struct LupaField: View {
                 ? min(1, tl.date.timeIntervalSince(model.approachStart) / model.approachDur)
                 : (model.stage == .arriving ? 0 : model.frozen)
             ZStack(alignment: .top) {
-                Text("Which is BIGGER?")
+                Text("Which is \(lcWord(model.level))?")
                     .font(luSerif(17, .bold)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(Color(hex: Lu.inkDim))
                     .frame(height: 30)
@@ -300,7 +304,7 @@ private struct LupaField: View {
                 ZStack {
                 HStack(spacing: 12) {
                     ForEach(0..<min(2, model.piles.count), id: \.self) { i in
-                        LupaCard(pile: model.piles[i], index: i, stage: model.stage, isBig: model.bigger == i)
+                        LupaCard(pile: model.piles[i], index: i, stage: model.stage, isBig: model.bigger == i, word: lcWord(model.level))
                             .frame(width: cardW, height: cardH)
                             .contentShape(Rectangle())
                             .onTapGesture { model.choose(i) }
@@ -401,6 +405,7 @@ private struct LupaCard: View {
     let index: Int
     let stage: LupaModel.Stage
     let isBig: Bool
+    let word: String
 
     private var eaten: Bool { if case .eating(let s) = stage { return s == index }; return false }
     private var revealed: Bool {
@@ -429,7 +434,7 @@ private struct LupaCard: View {
         )
         .overlay(alignment: .top) {
             if glow {
-                Text("BIGGER").font(luFont(13, .heavy)).tracking(1.5).foregroundStyle(Color(hex: Lu.inkDark))
+                Text(word).font(luFont(13, .heavy)).tracking(1.5).foregroundStyle(Color(hex: Lu.inkDark))
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(Capsule().fill(Color(hex: Lu.gold)))
                     .offset(y: -12)

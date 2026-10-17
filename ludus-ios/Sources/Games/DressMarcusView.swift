@@ -96,19 +96,23 @@ private func fit(_ g: Gear, _ w: Weather) -> Fit {
         return dry ? .wrong : .unsure                     // umbrellas in snow: people differ
     case .sunglasses:
         if w.sky == .sunny { return w.heat == .hot ? .need : .unsure }   // snow glare: arguable
-        return .wrong
+        return w.sky == .cloudy && w.heat == .hot ? .unsure : .wrong     // hot haze: arguable
     case .sunhat:
         if w.sky == .sunny { return w.heat == .hot ? .need : (w.heat == .mild ? .unsure : .wrong) }
-        return .wrong
+        return w.sky == .cloudy && w.heat == .hot ? .unsure : .wrong
     case .tshirt, .shorts:
         return w.heat == .hot ? .need : (w.heat == .cold ? .wrong : .unsure)
     case .sandals:
         if w.heat == .hot { return dry ? .need : .unsure }
         return w.heat == .cold ? .wrong : .unsure
-    case .coat, .scarf, .gloves:
+    case .coat:
+        if wet && w.heat == .hot { return .unsure }        // a light raincoat in a warm shower: arguable
+        return w.heat == .cold ? .need : (w.heat == .hot ? .wrong : .unsure)
+    case .scarf, .gloves:
         return w.heat == .cold ? .need : (w.heat == .hot ? .wrong : .unsure)
     case .boots:
-        if wet || w.sky == .snow { return .need }
+        if w.sky == .snow { return .need }
+        if wet { return w.heat == .hot ? .unsure : .need } // hot rain: boots or flip-flops, people differ
         return w.heat == .hot ? .wrong : .unsure
     }
 }
@@ -205,7 +209,8 @@ private func dmWeather(_ level: Int) -> Weather {
              Weather(sky: .rain, heat: .hot), Weather(sky: .rain, heat: .cold),
              Weather(sky: .snow, heat: .cold, windy: Bool.random())].randomElement()!
     }
-    w.celsius = temp(w.heat)
+    // Cold rain stays above freezing (below it, it would be sleet or snow).
+    w.celsius = w.sky == .rain && w.heat == .cold ? Int.random(in: 1...5) : temp(w.heat)
     w.gauge = level <= 2 ? .none : level <= 5 ? .bar : (Bool.random() ? .digitalC : .digitalF)
     return w
 }
@@ -262,6 +267,7 @@ private func dmSelfCheck() -> String? {
             if r.items.count == rights.count { return "L\(level): no wrong item" }
             if Set(r.items.map(\.label)).count != r.items.count { return "L\(level): duplicate item" }
             if r.weather.sky == .snow && r.weather.heat != .cold { return "L\(level): warm snow" }
+            if r.weather.sky == .rain && r.weather.celsius <= 0 { return "L\(level): freezing rain" }
             if r.ask == nil {
                 for it in r.items {
                     guard let g = it.gear else { return "L\(level): gear-less outfit item" }

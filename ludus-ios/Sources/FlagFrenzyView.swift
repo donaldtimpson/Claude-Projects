@@ -12,7 +12,7 @@ import SwiftUI
 //   III  NAME: the banner shows the country's name + its continent (picture & colour)
 //   IV   CONTINENT: "pop a flag from 🦘 Oceania" — bubbles ringed in their continent's colour
 //   V    CONTINENT without the colour rings, more flags
-//   VI   NAME among look-alikes (Ireland / Italy / Ivory Coast, Indonesia / Monaco / Poland…)
+//   VI   NAME among look-alikes (Ireland / Italy / Ivory Coast, Indonesia / Poland / Austria…)
 //   VII+ look-alikes and continents mixed; a little faster each level (capped)
 //
 // Continents follow the usual 7-continent school model with Oceania for Australia & the Pacific;
@@ -68,14 +68,27 @@ private func ffFind(_ n: String) -> FFCountry { ffAll.first { $0.name == n }! }
 
 /// Flags that are easy to mix up.
 private let ffLookalikes: [[String]] = [
-    ["Ireland", "Italy", "Ivory Coast", "Mexico"], ["Indonesia", "Monaco", "Poland"],
-    ["Romania", "Chad", "Belgium", "Mali"], ["Netherlands", "Luxembourg", "France"],
+    ["Ireland", "Italy", "Ivory Coast", "Mexico"], ["Indonesia", "Poland", "Austria"],
+    ["Romania", "Belgium", "Mali"], ["Netherlands", "Luxembourg", "France"],
     ["Australia", "New Zealand", "United Kingdom", "Fiji"], ["Colombia", "Ecuador", "Venezuela"],
     ["Norway", "Iceland", "Denmark", "Sweden", "Finland"], ["Mali", "Senegal", "Guinea", "Cameroon", "Ghana"],
     ["Austria", "Peru", "Canada"], ["Germany", "Belgium", "Hungary", "Bulgaria"],
     ["Japan", "Bangladesh", "South Korea"], ["Chile", "Cuba", "United States"],
     ["Honduras", "Guatemala", "Argentina", "Uruguay"],
 ]
+
+/// Flags that are practically identical (same colours, same layout): never on screen together,
+/// in any kind of round, so a tap can always be judged by the picture.
+private let ffTwins: [Set<String>] = [["Monaco", "Indonesia"], ["Chad", "Romania"]]
+private func ffClashes(_ a: FFCountry, _ b: FFCountry) -> Bool {
+    ffTwins.contains { $0.contains(a.name) && $0.contains(b.name) && a.name != b.name }
+}
+/// Drop any flag whose twin is already kept (earlier entries win, so a target listed first stays).
+private func ffNoTwins(_ list: [FFCountry]) -> [FFCountry] {
+    var kept: [FFCountry] = []
+    for x in list where !kept.contains(where: { ffClashes($0, x) }) { kept.append(x) }
+    return kept
+}
 
 private enum FFMode: Equatable { case match, name, continent }
 
@@ -98,13 +111,13 @@ private func ffTarget(_ level: Int, avoid: String?) -> FFTarget {
         return t
     }
     func others(_ pool: [FFCountry], not t: FFCountry, _ n: Int) -> [FFCountry] {
-        Array(pool.filter { $0.name != t.name }.shuffled().prefix(n))
+        Array(ffNoTwins([t] + pool.filter { $0.name != t.name }.shuffled()).dropFirst().prefix(n))
     }
     func continent(_ pool: [FFCountry], rings: Bool) -> FFTarget {
         let usable = pool.filter { $0.cont != nil }
         let k = Array(Set(usable.compactMap(\.cont))).randomElement()!
-        let right = Array(usable.filter { $0.cont == k }.shuffled().prefix(2))
-        let wrong = Array(usable.filter { $0.cont != k }.shuffled().prefix(3))
+        let right = Array(ffNoTwins(usable.filter { $0.cont == k }.shuffled()).prefix(2))
+        let wrong = Array(ffNoTwins(right + usable.filter { $0.cont != k }.shuffled()).dropFirst(right.count).prefix(3))
         return FFTarget(mode: .continent, country: nil, cont: k, rings: rings, kinds: right + wrong)
     }
     func lookalike() -> FFTarget {
@@ -338,6 +351,7 @@ private func ffSelfCheck() {
             let t = ffTarget(lv, avoid: nil)
             let right = t.kinds.filter(t.isRight).count
             precondition(right >= 1, "Flag Frenzy: no right flag at \(lv)")
+            for a in t.kinds { for b in t.kinds { precondition(!ffClashes(a, b), "Flag Frenzy: twin flags together at \(lv)") } }
             if t.mode != .continent { precondition(right == 1, "Flag Frenzy: two right flags at \(lv)") }
             else { precondition(t.kinds.allSatisfy { $0.cont != nil } && right < t.kinds.count, "Flag Frenzy: bad continent round") }
         }

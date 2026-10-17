@@ -29,7 +29,7 @@ private let ssPictureSets: [SSSet] = [
     SSSet(target: "ANIMALS", hint: "🐾", good: ["🐶", "🐱", "🐮", "🐷", "🐸", "🐵", "🐰", "🦁", "🐘"],
           opposite: ["🍎", "🚗", "⚽️", "🧦", "🎈", "🍌", "✏️", "🏠"]),
     SSSet(target: "THINGS THAT GO", hint: "🚗", good: ["🚗", "🚌", "🚲", "✈️", "🚂", "🚀", "🚜", "⛵️"],
-          opposite: ["🍎", "🐶", "🧦", "🌳", "🎂", "🏠", "🧸"]),
+          opposite: ["🍎", "🪑", "🧦", "🌳", "🎂", "🏠", "🧸"]),
     SSSet(target: "SWEETS", hint: "🍭", good: ["🍰", "🍩", "🍪", "🍭", "🍬", "🧁", "🍫", "🍦"],
           opposite: ["🥦", "🥕", "🧦", "🚗", "🐟", "⚽️", "✏️"]),
 ]
@@ -42,7 +42,7 @@ private let ssEasy: [SSSet] = [
     SSSet(target: "FAST", hint: "🐇", good: ["quick", "speedy", "rapid"], opposite: ["slow", "sluggish"]),
     SSSet(target: "COLD", hint: "🧊", good: ["chilly", "icy", "freezing"], opposite: ["hot", "warm", "boiling"]),
     SSSet(target: "SHOUT", hint: "📣", good: ["yell", "scream", "holler"], opposite: ["whisper", "mumble"]),
-    SSSet(target: "JUMP", hint: "🦘", good: ["leap", "hop", "bounce"], opposite: ["sit", "crawl"]),
+    SSSet(target: "WET", hint: "💧", good: ["damp", "soggy", "soaked"], opposite: ["dry", "parched"]),
     SSSet(target: "SCARED", hint: "😱", good: ["afraid", "frightened", "fearful"], opposite: ["brave", "bold", "calm"]),
     SSSet(target: "TIRED", hint: "😴", good: ["sleepy", "weary", "worn out"], opposite: ["awake", "lively", "rested"]),
 ]
@@ -55,11 +55,11 @@ private let ssMedium: [SSSet] = [
     SSSet(target: "STRONG", hint: "💪", good: ["powerful", "mighty", "tough"], opposite: ["weak", "feeble", "frail"]),
     SSSet(target: "EASY", hint: "✅", good: ["simple", "effortless"], opposite: ["hard", "difficult", "tricky"]),
     SSSet(target: "RICH", hint: "💰", good: ["wealthy", "well-off"], opposite: ["poor", "needy"]),
-    SSSet(target: "FUNNY", hint: "🤣", good: ["comical", "hilarious", "amusing"], opposite: ["serious", "dull", "boring"]),
+    SSSet(target: "FUNNY", hint: "🤣", good: ["comical", "hilarious", "amusing"], opposite: ["serious", "solemn"]),
 ]
 // Level V+.
 private let ssHard: [SSSet] = [
-    SSSet(target: "ENORMOUS", hint: "🐋", good: ["immense", "massive", "colossal", "vast"], opposite: ["tiny", "minute", "puny"]),
+    SSSet(target: "ENORMOUS", hint: "🐋", good: ["immense", "massive", "colossal", "vast"], opposite: ["tiny", "microscopic", "puny"]),
     SSSet(target: "FURIOUS", hint: "🌋", good: ["enraged", "livid", "irate"], opposite: ["calm", "content", "serene"]),
     SSSet(target: "TIMID", hint: "🐢", good: ["shy", "bashful", "meek"], opposite: ["bold", "daring", "confident"]),
     SSSet(target: "FRAGILE", hint: "🥚", good: ["delicate", "breakable", "flimsy"], opposite: ["sturdy", "tough", "solid"]),
@@ -68,12 +68,12 @@ private let ssHard: [SSSet] = [
     SSSet(target: "CALM", hint: "🌊", good: ["peaceful", "tranquil", "serene"], opposite: ["frantic", "anxious", "restless"]),
     SSSet(target: "HONEST", hint: "🤝", good: ["truthful", "sincere", "frank"], opposite: ["sneaky", "deceitful", "dishonest"]),
     SSSet(target: "STRANGE", hint: "👽", good: ["odd", "peculiar", "bizarre"], opposite: ["normal", "ordinary", "usual"]),
-    SSSet(target: "EXHAUSTED", hint: "🥵", good: ["weary", "drained", "worn out"], opposite: ["lively", "energetic", "rested"]),
+    SSSet(target: "EXHAUSTED", hint: "😩", good: ["weary", "drained", "worn out"], opposite: ["lively", "energetic", "rested"]),
     SSSet(target: "ANCIENT", hint: "🏛️", good: ["old", "aged", "age-old"], opposite: ["modern", "new", "recent"]),
     SSSet(target: "BRIEF", hint: "⏱️", good: ["short", "quick", "concise"], opposite: ["long", "lengthy", "endless"]),
 ]
 /// Unrelated words (bad food at II, mixed in later).
-private let ssFillers = ["dog", "table", "blue", "pizza", "tree", "sock", "river", "book", "seven", "window", "spoon", "cloud"]
+private let ssFillers = ["dog", "table", "purple", "pizza", "tree", "sock", "river", "book", "seven", "window", "spoon", "cloud"]
 
 private func ssSets(_ level: Int) -> [SSSet] {
     switch level { case 1: return ssPictureSets; case 2, 3: return ssEasy; case 4: return ssMedium; default: return ssHard }
@@ -245,7 +245,11 @@ private final class SynonymSnakeModel: ArcadeModel {
     }
 
     private func lessonFor(_ f: SSFood) -> String {
-        if level == 1 { return "\(f.word) isn't \(set.target.lowercased() == "things that go" ? "a thing that goes" : set.target.lowercased()) — eat \(set.good.prefix(2).joined(separator: " "))" }
+        if level == 1 {
+            let one = ["FRUIT": "a fruit", "ANIMALS": "an animal", "THINGS THAT GO": "a thing that goes", "SWEETS": "a sweet"][set.target]
+                ?? set.target.lowercased()
+            return "\(f.word) isn't \(one) — eat \(set.good.prefix(2).joined(separator: " "))"
+        }
         let t = set.target.lowercased()
         if f.opposite { return "*\(f.word)* is the OPPOSITE of \(t)" }
         return "*\(f.word)* doesn't mean \(t) — *\(set.good[0])* does"

@@ -41,6 +41,16 @@ private struct CTItem {
 }
 
 private let ctRoots = ["C", "D♭", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"].map { Spelled($0) }
+/// Minor and diminished chords take the sharp name for those two keys (C♯m, not D♭m — which would need F♭).
+private let ctRootsMinor = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "G♯", "A", "B♭", "B"].map { Spelled($0) }
+/// Notes a young reader shouldn't meet in a spelling: F♭, C♭, E♯, B♯.
+private let ctOddNotes: Set<Spelled> = [Spelled("F♭"), Spelled("C♭"), Spelled("E♯"), Spelled("B♯")]
+/// The answer's root is usable if every option's chord spells, and the answer's own spelling
+/// has no F♭ / C♭ / E♯ / B♯.
+private func ctRootOK(_ root: Spelled, _ q: ChordQuality, _ moods: [CTMood]) -> Bool {
+    guard !moods.contains(where: { spellTriad(root, $0.quality) == nil }), let notes = spellTriad(root, q) else { return false }
+    return ctOddNotes.isDisjoint(with: notes)
+}
 /// Scale-degree tunes (0 = tonic … 4 = 5th); every one uses the 3rd, the note that makes it major or minor.
 private let ctTunes: [[Int]] = [[0, 1, 2, 1, 0], [0, 2, 4, 2, 0], [4, 3, 2, 1, 0], [0, 1, 2, 3, 4, 2, 0], [2, 1, 0, 1, 2, 2, 2], [0, 2, 1, 3, 2, 0]]
 
@@ -51,10 +61,12 @@ private func ctMake(_ level: Int, last: CTMood?) -> CTItem {
     let names = level >= 7
     var mood = moods.randomElement()!
     if mood == last && Bool.random() { mood = moods.randomElement()! }   // fewer long runs of one answer
-    // A root whose chords (all the options' qualities) spell without double sharps/flats.
+    // A root whose chords (all the options' qualities) spell without double sharps/flats, and
+    // whose answer chord spells without F♭ / C♭ / E♯ / B♯.
     var root = Spelled("C")
     if level >= 2 {
-        repeat { root = ctRoots.randomElement()! } while moods.contains { spellTriad(root, $0.quality) == nil }
+        let pool = mood.quality == .minor || mood.quality == .diminished ? ctRootsMinor : ctRoots
+        repeat { root = pool.randomElement()! } while !ctRootOK(root, mood.quality, moods)
     }
     let r = root.pc <= 6 ? 60 + root.pc : 48 + root.pc          // G3 … F♯4
     let q = mood.quality
@@ -345,6 +357,8 @@ private struct CTMasks: View {
                 if q.rawValue > 1 || !pcs.contains(q.third) || pcs.contains(q == .major ? 3 : 4) { fails.append("tune \(it.name)") }
             }
             for o in it.options where spellTriad(it.root, o.quality) == nil { fails.append("unspellable \(it.root.name)\(o.quality.suffix)") }
+            if let notes = spellTriad(it.root, q), !ctOddNotes.isDisjoint(with: notes) { fails.append("odd spelling \(it.name)") }
+            if (q == .minor || q == .diminished) && [Spelled("D♭"), Spelled("A♭")].contains(it.root) { fails.append("flat minor \(it.name)") }
             if level >= 8, it.spelled?.first != it.root { fails.append("spelled") }
             if level == 1 && it.root != Spelled("C") { fails.append("L1 root") }
         }

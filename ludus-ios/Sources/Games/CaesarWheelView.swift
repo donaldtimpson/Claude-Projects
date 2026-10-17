@@ -61,7 +61,7 @@ private func cwWords(_ s: String) -> [CWWord] {
 }
 
 private let cwPic3 = cwWords("CAT:🐱 DOG:🐶 PIG:🐷 COW:🐮 BUS:🚌 SUN:☀️ HAT:🎩 BED:🛏️ FOX:🦊 BEE:🐝 EGG:🥚 CAR:🚗 OWL:🦉 ANT:🐜 BAT:🦇 HEN:🐔 CUP:☕️ KEY:🔑 BOX:📦 BUG:🐛 PIE:🥧 RAM:🐏 MAP:🗺️")
-private let cwPic4 = cwWords("FISH:🐟 BEAR:🐻 FROG:🐸 DUCK:🦆 LION:🦁 MOON:🌙 STAR:⭐️ CAKE:🎂 SHIP:🚢 BOOK:📖 TREE:🌳 BOAT:⛵️ MILK:🥛 GOAT:🐐 DEER:🦌 WOLF:🐺 KITE:🪁 BELL:🔔 DRUM:🥁 CRAB:🦀 RAIN:🌧️ LEAF:🍃 CORN:🌽 SOCK:🧦 KING:🤴")
+private let cwPic4 = cwWords("FISH:🐟 BEAR:🐻 FROG:🐸 DUCK:🦆 LION:🦁 MOON:🌙 STAR:⭐️ CAKE:🎂 SHIP:🚢 BOOK:📖 TREE:🌳 BOAT:⛵️ MILK:🥛 GOAT:🐐 DEER:🦌 WOLF:🐺 KITE:🪁 BELL:🔔 DRUM:🥁 CRAB:🦀 RAIN:🌧️ LEAF:🍃 CORN:🌽 SOCK:🧦 SEAL:🦭")
 private let cwPic5 = cwWords("HORSE:🐎 TIGER:🐯 SNAKE:🐍 APPLE:🍎 CROWN:👑 SWORD:🗡️ WHALE:🐋 SHEEP:🐑 MOUSE:🐭 ZEBRA:🦓 CAMEL:🐫 HOUSE:🏠 TRAIN:🚂 GRAPE:🍇 LEMON:🍋 PIZZA:🍕 ROBOT:🤖 EAGLE:🦅 SHARK:🦈 PANDA:🐼 KOALA:🐨 TRUCK:🚚 BREAD:🍞 CHAIR:🪑 HEART:❤️ CLOUD:☁️")
 private let cwRoman = cwWords("ROME ARMY GOLD WALL ROAD CAMP GATE FORT HILL SPEAR TENT SHIELD LEGION ARROW RIVER TOWER BRIDGE CHARIOT SENATE TEMPLE FORUM")
 private let cwPhrases = [

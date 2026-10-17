@@ -33,7 +33,7 @@ private struct TGScene {
 
 private let tgScenes: [TGScene] = [
     TGScene(era: .rome, title: "Roman Street", when: "2,000 years ago",
-            things: ["🏛️", "🏺", "🛡️", "⚔️", "🐎", "🌿", "📜", "🪔", "🎲", "🐐", "🛞", "⛵️", "🐓"],
+            things: ["🏛️", "🏺", "🛡️", "⚔️", "🐎", "🌿", "📜", "🪔", "🎲", "🐐", "⛵️", "🐓"],
             people: ["🧔", "👩", "👴"]),
     TGScene(era: .feast, title: "Roman Feast", when: "2,000 years ago",
             things: ["🍇", "🫒", "🍞", "🧀", "🍯", "🐟", "🍎", "🍐", "🥚", "🏺", "🪔", "🍗"],

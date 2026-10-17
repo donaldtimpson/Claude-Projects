@@ -66,11 +66,12 @@ private let csAnimals: [Critter] = [
     .init(emoji: "🐢", name: "Sea turtle", cls: "reptile", tricky: true),
     .init(emoji: "🐊", name: "Alligator", cls: "reptile", tricky: true),
     .init(emoji: "🦎", name: "Iguana", cls: "reptile", tricky: true),
-    // Amphibians (🦎 recoloured for the salamanders — the name is the answer)
+    // Amphibians (no emoji draws a newt or salamander, and a lizard would teach the wrong thing —
+    // these are words only)
     .init(emoji: "🐸", name: "Frog", cls: "amphibian"), .init(emoji: "🐸", name: "Toad", cls: "amphibian", hue: -70),
-    .init(emoji: "🦎", name: "Newt", cls: "amphibian", hue: -95),
-    .init(emoji: "🦎", name: "Salamander", cls: "amphibian", hue: -120, tricky: true),
-    .init(emoji: "🦎", name: "Axolotl", cls: "amphibian", hue: 200, tricky: true),
+    .init(emoji: "", name: "Newt", cls: "amphibian"),
+    .init(emoji: "", name: "Salamander", cls: "amphibian", tricky: true),
+    .init(emoji: "", name: "Axolotl", cls: "amphibian", tricky: true),
 ]
 
 private func csBinsFor(_ level: Int) -> [SortBin] { Array(csBins.prefix(min(5, level + 1))) }
@@ -86,7 +87,7 @@ private func csItem(_ c: Critter) -> SortItem {
     let title = csBins.first { $0.id == c.cls }?.title ?? c.cls
     let classArticle = csArticle(title).lowercased()
     return SortItem(emoji: c.emoji, hue: c.hue, text: c.name, bin: c.cls,
-                    lesson: "\(c.emoji) \(csArticle(c.name)) \(c.name.lowercased()) is \(classArticle) *\(title)*")
+                    lesson: "\(c.emoji.isEmpty ? "" : c.emoji + " ")\(csArticle(c.name)) \(c.name.lowercased()) is \(classArticle) *\(title)*")
 }
 
 /// Level I–IV: typical animals of the bins in play, the newest bin served more often.
