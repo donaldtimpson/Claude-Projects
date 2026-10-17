@@ -8,13 +8,14 @@ import SwiftUI
 // that falls unsliced is fine — no penalty. Mixed levels switch table every 3 slices (the fruit
 // in the air puffs away so nothing changes meaning mid-flight).
 //   I     the 2s, 2×1…5, odd numbers as the others — every fruit shows its dots in pairs
-//   II    the 5s (dots in fives) and the 10s, ×1…5
-//   III   2s / 5s / 10s mixed, ×1…10
-//   IV    the 3s and 4s (bombs start, rarely)
-//   V     the 6s and 7s
-//   VI    the 8s and 9s
-//   VII   11s and 12s mixed with 6–9, ×1…12
-//   VIII+ division: "Make 8" — slice the ÷ facts that equal 8 (56÷7 …); quicker each level, capped
+//   II    the 5s only, 5×1…4 (to 20), dots in fives
+//   III   the 10s, ×1…5
+//   IV    2s / 5s / 10s mixed, ×1…10
+//   V     the 3s and 4s (bombs start, rarely)
+//   VI    the 6s and 7s
+//   VII   the 8s and 9s
+//   VIII  11s and 12s mixed with 6–9, ×1…12
+//   IX+   division: "Make 8" — slice the ÷ facts that equal 8 (56÷7 …); quicker each level, capped
 // Early fruit floats on low gravity (≈4 s in the air); later levels fall faster.
 
 private struct TTNFruit {
@@ -45,13 +46,14 @@ private struct TTNLevel {
 private func ttnLevel(_ level: Int) -> TTNLevel {
     switch level {
     case 1: return TTNLevel(tables: [2], maxMul: 5, hint: true)
-    case 2: return TTNLevel(tables: [5, 10], maxMul: 5, hint: true)
-    case 3: return TTNLevel(tables: [2, 5, 10], maxMul: 10, hint: true)
-    case 4: return TTNLevel(tables: [3, 4], maxMul: 10, hint: true, bombs: 0.05)
-    case 5: return TTNLevel(tables: [6, 7], maxMul: 10, bombs: 0.06)
-    case 6: return TTNLevel(tables: [8, 9], maxMul: 10, bombs: 0.08)
-    case 7: return TTNLevel(tables: [11, 12, 6, 7, 8, 9], maxMul: 12, bombs: 0.08)
-    case 8: return TTNLevel(tables: Array(2...9), maxMul: 9, division: true, bombs: 0.08)
+    case 2: return TTNLevel(tables: [5], maxMul: 4, hint: true)
+    case 3: return TTNLevel(tables: [10], maxMul: 5, hint: true)
+    case 4: return TTNLevel(tables: [2, 5, 10], maxMul: 10, hint: true)
+    case 5: return TTNLevel(tables: [3, 4], maxMul: 10, hint: true, bombs: 0.05)
+    case 6: return TTNLevel(tables: [6, 7], maxMul: 10, bombs: 0.06)
+    case 7: return TTNLevel(tables: [8, 9], maxMul: 10, bombs: 0.08)
+    case 8: return TTNLevel(tables: [11, 12, 6, 7, 8, 9], maxMul: 12, bombs: 0.08)
+    case 9: return TTNLevel(tables: Array(2...9), maxMul: 9, division: true, bombs: 0.08)
     default: return TTNLevel(tables: Array(2...12), maxMul: 12, division: true, bombs: 0.1)
     }
 }
@@ -374,6 +376,7 @@ private final class TTNEngine: ArcadeModel {
                         precondition(Int(label) == val && val > 0, "L\(level) bad label \(label)")
                         precondition((val % t == 0) == right, "L\(level) \(val) vs the \(t)s")
                         precondition(val <= t * lv.maxMul, "L\(level) \(val) out of range")
+                        precondition(level != 2 || (t == 5 && val <= 20), "L2 must be the 5s to 20, got \(val)")
                     }
                 }
             }

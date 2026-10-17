@@ -7,12 +7,14 @@ import SwiftUI
 // the shelf. Every question has one checkable answer (no "would you rather").
 //
 // Ladder: I a prize costs 3–5 coins; 1 coin a day — drag each in, count up, tap BUY (buying
-// too early is the only slip) · II temptations, 1 coin a day: "Buy the 🍭 and still get the 🪁
-// by Day 7?" YES/NO, all within 10 · III needs vs wants (school shoes = need, toy dinosaur =
-// want) + temptations at 2 coins a day, within 20 · IV planning: "3 a week, the bike costs 18 —
-// how many weeks?" (exact) · V planning with savings and a remainder; save/give/spend jars by
-// halves · VI jars by percent (50/40/10 of 10–100) · VII interest: 10% a week, one week, 4
-// choices · VIII+ two weeks of interest (100 → 110 → 121), 5/20/25% rates, "now or later?".
+// too early is the only slip) · II prizes up to 10: fill the pig the rest of the way, or "Can
+// you buy the 🪁 now?" 👍/👎 with Porcus's coins laid out next to the price · III temptations,
+// 1 coin a day: "Buy the 🍭 and still get the 🪁 by Day 7?" YES/NO, all within 10 · IV needs vs
+// wants (school shoes = need, toy dinosaur = want) + temptations at 2 coins a day, within 20 ·
+// V planning: "3 a week, the bike costs 18 — how many weeks?" (exact) · VI planning with savings
+// and a remainder; save/give/spend jars by halves · VII jars by percent (50/40/10 of 10–100) ·
+// VIII interest: 10% a week, one week, 4 choices · IX+ two weeks of interest (100 → 110 → 121),
+// 5/20/25% rates, "now or later?".
 
 struct PItem: Hashable { let emoji: String, name: String }
 
@@ -45,10 +47,10 @@ let pWants: [PItem] = [
 // MARK: Rounds
 
 struct PorcusRound {
-    enum Kind { case fill, tempt, sort, choice }
+    enum Kind { case fill, afford, tempt, sort, choice }
     var kind: Kind
     var prize: PItem
-    var cost = 0                  // prize price (fill / tempt)
+    var cost = 0                  // prize price (fill / afford / tempt)
     var startCoins = 0            // in Porcus when the round opens
     var feed = 0                  // coins to drag in before the question
     var perDay = 1                // tempt: coins a day
@@ -74,11 +76,31 @@ private func pOptions(_ ans: Int, _ cands: [Int], _ n: Int, _ fmt: (Int) -> Stri
     return (nums.map(fmt), nums.firstIndex(of: ans)!)
 }
 
-private func pChoices(_ level: Int) -> Int { level >= 7 ? 4 : 3 }
+private func pChoices(_ level: Int) -> Int { level >= 8 ? 4 : 3 }
 
 private func pFill() -> PorcusRound {
     let c = Int.random(in: 3...5)
     return PorcusRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, feed: c, shelf: "")
+}
+
+/// Gradus II fill: a 6–10 coin prize with some coins already saved — feed the last 2–4.
+private func pFillBig() -> PorcusRound {
+    let c = Int.random(in: 6...10), f = Int.random(in: 2...4)
+    return PorcusRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, startCoins: c - f, feed: f, shelf: "")
+}
+
+/// "Can you buy the 🪁 now?" — Porcus's coins are laid out beside the price (all within 10);
+/// balanced 👍/👎, never off by more than 4 so it's a count, not a glance.
+private func pAfford() -> PorcusRound {
+    let yes = Bool.random()
+    let k = Int.random(in: 3...10)
+    let h = yes ? Int.random(in: k...min(10, k + 3)) : Int.random(in: max(1, k - 4)...(k - 1))
+    let p = pPrizes.randomElement()!
+    return PorcusRound(kind: .afford, prize: p, cost: k, startCoins: h,
+                       prompt: "Can you buy the \(p.emoji) now?",
+                       options: ["👍 YES", "👎 NO"], correct: yes ? 0 : 1,
+                       explain: "Porcus has \(h) 🪙 · the \(p.emoji) costs \(k) 🪙",
+                       shelf: yes ? p.emoji : "⭐️")
 }
 
 /// "Buy the treat and still get the prize by Day 7?" — balanced YES/NO, and the prize is always
@@ -123,7 +145,7 @@ private func pPlanExact(_ level: Int) -> PorcusRound {
 private func pPlanRemainder(_ level: Int) -> PorcusRound {
     for _ in 0..<500 {
         let h = Int.random(in: 1...9), a = Int.random(in: 2...6)
-        let cost = Int.random(in: (h + a + 1)...(level >= 8 ? 60 : 40))
+        let cost = Int.random(in: (h + a + 1)...(level >= 9 ? 60 : 40))
         let need = cost - h, w = (need + a - 1) / a
         guard (2...8).contains(w), need % a != 0 || Bool.random() else { continue }
         let p = pPrizes.randomElement()!
@@ -152,7 +174,7 @@ private func pJarsHalf(_ level: Int) -> PorcusRound {
 private func pJarsPercent(_ level: Int) -> PorcusRound {
     let splits = [(50, 40, 10), (60, 30, 10), (70, 20, 10), (50, 30, 20), (60, 20, 20)]
     let s = splits.randomElement()!
-    let t = 10 * Int.random(in: 1...(level >= 8 ? 20 : 10))
+    let t = 10 * Int.random(in: 1...(level >= 9 ? 20 : 10))
     let jars = [("SAVE", s.0), ("SPEND", s.1), ("GIVE", s.2)]
     let ask = jars.randomElement()!
     let tenth = t / 10, ans = t * ask.1 / 100
@@ -208,12 +230,13 @@ func porcusRound(_ level: Int) -> PorcusRound {
     let r = Int.random(in: 0..<20)
     switch level {
     case 1: return pFill()
-    case 2: return pTempt(perDay: 1)
-    case 3: return r < 10 ? pSort() : pTempt(perDay: 2)
-    case 4: return r < 12 ? pPlanExact(4) : r < 16 ? pSort() : pTempt(perDay: 2)
-    case 5: return r < 8 ? pPlanRemainder(5) : r < 16 ? pJarsHalf(5) : pPlanExact(5)
-    case 6: return r < 10 ? pJarsPercent(6) : r < 16 ? pPlanRemainder(6) : pJarsHalf(6)
-    case 7: return r < 10 ? pInterest1(7) : r < 15 ? pJarsPercent(7) : pPlanRemainder(7)
+    case 2: return r < 10 ? pFillBig() : pAfford()
+    case 3: return pTempt(perDay: 1)
+    case 4: return r < 10 ? pSort() : pTempt(perDay: 2)
+    case 5: return r < 12 ? pPlanExact(5) : r < 16 ? pSort() : pTempt(perDay: 2)
+    case 6: return r < 8 ? pPlanRemainder(6) : r < 16 ? pJarsHalf(6) : pPlanExact(6)
+    case 7: return r < 10 ? pJarsPercent(7) : r < 16 ? pPlanRemainder(7) : pJarsHalf(7)
+    case 8: return r < 10 ? pInterest1(8) : r < 15 ? pJarsPercent(8) : pPlanRemainder(8)
     default: return r < 10 ? pInterestTop(level) : r < 14 ? pInterest1(level) : r < 17 ? pJarsPercent(level) : pPlanRemainder(level)
     }
 }
@@ -230,13 +253,19 @@ func porcusSelfCheck() -> [String] {
             if r.kind != .fill && !r.options.indices.contains(r.correct) { errs.append("L\(level) bad index") }
             switch r.kind {
             case .fill:
-                if level != 1 || !(3...5).contains(r.cost) || r.feed != r.cost { errs.append("fill \(r.cost)") }
+                let ok = level == 1 ? (3...5).contains(r.cost) && r.feed == r.cost && r.startCoins == 0
+                    : level == 2 && (6...10).contains(r.cost) && r.startCoins + r.feed == r.cost && r.feed > 0 && r.startCoins > 0
+                if !ok { errs.append("fill L\(level) \(r.cost)") }
+            case .afford:
+                if level != 2 || r.cost > 10 || r.startCoins > 10 || r.startCoins < 1 || r.feed != 0
+                    || (r.startCoins >= r.cost) != (r.correct == 0) { errs.append("afford \(r.startCoins)/\(r.cost)") }
             case .tempt:
                 let h = r.startCoins + r.feed, end = h - r.treatCost + (7 - r.day) * r.perDay
                 if (end >= r.cost) != (r.correct == 0) { errs.append("tempt answer") }
-                if h + (7 - r.day) * r.perDay > (level <= 2 ? 10 : 20) || r.cost > 20 { errs.append("tempt too big") }
+                if level < 3 || h + (7 - r.day) * r.perDay > (level <= 3 ? 10 : 20) || r.cost > 20 { errs.append("tempt too big") }
                 if h < r.treatCost { errs.append("tempt can't afford treat") }
             case .sort:
+                if level < 4 { errs.append("L\(level) sort too early") }
                 let need = pNeeds.contains(r.prize), want = pWants.contains(r.prize)
                 if need == want || (r.correct == 0) != need { errs.append("sort \(r.prize)") }
             case .choice:
@@ -270,6 +299,7 @@ func porcusSelfCheck() -> [String] {
                     if n[1] * n[0] / 100 != opts[r.correct] || n[1] % 10 != 0 { errs.append("int pay") }
                 } else { errs.append("unchecked \(r.prompt)") }
                 if r.options.count != (r.options.contains("Plan A") ? 3 : pChoices(level)) { errs.append("L\(level) count \(r.options.count)") }
+                if level <= 3 { errs.append("L\(level) choice question too early") }
                 if opts.contains(where: { $0 <= 0 }) && !r.options.contains("Plan A") { errs.append("non-positive \(r.options)") }
             }
         }
@@ -306,7 +336,8 @@ private final class PorcusModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil {
+        let env = ProcessInfo.processInfo.environment
+        if env["LUDUS_SELFTEST"] != nil || env["LUDUS_SELFCHECK"] != nil {
             let errs = porcusSelfCheck()
             marketLog("PORCUS SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors") \(Array(Set(errs)).prefix(12))")
         }
@@ -322,7 +353,8 @@ private final class PorcusModel: ArcadeModel {
         stage = pending > 0 ? .feeding : .asking
         mood = .calm; chosen = nil; showExplain = false
         switch round.kind {
-        case .fill: say = "Let's save for the \(round.prize.emoji)!"
+        case .fill: say = round.startCoins > 0 ? "Fill me up! \(round.prize.emoji)" : "Save for the \(round.prize.emoji)!"
+        case .afford: say = "Can we buy it?"
         case .tempt: say = "Day \(round.day)! Feed me!"
         case .sort: say = "Need it or want it?"
         case .choice: say = "Oink? Think…"
@@ -375,6 +407,10 @@ private final class PorcusModel: ArcadeModel {
         } else if round.kind == .tempt {
             mood = right ? .happy : .sad
             say = right ? "Saved! Oink-oink! 💕" : "No! The \(round.prize.emoji) needs every coin!"
+        } else if round.kind == .afford {
+            mood = right ? .happy : .sad
+            let yes = round.correct == 0
+            say = right ? (yes ? "Yes! Enough! 💕" : "Right — not yet!") : (yes ? "We can! Count again!" : "Not enough yet!")
         } else {
             mood = right ? .happy : .sad
             say = right ? ["Oink! Clever!", "Right! 💕", "Bravo!", "Oink-oink!"].randomElement()! : "Oops! Look…"
@@ -484,6 +520,9 @@ struct PorcusView: View {
     private var shelfRow: some View {
         HStack(spacing: 4) {
             Text("🏆").font(.system(size: 20))
+            if model.shelf.isEmpty {
+                Text("Your prizes go here").font(luFont(14, .heavy)).foregroundStyle(Color(hex: Lu.inkDim)).opacity(0.8)
+            }
             ForEach(Array(model.shelf.suffix(9).enumerated()), id: \.offset) { _, e in
                 Text(e).font(.system(size: 24)).transition(.scale(scale: 0.2).combined(with: .opacity))
             }
@@ -514,12 +553,12 @@ struct PorcusView: View {
                     .offset(y: 54)
                 MarketSparks(trigger: model.sparks, glyphs: ["🪙", "✨", "💕"])
             }
-            .frame(width: 150, height: 140)
+            .frame(width: 136, height: 140)
             .pFrame("pig")
 
             MarketBubble {
                 Text(model.say).font(luFont(19, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                    .multilineTextAlignment(.leading).minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
             .padding(.bottom, 30)
@@ -534,12 +573,21 @@ struct PorcusView: View {
                 HStack(spacing: 10) {
                     Text(r.prize.emoji).font(.system(size: 54))
                     Text("=").font(luFont(30)).foregroundStyle(Color(hex: Lu.inkDim))
-                    HStack(spacing: 6) {
-                        ForEach(0..<r.cost, id: \.self) { i in PCoin(size: 40, ghost: i >= model.coins) }
-                    }
+                    coinRows(total: r.cost, filled: model.coins)
                 }
             }
             .frame(maxWidth: .infinity).padding(.vertical, 12).background(luPanelShape(18))
+        case .afford:
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    Text("🐷").font(.system(size: 34))
+                    coinRows(total: r.startCoins, filled: r.startCoins)
+                }
+                tag(r.prize.emoji, r.cost, goal: true)
+                Text(r.prompt).font(luFont(22, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity).padding(12).background(luPanelShape(18))
         case .tempt:
             VStack(spacing: 10) {
                 calendar(r)
@@ -575,6 +623,17 @@ struct PorcusView: View {
             Text(r.prompt).font(luFont(r.prompt.count > 90 ? 18 : 21, .heavy)).foregroundStyle(Color(hex: Lu.ink))
                 .multilineTextAlignment(.center).lineSpacing(3).minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity).padding(14).background(luPanelShape(18))
+        }
+    }
+
+    /// Coins in rows of five (so 6–10 stay easy to count); the first `filled` are gold, the rest ghosts.
+    private func coinRows(total: Int, filled: Int) -> some View {
+        VStack(spacing: 6) {
+            ForEach(Array(stride(from: 0, to: total, by: 5)), id: \.self) { row in
+                HStack(spacing: 6) {
+                    ForEach(row..<min(total, row + 5), id: \.self) { i in PCoin(size: 38, ghost: i >= filled) }
+                }
+            }
         }
     }
 
@@ -646,8 +705,10 @@ struct PorcusView: View {
             }
             switch r.kind {
             case .fill:
-                LudusButton(title: "Buy \(r.prize.emoji)", fill: model.coins >= r.cost ? [Lu.gold, Lu.tangerine] : [Lu.panel2, Lu.panel],
-                            fullWidth: true) { model.buy() }
+                let ready = model.coins >= r.cost
+                LudusButton(title: "Buy \(r.prize.emoji)", fill: ready ? [Lu.gold, Lu.tangerine] : [Lu.silver, 0xa79f8b],
+                            shadow: ready ? 0xb96b1e : 0x6f6857, fullWidth: true) { model.buy() }
+                    .opacity(ready ? 1 : 0.85)
                     .scaleEffect(model.coins >= r.cost && model.stage != .done ? 1.05 : 1)
                     .animation(.spring(response: 0.3, dampingFraction: 0.4), value: model.coins >= r.cost)
             case .sort:
@@ -655,7 +716,7 @@ struct PorcusView: View {
                     jar(0, "NEED", "🏠", Lu.sky)
                     jar(1, "WANT", "🎈", Lu.grape)
                 }
-            case .tempt, .choice:
+            case .afford, .tempt, .choice:
                 if model.stage != .feeding {
                     let n = r.options.count
                     let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: n == 4 ? 2 : n)

@@ -5,7 +5,8 @@ import SwiftUI
 // A big, dim, lovable Cyclops only eats things that have the sound on his bib. Drag a plate into
 // his mouth: the right one he chomps; a wrong one turns him green — "BLEH!" — he spits it across
 // the room, then the right plate glows and he gulps it, so every miss shows the answer. A 🔊
-// button (and once per round, automatically) says the cue; tapping a plate says its word.
+// button (and once per round, automatically) says the cue; tapping a plate says its word — and at
+// I–II a tap also feeds it to him (dragging works at every level).
 //
 // Ladder:
 //   I    first sound: bib letter + a picture with that sound ("B like 🐻"), 2 picture foods, no words
@@ -443,7 +444,7 @@ private final class PolyModel: ArcadeModel {
         }
     }
 
-    /// Feed plate `i` (the drag's drop and the bot both land here).
+    /// Feed plate `i` (a drag's drop, a tap at I–II, and the bot all land here).
     func feed(_ i: Int) {
         guard phase == .playing, stage == .waiting, round.foods.indices.contains(i) else { return }
         timeout?.cancel(); deadline = nil
@@ -719,7 +720,13 @@ private struct PolyPlay: View {
             .opacity(plateOpacity(i))
             .animation(model.stage == .spit ? .easeIn(duration: 0.55) : .spring(response: 0.42, dampingFraction: 0.78), value: model.stage)
             .animation(.interactiveSpring(), value: dragOffset)
-            .onTapGesture { LibraryVoice.say(food.word) }
+            .onTapGesture {
+                LibraryVoice.say(food.word)
+                // Gradus I–II: a tap feeds the plate too (small hands needn't drag).
+                if model.level <= 2 && model.stage == .waiting && model.phase == .playing {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { model.feed(i) }
+                }
+            }
             .gesture(
                 DragGesture(minimumDistance: 4, coordinateSpace: .named("poly"))
                     .onChanged { v in

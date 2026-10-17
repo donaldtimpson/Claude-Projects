@@ -6,8 +6,8 @@ import SwiftUI
 // the ferry bound for its home (or tap that ferry). The ferry sails across the world map from
 // Alexandria; at home the animal cheers. A wrong ferry turns back and the right home glows.
 //
-// Ladder:  I    2 continents, picture-famous animals (kangaroo, giraffe, panda, penguin …)
-//          II   3 continents
+// Ladder:  I    Africa vs Australia only: giraffe, zebra, hippo / kangaroo, koala
+//          II   3 continents, picture-famous animals (+ panda, bison, penguin …)
 //          III  4 continents, the whole animal list
 //          IV   all 7 continents
 //          V    countries (panda → China, kiwi → New Zealand …), 3 ferries; a slow clock (20 s)
@@ -93,7 +93,7 @@ private struct ZFAnimal {
     var country: String? = nil
     var biome: ZFBiome? = nil
     var also: Set<String> = []      // continents/countries that are ALSO home — never offered as wrong
-    var famous = false              // level I–II pool
+    var famous = false              // level II pool (level I: `zfStarters`)
 }
 
 /// The deck. Sources of truth: native wild range (not zoos, not introductions).
@@ -102,7 +102,7 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🐨", name: "Koala", continent: "Australia", country: "Australia", famous: true),
     .init(emoji: "🦒", name: "Giraffe", continent: "Africa", biome: .grassland, famous: true),
     .init(emoji: "🦓", name: "Zebra", continent: "Africa", biome: .grassland, famous: true),
-    .init(emoji: "🦛", name: "Hippo", continent: "Africa"),
+    .init(emoji: "🦛", name: "Hippo", continent: "Africa", famous: true),
     .init(emoji: "🦍", name: "Gorilla", continent: "Africa", biome: .rainforest),
     .init(emoji: "🐼", name: "Giant panda", continent: "Asia", country: "China", famous: true),
     .init(emoji: "🐅", name: "Bengal tiger", continent: "Asia", country: "India",
@@ -118,7 +118,7 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🦅", name: "Bald eagle", continent: "North America", country: "United States", also: ["Canada", "Mexico"]),
     .init(emoji: "🐊", name: "American alligator", continent: "North America", country: "United States"),
     .init(emoji: "🐐", name: "Mountain goat", continent: "North America", biome: .mountains, also: ["Canada"]),
-    .init(emoji: "🦙", name: "Guanaco", continent: "South America", biome: .mountains, famous: true),
+    .init(emoji: "🦙", name: "Guanaco", continent: "South America", biome: .mountains),   // not before III
     .init(emoji: "🦥", name: "Sloth", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🦜", name: "Scarlet macaw", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🐸", name: "Poison dart frog", continent: "South America", biome: .rainforest, also: ["North America"]),
@@ -135,6 +135,10 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🐙", name: "Octopus", biome: .ocean),
     .init(emoji: "🦈", name: "Great white shark", biome: .ocean),
 ]
+
+/// Gradus I: only these, and only their two homes (Africa, Australia) as ferries.
+private let zfStarters: Set<String> = ["🦒", "🦓", "🦛", "🦘", "🐨"]
+private let zfStarterHomes = ["Africa", "Australia"]
 
 /// What a ferry is bound for.
 private enum ZFDest: Hashable {
@@ -208,7 +212,7 @@ private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
     let (kind, n) = zfKind(level)
     let pool: [ZFAnimal] = zfAnimals.filter { a in
         switch kind {
-        case .continent: return a.continent != nil && (level > 2 || a.famous)
+        case .continent: return a.continent != nil && (level > 2 || a.famous) && (level > 1 || zfStarters.contains(a.emoji))
         case .country: return a.country != nil
         case .biome: return a.biome != nil
         case .both: return a.continent != nil && a.biome != nil
@@ -222,7 +226,7 @@ private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
     switch kind {
     case .continent:
         answer = .continent(animal.continent!)
-        wrong = zfContinents.map { ZFDest.continent($0) }
+        wrong = (level == 1 ? zfStarterHomes : zfContinents).map { ZFDest.continent($0) }
     case .country:
         answer = .country(animal.country!)
         wrong = zfCountries.map { ZFDest.country($0.name) }
@@ -259,6 +263,11 @@ private func zfSelfCheck() {
             precondition(truths.count == 1 && zfTrue(q.animal, q.options[q.answer]), "ZooFerry: \(q.animal.name) \(q.options)")
             precondition(Set(q.options).count == q.options.count, "ZooFerry: duplicate options")
             for case .country(let c) in q.options { precondition(GeoAtlas.named(c) != nil, "ZooFerry: no map for \(c)") }
+            if level == 1 {
+                precondition(zfStarters.contains(q.animal.emoji), "ZooFerry: L1 animal \(q.animal.name)")
+                for case .continent(let c) in q.options { precondition(zfStarterHomes.contains(c), "ZooFerry: L1 ferry \(c)") }
+            }
+            precondition(level >= 3 || q.animal.name != "Guanaco", "ZooFerry: guanaco before III")
             n += 1
         }
     }

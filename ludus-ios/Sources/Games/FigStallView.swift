@@ -280,11 +280,12 @@ private final class FigStallModel: ArcadeModel {
 
     init() { super.init(key: GameID.figStall.rawValue) }
 
-    override func perLevel(_ level: Int) -> Int { level <= 2 ? 6 : 5 }
+    override func perLevel(_ level: Int) -> Int { level == 1 ? 4 : level == 2 ? 6 : 5 }
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil {
+        let env = ProcessInfo.processInfo.environment
+        if env["LUDUS_SELFTEST"] != nil || env["LUDUS_SELFCHECK"] != nil {
             let errs = fsSelfCheck()
             marketLog("FIGSTALL SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors") \(Array(Set(errs)).prefix(12))")
         }
@@ -613,8 +614,11 @@ struct FigStallView: View {
                 HStack(spacing: 10) {
                     ForEach(model.order.crates, id: \.self) { k in crate(k) }
                 }
-                LudusButton(title: "Give 🤝", fill: [Lu.mint, 0x3f8f4a], shadow: 0x2a6a33, fullWidth: true) { model.give() }
-                    .opacity(model.bag.isEmpty || model.stage != .bagging ? 0.45 : 1)
+                // Not ready yet: a readable pewter button (dark text on light), not a see-through one.
+                let ready = !model.bag.isEmpty && model.stage == .bagging
+                LudusButton(title: "Give 🤝", fill: ready ? [Lu.mint, 0x3f8f4a] : [Lu.silver, 0xa79f8b],
+                            shadow: ready ? 0x2a6a33 : 0x6f6857, fullWidth: true) { model.give() }
+                    .opacity(ready ? 1 : 0.85)
             }
         }
     }

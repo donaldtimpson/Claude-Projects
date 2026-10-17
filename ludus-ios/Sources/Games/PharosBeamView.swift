@@ -8,7 +8,8 @@ import SwiftUI
 // Alexandria (Mercator, so on-map directions are true compass directions).
 //
 // Ladder:  I    the ship is VISIBLE; "a ship from the TOP ⬆️ (North)"; 4 directions
-//          II   ships hide in fog — read NORTH / SOUTH / EAST / WEST off the rose; 4 directions
+//          II   ships hide in fog — read NORTH ⬆️ / SOUTH ⬇️ / EAST ➡️ / WEST ⬅️ off the rose (the arrow
+//               still shows the way); 4 directions
 //          III  8 directions (NORTH-EAST …)
 //          IV   the rose (and map) is turned 90/180/270° — find N first; 4 directions
 //          V    turned by any 45° step; 8 directions; a slow clock appears (20 s)
@@ -107,7 +108,8 @@ private func makeRound(_ level: Int) -> PBRound {
                        sub: "That's \(pbNames8[i * 2])!")
     case 2:
         let i = Int.random(in: 0..<4)
-        return PBRound(bearings: four, answer: i, title: pbNames8[i * 2], sub: "Find \(pbShort8[i * 2]) on the compass")
+        let arrow = ["⬆️", "➡️", "⬇️", "⬅️"][i]
+        return PBRound(bearings: four, answer: i, title: "\(pbNames8[i * 2]) \(arrow)", sub: "Find \(pbShort8[i * 2]) on the compass")
     case 3:
         let i = Int.random(in: 0..<8)
         return PBRound(bearings: eight, answer: i, labels: .eight, title: pbNames8[i],

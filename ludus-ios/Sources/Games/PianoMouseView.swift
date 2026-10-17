@@ -7,8 +7,8 @@ import SwiftUI
 // a cat pops up, the mouse runs to the right key, and the key shows its name.
 //
 // Ladder (one octave C–B at I–V, C to the next E from VI):
-//   I     the key that glows — tap it (no reading, no clock)
-//   II    a BLACK key / a WHITE key, the HIGHEST / LOWEST key (pictures)
+//   I     the WHITE key that glows — tap it (no reading, no clock)
+//   II    a BLACK key / a WHITE key, the HIGHEST / LOWEST key (pictures); glowing keys may be black
 //   III   find C, D, E, F by the black-key groups (C sits left of the 2 black keys; hint shown)
 //   IV    any white-key name, C D E F G A B (no hint)
 //   V     sharps and flats on the black keys (G♭ is the F♯ key — enharmonic trap), some naturals
@@ -60,7 +60,8 @@ private func pmMake(_ level: Int, avoid: Int?) -> PMQuestion {
     let whites = all.filter { !isBlackKey($0) }
     func glow() -> PMQuestion {
         var k: Int
-        repeat { k = Bool.random() && Int.random(in: 0..<4) == 0 ? all.filter(isBlackKey).randomElement()! : whites.randomElement()! } while k == avoid
+        // Gradus I glows only white keys; from II a black key glows now and then.
+        repeat { k = level >= 2 && Bool.random() && Int.random(in: 0..<4) == 0 ? all.filter(isBlackKey).randomElement()! : whites.randomElement()! } while k == avoid
         return PMQuestion(task: .glow(k), keys: keys, answers: [k])
     }
     func name(_ pool: [Spelled], hint: Bool) -> PMQuestion {
@@ -522,7 +523,9 @@ private struct PMGlowRing: View {
             let q = pmMake(level, avoid: prev)
             let keys = Set(q.keys)
             switch q.task {
-            case .glow(let k): if q.answers != [k] || !keys.contains(k) || k == prev { fails.append("glow \(k)") }; prev = k
+            case .glow(let k):
+                if q.answers != [k] || !keys.contains(k) || k == prev { fails.append("glow \(k)") }; prev = k
+                if level == 1 && isBlackKey(k) { fails.append("L1 black glow \(k)") }
             case .color(let b): if q.answers != keys.filter({ isBlackKey($0) == b }) || q.answers.isEmpty { fails.append("color") }
             case .end(let h): if q.answers != [h ? q.keys.upperBound : q.keys.lowerBound] { fails.append("end") }
             case .name(let s, _):

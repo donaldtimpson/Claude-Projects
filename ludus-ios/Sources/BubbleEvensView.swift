@@ -3,8 +3,10 @@ import SwiftUI
 // MARK: - Bubble Evens  (Number Crunchers · pop-the-target)
 //
 // Bubbles rise; the RULE banner says which ones to pop. Pop a match to score; popping a
-// non-match, or letting a match float out the top, is a miss — and the game says why
-// ("7 is odd") and rings the bubbles that DO match. The rule changes every level:
+// non-match is a miss — and the game says why ("7 is odd") and rings the bubbles that DO match.
+// A bubble that reaches the banner's bottom edge has escaped and fades out there (so nothing is
+// ever tappable under the banner or the HUD's ✕); an escaped match costs a heart from III on,
+// but is free at I–II (like Flag Frenzy). The rule changes every level:
 //   I     pop the 🍎 (pictures — no numbers)
 //   II    even numbers to 10, with dots in pairs (every dot has a partner = even)
 //   III   even numbers to 20
@@ -99,6 +101,7 @@ private struct BEBubble {
     var pop: CGFloat = 0          // 0 alive; 0→1 while bursting
     var fade: CGFloat = 0         // 0 alive; 0→1 while fading away (rule changed)
     var glow: CGFloat = 0         // seconds left of the "this one!" ring after a miss
+    var escaped = false           // reached the banner: fades out in place instead of drifting on
     var alive: Bool { pop == 0 && fade == 0 }
 }
 private struct BEParticle { var x, y, vx, vy, life, r: CGFloat; var hex: UInt }
@@ -116,6 +119,8 @@ private final class BubbleEvensEngine: ArcadeModel {
     private var lastTick: Date?
     private var shake: CGFloat = 0
     private var needsSeed = false
+    /// Canvas y of the rule banner's bottom edge: bubbles escape (and fade) when their top reaches it.
+    var ceiling: CGFloat = 0
 
     init() {
         super.init(key: GameID.bubbleEvens.rawValue)
@@ -179,7 +184,7 @@ private final class BubbleEvensEngine: ArcadeModel {
             }
             if bubbles[i].fade > 0 {
                 bubbles[i].fade += CGFloat(dt) * 2.5
-                bubbles[i].y -= rise * 2
+                if !bubbles[i].escaped { bubbles[i].y -= rise * 2 }
                 if bubbles[i].fade >= 1 { bubbles.remove(at: i) }
                 continue
             }
@@ -190,9 +195,9 @@ private final class BubbleEvensEngine: ArcadeModel {
             let r = bubbles[i].r
             if bubbles[i].x < r { bubbles[i].x = r; bubbles[i].vx = abs(bubbles[i].vx) }
             if bubbles[i].x > size.width - r { bubbles[i].x = size.width - r; bubbles[i].vx = -abs(bubbles[i].vx) }
-            if bubbles[i].y < -r {
-                let b = bubbles.remove(at: i)
-                if b.target { escaped(b) }
+            if bubbles[i].y - r <= ceiling {
+                bubbles[i].escaped = true; bubbles[i].fade = 0.001
+                if bubbles[i].target { escaped(bubbles[i]) }
             }
         }
         stepEffects(dt)
@@ -226,11 +231,17 @@ private final class BubbleEvensEngine: ArcadeModel {
                                 hex: (rule.picture ? Lu.bubbleHexes.filter { $0 != Lu.coral } : Lu.bubbleHexes).randomElement() ?? Lu.sky))
     }
 
-    /// A match floated out of the top: a miss — say what it was.
+    /// A match reached the banner: say what it was — a miss from III on, free at I–II.
     private func escaped(_ b: BEBubble) {
         guard !dying else { return }
+        let y = max(ceiling + 34, 240)
+        if level <= 2 {
+            floaters.append(BEFloater(x: min(max(b.x, 90), size.width - 90), y: y,
+                                      text: rule.whyYes(b.text), life: 1.2, hex: Lu.inkDim, size: 22))
+            return
+        }
         shake = 0.22
-        floaters.append(BEFloater(x: min(max(b.x, 90), size.width - 90), y: 240,
+        floaters.append(BEFloater(x: min(max(b.x, 90), size.width - 90), y: y,
                                   text: rule.whyYes(b.text), life: 1.4, hex: Lu.coral, size: 26))
         DispatchQueue.main.async { [weak self] in self?.miss(reason: "A bubble got away!", delay: 1.0) }
     }
@@ -379,6 +390,8 @@ func drawCountingDots(_ ctx: GraphicsContext, n: Int, group: Int, at c: CGPoint,
 struct BubbleEvensView: View {
     let onClose: () -> Void
     @StateObject private var game = BubbleEvensEngine()
+    @State private var canvasTop: CGFloat = 0
+    @State private var bannerBottom: CGFloat = 0
 
     var body: some View {
         ArcadeShell(model: game,
@@ -393,14 +406,23 @@ struct BubbleEvensView: View {
                         game.render(context: &ctx, size: sz)
                     }
                     .gesture(SpatialTapGesture().onEnded { ev in game.tap(ev.location) })
+                    .background(GeometryReader { g in
+                        Color.clear.onAppear { canvasTop = g.frame(in: .global).minY }
+                            .onChange(of: g.frame(in: .global).minY) { canvasTop = $0 }
+                    })
                 }
                 .ignoresSafeArea()
 
                 BERuleBanner(rule: game.rule, combo: game.combo)
+                    .background(GeometryReader { g in
+                        Color.clear.onAppear { bannerBottom = g.frame(in: .global).maxY }
+                            .onChange(of: g.frame(in: .global).maxY) { bannerBottom = $0 }
+                    })
                     .padding(.top, 62)
                     .opacity(game.phase == .playing ? 1 : 0)
                     .allowsHitTesting(false)
             }
+            .onChange(of: bannerBottom - canvasTop) { game.ceiling = max(0, $0) }
         }
     }
 }

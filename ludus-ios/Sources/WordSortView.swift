@@ -7,8 +7,8 @@ import SwiftUI
 //
 // Level ladder:
 //   I    NOUN vs VERB, every word with a picture (🐱 cat / 🏃 run) — very slow fall (15 s)
-//   II   NOUN vs VERB, short words, no pictures
-//   III  + ADJECTIVE ("a describing word": big, sleepy, fluffy)
+//   II   NOUN vs VERB, short words, about half still with a picture; verbs are concrete actions
+//   III  + ADJECTIVE ("a describing word": big, sleepy, fluffy); less concrete verbs (obey, enjoy)
 //   IV   + ADVERB ("how? when? how much?": quickly, softly, never, very) and some longer words
 //   V    words that can be either, decided by a short phrase: "a *run* in the park" → NOUN
 //   VI+  phrases + tricky endings (friendly = adjective, belly = noun, apply = verb); faster
@@ -26,23 +26,26 @@ private let wsBins: [SortBin] = [
 private let wsNames = ["noun": "noun", "verb": "verb", "adj": "adjective", "adv": "adverb"]
 private let wsHints = ["noun": "a person, place or thing", "verb": "a doing word", "adj": "a describing word", "adv": "how, when or how much"]
 
-// Level I — with pictures.
+// Level I — with pictures (and half of Level II). The picture decides, so a person-doing-it
+// emoji may carry a verb that is also a noun (run, swim); those stay out of the plain banks.
 private let wsPictures: [(String, String, String)] = [
     ("🐱", "cat", "noun"), ("🍎", "apple", "noun"), ("🍌", "banana", "noun"), ("🐸", "frog", "noun"),
     ("🐝", "bee", "noun"), ("🍕", "pizza", "noun"), ("🚗", "car", "noun"), ("🐘", "elephant", "noun"),
     ("🦁", "lion", "noun"), ("🌈", "rainbow", "noun"), ("🦒", "giraffe", "noun"), ("🥕", "carrot", "noun"),
     ("🐯", "tiger", "noun"), ("☂️", "umbrella", "noun"), ("🍓", "strawberry", "noun"), ("🐧", "penguin", "noun"),
     ("🏃", "run", "verb"), ("🏊", "swim", "verb"), ("🧗", "climb", "verb"), ("💃", "dance", "verb"),
-    ("😴", "sleep", "verb"), ("😢", "cry", "verb"), ("😂", "laugh", "verb"), ("👏", "clap", "verb"),
-    ("✍️", "write", "verb"), ("😋", "eat", "verb"), ("🥱", "yawn", "verb"), ("🤔", "think", "verb"),
+    ("🤸", "tumble", "verb"), ("🏋️", "lift", "verb"), ("😂", "laugh", "verb"), ("👏", "clap", "verb"),
+    ("✍️", "write", "verb"), ("😋", "eat", "verb"), ("🤾", "throw", "verb"), ("🤔", "think", "verb"),
     ("🧎", "kneel", "verb"), ("🤧", "sneeze", "verb"), ("🚴", "ride", "verb"), ("🙈", "hide", "verb"),
 ]
 
 // Plain words (II+).
 private let wsNouns1 = ["cat", "girl", "boy", "desk", "apple", "bird", "lamp", "car", "frog", "hen", "hat",
                         "sofa", "lion", "zoo", "tooth", "ear", "bee", "ant", "owl", "goat", "door", "uncle", "aunt"]
-private let wsVerbs1 = ["eat", "sing", "lend", "sell", "see", "give", "obey", "come", "agree", "enjoy", "write",
-                        "sit", "bring", "pretend", "think", "teach", "speak", "tell", "learn", "fetch"]
+// Short, concrete actions (II+); the less concrete ones join at III.
+private let wsVerbs1 = ["eat", "sing", "lend", "sell", "see", "give", "come", "write",
+                        "sit", "bring", "think", "teach", "speak", "tell", "learn", "fetch"]
+private let wsVerbsMid = ["obey", "agree", "enjoy", "pretend"]
 private let wsAdjs1 = ["big", "tiny", "happy", "sad", "tall", "soft", "hot", "funny", "sleepy", "shiny",
                        "fluffy", "angry", "hungry", "noisy", "huge", "sticky", "lazy", "silly", "grumpy", "scary"]
 private let wsAdvs1 = ["quickly", "slowly", "softly", "loudly", "happily", "sadly", "gently", "quietly",
@@ -118,7 +121,7 @@ private func wsMake(_ level: Int) -> SortItem {
         let bank: [String]
         switch pos {
         case "noun": bank = long ? wsNouns1 + wsNouns2 : wsNouns1
-        case "verb": bank = long ? wsVerbs1 + wsVerbs2 : wsVerbs1
+        case "verb": bank = (level >= 3 ? wsVerbs1 + wsVerbsMid : wsVerbs1) + (long ? wsVerbs2 : [])
         case "adj": bank = long ? wsAdjs1 + wsAdjs2 : wsAdjs1
         default: bank = wsAdvs1
         }
@@ -129,7 +132,9 @@ private func wsMake(_ level: Int) -> SortItem {
     case 1:
         let p = wsPictures.randomElement()!
         return wsWord(p.1, p.2, emoji: p.0)
-    case 2: return plain(["noun", "verb"].randomElement()!, long: false)
+    case 2:
+        if r < 0.5 { let p = wsPictures.randomElement()!; return wsWord(p.1, p.2, emoji: p.0) }
+        return plain(["noun", "verb"].randomElement()!, long: false)
     case 3: return plain(r < 0.4 ? "adj" : ["noun", "verb", "adj"].randomElement()!, long: false)
     case 4: return plain(r < 0.4 ? "adv" : ["noun", "verb", "adj", "adv"].randomElement()!, long: true)
     case 5: return r < 0.6 ? wsPhrase(wsPhrases.randomElement()!) : plain(["noun", "verb", "adj", "adv"].randomElement()!, long: true)
@@ -146,7 +151,7 @@ private func wsMake(_ level: Int) -> SortItem {
 private func wsSelfCheck() {
     var seen: [String: String] = [:]
     let plain = wsPictures.map { ($0.1, $0.2) } + wsNouns1.map { ($0, "noun") } + wsNouns2.map { ($0, "noun") }
-        + wsVerbs1.map { ($0, "verb") } + wsVerbs2.map { ($0, "verb") } + wsAdjs1.map { ($0, "adj") }
+        + wsVerbs1.map { ($0, "verb") } + wsVerbsMid.map { ($0, "verb") } + wsVerbs2.map { ($0, "verb") } + wsAdjs1.map { ($0, "adj") }
         + wsAdjs2.map { ($0, "adj") } + wsAdvs1.map { ($0, "adv") } + wsTricky
     for (w, p) in plain {
         precondition(seen[w] == nil || seen[w] == p, "Word Sort: \(w) in two bins")
@@ -155,8 +160,15 @@ private func wsSelfCheck() {
     for p in wsPhrases { precondition(p.0.filter { $0 == "*" }.count == 2, "Word Sort: bad phrase \(p.0)") }
     for lv in 1...12 {
         let ids = Set(wsBinsFor(lv).map(\.id))
-        for _ in 0..<400 { precondition(ids.contains(wsMake(lv).bin), "Word Sort: off-screen bin at \(lv)") }
+        for _ in 0..<400 {
+            let it = wsMake(lv)
+            precondition(ids.contains(it.bin), "Word Sort: off-screen bin at \(lv)")
+            precondition(lv >= 3 || !wsVerbsMid.contains(it.text), "Word Sort: abstract verb \(it.text) at \(lv)")
+        }
     }
+    // Gradus II keeps a picture on about half its words.
+    let pics = (0..<1000).filter { _ in !wsMake(2).emoji.isEmpty }.count
+    precondition((350...650).contains(pics), "Word Sort: L2 pictures \(pics)/1000")
     print("SELFCHECK wordSort OK")
 }
 #endif

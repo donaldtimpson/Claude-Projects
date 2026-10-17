@@ -9,8 +9,8 @@ import SwiftUI
 // Ladder (3 words a level):
 //   I    3-letter CVC with a picture, all slots show the word faintly; next letter + 1 unlike decoy;
 //        slow (6.5 s fall), wide basket
-//   II   CVC, no faint word; 2 decoys incl. a look-alike (b/d, m/n…); 6 s
-//   III  blends (frog, stop, milk), 2 decoys, 5.5 s
+//   II   CVC, the faint word still shown; 2 unlike decoys; 6 s
+//   III  blends (frog, stop, milk), no faint word; 2 decoys incl. a look-alike (b/d, m/n…); 5.5 s
 //   IV   digraphs & -ck (ship, chick, duck), 2 decoys, 5 s
 //   V    silent-e & vowel teams (cake, boat, rain), 3 decoys, 4.7 s
 //   VI   two-syllable words; the word shows for 3 s then hides (picture stays); 4.4 s
@@ -112,11 +112,11 @@ private func scDecoys(word: SCWord, index: Int, level: Int) -> [Character] {
     let alike = scAlike[needed] ?? []
     var out: [Character] = []
     if level >= 7, let t = word.traps[index], t != needed { out.append(t) }
-    if level >= 2, let a = alike.shuffled().first(where: { $0 != needed && !out.contains($0) && (level >= 3 || !inWord.contains($0)) }) {
+    if level >= 3, let a = alike.shuffled().first(where: { $0 != needed && !out.contains($0) && (level >= 3 || !inWord.contains($0)) }) {
         out.append(a)
     }
     let pool = Array("abcdefghijklmnopqrstuvwxyz").shuffled().filter { c in
-        c != needed && !out.contains(c) && (level >= 3 || !inWord.contains(c)) && (level >= 2 || !alike.contains(c))
+        c != needed && !out.contains(c) && (level >= 3 || !inWord.contains(c)) && (level >= 3 || !alike.contains(c))
     }
     for c in pool where out.count < scDecoyCount(level) { out.append(c) }
     return Array(out.prefix(scDecoyCount(level)))
@@ -137,6 +137,7 @@ private func scSelfCheck() {
                 if d.contains(wd.letters[i]) { problems.append("\(wd.text)[\(i)] decoy = answer") }
                 if d.count != scDecoyCount(lv) || Set(d).count != d.count { problems.append("\(wd.text)[\(i)] decoys \(d)") }
                 if lv <= 2 && d.contains(where: { wd.letters.contains($0) }) { problems.append("\(wd.text) L\(lv) decoy in word") }
+                if lv <= 2 && d.contains(where: { (scAlike[wd.letters[i]] ?? []).contains($0) }) { problems.append("\(wd.text) L\(lv) look-alike decoy") }
             }
         }
     }
@@ -196,7 +197,7 @@ private final class ScrollModel: ArcadeModel {
     var basketY: CGFloat { size.height - 64 }
     var basketW: CGFloat { max(80, size.width * scBasketFrac(level)) }
     var tile: CGFloat { scTile(level) }
-    var ghostAll: Bool { level <= 1 }
+    var ghostAll: Bool { level <= 2 }
 
     override func onBegin() {
         letters.removeAll(); sparks.removeAll()

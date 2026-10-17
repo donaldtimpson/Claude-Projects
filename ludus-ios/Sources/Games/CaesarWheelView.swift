@@ -8,8 +8,8 @@ import SwiftUI
 // the inner A sits (A→D = shift 3). Tapping a letter tile lights it and its partner on the wheel.
 //
 // Level ladder (4 puzzles a level at I–II, then 5):
-//   I    3-letter picture word, shift 1 (told: "turn ↻ 1"), the answer reads out live and glows
-//        when right; pick from 2 pictures
+//   I    3-letter picture word, shift 1 — the whole instruction is a big "Tap ↻ once!"; the
+//        answer reads out live and glows when right; pick from 2 pictures
 //   II   3–4 letter words, shift 1–2 told, 3 picture choices
 //   III  Caesar's own shift 3 (told), 4–5 letter words, 3 picture choices
 //   IV   unknown key — turn until it makes a word (the wheel glows); 3 choices
@@ -331,7 +331,7 @@ private struct CWHeader: View {
                 .rotationEffect(.degrees(model.stage == .right ? -10 : 0))
                 .animation(.spring(response: 0.3, dampingFraction: 0.4), value: model.stage)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(luFont(17, .heavy)).foregroundStyle(Color(hex: titleHex))
+                Text(title).font(luFont(bigTitle ? 28 : 17, .heavy)).foregroundStyle(Color(hex: titleHex))
                     .lineLimit(2).minimumScaleFactor(0.7)
                 Text(sub).font(luFont(12, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
                     .lineLimit(2).minimumScaleFactor(0.7)
@@ -366,12 +366,15 @@ private struct CWHeader: View {
         case .wrong: return Lu.gold
         }
     }
+    /// Gradus I asks for one thing only, in big letters.
+    private var bigTitle: Bool { model.level == 1 && model.stage == .asking }
     private var title: String {
         let p = model.puzzle
         switch model.stage {
         case .right: return "Ave! You cracked it!"
         case .wrong: return p.mode == .decode ? "It said: \(p.plain)" : "In code: \(p.coded)"
         case .asking:
+            if model.level == 1 && p.shift == 1 { return "Tap ↻ once!" }
             if p.mode == .encode { return "Write \(p.plain) in code!" }
             return p.told ? "Turn the wheel to the key!" : "Find the key! Turn till it's a word"
         }

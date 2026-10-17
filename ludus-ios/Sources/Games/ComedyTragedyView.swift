@@ -9,9 +9,10 @@ import SwiftUI
 // There's always a 🔁 hear-again button, and the next piece never starts before the last ends.
 //
 // Ladder (no clock):
-//   I     C major vs C minor, block chords voiced wide; the first 3 pieces light the right mask
-//   II    the same from any root (C … B, with flats and sharps)
-//   III   broken chords (arpeggios, up and back down)
+//   I     C major vs C minor, block chords voiced wide; the first 5 pieces light the right mask;
+//         4 pieces a level
+//   II    the same, still on C, no lit mask; 4 pieces
+//   III   any root (C … B, with flats and sharps); broken chords (arpeggios, up and back down)
 //   IV    short tunes in a major or a minor key (only the 3rd of the scale differs)
 //   V     + 😱 SPOOKY = diminished (three masks)
 //   VI    + 😵‍💫 DREAMY = augmented (four masks)
@@ -64,7 +65,7 @@ private func ctMake(_ level: Int, last: CTMood?) -> CTItem {
     // A root whose chords (all the options' qualities) spell without double sharps/flats, and
     // whose answer chord spells without F♭ / C♭ / E♯ / B♯.
     var root = Spelled("C")
-    if level >= 2 {
+    if level >= 3 {
         let pool = mood.quality == .minor || mood.quality == .diminished ? ctRootsMinor : ctRoots
         repeat { root = pool.randomElement()! } while !ctRootOK(root, mood.quality, moods)
     }
@@ -118,9 +119,10 @@ private final class ComedyModel: ArcadeModel {
 
     init() { super.init(key: GameID.comedyTragedy.rawValue) }
     override func onBegin() { seenAtOne = 0; next() }
+    override func perLevel(_ level: Int) -> Int { level <= 2 ? 4 : 6 }
 
-    /// Level I's first three pieces light the right mask.
-    var hint: Bool { level == 1 && seenAtOne <= 3 && !revealed }
+    /// Level I's first five pieces light the right mask.
+    var hint: Bool { level == 1 && seenAtOne <= 5 && !revealed }
 
     private func next() {
         item = ctMake(level, last: item.mood)
@@ -360,7 +362,7 @@ private struct CTMasks: View {
             if let notes = spellTriad(it.root, q), !ctOddNotes.isDisjoint(with: notes) { fails.append("odd spelling \(it.name)") }
             if (q == .minor || q == .diminished) && [Spelled("D♭"), Spelled("A♭")].contains(it.root) { fails.append("flat minor \(it.name)") }
             if level >= 8, it.spelled?.first != it.root { fails.append("spelled") }
-            if level == 1 && it.root != Spelled("C") { fails.append("L1 root") }
+            if level <= 2 && it.root != Spelled("C") { fails.append("L\(level) root") }
         }
     }
     NSLog("ComedyTragedy self-check: %@", fails.isEmpty ? "PASS" : "FAIL \(Array(Set(fails)).prefix(10))")

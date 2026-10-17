@@ -8,12 +8,13 @@ import SwiftUI
 // about words. A wrong bite says why ("*tiny* is the OPPOSITE of big").
 //
 // Level ladder:
-//   I    pictures: "eat the 🍎 FRUIT" — 2 good + 1 bad on the board, slow snake
-//   II   easy synonyms with a picture hint (BIG 🐘 → large, huge, giant); bad = unrelated words
-//   III  same words, but some bad ones are OPPOSITES (tiny for BIG)
-//   IV   harder words (ANGRY → furious, cross); more food on the board
-//   V    tier-2 vocabulary (ENORMOUS → immense, colossal; TIMID → meek, bashful) with opposite traps
-//   VI+  tier-2, fuller board, a little faster each level (capped)
+//   I    pictures: "eat the 🍎 FRUIT" — 2 good + 1 bad on the board, slow snake; big picture food
+//   II   pictures again, 2 good + 2 bad (no reading yet)
+//   III  easy synonyms with a picture hint (BIG 🐘 → large, huge, giant); bad = unrelated words
+//   IV   same words, but some bad ones are OPPOSITES (tiny for BIG)
+//   V    harder words (ANGRY → furious, cross); more food on the board
+//   VI   tier-2 vocabulary (ENORMOUS → immense, colossal; TIMID → meek, bashful) with opposite traps
+//   VII+ tier-2, fuller board, a little faster each level (capped)
 
 private struct SSSet {
     let target: String
@@ -22,7 +23,7 @@ private struct SSSet {
     let opposite: [String]
 }
 
-// Level I: picture categories (good / bad are emoji).
+// Levels I–II: picture categories (good / bad are emoji).
 private let ssPictureSets: [SSSet] = [
     SSSet(target: "FRUIT", hint: "🍎", good: ["🍎", "🍌", "🍇", "🍓", "🍊", "🍐", "🍒", "🍉", "🍍"],
           opposite: ["🚗", "⚽️", "🧦", "🪑", "🐶", "🎈", "✏️", "🧸"]),
@@ -33,7 +34,7 @@ private let ssPictureSets: [SSSet] = [
     SSSet(target: "SWEETS", hint: "🍭", good: ["🍰", "🍩", "🍪", "🍭", "🍬", "🧁", "🍫", "🍦"],
           opposite: ["🥦", "🥕", "🧦", "🚗", "🐟", "⚽️", "✏️"]),
 ]
-// Level II–III.
+// Levels III–IV.
 private let ssEasy: [SSSet] = [
     SSSet(target: "BIG", hint: "🐘", good: ["large", "huge", "giant"], opposite: ["small", "tiny", "little"]),
     SSSet(target: "SMALL", hint: "🐭", good: ["little", "tiny", "mini"], opposite: ["big", "huge", "large"]),
@@ -46,7 +47,7 @@ private let ssEasy: [SSSet] = [
     SSSet(target: "SCARED", hint: "😱", good: ["afraid", "frightened", "fearful"], opposite: ["brave", "bold", "calm"]),
     SSSet(target: "TIRED", hint: "😴", good: ["sleepy", "weary", "worn out"], opposite: ["awake", "lively", "rested"]),
 ]
-// Level IV.
+// Level V.
 private let ssMedium: [SSSet] = [
     SSSet(target: "ANGRY", hint: "😠", good: ["mad", "cross", "furious"], opposite: ["calm", "pleased", "cheerful"]),
     SSSet(target: "SMART", hint: "🧠", good: ["clever", "bright", "wise"], opposite: ["foolish", "silly", "dim"]),
@@ -57,7 +58,7 @@ private let ssMedium: [SSSet] = [
     SSSet(target: "RICH", hint: "💰", good: ["wealthy", "well-off"], opposite: ["poor", "needy"]),
     SSSet(target: "FUNNY", hint: "🤣", good: ["comical", "hilarious", "amusing"], opposite: ["serious", "solemn"]),
 ]
-// Level V+.
+// Level VI+.
 private let ssHard: [SSSet] = [
     SSSet(target: "ENORMOUS", hint: "🐋", good: ["immense", "massive", "colossal", "vast"], opposite: ["tiny", "microscopic", "puny"]),
     SSSet(target: "FURIOUS", hint: "🌋", good: ["enraged", "livid", "irate"], opposite: ["calm", "content", "serene"]),
@@ -72,11 +73,11 @@ private let ssHard: [SSSet] = [
     SSSet(target: "ANCIENT", hint: "🏛️", good: ["old", "aged", "age-old"], opposite: ["modern", "new", "recent"]),
     SSSet(target: "BRIEF", hint: "⏱️", good: ["short", "quick", "concise"], opposite: ["long", "lengthy", "endless"]),
 ]
-/// Unrelated words (bad food at II, mixed in later).
+/// Unrelated words (bad food at III, mixed in later).
 private let ssFillers = ["dog", "table", "purple", "pizza", "tree", "sock", "river", "book", "seven", "window", "spoon", "cloud"]
 
 private func ssSets(_ level: Int) -> [SSSet] {
-    switch level { case 1: return ssPictureSets; case 2, 3: return ssEasy; case 4: return ssMedium; default: return ssHard }
+    switch level { case 1, 2: return ssPictureSets; case 3, 4: return ssEasy; case 5: return ssMedium; default: return ssHard }
 }
 
 // MARK: - Engine
@@ -126,8 +127,10 @@ private final class SynonymSnakeModel: ArcadeModel {
     private var stepTime: Double {
         level <= 8 ? [0.62, 0.56, 0.5, 0.46, 0.42, 0.38, 0.35, 0.32][level - 1] : max(0.26, 0.32 - Double(level - 8) * 0.01)
     }
-    private var goodOnBoard: Int { level <= 3 ? 2 : 3 }
-    private var badOnBoard: Int { level == 1 ? 1 : (level <= 3 ? 2 : 3) }
+    private var goodOnBoard: Int { level <= 4 ? 2 : 3 }
+    private var badOnBoard: Int { level == 1 ? 1 : (level <= 4 ? 2 : 3) }
+    /// Gradus I–II play with pictures, not words.
+    var pictures: Bool { level <= 2 }
 
     override func onBegin() {
         snake = [SSCell(col: 2, row: rows / 2), SSCell(col: 1, row: rows / 2), SSCell(col: 0, row: rows / 2)]
@@ -181,11 +184,11 @@ private final class SynonymSnakeModel: ArcadeModel {
         guardCount = 0
         while foods.filter({ !$0.good }).count < badOnBoard && guardCount < 10 {
             guardCount += 1
-            // Opposite traps from III on (pictures at I use their own "bad" list).
-            let useOpposite = level == 1 || (level >= 3 && Double.random(in: 0..<1) < 0.6)
+            // Opposite traps from IV on (pictures at I–II use their own "bad" list).
+            let useOpposite = pictures || (level >= 4 && Double.random(in: 0..<1) < 0.6)
             let pool = (useOpposite ? set.opposite : ssFillers).filter { w in !foods.contains { $0.word == w } }
             guard let w = pool.randomElement() else { continue }
-            place(w, good: false, opposite: useOpposite && level > 1)
+            place(w, good: false, opposite: useOpposite && !pictures)
         }
     }
 
@@ -245,7 +248,7 @@ private final class SynonymSnakeModel: ArcadeModel {
     }
 
     private func lessonFor(_ f: SSFood) -> String {
-        if level == 1 {
+        if pictures {
             let one = ["FRUIT": "a fruit", "ANIMALS": "an animal", "THINGS THAT GO": "a thing that goes", "SWEETS": "a sweet"][set.target]
                 ?? set.target.lowercased()
             return "\(f.word) isn't \(one) — eat \(set.good.prefix(2).joined(separator: " "))"
@@ -330,7 +333,7 @@ private struct SSPlayArea: View {
     var body: some View {
         VStack(spacing: 10) {
             Color.clear.frame(height: 52)
-            SSBanner(set: model.set, picture: model.level == 1, lesson: model.lesson, combo: model.combo)
+            SSBanner(set: model.set, picture: model.pictures, lesson: model.lesson, combo: model.combo)
             GeometryReader { geo in
                 let cell = min(geo.size.width / CGFloat(model.cols), geo.size.height / CGFloat(model.rows))
                 let w = cell * CGFloat(model.cols), h = cell * CGFloat(model.rows)
@@ -355,8 +358,8 @@ private struct SSPlayArea: View {
                     }
                     ForEach(model.foods) { f in
                         let p = center(f.cell)
-                        let half = model.level == 1 ? cell / 2 : cell * 0.8
-                        SSFoodView(food: f, picture: model.level == 1, cell: cell)
+                        let half = model.pictures ? cell / 2 : cell * 0.8
+                        SSFoodView(food: f, picture: model.pictures, cell: cell)
                             .position(x: min(max(p.x, ox + half), ox + w - half), y: p.y)
                             .transition(.scale.combined(with: .opacity))
                     }
@@ -446,8 +449,8 @@ private struct SSFoodView: View {
     var body: some View {
         Group {
             if picture {
-                Text(food.word).font(.system(size: cell * 0.62))
-                    .frame(width: cell * 0.92, height: cell * 0.92)
+                Text(food.word).font(.system(size: cell * 0.74))
+                    .frame(width: cell * 0.98, height: cell * 0.98)
                     .background(Circle().fill(Color.white.opacity(0.9)))
             } else {
                 Text(food.word).font(luFont(min(18, cell * 0.3), .black)).foregroundStyle(Color(hex: Lu.inkDark))

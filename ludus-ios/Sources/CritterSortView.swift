@@ -15,11 +15,11 @@ import SwiftUI
 //   VI+  mostly tricky; the fall speeds up a little each level (to a 5 s floor)
 
 private let csBins: [SortBin] = [
-    SortBin(id: "mammal", title: "MAMMAL", icon: "🐾", tint: Lu.coral),
-    SortBin(id: "bird", title: "BIRD", icon: "🪶", tint: Lu.sky),
-    SortBin(id: "fish", title: "FISH", icon: "🫧", tint: 0x58c4c0),
-    SortBin(id: "reptile", title: "REPTILE", icon: "🦎", tint: Lu.mint),
-    SortBin(id: "amphibian", title: "AMPHIBIAN", icon: "🐸", tint: Lu.gold),
+    SortBin(id: "mammal", title: "MAMMAL", icon: "🐾", tint: Lu.coral, hint: "fur"),
+    SortBin(id: "bird", title: "BIRD", icon: "🪶", tint: Lu.sky, hint: "feathers"),
+    SortBin(id: "fish", title: "FISH", icon: "🫧", tint: 0x58c4c0, hint: "fins"),
+    SortBin(id: "reptile", title: "REPTILE", icon: "🦎", tint: Lu.mint, hint: "scales"),
+    SortBin(id: "amphibian", title: "AMPHIBIAN", icon: "🐸", tint: Lu.gold, hint: "wet skin"),
 ]
 
 private struct Critter {

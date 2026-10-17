@@ -11,7 +11,7 @@ import SwiftUI
 //
 // Ladder (3 boards a level):
 //   I     a row of 3, one tap; a hint glow after 3 s; 4 spare taps
-//   II    a row of 4, one or two taps; hint after 4 s
+//   II    a row of 4, one or two taps; hint after 4 s (I–II show only the tap dots, no FEWEST number)
 //   III   2 × 3, two taps; hint after 6 s
 //   IV    3 × 3, two or three taps; 3 spare
 //   V     3 × 3 or 3 × 4, three or four taps
@@ -389,9 +389,11 @@ struct TorchesView: View {
             }
             .animation(.easeOut(duration: 0.2), value: model.taps)
             Spacer(minLength: 4)
-            VStack(spacing: 0) {
-                Text("FEWEST").font(luFont(9, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
-                Text("\(model.par)").font(luFont(22)).foregroundStyle(Color(hex: Lu.tangerine))
+            if model.level >= 3 {
+                VStack(spacing: 0) {
+                    Text("FEWEST").font(luFont(9, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
+                    Text("\(model.par)").font(luFont(22)).foregroundStyle(Color(hex: Lu.tangerine))
+                }
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
