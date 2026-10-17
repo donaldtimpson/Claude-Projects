@@ -43,7 +43,7 @@
     {
       "type": "practice",
       "heading": "Practice — Point Out the Adverbs",
-      "instruction": "Name the adverb and the word it modifies.  Model:  “The wind blew furiously.” — *furiously* is an adverb; it is used to modify a verb, *blew*.",
+      "instruction": "Name the adverb and the word it modifies.  Model — “The wind blew furiously.” — *furiously* modifies the verb *blew*.",
       "items": [
         "That vessel sails slowly.",
         "Emma is quite late.",
@@ -57,7 +57,7 @@
       "answers": [
         "slowly  →  sails (verb)",
         "quite  →  late (adjective)",
-        "agreeably  →  surprised (participle; or *were surprised*, verb)",
+        "agreeably  →  surprised (participle)",
         "never, again  →  will see (verb)",
         "gladly  →  would pardon (verb)",
         "So  →  thought (verb)",
@@ -105,7 +105,8 @@
         "how",
         "how much",
         "when"
-      ]
+      ],
+      "answerInline": true
     },
     {
       "type": "definition",
@@ -223,12 +224,12 @@
         "Caution I. — Do not use such expressions as “I don’t see nothing,” “Don’t tell nobody.”  Say “I don’t see **anything**.”",
         "Caution II. — Do not use adjectives as adverbs:  “Samuel speaks very **distinctly**,” not “distinct.”",
         "Caution III. — Do not use adverbs as adjectives:  “This flower smells **sweet**,” not “sweetly.”",
-        "*looks*, *feels*, *smells* act like the copula *is*:  in “This flower smells sweet,” *sweet* is the predicate, describing *flower*."
+        "Here *looks*, *feels*, *smells* are copulative verbs:  in “This flower smells sweet,” *sweet* is the predicate, describing *flower*."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Correct the Sentences",
+      "heading": "Practice — Correct the Language",
       "instruction": "Each sentence has an error. Give the correct word.",
       "items": [
         "I don’t want nothing today.",
@@ -245,7 +246,8 @@
         "so",
         "beautiful",
         "favorable"
-      ]
+      ],
+      "answerInline": true
     },
     {
       "type": "questions",
@@ -263,7 +265,7 @@
         "A word or group of words used to modify a verb, an adjective, a participle, or an adverb.",
         "A clause used as an adverbial element.",
         "*when*, *where*, *while*, *because*, *if*, and a large number of other words.",
-        "*smells* acts like the copula; *sweet* is the predicate, describing the subject *rose* — so an adjective."
+        "*smells* is a copulative verb; *sweet* is the predicate, describing the subject *rose* — so an adjective."
       ]
     }
   ]
