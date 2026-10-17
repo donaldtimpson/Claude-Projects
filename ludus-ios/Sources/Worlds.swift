@@ -118,7 +118,7 @@ let ludusWorlds: [LudusWorld] = [
         .init(title: "Times Table Ninja", mechanic: "slash", premise: "Slice the fruit from the right times table, dodge the bombs.", game: .timesTableNinja,
               icon: "🥷", howTo: how(("👀", "Look at the table on top"), ("👉", "Swipe fruit from that table"), ("💣", "Never slice a bomb"))),
         .init(title: "Stack Attack", mechanic: "stacker", premise: "Answer to stack blocks — how high can you go?", game: .stackAttack,
-              icon: "🧱", howTo: how(("🔢", "Tap the right answer"), ("🧱", "Each one stacks a block"))),
+              icon: "🧱", howTo: how(("🍎", "Count it or solve it"), ("👆", "Tap the right answer"), ("🧱", "Each one stacks a block"))),
     ]),
     LudusWorld(name: "Globe Trotters", subject: "Geography", emoji: "🌍", colorHex: Lu.sky, games: [
         .init(title: "Pharos Beam", mechanic: "spinner", premise: "Swing the lighthouse beam to the ship that calls.", game: nil,
