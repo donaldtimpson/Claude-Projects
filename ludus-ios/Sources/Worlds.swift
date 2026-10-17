@@ -50,8 +50,8 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .portaCustos:     PortaCustosView(onClose: onClose)
     case .torches:         TorchesView(onClose: onClose)
     case .critterSort:     CritterSortView(onClose: onClose)
-    case .dressMarcus:     ComingSoonGame(id: id, onClose: onClose)
-    case .zookeeper:       ComingSoonGame(id: id, onClose: onClose)
+    case .dressMarcus:     DressMarcusView(onClose: onClose)
+    case .zookeeper:       ZookeeperView(onClose: onClose)
     case .timeline:        TimeOrderView(onClose: onClose)
     case .timeGuard:       TimeGuardView(onClose: onClose)
     case .caesarWheel:     CaesarWheelView(onClose: onClose)
@@ -153,10 +153,10 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🔮", howTo: how(("👀", "Find the pattern"), ("👆", "Tap what comes next"))),
     ]),
     LudusWorld(name: "Lab Rats", subject: "Science", emoji: "🔬", colorHex: Lu.tangerine, games: [
-        .init(title: "Dress Marcus", mechanic: "dress-up", premise: "Dress Marcus for the weather — or he'll freeze!", game: nil,
-              icon: "🧥", howTo: how(("🌦️", "Look at the weather"), ("🧣", "Drag on the right clothes"))),
-        .init(title: "Zookeeper's Breakfast", mechanic: "feed", premise: "Give every animal the food it really eats.", game: nil,
-              icon: "🦁", howTo: how(("🐼", "An animal is hungry"), ("🎋", "Drag it the right food"))),
+        .init(title: "Dress Marcus", mechanic: "dress-up", premise: "Dress Marcus for the weather — or he'll freeze!", game: .dressMarcus,
+              icon: "🧥", howTo: how(("🌦️", "Look out the window"), ("🧣", "Drag clothes onto Marcus"), ("😄", "Keep him comfy!"))),
+        .init(title: "Zookeeper's Breakfast", mechanic: "feed", premise: "Give every animal the food it really eats.", game: .zookeeper,
+              icon: "🦁", howTo: how(("🐼", "An animal is hungry"), ("🎋", "Drag it the right food"), ("😋", "Watch it munch!"))),
         .init(title: "Critter Sort", mechanic: "lane-sorter", premise: "Sort each animal — mammal, bird, or reptile.", game: .critterSort,
               icon: "🦎", howTo: how(("👀", "Look at the animal"), ("👆", "Tap its group"))),
     ]),
