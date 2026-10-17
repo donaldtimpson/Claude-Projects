@@ -263,18 +263,19 @@ struct ArcadeShell<Model: ArcadeModel, Content: View>: View {
             #endif
         }
         #if DEBUG
-        .onReceive(botClock) { _ in
-            guard model.phase == .playing, let acc = Double(ProcessInfo.processInfo.environment["LUDUS_BOT"] ?? "") else { return }
-            model.botAct(correct: Double.random(in: 0..<1) < acc)
+        // The autoplayer runs as a task (not a Timer stored on this struct, which restarted on every
+        // redraw and starved fast-redrawing games).
+        .task {
+            let env = ProcessInfo.processInfo.environment
+            guard let acc = Double(env["LUDUS_BOT"] ?? "") else { return }
+            let every = Double(env["LUDUS_BOT_EVERY"] ?? "") ?? 1.2
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(every * 1e9))
+                if model.phase == .playing { model.botAct(correct: Double.random(in: 0..<1) < acc) }
+            }
         }
         #endif
     }
-
-    #if DEBUG
-    private let botClock = Timer.publish(
-        every: Double(ProcessInfo.processInfo.environment["LUDUS_BOT_EVERY"] ?? "") ?? 1.2, on: .main, in: .common
-    ).autoconnect()
-    #endif
 
     private var hud: some View {
         VStack {
