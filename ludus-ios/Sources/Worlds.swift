@@ -43,7 +43,7 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .wordSort:        WordSortView(onClose: onClose)
     case .synonymSnake:    SynonymSnakeView(onClose: onClose)
     case .polyphemus:      PolyphemusView(onClose: onClose)
-    case .scrollCatcher:   ComingSoonGame(id: id, onClose: onClose)
+    case .scrollCatcher:   ScrollCatcherView(onClose: onClose)
     case .trueFalseBlitz:  TrueFalseBlitzView(onClose: onClose)
     case .oddOneOut:       OddOneOutView(onClose: onClose)
     case .patternPop:      PatternPopView(onClose: onClose)
@@ -133,8 +133,8 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Word Wizards", subject: "Language Arts", emoji: "✏️", colorHex: Lu.mint, games: [
         .init(title: "Polyphemus Is Hungry", mechanic: "feed", premise: "Feed the Cyclops only foods with his sound.", game: .polyphemus,
               icon: "👁️", howTo: how(("🅱️", "Look at his letter"), ("🍌", "Drag him a food with it"), ("🔊", "Tap to hear it"))),
-        .init(title: "Scroll Catcher", mechanic: "catch", premise: "Catch the falling letters to spell the picture.", game: nil,
-              icon: "📜", howTo: how(("🐱", "Look at the picture"), ("🧺", "Catch its letters in order"))),
+        .init(title: "Scroll Catcher", mechanic: "catch", premise: "Catch the falling letters to spell the picture.", game: .scrollCatcher,
+              icon: "📜", howTo: how(("🐱", "Look at the picture"), ("👉", "Drag the basket"), ("🔤", "Catch its letters in order"))),
         .init(title: "Word Sort", mechanic: "lane-sorter", premise: "Drop each word into noun or verb.", game: .wordSort,
               icon: "📚", howTo: how(("📖", "Read the word"), ("👈", "Send it to the right bin"))),
         .init(title: "Synonym Snake", mechanic: "snake", premise: "Eat the synonyms, avoid the antonyms.", game: .synonymSnake,
