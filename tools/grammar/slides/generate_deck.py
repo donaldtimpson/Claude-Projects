@@ -239,6 +239,8 @@ def _draw_clause(slide, left, base, ante, cl):
     """Hang a relative clause beneath its antecedent (modern Reed-Kellogg): the
     clause on its own baseline — its own subject | predicate — with a dashed line
     dropping straight from the antecedent's left end to the relative pronoun.
+    An adverbial clause names the modified slot as its "rel" (usually "p") and
+    may set `link`, the connective written beside the dashed line.
     `ante` is the antecedent's (left, width) relative to `left`. Returns the
     clause's right edge (EMU)."""
     anchor = left + ante[0] + CLAUSE_INSET
@@ -248,6 +250,12 @@ def _draw_clause(slide, left, base, ante, cl):
                           cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
                           omod=cl.get("omod"))
     _line(slide, int(anchor), base, int(anchor), ctop + Inches(0.02), dashed=True)
+    if cl.get("link"):
+        # A connective (e.g. the *when* of an adverbial clause) written on the connector.
+        lw = _slot_w(cl["link"])
+        lx = int(anchor + Inches(0.06))
+        _diag_word(slide, lx, base + Inches(0.58), lw, cl["link"])
+        right = max(right, lx + lw)
     return right
 
 

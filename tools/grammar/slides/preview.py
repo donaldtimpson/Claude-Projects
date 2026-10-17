@@ -247,7 +247,9 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     the baseline beside the subject (modern Reed-Kellogg), with its own modifier
     on a slant. `sclause`/`pclause`/`oclause` hang a relative clause on its own
     baseline beneath that slot, a dashed line running from the relative pronoun
-    (the clause slot named by "rel") up to its antecedent."""
+    (the clause slot named by "rel") up to its antecedent. An adverbial clause
+    names the slot it modifies as "rel" and may set `link`, the connective
+    written beside the dashed line."""
     base = 30
     drop, inset = 80, 10          # clause baseline below the main one; connector inset
     clauses = {"s": sclause, "p": pclause, "o": oclause}
@@ -277,6 +279,11 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
         lines += l2 + [f'<line x1="{anchor:.0f}" y1="{base}" x2="{anchor:.0f}" '
                        f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
         texts += t2
+        if cl.get("link"):
+            # A connective (e.g. the *when* of an adverbial clause) written on the connector.
+            texts.append(f'<text x="{anchor + 6:.0f}" y="{base + (drop - 22) / 2 + 8:.0f}" '
+                         f'text-anchor="start">{esc(cl["link"])}</text>')
+            r2 = max(r2, anchor + 6 + _w(cl["link"]))
         mods += m2
         right = max(right, r2)
         bottom = max(bottom, cbase + (40 if hm2 else 16))

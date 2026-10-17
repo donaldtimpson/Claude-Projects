@@ -12,10 +12,11 @@
       "type": "concept",
       "heading": "Oral Lesson",
       "bullets": [
-        "In “Birds sing sweetly,” the word sweetly tells how the birds sing — it modifies the verb sing.",
-        "In “Very large vessels sailed,” the word very modifies the adjective large.",
-        "In “He rode quite fast,” the word quite modifies the adverb fast.",
-        "A word used to modify a verb, an adjective, or another adverb is called an Adverb."
+        "“Birds sing sweetly.” — *sweetly* does not tell what the birds sing; it tells how they sing.",
+        "It does not complete the meaning of *sing*, like an objective element:  it modifies it in another way.",
+        "“Very large vessels were seen.” — *very* modifies *large*, an adjective.",
+        "“He rode quite fast.” — *fast* tells how he rode; *quite* tells how fast.",
+        "Words used in this manner are called *Adverbs*."
       ]
     },
     {
@@ -23,177 +24,246 @@
       "term": "Adverb",
       "text": "An Adverb is a word used to modify a verb, an adjective, a participle, or an adverb.",
       "examples": [
-        "sings sweetly  (modifies a verb)",
-        "very large  (modifies an adjective)",
-        "quite fast  (modifies an adverb)",
-        "gently falling snow  (modifies a participle)"
+        "The wind blew **furiously**.  (a verb)",
+        "Those mountains are **very** high.  (an adjective)",
+        "The **gently** falling snow covered the hills.  (a participle)",
+        "He walks **quite** slowly.  (an adverb)"
       ]
     },
     {
       "type": "concept",
-      "heading": "What Adverbs Tell",
+      "heading": "What Adverbs Denote",
       "bullets": [
-        "Adverbs usually tell how, when, where, or how much (to what degree).",
-        "How:  slowly, sweetly, well.   ·   When:  soon, now, yesterday.",
-        "Where:  here, there, near.   ·   How much:  very, quite, too.",
-        "Ex. — “She sang sweetly (how) here (where) yesterday (when).”"
+        "Adverbs usually denote manner (how), time (when), place (where), or degree (how much).",
+        "How:  *slowly*, *sweetly*, *well*.   ·   When:  *soon*, *now*, *never*.",
+        "Where:  *here*, *there*, *yonder*.   ·   How much:  *very*, *quite*, *too*.",
+        "“I will come **soon**.” — when.   “Put it **yonder**.” — where."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Adverb",
-      "instruction": "Name the adverb in each sentence.",
+      "heading": "Practice — Point Out the Adverbs",
+      "instruction": "Name the adverb and the word it modifies.  Model:  “The wind blew furiously.” — *furiously* is an adverb; it is used to modify a verb, *blew*.",
       "items": [
         "That vessel sails slowly.",
-        "He built a house there.",
         "Emma is quite late.",
-        "Those mountains are very high.",
-        "I will shortly return.",
+        "We were agreeably surprised.",
         "You will never see him again.",
         "I would gladly pardon you.",
-        "He afterwards escaped."
+        "So thought Palmyra.",
+        "He afterwards escaped.",
+        "Very loud reports were heard."
       ],
       "answers": [
-        "slowly",
-        "there",
-        "quite",
-        "very",
-        "shortly",
-        "never",
-        "gladly",
-        "afterwards"
+        "slowly  →  sails (verb)",
+        "quite  →  late (adjective)",
+        "agreeably  →  surprised (participle; or *were surprised*, verb)",
+        "never, again  →  will see (verb)",
+        "gladly  →  would pardon (verb)",
+        "So  →  thought (verb)",
+        "afterwards  →  escaped (verb)",
+        "Very  →  loud (adjective)"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — What Does the Adverb Tell?",
-      "instruction": "Tell whether each adverb tells how, when, where, or how much.",
+      "heading": "Practice — Adverb on Adverb",
+      "instruction": "Name the adverbs, and tell what each modifies.",
       "items": [
-        "slowly",
-        "yesterday",
-        "there",
-        "very",
-        "gently",
-        "soon",
-        "here",
-        "quite"
+        "She spoke very softly.",
+        "She came here very early.",
+        "The fire burned too fiercely.",
+        "You will very soon see him."
       ],
       "answers": [
-        "how",
-        "when",
+        "very  →  softly;  softly  →  spoke",
+        "here, early  →  came;  very  →  early",
+        "too  →  fiercely;  fiercely  →  burned",
+        "very  →  soon;  soon  →  will see"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — How, When, Where?",
+      "instruction": "Tell whether the adverb in each sentence tells how, when, where, or how much.",
+      "items": [
+        "He built a house there.",
+        "The old man walked feebly.",
+        "The water was very cold.",
+        "I will return soon.",
+        "Come here.",
+        "The child sang sweetly.",
+        "You are too late.",
+        "We met him yesterday."
+      ],
+      "answers": [
         "where",
+        "how",
         "how much",
-        "how",
         "when",
         "where",
-        "how much"
+        "how",
+        "how much",
+        "when"
       ]
     },
     {
-      "type": "practice",
-      "heading": "Practice — What Does the Adverb Modify?",
-      "instruction": "Tell whether the adverb modifies a verb, an adjective, or another adverb.",
-      "items": [
-        "Birds sing sweetly.",
-        "Very large vessels sailed.",
-        "He rode quite fast.",
-        "She spoke softly.",
-        "The soup is too hot.",
-        "They left very quickly."
-      ],
-      "answers": [
-        "verb",
-        "adjective",
-        "adverb",
-        "verb",
-        "adjective",
-        "adverb"
+      "type": "definition",
+      "term": "Adverbial Element",
+      "text": "An Adverbial Element is a word or group of words used to modify a verb, an adjective, a participle, or an adverb.",
+      "examples": [
+        "Our house is **very** small.",
+        "We should study our lessons **carefully**.",
+        "Flowers bloom **when spring comes**."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Adverbial Elements",
+      "rows": [
+        {
+          "sentence": "Our house is very small.",
+          "s": "house",
+          "smod": "Our",
+          "c": "is",
+          "p": "small",
+          "pmod": "very",
+          "note": "Declarative. *house* is the subject; *small*, the predicate; *is*, the copula. *house* is modified by *our*, an adjective element; *small*, by *very*, an adverbial element."
+        },
+        {
+          "sentence": "We should study our lessons carefully.",
+          "s": "We",
+          "p": "should study",
+          "o": "lessons",
+          "omod": "our",
+          "pmod": "carefully",
+          "note": "Declarative. *We* is the subject; *should study*, the predicate. *should study* is modified by *lessons*, an objective element, and by *carefully*, an adverbial element. *lessons* is modified by *our*, an adjective element."
+        }
       ]
     },
     {
       "type": "concept",
-      "heading": "Adverbial Element & Adverbial Clause",
+      "heading": "The Adverbial Clause",
       "bullets": [
-        "A word or group of words used like an adverb is an Adverbial Element.",
-        "When that group is a clause (it has its own subject and predicate), it is an Adverbial Clause.",
-        "“Flowers bloom when spring comes.” — “when spring comes” tells when they bloom.",
-        "Adverbial clauses begin with when, where, while, because, if, and many other words."
+        "“Flowers bloom when spring comes.” — the group *when spring comes* tells when flowers bloom. It modifies the verb *bloom*:  an adverbial element.",
+        "Is the group a proposition? It is:  it contains a subject, *spring*, and a predicate, *comes*.",
+        "So the sentence contains two propositions:  “Flowers bloom” and “when spring comes.” The second is used as an adverbial element.",
+        "Adverbial clauses begin with *when*, *where*, *while*, *because*, *if*, and a large number of other words."
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Adverbial Clause",
+      "text": "An Adverbial Clause is a clause used as an adverbial element.",
+      "examples": [
+        "He trembles **when it thunders**.",
+        "I left the spade **where I found it**.",
+        "We rested **because we were tired**.",
+        "Henry will play with you, **if you desire it**."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Adverbial Clauses",
+      "rows": [
+        {
+          "sentence": "He trembles when it thunders.",
+          "s": "He",
+          "p": "trembles",
+          "pclause": {
+            "s": "it",
+            "p": "thunders",
+            "rel": "p",
+            "link": "when"
+          },
+          "note": "Declarative. *He* is the subject; *trembles*, the predicate. *trembles* is modified by the clause *when it thunders*, an adverbial element. Within the clause, *it* is the subject; *thunders*, the predicate."
+        },
+        {
+          "sentence": "The bear growled when he saw the hunter.",
+          "s": "bear",
+          "smod": "The",
+          "p": "growled",
+          "pclause": {
+            "s": "he",
+            "p": "saw",
+            "o": "hunter",
+            "omod": "the",
+            "rel": "p",
+            "link": "when"
+          },
+          "note": "Declarative. *bear* is the subject; *growled*, the predicate. *bear* is modified by *the*, an adjective element; *growled*, by the clause *when he saw the hunter*, an adverbial element. Within the clause, *he* is the subject; *saw*, the predicate, modified by *hunter*, an objective element."
+        }
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Adverbial Clause",
-      "instruction": "Name the adverbial clause in each sentence.",
-      "answerInline": true,
+      "heading": "Practice — Adverbial Clauses",
+      "instruction": "Name the adverbial clause and the word it modifies.",
       "items": [
-        "Birds sing when day breaks.",
+        "John was whispering while you were talking.",
+        "I can not go before my father returns.",
+        "We traveled slowly, because we wished to see the country.",
         "Stay here until I return.",
-        "We rested because we were tired.",
-        "Call me if you need help.",
-        "He smiled while she spoke.",
-        "Plants grow where it is warm."
+        "Plants grow where the soil is rich.",
+        "The dog barks if a stranger comes."
       ],
       "answers": [
-        "when day breaks",
-        "until I return",
-        "because we were tired",
-        "if you need help",
-        "while she spoke",
-        "where it is warm"
+        "while you were talking  →  was whispering",
+        "before my father returns  →  can go",
+        "because we wished to see the country  →  traveled",
+        "until I return  →  Stay",
+        "where the soil is rich  →  grow",
+        "if a stranger comes  →  barks"
       ]
     },
     {
       "type": "concept",
-      "heading": "Common Mistakes with Adverbs",
+      "heading": "Incorrect Language — Cautions",
       "bullets": [
-        "Don’t use two negatives:  “I don’t want anything,” not “I don’t want nothing.”",
-        "Use an -ly adverb to tell how you do something:  “drive safely,” not “drive safe.”",
-        "After looks, feels, smells, tastes, use an adjective:  “smells sweet,” not “smells sweetly.”",
-        "Say “I did well,” not “I did good.”"
+        "Caution I. — Do not use such expressions as “I don’t see nothing,” “Don’t tell nobody.”  Say “I don’t see **anything**.”",
+        "Caution II. — Do not use adjectives as adverbs:  “Samuel speaks very **distinctly**,” not “distinct.”",
+        "Caution III. — Do not use adverbs as adjectives:  “This flower smells **sweet**,” not “sweetly.”",
+        "*looks*, *feels*, *smells* act like the copula *is*:  in “This flower smells sweet,” *sweet* is the predicate, describing *flower*."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Fix the Adverb",
-      "instruction": "Each sentence has a mistake. Give the correct word.",
+      "heading": "Practice — Correct the Sentences",
+      "instruction": "Each sentence has an error. Give the correct word.",
       "items": [
         "I don’t want nothing today.",
-        "Samuel speaks very distinct.",
-        "This flower smells sweetly.",
-        "He writes careless.",
-        "The team played good.",
-        "Don’t tell nobody.",
-        "The country looks beautifully.",
-        "Drive safe on the ice."
+        "Don’t tell nobody nothing about it.",
+        "I feel tolerable well.",
+        "He was that cold he couldn’t move.",
+        "The country looks beautifully after a shower.",
+        "Things look somewhat more favorably this morning."
       ],
       "answers": [
         "anything",
-        "distinctly",
-        "sweet",
-        "carelessly",
-        "well",
-        "anybody",
+        "anybody, anything",
+        "tolerably",
+        "so",
         "beautiful",
-        "safely"
+        "favorable"
       ]
     },
     {
       "type": "questions",
       "items": [
         "What is an adverb?",
-        "What do adverbs usually tell?",
+        "What do adverbs usually denote?",
         "What is an adverbial element?",
         "What is an adverbial clause?",
-        "What words begin adverbial clauses?",
-        "Which is right: “drive safe” or “drive safely”?"
+        "With what words do adverbial clauses begin?",
+        "Why do we say “The rose smells sweet,” not “sweetly”?"
       ],
       "answers": [
-        "A word that modifies a verb, adjective, participle, or adverb.",
-        "How, when, where, or how much.",
-        "A word or group of words used like an adverb.",
+        "A word used to modify a verb, an adjective, a participle, or an adverb.",
+        "Manner (how), time (when), place (where), or degree (how much).",
+        "A word or group of words used to modify a verb, an adjective, a participle, or an adverb.",
         "A clause used as an adverbial element.",
-        "When, where, while, because, if, and others.",
-        "“Drive safely.”"
+        "*when*, *where*, *while*, *because*, *if*, and a large number of other words.",
+        "*smells* acts like the copula; *sweet* is the predicate, describing the subject *rose* — so an adjective."
       ]
     }
   ]
