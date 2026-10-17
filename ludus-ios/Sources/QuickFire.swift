@@ -43,9 +43,11 @@ final class QuickFireEngine: ArcadeModel {
     @Published var chosen: Int?
 
     private let make: (Int) -> QFQuestion   // passed the current level
+    private let readAloud: Bool             // say each prompt at Gradus I–II (for slow readers)
 
-    init(key: String, make: @escaping (Int) -> QFQuestion) {
+    init(key: String, readAloud: Bool = false, make: @escaping (Int) -> QFQuestion) {
         self.make = make
+        self.readAloud = readAloud
         super.init(key: key)
     }
 
@@ -77,6 +79,7 @@ final class QuickFireEngine: ArcadeModel {
 
     private func nextQuestion() {
         question = make(level)
+        if readAloud && level <= 2 { LibraryVoice.say(question.big) }
         revealed = false; chosen = nil
         perQ = qfTime(level)
         tLeft = perQ
@@ -85,6 +88,20 @@ final class QuickFireEngine: ArcadeModel {
 
 private struct QFOptionButton: View {
     let text: String
+
+    /// "emoji\ncaption" options draw the emoji large over a small caption (it's the picture a
+    /// young player reads); anything else is plain text.
+    @ViewBuilder private var label: some View {
+        let parts = text.split(separator: "\n", maxSplits: 1).map(String.init)
+        if parts.count == 2 {
+            VStack(spacing: 4) {
+                Text(parts[0]).font(.system(size: big ? 54 : 40))
+                Text(parts[1]).font(luFont(big ? 18 : 15, .heavy))
+            }
+        } else {
+            Text(text)
+        }
+    }
     let index: Int
     let revealed: Bool
     let chosen: Int?
@@ -104,7 +121,7 @@ private struct QFOptionButton: View {
 
     var body: some View {
         Button(action: action) {
-            Text(text)
+            label
                 .font(luFont(text.count == 1 ? 56 : (big ? 30 : 22)))   // a lone emoji reads as a picture
                 .foregroundStyle(Color(hex: textHex))
                 .multilineTextAlignment(.center)
@@ -229,8 +246,9 @@ private struct QuickFireView: View {
 }
 
 /// Opens a QuickFire game from its catalog entry.
-@MainActor private func quickFire(_ id: GameID, accent: UInt, onClose: @escaping () -> Void, make: @escaping (Int) -> QFQuestion) -> some View {
-    QuickFireView(engine: QuickFireEngine(key: id.rawValue, make: make),
+@MainActor private func quickFire(_ id: GameID, accent: UInt, readAloud: Bool = false, onClose: @escaping () -> Void,
+                                  make: @escaping (Int) -> QFQuestion) -> some View {
+    QuickFireView(engine: QuickFireEngine(key: id.rawValue, readAloud: readAloud, make: make),
                   spec: id.spec ?? GameSpec(title: id.rawValue, mechanic: "", premise: "", game: id),
                   accent: accent, onClose: onClose)
 }
@@ -249,7 +267,8 @@ private let orbisTier2: Set<String> = orbisTier1.union([
 
 private func countryQuestion(_ level: Int) -> QFQuestion {
     var pool = GeoShapes.quizPool
-    let allowed: Set<String>? = level <= 2 ? Set(orbisTier0) : level <= 4 ? orbisTier1 : level <= 6 ? orbisTier2 : nil
+    let allowed: Set<String>? = level <= 1 ? ["Italy", "Australia", "Brazil", "United States"]
+        : level <= 2 ? Set(orbisTier0) : level <= 4 ? orbisTier1 : level <= 6 ? orbisTier2 : nil
     if let allowed {
         let filtered = pool.filter { allowed.contains($0.name) }
         if filtered.count >= 4 { pool = filtered }
@@ -257,7 +276,12 @@ private func countryQuestion(_ level: Int) -> QFQuestion {
     guard let answer = pool.randomElement() else {
         return QFQuestion(topLabel: "NAME THIS COUNTRY", big: "map unavailable", options: ["—"], correct: 0)
     }
-    let (opts, c) = qfOptions(answer.name, pool.map(\.name), qfChoices(level))
+    // Gradus I–II: each name carries its flag (a picture to hold on to while reading is slow).
+    let tag: (String) -> String = { name in
+        guard level <= 2, let flag = Geo.countries.first(where: { $0.name == name })?.flag else { return name }
+        return "\(flag)\n\(name)"
+    }
+    let (opts, c) = qfOptions(tag(answer.name), pool.map { tag($0.name) }, qfChoices(level))
     return QFQuestion(topLabel: "NAME THIS COUNTRY", big: "", options: opts, correct: c, shape: answer)
 }
 
@@ -294,7 +318,7 @@ private func trueFalseQuestion(_ level: Int) -> QFQuestion {
     }
     switch level {
     case 1: return Bool.random() ? fact(tfPictureFacts) : sum(3)
-    case 2: return [fact(tfPictureFacts), sum(5), fact(tfFacts)].randomElement()!
+    case 2: return Bool.random() ? fact(tfPictureFacts) : sum(5)
     case 3: return Bool.random() ? fact(tfFacts) : sum(9)
     case 4: return [fact(tfFacts), sum(12), sum(5, "×")].randomElement()!
     default:
@@ -308,7 +332,7 @@ private func trueFalseQuestion(_ level: Int) -> QFQuestion {
 
 struct TrueFalseBlitzView: View {
     let onClose: () -> Void
-    var body: some View { quickFire(.trueFalseBlitz, accent: Lu.grape, onClose: onClose, make: trueFalseQuestion) }
+    var body: some View { quickFire(.trueFalseBlitz, accent: Lu.grape, readAloud: true, onClose: onClose, make: trueFalseQuestion) }
 }
 
 // Odd One Out: emoji groups first (an animal among fruit), then words, then subtler sets.
@@ -374,21 +398,31 @@ private let timelineEvents: [(String, Int, String)] = [
 
 private func timelineQuestion(_ level: Int) -> QFQuestion {
     let n = qfChoices(level)
-    // The smallest gap allowed between any two choices shrinks with level.
-    let minGap: Int = level <= 1 ? 1500 : level == 2 ? 500 : level <= 4 ? 150 : level <= 6 ? 40 : 25
+    let label: ((String, Int, String)) -> String = { e in "\(e.2)\n\(e.0)" }
     var picks: [(String, Int, String)] = []
-    for _ in 0..<400 {
-        picks = []
-        for e in timelineEvents.shuffled() where picks.allSatisfy({ abs($0.1 - e.1) >= minGap }) {
-            picks.append(e); if picks.count == n { break }
+    if level <= 2 {
+        // I: dinosaurs or the pyramids against something from our time. II: one each from long ago,
+        // the middle ages-ish, and modern times — never close calls.
+        let ancient = timelineEvents.filter { $0.1 < -2000 }
+        let middle = timelineEvents.filter { (-800...1700).contains($0.1) }
+        let modern = timelineEvents.filter { $0.1 >= 1900 }
+        picks = level == 1 ? [ancient.randomElement()!, modern.randomElement()!]
+                           : [ancient.randomElement()!, middle.randomElement()!, modern.randomElement()!]
+    } else {
+        // The smallest gap allowed between any two choices shrinks with level.
+        let minGap: Int = level <= 4 ? 150 : level <= 6 ? 40 : 25
+        for _ in 0..<400 {
+            picks = []
+            for e in timelineEvents.shuffled() where picks.allSatisfy({ abs($0.1 - e.1) >= minGap }) {
+                picks.append(e); if picks.count == n { break }
+            }
+            if picks.count == n { break }
         }
-        if picks.count == n { break }
     }
     let earliest = picks.min(by: { $0.1 < $1.1 })!
-    let label: (String, Int, String) -> String = { name, _, emoji in "\(emoji)\n\(name)" }
-    let opts = picks.map { label($0.0, $0.1, $0.2) }.shuffled()
-    return QFQuestion(topLabel: "WHICH CAME FIRST?", big: "Tap the oldest", options: opts,
-                      correct: opts.firstIndex(of: label(earliest.0, earliest.1, earliest.2)) ?? 0)
+    let opts = picks.map(label).shuffled()
+    return QFQuestion(topLabel: "WHICH CAME FIRST?", big: level <= 2 ? "Which is OLDEST? 👴" : "Tap the oldest",
+                      options: opts, correct: opts.firstIndex(of: label(earliest)) ?? 0)
 }
 
 /// Named TimeOrderView (not TimelineView — that collides with SwiftUI.TimelineView).
