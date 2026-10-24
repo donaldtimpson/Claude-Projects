@@ -27,6 +27,7 @@ syllabus under `edu-web/scripts/syllabi/`).
 | 03 | 1.5 Solution Sets · 1.7 Linear Independence · 1.6 Applications | `notes/03_solution-sets-and-independence.md` |
 | 04 | 1.8 Introduction to Linear Transformations · 1.9 The Matrix of a Linear Transformation · 1.10 Linear Models | `notes/04_linear-transformations.md` |
 | 05 | 2.1 Matrix Operations · 2.2 The Inverse of a Matrix · 2.3 Characterizations of Invertible Matrices | `notes/05_matrix-algebra-and-inverses.md` |
+| 06 | 2.2 The Inverse of a Matrix · 2.3 Characterizations of Invertible Matrices · 2.4 Partitioned Matrices (2.2–2.3 carried over from 05) | `notes/06_inverses-and-partitioned-matrices.md` |
 
 ## How it's consumed (generator lives in `tools/linear-algebra/`)
 

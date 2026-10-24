@@ -81,7 +81,8 @@ TAIL = """</script>
     var raw = document.getElementById('src').textContent;
     // Protect math so the markdown parser can't mangle underscores/backslashes.
     var store = [], i = 0;
-    raw = raw.replace(/\\$\\$[\\s\\S]+?\\$\\$/g, function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    // Multi-line display math inside a blockquote carries "> " line prefixes; strip them.
+    raw = raw.replace(/\\$\\$[\\s\\S]+?\\$\\$/g, function(m){ store.push(m.replace(/\\n[ \\t]*>[ \\t]?/g, '\\n')); return '@@M'+(i++)+'@@'; });
     raw = raw.replace(/\\$[^\\$\\n]+?\\$/g,   function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
     var html = marked.parse(raw);
     html = html.replace(/@@M(\\d+)@@/g, function(_, n){ return store[+n]; });
