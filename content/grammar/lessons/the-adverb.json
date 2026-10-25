@@ -77,13 +77,21 @@
         "She spoke very softly.",
         "She came here very early.",
         "The fire burned too fiercely.",
-        "You will very soon see him."
+        "You will very soon see him.",
+        "The boy reads remarkably well.",
+        "He answered rather hastily.",
+        "He rose quite suddenly.",
+        "She almost always sings sweetly."
       ],
       "answers": [
         "very  →  softly;  softly  →  spoke",
         "here, early  →  came;  very  →  early",
         "too  →  fiercely;  fiercely  →  burned",
-        "very  →  soon;  soon  →  will see"
+        "very  →  soon;  soon  →  will see",
+        "remarkably  →  well;  well  →  reads",
+        "rather  →  hastily;  hastily  →  answered",
+        "quite  →  suddenly;  suddenly  →  rose",
+        "almost  →  always;  always, sweetly  →  sings"
       ]
     },
     {
