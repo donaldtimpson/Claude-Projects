@@ -52,7 +52,8 @@ so $C = A^{-1}$.
 > **The case $ad - bc \ne 0$.** Let $C = \frac{1}{ad-bc}\begin{bmatrix} d & -b\\ -c & a\end{bmatrix}$. Multiply directly:
 > $$
 > \begin{bmatrix} a & b\\ c & d\end{bmatrix}\begin{bmatrix} d & -b\\ -c & a\end{bmatrix} = \begin{bmatrix} ad-bc & -ab+ba\\ cd-dc & -cb+da\end{bmatrix} = (ad-bc)I,
-> \qquad
+> $$
+> $$
 > \begin{bmatrix} d & -b\\ -c & a\end{bmatrix}\begin{bmatrix} a & b\\ c & d\end{bmatrix} = \begin{bmatrix} da-bc & db-bd\\ -ca+ac & -cb+ad\end{bmatrix} = (ad-bc)I.
 > $$
 > Dividing by the nonzero scalar $ad-bc$ (Theorem 2(d)) gives $AC = I$ and $CA = I$.

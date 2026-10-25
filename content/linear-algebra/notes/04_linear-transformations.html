@@ -451,12 +451,22 @@ So the model predicts $565{,}440$ in the city and $434{,}560$ in the suburbs by 
     var raw = document.getElementById('src').textContent;
     // Protect math so the markdown parser can't mangle underscores/backslashes.
     var store = [], i = 0;
-    raw = raw.replace(/\$\$[\s\S]+?\$\$/g, function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    // Multi-line display math inside a blockquote carries "> " line prefixes; strip them.
+    raw = raw.replace(/\$\$[\s\S]+?\$\$/g, function(m){ store.push(m.replace(/\n[ \t]*>[ \t]?/g, '\n')); return '@@M'+(i++)+'@@'; });
     raw = raw.replace(/\$[^\$\n]+?\$/g,   function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
     var html = marked.parse(raw);
     html = html.replace(/@@M(\d+)@@/g, function(_, n){ return store[+n]; });
     document.getElementById('wrap').innerHTML = html;
-    var go = function(){ MathJax.typesetPromise(); };
+    // Shrink any display wider than the column so it fits (scrolls only below 70%).
+    var fit = function(){
+      document.querySelectorAll('mjx-container[display="true"]').forEach(function(e){
+        e.style.fontSize = '';
+        if (e.scrollWidth > e.clientWidth + 1)
+          e.style.fontSize = Math.max(70, Math.floor(99 * e.clientWidth / e.scrollWidth)) + '%';
+      });
+    };
+    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fit, 150); });
+    var go = function(){ MathJax.typesetPromise().then(fit); };
     if (window.MathJax && MathJax.typesetPromise) go();
     else { var t=setInterval(function(){ if(window.MathJax&&MathJax.typesetPromise){clearInterval(t);go();} },80); }
   })();

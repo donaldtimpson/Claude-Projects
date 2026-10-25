@@ -87,7 +87,16 @@ TAIL = """</script>
     var html = marked.parse(raw);
     html = html.replace(/@@M(\\d+)@@/g, function(_, n){ return store[+n]; });
     document.getElementById('wrap').innerHTML = html;
-    var go = function(){ MathJax.typesetPromise(); };
+    // Shrink any display wider than the column so it fits (scrolls only below 70%).
+    var fit = function(){
+      document.querySelectorAll('mjx-container[display="true"]').forEach(function(e){
+        e.style.fontSize = '';
+        if (e.scrollWidth > e.clientWidth + 1)
+          e.style.fontSize = Math.max(70, Math.floor(99 * e.clientWidth / e.scrollWidth)) + '%';
+      });
+    };
+    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fit, 150); });
+    var go = function(){ MathJax.typesetPromise().then(fit); };
     if (window.MathJax && MathJax.typesetPromise) go();
     else { var t=setInterval(function(){ if(window.MathJax&&MathJax.typesetPromise){clearInterval(t);go();} },80); }
   })();
