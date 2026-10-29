@@ -9,6 +9,7 @@ Usage:
     python generate_deck.py lessons/the-verb.json
 """
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -198,38 +199,146 @@ def _draw_mods(slide, cx, base_y, words):
         prev = w
 
 
+
+# A modifier may also be a phrase — {"prep", "obj", "mod", "o", "omod"} — hung
+# modern Reed-Kellogg style: the preposition on a slant, its object on a short
+# line beneath (with its own modifiers, and an object after a divider for an
+# infinitive like "to write | letter"). An infinitive keeps "to" with its verb
+# in `obj` (Harvey: the two parts are not separated) and omits `prep`.
+PH_DX, PH_DY = int(Inches(0.36)), int(Inches(0.55))   # phrase slant run / drop
+MOD_DX, MOD_GAP, MOD_LEAD = int(Inches(0.24)), int(Inches(0.14)), int(Inches(0.10))
+
+
+def _is_phrase(m):
+    return isinstance(m, dict)
+
+
+def _mods_right(cx, words):
+    """Rightmost x reached by _draw_mods(cx, words), without drawing."""
+    gap, wx, prev, right = Inches(0.06), cx + MOD_DX, 0, cx
+    for i, word in enumerate(words):
+        w = _slot_w(word)
+        if i:
+            wx += prev / 2 + w / 2 + gap
+        right = max(right, wx + w / 2)
+        prev = w
+    return right
+
+
+def _mod_plan(items):
+    """Lay out a slot's modifiers left to right when any is a phrase, each
+    starting clear of the one before so no slant crosses another's line.
+    Returns ([(item, anchor offset)], span) with offsets from the slot's left."""
+    plan, a = [], MOD_LEAD
+    for m in items:
+        plan.append((m, a))
+        if _is_phrase(m):
+            hx = a + PH_DX
+            wobj = _slot_w(m["obj"])
+            end = hx + wobj + (_slot_w(m["o"]) if m.get("o") else 0)
+            end = max(end, _mods_right(hx + wobj / 2, _mlist(m.get("mod"))))
+            if m.get("o"):
+                end = max(end, _mods_right(hx + wobj + _slot_w(m["o"]) / 2, _mlist(m.get("omod"))))
+        else:
+            w = _slot_w(m)
+            end = a + max(MOD_DX, w / 2) + w / 2
+        a = int(end + MOD_GAP)
+    return plan, a
+
+
+def _wslot(word, mods):
+    """A slot's baseline width: the word's, or wider to seat its phrases."""
+    ms = _mlist(mods)
+    w = _slot_w(word)
+    if any(_is_phrase(m) for m in ms):
+        w = max(w, _mod_plan(ms)[1])
+    return w
+
+
+def _draw_slot_mods(slide, left, width, base_y, mods):
+    """Hang a slot's modifiers: centered under the word as before when they are
+    all single words; laid out left to right when a phrase is among them."""
+    ms = _mlist(mods)
+    if not ms:
+        return
+    if not any(_is_phrase(m) for m in ms):
+        _draw_mods(slide, left + width / 2, base_y, ms)
+        return
+    for m, off in _mod_plan(ms)[0]:
+        a = left + off
+        if not _is_phrase(m):
+            w = _slot_w(m)
+            c = a + max(MOD_DX, w / 2)
+            _line(slide, int(a), base_y, int(c), base_y + Inches(0.34))
+            _diag_word(slide, int(c - w / 2), base_y + Inches(0.64), w, m)
+            continue
+        hx, hy = a + PH_DX, base_y + PH_DY
+        wobj = _slot_w(m["obj"])
+        wo = _slot_w(m["o"]) if m.get("o") else 0
+        _line(slide, int(a), base_y, int(hx), hy)                 # slant
+        _line(slide, int(hx), hy, int(hx + wobj + wo), hy)        # object line
+        _diag_word(slide, int(hx), hy, wobj, m["obj"])
+        if m.get("o"):
+            _line(slide, int(hx + wobj), hy - Inches(0.26), int(hx + wobj), hy)
+            _diag_word(slide, int(hx + wobj), hy, wo, m["o"])
+            if m.get("omod"):
+                _draw_mods(slide, hx + wobj + wo / 2, hy, _mlist(m["omod"]))
+        if m.get("mod"):
+            _draw_mods(slide, hx + wobj / 2, hy, _mlist(m["mod"]))
+        if m.get("prep"):
+            # The preposition written along its slant, just above-right of the line.
+            ang = math.atan2(PH_DY, PH_DX)
+            off = Inches(0.13)
+            mx = (a + hx) / 2 + math.sin(ang) * off
+            my = (base_y + hy) / 2 - math.cos(ang) * off
+            pw, ph = _slot_w(m["prep"]), Inches(0.3)
+            tb = slide.shapes.add_textbox(int(mx - pw / 2), int(my - ph / 2), int(pw), int(ph))
+            tb.rotation = math.degrees(ang)
+            tf = tb.text_frame
+            tf.word_wrap = False
+            tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            pp = tf.paragraphs[0]
+            pp.alignment = PP_ALIGN.CENTER
+            _run(pp, m["prep"], size=16, color=DIAGRAM)
+
+
+def _has_phrase(*mods):
+    return any(_is_phrase(m) for ms in mods for m in _mlist(ms))
+
 CLAUSE_DROP = Inches(0.92)      # main baseline -> top of a hanging clause's diagram
 CLAUSE_INSET = Inches(0.12)     # where a dashed connector meets its antecedent word
 
 
-def _slot_layout(s, p, o=None, c=None, sappo=None):
+def _slot_layout(s, p, o=None, c=None, sappo=None, smod=None, pmod=None, omod=None):
     """(left edge, width) of the subject, predicate, and object slots, relative to
     the diagram's left — the same geometry _draw_diagram lays out."""
     ap = _appo(sappo)
-    ws = _slot_w(s)
+    ws = _wslot(s, smod)
     sreg = ws + (_slot_w(f"({ap['word']})") if ap else 0)
     if c:
-        wc, wp = _slot_w(c), _slot_w(p)
+        wc, wp = _slot_w(c), _wslot(p, pmod)
         return {"s": (0, ws), "c": (sreg, wc), "p": (sreg + wc, wp)}
-    wp = _slot_w(p)
+    wp = _wslot(p, pmod)
     out = {"s": (0, ws), "p": (sreg, wp)}
     if o:
-        out["o"] = (sreg + wp, _slot_w(o))
+        out["o"] = (sreg + wp, _wslot(o, omod))
     return out
 
 
 def _clause_rel(cl):
     """Center of a clause's relative pronoun (the slot named by cl["rel"]),
     relative to the clause diagram's left edge."""
-    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"))
+    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                         smod=cl.get("smod"), pmod=cl.get("pmod"), omod=cl.get("omod"))
     rl, rw = slots[cl.get("rel", "s")]
     return rl + rw / 2
 
 
-def _clause_shift(s, p, o, c, sappo, clauses):
+def _clause_shift(s, p, o, c, sappo, clauses, mods=(None, None, None)):
     """How far to push the main line right so each hanging clause can sit with
     its relative straight beneath the antecedent's left end."""
-    slots = _slot_layout(s, p, o, c, sappo)
+    slots = _slot_layout(s, p, o, c, sappo, *mods)
     need = [_clause_rel(cl) - (slots[k][0] + CLAUSE_INSET)
             for k, cl in clauses.items() if cl and k in slots]
     return int(max([0] + need))
@@ -270,21 +379,21 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     its own modifier on a slant. `sclause`/`pclause`/`oclause` hang a relative
     clause beneath that slot (see _draw_clause); the main line shifts right to
     make room for it. Returns the right edge (EMU)."""
-    left += _clause_shift(s, p, o, c, sappo, {"s": sclause, "p": pclause, "o": oclause})
+    left += _clause_shift(s, p, o, c, sappo, {"s": sclause, "p": pclause, "o": oclause},
+                          (smod, pmod, omod))
     base = top + Inches(0.30)
     top_line = top + Inches(0.04)
     below = Inches(0.13)
     sm, pm, om = _mlist(smod), _mlist(pmod), _mlist(omod)
     ap = _appo(sappo)
-    ws = _slot_w(s)
+    ws = _wslot(s, sm)
     appo_text = f"({ap['word']})" if ap else ""
     wappo = _slot_w(appo_text) if ap else 0
     sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
 
     def draw_subject():
         _diag_word(slide, left, base, ws, s)
-        if sm:
-            _draw_mods(slide, left + ws / 2, base, sm)
+        _draw_slot_mods(slide, left, ws, base, sm)
         if ap:
             _diag_word(slide, left + ws, base, wappo, appo_text)
             if ap["mod"]:
@@ -292,7 +401,7 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
 
     if c:
         # Harvey: "Iron | is : heavy" — copula set off from the predicate, not folded in.
-        wc, wp = _slot_w(c), _slot_w(p)
+        wc, wp = _slot_w(c), _wslot(p, pm)
         x1 = left + sreg
         x2 = x1 + wc
         xend = x2 + wp
@@ -302,12 +411,11 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
         draw_subject()
         _diag_word(slide, x1, base, wc, c)
         _diag_word(slide, x2, base, wp, p)
-        if pm:
-            _draw_mods(slide, x2 + wp / 2, base, pm)
+        _draw_slot_mods(slide, x2, wp, base, pm)
         return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
-                             sclause, pclause, oclause)
-    wp = _slot_w(p)
-    wo = _slot_w(o) if o else 0
+                             sclause, pclause, oclause, (sm, pm, om))
+    wp = _wslot(p, pm)
+    wo = _wslot(o, om) if o else 0
     x1 = left + sreg
     x2 = x1 + wp
     xend = x2 + wo
@@ -319,16 +427,16 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     _diag_word(slide, x1, base, wp, p)
     if o:
         _diag_word(slide, x2, base, wo, o)
-    if pm:
-        _draw_mods(slide, x1 + wp / 2, base, pm)
-    if om and o:
-        _draw_mods(slide, x2 + wo / 2, base, om)
+    _draw_slot_mods(slide, x1, wp, base, pm)
+    if o:
+        _draw_slot_mods(slide, x2, wo, base, om)
     return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
-                         sclause, pclause, oclause)
+                         sclause, pclause, oclause, (sm, pm, om))
 
 
-def _hang_clauses(slide, left, base, xend, s, p, o, c, sappo, sclause, pclause, oclause):
-    slots = _slot_layout(s, p, o, c, sappo)
+def _hang_clauses(slide, left, base, xend, s, p, o, c, sappo, sclause, pclause, oclause,
+                  mods=(None, None, None)):
+    slots = _slot_layout(s, p, o, c, sappo, *mods)
     for key, cl in (("s", sclause), ("p", pclause), ("o", oclause)):
         if cl and key in slots:
             xend = max(xend, _draw_clause(slide, left, base, slots[key], cl))
@@ -568,11 +676,19 @@ def render_analysis(slide, s, source):
     rows = s["rows"]
     # A row with a hanging clause needs room for a second baseline.
     heights = [Inches(2.2) if any(r.get(k) for k in ("sclause", "pclause", "oclause"))
+               else Inches(2.0) if _has_phrase(r.get("smod"), r.get("pmod"), r.get("omod"))
                else Inches(1.5) for r in rows]
     avail = Inches(6.8) - y
     if sum(heights) > avail:
         heights = [int(h * avail / sum(heights)) for h in heights]
-    note_x = MARGIN + Inches(5.3)
+    # The note column sits right of the widest diagram (phrases can run long).
+    def diag_w(r):
+        mods = (r.get("smod"), r.get("pmod"), r.get("omod"))
+        slots = _slot_layout(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"), *mods)
+        shift = _clause_shift(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"),
+                              {k: r.get(k + "clause") for k in "spo"}, mods)
+        return shift + max(l + w for l, w in slots.values())
+    note_x = max(MARGIN + Inches(5.3), MARGIN + Inches(0.55) + max(diag_w(r) for r in rows))
     note_w = SLIDE_W - MARGIN - note_x
     top = y
     for r, row_h in zip(rows, heights):

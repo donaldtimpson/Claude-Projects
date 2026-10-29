@@ -9,6 +9,7 @@ Usage:
 import base64
 import html
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -94,6 +95,7 @@ strong.hl { color: var(--accent); }
 svg.diag { display: block; }
 svg.diag text { font-family: var(--body-font); font-size: 18px; fill: var(--diagram); }
 svg.diag line { stroke: var(--diagram); stroke-width: 1.6; }
+svg.diag text.prep { font-size: 16px; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; }
 ol.q { padding-left: 0; list-style: none; counter-reset: q; }
 ol.q li { counter-increment: q; font-size: 24px; line-height: 1.4; margin-bottom: 14px;
@@ -111,7 +113,7 @@ ol.q.tight li { font-size: 22px; line-height: 1.2; margin-bottom: 5px; }
 .ctable .tex { color:var(--muted); font-style:italic; font-size:17px; margin-top:5px; }
 .arows { display:flex; flex-direction:column; gap:26px; margin-top:10px; }
 .arow { display:flex; align-items:center; gap:32px; }
-.adiag { flex:0 0 390px; }
+.adiag { flex:0 0 auto; min-width:390px; }
 .anote { font-size:19px; line-height:1.4; }
 .anote .asent { color:var(--accent); font-weight:700; margin-bottom:5px; }
 """
@@ -177,37 +179,135 @@ def _w(t):
     return len(t) * _CH + 2 * _PAD
 
 
+
+# Phrase modifiers ({"prep", "obj", "mod", "o", "omod"}) — mirrors generate_deck.py:
+# preposition on a slant, object on a short line beneath; an infinitive keeps
+# "to" with its verb in `obj` and omits `prep`.
+_PH_DX, _PH_DY, _MOD_DX, _MOD_GAP, _MOD_LEAD = 26, 38, 15, 10, 7
+
+
+def _is_phrase(m):
+    return isinstance(m, dict)
+
+
+def _mods_right(cx, words):
+    wx, prev, right = cx + _MOD_DX, 0, cx
+    for i, word in enumerate(words):
+        wd = _w(word)
+        if i:
+            wx += prev / 2 + wd / 2 + 6
+        right = max(right, wx + wd / 2)
+        prev = wd
+    return right
+
+
+def _mod_plan(items):
+    """Left-to-right layout of a slot's modifiers when any is a phrase.
+    Returns ([(item, anchor offset)], span)."""
+    plan, a = [], _MOD_LEAD
+    for m in items:
+        plan.append((m, a))
+        if _is_phrase(m):
+            hx, wobj = a + _PH_DX, _w(m["obj"])
+            end = hx + wobj + (_w(m["o"]) if m.get("o") else 0)
+            end = max(end, _mods_right(hx + wobj / 2, _mlist(m.get("mod"))))
+            if m.get("o"):
+                end = max(end, _mods_right(hx + wobj + _w(m["o"]) / 2, _mlist(m.get("omod"))))
+        else:
+            wd = _w(m)
+            end = a + max(_MOD_DX, wd / 2) + wd / 2
+        a = end + _MOD_GAP
+    return plan, a
+
+
+def _wslot(word, mods):
+    ms = _mlist(mods)
+    w = _w(word)
+    if any(_is_phrase(m) for m in ms):
+        w = max(w, _mod_plan(ms)[1])
+    return w
+
+
+def _slot_mods_svg(left, width, base, mods):
+    """A slot's modifiers: centered under the word when all are single words,
+    laid out left to right when a phrase is among them.
+    Returns (fragments, rightmost x, lowest y)."""
+    ms = _mlist(mods)
+    if not ms:
+        return [], left, base
+    if not any(_is_phrase(m) for m in ms):
+        frag, r = _mods_svg(left + width / 2, base, ms, _CH, _PAD)
+        return frag, r, base + 34   # keeps word-only diagrams at their old height
+    out, right, low = [], left, base
+    for m, off in _mod_plan(ms)[0]:
+        a = left + off
+        if not _is_phrase(m):
+            wd = _w(m)
+            c = a + max(_MOD_DX, wd / 2)
+            out += [f'<line x1="{a:.0f}" y1="{base}" x2="{c:.0f}" y2="{base + 20}"/>',
+                    f'<text x="{c:.0f}" y="{base + 37}" text-anchor="middle">{esc(m)}</text>']
+            right, low = max(right, c + wd / 2), max(low, base + 37)
+            continue
+        hx, hy = a + _PH_DX, base + _PH_DY
+        wobj = _w(m["obj"])
+        wo = _w(m["o"]) if m.get("o") else 0
+        out += [f'<line x1="{a:.0f}" y1="{base}" x2="{hx:.0f}" y2="{hy}"/>',
+                f'<line x1="{hx:.0f}" y1="{hy}" x2="{hx + wobj + wo:.0f}" y2="{hy}"/>',
+                f'<text x="{hx + wobj/2:.0f}" y="{hy - 7}" text-anchor="middle">{esc(m["obj"])}</text>']
+        right, low = max(right, hx + wobj + wo), max(low, hy + 4)
+        if m.get("o"):
+            out += [f'<line x1="{hx + wobj:.0f}" y1="{hy - 22}" x2="{hx + wobj:.0f}" y2="{hy}"/>',
+                    f'<text x="{hx + wobj + wo/2:.0f}" y="{hy - 7}" text-anchor="middle">{esc(m["o"])}</text>']
+            if m.get("omod"):
+                frag, r = _mods_svg(hx + wobj + wo / 2, hy, _mlist(m["omod"]), _CH, _PAD)
+                out += frag
+                right, low = max(right, r), max(low, hy + 37)
+        if m.get("mod"):
+            frag, r = _mods_svg(hx + wobj / 2, hy, _mlist(m["mod"]), _CH, _PAD)
+            out += frag
+            right, low = max(right, r), max(low, hy + 37)
+        if m.get("prep"):
+            # The preposition written along its slant, just above-right of the line.
+            ang = math.atan2(_PH_DY, _PH_DX)
+            mx = (a + hx) / 2 + math.sin(ang) * 4
+            my = (base + hy) / 2 - math.cos(ang) * 4
+            out.append(f'<text class="prep" x="{mx:.1f}" y="{my:.1f}" text-anchor="middle" '
+                       f'transform="rotate({math.degrees(ang):.1f} {mx:.1f} {my:.1f})">'
+                       f'{esc(m["prep"])}</text>')
+    return out, right, low
+
 def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
                 sappo=None):
     """One baseline's SVG fragments, drawn from x0 at baseline y `base`.
-    Returns (lines, texts, mods, right edge, {slot: (left, width)}, has_mods)."""
+    Returns (lines, texts, mods, right edge, {slot: (left, width)}, depth of the
+    modifiers below the baseline — 0 when there are none)."""
     topln, below, texty = base - 24, 13, base - 7
     ap = _appo(sappo)
-    ws = _w(s)
+    ws = _wslot(s, smod)
     appo_text = f"({ap['word']})" if ap else ""
     wappo = _w(appo_text) if ap else 0
     sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
 
     lines, texts, mods = [], [], []
     right = x0
+    low = base
     slots = {"s": (x0, ws)}
 
-    def add_mods(cx, words):
-        nonlocal right
-        if words:
-            frag, rmost = _mods_svg(cx, base, words, _CH, _PAD)
-            mods.extend(frag)
-            right = max(right, rmost)
+    def add_mods(left, width, words):
+        nonlocal right, low
+        frag, rmost, lo = _slot_mods_svg(left, width, base, words)
+        mods.extend(frag)
+        right, low = max(right, rmost), max(low, lo)
 
     texts.append(f'<text x="{x0 + ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>')
-    add_mods(x0 + ws / 2, _mlist(smod))
+    add_mods(x0, ws, smod)
     if ap:
         texts.append(f'<text x="{x0 + ws + wappo/2:.0f}" y="{texty}" text-anchor="middle">{esc(appo_text)}</text>')
-        add_mods(x0 + ws + wappo / 2, ap["mod"])
+        add_mods(x0 + ws, wappo, ap["mod"])
 
     if c:
         # Harvey: "Iron | is : heavy" — the copula is set off, not folded into the predicate.
-        wc, wp = _w(c), _w(p)
+        wc, wp = _w(c), _wslot(p, pmod)
         total = sreg + wc + wp
         x1, x2 = x0 + sreg, x0 + sreg + wc
         lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
@@ -215,26 +315,26 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
                   f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>']
         texts += [f'<text x="{x1 + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>',
                   f'<text x="{x2 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>']
-        add_mods(x2 + wp / 2, _mlist(pmod))
+        add_mods(x2, wp, pmod)
         slots.update(c=(x1, wc), p=(x2, wp))
     else:
-        wp = _w(p)
-        wo = _w(o) if o else 0
+        wp = _wslot(p, pmod)
+        wo = _wslot(o, omod) if o else 0
         total = sreg + wp + wo
         x1, x2 = x0 + sreg, x0 + sreg + wp
         lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
                   f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>']
         texts.append(f'<text x="{x1 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>')
-        add_mods(x1 + wp / 2, _mlist(pmod))
+        add_mods(x1, wp, pmod)
         slots["p"] = (x1, wp)
         if o:
             lines.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
             texts.append(f'<text x="{x2 + wo/2:.0f}" y="{texty}" text-anchor="middle">{esc(o)}</text>')
-            add_mods(x2 + wo / 2, _mlist(omod))
+            add_mods(x2, wo, omod)
             slots["o"] = (x2, wo)
 
     right = max(right, x0 + total)
-    return lines, texts, mods, right, slots, bool(mods)
+    return lines, texts, mods, right, slots, (low - base if mods else 0)
 
 
 def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=None,
@@ -255,18 +355,19 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     clauses = {"s": sclause, "p": pclause, "o": oclause}
 
     def rel_cx(cl):
-        *_, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"))
+        *_, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                                    cl.get("smod"), cl.get("pmod"), cl.get("omod"))
         rl, rw = cslots[cl.get("rel", "s")]
         return rl + rw / 2
 
     # Shift the main line right so each clause's relative sits straight beneath
     # its antecedent's left end (the clause may reach left of the main line).
-    *_, slots0, _ = _diag_parts(0, base, s, p, o, c, sappo=sappo)
+    *_, slots0, _ = _diag_parts(0, base, s, p, o, c, smod, pmod, omod, sappo)
     shift = max([0] + [rel_cx(cl) - (slots0[k][0] + inset)
                        for k, cl in clauses.items() if cl and k in slots0])
     lines, texts, mods, right, slots, has_mods = _diag_parts(
         shift, base, s, p, o, c, smod, pmod, omod, sappo)
-    bottom = 70 if has_mods else 46
+    bottom = max(70, base + has_mods + 6) if has_mods else 46
     for key, cl in clauses.items():
         if not cl or key not in slots:
             continue
@@ -286,7 +387,7 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
             r2 = max(r2, anchor + 6 + _w(cl["link"]))
         mods += m2
         right = max(right, r2)
-        bottom = max(bottom, cbase + (40 if hm2 else 16))
+        bottom = max(bottom, cbase + (max(40, hm2 + 6) if hm2 else 16))
     minx = -6 if (mods or bottom > 70) else 0
     width = right + (6 if minx else 0) - minx
     return "".join([

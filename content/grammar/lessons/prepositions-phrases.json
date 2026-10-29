@@ -5,214 +5,349 @@
   "slides": [
     {
       "type": "title",
-      "title": "Prepositions & Phrases",
-      "subtitle": "Lesson 8 · Word Groups at Work"
+      "title": "Prepositions, Phrases & Infinitives",
+      "subtitle": "Lesson 8 · Words That Show Relation"
     },
     {
       "type": "concept",
       "heading": "Oral Lesson",
       "bullets": [
-        "In “A man of wealth rode by our house,” look at the little words of and by.",
-        "“of” connects wealth to man; “by” connects house to rode.",
-        "Each shows how its noun is related to another word in the sentence.",
-        "A word used to show such a relation is called a Preposition."
+        "“A man of wealth rode by our house.” — the group *of wealth* modifies the noun *man*:  an adjective element.",
+        "The group *by our house* modifies the verb *rode*; it tells where he rode:  an adverbial element.",
+        "*of* connects the noun *wealth* to the noun *man*; *by* connects the noun *house* with the verb *rode*.",
+        "They show the relations between the words which they connect, and are called *Prepositions*.",
+        "The nouns which follow them, *wealth* and *house*, are called their *Objects*."
       ]
     },
     {
       "type": "definition",
       "term": "Preposition",
-      "text": "A Preposition is a word used to show the relation between a noun or pronoun and some other word.",
+      "text": "A Preposition is a word used to show the relation between its object and some other word.",
       "examples": [
-        "the book on the table",
-        "a man of wealth",
-        "rode by the house",
-        "the noun or pronoun it governs is its object"
+        "He came **from** France **to** America.",
+        "Light moves **in** straight lines.",
+        "I differ **from** you **on** that point.",
+        "They went **aboard** the ship.",
+        "But “He rode **by**.” — no object:  *by* is an adverb."
       ]
     },
     {
       "type": "concept",
-      "heading": "Common Prepositions",
+      "heading": "The Principal Prepositions",
       "bullets": [
-        "Place & direction:  in, on, at, by, to, into, from, up, down, over, under.",
-        "Others:  of, for, with, without, about, above, below, near, past.",
-        "Between things:  between, among, through, across, around, behind, beside.",
-        "A preposition almost always sits just before its object (a noun or pronoun)."
+        "a · aboard · about · above · according to · across · after · against · along · amid(st) · among(st) · around · as to · at · athwart",
+        "before · behind · beneath · beside(s) · between · betwixt · beyond · but · by · down · during · ere · except · for · from",
+        "in · into · of · off · on · over · past · round · save · since · till · until · through · throughout",
+        "to · toward(s) · under · unto · up · upon · with · within · without",
+        "Glosses:  *a* = at, on, in (twice *a* day);  *athwart* = across;  *betwixt* = between;  *ere* = before;  *save*, *but* = except (all *but* one);  *unto* = to."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Preposition",
-      "instruction": "Name the preposition (or prepositions) in each sentence.",
+      "heading": "Practice — Find the Prepositions (Set 1)",
+      "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
-        "The boy went through the gate.",
-        "He drove over the bridge.",
-        "She went to the doctor.",
-        "The light came through the window.",
-        "He sat beside the fire.",
-        "They walked into the garden.",
-        "A man of wealth rode by.",
-        "Put the book on the shelf."
+        "The boy went through the gate into the garden.",
+        "Be not forward in the presence of your superiors.",
+        "He drove over the bridge into the city.",
+        "He went to the doctor for advice."
       ],
       "answers": [
-        "through",
-        "over",
-        "to",
-        "through",
-        "beside",
-        "into",
-        "of, by",
-        "on"
+        "through:  gate → went;  into:  garden → went",
+        "in:  presence → forward;  of:  superiors → presence",
+        "over:  bridge → drove;  into:  city → drove",
+        "to:  doctor → went;  for:  advice → went"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Prepositions (Set 2)",
+      "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
+      "items": [
+        "The path brought them to the end of the wood.",
+        "She turned to the old man with a lovely smile upon her face.",
+        "The light came through the stained windows of the old church."
+      ],
+      "answers": [
+        "to:  end → brought;  of:  wood → end",
+        "to:  man → turned;  with:  smile → turned;  upon:  face → smile",
+        "through:  windows → came;  of:  church → windows"
+      ]
+    },
+    {
+      "type": "definition",
+      "term": "Phrase",
+      "text": "A group of words consisting of a preposition and its object is called a Phrase.",
+      "examples": [
+        "Habits **of industry** will lead **to prosperity**.",
+        "The ship was driven **upon the rocks**.",
+        "The sleep **of a laboring man** is sweet."
       ]
     },
     {
       "type": "concept",
-      "heading": "The Phrase",
+      "heading": "Phrases as Elements",
       "bullets": [
-        "A Phrase is a group of words, without a subject and predicate, used as a single part of speech.",
-        "The commonest kind is a preposition and its object:  of wealth, by our house.",
-        "A phrase does the work of a single adjective or adverb.",
-        "Adjective phrase — modifies a noun:  “a man of wealth” tells which man.",
-        "Adverbial phrase — modifies a verb:  “rode by our house” tells where he rode."
+        "Phrases are most commonly used as adjective or adverbial elements.",
+        "“Habits of industry” — *of industry* modifies the noun *Habits*:  an adjective element.",
+        "“will lead to prosperity” — *to prosperity* modifies the verb *will lead*:  an adverbial element.",
+        "A phrase is not a proposition:  it has no subject and no predicate.  *after dinner* is a phrase; *after we had dined* is a clause."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Phrases",
+      "rows": [
+        {
+          "sentence": "Habits of industry will lead to prosperity.",
+          "s": "Habits",
+          "smod": [
+            {
+              "prep": "of",
+              "obj": "industry"
+            }
+          ],
+          "p": "will lead",
+          "pmod": [
+            {
+              "prep": "to",
+              "obj": "prosperity"
+            }
+          ],
+          "note": "Declarative. *Habits* is the subject; *will lead*, the predicate. *Habits* is modified by the phrase *of industry*, an adjective element; *will lead*, by the phrase *to prosperity*, an adverbial element."
+        },
+        {
+          "sentence": "The sleep of a laboring man is sweet.",
+          "s": "sleep",
+          "smod": [
+            "The",
+            {
+              "prep": "of",
+              "obj": "man",
+              "mod": [
+                "a",
+                "laboring"
+              ]
+            }
+          ],
+          "c": "is",
+          "p": "sweet",
+          "note": "Declarative. *sleep* is the subject; *sweet*, the predicate; *is*, the copula. *sleep* is modified by *the* and by the phrase *of a laboring man*, both adjective elements. *man* is modified by *a* and *laboring*, both adjective elements."
+        }
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Phrase",
-      "instruction": "Name the prepositional phrase in each sentence.",
-      "answerInline": true,
+      "heading": "Practice — Adjective or Adverbial?",
+      "instruction": "Name each phrase, the word it modifies, and the element it is.",
       "items": [
-        "The book on the table is mine.",
-        "He ran to the store.",
-        "A man of wealth arrived.",
-        "She sang with great joy.",
-        "The dog slept under the porch.",
-        "We walked through the woods."
+        "The young lambs are bleating in the meadows.",
+        "The roof of the old barn leaked.",
+        "The two thieves divided the money between them.",
+        "They came to the country of the free.",
+        "Our sincerest laughter is fraught with some pain.",
+        "The leaves of the oak fell in the night."
       ],
       "answers": [
-        "on the table",
-        "to the store",
-        "of wealth",
-        "with great joy",
-        "under the porch",
-        "through the woods"
+        "in the meadows → are bleating:  adverbial",
+        "of the old barn → roof:  adjective",
+        "between them → divided:  adverbial",
+        "to the country → came:  adverbial;  of the free → country:  adjective",
+        "with some pain → fraught:  adverbial",
+        "of the oak → leaves:  adjective;  in the night → fell:  adverbial"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Adjective or Adverbial Phrase?",
-      "instruction": "Tell whether the phrase modifies a noun (adjective) or a verb (adverbial).",
+      "heading": "Practice — Replace the Phrase",
+      "instruction": "Put a single word or a clause in place of each phrase.  Model — “Henry studies his lessons with care” = “Henry studies his lessons carefully.”  “Ice forms in cold weather” = “Ice forms when the weather is cold.”",
       "items": [
-        "The house on the hill is old.",
-        "He walked to school.",
-        "A book of poems fell.",
-        "She sang in the choir.",
-        "The man with the hat left.",
-        "They played in the yard."
+        "The sailors weighed anchor at sunrise.",
+        "The enraged lion struggled in vain.",
+        "Flowers bloom in the spring.",
+        "I have written this letter in haste.",
+        "Our schools should be the pride and boast of our country.",
+        "The face of the poor boy was disfigured."
       ],
       "answers": [
-        "adjective",
-        "adverbial",
-        "adjective",
-        "adverbial",
-        "adjective",
-        "adverbial"
+        "when the sun rose  (or:  early)",
+        "vainly",
+        "when spring comes",
+        "hastily",
+        "our country’s pride and boast",
+        "The poor boy’s face"
+      ],
+      "answerInline": true
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson — The Infinitive",
+      "bullets": [
+        "“To play is pleasant.” — *to play* is the subject.  Why?  It is that of which something is affirmed.",
+        "It is a form of the verb *play*.  It expresses action, but does not affirm it.",
+        "For this reason it is called an *Infinitive*, or an *infinitive Phrase*."
       ]
     },
     {
       "type": "definition",
       "term": "Infinitive",
-      "text": "An Infinitive is a form of the verb, usually with “to,” that names an action without asserting it.",
+      "text": "An Infinitive is a form of the verb used to express action without affirming it.",
       "examples": [
-        "To play is pleasant.  (to play = the subject)",
-        "He wants to go.  (to go = the object)",
-        "John studies to learn.  (to learn tells why)",
-        "the word “to” is the sign of the infinitive"
+        "**To err** is human.",
+        "She hopes **to travel**.",
+        "The lawyer went to his office **to write** a letter."
+      ]
+    },
+    {
+      "type": "table",
+      "heading": "What an Infinitive May Be",
+      "rows": [
+        {
+          "label": "Subject",
+          "text": "that of which something is affirmed",
+          "examples": "**To play** is pleasant."
+        },
+        {
+          "label": "Predicate",
+          "text": "that which is affirmed of the subject",
+          "examples": "To love is **to obey**."
+        },
+        {
+          "label": "Objective",
+          "text": "an objective element: completes the meaning of a verb",
+          "examples": "Birds love **to sing**."
+        },
+        {
+          "label": "Adverbial",
+          "text": "an adverbial element: modifies a verb, adjective, or adverb",
+          "examples": "I came **to see** you.  ·  He is glad **to help**."
+        },
+        {
+          "label": "Adjective",
+          "text": "an adjective element: modifies a noun",
+          "examples": "We have water **to drink**."
+        }
       ]
     },
     {
       "type": "concept",
-      "heading": "The Infinitive at Work",
+      "heading": "The Sign of the Infinitive",
       "bullets": [
-        "An infinitive names or points to an action, but does not affirm it.",
-        "It can be the subject:  “To lie is wicked.”",
-        "It can be the object:  “He wants to go home.”",
-        "It can tell why:  “John studies to learn.”",
-        "The two parts — “to” and the verb — are kept together."
+        "The word *to* is usually placed before the verb, and is called the *sign of the infinitive*.",
+        "The two parts should not be separated in analyzing or parsing:  *to play* is one element.",
+        "This *to* is not a preposition:  it has no object.  In “to go to the city,” only the second *to* is a preposition.",
+        "An infinitive affirms nothing.  In “To love is to obey,” the copula *is* does the affirming."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Infinitives",
+      "rows": [
+        {
+          "sentence": "To love is to obey.",
+          "s": "To love",
+          "c": "is",
+          "p": "to obey",
+          "note": "Declarative. *To love* is the subject; *to obey*, the predicate; *is*, the copula."
+        },
+        {
+          "sentence": "The lawyer went to his office to write a letter.",
+          "s": "lawyer",
+          "smod": "The",
+          "p": "went",
+          "pmod": [
+            {
+              "prep": "to",
+              "obj": "office",
+              "mod": [
+                "his"
+              ]
+            },
+            {
+              "obj": "to write",
+              "o": "letter",
+              "omod": [
+                "a"
+              ]
+            }
+          ],
+          "note": "Declarative. *lawyer* is the subject; *went*, the predicate. *lawyer* is modified by *the*, an adjective element; *went*, by the phrases *to his office* and *to write a letter*, both adverbial elements. *office* is modified by *his*, an adjective element; *to write*, by *letter*, an objective element, which is modified by *a*, an adjective element."
+        }
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Infinitive",
-      "instruction": "Name the infinitive in each sentence.",
+      "heading": "Practice — The Infinitive’s Office",
+      "instruction": "Name each infinitive, and tell whether it is a subject, a predicate, or an adjective, objective, or adverbial element.",
       "items": [
         "To lie is wicked.",
-        "He wants to go home.",
+        "He wants to go to the city.",
         "John studies to learn.",
-        "She wishes to stay.",
-        "To win takes work.",
-        "Are you ready to recite?"
+        "My sister wishes to remain here.",
+        "Are you ready to recite?",
+        "To teach the young is a pleasant task.",
+        "To see is to believe.",
+        "He had no reason to complain."
       ],
       "answers": [
-        "to lie",
-        "to go",
-        "to learn",
-        "to stay",
-        "to win",
-        "to recite"
-      ]
-    },
-    {
-      "type": "practice",
-      "heading": "Practice — What Is the Infinitive Doing?",
-      "instruction": "Tell what the infinitive does: is it the subject, the object, or does it tell why?",
-      "items": [
-        "To lie is wicked.",
-        "He wants to go home.",
-        "John studies to learn.",
-        "To win takes work.",
-        "She hopes to travel.",
-        "We ran to escape."
-      ],
-      "answers": [
-        "subject",
-        "object",
-        "tells why",
-        "subject",
-        "object",
-        "tells why"
+        "To lie:  subject",
+        "to go:  objective",
+        "to learn:  adverbial (→ studies)",
+        "to remain:  objective",
+        "to recite:  adverbial (→ ready)",
+        "To teach:  subject",
+        "To see:  subject;  to believe:  predicate",
+        "to complain:  adjective (→ reason)"
       ]
     },
     {
       "type": "concept",
-      "heading": "Where to Put a Modifier",
+      "heading": "The Position of Modifiers",
       "bullets": [
-        "Place a modifier as near as possible to the word it modifies, or the meaning changes.",
-        "“John only studies algebra.” — only John does (no one else).",
-        "“John studies algebra only.” — algebra is all he studies.",
-        "A misplaced phrase can turn silly:  “A watch was found by a boy with steel hands.”",
-        "Keep each word, phrase, and clause beside the word it belongs to."
+        "The meaning of a sentence may often be changed by changing the position of its words, phrases, and clauses.",
+        "“John **only** studies algebra.” — *only* modifies *John*:  he is the only person that studies algebra.",
+        "“John studies algebra **only**.” — *only* modifies *algebra*:  it is the only branch John studies.",
+        "Rule. — Words, phrases, and clauses, used as modifiers, should be placed as near the modified words as possible."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Misplaced Phrases & Clauses",
+      "bullets": [
+        "“A watch was found yesterday by a school-boy **with steel hands**.” — the steel hands belong to the school-boy!",
+        "Say:  “A watch **with steel hands** was found yesterday by a school-boy.”",
+        "“He needs no spectacles **that can not see**.” — the clause is meant to modify *He*, not *spectacles*.",
+        "Say:  “He **that can not see** needs no spectacles.”"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — What Does It Seem to Say?",
-      "instruction": "A modifier is out of place, so each sentence says something silly. What does the modifier seem to describe?",
-      "answerInline": true,
+      "heading": "Practice — Place the Phrases",
+      "instruction": "Locate the phrases properly in these sentences.",
       "items": [
-        "I saw a man walking a dog with a hat.",
-        "She gave a balloon to the kid that was red.",
-        "He fed the cat wearing pajamas.",
-        "We watched the parade on the roof.",
-        "He handed tests to the kids with no names.",
-        "I found a wallet walking to school."
+        "The sled was bought by a boy going to school for a dollar.",
+        "The book was dropped by a bad boy on my head.",
+        "I saw a dog bite a man with long ears and a white spot on his face."
       ],
       "answers": [
-        "the dog",
-        "the kid",
-        "the cat",
-        "the parade",
-        "the kids",
-        "the wallet"
+        "The sled was bought for a dollar by a boy going to school.",
+        "The book was dropped on my head by a bad boy.",
+        "I saw a dog with long ears and a white spot on its face bite a man."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Place the Clauses",
+      "instruction": "Locate the clauses properly in these sentences.",
+      "items": [
+        "Mr. Otis needs a surgeon, who has broken his arm.",
+        "A silver fruit knife was found by a child which has a broken back.",
+        "He wants no food that can not eat."
+      ],
+      "answers": [
+        "Mr. Otis, who has broken his arm, needs a surgeon.",
+        "A silver fruit knife which has a broken back was found by a child.",
+        "He that can not eat wants no food."
       ]
     },
     {
@@ -220,20 +355,22 @@
       "items": [
         "What is a preposition?",
         "What is the object of a preposition?",
+        "Name ten of the principal prepositions.",
         "What is a phrase?",
-        "A phrase that modifies a noun is what kind?",
+        "Why is a phrase not a proposition?",
         "What is an infinitive?",
         "What is the sign of the infinitive?",
-        "Where should a modifier be placed?"
+        "Give the rule for the placing of modifying words, phrases, and clauses."
       ],
       "answers": [
-        "A word that shows the relation between a noun or pronoun and some other word.",
-        "The noun or pronoun it governs.",
-        "A group of words, without a subject and predicate, used as a single part of speech.",
-        "An adjective phrase.",
-        "A verb form, usually with “to,” that names an action without asserting it.",
-        "The word “to.”",
-        "As near as possible to the word it modifies."
+        "A word used to show the relation between its object and some other word.",
+        "The noun or pronoun which follows it.",
+        "Any ten — e.g. about, at, by, for, from, in, of, on, to, with.",
+        "A group of words consisting of a preposition and its object.",
+        "It has no subject and no predicate; nothing is affirmed in it.",
+        "A form of the verb used to express action without affirming it.",
+        "The word *to*.",
+        "They should be placed as near the modified words as possible."
       ]
     }
   ]
