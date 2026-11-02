@@ -1,0 +1,749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linear Algebra — Lecture Notes</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+    svg: { fontCache: 'global' },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+  :root{
+    --crimson:#8a1a2b; --gold:#b08a2e; --ink:#23201c; --parchment:#faf7f0;
+    --rule:#e4ddcf; --callout:#fbf4e6;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--parchment); color:var(--ink);
+    font-family:Georgia,'EB Garamond','Iowan Old Style',serif;
+    font-size:19px; line-height:1.62;
+  }
+  #wrap{max-width:820px; margin:0 auto; padding:56px 28px 120px}
+  h1,h2,h3{font-family:'Cinzel',Georgia,serif; line-height:1.2; color:var(--crimson)}
+  h1{font-size:2.05rem; margin:0 0 .2em; text-align:center; letter-spacing:.5px}
+  h2{font-size:1.5rem; margin:2.2em 0 .5em; padding-bottom:.22em; border-bottom:2px solid var(--gold)}
+  h3{font-size:1.16rem; color:#5a2530; margin:1.6em 0 .35em}
+  a{color:var(--crimson)}
+  hr{border:0; border-top:1px solid var(--rule); margin:2.4em 0}
+  strong{color:#1c1a17}
+  code{background:#efe9dc; padding:.08em .35em; border-radius:4px; font-size:.86em}
+  table{border-collapse:collapse; margin:1em 0; width:100%; font-size:.92em}
+  th,td{border:1px solid var(--rule); padding:.5em .7em; text-align:left; vertical-align:top}
+  th{background:#f0e9d9}
+  blockquote{
+    margin:1.1em 0; padding:.7em 1.1em; background:var(--callout);
+    border-left:4px solid var(--gold); border-radius:0 6px 6px 0;
+  }
+  blockquote p{margin:.4em 0}
+  blockquote strong{color:var(--crimson)}
+  mjx-container[display="true"]{overflow-x:auto; overflow-y:hidden; padding:2px 0}
+  .toolbar{
+    max-width:820px; margin:0 auto; padding:10px 28px 0; text-align:right;
+    font-family:system-ui,sans-serif; font-size:13px; color:#8a827200
+  }
+  @media print{ body{background:#fff} .toolbar{display:none} }
+  @media (max-width:640px){ body{font-size:17px} #wrap{padding:32px 16px 80px} }
+</style>
+</head>
+<body>
+<div id="wrap"><p style="text-align:center;color:#9a9384;font-family:system-ui,sans-serif">Rendering…</p></div>
+<script type="text/markdown" id="src"># Linear Algebra — Lecture Notes
+
+**Text:** Lay, *Linear Algebra and Its Applications*, 5th ed.
+**Chapter 2 — Matrix Algebra**
+**Sections covered:** 2.5 Matrix Factorizations · 2.6 The Leontief Input–Output Model · 2.7 Applications to Computer Graphics
+
+> *Roadmap:* §2.1–2.4 built products, inverses, and block products. This lecture turns that machinery into three uses. §2.5 runs multiplication **backwards**: it writes $A$ as a product $LU$ and shows that ordinary row reduction already produces both factors. §2.6 models a whole economy with one equation, $\mathbf x = C\mathbf x + \mathbf d$, and proves that $(I-C)^{-1}$ is a convergent sum of powers of $C$. §2.7 represents the moves of computer graphics, including translation (which is **not** linear), as matrix products by adding one coordinate. §2.8 (subspaces) comes next.
+
+---
+
+## §2.5 — Matrix Factorizations
+
+A **factorization** of a matrix $A$ is an equation that expresses $A$ as a product of two or more matrices. Matrix multiplication is a *synthesis* of data: it combines the effects of two or more linear transformations into one matrix. Factorization is an *analysis* of data. It preprocesses the data in $A$ into two or more parts whose structures are more useful, for example more accessible for computation.
+
+### The LU Factorization
+
+**The motivating problem.** In industry one often solves a sequence of equations with the **same** coefficient matrix:
+
+$$A\mathbf x = \mathbf b_1,\quad A\mathbf x = \mathbf b_2,\quad \dots,\quad A\mathbf x = \mathbf b_p. \tag{1}$$
+
+If $A$ is invertible, one could compute $A^{-1}$ and then $A^{-1}\mathbf b_1, A^{-1}\mathbf b_2,\dots$. It is more efficient to solve the first equation by row reduction, obtain an LU factorization of $A$ at the same time, and then solve the remaining equations with that factorization.
+
+> **📗 DEFINITION.** A square matrix is **lower triangular** if every entry above the main diagonal is $0$. It is **unit lower triangular** if, in addition, every diagonal entry is $1$.
+
+> **📗 DEFINITION.** Let $A$ be an $m\times n$ matrix that can be row reduced to echelon form **without row interchanges**. An **LU factorization** of $A$ is an equation
+> $$A = LU,$$
+> where $L$ is an $m\times m$ **unit lower triangular** matrix and $U$ is an $m\times n$ **echelon form** of $A$.
+
+For instance, an LU factorization of a $4\times 5$ matrix has the shape
+
+$$
+A=\begin{bmatrix} 1&0&0&0\\ *&1&0&0\\ *&*&1&0\\ *&*&*&1\end{bmatrix}
+\begin{bmatrix} \blacksquare&*&*&*&*\\ 0&\blacksquare&*&*&*\\ 0&0&0&\blacksquare&*\\ 0&0&0&0&0\end{bmatrix}
+\qquad (L\ \text{times}\ U).
+$$
+
+> **⚠ Watch for:** $U$ is an **echelon form** of $A$, the same size as $A$, so it need not be square. It has zeros below the diagonal, but its pivots need not lie on the diagonal (in Example 2 below, the third pivot is in column 4). $L$ is always square, $m\times m$, and **invertible**: it row reduces to $I$ by replacements alone (proved below).
+
+#### Why $A = LU$ is useful
+
+When $A = LU$, the equation $A\mathbf x = \mathbf b$ reads $L(U\mathbf x) = \mathbf b$. Write $\mathbf y$ for $U\mathbf x$. Then $\mathbf x$ is found by solving the **pair** of equations
+
+$$
+\boxed{\begin{aligned} L\mathbf y &= \mathbf b\\ U\mathbf x &= \mathbf y\end{aligned}} \tag{2}
+$$
+
+First solve $L\mathbf y = \mathbf b$ for $\mathbf y$, then solve $U\mathbf x = \mathbf y$ for $\mathbf x$. Each is easy because $L$ and $U$ are triangular.
+
+> **🔎 Why (2) gives every solution and only solutions.** If $L\mathbf y = \mathbf b$ and $U\mathbf x = \mathbf y$, then $A\mathbf x = L(U\mathbf x) = L\mathbf y = \mathbf b$. Conversely, if $A\mathbf x = \mathbf b$, set $\mathbf y = U\mathbf x$. Then $L\mathbf y = \mathbf b$. Since $L$ is invertible, $\mathbf y = L^{-1}\mathbf b$ is the **only** solution of $L\mathbf y = \mathbf b$, so every solution $\mathbf x$ of $A\mathbf x = \mathbf b$ satisfies $U\mathbf x = \mathbf y$ for that one $\mathbf y$.
+
+> **💡 Picture:** the mapping $\mathbf x\mapsto A\mathbf x$ factors as two steps, $\mathbf x \xrightarrow{\ U\ } \mathbf y \xrightarrow{\ L\ } \mathbf b$. Solving undoes the steps in reverse order: undo $L$ first, then $U$.
+
+#### Example 1 — solving with a given LU factorization (worked)
+
+$$
+A=\begin{bmatrix} 3&-7&-2&2\\ -3&5&1&0\\ 6&-4&0&-5\\ -9&5&-5&12\end{bmatrix}
+=\begin{bmatrix} 1&0&0&0\\ -1&1&0&0\\ 2&-5&1&0\\ -3&8&3&1\end{bmatrix}
+\begin{bmatrix} 3&-7&-2&2\\ 0&-2&-1&2\\ 0&0&-1&1\\ 0&0&0&-1\end{bmatrix}=LU,
+\qquad
+\mathbf b=\begin{bmatrix} -9\\ 5\\ 7\\ 11\end{bmatrix}.
+$$
+
+*Step 1: solve $L\mathbf y = \mathbf b$.* The arithmetic happens only in the last column, because the zeros below each pivot of $L$ are created automatically by the choice of row operations.
+
+$$
+[\,L\ \ \mathbf b\,]=\left[\begin{array}{cccc|c} 1&0&0&0&-9\\ -1&1&0&0&5\\ 2&-5&1&0&7\\ -3&8&3&1&11\end{array}\right]
+\sim
+\left[\begin{array}{cccc|c} 1&0&0&0&-9\\ 0&1&0&0&-4\\ 0&0&1&0&5\\ 0&0&0&1&1\end{array}\right]=[\,I\ \ \mathbf y\,].
+$$
+
+*Step 2: solve $U\mathbf x = \mathbf y$* (the backward phase only).
+
+$$
+[\,U\ \ \mathbf y\,]=\left[\begin{array}{cccc|c} 3&-7&-2&2&-9\\ 0&-2&-1&2&-4\\ 0&0&-1&1&5\\ 0&0&0&-1&1\end{array}\right]
+\sim
+\left[\begin{array}{cccc|c} 1&0&0&0&3\\ 0&1&0&0&4\\ 0&0&1&0&-6\\ 0&0&0&1&-1\end{array}\right],
+\qquad
+\mathbf x=\begin{bmatrix} 3\\ 4\\ -6\\ -1\end{bmatrix}.
+$$
+
+*Cost.* $L\mathbf y = \mathbf b$ needs 6 multiplications and 6 additions. $U\mathbf x = \mathbf y$ needs 4 divisions, 6 multiplications, and 6 additions. (Creating the zeros in column 4 of $[\,U\ \ \mathbf y\,]$, for instance, takes 1 division in row 4 and 3 multiplication–addition pairs to add multiples of row 4 to the rows above.) That is **28** arithmetic operations, or "flops," once $L$ and $U$ are known. Row reducing $[\,A\ \ \mathbf b\,]$ to $[\,I\ \ \mathbf x\,]$ from scratch takes **62**.
+
+> **💡 Why this matters:** the efficiency depends on already **knowing** $L$ and $U$. The next algorithm shows that reducing $A$ to an echelon form $U$ produces $L$ with essentially no extra work. After the first row reduction, $L$ and $U$ are on hand for every later right-hand side.
+
+### Two Facts About Unit Lower Triangular Matrices
+
+The algorithm rests on two closure properties.
+
+> **📦 Fact A (products).** The product of two $n\times n$ lower triangular matrices is lower triangular, and its diagonal entries are the products of the corresponding diagonal entries. In particular, a product of unit lower triangular matrices is unit lower triangular.
+
+> **🔎 Proof.** Let $A$ and $B$ be lower triangular, so $a_{ik}=0$ when $k>i$ and $b_{kj}=0$ when $k<j$. By the row–column rule,
+> $$(AB)_{ij} = \sum_{k=1}^n a_{ik}b_{kj}.$$
+> A term can be nonzero only if $k\le i$ and $k\ge j$, that is, $j\le k\le i$.
+> - If $i<j$, no $k$ satisfies $j\le k\le i$, so $(AB)_{ij} = 0$. Thus $AB$ is lower triangular.
+> - If $i=j$, the only term is $k=i$, so $(AB)_{ii} = a_{ii}b_{ii}$.
+>
+> If every $a_{ii}$ and $b_{ii}$ is $1$, then every $(AB)_{ii}$ is $1$. For $k>2$ factors, induct: $A_1\cdots A_k = (A_1\cdots A_{k-1})A_k$, where $A_1\cdots A_{k-1}$ is (unit) lower triangular by the inductive hypothesis, and apply the two-factor case. $\blacksquare$
+
+> **📦 Fact B (inverses).** A unit lower triangular matrix $L$ is invertible, and $L^{-1}$ is unit lower triangular.
+
+> **🔎 Proof.** Row reduce $L$ to $I$ column by column, for $j = 1,\dots,n$: use row $j$ to clear the entries below position $(j,j)$, by adding suitable multiples of row $j$ to the rows **below** it. By induction on $j$, **row $j$ is $\mathbf e_j^T$ when its turn comes.** It starts as $(\ell_{j1},\dots,\ell_{j,j-1},1,0,\dots,0)$. Each earlier stage $k<j$ used a row equal to $\mathbf e_k^T$, so it changed only entry $(j,k)$ of row $j$, setting it to $0$. So at stage $j$, adding multiples of row $j = \mathbf e_j^T$ changes only column $j$, clearing it below the diagonal and leaving the cleared columns alone. No scaling is needed, since every diagonal entry is already $1$, and no interchange is needed. After the last column, $L$ has become $I$.
+>
+> Each operation "add $c\cdot$(row $j$) to row $i$" with $i>j$ is left multiplication by the elementary matrix $E = I + c\,\mathbf e_i\mathbf e_j^T$. That matrix is $I$ with the single extra entry $c$ in position $(i,j)$, below the diagonal, so $E$ is unit lower triangular. So there are unit lower triangular elementary matrices with
+> $$E_q\cdots E_1 L = I.$$
+> By Theorem 7 (§2.2) $L$ is invertible and $L^{-1} = E_q\cdots E_1$, a product of unit lower triangular matrices. By Fact A, $L^{-1}$ is unit lower triangular. $\blacksquare$
+
+### An LU Factorization Algorithm
+
+Suppose $A$ can be reduced to an echelon form $U$ using only row replacements that add a multiple of one row to a row **below** it. Each such replacement is left multiplication by a unit lower triangular elementary matrix, so there are unit lower triangular elementary matrices $E_1,\dots,E_p$ with
+
+$$E_p\cdots E_1A = U. \tag{3}$$
+
+The product $E_p\cdots E_1$ is unit lower triangular (Fact A) and invertible (each $E_k$ is invertible). So
+
+$$A = (E_p\cdots E_1)^{-1}U = LU,\qquad\text{where}\qquad L = (E_p\cdots E_1)^{-1}. \tag{4}$$
+
+By Fact B, $L$ is unit lower triangular. **So an LU factorization exists whenever step 1 below is possible.**
+
+The key to *constructing* $L$: the row operations in (3) that reduce $A$ to $U$ **also reduce $L$ to $I$**, because
+$$(E_p\cdots E_1)L = (E_p\cdots E_1)(E_p\cdots E_1)^{-1} = I.$$
+
+> **📦 Algorithm for an LU factorization.**
+> 1. Reduce $A$ to an echelon form $U$ by a sequence of row replacement operations, if possible.
+> 2. Place entries in $L$ such that the **same sequence of row operations** reduces $L$ to $I$.
+
+> **🔎 Why step 2 produces a correct $L$.** Suppose $L$ is unit lower triangular and $(E_p\cdots E_1)L = I$ for the same $E_1,\dots,E_p$ as in (3). $L$ is square, so by the IMT (one-sided inverses suffice, §2.3) $L$ is invertible with $L^{-1} = E_p\cdots E_1$. Then (3) says $L^{-1}A = U$, so $A = LU$.
+
+**How to carry out step 2: the multipliers.** At the stage where row $j$ supplies the $j$th pivot $u$, each entry $a$ below that pivot in its column is cleared by $R_i \leftarrow R_i - \ell_{ij}R_j$ with **multiplier** $\ell_{ij} = a/u$. So in practice: **at each pivot column, take the entries from the pivot down, divide them by the pivot, and place the result into $L$** below the diagonal. If $A$ has $r<m$ pivots, the last $m-r$ columns of $L$ are the last columns of $I_m$.
+
+> **🔎 Proof that the multiplier recipe works.** Let $L$ have $1$s on the diagonal, the multiplier $\ell_{ij}$ in position $(i,j)$ for $i>j$ at each pivot stage $j$, and $0$ elsewhere. Apply the reduction's operations to $L$, stage by stage. We show by induction on $j$: **when stage $j$ begins, row $j$ of the current matrix is $\mathbf e_j^T$, and columns $1,\dots,j-1$ have already become $\mathbf e_1,\dots,\mathbf e_{j-1}$.**
+> - Stage $k$ consists of the operations $R_i \leftarrow R_i - \ell_{ik}R_k$ for $i>k$. If row $k$ equals $\mathbf e_k^T$ at that moment, each operation subtracts $\ell_{ik}$ from entry $(i,k)$ and changes nothing else. Entry $(i,k)$ was $\ell_{ik}$, so it becomes $0$, and column $k$ becomes $\mathbf e_k$.
+> - Row $j$ of $L$ starts as $(\ell_{j1},\dots,\ell_{j,j-1},1,0,\dots,0)$. Stages $1,\dots,j-1$ zero out exactly the entries $\ell_{j1},\dots,\ell_{j,j-1}$ and touch nothing else in row $j$. So row $j$ is $\mathbf e_j^T$ when stage $j$ begins, as claimed.
+>
+> Once column $k$ has become $\mathbf e_k$, it is never touched again: every later stage $k'>k$ subtracts multiples of $\mathbf e_{k'}^T$, which is zero in column $k$.
+>
+> After the last pivot stage, every column has become $\mathbf e_j$ (columns past the last pivot were $\mathbf e_j$ from the start and were never touched below the diagonal). So the same operations reduce $L$ to $I$, which is step 2. $\blacksquare$
+
+#### Example 2 — finding an LU factorization (worked)
+
+$$
+A=\begin{bmatrix} 2&4&-1&5&-2\\ -4&-5&3&-8&1\\ 2&-5&-4&1&8\\ -6&0&7&-3&1\end{bmatrix}
+$$
+
+$A$ has four rows, so $L$ is $4\times4$. Row reduce $A$ by replacements, noting the entries from each pivot down (the **pivot-column segments**, shown in **bold** below):
+
+$$
+A=\begin{bmatrix} \mathbf{2}&4&-1&5&-2\\ \mathbf{-4}&-5&3&-8&1\\ \mathbf{2}&-5&-4&1&8\\ \mathbf{-6}&0&7&-3&1\end{bmatrix}
+\sim
+\begin{bmatrix} 2&4&-1&5&-2\\ 0&\mathbf{3}&1&2&-3\\ 0&\mathbf{-9}&-3&-4&10\\ 0&\mathbf{12}&4&12&-5\end{bmatrix}=A_1 \tag{5}
+$$
+
+$$
+\sim
+\begin{bmatrix} 2&4&-1&5&-2\\ 0&3&1&2&-3\\ 0&0&0&\mathbf{2}&1\\ 0&0&0&\mathbf{4}&7\end{bmatrix}=A_2
+\sim
+\begin{bmatrix} 2&4&-1&5&-2\\ 0&3&1&2&-3\\ 0&0&0&2&1\\ 0&0&0&0&\mathbf{5}\end{bmatrix}=U.
+$$
+
+Divide each segment by its pivot and place the result into $L$:
+
+$$
+\begin{bmatrix} 2\\ -4\\ 2\\ -6\end{bmatrix}\div 2,\quad
+\begin{bmatrix} 3\\ -9\\ 12\end{bmatrix}\div 3,\quad
+\begin{bmatrix} 2\\ 4\end{bmatrix}\div 2,\quad
+\begin{bmatrix} 5\end{bmatrix}\div 5
+\quad\longrightarrow\quad
+L=\begin{bmatrix} 1&0&0&0\\ -2&1&0&0\\ 1&-3&1&0\\ -3&4&2&1\end{bmatrix}.
+$$
+
+*Check:* $LU = \begin{bmatrix} 1&0&0&0\\ -2&1&0&0\\ 1&-3&1&0\\ -3&4&2&1\end{bmatrix}\begin{bmatrix} 2&4&-1&5&-2\\ 0&3&1&2&-3\\ 0&0&0&2&1\\ 0&0&0&0&5\end{bmatrix} = A.$
+
+> **⚠ Sign watch:** the entry placed in $L$ is the *segment entry divided by the pivot*, e.g. $-4/2 = -2$. The row operation actually performed was $R_2 + 2R_1$, the **opposite** sign. Students who record the operation's coefficient get every sign of $L$ wrong.
+
+> **⚠ Watch for:** column 3 of $A$ is not a pivot column, so the third pivot sits in column 4. The third column of $L$ comes from the **third pivot**, not from column 3 of $A$.
+
+#### Practice Problem — fewer pivots than rows (worked)
+
+$$
+A=\begin{bmatrix} 2&-4&-2&3\\ 6&-9&-5&8\\ 2&-7&-3&9\\ 4&-2&-2&-1\\ -6&3&3&4\end{bmatrix}
+\sim
+\begin{bmatrix} 2&-4&-2&3\\ 0&3&1&-1\\ 0&-3&-1&6\\ 0&6&2&-7\\ 0&-9&-3&13\end{bmatrix}
+\sim
+\begin{bmatrix} 2&-4&-2&3\\ 0&3&1&-1\\ 0&0&0&5\\ 0&0&0&-5\\ 0&0&0&10\end{bmatrix}
+\sim
+\begin{bmatrix} 2&-4&-2&3\\ 0&3&1&-1\\ 0&0&0&5\\ 0&0&0&0\\ 0&0&0&0\end{bmatrix}=U.
+$$
+
+The pivot-column segments are $(2,6,2,4,-6)$, $(3,-3,6,-9)$, and $(5,-5,10)$. Dividing by the pivots $2$, $3$, $5$ gives the first three columns of $L$. $A$ has only three pivots, so the last two columns of $L$ come from $I_5$:
+
+$$
+L=\begin{bmatrix} 1&0&0&0&0\\ 3&1&0&0&0\\ 1&-1&1&0&0\\ 2&2&-1&1&0\\ -3&-3&2&0&1\end{bmatrix},\qquad A = LU.
+$$
+
+### Permuted LU Factorizations
+
+In practical work, row interchanges are nearly always needed, because **partial pivoting** is used for high accuracy: among the possible pivots in a column, it selects an entry of largest absolute value. To handle interchanges, the factorization is modified to produce an $L$ that is **permuted lower triangular**: a rearrangement (a *permutation*) of the rows of $L$ makes it unit lower triangular. The resulting **permuted LU factorization** solves $A\mathbf x = \mathbf b$ the same way, except that the reduction of $[\,L\ \ \mathbf b\,]$ to $[\,I\ \ \mathbf y\,]$ follows the order of the pivots in $L$ from left to right, starting with the pivot in the first column. A reference to "an LU factorization" usually includes the possibility that $L$ is permuted lower triangular.
+
+> **📝 Numerical Notes.** For an $n\times n$ dense matrix $A$ (most entries nonzero) with $n$ moderately large, say $n\ge 30$:
+> 1. Computing an LU factorization of $A$ takes about $2n^3/3$ flops, about the same as row reducing $[\,A\ \ \mathbf b\,]$. Finding $A^{-1}$ takes about $2n^3$ flops.
+> 2. Solving $L\mathbf y = \mathbf b$ and $U\mathbf x = \mathbf y$ takes about $2n^2$ flops, because any $n\times n$ triangular system can be solved in about $n^2$ flops.
+> 3. Multiplying $\mathbf b$ by $A^{-1}$ also takes about $2n^2$ flops, but the result may be less accurate than the one from $L$ and $U$, because of roundoff in computing both $A^{-1}$ and $A^{-1}\mathbf b$.
+> 4. If $A$ is **sparse** (mostly zero entries), then $L$ and $U$ may be sparse too, whereas $A^{-1}$ is likely to be dense. Then solving $A\mathbf x = \mathbf b$ with an LU factorization is *much* faster than using $A^{-1}$.
+>
+> (A **flop** is one $+$, $-$, $\times$, or $\div$.)
+
+### A Matrix Factorization in Electrical Engineering
+
+Matrix factorization is closely tied to building an electrical network with specified properties.
+
+Suppose a box is an electric circuit with input terminals and output terminals. Record the input voltage and current as $\begin{bmatrix} v_1\\ i_1\end{bmatrix}$ (volts, amps) and the output voltage and current as $\begin{bmatrix} v_2\\ i_2\end{bmatrix}$. Frequently the transformation $\begin{bmatrix} v_1\\ i_1\end{bmatrix}\mapsto\begin{bmatrix} v_2\\ i_2\end{bmatrix}$ is linear: there is a matrix $A$, the **transfer matrix**, with
+
+$$\begin{bmatrix} v_2\\ i_2\end{bmatrix} = A\begin{bmatrix} v_1\\ i_1\end{bmatrix}.$$
+
+A **ladder network** connects circuits in series, so that the output of one is the input of the next. Two basic circuits:
+
+- a **series circuit** with resistance $R_1$ (ohms), and
+- a **shunt circuit** with resistance $R_2$.
+
+Using Ohm's law and Kirchhoff's laws, their transfer matrices are
+
+$$
+\underbrace{\begin{bmatrix} 1 & -R_1\\ 0 & 1\end{bmatrix}}_{\text{series}}
+\qquad\text{and}\qquad
+\underbrace{\begin{bmatrix} 1 & 0\\ -1/R_2 & 1\end{bmatrix}}_{\text{shunt}}.
+$$
+
+#### Example 3 — transfer matrix of a ladder network, and a design (worked)
+
+**(a)** *Compute the transfer matrix of the network: a series circuit ($R_1$) followed by a shunt circuit ($R_2$).*
+
+Let $A_1$ and $A_2$ be the series and shunt transfer matrices. An input $\mathbf x$ is transformed first into $A_1\mathbf x$ and then into $A_2(A_1\mathbf x)$. Series connection is composition of linear transformations, so the network's transfer matrix is (note the order)
+
+$$
+A_2A_1=\begin{bmatrix} 1&0\\ -1/R_2&1\end{bmatrix}\begin{bmatrix} 1&-R_1\\ 0&1\end{bmatrix}=\begin{bmatrix} 1&-R_1\\ -1/R_2&1+R_1/R_2\end{bmatrix}. \tag{6}
+$$
+
+**(b)** *Design a ladder network whose transfer matrix is $\begin{bmatrix} 1&-8\\ -.5&5\end{bmatrix}$.*
+
+Factor it as in (6): find $R_1, R_2$ with
+
+$$\begin{bmatrix} 1&-R_1\\ -1/R_2&1+R_1/R_2\end{bmatrix}=\begin{bmatrix} 1&-8\\ -.5&5\end{bmatrix}.$$
+
+From the $(1,2)$-entries, $R_1 = 8$ ohms. From the $(2,1)$-entries, $1/R_2 = .5$, so $R_2 = 2$ ohms. *Check the $(2,2)$-entry:* $1 + 8/2 = 5$ ✓. A series circuit of $8$ ohms followed by a shunt circuit of $2$ ohms has the desired transfer matrix.
+
+> **💡 Why this matters:** a transfer matrix summarizes a network's input–output behavior (its design specification) without reference to the interior circuits. To build a network with given properties, an engineer first decides whether one can be constructed (**realized**), then tries to **factor** the transfer matrix into matrices of smaller circuits that may already be manufactured. A standard problem is to find a **minimal realization**, one with the fewest electrical components. With alternating current, the entries are usually rational complex-valued functions.
+
+---
+
+## §2.6 — The Leontief Input–Output Model
+
+Linear algebra played an essential role in the Nobel prize–winning work of Wassily Leontief. The model below is the basis for more elaborate models used in many parts of the world.
+
+### Core Definitions
+
+Divide a nation's economy into $n$ sectors that produce goods or services.
+
+> **📗 DEFINITIONS.**
+> - The **production vector** $\mathbf x\in\mathbb R^n$ lists the output of each sector for one year.
+> - The **open sector** is the part of the economy that produces nothing and only consumes.
+> - The **final demand vector** (or **bill of final demands**) $\mathbf d\in\mathbb R^n$ lists the values of the goods and services the open sector demands from the producing sectors: consumer demand, government consumption, surplus production, exports, or other external demand.
+> - **Intermediate demand** is what the producing sectors themselves need as inputs for their own production.
+> - For each sector, the **unit consumption vector** in $\mathbb R^n$ lists the inputs that sector needs **per unit of its output**.
+
+All units are millions of dollars, not tons or bushels, and prices are held constant.
+
+Leontief asked whether there is a production level $\mathbf x$ at which supply exactly balances total demand:
+
+$$\{\text{amount produced } \mathbf x\} = \{\text{intermediate demand}\} + \{\text{final demand } \mathbf d\}. \tag{1}$$
+
+**A three-sector economy.** Manufacturing, agriculture, and services, with unit consumption vectors $\mathbf c_1,\mathbf c_2,\mathbf c_3$:
+
+| Purchased from: | Manufacturing ($\mathbf c_1$) | Agriculture ($\mathbf c_2$) | Services ($\mathbf c_3$) |
+|---|---|---|---|
+| Manufacturing | .50 | .40 | .20 |
+| Agriculture | .20 | .30 | .10 |
+| Services | .10 | .10 | .30 |
+
+Each **column** is one sector's shopping list per unit of its output. Each **row** says what is bought from one sector.
+
+#### Example 1 — consumption for a given output (worked)
+
+*What will manufacturing consume if it decides to produce 100 units?*
+
+$$100\,\mathbf c_1 = 100\begin{bmatrix} .50\\ .20\\ .10\end{bmatrix} = \begin{bmatrix} 50\\ 20\\ 10\end{bmatrix}.$$
+
+To produce 100 units, manufacturing orders and consumes 50 units from manufacturing itself, 20 from agriculture, and 10 from services.
+
+### The Production Equation
+
+If the sectors produce $x_1, x_2, x_3$ units, their intermediate demands are $x_1\mathbf c_1$, $x_2\mathbf c_2$, $x_3\mathbf c_3$. The total intermediate demand is
+
+$$\{\text{intermediate demand}\} = x_1\mathbf c_1 + x_2\mathbf c_2 + x_3\mathbf c_3 = C\mathbf x, \tag{2}$$
+
+where $C = [\,\mathbf c_1\ \mathbf c_2\ \mathbf c_3\,]$ is the **consumption matrix**:
+
+$$C=\begin{bmatrix} .50&.40&.20\\ .20&.30&.10\\ .10&.10&.30\end{bmatrix}. \tag{3}$$
+
+Equations (1) and (2) give Leontief's model.
+
+> **📗 THE LEONTIEF INPUT–OUTPUT MODEL, OR PRODUCTION EQUATION.**
+> $$\underset{\text{amount produced}}{\mathbf x} \;=\; \underset{\text{intermediate demand}}{C\mathbf x} \;+\; \underset{\text{final demand}}{\mathbf d} \tag{4}$$
+
+Writing $\mathbf x$ as $I\mathbf x$ and collecting terms:
+
+$$(I - C)\mathbf x = \mathbf d. \tag{5}$$
+
+> **💡 Why this matters:** (2) is the column picture of $A\mathbf x$ from §1.4 doing real work. Each sector's output level **weights** its own column of inputs, and the sum is the economy's total internal demand.
+
+#### Example 2 — the production level for a given demand (worked)
+
+*For $C$ in (3), the final demand is 50 units for manufacturing, 30 for agriculture, and 20 for services. Find the production level $\mathbf x$.*
+
+$$
+I - C = \begin{bmatrix} 1&0&0\\ 0&1&0\\ 0&0&1\end{bmatrix} - \begin{bmatrix} .5&.4&.2\\ .2&.3&.1\\ .1&.1&.3\end{bmatrix} = \begin{bmatrix} .5&-.4&-.2\\ -.2&.7&-.1\\ -.1&-.1&.7\end{bmatrix}.
+$$
+
+Row reduce the augmented matrix (scaling each row by 10 first clears the decimals):
+
+$$
+\left[\begin{array}{ccc|c} .5&-.4&-.2&50\\ -.2&.7&-.1&30\\ -.1&-.1&.7&20\end{array}\right]
+\sim
+\left[\begin{array}{ccc|c} 5&-4&-2&500\\ -2&7&-1&300\\ -1&-1&7&200\end{array}\right]
+\sim\cdots\sim
+\left[\begin{array}{ccc|c} 1&0&0&6100/27\\ 0&1&0&3200/27\\ 0&0&1&700/9\end{array}\right].
+$$
+
+So $\mathbf x \approx (225.9,\ 118.5,\ 77.8)$. Rounded to whole units: manufacturing must produce about **226** units, agriculture **119**, and services only **78**.
+
+> **⚠ Watch for:** the final demand on manufacturing is only 50, yet it must produce about 226. The difference, about 176 units, is consumed **inside** the economy. That is the whole point of the model.
+
+### When Is the Model Solvable? Theorem 11
+
+If $I - C$ is invertible, Theorem 5 (§2.2) applied to (5) gives $\mathbf x = (I-C)^{-1}\mathbf d$. The theorem below says that in most practical cases $I-C$ **is** invertible and $\mathbf x$ is **economically feasible**: its entries are nonnegative.
+
+> **📗 DEFINITION.** A **column sum** of a matrix is the sum of the entries in one column.
+
+Under ordinary circumstances the column sums of a consumption matrix are less than $1$: a sector should need **less than one unit's worth of inputs to produce one unit of output**. In (3) the column sums are $.8$, $.8$, and $.6$.
+
+> **📐 THEOREM 11.** Let $C$ be the consumption matrix for an economy, and let $\mathbf d$ be the final demand. If $C$ and $\mathbf d$ have nonnegative entries and if each column sum of $C$ is less than $1$, then $(I-C)^{-1}$ exists and the production vector
+> $$\mathbf x = (I - C)^{-1}\mathbf d$$
+> has nonnegative entries and is the unique solution of
+> $$\mathbf x = C\mathbf x + \mathbf d.$$
+
+The proof comes from an economic thought experiment that also yields a new way to compute $(I-C)^{-1}$.
+
+### A Formula for $(I-C)^{-1}$
+
+Suppose the demand $\mathbf d$ is presented to the industries at the start of the year, and they respond by setting production to $\mathbf x = \mathbf d$, which exactly meets the final demand. To produce $\mathbf d$, they order raw materials and other inputs, creating an intermediate demand of $C\mathbf d$. To meet that, they need further inputs $C(C\mathbf d) = C^2\mathbf d$, which is a second round of intermediate demand. Then $C(C^2\mathbf d) = C^3\mathbf d$, and so on:
+
+| | Demand that must be met | Inputs needed to meet it |
+|---|---|---|
+| Final demand | $\mathbf d$ | $C\mathbf d$ |
+| 1st round | $C\mathbf d$ | $C(C\mathbf d) = C^2\mathbf d$ |
+| 2nd round | $C^2\mathbf d$ | $C(C^2\mathbf d) = C^3\mathbf d$ |
+| 3rd round | $C^3\mathbf d$ | $C(C^3\mathbf d) = C^4\mathbf d$ |
+| $\vdots$ | $\vdots$ | $\vdots$ |
+
+The production level that meets all of this demand is
+
+$$\mathbf x = \mathbf d + C\mathbf d + C^2\mathbf d + C^3\mathbf d + \cdots = (I + C + C^2 + C^3 + \cdots)\mathbf d. \tag{6}$$
+
+To make sense of (6), use the algebraic identity
+
+$$(I - C)(I + C + C^2 + \cdots + C^m) = I - C^{m+1}. \tag{7}$$
+
+> **🔎 Proof of (7).** Distribute:
+> $$(I-C)(I + C + \cdots + C^m) = (I + C + \cdots + C^m) - (C + C^2 + \cdots + C^{m+1}).$$
+> Every power $C, C^2,\dots,C^m$ appears once with each sign and cancels, leaving $I - C^{m+1}$. $\blacksquare$
+
+> **💡 Analogy:** this is the matrix version of $(1-t)(1 + t + \cdots + t^m) = 1 - t^{m+1}$. For a number $0\le t<1$, $t^m\to 0$, so $1 + t + t^2 + \cdots = 1/(1-t)$. Theorem 11 is the matrix geometric series, and "column sums less than $1$" plays the role of "$t<1$."
+
+**The key estimate.** For a vector $\mathbf v$, let $\|\mathbf v\|_1 = |v_1| + \cdots + |v_n|$, the sum of the absolute values of its entries.
+
+> **📦 Lemma.** Let $C$ be $n\times n$, and suppose that for each column, the sum of the **absolute values** of its entries is at most $s$, where $s<1$. Then for every $\mathbf v\in\mathbb R^n$,
+> $$\|C\mathbf v\|_1 \le s\,\|\mathbf v\|_1,\qquad\text{and hence}\qquad \|C^m\mathbf v\|_1 \le s^m\|\mathbf v\|_1\ \text{ for } m = 1,2,\dots$$
+
+> **🔎 Proof.** Entry $i$ of $C\mathbf v$ is $\sum_j c_{ij}v_j$. By the triangle inequality,
+> $$\|C\mathbf v\|_1 = \sum_{i=1}^n\Big|\sum_{j=1}^n c_{ij}v_j\Big| \le \sum_{i=1}^n\sum_{j=1}^n |c_{ij}|\,|v_j| = \sum_{j=1}^n\Big(\sum_{i=1}^n |c_{ij}|\Big)|v_j| \le \sum_{j=1}^n s\,|v_j| = s\,\|\mathbf v\|_1.$$
+> Swapping the order of summation groups the terms by **column** $j$, which is exactly where the column-sum hypothesis enters. Applying the inequality $m$ times gives $\|C^m\mathbf v\|_1 \le s\|C^{m-1}\mathbf v\|_1 \le\cdots\le s^m\|\mathbf v\|_1$. $\blacksquare$
+
+> **🔎 Proof of Theorem 11.** Since $C$ has nonnegative entries, its column sums equal its sums of absolute values. Let $s<1$ be the largest column sum, so the Lemma applies.
+>
+> **Step 1: $C^m \to 0$.** The $(i,j)$-entry of $C^m$ is entry $i$ of $C^m\mathbf e_j$, so by the Lemma
+> $$\big|(C^m)_{ij}\big| \le \|C^m\mathbf e_j\|_1 \le s^m\|\mathbf e_j\|_1 = s^m.$$
+> Since $0\le s<1$, $s^m\to 0$. So **every entry of $C^m$ tends to $0$** as $m\to\infty$.
+>
+> **Step 2: $I-C$ is invertible.** Suppose $(I-C)\mathbf v = \mathbf 0$. Then $\mathbf v = C\mathbf v$, so $\|\mathbf v\|_1 = \|C\mathbf v\|_1 \le s\|\mathbf v\|_1$, that is, $(1-s)\|\mathbf v\|_1 \le 0$. Since $1-s>0$, $\|\mathbf v\|_1 = 0$, so $\mathbf v = \mathbf 0$. The square matrix $I-C$ has $(I-C)\mathbf v = \mathbf 0$ only for $\mathbf v = \mathbf 0$, so it is invertible by the IMT, statement (d).
+>
+> **Step 3: the partial sums converge to $(I-C)^{-1}$.** Multiply (7) on the left by $(I-C)^{-1}$:
+> $$I + C + C^2 + \cdots + C^m = (I-C)^{-1} - (I-C)^{-1}C^{m+1}.$$
+> Each entry of $(I-C)^{-1}C^{m+1}$ is a fixed linear combination of the entries of $C^{m+1}$, which tend to $0$ by Step 1. So $(I-C)^{-1}C^{m+1}\to 0$ entrywise, and
+> $$I + C + C^2 + \cdots + C^m \;\longrightarrow\; (I-C)^{-1}\qquad (m\to\infty).$$
+>
+> **Step 4: nonnegativity.** $C$ and $\mathbf d$ have nonnegative entries, so every $C^k\mathbf d$ does (products and sums of nonnegative numbers). Hence each partial sum $(I + C + \cdots + C^m)\mathbf d$ has nonnegative entries. By Step 3 these vectors converge entrywise to $(I-C)^{-1}\mathbf d = \mathbf x$. A limit of nonnegative numbers is nonnegative, so $\mathbf x$ has nonnegative entries.
+>
+> **Step 5: uniqueness.** $\mathbf x = C\mathbf x + \mathbf d$ is equivalent to $(I-C)\mathbf x = \mathbf d$. Since $I-C$ is invertible, Theorem 5 (§2.2) says its unique solution is $\mathbf x = (I-C)^{-1}\mathbf d$. $\blacksquare$
+
+The approximation that results is
+
+$$\boxed{(I - C)^{-1} \approx I + C + C^2 + C^3 + \cdots + C^m\quad\text{when the column sums of } C \text{ are less than } 1.} \tag{8}$$
+
+"$\approx$" means the right side can be made as close to $(I-C)^{-1}$ as desired by taking $m$ large enough. In real input–output models, powers of the consumption matrix approach $0$ quickly, so (8) is a practical way to compute $(I-C)^{-1}$, and (6) is a practical way to solve $(I-C)\mathbf x = \mathbf d$.
+
+#### Example 2, revisited — the rounds of demand converging (worked)
+
+Same $C$ and $\mathbf d = (50, 30, 20)$. Partial sums $\mathbf d + C\mathbf d + \cdots + C^m\mathbf d$:
+
+| $m$ | $0$ | $1$ | $2$ | $5$ | $10$ | $20$ | $40$ |
+|---|---|---|---|---|---|---|---|
+| Manufacturing | 50 | 91 | 122.7 | 179.8 | 213.9 | 225.1 | 225.9 |
+| Agriculture | 30 | 51 | 66.9 | 95.4 | 112.5 | 118.1 | 118.5 |
+| Services | 20 | 34 | 44.4 | 62.9 | 73.9 | 77.5 | 77.8 |
+
+They climb toward the exact answer $(6100/27,\ 3200/27,\ 700/9)\approx(225.9,\ 118.5,\ 77.8)$ from Example 2, and every partial sum is nonnegative. Here the largest column sum is $s = .8$, so the **total** of each round (the sum of its entries) is at most $80\%$ of the previous round's total: $100,\ 76,\ 58,\ 44.32,\ \dots$ Individual entries can shrink more slowly. Manufacturing goes from $50$ to $41$, which is $82\%$.
+
+### The Economic Importance of the Entries in $(I-C)^{-1}$
+
+The entries of $(I-C)^{-1}$ predict how production must change when the final demand changes.
+
+> **📦 Fact.** The entries in column $j$ of $(I-C)^{-1}$ are the **increased** amounts the sectors must produce to satisfy an **increase of 1 unit** in the final demand for output from sector $j$. (Exercise 8)
+
+> **🔎 Proof.** Let $\mathbf x$ satisfy $(I-C)\mathbf x = \mathbf d$, and let $\Delta\mathbf x$ satisfy $(I-C)\Delta\mathbf x = \Delta\mathbf d$. By linearity, $(I-C)(\mathbf x + \Delta\mathbf x) = \mathbf d + \Delta\mathbf d$, so by uniqueness the production for demand $\mathbf d + \Delta\mathbf d$ is $\mathbf x + \Delta\mathbf x$. The **change** in production is $\Delta\mathbf x = (I-C)^{-1}\Delta\mathbf d$. Take $\Delta\mathbf d = \mathbf e_j$, one extra unit of demand from sector $j$. Then $\Delta\mathbf x = (I-C)^{-1}\mathbf e_j$, which is column $j$ of $(I-C)^{-1}$. $\blacksquare$
+
+For the economy in (3),
+
+$$
+(I-C)^{-1} = \begin{bmatrix} 80/27 & 50/27 & 10/9\\ 25/27 & 55/27 & 5/9\\ 5/9 & 5/9 & 5/3\end{bmatrix} \approx \begin{bmatrix} 2.96 & 1.85 & 1.11\\ 0.93 & 2.04 & 0.56\\ 0.56 & 0.56 & 1.67\end{bmatrix}.
+$$
+
+Column 1: one more unit of final demand for manufactured goods requires about $2.96$ more units from manufacturing, $0.93$ from agriculture, and $0.56$ from services. (*Check:* $(I-C)^{-1}\mathbf d$ with $\mathbf d = (50,30,20)$ gives $(6100/27,\ 3200/27,\ 700/9)$, as in Example 2.)
+
+> **💡 Why this matters:** $(I-C)^{-1}$ is the economy's **ripple table**. Every entry is at least as large as the corresponding entry of $I$, because $(I-C)^{-1} = I + C + C^2 + \cdots$ with every term nonnegative. A unit of demand always costs at least a unit of production, and usually more.
+
+> **📝 Numerical Note.** In any applied problem, not just in economics, $A\mathbf x = \mathbf b$ can be written as $(I-C)\mathbf x = \mathbf b$ with $C = I - A$. If the system is large and **sparse**, it can happen that the column sums of the **absolute values** in $C$ are less than $1$. Then $C^m\to 0$ (the Lemma above covers this case). If $C^m$ approaches $0$ quickly enough, (6) and (8) give practical formulas for solving $A\mathbf x = \mathbf b$ and finding $A^{-1}$.
+
+#### Practice Problem — setting up and solving a model (worked)
+
+*An economy has two sectors, goods and services. One unit of output from goods requires inputs of $.2$ unit from goods and $.5$ unit from services. One unit of output from services requires $.4$ unit from goods and $.3$ unit from services. The final demand is 20 units of goods and 30 units of services. Set up the Leontief model, then solve it.*
+
+| Purchased from: | Goods | Services | External demand |
+|---|---|---|---|
+| Goods | .2 | .4 | 20 |
+| Services | .5 | .3 | 30 |
+
+$$\mathbf x = C\mathbf x + \mathbf d,\qquad C=\begin{bmatrix} .2&.4\\ .5&.3\end{bmatrix},\qquad \mathbf d=\begin{bmatrix} 20\\ 30\end{bmatrix}.$$
+
+> **⚠ Watch for:** the inputs for **one sector's** output fill a **column** of $C$, not a row. The goods sector's needs, $.2$ and $.5$, form column 1.
+
+The column sums are $.7$ and $.7$, so Theorem 11 applies. Here $I - C = \begin{bmatrix} .8&-.4\\ -.5&.7\end{bmatrix}$, with $\det(I-C) = .56 - .20 = .36$. By Theorem 4,
+
+$$\mathbf x = (I-C)^{-1}\mathbf d = \frac{1}{.36}\begin{bmatrix} .7&.4\\ .5&.8\end{bmatrix}\begin{bmatrix} 20\\ 30\end{bmatrix} = \frac{1}{.36}\begin{bmatrix} 26\\ 34\end{bmatrix} = \begin{bmatrix} 650/9\\ 850/9\end{bmatrix}\approx\begin{bmatrix} 72.2\\ 94.4\end{bmatrix}.$$
+
+---
+
+## §2.7 — Applications to Computer Graphics
+
+Computer graphics are images displayed or animated on a computer screen: computer-aided design (CAD) in engineering, film special effects and video games, graphical display of data, desktop publishing, slide production. This section examines some of the basic mathematics used to manipulate and display graphical images such as a wire-frame model of an airplane. Such an image consists of a number of points, connecting lines or curves, and information about how to fill in closed regions bounded by the lines and curves. Curved lines are often approximated by short straight-line segments, so **a figure is defined mathematically by a list of points.**
+
+### Data Matrices
+
+#### Example 1 — the letter N as a data matrix (worked)
+
+The capital letter N is determined by eight points, or **vertices**. Store their coordinates as the columns of a **data matrix** $D$:
+
+$$
+D=\begin{bmatrix} 0 & .5 & .5 & 6 & 6 & 5.5 & 5.5 & 0\\ 0 & 0 & 6.42 & 0 & 8 & 8 & 1.58 & 8\end{bmatrix}
+\qquad\begin{array}{l}\leftarrow x\text{-coordinates}\\ \leftarrow y\text{-coordinates}\end{array}
+$$
+
+(columns = vertices $1$ through $8$). We must also record which vertices are connected by lines, a detail omitted here.
+
+Objects are described by straight-line segments because the standard transformations of computer graphics **map line segments onto line segments**. Once the vertices have been transformed, their images can be connected with the appropriate straight lines to produce the complete image.
+
+> **🔎 Why a linear map sends segments to segments.** The segment from $\mathbf p$ to $\mathbf q$ is the set of points $(1-t)\mathbf p + t\mathbf q$ for $0\le t\le 1$. If $T$ is linear, $T\big((1-t)\mathbf p + t\mathbf q\big) = (1-t)T(\mathbf p) + tT(\mathbf q)$, which runs over the segment from $T(\mathbf p)$ to $T(\mathbf q)$ (a single point if $T(\mathbf p) = T(\mathbf q)$).
+
+#### Example 2 — a shear applied to N (worked)
+
+*Given $A = \begin{bmatrix} 1 & .25\\ 0 & 1\end{bmatrix}$, describe the effect of the shear $\mathbf x\mapsto A\mathbf x$ on the letter N.*
+
+By the column definition of the product, **the columns of $AD$ are the images of the vertices**:
+
+$$
+AD=\begin{bmatrix} 1&.25\\ 0&1\end{bmatrix}\begin{bmatrix} 0 & .5 & .5 & 6 & 6 & 5.5 & 5.5 & 0\\ 0 & 0 & 6.42 & 0 & 8 & 8 & 1.58 & 8\end{bmatrix}
+=\begin{bmatrix} 0 & .5 & 2.105 & 6 & 8 & 7.5 & 5.895 & 2\\ 0 & 0 & 6.420 & 0 & 8 & 8 & 1.580 & 8\end{bmatrix}.
+$$
+
+Each point moves right by $.25$ times its height, so connecting the new vertices gives a **slanted** (italic) N. The $y$-coordinates are unchanged.
+
+#### Example 3 — shear, then scale (worked)
+
+*The italic N looks too wide. Find the matrix of the transformation that performs the shear of Example 2 and then scales all $x$-coordinates by $.75$.*
+
+The matrix that multiplies the $x$-coordinate by $.75$ is $S = \begin{bmatrix} .75&0\\ 0&1\end{bmatrix}$. The shear acts **first**, so it stands on the **right**:
+
+$$SA=\begin{bmatrix} .75&0\\ 0&1\end{bmatrix}\begin{bmatrix} 1&.25\\ 0&1\end{bmatrix}=\begin{bmatrix} .75&.1875\\ 0&1\end{bmatrix}.$$
+
+> **⚠ Order:** "first $A$, then $S$" is the product $SA$, read right to left, because $(SA)\mathbf x = S(A\mathbf x)$.
+
+**The obstacle.** Translating an object on the screen, $\mathbf x\mapsto\mathbf x + \mathbf p$ with $\mathbf p\neq\mathbf 0$, does not correspond to matrix multiplication, because translation is **not linear**: it moves $\mathbf 0$ to $\mathbf p$, while every linear transformation fixes $\mathbf 0$. The standard way around this is **homogeneous coordinates**.
+
+### Homogeneous Coordinates
+
+> **📗 DEFINITION.** Each point $(x,y)$ in $\mathbb R^2$ is identified with the point $(x,y,1)$ on the plane in $\mathbb R^3$ that lies one unit above the $xy$-plane. We say $(x,y)$ has **homogeneous coordinates** $(x,y,1)$. For instance, $(0,0)$ has homogeneous coordinates $(0,0,1)$.
+
+Homogeneous coordinates for points are **not** added or multiplied by scalars, but they **can** be transformed by multiplication by $3\times3$ matrices.
+
+#### Example 4 — translation as a matrix product (worked)
+
+The translation $(x,y)\mapsto(x+h,\ y+k)$ is written in homogeneous coordinates as $(x,y,1)\mapsto(x+h,\ y+k,\ 1)$, and this **is** a matrix product:
+
+$$\begin{bmatrix} 1&0&h\\ 0&1&k\\ 0&0&1\end{bmatrix}\begin{bmatrix} x\\ y\\ 1\end{bmatrix} = \begin{bmatrix} x+h\\ y+k\\ 1\end{bmatrix}.$$
+
+> **💡 Why this matters:** translation is not linear on $\mathbb R^2$, but it is the restriction of a **linear** map of $\mathbb R^3$ to the plane at height $1$. The constant $h$ rides in on the third coordinate, which is always $1$.
+
+#### Example 5 — any linear map of $\mathbb R^2$ in homogeneous coordinates (worked)
+
+Any linear transformation on $\mathbb R^2$ is represented in homogeneous coordinates by a partitioned matrix of the form $\begin{bmatrix} A & \mathbf 0\\ \mathbf 0^T & 1\end{bmatrix}$, where $A$ is $2\times2$. By block multiplication,
+
+$$\begin{bmatrix} A & \mathbf 0\\ \mathbf 0^T & 1\end{bmatrix}\begin{bmatrix} \mathbf x\\ 1\end{bmatrix} = \begin{bmatrix} A\mathbf x + \mathbf 0\\ \mathbf 0^T\mathbf x + 1\end{bmatrix} = \begin{bmatrix} A\mathbf x\\ 1\end{bmatrix}.$$
+
+Typical examples:
+
+$$
+\underbrace{\begin{bmatrix} \cos\varphi&-\sin\varphi&0\\ \sin\varphi&\cos\varphi&0\\ 0&0&1\end{bmatrix}}_{\text{counterclockwise rotation about the origin, angle }\varphi},\qquad
+\underbrace{\begin{bmatrix} 0&1&0\\ 1&0&0\\ 0&0&1\end{bmatrix}}_{\text{reflection through } y=x},\qquad
+\underbrace{\begin{bmatrix} s&0&0\\ 0&t&0\\ 0&0&1\end{bmatrix}}_{\text{scale } x \text{ by } s \text{ and } y \text{ by } t}.
+$$
+
+### Composite Transformations
+
+Moving a figure on the screen often takes two or more basic transformations. With homogeneous coordinates, **composition corresponds to matrix multiplication**: if $M_1$ acts first and $M_2$ second, then $M_2(M_1\mathbf v) = (M_2M_1)\mathbf v$ by associativity, so the composite is the single matrix $M_2M_1$.
+
+> **📦 Fact.** Every matrix of the form $\begin{bmatrix} A & \mathbf p\\ \mathbf 0^T & 1\end{bmatrix}$ ($A$ a $2\times2$ matrix, $\mathbf p\in\mathbb R^2$) acts on homogeneous coordinates as **the linear map $\mathbf x\mapsto A\mathbf x$ followed by translation by $\mathbf p$**, and the product of two such matrices has the same form. (Exercise 13)
+
+> **🔎 Proof.** By block multiplication,
+> $$\begin{bmatrix} A & \mathbf p\\ \mathbf 0^T & 1\end{bmatrix} = \begin{bmatrix} I & \mathbf p\\ \mathbf 0^T & 1\end{bmatrix}\begin{bmatrix} A & \mathbf 0\\ \mathbf 0^T & 1\end{bmatrix},\qquad\text{and}\qquad \begin{bmatrix} A & \mathbf p\\ \mathbf 0^T & 1\end{bmatrix}\begin{bmatrix} \mathbf x\\ 1\end{bmatrix} = \begin{bmatrix} A\mathbf x + \mathbf p\\ 1\end{bmatrix}.$$
+> The right factor is the linear map $A$ (Example 5), and the left factor is translation by $\mathbf p$ (Example 4). For two such matrices,
+> $$\begin{bmatrix} A & \mathbf p\\ \mathbf 0^T & 1\end{bmatrix}\begin{bmatrix} B & \mathbf q\\ \mathbf 0^T & 1\end{bmatrix} = \begin{bmatrix} AB & A\mathbf q + \mathbf p\\ \mathbf 0^T & 1\end{bmatrix},$$
+> again of the same form. $\blacksquare$
+
+So any chain of rotations, reflections, scalings, shears, and translations collapses to one $3\times3$ matrix.
+
+#### Example 6 — scale, rotate, translate (worked)
+
+*Find the $3\times3$ matrix for the composite: scale by $.3$, then rotate $90^\circ$ about the origin, then translate by adding $(-.5,\ 2)$ to each point.*
+
+For $\varphi = \pi/2$, $\sin\varphi = 1$ and $\cos\varphi = 0$. Using Examples 4 and 5, the steps act on $\begin{bmatrix} x\\ y\\ 1\end{bmatrix}$ in turn:
+
+$$
+\begin{bmatrix} x\\ y\\ 1\end{bmatrix}
+\xrightarrow{\text{scale}}
+\begin{bmatrix} .3&0&0\\ 0&.3&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} x\\ y\\ 1\end{bmatrix}
+\xrightarrow{\text{rotate}}
+\begin{bmatrix} 0&-1&0\\ 1&0&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} .3&0&0\\ 0&.3&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} x\\ y\\ 1\end{bmatrix}
+\xrightarrow{\text{translate}}
+\begin{bmatrix} 1&0&-.5\\ 0&1&2\\ 0&0&1\end{bmatrix}\begin{bmatrix} 0&-1&0\\ 1&0&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} .3&0&0\\ 0&.3&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} x\\ y\\ 1\end{bmatrix}.
+$$
+
+The composite matrix is
+
+$$
+\begin{bmatrix} 1&0&-.5\\ 0&1&2\\ 0&0&1\end{bmatrix}\begin{bmatrix} 0&-1&0\\ 1&0&0\\ 0&0&1\end{bmatrix}\begin{bmatrix} .3&0&0\\ 0&.3&0\\ 0&0&1\end{bmatrix}
+=\begin{bmatrix} 0&-1&-.5\\ 1&0&2\\ 0&0&1\end{bmatrix}\begin{bmatrix} .3&0&0\\ 0&.3&0\\ 0&0&1\end{bmatrix}
+=\begin{bmatrix} 0&-.3&-.5\\ .3&0&2\\ 0&0&1\end{bmatrix}.
+$$
+
+> **⚠ Watch for:** the matrices are written **right to left** in the order the operations happen. The first operation, scaling, stands next to the vector.
+
+#### Practice Problem — rotation about a point other than the origin (worked)
+
+Rotation of a figure about a point $\mathbf p$ is done in three steps: translate by $-\mathbf p$ (moving $\mathbf p$ to the origin), rotate about the origin, then translate back by $\mathbf p$.
+
+*Construct the $3\times3$ matrix that rotates points $-30^\circ$ about $\mathbf p = (-2, 6)$.*
+
+With $\cos(-30^\circ) = \sqrt3/2$ and $\sin(-30^\circ) = -.5$, assemble right to left:
+
+$$
+\underbrace{\begin{bmatrix} 1&0&-2\\ 0&1&6\\ 0&0&1\end{bmatrix}}_{\text{translate back by } \mathbf p}
+\underbrace{\begin{bmatrix} \sqrt3/2&1/2&0\\ -1/2&\sqrt3/2&0\\ 0&0&1\end{bmatrix}}_{\text{rotate about the origin}}
+\underbrace{\begin{bmatrix} 1&0&2\\ 0&1&-6\\ 0&0&1\end{bmatrix}}_{\text{translate by } -\mathbf p}
+=\begin{bmatrix} \sqrt3/2&1/2&\sqrt3-5\\ -1/2&\sqrt3/2&-3\sqrt3+5\\ 0&0&1\end{bmatrix}.
+$$
+
+*Check:* the center must stay put. Apply the result to $(-2, 6, 1)$: the first entry is $-\sqrt3 + 3 + \sqrt3 - 5 = -2$, and the second is $1 + 3\sqrt3 - 3\sqrt3 + 5 = 6$ ✓.
+
+### 3D Computer Graphics
+
+Much exciting work in computer graphics concerns **molecular modeling**. With 3D graphics, a biologist can examine a simulated protein molecule and search for active sites that might accept a drug molecule, rotating and translating an experimental drug to try to attach it to the protein. Current research in molecular modeling focuses on **virtual reality**, where the researcher can see and *feel* the drug molecule slide into the protein, for instance through a force-displaying remote manipulator, or a helmet and glove that detect head, hand, and finger movements.
+
+### Homogeneous 3D Coordinates
+
+By analogy with the 2D case, $(x,y,z,1)$ are homogeneous coordinates for the point $(x,y,z)$ in $\mathbb R^3$. More generally:
+
+> **📗 DEFINITION.** $(X, Y, Z, H)$ are **homogeneous coordinates** for $(x,y,z)$ if $H\neq 0$ and
+> $$x = \frac{X}{H},\qquad y = \frac{Y}{H},\qquad z = \frac{Z}{H}. \tag{1}$$
+
+So each **nonzero scalar multiple** of $(x,y,z,1)$ gives homogeneous coordinates for $(x,y,z)$: if $H\neq0$, then $(Hx, Hy, Hz, H)$ satisfies (1). For instance, both $(10,-6,14,2)$ and $(-15,9,-21,-3)$ are homogeneous coordinates for $(5,-3,7)$: divide by $2$ and by $-3$, respectively.
+
+> **⚠ Watch for:** in 3D the last coordinate need **not** be $1$. To recover the point, divide the first three coordinates by the fourth. This is what makes perspective projection (below) possible with a matrix.
+
+#### Example 7 — a 3D rotation and a 3D translation (worked)
+
+**(a)** *Give the $4\times4$ matrix for rotation about the $y$-axis through $30^\circ$.* (By convention, a positive angle is counterclockwise when looking toward the origin from the positive half of the axis of rotation, here the $y$-axis.)
+
+First build the $3\times3$ matrix from the images of $\mathbf e_1,\mathbf e_2,\mathbf e_3$ (§1.9):
+- $\mathbf e_1$ rotates down toward the negative $z$-axis, stopping at $(\cos30^\circ, 0, -\sin30^\circ) = (\sqrt3/2,\ 0,\ -.5)$.
+- $\mathbf e_2$, on the $y$-axis, does not move.
+- $\mathbf e_3$ rotates down toward the positive $x$-axis, stopping at $(\sin30^\circ, 0, \cos30^\circ) = (.5,\ 0,\ \sqrt3/2)$.
+
+$$
+\begin{bmatrix} \sqrt3/2&0&.5\\ 0&1&0\\ -.5&0&\sqrt3/2\end{bmatrix}
+\qquad\Longrightarrow\qquad
+A=\begin{bmatrix} \sqrt3/2&0&.5&0\\ 0&1&0&0\\ -.5&0&\sqrt3/2&0\\ 0&0&0&1\end{bmatrix}\ \text{(homogeneous)}.
+$$
+
+**(b)** *Give the $4\times4$ matrix for translation by $\mathbf p = (-6, 4, 5)$.* We want $(x,y,z,1)\mapsto(x-6,\ y+4,\ z+5,\ 1)$:
+
+$$\begin{bmatrix} 1&0&0&-6\\ 0&1&0&4\\ 0&0&1&5\\ 0&0&0&1\end{bmatrix}.$$
+
+> **⚠ Sign watch (rotation about $y$):** the minus sign sits in the **lower-left**, the opposite of the rotations about $x$ and $z$. Viewed from the positive $y$-axis, the positive $z$-axis plays the role of "first axis" and $x$ of "second," which is why $\mathbf e_1$ heads toward **negative** $z$.
+
+### Perspective Projections
+
+A 3D object is shown on the 2D screen by projecting it onto a **viewing plane**. For simplicity, let the $xy$-plane be the screen, and imagine the viewer's eye on the positive $z$-axis at $(0,0,d)$.
+
+> **📗 DEFINITION.** A **perspective projection** maps each point $(x,y,z)$ to an image point $(x^*, y^*, 0)$ such that $(x,y,z)$, $(x^*,y^*,0)$, and the eye position $(0,0,d)$, called the **center of projection**, lie on one line.
+
+> **📦 Formula.** For a point with $z<d$ (in front of the eye),
+> $$x^* = \frac{x}{1 - z/d},\qquad y^* = \frac{y}{1 - z/d}.$$
+
+> **🔎 Proof.** Parametrize the line through the eye $(0,0,d)$ and the point $(x,y,z)$:
+> $$(0,0,d) + t\big((x,y,z) - (0,0,d)\big) = \big(tx,\ ty,\ d + t(z-d)\big).$$
+> It meets the screen $z = 0$ when $d + t(z - d) = 0$, that is, at $t = \dfrac{d}{d-z}$ (defined since $z<d$). There the first coordinate is
+> $$x^* = tx = \frac{dx}{d - z} = \frac{x}{1 - z/d}.$$
+> In the $xz$-plane this is the similar-triangles relation $\dfrac{x^*}{d} = \dfrac{x}{d-z}$: the eye-to-screen drop $d$ is to the eye-to-point drop $d-z$ as the offset $x^*$ is to the offset $x$. Signs take care of themselves, so it holds for $x<0$ too.
+> Likewise $y^* = ty = y/(1 - z/d)$. $\blacksquare$
+
+**As a matrix.** We want $(x,y,z,1)\mapsto\left(\dfrac{x}{1-z/d},\ \dfrac{y}{1-z/d},\ 0,\ 1\right)$. Scaling these coordinates by $1 - z/d$, we may instead use $(x,\ y,\ 0,\ 1 - z/d)$ as homogeneous coordinates for the image. That is linear in $(x,y,z,1)$:
+
+$$
+P\begin{bmatrix} x\\ y\\ z\\ 1\end{bmatrix}=\begin{bmatrix} 1&0&0&0\\ 0&1&0&0\\ 0&0&0&0\\ 0&0&-1/d&1\end{bmatrix}\begin{bmatrix} x\\ y\\ z\\ 1\end{bmatrix}=\begin{bmatrix} x\\ y\\ 0\\ 1 - z/d\end{bmatrix}.
+$$
+
+> **💡 Why this matters:** division by $1 - z/d$, the thing that makes perspective **nonlinear**, has been postponed into the fourth coordinate. The matrix does the linear part, and one division at the end recovers the point. This is the reason 3D homogeneous coordinates allow $H\ne1$.
+
+#### Example 8 — perspective image of a box (worked)
+
+*Let $S$ be the box with vertices $(3,1,5)$, $(5,1,5)$, $(5,0,5)$, $(3,0,5)$, $(3,1,4)$, $(5,1,4)$, $(5,0,4)$, $(3,0,4)$. Find its image under the perspective projection with center of projection $(0,0,10)$.*
+
+Here $d = 10$. Let $D$ be the data matrix of $S$ in homogeneous coordinates:
+
+$$
+PD=\begin{bmatrix} 1&0&0&0\\ 0&1&0&0\\ 0&0&0&0\\ 0&0&-1/10&1\end{bmatrix}
+\begin{bmatrix} 3&5&5&3&3&5&5&3\\ 1&1&0&0&1&1&0&0\\ 5&5&5&5&4&4&4&4\\ 1&1&1&1&1&1&1&1\end{bmatrix}
+=\begin{bmatrix} 3&5&5&3&3&5&5&3\\ 1&1&0&0&1&1&0&0\\ 0&0&0&0&0&0&0&0\\ .5&.5&.5&.5&.6&.6&.6&.6\end{bmatrix}.
+$$
+
+To get $\mathbb R^3$ coordinates, use (1): divide the top three entries of each column by its fourth entry.
+
+$$
+\text{image vertices: }\begin{bmatrix} 6&10&10&6&5&8.3&8.3&5\\ 2&2&0&0&1.7&1.7&0&0\\ 0&0&0&0&0&0&0&0\end{bmatrix}
+$$
+
+(entries $8.3$ and $1.7$ are $25/3$ and $5/3$ rounded). The face at $z = 5$, nearer the eye, is enlarged by the factor $2$. The face at $z=4$ is enlarged only by $1/.6 = 5/3$. **Nearer things look bigger**, which is exactly what perspective should do.
+
+> **📝 Numerical Note.** Continuous movement of 3D graphical objects takes intensive computation with $4\times4$ matrices, particularly when surfaces are **rendered** to look realistic, with texture and appropriate lighting. High-end computer graphics boards have $4\times4$ matrix operations and graphics algorithms built into their microchips and circuitry, and can perform the billions of matrix multiplications per second needed for realistic color animation in 3D gaming programs.
+</script>
+<script>
+  (function(){
+    var raw = document.getElementById('src').textContent;
+    // Protect math so the markdown parser can't mangle underscores/backslashes.
+    var store = [], i = 0;
+    // Multi-line display math inside a blockquote carries "> " line prefixes; strip them.
+    raw = raw.replace(/\$\$[\s\S]+?\$\$/g, function(m){ store.push(m.replace(/\n[ \t]*>[ \t]?/g, '\n')); return '@@M'+(i++)+'@@'; });
+    raw = raw.replace(/\$[^\$\n]+?\$/g,   function(m){ store.push(m); return '@@M'+(i++)+'@@'; });
+    var html = marked.parse(raw);
+    html = html.replace(/@@M(\d+)@@/g, function(_, n){ return store[+n]; });
+    document.getElementById('wrap').innerHTML = html;
+    // Shrink any display wider than the column so it fits (scrolls only below 70%).
+    var fit = function(){
+      document.querySelectorAll('mjx-container[display="true"]').forEach(function(e){
+        e.style.fontSize = '';
+        if (e.scrollWidth > e.clientWidth + 1)
+          e.style.fontSize = Math.max(70, Math.floor(99 * e.clientWidth / e.scrollWidth)) + '%';
+      });
+    };
+    var rt; window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(fit, 150); });
+    var go = function(){ MathJax.typesetPromise().then(fit); };
+    if (window.MathJax && MathJax.typesetPromise) go();
+    else { var t=setInterval(function(){ if(window.MathJax&&MathJax.typesetPromise){clearInterval(t);go();} },80); }
+  })();
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ syllabus under `edu-web/scripts/syllabi/`).
 | 04 | 1.8 Introduction to Linear Transformations · 1.9 The Matrix of a Linear Transformation · 1.10 Linear Models | `notes/04_linear-transformations.md` |
 | 05 | 2.1 Matrix Operations · 2.2 The Inverse of a Matrix · 2.3 Characterizations of Invertible Matrices | `notes/05_matrix-algebra-and-inverses.md` |
 | 06 | 2.2 The Inverse of a Matrix · 2.3 Characterizations of Invertible Matrices · 2.4 Partitioned Matrices (2.2–2.3 carried over from 05) | `notes/06_inverses-and-partitioned-matrices.md` |
+| 07 | 2.5 Matrix Factorizations · 2.6 The Leontief Input–Output Model · 2.7 Applications to Computer Graphics | `notes/07_lu-leontief-graphics.md` |
 
 ## How it's consumed (generator lives in `tools/linear-algebra/`)
 
