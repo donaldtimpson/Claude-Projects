@@ -1,21 +1,21 @@
 {
   "lesson": "conjunctions",
   "title": "Conjunctions & Compound Elements",
-  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 67-69",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 67-70",
   "slides": [
     {
       "type": "title",
-      "title": "The Conjunction",
+      "title": "Conjunctions & Compound Elements",
       "subtitle": "Lesson 9 · Words That Join"
     },
     {
       "type": "concept",
       "heading": "Oral Lesson",
       "bullets": [
-        "In “Ellen and Mary study botany,” the word and joins the two subjects Ellen and Mary.",
-        "In “Ellen or Mary studies,” the word or joins them in another way.",
-        "In “Ellen will study, if Mary helps,” the word if joins two whole clauses.",
-        "A word used only to join words or groups of words is called a Conjunction."
+        "“Ellen **and** Mary study botany.” — *Ellen* and *Mary* together form the subject:  *study botany* is affirmed of both.  *and* connects them.",
+        "“Ellen **or** Mary studies botany.” — not both are represented as studying:  if Ellen studies botany, Mary does not.  *or* connects them.",
+        "“Ellen will study botany, **if** Mary studies algebra.” — two clauses;  *if* connects them.",
+        "Words used merely to join words or groups of words are called *Conjunctions*."
       ]
     },
     {
@@ -23,164 +23,292 @@
       "term": "Conjunction",
       "text": "A Conjunction is a word used to connect words, phrases, clauses, and members.",
       "examples": [
-        "salt and pepper  (joins words)",
-        "over the hill and through the woods  (joins phrases)",
-        "I will go, if you come  (joins clauses)",
-        "and, or, but, if, because, since"
+        "Eli **and** Silas will improve.  (words)",
+        "He looked under the bed **and** behind the door.  (phrases)",
+        "Eli and Silas will improve, **if** they study.  (clauses)",
+        "Wheat grows in the field, **and** men reap it.  (members — sentences each making complete sense alone)"
       ]
     },
     {
       "type": "concept",
       "heading": "Conjunction or Preposition?",
       "bullets": [
-        "Both are small joining words, but they work in different ways.",
-        "A Preposition shows a relation and always has an object:  “of wealth,” “by the house.”",
-        "A Conjunction merely connects; it shows no relation and needs no object:  and, or, but, if.",
-        "Test — can a noun follow it as its object? Yes → preposition; no → conjunction."
+        "Conjunctions merely connect;  unlike prepositions, they do not express relations.",
+        "“A man **of** wealth” — *of* shows the relation of its object, *wealth*, to *man*.",
+        "“Ellen **and** Mary” — *and* only joins;  *Mary* is not its object.",
+        "Some words serve as both:  “Wait **until** noon” (preposition — object *noon*);  “Wait **until** I come” (conjunction — joins clauses)."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Conjunction",
-      "instruction": "Name the conjunction (or conjunctions) in each sentence.",
+      "heading": "Practice — Point Out the Conjunctions (Set 1)",
+      "instruction": "Name each conjunction and what it connects.  Model — “Eli and Silas will improve, if they study.” — and:  Eli · Silas;  if:  the clauses Eli and Silas will improve · they study.",
       "items": [
-        "We moved silently and cautiously.",
-        "He worked hard, but earned little.",
-        "I shall not go, if it rains.",
-        "Emma or Susan will stay home.",
-        "They submit, since they cannot win.",
-        "He is both kind and wise.",
-        "I stayed, because I was tired.",
-        "Study hard, or you will fail."
+        "We moved along silently and cautiously.",
+        "I consent to the constitution, because I expect no better.",
+        "He heaped up great riches, but passed his time miserably.",
+        "He is both learned and wise.",
+        "I shall not go, if it rain.  (*rain* = *rains*)"
       ],
       "answers": [
-        "and",
-        "but",
-        "if",
-        "or",
-        "since",
-        "both, and",
-        "because",
-        "or"
+        "and:  silently · cautiously",
+        "because:  the clauses I consent to the constitution · I expect no better",
+        "but:  heaped up great riches · passed his time miserably",
+        "both … and:  learned · wise",
+        "if:  the clauses I shall not go · it rain"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Point Out the Conjunctions (Set 2)",
+      "instruction": "Name each conjunction and what it connects.  Model — “Eli and Silas will improve, if they study.” — and:  Eli · Silas;  if:  the clauses Eli and Silas will improve · they study.",
+      "items": [
+        "Cold and hunger awake not her care.  (awake not = do not awaken)",
+        "They submit, since they can not conquer.",
+        "He has many faults, still he is very popular.",
+        "Emma or Susan will remain at home."
+      ],
+      "answers": [
+        "and:  Cold · hunger",
+        "since:  the clauses They submit · they can not conquer",
+        "still:  the members He has many faults · he is very popular",
+        "or:  Emma · Susan"
       ]
     },
     {
       "type": "practice",
       "heading": "Practice — Conjunction or Preposition?",
-      "instruction": "Tell whether each joining word is a conjunction or a preposition.",
+      "instruction": "Tell whether the marked word is a conjunction or a preposition.  If a preposition, name its object.",
       "items": [
-        "and",
-        "of",
-        "but",
-        "with",
-        "if",
-        "under",
-        "because",
-        "through"
+        "All **but** one escaped.",
+        "He is poor, **but** honest.",
+        "I have not seen him **since** Monday.",
+        "**Since** you ask, I will tell you.",
+        "We rested **after** dinner.",
+        "We rested **after** we had dined.",
+        "He rose **before** daybreak.",
+        "He rose **before** the sun was up."
       ],
       "answers": [
+        "preposition — object:  one",
         "conjunction",
-        "preposition",
+        "preposition — object:  Monday",
         "conjunction",
-        "preposition",
+        "preposition — object:  dinner",
         "conjunction",
-        "preposition",
-        "conjunction",
-        "preposition"
+        "preposition — object:  daybreak",
+        "conjunction"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Oral Lesson — Compound Elements",
+      "bullets": [
+        "“James and Samuel are kind, honest, and faithful.”",
+        "*James* and *Samuel* are the parts of a *Compound Subject*.",
+        "*kind*, *honest*, and *faithful* are the parts of a *Compound Predicate*."
       ]
     },
     {
       "type": "definition",
       "term": "Compound Element",
-      "text": "A Compound Element is two or more similar parts of the same proposition, joined by conjunctions.",
+      "text": "A Compound Element consists of two or more similar parts of the same proposition connected by conjunctions.",
       "examples": [
-        "James and Samuel are kind.  (compound subject)",
-        "We run, jump, and play.  (compound predicate)",
-        "Dad owns a farm and a factory.  (compound object)",
-        "any part of a sentence can be compound"
+        "**Ellen and Lucy** are my sisters.  (compound subject)",
+        "We **run, jump, and talk** at recess.  (compound predicate)",
+        "My father owns **a farm and a factory**.  (compound objective element)",
+        "Tray is a **large, black, and cross** dog.  (compound adjective element;  *cross* = ill-tempered)",
+        "We stopped **then and there**.  (compound adverbial element)"
       ]
     },
     {
       "type": "concept",
-      "heading": "Kinds of Compound Elements",
+      "heading": "Remarks on Compound Elements",
       "bullets": [
-        "Compound subject:  “Ellen and Lucy are sisters.”",
-        "Compound predicate:  “We run, jump, and play.”",
-        "Compound object:  “Dad owns a farm and a factory.”",
-        "Compound modifier:  “Tray is a large, black, and friendly dog.”",
-        "The conjunction may be written out, or simply understood."
+        "Any element of a proposition may be compound.",
+        "Rem. 1. — The conjunctions may be expressed or understood:  in “We run, jump, and talk,” an *and* is understood between *run* and *jump*.",
+        "A compound element is still one proposition:  in “James and Samuel are kind,” one copula, *are*, affirms *kind* of the subject *James and Samuel*."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Compound Elements & Truth",
+      "bullets": [
+        "“James and Samuel are kind” affirms what two propositions affirm:  *James is kind*;  *Samuel is kind*.  True if both are true;  false if either is false.",
+        "“Ellen or Mary studies botany” — Harvey’s *or* shuts out both:  true if exactly one studies;  false if neither does, or both do.  (Logic also uses an inclusive *or*:  at least one.)",
+        "Not every *and* divides so:  “Rome and Carthage were rivals” does not mean “Rome was rivals.”  The predicate is affirmed of the parts taken together."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Subject & Predicate",
+      "rows": [
+        {
+          "sentence": "William and Henry study algebra.",
+          "s": {
+            "parts": [
+              "William",
+              "Henry"
+            ],
+            "conj": "and"
+          },
+          "p": "study",
+          "o": "algebra",
+          "note": "Declarative. *William and Henry* is the compound subject;  *study*, the predicate.  *study* is modified by *algebra*, an objective element."
+        },
+        {
+          "sentence": "James and Samuel are kind, honest, and faithful.",
+          "s": {
+            "parts": [
+              "James",
+              "Samuel"
+            ],
+            "conj": "and"
+          },
+          "c": "are",
+          "p": {
+            "parts": [
+              "kind",
+              "honest",
+              "faithful"
+            ],
+            "conj": "and"
+          },
+          "note": "Declarative. *James and Samuel* is the compound subject;  *kind, honest, and faithful*, the compound predicate;  *are*, the copula."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Object & Modifier",
+      "rows": [
+        {
+          "sentence": "Mr. Edson buys and sells butter and eggs.",
+          "s": "Mr. Edson",
+          "p": {
+            "parts": [
+              "buys",
+              "sells"
+            ],
+            "conj": "and"
+          },
+          "o": {
+            "parts": [
+              "butter",
+              "eggs"
+            ],
+            "conj": "and"
+          },
+          "note": "Declarative. *Mr. Edson* is the subject;  *buys and sells*, the compound predicate, which is modified by *butter and eggs*, a compound objective element."
+        },
+        {
+          "sentence": "The two boys moved along silently and cautiously.",
+          "s": "boys",
+          "smod": [
+            "The",
+            "two"
+          ],
+          "p": "moved",
+          "pmod": [
+            "along",
+            {
+              "parts": [
+                "silently",
+                "cautiously"
+              ],
+              "conj": "and"
+            }
+          ],
+          "note": "Declarative. *boys* is the subject;  *moved*, the predicate.  *boys* is modified by *the* and *two*, adjective elements;  *moved*, by *along*, an adverbial element, and by *silently and cautiously*, a compound adverbial element."
+        }
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — What Is Compound?",
-      "instruction": "Tell which part is compound: the subject, the predicate, or the object.",
+      "heading": "Practice — Compound Elements (Set 1)",
+      "instruction": "Name every compound element and tell what kind it is.",
       "items": [
-        "Ellen and Lucy are sisters.",
-        "We run, jump, and play.",
-        "Dad owns a farm and a factory.",
-        "Cats and dogs are pets.",
-        "She reads and writes well.",
-        "He bought apples and pears."
+        "Exercise and temperance strengthen the constitution.",
+        "Mr. Mann owns and cultivates a large and valuable farm.",
+        "Duty and interest forbid vicious and wicked indulgences.",
+        "Your levity and heedlessness will prevent all improvement."
       ],
       "answers": [
-        "subject",
-        "predicate",
-        "object",
-        "subject",
-        "predicate",
-        "object"
-      ]
-    },
-    {
-      "type": "concept",
-      "heading": "Commas in a Series",
-      "bullets": [
-        "When three or more parts are joined, use commas to separate them.",
-        "Put a comma after each part, and the conjunction before the last:  “red, white, and blue.”",
-        "When only two parts are joined, use just the conjunction — no comma:  “salt and pepper.”",
-        "Ex. — “She is kind, honest, and brave.”  ·  “We run and jump.”"
+        "Exercise and temperance:  compound subject",
+        "owns and cultivates:  compound predicate;  large and valuable:  compound adjective element",
+        "Duty and interest:  compound subject;  vicious and wicked:  compound adjective element",
+        "levity and heedlessness:  compound subject"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Punctuate the Series",
-      "instruction": "Write each list as a correct series, with commas and “and.”",
+      "heading": "Practice — Compound Elements (Set 2)",
+      "instruction": "Name every compound element and tell what kind it is.",
+      "items": [
+        "Two and two are four.",
+        "Forty pupils study arithmetic, grammar, and geography.",
+        "The wearied soldiers fought bravely and successfully.",
+        "It was a bright, warm morning.",
+        "He will come today or tomorrow."
+      ],
+      "answers": [
+        "Two and two:  compound subject  (taken together — not “Two is four”)",
+        "arithmetic, grammar, and geography:  compound objective element",
+        "bravely and successfully:  compound adverbial element",
+        "bright, warm:  compound adjective element  (conjunction understood)",
+        "today or tomorrow:  compound adverbial element"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Directions for Writing",
+      "bullets": [
+        "More than two parts:  I. Place a comma after each part except the last.  II. Use the conjunction between the last two parts only. — “kind, honest, and faithful”",
+        "Two parts:  I. Connect them by a conjunction — “Ellen and Lucy.”  II. Or, omit the conjunction and use a comma in its stead — “a cold, dark night.”",
+        "Rem. 2. — To make the parts emphatic, the conjunction and the comma may both be used between any two of them:  “kind, and honest, and faithful.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Punctuate the Compound Elements",
+      "instruction": "Write each compound element correctly, following the Directions for Writing.",
       "answerInline": true,
       "items": [
-        "dogs cats birds",
-        "red white blue",
-        "run jump play",
-        "milk eggs bread",
-        "Tom Sue Ann",
-        "north south east"
+        "The farmer plows sows and reaps.",
+        "She bought apples pears and plums.",
+        "The horse was old lame and blind.",
+        "Exercise temperance and rest strengthen the constitution.",
+        "The wind blew fiercely steadily and coldly.",
+        "It was a long dull day.",
+        "Mary and Jane sing in the choir."
       ],
       "answers": [
-        "dogs, cats, and birds",
-        "red, white, and blue",
-        "run, jump, and play",
-        "milk, eggs, and bread",
-        "Tom, Sue, and Ann",
-        "north, south, and east"
+        "plows, sows, and reaps",
+        "apples, pears, and plums",
+        "old, lame, and blind",
+        "Exercise, temperance, and rest",
+        "fiercely, steadily, and coldly",
+        "long, dull — or long and dull",
+        "Mary and Jane  (two parts joined by a conjunction:  no comma)"
       ]
     },
     {
       "type": "questions",
       "items": [
         "What is a conjunction?",
-        "Name some conjunctions.",
-        "How does a conjunction differ from a preposition?",
+        "What is the difference between a conjunction and a preposition?",
         "What is a compound element?",
-        "Name some kinds of compound elements.",
-        "In a series of three, where does the conjunction go?"
+        "May the conjunctions of a compound element be understood?",
+        "Give directions for writing a compound element consisting of more than two parts.",
+        "Of two parts only."
       ],
       "answers": [
-        "A word used to connect words, phrases, clauses, or members.",
-        "And, or, but, if, because, since.",
-        "A conjunction merely connects; a preposition shows a relation and has an object.",
-        "Two or more similar parts of a proposition joined by conjunctions.",
-        "Compound subject, predicate, and object.",
-        "Before the last part — “red, white, and blue.”"
+        "A word used to connect words, phrases, clauses, and members.",
+        "A conjunction merely connects;  a preposition expresses a relation and has an object.",
+        "Two or more similar parts of the same proposition connected by conjunctions.",
+        "Yes — they may be expressed or understood.",
+        "A comma after each part except the last;  the conjunction between the last two parts only.",
+        "Connect them by a conjunction, or omit the conjunction and use a comma in its stead."
       ]
     }
   ]

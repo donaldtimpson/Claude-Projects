@@ -207,7 +207,9 @@ def _mod_plan(items):
     plan, a = [], _MOD_LEAD
     for m in items:
         plan.append((m, a))
-        if _is_phrase(m):
+        if _is_comp(m):
+            end = _cmod_geom(a, m)[1]
+        elif _is_phrase(m):
             hx, wobj = a + _PH_DX, _w(m["obj"])
             end = hx + wobj + (_w(m["o"]) if m.get("o") else 0)
             end = max(end, _mods_right(hx + wobj / 2, _mlist(m.get("mod"))))
@@ -220,10 +222,90 @@ def _mod_plan(items):
     return plan, a
 
 
+# Compound elements ({"parts", "conj"}) — mirrors generate_deck.py: a fork on the
+# baseline for a subject, predicate, or object; one slant per part, the ends
+# joined by a dashed line, for a modifier. The conjunction sits between the
+# last two parts.
+_FG, _FDX, _FSTUB = 56, 20, 10
+
+
+def _is_comp(x):
+    return isinstance(x, dict) and "parts" in x
+
+
+def _ww(word):
+    if _is_comp(word):
+        return 2 * (_FSTUB + _FDX) + max(_w(p) for p in word["parts"])
+    return _w(word)
+
+
+def _reach(word):
+    return (len(word["parts"]) - 1) / 2 * _FG if _is_comp(word) else 0
+
+
+def _slot_word_svg(left, width, base, word):
+    """(lines, texts) for a slot's word, or its fork when compound."""
+    if not _is_comp(word):
+        return [], [f'<text x="{left + width/2:.0f}" y="{base - 7}" text-anchor="middle">{esc(word)}</text>']
+    parts = word["parts"]
+    n = len(parts)
+    ys = [base + (i - (n - 1) / 2) * _FG for i in range(n)]
+    l1, r2 = left + _FSTUB, left + width - _FSTUB
+    l2, r1 = l1 + _FDX, r2 - _FDX
+    lines, texts = [], []
+    for part, y in zip(parts, ys):
+        lines += [f'<line x1="{l1:.0f}" y1="{base}" x2="{l2:.0f}" y2="{y:.0f}"/>',
+                  f'<line x1="{l2:.0f}" y1="{y:.0f}" x2="{r1:.0f}" y2="{y:.0f}"/>',
+                  f'<line x1="{r1:.0f}" y1="{y:.0f}" x2="{r2:.0f}" y2="{base}"/>']
+        texts.append(f'<text x="{(l2 + r1)/2:.0f}" y="{y - 7:.0f}" text-anchor="middle">{esc(part)}</text>')
+    xd = l2 + 5
+    lines.append(f'<line x1="{xd:.0f}" y1="{ys[0]:.0f}" x2="{xd:.0f}" y2="{ys[-1]:.0f}" stroke-dasharray="5 4"/>')
+    texts.append(f'<text x="{xd + 5:.0f}" y="{ys[-2] + 24:.0f}" text-anchor="start">{esc(word.get("conj", "and"))}</text>')
+    return lines, texts
+
+
+def _baseline_svg(base, left, xend, slots):
+    """Baseline from left to xend, open across the inside of each fork."""
+    out, x = [], left
+    for sl, sw, word in sorted(slots, key=lambda t: t[0]):
+        if _is_comp(word):
+            out.append(f'<line x1="{x:.0f}" y1="{base}" x2="{sl + _FSTUB:.0f}" y2="{base}"/>')
+            x = sl + sw - _FSTUB
+    out.append(f'<line x1="{x:.0f}" y1="{base}" x2="{xend:.0f}" y2="{base}"/>')
+    return out
+
+
+def _cmod_geom(a, m):
+    parts = m["parts"]
+    wcj = _w(m.get("conj", "and"))
+    out, edge = [], None
+    for i, p in enumerate(parts):
+        wd = _w(p)
+        c = a + max(_MOD_DX, wd / 2) if edge is None else edge + wd / 2
+        out.append((c - max(_MOD_DX, wd / 2), c, wd))
+        gap = wcj - _PAD if i == len(parts) - 2 else 6
+        edge = c + wd / 2 + gap
+    return out, out[-1][1] + out[-1][2] / 2
+
+
+def _cmod_svg(a, base, m):
+    geom, right = _cmod_geom(a, m)
+    out = []
+    for part, (x, c, wd) in zip(m["parts"], geom):
+        out += [f'<line x1="{x:.0f}" y1="{base}" x2="{c:.0f}" y2="{base + 20}"/>',
+                f'<text x="{c:.0f}" y="{base + 37}" text-anchor="middle">{esc(part)}</text>']
+    for (_, c1, _), (_, c2, _) in zip(geom, geom[1:]):
+        out.append(f'<line x1="{c1:.0f}" y1="{base + 20}" x2="{c2:.0f}" y2="{base + 20}" stroke-dasharray="5 4"/>')
+    (_, c1, w1), (_, c2, w2) = geom[-2], geom[-1]
+    mid = ((c1 + w1 / 2) + (c2 - w2 / 2)) / 2
+    out.append(f'<text x="{mid:.0f}" y="{base + 37}" text-anchor="middle">{esc(m.get("conj", "and"))}</text>')
+    return out, right
+
+
 def _wslot(word, mods):
     ms = _mlist(mods)
-    w = _w(word)
-    if any(_is_phrase(m) for m in ms):
+    w = _ww(word)
+    if any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
@@ -235,12 +317,17 @@ def _slot_mods_svg(left, width, base, mods):
     ms = _mlist(mods)
     if not ms:
         return [], left, base
-    if not any(_is_phrase(m) for m in ms):
+    if not any(isinstance(m, dict) for m in ms):
         frag, r = _mods_svg(left + width / 2, base, ms, _CH, _PAD)
         return frag, r, base + 34   # keeps word-only diagrams at their old height
     out, right, low = [], left, base
     for m, off in _mod_plan(ms)[0]:
         a = left + off
+        if _is_comp(m):
+            frag, r = _cmod_svg(a, base, m)
+            out += frag
+            right, low = max(right, r), max(low, base + 37)
+            continue
         if not _is_phrase(m):
             wd = _w(m)
             c = a + max(_MOD_DX, wd / 2)
@@ -276,6 +363,15 @@ def _slot_mods_svg(left, width, base, mods):
                        f'{esc(m["prep"])}</text>')
     return out, right, low
 
+def _overhang(ws, smod, pmod):
+    """Room after the subject when its word modifiers step right past it and
+    the predicate's modifiers are laid out from the predicate's left edge."""
+    sm, pm = _mlist(smod), _mlist(pmod)
+    if not sm or any(isinstance(m, dict) for m in sm) or not any(isinstance(m, dict) for m in pm):
+        return 0
+    return max(0, _mods_right(ws / 2, sm) + _MOD_GAP - ws)
+
+
 def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
                 sappo=None):
     """One baseline's SVG fragments, drawn from x0 at baseline y `base`.
@@ -286,7 +382,7 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
     ws = _wslot(s, smod)
     appo_text = f"({ap['word']})" if ap else ""
     wappo = _w(appo_text) if ap else 0
-    sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
+    sreg = ws + (wappo if ap else _overhang(ws, smod, pmod))   # subject word + any appositive
 
     lines, texts, mods = [], [], []
     right = x0
@@ -299,7 +395,9 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         mods.extend(frag)
         right, low = max(right, rmost), max(low, lo)
 
-    texts.append(f'<text x="{x0 + ws/2:.0f}" y="{texty}" text-anchor="middle">{esc(s)}</text>')
+    l, tx = _slot_word_svg(x0, ws, base, s)
+    lines += l
+    texts += tx
     add_mods(x0, ws, smod)
     if ap:
         texts.append(f'<text x="{x0 + ws + wappo/2:.0f}" y="{texty}" text-anchor="middle">{esc(appo_text)}</text>')
@@ -310,11 +408,13 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         wc, wp = _w(c), _wslot(p, pmod)
         total = sreg + wc + wp
         x1, x2 = x0 + sreg, x0 + sreg + wc
-        lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
-                  f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>',
+        lines += _baseline_svg(base, x0, x0 + total, [(x0, ws, s), (x2, wp, p)])
+        lines += [f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>',
                   f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>']
-        texts += [f'<text x="{x1 + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>',
-                  f'<text x="{x2 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>']
+        texts.append(f'<text x="{x1 + wc/2:.0f}" y="{texty}" text-anchor="middle">{esc(c)}</text>')
+        l, tx = _slot_word_svg(x2, wp, base, p)
+        lines += l
+        texts += tx
         add_mods(x2, wp, pmod)
         slots.update(c=(x1, wc), p=(x2, wp))
     else:
@@ -322,14 +422,19 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         wo = _wslot(o, omod) if o else 0
         total = sreg + wp + wo
         x1, x2 = x0 + sreg, x0 + sreg + wp
-        lines += [f'<line x1="{x0:.0f}" y1="{base}" x2="{x0 + total:.0f}" y2="{base}"/>',
-                  f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>']
-        texts.append(f'<text x="{x1 + wp/2:.0f}" y="{texty}" text-anchor="middle">{esc(p)}</text>')
+        lines += _baseline_svg(base, x0, x0 + total,
+                               [(x0, ws, s), (x1, wp, p)] + ([(x2, wo, o)] if o else []))
+        lines.append(f'<line x1="{x1:.0f}" y1="{topln}" x2="{x1:.0f}" y2="{base + below}"/>')
+        l, tx = _slot_word_svg(x1, wp, base, p)
+        lines += l
+        texts += tx
         add_mods(x1, wp, pmod)
         slots["p"] = (x1, wp)
         if o:
             lines.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
-            texts.append(f'<text x="{x2 + wo/2:.0f}" y="{texty}" text-anchor="middle">{esc(o)}</text>')
+            l, tx = _slot_word_svg(x2, wo, base, o)
+            lines += l
+            texts += tx
             add_mods(x2, wo, omod)
             slots["o"] = (x2, wo)
 
@@ -350,7 +455,8 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     (the clause slot named by "rel") up to its antecedent. An adverbial clause
     names the slot it modifies as "rel" and may set `link`, the connective
     written beside the dashed line."""
-    base = 30
+    reach = max(_reach(w) for w in (s, p, o))
+    base = 30 + reach
     drop, inset = 80, 10          # clause baseline below the main one; connector inset
     clauses = {"s": sclause, "p": pclause, "o": oclause}
 
@@ -368,6 +474,8 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     lines, texts, mods, right, slots, has_mods = _diag_parts(
         shift, base, s, p, o, c, smod, pmod, omod, sappo)
     bottom = max(70, base + has_mods + 6) if has_mods else 46
+    if reach:
+        bottom = max(bottom, base + reach + 10)
     for key, cl in clauses.items():
         if not cl or key not in slots:
             continue

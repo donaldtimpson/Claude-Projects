@@ -232,7 +232,9 @@ def _mod_plan(items):
     plan, a = [], MOD_LEAD
     for m in items:
         plan.append((m, a))
-        if _is_phrase(m):
+        if _is_comp(m):
+            end = _cmod_geom(a, m)[1]
+        elif _is_phrase(m):
             hx = a + PH_DX
             wobj = _slot_w(m["obj"])
             end = hx + wobj + (_slot_w(m["o"]) if m.get("o") else 0)
@@ -249,8 +251,8 @@ def _mod_plan(items):
 def _wslot(word, mods):
     """A slot's baseline width: the word's, or wider to seat its phrases."""
     ms = _mlist(mods)
-    w = _slot_w(word)
-    if any(_is_phrase(m) for m in ms):
+    w = _ww(word)
+    if any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
@@ -261,11 +263,14 @@ def _draw_slot_mods(slide, left, width, base_y, mods):
     ms = _mlist(mods)
     if not ms:
         return
-    if not any(_is_phrase(m) for m in ms):
+    if not any(isinstance(m, dict) for m in ms):
         _draw_mods(slide, left + width / 2, base_y, ms)
         return
     for m, off in _mod_plan(ms)[0]:
         a = left + off
+        if _is_comp(m):
+            _draw_cmod(slide, a, base_y, m)
+            continue
         if not _is_phrase(m):
             w = _slot_w(m)
             c = a + max(MOD_DX, w / 2)
@@ -306,8 +311,105 @@ def _draw_slot_mods(slide, left, width, base_y, mods):
 def _has_phrase(*mods):
     return any(_is_phrase(m) for ms in mods for m in _mlist(ms))
 
+
+# A compound element — {"parts": [...], "conj": "and"} — as a subject, predicate,
+# or object is drawn as a modern Reed-Kellogg fork: the baseline splits into one
+# branch per part and closes again, a dashed line joins the branches, and the
+# conjunction is written beside it (Harvey: "between the last two parts only").
+# As a modifier it hangs as one slant per part, the slant ends joined by a dashed
+# line with the conjunction between the last two words.
+FORK_G, FORK_DX, FORK_STUB = int(Inches(0.78)), int(Inches(0.3)), int(Inches(0.16))
+
+
+def _is_comp(x):
+    return isinstance(x, dict) and "parts" in x
+
+
+def _ww(word):
+    """Baseline width of a slot's word, or of the fork for a compound one."""
+    if _is_comp(word):
+        return 2 * (FORK_STUB + FORK_DX) + max(_slot_w(p) for p in word["parts"])
+    return _slot_w(word)
+
+
+def _reach(word):
+    """How far a compound slot's fork spreads above (and below) the baseline."""
+    return int((len(word["parts"]) - 1) / 2 * FORK_G) if _is_comp(word) else 0
+
+
+def _draw_slot_word(slide, left, width, base, word):
+    if not _is_comp(word):
+        _diag_word(slide, left, base, width, word)
+        return
+    parts = word["parts"]
+    n = len(parts)
+    ys = [base + int((i - (n - 1) / 2) * FORK_G) for i in range(n)]
+    l1, r2 = left + FORK_STUB, left + width - FORK_STUB
+    l2, r1 = l1 + FORK_DX, r2 - FORK_DX
+    for part, y in zip(parts, ys):
+        _line(slide, int(l1), base, int(l2), y)
+        _line(slide, int(l2), y, int(r1), y)
+        _line(slide, int(r1), y, int(r2), base)
+        _diag_word(slide, int(l2), y, int(r1 - l2), part)
+    xd = int(l2 + Inches(0.06))
+    _line(slide, xd, ys[0], xd, ys[-1], dashed=True)
+    cj = word.get("conj", "and")
+    _diag_word(slide, int(xd + Inches(0.02)), ys[-2] + Inches(0.40), _slot_w(cj), cj)
+
+
+def _baseline(slide, base, left, xend, slots):
+    """The baseline from left to xend, open across the inside of each fork."""
+    x = left
+    for sl, sw, word in sorted(slots, key=lambda t: t[0]):
+        if _is_comp(word):
+            _line(slide, int(x), base, int(sl + FORK_STUB), base)
+            x = sl + sw - FORK_STUB
+    _line(slide, int(x), base, int(xend), base)
+
+
+def _cmod_geom(a, m):
+    """Slants of a compound modifier starting at anchor a: [(anchor, end x,
+    word width)], and the right edge reached."""
+    parts = m["parts"]
+    wcj = _slot_w(m.get("conj", "and"))
+    out, edge = [], None
+    for i, p in enumerate(parts):
+        w = _slot_w(p)
+        if edge is None:
+            c = a + max(MOD_DX, w / 2)
+        else:
+            c = edge + w / 2
+        out.append((c - max(MOD_DX, w / 2), c, w))
+        gap = wcj - DIAG_PAD if i == len(parts) - 2 else int(Inches(0.06))
+        edge = c + w / 2 + gap
+    return out, out[-1][1] + out[-1][2] / 2
+
+
+def _draw_cmod(slide, a, base_y, m):
+    geom, _ = _cmod_geom(a, m)
+    dy = Inches(0.34)
+    for part, (x, c, w) in zip(m["parts"], geom):
+        _line(slide, int(x), base_y, int(c), base_y + dy)
+        _diag_word(slide, int(c - w / 2), base_y + Inches(0.64), w, part)
+    for (_, c1, _), (_, c2, _) in zip(geom, geom[1:]):
+        _line(slide, int(c1), base_y + dy, int(c2), base_y + dy, dashed=True)
+    (_, c1, w1), (_, c2, w2) = geom[-2], geom[-1]
+    cj = m.get("conj", "and")
+    wcj = _slot_w(cj)
+    mid = ((c1 + w1 / 2) + (c2 - w2 / 2)) / 2
+    _diag_word(slide, int(mid - wcj / 2), base_y + Inches(0.64), wcj, cj)
+
 CLAUSE_DROP = Inches(0.92)      # main baseline -> top of a hanging clause's diagram
 CLAUSE_INSET = Inches(0.12)     # where a dashed connector meets its antecedent word
+
+
+def _overhang(ws, smod, pmod):
+    """Extra room after the subject when its word modifiers step right past it
+    and the predicate's modifiers are laid out from the predicate's left edge."""
+    sm, pm = _mlist(smod), _mlist(pmod)
+    if not sm or any(isinstance(m, dict) for m in sm) or not any(isinstance(m, dict) for m in pm):
+        return 0
+    return max(0, int(_mods_right(ws / 2, sm) + MOD_GAP - ws))
 
 
 def _slot_layout(s, p, o=None, c=None, sappo=None, smod=None, pmod=None, omod=None):
@@ -315,7 +417,7 @@ def _slot_layout(s, p, o=None, c=None, sappo=None, smod=None, pmod=None, omod=No
     the diagram's left — the same geometry _draw_diagram lays out."""
     ap = _appo(sappo)
     ws = _wslot(s, smod)
-    sreg = ws + (_slot_w(f"({ap['word']})") if ap else 0)
+    sreg = ws + (_slot_w(f"({ap['word']})") if ap else _overhang(ws, smod, pmod))
     if c:
         wc, wp = _slot_w(c), _wslot(p, pmod)
         return {"s": (0, ws), "c": (sreg, wc), "p": (sreg + wc, wp)}
@@ -381,18 +483,19 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     make room for it. Returns the right edge (EMU)."""
     left += _clause_shift(s, p, o, c, sappo, {"s": sclause, "p": pclause, "o": oclause},
                           (smod, pmod, omod))
-    base = top + Inches(0.30)
-    top_line = top + Inches(0.04)
+    up = max(_reach(w) for w in (s, p, o))
+    base = top + Inches(0.30) + up
+    top_line = base - Inches(0.26)
     below = Inches(0.13)
     sm, pm, om = _mlist(smod), _mlist(pmod), _mlist(omod)
     ap = _appo(sappo)
     ws = _wslot(s, sm)
     appo_text = f"({ap['word']})" if ap else ""
     wappo = _slot_w(appo_text) if ap else 0
-    sreg = ws + wappo   # subject region: subject word + any appositive, on the baseline
+    sreg = ws + (wappo if ap else _overhang(ws, sm, pm))   # subject word + any appositive
 
     def draw_subject():
-        _diag_word(slide, left, base, ws, s)
+        _draw_slot_word(slide, left, ws, base, s)
         _draw_slot_mods(slide, left, ws, base, sm)
         if ap:
             _diag_word(slide, left + ws, base, wappo, appo_text)
@@ -405,12 +508,12 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
         x1 = left + sreg
         x2 = x1 + wc
         xend = x2 + wp
-        _line(slide, left, base, xend, base)            # baseline
+        _baseline(slide, base, left, xend, [(left, ws, s), (x2, wp, p)])
         _line(slide, x1, top_line, x1, base + below)     # subject | (crosses, principal split)
         _line(slide, x2, top_line, x2, base)             # copula : predicate (stops at baseline)
         draw_subject()
         _diag_word(slide, x1, base, wc, c)
-        _diag_word(slide, x2, base, wp, p)
+        _draw_slot_word(slide, x2, wp, base, p)
         _draw_slot_mods(slide, x2, wp, base, pm)
         return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
                              sclause, pclause, oclause, (sm, pm, om))
@@ -419,14 +522,14 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     x1 = left + sreg
     x2 = x1 + wp
     xend = x2 + wo
-    _line(slide, left, base, xend, base)               # baseline
+    _baseline(slide, base, left, xend, [(left, ws, s), (x1, wp, p)] + ([(x2, wo, o)] if o else []))
     _line(slide, x1, top_line, x1, base + below)        # subject | predicate (crosses)
     if o:
         _line(slide, x2, top_line, x2, base)            # predicate | object (stops)
     draw_subject()
-    _diag_word(slide, x1, base, wp, p)
+    _draw_slot_word(slide, x1, wp, base, p)
     if o:
-        _diag_word(slide, x2, base, wo, o)
+        _draw_slot_word(slide, x2, wo, base, o)
     _draw_slot_mods(slide, x1, wp, base, pm)
     if o:
         _draw_slot_mods(slide, x2, wo, base, om)
@@ -678,6 +781,7 @@ def render_analysis(slide, s, source):
     heights = [Inches(2.2) if any(r.get(k) for k in ("sclause", "pclause", "oclause"))
                else Inches(2.0) if _has_phrase(r.get("smod"), r.get("pmod"), r.get("omod"))
                else Inches(1.5) for r in rows]
+    heights = [h + 2 * max(_reach(r.get(k)) for k in "spo") for h, r in zip(heights, rows)]
     avail = Inches(6.8) - y
     if sum(heights) > avail:
         heights = [int(h * avail / sum(heights)) for h in heights]
