@@ -39,7 +39,7 @@
         "before · behind · beneath · beside(s) · between · betwixt · beyond · but · by · down · during · ere · except · for · from",
         "in · into · of · off · on · over · past · round · save · since · till · until · through · throughout",
         "to · toward(s) · under · unto · up · upon · with · within · without",
-        "Glosses:  *a* = at, on, in (twice *a* day);  *athwart* = across;  *betwixt* = between;  *ere* = before;  *save*, *but* = except (all *but* one);  *unto* = to."
+        "Glosses:  *a* = at, on, in (twice *a* day) · *athwart* = across · *betwixt* = between · *ere* = before · *save*, *but* = except · *unto* = to"
       ]
     },
     {
@@ -47,21 +47,34 @@
       "heading": "Practice — Find the Prepositions (Set 1)",
       "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
+        "The old man was often in want of the necessaries of life.",
         "The boy went through the gate into the garden.",
-        "Be not forward in the presence of your superiors.",
+        "Be not forward in the presence of your superiors.  (*forward* = bold)"
+      ],
+      "answers": [
+        "in:  want → was;  of:  necessaries → want;  of:  life → necessaries",
+        "through:  gate → went;  into:  garden → went",
+        "in:  presence → forward;  of:  superiors → presence"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Find the Prepositions (Set 2)",
+      "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
+      "items": [
+        "He was not, at that time, in the city.",
         "He drove over the bridge into the city.",
         "He went to the doctor for advice."
       ],
       "answers": [
-        "through:  gate → went;  into:  garden → went",
-        "in:  presence → forward;  of:  superiors → presence",
+        "at:  time → was;  in:  city → was",
         "over:  bridge → drove;  into:  city → drove",
         "to:  doctor → went;  for:  advice → went"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Prepositions (Set 2)",
+      "heading": "Practice — Find the Prepositions (Set 3)",
       "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
         "The path brought them to the end of the wood.",
@@ -89,8 +102,8 @@
       "heading": "Phrases as Elements",
       "bullets": [
         "Phrases are most commonly used as adjective or adverbial elements.",
-        "“Habits of industry” — *of industry* modifies the noun *Habits*:  an adjective element.",
-        "“will lead to prosperity” — *to prosperity* modifies the verb *will lead*:  an adverbial element.",
+        "Adjective element — modifies a noun:  “A man **of wealth** rode by.”",
+        "Adverbial element — modifies a verb, adjective, or adverb:  “He rode **by our house**.”",
         "A phrase is not a proposition:  it has no subject and no predicate.  *after dinner* is a phrase; *after we had dined* is a clause."
       ]
     },
@@ -138,23 +151,32 @@
     },
     {
       "type": "practice",
-      "heading": "Practice — Adjective or Adverbial?",
+      "heading": "Practice — Adjective or Adverbial (Set 1)",
       "instruction": "Name each phrase, the word it modifies, and the element it is.",
       "items": [
         "The young lambs are bleating in the meadows.",
-        "The roof of the old barn leaked.",
-        "The two thieves divided the money between them.",
-        "They came to the country of the free.",
-        "Our sincerest laughter is fraught with some pain.",
-        "The leaves of the oak fell in the night."
+        "I will divide this farm among my three sons.",
+        "The two thieves divided the money between them."
       ],
       "answers": [
         "in the meadows → are bleating:  adverbial",
-        "of the old barn → roof:  adjective",
-        "between them → divided:  adverbial",
+        "among my three sons → will divide:  adverbial",
+        "between them → divided:  adverbial"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Adjective or Adverbial (Set 2)",
+      "instruction": "Name each phrase, the word it modifies, and the element it is.",
+      "items": [
+        "They came to the country of the free.",
+        "Our sincerest laughter is fraught with some pain.",
+        "Man goeth to his long home.  (*goeth* = goes;  *long home* = the grave)"
+      ],
+      "answers": [
         "to the country → came:  adverbial;  of the free → country:  adjective",
-        "with some pain → fraught:  adverbial",
-        "of the oak → leaves:  adjective;  in the night → fell:  adverbial"
+        "with some pain → fraught (the predicate):  adverbial",
+        "to his long home → goeth:  adverbial"
       ]
     },
     {
@@ -165,17 +187,19 @@
         "The sailors weighed anchor at sunrise.",
         "The enraged lion struggled in vain.",
         "Flowers bloom in the spring.",
+        "Some seed fell on stony ground.",
         "I have written this letter in haste.",
         "Our schools should be the pride and boast of our country.",
         "The face of the poor boy was disfigured."
       ],
       "answers": [
-        "when the sun rose  (or:  early)",
+        "when the sun rose",
         "vainly",
         "when spring comes",
+        "where the ground was stony",
         "hastily",
-        "our country’s pride and boast",
-        "The poor boy’s face"
+        "our country’s  (before *pride*)",
+        "the poor boy’s  (before *face*)"
       ],
       "answerInline": true
     },
@@ -185,7 +209,7 @@
       "bullets": [
         "“To play is pleasant.” — *to play* is the subject.  Why?  It is that of which something is affirmed.",
         "It is a form of the verb *play*.  It expresses action, but does not affirm it.",
-        "For this reason it is called an *Infinitive*, or an *infinitive Phrase*."
+        "For this reason it is called an *Infinitive*, or an *Infinitive Phrase*."
       ]
     },
     {
@@ -235,7 +259,8 @@
       "bullets": [
         "The word *to* is usually placed before the verb, and is called the *sign of the infinitive*.",
         "The two parts should not be separated in analyzing or parsing:  *to play* is one element.",
-        "This *to* is not a preposition:  it has no object.  In “to go to the city,” only the second *to* is a preposition.",
+        "This *to* is not a preposition:  it has no object.  In “to run to the gate,” only the second *to* is a preposition.",
+        "Harvey also calls an infinitive with its modifiers a phrase (*to write a letter*), though its *to* is no preposition.",
         "An infinitive affirms nothing.  In “To love is to obey,” the copula *is* does the affirming."
       ]
     },
@@ -277,24 +302,37 @@
     },
     {
       "type": "practice",
-      "heading": "Practice — The Infinitive’s Office",
+      "heading": "Practice — The Infinitive’s Office (Set 1)",
       "instruction": "Name each infinitive, and tell whether it is a subject, a predicate, or an adjective, objective, or adverbial element.",
       "items": [
         "To lie is wicked.",
         "He wants to go to the city.",
+        "To doubt the promise of a friend is a sin.",
         "John studies to learn.",
-        "My sister wishes to remain here.",
+        "My sister wishes to remain here."
+      ],
+      "answers": [
+        "To lie:  subject",
+        "to go:  objective",
+        "To doubt:  subject",
+        "to learn:  adverbial (→ studies)",
+        "to remain:  objective"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — The Infinitive’s Office (Set 2)",
+      "instruction": "Name each infinitive, and tell whether it is a subject, a predicate, or an adjective, objective, or adverbial element.",
+      "items": [
         "Are you ready to recite?",
+        "Boys seldom like to work hard.",
         "To teach the young is a pleasant task.",
         "To see is to believe.",
         "He had no reason to complain."
       ],
       "answers": [
-        "To lie:  subject",
-        "to go:  objective",
-        "to learn:  adverbial (→ studies)",
-        "to remain:  objective",
         "to recite:  adverbial (→ ready)",
+        "to work:  objective",
         "To teach:  subject",
         "To see:  subject;  to believe:  predicate",
         "to complain:  adjective (→ reason)"
@@ -322,7 +360,7 @@
     },
     {
       "type": "practice",
-      "heading": "Practice — Place the Phrases",
+      "heading": "Practice — Place the Phrases (Set 1)",
       "instruction": "Locate the phrases properly in these sentences.",
       "items": [
         "The sled was bought by a boy going to school for a dollar.",
@@ -333,6 +371,21 @@
         "The sled was bought for a dollar by a boy going to school.",
         "The book was dropped on my head by a bad boy.",
         "I saw a dog with long ears and a white spot on its face bite a man."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Place the Phrases (Set 2)",
+      "instruction": "Locate the phrases properly in these sentences.",
+      "items": [
+        "Wanted. — A horse by an English gentleman, sixteen hands high.",
+        "A man was hanged yesterday with a blind eye.",
+        "Look at those two men fishing with sunburnt faces."
+      ],
+      "answers": [
+        "Wanted. — By an English gentleman, a horse sixteen hands high.",
+        "A man with a blind eye was hanged yesterday.",
+        "Look at those two men with sunburnt faces fishing."
       ]
     },
     {
