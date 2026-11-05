@@ -47,14 +47,16 @@
       "heading": "Practice — Find the Prepositions (Set 1)",
       "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
-        "The old man was often in want of the necessaries of life.",
-        "The boy went through the gate into the garden.",
-        "Be not forward in the presence of your superiors.  (*forward* = bold)"
+        "The bird sat on the fence.",
+        "We walked to the river.",
+        "The boy with the red cap is my brother.",
+        "The old man was often in want of the necessaries of life."
       ],
       "answers": [
-        "in:  want → was;  of:  necessaries → want;  of:  life → necessaries",
-        "through:  gate → went;  into:  garden → went",
-        "in:  presence → forward;  of:  superiors → presence"
+        "on:  fence → sat",
+        "to:  river → walked",
+        "with:  cap → boy",
+        "in:  want → was;  of:  necessaries → want;  of:  life → necessaries"
       ]
     },
     {
@@ -62,14 +64,16 @@
       "heading": "Practice — Find the Prepositions (Set 2)",
       "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
+        "The boy went through the gate into the garden.",
+        "Be not forward in the presence of your superiors.  (*forward* = bold)",
         "He was not, at that time, in the city.",
-        "He drove over the bridge into the city.",
-        "He went to the doctor for advice."
+        "He drove over the bridge into the city."
       ],
       "answers": [
+        "through:  gate → went;  into:  garden → went",
+        "in:  presence → forward;  of:  superiors → presence",
         "at:  time → was;  in:  city → was",
-        "over:  bridge → drove;  into:  city → drove",
-        "to:  doctor → went;  for:  advice → went"
+        "over:  bridge → drove;  into:  city → drove"
       ]
     },
     {
@@ -77,11 +81,13 @@
       "heading": "Practice — Find the Prepositions (Set 3)",
       "instruction": "Name each preposition, its object, and the word it relates its object to.  Model — “He came from France to America.” — from:  France → came;  to:  America → came.",
       "items": [
+        "He went to the doctor for advice.",
         "The path brought them to the end of the wood.",
         "She turned to the old man with a lovely smile upon her face.",
         "The light came through the stained windows of the old church."
       ],
       "answers": [
+        "to:  doctor → went;  for:  advice → went",
         "to:  end → brought;  of:  wood → end",
         "to:  man → turned;  with:  smile → turned;  upon:  face → smile",
         "through:  windows → came;  of:  church → windows"
