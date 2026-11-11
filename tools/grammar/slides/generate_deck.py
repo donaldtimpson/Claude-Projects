@@ -345,7 +345,8 @@ def _draw_slot_word(slide, left, width, base, word):
         _draw_ncl(slide, left, width, base, word)
         return
     if not _is_comp(word):
-        _diag_word(slide, left, base, width, word)
+        # A slot stretched to seat its phrases keeps the word at the line's start.
+        _diag_word(slide, left, base, min(width, _slot_w(word)), word)
         return
     parts = word["parts"]
     n = len(parts)

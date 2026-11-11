@@ -123,11 +123,11 @@
       "term": "Compound Element",
       "text": "A Compound Element consists of two or more similar parts of the same proposition connected by conjunctions.",
       "examples": [
-        "**Ellen and Lucy** are my sisters.  (compound subject)",
-        "We **run, jump, and talk** at recess.  (compound predicate)",
-        "My father owns **a farm and a factory**.  (compound objective element)",
-        "Tray is a **large, black, and cross** dog.  (compound adjective element;  *cross* = ill-tempered)",
-        "We stopped **then and there**.  (compound adverbial element)"
+        "**Ellen and Lucy** are my sisters.  (subject)",
+        "We **run, jump, and talk** at recess.  (predicate)",
+        "My father owns **a farm and a factory**.  (objective element)",
+        "Tray is a **large, black, and cross** dog.  (adjective element;  *cross* = surly)",
+        "We stopped **then and there**.  (adverbial element)"
       ]
     },
     {

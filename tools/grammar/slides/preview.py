@@ -73,7 +73,7 @@ body { margin:0; background:var(--body-bg); font-family: var(--body-font);
 .title-slide .dbl { width: 320px; margin: 10px 0; }
 .title-slide .motto { color: var(--accent); font-style: italic; font-size: 19px;
        letter-spacing: .03em; margin-top: 16px; }
-.defn { font-style: italic; font-size: 30px; line-height: 1.35; margin: 8px 0 26px; }
+.defn { font-style: italic; font-size: 30px; line-height: 1.3; margin: 4px 0 18px; }
 .exlabel { color: var(--accent); font-weight:700; font-size: 15px; margin: 0 0 8px;
            letter-spacing: .18em; text-transform: uppercase; }
 ul.b { list-style: none; padding: 0; margin: 0; }
@@ -81,9 +81,12 @@ ul.b li { font-size: 24px; line-height: 1.4; margin-bottom: 12px; padding-left: 
           position: relative; }
 ul.b li:before { content: "•"; color: var(--accent); font-weight: 700;
                  position: absolute; left: 0; }
-.ex li { font-size: 22px; margin-bottom: 8px; }
+.ex li { font-size: 22px; line-height: 1.3; margin-bottom: 6px; }
+/* practice items: numbered, no bullet; sizes match the .pptx (22pt items, 20pt answers) */
+ul.nb li { font-size: 22px; line-height: 1.3; margin-bottom: 10px; padding-left: 0; }
+ul.nb li:before { content: none; }
 .instr { color: var(--muted); font-style: italic; font-size: 18px; margin: 0 0 20px; }
-.ansline { color: var(--answer); font-weight: 700; font-size: 20px; margin-top: 3px; padding-left: 22px; }
+.ansline { color: var(--answer); font-weight: 700; font-size: 20px; line-height: 1.25; margin-top: 2px; padding-left: 22px; }
 .qans { color: var(--answer); font-weight: 700; font-size: 20px; margin-left: 4px; }
 .ansinline { color: var(--answer); font-weight: 700; margin-left: 6px; }
 .anskey { position: absolute; top: 22px; right: 64px; color: var(--accent);
@@ -111,10 +114,12 @@ ol.q.tight li { font-size: 22px; line-height: 1.2; margin-bottom: 5px; }
                     font-weight:700; font-size:28px; padding-right:20px; }
 .ctable td.tdesc { font-size:22px; line-height:1.35; }
 .ctable .tex { color:var(--muted); font-style:italic; font-size:17px; margin-top:5px; }
-.arows { display:flex; flex-direction:column; gap:26px; margin-top:10px; }
-.arow { display:flex; align-items:center; gap:32px; }
-.adiag { flex:0 0 auto; min-width:390px; }
+/* one shared diagram column, so every row's note starts at the same x */
+.arows { display:grid; grid-template-columns:minmax(390px, auto) 1fr; gap:22px 32px;
+         align-items:center; margin-top:10px; }
+.arow { display:contents; }
 .anote { font-size:19px; line-height:1.4; }
+.arows.multi .anote { font-size:16px; line-height:1.35; }
 .anote .asent { color:var(--accent); font-weight:700; margin-bottom:5px; }
 """
 
@@ -293,7 +298,9 @@ def _slot_word_svg(left, width, base, word):
     if _is_ncl(word):
         return _ncl_svg(left, width, base, word)
     if not _is_comp(word):
-        return [], [f'<text x="{left + width/2:.0f}" y="{base - 7}" text-anchor="middle">{esc(word)}</text>']
+        # A slot stretched to seat its phrases keeps the word at the line's start.
+        cx = left + min(width, _w(word)) / 2
+        return [], [f'<text x="{cx:.0f}" y="{base - 7}" text-anchor="middle">{esc(word)}</text>']
     parts = word["parts"]
     n = len(parts)
     ys = [base + (i - (n - 1) / 2) * _FG for i in range(n)]
@@ -652,8 +659,8 @@ def render(slide, source, show_answers=False):
                             ans = f'<div class="ansline">{fmt(answers[n-1])}</div>'
                     out += f'<li><b style="color:var(--accent)">{n}.</b> {fmt(it)}{ans}</li>'
                 return out
-            left = f'<ul class="b" style="list-style:none">{col(1, items[:mid])}</ul>'
-            right = f'<ul class="b" style="list-style:none">{col(mid+1, items[mid:])}</ul>'
+            left = f'<ul class="b nb">{col(1, items[:mid])}</ul>'
+            right = f'<ul class="b nb">{col(mid+1, items[mid:])}</ul>'
             body = f'<div class="cols">{left}{right}</div>'
         return f'<section class="slide">{tag}{head}{body}{foot}</section>'
     if t == "analysis":
@@ -665,7 +672,7 @@ def render(slide, source, show_answers=False):
             rows += (f'<div class="arow"><div class="adiag">{svg}</div>'
                      f'<div class="anote">{sent}<div>{fmt(r["note"])}</div></div></div>')
         return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
-                f'{intro}<div class="arows">{rows}</div>{foot}</section>')
+                f'{intro}<div class="arows{" multi" if len(slide["rows"]) > 1 else ""}">{rows}</div>{foot}</section>')
     if t == "questions":
         answers = slide.get("answers") or []
         tag = '<div class="anskey">Answer Key</div>' if show_answers else ''
