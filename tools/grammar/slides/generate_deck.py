@@ -248,20 +248,36 @@ def _mod_plan(items):
     return plan, a
 
 
+STEM_CX = int(Inches(0.14))     # where a compound slot's word modifiers hang on its stem
+
+
+def _stem_w(ms):
+    """Length of the shared stem before a fork, long enough to hang the
+    compound's word modifiers (e.g. *Your* in "Your levity and heedlessness")."""
+    return int(_mods_right(STEM_CX, ms) + MOD_GAP)
+
+
 def _wslot(word, mods):
-    """A slot's baseline width: the word's, or wider to seat its phrases."""
+    """A slot's baseline width: the word's, or wider to seat its phrases — or,
+    for a compound with word modifiers, a stem to hang them on before the fork."""
     ms = _mlist(mods)
     w = _ww(word)
+    if _is_comp(word) and ms and all(isinstance(m, str) for m in ms):
+        return w + _stem_w(ms)
     if any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
 
-def _draw_slot_mods(slide, left, width, base_y, mods):
+def _draw_slot_mods(slide, left, width, base_y, mods, word=None):
     """Hang a slot's modifiers: centered under the word as before when they are
-    all single words; laid out left to right when a phrase is among them."""
+    all single words; laid out left to right when a phrase is among them; on
+    the stem before the fork when the word is compound."""
     ms = _mlist(mods)
     if not ms:
+        return
+    if _is_comp(word) and all(isinstance(m, str) for m in ms):
+        _draw_mods(slide, left + STEM_CX, base_y, ms)
         return
     if not any(isinstance(m, dict) for m in ms):
         _draw_mods(slide, left + width / 2, base_y, ms)
@@ -348,6 +364,8 @@ def _draw_slot_word(slide, left, width, base, word):
         # A slot stretched to seat its phrases keeps the word at the line's start.
         _diag_word(slide, left, base, min(width, _slot_w(word)), word)
         return
+    stem = max(0, width - _ww(word))     # the fork starts after any stem
+    left, width = left + stem, width - stem
     parts = word["parts"]
     n = len(parts)
     ys = [base + int((i - (n - 1) / 2) * FORK_G) for i in range(n)]
@@ -369,7 +387,8 @@ def _baseline(slide, base, left, xend, slots):
     x = left
     for sl, sw, word in sorted(slots, key=lambda t: t[0]):
         if _is_comp(word):
-            _line(slide, int(x), base, int(sl + FORK_STUB), base)
+            stem = max(0, sw - _ww(word))
+            _line(slide, int(x), base, int(sl + stem + FORK_STUB), base)
             x = sl + sw - FORK_STUB
     _line(slide, int(x), base, int(xend), base)
 
@@ -555,7 +574,7 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
 
     def draw_subject():
         _draw_slot_word(slide, left, ws, base, s)
-        _draw_slot_mods(slide, left, ws, base, sm)
+        _draw_slot_mods(slide, left, ws, base, sm, s)
         if ap:
             _diag_word(slide, left + ws, base, wappo, appo_text)
             if ap["mod"]:
@@ -573,7 +592,7 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
         draw_subject()
         _diag_word(slide, x1, base, wc, c)
         _draw_slot_word(slide, x2, wp, base, p)
-        _draw_slot_mods(slide, x2, wp, base, pm)
+        _draw_slot_mods(slide, x2, wp, base, pm, p)
         return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
                              sclause, pclause, oclause, (sm, pm, om))
     wp = _wslot(p, pm)
@@ -589,9 +608,9 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     _draw_slot_word(slide, x1, wp, base, p)
     if o:
         _draw_slot_word(slide, x2, wo, base, o)
-    _draw_slot_mods(slide, x1, wp, base, pm)
+    _draw_slot_mods(slide, x1, wp, base, pm, p)
     if o:
-        _draw_slot_mods(slide, x2, wo, base, om)
+        _draw_slot_mods(slide, x2, wo, base, om, o)
     return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
                          sclause, pclause, oclause, (sm, pm, om))
 

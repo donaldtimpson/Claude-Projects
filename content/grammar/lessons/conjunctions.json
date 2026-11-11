@@ -233,44 +233,148 @@
       ]
     },
     {
-      "type": "practice",
-      "heading": "Practice — Analyze (Set 1)",
-      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
-      "items": [
-        "Exercise and temperance strengthen the constitution.",
-        "Mr. Mann owns and cultivates a large and valuable farm."
-      ],
-      "answers": [
-        "*Exercise and temperance*, the compound subject;  *strengthen*, the predicate, modified by *constitution*, an objective element, which *the* modifies.",
-        "*Mr. Mann*, the subject;  *owns and cultivates*, the compound predicate, modified by *farm*, an objective element, which *a* and *large and valuable*, a compound adjective element, modify."
+      "type": "analysis",
+      "heading": "Analyze — Compound Subjects",
+      "rows": [
+        {
+          "sentence": "Exercise and temperance strengthen the constitution.",
+          "s": {
+            "parts": [
+              "Exercise",
+              "temperance"
+            ],
+            "conj": "and"
+          },
+          "p": "strengthen",
+          "o": "constitution",
+          "omod": "the",
+          "note": "*Exercise and temperance*, the compound subject;  *strengthen*, the predicate;  *constitution*, an objective element."
+        },
+        {
+          "sentence": "Your levity and heedlessness will prevent all improvement.",
+          "s": {
+            "parts": [
+              "levity",
+              "heedlessness"
+            ],
+            "conj": "and"
+          },
+          "smod": "Your",
+          "p": "will prevent",
+          "o": "improvement",
+          "omod": "all",
+          "note": "*levity and heedlessness*, the compound subject, modified by *Your*;  *will prevent*, the predicate;  *improvement*, an objective element."
+        }
       ]
     },
     {
-      "type": "practice",
-      "heading": "Practice — Analyze (Set 2)",
-      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
-      "items": [
-        "Duty and interest forbid vicious and wicked indulgences.",
-        "Your levity and heedlessness will prevent all improvement."
-      ],
-      "answers": [
-        "*Duty and interest*, the compound subject;  *forbid*, the predicate, modified by *indulgences*, an objective element, which *vicious and wicked*, a compound adjective element, modifies.",
-        "*levity and heedlessness*, the compound subject, modified by *Your*;  *will prevent*, the predicate, modified by *improvement*, an objective element, which *all* modifies."
+      "type": "analysis",
+      "heading": "Analyze — Compound Adjective Elements",
+      "rows": [
+        {
+          "sentence": "Duty and interest forbid vicious and wicked indulgences.",
+          "s": {
+            "parts": [
+              "Duty",
+              "interest"
+            ],
+            "conj": "and"
+          },
+          "p": "forbid",
+          "o": "indulgences",
+          "omod": [
+            {
+              "parts": [
+                "vicious",
+                "wicked"
+              ],
+              "conj": "and"
+            }
+          ],
+          "note": "*Duty and interest*, the compound subject;  *vicious and wicked*, a compound adjective element modifying *indulgences*."
+        },
+        {
+          "sentence": "Mr. Mann owns and cultivates a large and valuable farm.",
+          "s": "Mr. Mann",
+          "p": {
+            "parts": [
+              "owns",
+              "cultivates"
+            ],
+            "conj": "and"
+          },
+          "o": "farm",
+          "omod": [
+            "a",
+            {
+              "parts": [
+                "large",
+                "valuable"
+              ],
+              "conj": "and"
+            }
+          ],
+          "note": "*owns and cultivates*, the compound predicate;  *large and valuable*, a compound adjective element modifying *farm*."
+        }
       ]
     },
     {
-      "type": "practice",
-      "heading": "Practice — Analyze (Set 3)",
-      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
-      "items": [
-        "Two and two are four.",
-        "The wearied soldiers fought bravely and successfully.",
-        "Forty pupils study arithmetic, grammar, and geography."
-      ],
-      "answers": [
-        "*Two and two*, the compound subject (taken together);  *four*, the predicate;  *are*, the copula.",
-        "*soldiers*, the subject;  *fought*, the predicate, modified by *bravely and successfully*, a compound adverbial element.",
-        "*pupils*, the subject, modified by *Forty*;  *study*, the predicate, modified by *arithmetic, grammar, and geography*, a compound objective element."
+      "type": "analysis",
+      "heading": "Analyze — Compound Objects & Adverbials",
+      "rows": [
+        {
+          "sentence": "Forty pupils study arithmetic, grammar, and geography.",
+          "s": "pupils",
+          "smod": "Forty",
+          "p": "study",
+          "o": {
+            "parts": [
+              "arithmetic",
+              "grammar",
+              "geography"
+            ],
+            "conj": "and"
+          },
+          "note": "*pupils*, the subject;  *study*, the predicate;  *arithmetic, grammar, and geography*, a compound objective element."
+        },
+        {
+          "sentence": "The wearied soldiers fought bravely and successfully.",
+          "s": "soldiers",
+          "smod": [
+            "The",
+            "wearied"
+          ],
+          "p": "fought",
+          "pmod": [
+            {
+              "parts": [
+                "bravely",
+                "successfully"
+              ],
+              "conj": "and"
+            }
+          ],
+          "note": "*soldiers*, the subject;  *fought*, the predicate, modified by *bravely and successfully*, a compound adverbial element."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Parts Taken Together",
+      "rows": [
+        {
+          "sentence": "Two and two are four.",
+          "s": {
+            "parts": [
+              "Two",
+              "two"
+            ],
+            "conj": "and"
+          },
+          "c": "are",
+          "p": "four",
+          "note": "*Two and two*, the compound subject, taken together;  *four*, the predicate;  *are*, the copula."
+        }
       ]
     },
     {

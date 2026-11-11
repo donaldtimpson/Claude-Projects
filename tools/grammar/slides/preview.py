@@ -301,6 +301,8 @@ def _slot_word_svg(left, width, base, word):
         # A slot stretched to seat its phrases keeps the word at the line's start.
         cx = left + min(width, _w(word)) / 2
         return [], [f'<text x="{cx:.0f}" y="{base - 7}" text-anchor="middle">{esc(word)}</text>']
+    stem = max(0, width - _ww(word))     # the fork starts after any stem
+    left, width = left + stem, width - stem
     parts = word["parts"]
     n = len(parts)
     ys = [base + (i - (n - 1) / 2) * _FG for i in range(n)]
@@ -323,7 +325,8 @@ def _baseline_svg(base, left, xend, slots):
     out, x = [], left
     for sl, sw, word in sorted(slots, key=lambda t: t[0]):
         if _is_comp(word):
-            out.append(f'<line x1="{x:.0f}" y1="{base}" x2="{sl + _FSTUB:.0f}" y2="{base}"/>')
+            stem = max(0, sw - _ww(word))
+            out.append(f'<line x1="{x:.0f}" y1="{base}" x2="{sl + stem + _FSTUB:.0f}" y2="{base}"/>')
             x = sl + sw - _FSTUB
     out.append(f'<line x1="{x:.0f}" y1="{base}" x2="{xend:.0f}" y2="{base}"/>')
     return out
@@ -356,21 +359,33 @@ def _cmod_svg(a, base, m):
     return out, right
 
 
+_STEM_CX = 9   # where a compound slot's word modifiers hang on its stem
+
+
+def _stem_w(ms):
+    return _mods_right(_STEM_CX, ms) + _MOD_GAP
+
+
 def _wslot(word, mods):
     ms = _mlist(mods)
     w = _ww(word)
+    if _is_comp(word) and ms and all(isinstance(m, str) for m in ms):
+        return w + _stem_w(ms)   # a stem before the fork to hang its modifiers
     if any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
 
-def _slot_mods_svg(left, width, base, mods):
+def _slot_mods_svg(left, width, base, mods, word=None):
     """A slot's modifiers: centered under the word when all are single words,
     laid out left to right when a phrase is among them.
     Returns (fragments, rightmost x, lowest y)."""
     ms = _mlist(mods)
     if not ms:
         return [], left, base
+    if _is_comp(word) and all(isinstance(m, str) for m in ms):
+        frag, r = _mods_svg(left + _STEM_CX, base, ms, _CH, _PAD)   # on the stem
+        return frag, r, base + 34
     if not any(isinstance(m, dict) for m in ms):
         frag, r = _mods_svg(left + width / 2, base, ms, _CH, _PAD)
         return frag, r, base + 34   # keeps word-only diagrams at their old height
@@ -443,16 +458,16 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
     low = base
     slots = {"s": (x0, ws)}
 
-    def add_mods(left, width, words):
+    def add_mods(left, width, words, word=None):
         nonlocal right, low
-        frag, rmost, lo = _slot_mods_svg(left, width, base, words)
+        frag, rmost, lo = _slot_mods_svg(left, width, base, words, word)
         mods.extend(frag)
         right, low = max(right, rmost), max(low, lo)
 
     l, tx = _slot_word_svg(x0, ws, base, s)
     lines += l
     texts += tx
-    add_mods(x0, ws, smod)
+    add_mods(x0, ws, smod, s)
     if ap:
         texts.append(f'<text x="{x0 + ws + wappo/2:.0f}" y="{texty}" text-anchor="middle">{esc(appo_text)}</text>')
         add_mods(x0 + ws, wappo, ap["mod"])
@@ -469,7 +484,7 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         l, tx = _slot_word_svg(x2, wp, base, p)
         lines += l
         texts += tx
-        add_mods(x2, wp, pmod)
+        add_mods(x2, wp, pmod, p)
         slots.update(c=(x1, wc), p=(x2, wp))
     else:
         wp = _wslot(p, pmod)
@@ -482,14 +497,14 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         l, tx = _slot_word_svg(x1, wp, base, p)
         lines += l
         texts += tx
-        add_mods(x1, wp, pmod)
+        add_mods(x1, wp, pmod, p)
         slots["p"] = (x1, wp)
         if o:
             lines.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
             l, tx = _slot_word_svg(x2, wo, base, o)
             lines += l
             texts += tx
-            add_mods(x2, wo, omod)
+            add_mods(x2, wo, omod, o)
             slots["o"] = (x2, wo)
 
     right = max(right, x0 + total)
