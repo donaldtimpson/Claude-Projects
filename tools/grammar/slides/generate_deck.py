@@ -326,7 +326,10 @@ def _is_comp(x):
 
 
 def _ww(word):
-    """Baseline width of a slot's word, or of the fork for a compound one."""
+    """Baseline width of a slot's word, of the fork for a compound one, or of
+    the pedestal clause for a noun clause."""
+    if _is_ncl(word):
+        return _ncl_w(word)
     if _is_comp(word):
         return 2 * (FORK_STUB + FORK_DX) + max(_slot_w(p) for p in word["parts"])
     return _slot_w(word)
@@ -338,6 +341,9 @@ def _reach(word):
 
 
 def _draw_slot_word(slide, left, width, base, word):
+    if _is_ncl(word):
+        _draw_ncl(slide, left, width, base, word)
+        return
     if not _is_comp(word):
         _diag_word(slide, left, base, width, word)
         return
@@ -399,8 +405,60 @@ def _draw_cmod(slide, a, base_y, m):
     mid = ((c1 + w1 / 2) + (c2 - w2 / 2)) / 2
     _diag_word(slide, int(mid - wcj / 2), base_y + Inches(0.64), wcj, cj)
 
+# A noun clause used as a subject or object — {"clause": {s, p, o, c, smod, ...},
+# "link": "that"} — stands on a pedestal (modern Reed-Kellogg): its own baseline
+# raised above the slot, a stilt dropping to the main line. Harvey's introducing
+# connective is written in parentheses before the clause, as in his
+# "(That) he | is : sick".
+PED_H = int(Inches(1.05))       # main baseline -> pedestal clause's baseline
+
+
+def _is_ncl(x):
+    return isinstance(x, dict) and "clause" in x
+
+
+def _ncl_link(x):
+    return f"({x['link']})" if x.get("link") else ""
+
+
+def _ncl_core_w(cl):
+    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                         smod=cl.get("smod"), pmod=cl.get("pmod"), omod=cl.get("omod"))
+    return max(l + w for l, w in slots.values())
+
+
+def _ncl_w(x):
+    lk = _ncl_link(x)
+    return (_slot_w(lk) if lk else 0) + _ncl_core_w(x["clause"]) + int(Inches(0.1))
+
+
+def _up(word):
+    """How far a slot reaches above the baseline: a fork's upper branches, or a
+    noun clause standing on its pedestal."""
+    if _is_ncl(word):
+        return PED_H + int(Inches(0.10))
+    return _reach(word)
+
+
+def _draw_ncl(slide, left, width, base, x):
+    cl = x["clause"]
+    lk = _ncl_link(x)
+    lw = _slot_w(lk) if lk else 0
+    cbase = base - PED_H
+    cleft = left + lw
+    _draw_diagram(slide, int(cleft), int(cbase - Inches(0.30)), cl["s"], cl.get("p", ""),
+                  cl.get("o"), cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
+                  omod=cl.get("omod"))
+    if lk:
+        _diag_word(slide, int(left), int(cbase), int(lw), lk)
+    # The stilt: from the middle of the clause's baseline down to the main line.
+    sx = int(cleft + _ncl_core_w(cl) / 2)
+    _line(slide, sx, int(cbase), sx, int(base))
+
+
 CLAUSE_DROP = Inches(0.92)      # main baseline -> top of a hanging clause's diagram
 CLAUSE_INSET = Inches(0.12)     # where a dashed connector meets its antecedent word
+PHRASE_CLEAR = Inches(0.55)     # extra drop so a clause clears the main line's phrases
 
 
 def _overhang(ws, smod, pmod):
@@ -446,7 +504,7 @@ def _clause_shift(s, p, o, c, sappo, clauses, mods=(None, None, None)):
     return int(max([0] + need))
 
 
-def _draw_clause(slide, left, base, ante, cl):
+def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP):
     """Hang a relative clause beneath its antecedent (modern Reed-Kellogg): the
     clause on its own baseline — its own subject | predicate — with a dashed line
     dropping straight from the antecedent's left end to the relative pronoun.
@@ -456,7 +514,7 @@ def _draw_clause(slide, left, base, ante, cl):
     clause's right edge (EMU)."""
     anchor = left + ante[0] + CLAUSE_INSET
     cl_left = int(anchor - _clause_rel(cl))
-    ctop = base + CLAUSE_DROP
+    ctop = base + drop
     right = _draw_diagram(slide, cl_left, ctop, cl["s"], cl.get("p", ""), cl.get("o"),
                           cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
                           omod=cl.get("omod"))
@@ -483,7 +541,7 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     make room for it. Returns the right edge (EMU)."""
     left += _clause_shift(s, p, o, c, sappo, {"s": sclause, "p": pclause, "o": oclause},
                           (smod, pmod, omod))
-    up = max(_reach(w) for w in (s, p, o))
+    up = max(_up(w) for w in (s, p, o))
     base = top + Inches(0.30) + up
     top_line = base - Inches(0.26)
     below = Inches(0.13)
@@ -540,9 +598,10 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
 def _hang_clauses(slide, left, base, xend, s, p, o, c, sappo, sclause, pclause, oclause,
                   mods=(None, None, None)):
     slots = _slot_layout(s, p, o, c, sappo, *mods)
+    drop = CLAUSE_DROP + (PHRASE_CLEAR if _has_phrase(*mods) else 0)
     for key, cl in (("s", sclause), ("p", pclause), ("o", oclause)):
         if cl and key in slots:
-            xend = max(xend, _draw_clause(slide, left, base, slots[key], cl))
+            xend = max(xend, _draw_clause(slide, left, base, slots[key], cl, drop))
     return xend
 
 
@@ -634,7 +693,7 @@ def render_practice(slide, s, source, show_answers=False):
     _bg(slide)
     _heading(slide, s["heading"])
     if show_answers:
-        _, tft = _box(slide, SLIDE_W - MARGIN - Inches(2.6), Inches(0.92),
+        _, tft = _box(slide, SLIDE_W - MARGIN - Inches(2.6), Inches(0.3),
                       Inches(2.6), Inches(0.4))
         pt = tft.paragraphs[0]
         pt.alignment = PP_ALIGN.RIGHT
@@ -705,7 +764,7 @@ def render_questions(slide, s, source, show_answers=False):
     _bg(slide)
     _heading(slide, "Questions")
     if show_answers:
-        _, tft = _box(slide, SLIDE_W - MARGIN - Inches(2.6), Inches(0.92),
+        _, tft = _box(slide, SLIDE_W - MARGIN - Inches(2.6), Inches(0.3),
                       Inches(2.6), Inches(0.4))
         pt = tft.paragraphs[0]
         pt.alignment = PP_ALIGN.RIGHT
@@ -777,41 +836,107 @@ def render_analysis(slide, s, source):
         _run(tfi.paragraphs[0], s["intro"], size=18, color=MUTED, italic=True)
         y = Inches(2.5)
     rows = s["rows"]
-    # A row with a hanging clause needs room for a second baseline.
-    heights = [Inches(2.2) if any(r.get(k) for k in ("sclause", "pclause", "oclause"))
-               else Inches(2.0) if _has_phrase(r.get("smod"), r.get("pmod"), r.get("omod"))
-               else Inches(1.5) for r in rows]
-    heights = [h + 2 * max(_reach(r.get(k)) for k in "spo") for h, r in zip(heights, rows)]
+    heights = [sum(_row_h(m) for m in r["members"]) if r.get("members") else _row_h(r)
+               for r in rows]
     avail = Inches(6.8) - y
     if sum(heights) > avail:
         heights = [int(h * avail / sum(heights)) for h in heights]
     # The note column sits right of the widest diagram (phrases can run long).
     def diag_w(r):
+        if r.get("members"):
+            return max(_divider_x(m) for m in r["members"]) + max(
+                diag_w(m) - _divider_x(m) for m in r["members"])
         mods = (r.get("smod"), r.get("pmod"), r.get("omod"))
         slots = _slot_layout(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"), *mods)
         shift = _clause_shift(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"),
                               {k: r.get(k + "clause") for k in "spo"}, mods)
-        return shift + max(l + w for l, w in slots.values())
+        return _interj_w(r) + shift + max(l + w for l, w in slots.values())
     note_x = max(MARGIN + Inches(5.3), MARGIN + Inches(0.55) + max(diag_w(r) for r in rows))
     note_w = SLIDE_W - MARGIN - note_x
     top = y
+    big = len(rows) == 1      # a lone model gets the room to read at a distance
     for r, row_h in zip(rows, heights):
-        _draw_diagram(slide, MARGIN + Inches(0.2), top + Inches(0.1),
-                      r["s"], r.get("p", ""), r.get("o"), r.get("c"),
-                      smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
-                      sappo=r.get("sappo"), sclause=r.get("sclause"),
-                      pclause=r.get("pclause"), oclause=r.get("oclause"))
+        if r.get("members"):
+            _draw_members(slide, MARGIN + Inches(0.2), top + Inches(0.1), r)
+        else:
+            _draw_row(slide, MARGIN + Inches(0.2), top + Inches(0.1), r)
         _, tfn = _box(slide, note_x, top - Inches(0.1), note_w, row_h)
         tfn.vertical_anchor = MSO_ANCHOR.MIDDLE
         if r.get("sentence"):
             ps = tfn.paragraphs[0]
             ps.space_after = Pt(5)
-            _richrun(ps, r["sentence"], size=17, color=ACCENT, bold=True)
-            _richrun(tfn.add_paragraph(), r["note"], size=15, color=INK)
+            _richrun(ps, r["sentence"], size=20 if big else 17, color=ACCENT, bold=True)
+            _richrun(tfn.add_paragraph(), r["note"], size=18 if big else 15, color=INK)
         else:
             _richrun(tfn.paragraphs[0], r["note"], size=16, color=INK)
         top += row_h
     _footer(slide, source)
+
+
+def _row_h(r):
+    """Vertical room for one analysis diagram: a hanging clause needs a second
+    baseline, a phrase a deeper drop, a fork or pedestal its reach above."""
+    clause = any(r.get(k) for k in ("sclause", "pclause", "oclause"))
+    phrase = _has_phrase(r.get("smod"), r.get("pmod"), r.get("omod"))
+    h = (Inches(2.2) + (PHRASE_CLEAR if phrase else 0) if clause
+         else Inches(2.0) if phrase
+         else Inches(1.5))
+    if r.get("interj"):
+        h += INTERJ_RISE
+    return h + max(2 * _reach(r.get(k)) + (_up(r.get(k)) if _is_ncl(r.get(k)) else 0)
+                   for k in "spo")
+
+
+# Harvey: an interjection "may be placed before and a little above the first
+# words in a diagram" — on its own short line, apart from the proposition.
+INTERJ_RISE = int(Inches(0.36))
+
+
+def _interj_w(r):
+    return _slot_w(r["interj"]) + int(Inches(0.1)) if r.get("interj") else 0
+
+
+def _draw_row(slide, left, top, r):
+    iw = _interj_w(r)
+    if iw:
+        top += INTERJ_RISE
+        y = int(top + Inches(0.30) + max(_up(r.get(k)) for k in "spo") - INTERJ_RISE)
+        w = _slot_w(r["interj"])
+        _line(slide, int(left), y, int(left + w), y)
+        _diag_word(slide, int(left), y, w, r["interj"])
+        left += iw
+    _draw_diagram(slide, left, top, r["s"], r.get("p", ""), r.get("o"), r.get("c"),
+                  smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
+                  sappo=r.get("sappo"), sclause=r.get("sclause"),
+                  pclause=r.get("pclause"), oclause=r.get("oclause"))
+
+
+def _divider_x(r):
+    """x of a diagram's subject-predicate divider, relative to its left."""
+    mods = (r.get("smod"), r.get("pmod"), r.get("omod"))
+    slots = _slot_layout(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"), *mods)
+    shift = _clause_shift(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"),
+                          {k: r.get(k + "clause") for k in "spo"}, mods)
+    return _interj_w(r) + shift + slots["c" if r.get("c") else "p"][0]
+
+
+def _draw_members(slide, left, top, r):
+    """A compound sentence: each member on its own baseline, the members'
+    subject-predicate dividers lined up, joined by a dashed line with the
+    connective written beside it (Harvey sets the connective between them)."""
+    members = r["members"]
+    dx = max(_divider_x(m) for m in members)
+    y, bases = top, []
+    for m in members:
+        _draw_row(slide, left + dx - _divider_x(m), y, m)
+        bases.append(y + Inches(0.30) + max(_up(m.get(k)) for k in "spo"))
+        y += _row_h(m)
+    x = int(left + dx)
+    for b1, b2 in zip(bases, bases[1:]):
+        _line(slide, x, int(b1 + Inches(0.13)), x, int(b2 - Inches(0.26)), dashed=True)
+        cj = r.get("conj", "and")
+        _diag_word(slide, int(x - _slot_w(cj) - Inches(0.04)), int(b2 - Inches(0.62)),
+                   _slot_w(cj), cj)
 
 
 RENDERERS = {

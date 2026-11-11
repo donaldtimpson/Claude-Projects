@@ -86,7 +86,7 @@ ul.b li:before { content: "•"; color: var(--accent); font-weight: 700;
 .ansline { color: var(--answer); font-weight: 700; font-size: 20px; margin-top: 3px; padding-left: 22px; }
 .qans { color: var(--answer); font-weight: 700; font-size: 20px; margin-left: 4px; }
 .ansinline { color: var(--answer); font-weight: 700; margin-left: 6px; }
-.anskey { position: absolute; top: 54px; right: 64px; color: var(--accent);
+.anskey { position: absolute; top: 22px; right: 64px; color: var(--accent);
           font-weight: 700; font-size: 14px; letter-spacing: .18em;
           text-transform: uppercase; }
 .diagrows { }
@@ -233,7 +233,51 @@ def _is_comp(x):
     return isinstance(x, dict) and "parts" in x
 
 
+# A noun clause used as a subject or object ({"clause": {...}, "link": "that"})
+# stands on a pedestal — mirrors generate_deck.py: its own baseline raised above
+# the slot, a stilt down to the main line, Harvey's "(that)" written before it.
+_PED = 64
+
+
+def _is_ncl(x):
+    return isinstance(x, dict) and "clause" in x
+
+
+def _ncl_link(x):
+    return f"({x['link']})" if x.get("link") else ""
+
+
+def _ncl_core_w(cl):
+    return _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                       cl.get("smod"), cl.get("pmod"), cl.get("omod"))[3]
+
+
+def _ncl_w(x):
+    lk = _ncl_link(x)
+    return (_w(lk) if lk else 0) + _ncl_core_w(x["clause"]) + 8
+
+
+def _up(word):
+    return _PED + 8 if _is_ncl(word) else _reach(word)
+
+
+def _ncl_svg(left, width, base, x):
+    cl = x["clause"]
+    lk = _ncl_link(x)
+    lw = _w(lk) if lk else 0
+    cbase = base - _PED
+    l, t, m, *_ = _diag_parts(left + lw, cbase, cl["s"], cl.get("p", ""), cl.get("o"),
+                              cl.get("c"), cl.get("smod"), cl.get("pmod"), cl.get("omod"))
+    sx = left + lw + _ncl_core_w(cl) / 2
+    l = l + m + [f'<line x1="{sx:.0f}" y1="{cbase}" x2="{sx:.0f}" y2="{base}"/>']
+    if lk:
+        t = t + [f'<text x="{left + lw/2:.0f}" y="{cbase - 7}" text-anchor="middle">{esc(lk)}</text>']
+    return l, t
+
+
 def _ww(word):
+    if _is_ncl(word):
+        return _ncl_w(word)
     if _is_comp(word):
         return 2 * (_FSTUB + _FDX) + max(_w(p) for p in word["parts"])
     return _w(word)
@@ -244,7 +288,10 @@ def _reach(word):
 
 
 def _slot_word_svg(left, width, base, word):
-    """(lines, texts) for a slot's word, or its fork when compound."""
+    """(lines, texts) for a slot's word, its fork when compound, or its pedestal
+    when a noun clause."""
+    if _is_ncl(word):
+        return _ncl_svg(left, width, base, word)
     if not _is_comp(word):
         return [], [f'<text x="{left + width/2:.0f}" y="{base - 7}" text-anchor="middle">{esc(word)}</text>']
     parts = word["parts"]
@@ -443,7 +490,7 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
 
 
 def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=None,
-                sclause=None, pclause=None, oclause=None):
+                sclause=None, pclause=None, oclause=None, meta=False):
     """Reed-Kellogg baseline: subject | predicate | object, or Harvey's copular
     form subject | copula : predicate when `c` is given. `smod`/`pmod`/`omod`
     hang adjective-element modifiers (articles, adjectives, possessives,
@@ -456,8 +503,10 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     names the slot it modifies as "rel" and may set `link`, the connective
     written beside the dashed line."""
     reach = max(_reach(w) for w in (s, p, o))
-    base = 30 + reach
+    base = 30 + max(_up(w) for w in (s, p, o))
     drop, inset = 80, 10          # clause baseline below the main one; connector inset
+    if any(_is_phrase(m) for ms in (smod, pmod, omod) for m in _mlist(ms)):
+        drop += 36                # clear the main line's phrases
     clauses = {"s": sclause, "p": pclause, "o": oclause}
 
     def rel_cx(cl):
@@ -476,6 +525,7 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     bottom = max(70, base + has_mods + 6) if has_mods else 46
     if reach:
         bottom = max(bottom, base + reach + 10)
+    bottom = max(bottom, base + 16)   # a pedestal clause raises the main line
     for key, cl in clauses.items():
         if not cl or key not in slots:
             continue
@@ -498,10 +548,58 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
         bottom = max(bottom, cbase + (max(40, hm2 + 6) if hm2 else 16))
     minx = -6 if (mods or bottom > 70) else 0
     width = right + (6 if minx else 0) - minx
+    if meta:
+        # The subject-predicate divider, for lining up a compound sentence's members.
+        div = slots["c" if c else "p"][0]
+        return {"inner": "".join([*lines, *mods, *texts]), "minx": minx, "width": width,
+                "height": bottom, "div": div, "base": base}
     return "".join([
         f'<svg class="diag" width="{width:.0f}" height="{bottom}" '
         f'viewBox="{minx:.0f} 0 {width:.0f} {bottom}" xmlns="http://www.w3.org/2000/svg">',
         *lines, *mods, *texts, '</svg>'])
+
+
+def _row_svg(r, meta=False):
+    d = diagram_svg(r["s"], r.get("p", ""), r.get("o"), r.get("c"),
+                    smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
+                    sappo=r.get("sappo"), sclause=r.get("sclause"),
+                    pclause=r.get("pclause"), oclause=r.get("oclause"), meta=True)
+    if r.get("interj"):
+        # Harvey: placed "before and a little above the first words in a diagram."
+        rise, wi = 24, _w(r["interj"])
+        x0, y = d["minx"] - wi - 6, d["base"]
+        d["inner"] = (f'<line x1="{x0:.0f}" y1="{y}" x2="{x0 + wi:.0f}" y2="{y}"/>'
+                      f'<text x="{x0 + wi/2:.0f}" y="{y - 7}" text-anchor="middle">{esc(r["interj"])}</text>'
+                      f'<g transform="translate(0,{rise})">{d["inner"]}</g>')
+        d.update(minx=x0, width=d["width"] + wi + 6, height=d["height"] + rise,
+                 base=d["base"] + rise)
+    if meta:
+        return d
+    return (f'<svg class="diag" width="{d["width"]:.0f}" height="{d["height"]}" '
+            f'viewBox="{d["minx"]:.0f} 0 {d["width"]:.0f} {d["height"]}" '
+            f'xmlns="http://www.w3.org/2000/svg">{d["inner"]}</svg>')
+
+
+def members_svg(r):
+    """A compound sentence: each member on its own baseline, the dividers lined
+    up and joined by a dashed line with the connective beside it."""
+    ms = [_row_svg(m, meta=True) for m in r["members"]]
+    d = max(m["div"] - m["minx"] for m in ms)
+    width = max(d - (m["div"] - m["minx"]) + m["width"] for m in ms)
+    out, y, bases = [], 0, []
+    for m in ms:
+        x = d - (m["div"] - m["minx"])
+        out.append(f'<svg x="{x:.0f}" y="{y}" width="{m["width"]:.0f}" height="{m["height"]}" '
+                   f'viewBox="{m["minx"]:.0f} 0 {m["width"]:.0f} {m["height"]}">{m["inner"]}</svg>')
+        bases.append(y + m["base"])
+        y += m["height"] + 24
+    cj = esc(r.get("conj", "and"))
+    for b1, b2 in zip(bases, bases[1:]):
+        out.append(f'<line x1="{d:.0f}" y1="{b1 + 13}" x2="{d:.0f}" y2="{b2 - 24}" stroke-dasharray="5 4"/>')
+        out.append(f'<text x="{d - 6:.0f}" y="{b2 - 34}" text-anchor="end">{cj}</text>')
+    h = y - 24
+    return (f'<svg class="diag" width="{width:.0f}" height="{h}" viewBox="0 0 {width:.0f} {h}" '
+            f'xmlns="http://www.w3.org/2000/svg">{"".join(out)}</svg>')
 
 
 def render(slide, source, show_answers=False):
@@ -562,10 +660,7 @@ def render(slide, source, show_answers=False):
         intro = f'<p class="instr">{fmt(slide["intro"])}</p>' if slide.get("intro") else ""
         rows = ""
         for r in slide["rows"]:
-            svg = diagram_svg(r["s"], r.get("p", ""), r.get("o"), r.get("c"),
-                              smod=r.get("smod"), pmod=r.get("pmod"), omod=r.get("omod"),
-                              sappo=r.get("sappo"), sclause=r.get("sclause"),
-                              pclause=r.get("pclause"), oclause=r.get("oclause"))
+            svg = members_svg(r) if r.get("members") else _row_svg(r)
             sent = f'<div class="asent">{fmt(r["sentence"])}</div>' if r.get("sentence") else ""
             rows += (f'<div class="arow"><div class="adiag">{svg}</div>'
                      f'<div class="anote">{sent}<div>{fmt(r["note"])}</div></div></div>')

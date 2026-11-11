@@ -1,22 +1,12 @@
 {
   "lesson": "sentences-interjection",
   "title": "Building Sentences & the Interjection",
-  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 70-77",
+  "source": "Harvey's Elementary Grammar & Composition (1880), pp. 70-78",
   "slides": [
     {
       "type": "title",
       "title": "Building Sentences",
-      "subtitle": "Lesson 10 · Simple, Compound & Complex"
-    },
-    {
-      "type": "concept",
-      "heading": "Three Ways to Build a Sentence",
-      "bullets": [
-        "Every sentence is built from one or more propositions (subject + predicate statements).",
-        "A Simple sentence has just one proposition.",
-        "A Compound sentence joins two or more complete sentences together.",
-        "A Complex sentence tucks a clause inside another."
-      ]
+      "subtitle": "Lesson 10 · Simple, Compound & Complex · the Interjection"
     },
     {
       "type": "definition",
@@ -24,176 +14,662 @@
       "text": "A Simple Sentence consists of a single proposition.",
       "examples": [
         "Wheat is a vegetable.",
-        "Birds sing.",
         "The tired soldiers fought bravely.",
-        "one subject, one predicate — one complete thought"
+        "Ellen and Mary study botany.  (compound subject — still one proposition)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Combining Sentences",
+      "bullets": [
+        "“I see a dog.”  “I see a boy.”  “I see a tree.”  “I see a house.” — *I see* is a part common to all of them.",
+        "Use the common part but once, and the four become a single sentence:  “I see a dog, a boy, a tree, and a house.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Combining (Set 1)",
+      "instruction": "Combine the sentences in each group into a single sentence.",
+      "items": [
+        "I found a book. I found a pencil. I found a slate. I found a knife.",
+        "John walked to the lake. John walked over the hill. John walked rapidly.",
+        "The horse was old. The horse was lame. The horse was blind."
+      ],
+      "answers": [
+        "I found a book, a pencil, a slate, and a knife.",
+        "John walked rapidly over the hill to the lake.",
+        "The horse was old, lame, and blind."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Combining (Set 2)",
+      "instruction": "Combine the sentences in each group into a single sentence.",
+      "items": [
+        "Apple trees grow thriftily. Apple trees grow in our orchard.",
+        "The wind blew fiercely. The wind blew last night. The wind blew from the north.",
+        "William gave me a new book. William sold me ten marbles. William bought a sled for my brother."
+      ],
+      "answers": [
+        "Apple trees grow thriftily in our orchard.",
+        "The wind blew fiercely from the north last night.",
+        "William gave me a new book, sold me ten marbles, and bought a sled for my brother."
       ]
     },
     {
       "type": "definition",
       "term": "Compound Sentence",
-      "text": "A Compound Sentence is two or more complete sentences joined together, each making sense alone.",
+      "text": "A Compound Sentence consists of two or more connected sentences, each of which will make complete sense when standing alone.",
       "examples": [
-        "Wheat grows in the field, and men reap it.",
-        "The wind blew, but the ship was safe.",
-        "Study hard, or you will fail.",
-        "each complete part is called a Member"
+        "Wheat grows in the field, **and** men reap it.",
+        "The wind blew, **but** the ship was safe.",
+        "He is at home, **or** he is at school."
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Members & Common Parts",
+      "bullets": [
+        "Rem. — The sentences of which a compound sentence is composed are called *Members*.",
+        "“Exercise strengthens the constitution, and temperance strengthens the constitution.” — *exercise* and *temperance* are the parts not common to the two members.",
+        "Unite the parts not common, and use the common parts but once:  “Exercise and temperance strengthen the constitution” — a simple sentence."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Simple or Compound?",
-      "instruction": "Tell whether each sentence is simple or compound.",
+      "heading": "Practice — Change to Simple (Set 1)",
+      "instruction": "Change each compound sentence to a simple one.",
       "items": [
-        "Birds sing.",
-        "Birds sing, and flowers bloom.",
-        "The dog barked loudly.",
-        "Rain fell, but we stayed dry.",
-        "Snow is white.",
-        "I came, and I saw.",
-        "Fish swim in the sea.",
-        "He ran, so he won."
+        "Behold my mother, and behold my brethren.",
+        "I saw a man in a boat, and I saw a boy in the water.",
+        "Washington was a warrior, and Washington was a statesman."
       ],
       "answers": [
-        "simple",
-        "compound",
-        "simple",
-        "compound",
-        "simple",
-        "compound",
-        "simple",
-        "compound"
+        "Behold my mother and my brethren.",
+        "I saw a man in a boat and a boy in the water.",
+        "Washington was a warrior and a statesman."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Change to Simple (Set 2)",
+      "instruction": "Change each compound sentence to a simple one.",
+      "items": [
+        "The man you saw was sick, or he was in trouble.",
+        "The river was swift, and it was very deep."
+      ],
+      "answers": [
+        "The man you saw was sick or in trouble.  (*you saw* is still an adjective clause)",
+        "The river was swift and very deep."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — A Compound Sentence",
+      "rows": [
+        {
+          "sentence": "The heavens declare the glory of God, and the firmament showeth his handiwork.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "heavens",
+              "smod": "The",
+              "p": "declare",
+              "o": "glory",
+              "omod": [
+                "the",
+                {
+                  "prep": "of",
+                  "obj": "God"
+                }
+              ]
+            },
+            {
+              "s": "firmament",
+              "smod": "the",
+              "p": "showeth",
+              "o": "handiwork",
+              "omod": "his"
+            }
+          ],
+          "note": "Declarative; compound. *The heavens declare the glory of God* is the first member;  *the firmament showeth his handiwork*, the second;  *and*, the connective.  *heavens* is the subject of the first member;  *declare*, the predicate, modified by *glory*, an objective element, which *the* and the phrase *of God* modify.  *firmament* is the subject of the second;  *showeth* (= shows), the predicate, modified by *handiwork*, an objective element, which *his* modifies."
+        }
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Members (Set 1)",
+      "instruction": "Name the members of each compound sentence and the connective.",
+      "items": [
+        "Talent is something, but tact is every thing.",
+        "Art is long, and time is fleeting.",
+        "Lead us not into temptation, but deliver us from evil.",
+        "The stores were closed, and the hum of business was hushed."
+      ],
+      "answers": [
+        "Talent is something · tact is every thing — *but*",
+        "Art is long · time is fleeting — *and*",
+        "Lead us not into temptation · deliver us from evil — *but*",
+        "The stores were closed · the hum of business was hushed — *and*"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Members (Set 2)",
+      "instruction": "Name the members of each compound sentence and the connective.",
+      "items": [
+        "Every eye was filled with tears, and, for a moment, all were silent.",
+        "You may stay here with me, or we will go to the lecture with Susan.",
+        "The gathering clouds threatened an approaching storm, and the deep darkness of the night soon enveloped them."
+      ],
+      "answers": [
+        "Every eye was filled with tears · for a moment, all were silent — *and*",
+        "You may stay here with me · we will go to the lecture with Susan — *or*",
+        "The gathering clouds threatened an approaching storm · the deep darkness of the night soon enveloped them — *and*"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Members & Truth",
+      "bullets": [
+        "Each member of a declarative compound sentence is a proposition, true or false by itself.  (A command — *Lead us not…* — is neither.)",
+        "*and*, *but* — both members are affirmed:  true if both are true;  false if either is false.  *but* adds contrast, not a different truth.",
+        "*or* — Harvey’s *or* shuts out both:  true if exactly one member is true;  false if neither is, or both are.  (Logic also uses an inclusive *or*:  at least one.)"
       ]
     },
     {
       "type": "definition",
       "term": "Complex Sentence",
-      "text": "A Complex Sentence is one in which some element is a clause — a group with its own subject and predicate.",
+      "text": "A Complex Sentence is one some element of which contains a subject and a predicate.",
       "examples": [
-        "I know where gold is found.",
-        "She smiled when he arrived.",
-        "The book that I read was long.",
-        "one main statement, with a clause built into it"
+        "I know **where gold is found**.",
+        "The house **that Jack built** is old.",
+        "Flowers bloom **when spring comes**.",
+        "**Whoever studies** will learn."
       ]
     },
     {
       "type": "concept",
       "heading": "Principal & Subordinate Clauses",
       "bullets": [
-        "A complex sentence has a principal clause and at least one subordinate clause.",
-        "A Principal Clause makes complete sense by itself:  “I know…”",
-        "A Subordinate Clause does not make complete sense alone:  “…where gold is found.”",
-        "The subordinate clause does the work of a single element inside the sentence."
+        "A clause must contain a subject and a predicate.",
+        "“I know where gold is found.” — *I know* makes complete sense standing alone:  the *Principal Clause*.  *where gold is found* does not:  a *Subordinate Clause*.",
+        "A Principal Clause is one which makes complete sense when separated from the rest of the sentence.",
+        "A Subordinate Clause is one which does not make complete sense when separated from the rest of the sentence."
+      ]
+    },
+    {
+      "type": "table",
+      "heading": "Five Classes of Clauses",
+      "rows": [
+        {
+          "label": "Subject",
+          "text": "A clause used as the subject.",
+          "examples": "“Haste makes waste,” is a true saying."
+        },
+        {
+          "label": "Predicate",
+          "text": "A clause used as the predicate.",
+          "examples": "My hope is, that he will recover."
+        },
+        {
+          "label": "Objective",
+          "text": "A clause used as an objective element.",
+          "examples": "I believe that the earth is round."
+        },
+        {
+          "label": "Adjective",
+          "text": "A clause used as an adjective element.",
+          "examples": "The report that he is insane, is unfounded."
+        },
+        {
+          "label": "Adverbial",
+          "text": "A clause used as an adverbial element.",
+          "examples": "Our teacher is delighted when we are studious."
+        }
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Remarks on Analysis",
+      "bullets": [
+        "Rem. 1. — A complex sentence whose subject or predicate only is a clause need not be separated into principal and subordinate clauses.",
+        "Rem. 2. — Some complex sentences are composed of many clauses.  Each clause should be analyzed in the order indicated by its position."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — An Adjective Clause",
+      "rows": [
+        {
+          "sentence": "He that hateth, dissembleth with his lips.",
+          "s": "He",
+          "sclause": {
+            "s": "that",
+            "p": "hateth",
+            "rel": "s"
+          },
+          "p": "dissembleth",
+          "pmod": [
+            {
+              "prep": "with",
+              "obj": "lips",
+              "mod": "his"
+            }
+          ],
+          "note": "Declarative; complex.  *He dissembleth with his lips* is the principal clause;  *that hateth*, the subordinate clause, an adjective element modifying *He*.  Of the clause, *that* is the subject;  *hateth*, the predicate.  *dissembleth* is modified by the phrase *with his lips*, an adverbial element;  *lips*, by *his*.  (*hateth* = hates;  *dissembleth* = disguises the truth)"
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — An Adverbial Clause",
+      "rows": [
+        {
+          "sentence": "He builds a palace of ice where the torrents fall.",
+          "s": "He",
+          "p": "builds",
+          "o": "palace",
+          "omod": [
+            "a",
+            {
+              "prep": "of",
+              "obj": "ice"
+            }
+          ],
+          "pclause": {
+            "s": "torrents",
+            "smod": "the",
+            "p": "fall",
+            "rel": "p",
+            "link": "where"
+          },
+          "note": "Declarative; complex.  *He builds a palace of ice* is the principal clause;  *the torrents fall*, the subordinate clause;  *where*, the connective.  *builds* is modified by *palace*, an objective element, which *a* and the phrase *of ice* modify, and by the clause *where the torrents fall*, an adverbial element.  *torrents* is modified by *the*;  *fall*, by *where*."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — A Subject Clause",
+      "rows": [
+        {
+          "sentence": "That he is very sick, is evident.",
+          "s": {
+            "clause": {
+              "s": "he",
+              "c": "is",
+              "p": "sick",
+              "pmod": "very"
+            },
+            "link": "That"
+          },
+          "c": "is",
+          "p": "evident",
+          "note": "Declarative; complex;  its subject is a clause.  *That he is very sick* is the subject;  *evident*, the predicate;  *is*, the copula.  In the subject clause, *he* is the subject;  *sick*, the predicate, modified by *very*;  *is*, the copula.  *That* is a conjunction introducing the clause."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — An Objective Clause",
+      "rows": [
+        {
+          "sentence": "He never denied that the letter was lost.",
+          "s": "He",
+          "p": "denied",
+          "pmod": "never",
+          "o": {
+            "clause": {
+              "s": "letter",
+              "smod": "the",
+              "p": "was lost"
+            },
+            "link": "that"
+          },
+          "note": "Declarative; complex.  *He never denied* is the principal clause;  *the letter was lost*, the subordinate clause;  *that*, the connective.  *denied* is modified by *never*, an adverbial element, and by the clause *that the letter was lost*, an objective element."
+        }
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Clauses & Truth",
+      "bullets": [
+        "A subordinate clause is a proposition used as an element:  it is not affirmed on its own, as a member is.",
+        "“He never denied that the letter was lost.” — true or false whether or not the letter was lost.",
+        "“That he is very sick, is evident.” — *evident* is affirmed of a whole proposition:  *he is very sick*."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Principal or Subordinate?",
-      "instruction": "Tell whether each clause is principal (makes sense alone) or subordinate (does not).",
+      "heading": "Practice — Subordinate Clauses (Set 1)",
+      "instruction": "Name the subordinate clause and tell its class.",
       "items": [
-        "I know",
-        "where gold is found",
-        "she was tired",
-        "because it rained",
-        "the boy studies",
-        "when spring comes"
+        "He that flattereth, deceiveth his neighbor.",
+        "The boy that you saw, is my younger brother.",
+        "He was frightened when he first saw a lion.",
+        "I can not study where pupils make so much noise."
       ],
       "answers": [
-        "principal",
-        "subordinate",
-        "principal",
-        "subordinate",
-        "principal",
-        "subordinate"
+        "that flattereth — adjective",
+        "that you saw — adjective",
+        "when he first saw a lion — adverbial",
+        "where pupils make so much noise — adverbial"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Simple, Compound, or Complex?",
-      "instruction": "Name the kind of each sentence.",
+      "heading": "Practice — Subordinate Clauses (Set 2)",
+      "instruction": "Name the subordinate clause and tell its class.  If the subject only is a clause, say so (Rem. 1).",
       "items": [
-        "Dogs bark.",
-        "Dogs bark, and cats meow.",
-        "I know that you are here.",
-        "She smiled when he arrived.",
-        "Snow fell all night.",
-        "He tried, but he failed.",
-        "The book that I read was long.",
-        "Birds fly south in winter."
+        "I would pay you if I had the money.",
+        "That he will succeed, is uncertain.",
+        "The messenger reported that the brave general was dead.",
+        "He is a good man, though very eccentric."
+      ],
+      "answers": [
+        "if I had the money — adverbial",
+        "That he will succeed — subject clause  (Rem. 1:  need not be separated)",
+        "that the brave general was dead — objective",
+        "though [he is] very eccentric — adverbial"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Subordinate Clauses (Set 3)",
+      "instruction": "Name every subordinate clause and tell its class.",
+      "items": [
+        "Nature never did betray the heart that loved her.",
+        "The poor too often turn away, unheard, / From hearts that shut against them, with a sound / That shall be heard in heaven.  — Longfellow"
+      ],
+      "answers": [
+        "that loved her — adjective",
+        "that shut against them — adjective (modifies *hearts*);  That shall be heard in heaven — adjective (modifies *sound*)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Reducing & Enlarging",
+      "bullets": [
+        "Complex sentences may often be reduced to simple sentences by using single words or phrases, instead of subordinate propositions, as modifiers.",
+        "“A man who is wealthy, lives there” = “A man of wealth lives there,” or “A wealthy man lives there.”",
+        "Simple sentences may often be enlarged to complex sentences by using subordinate propositions, instead of single words or phrases, as modifiers.",
+        "“None think the great unhappy but the great” = “None think that the great are unhappy but the great.”"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Reduce to Simple (Set 1)",
+      "instruction": "Reduce each complex sentence to a simple sentence.  Model — “We started when the sun rose” = “We started at sunrise.”",
+      "items": [
+        "A pupil that is studious, will learn rapidly.",
+        "Men who are honest, are respected.",
+        "A boy, when he is at play, is happy.",
+        "An accident that was unavoidable, occurred at the factory this morning."
+      ],
+      "answers": [
+        "A studious pupil will learn rapidly.",
+        "Honest men are respected.",
+        "A boy at play is happy.",
+        "An unavoidable accident occurred at the factory this morning."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Reduce to Simple (Set 2)",
+      "instruction": "Reduce each complex sentence to a simple sentence.",
+      "items": [
+        "Franklin, who was a philosopher, was an American.",
+        "One soldier was not present when the roll was called.",
+        "They weighed anchor when the tide turned.",
+        "My brother has gone to the city that he may find employment."
+      ],
+      "answers": [
+        "Franklin, a philosopher, was an American.",
+        "One soldier was not present at roll call.",
+        "They weighed anchor at the turn of the tide.",
+        "My brother has gone to the city to find employment."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Enlarge to Complex (Set 1)",
+      "instruction": "Enlarge each simple sentence to a complex sentence, using a clause instead of the marked words.",
+      "items": [
+        "A thing **of beauty** is a joy forever.",
+        "I went down to the river **at ten o’clock**.",
+        "Thou hast uttered **cruel** words.",
+        "The poor must work **in their grief**."
+      ],
+      "answers": [
+        "A thing that is beautiful is a joy forever.",
+        "I went down to the river when it was ten o’clock.",
+        "Thou hast uttered words that are cruel.",
+        "The poor must work while they grieve."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Enlarge to Complex (Set 2)",
+      "instruction": "Enlarge each simple sentence to a complex sentence, using a clause instead of the marked words.",
+      "items": [
+        "Time **wasted** is existence;  **used**, is life.",
+        "They came here **to see the country**.",
+        "The wild beasts **kept for the games**, had broken from their dens.",
+        "Haste **to cheer my father’s heart**."
+      ],
+      "answers": [
+        "Time that is wasted is existence;  time that is used is life.",
+        "They came here that they might see the country.",
+        "The wild beasts that were kept for the games, had broken from their dens.",
+        "Haste, that thou mayest cheer my father’s heart."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Which Kind?",
+      "instruction": "Name the kind of each sentence.",
+      "answerInline": true,
+      "items": [
+        "Iron and lead are heavy.",
+        "The sun rose, and the mist vanished.",
+        "The tree that fell was an oak.",
+        "We waited until noon.",
+        "We waited until he came.",
+        "He is poor, but he is honest.",
+        "He said that the road was closed.",
+        "Eli ran, jumped, and shouted."
       ],
       "answers": [
         "simple",
         "compound",
         "complex",
-        "complex",
         "simple",
+        "complex",
         "compound",
         "complex",
         "simple"
       ]
     },
     {
+      "type": "concept",
+      "heading": "Oral Lesson — the Interjection",
+      "bullets": [
+        "“Hurra! we have found him.” — *we* is the subject;  *have found*, the predicate, modified by *him*, an objective element.",
+        "What does *hurra* denote?  That the speaker is highly pleased.  Does it affirm or deny any thing?  It does not:  it simply implies a feeling of pleasure.",
+        "Other words denote sorrow, grief, surprise, disgust, pity, hatred.  All such words are called *Interjections*."
+      ]
+    },
+    {
       "type": "definition",
       "term": "Interjection",
-      "text": "An Interjection is a word thrown into a sentence to express sudden feeling or emotion.",
+      "text": "An Interjection is a word used to denote some sudden or strong emotion.",
       "examples": [
-        "Hurrah! We won the game.",
-        "Ouch! That hurts.",
-        "Alas! The ship was lost.",
-        "it neither affirms nor denies — it just exclaims"
+        "**Bravo!** you have won the race.  (approval)",
+        "**Ugh!** the milk is sour.  (disgust)",
+        "**Ah**, how calm the sea is!  (delight)",
+        "**Fie!** you should be ashamed.  (reproach)"
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Remarks on the Interjection",
+      "bullets": [
+        "Rem. — Interjections usually, but not always, require an exclamation point [ ! ] after them.",
+        "An interjection is no part of the proposition:  “Alas! the ship was lost” is true just when the ship was lost.",
+        "Note. — Interjections may be omitted in analysis.  In a diagram they may be placed before and a little above the first words."
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Sentences with Interjections",
+      "rows": [
+        {
+          "sentence": "Hurra! we have found him.",
+          "interj": "Hurra",
+          "s": "we",
+          "p": "have found",
+          "o": "him",
+          "note": "Declarative.  *we* is the subject;  *have found*, the predicate, modified by *him*, an objective element.  *Hurra* is an interjection;  it denotes pleasure."
+        },
+        {
+          "sentence": "Hush! they are coming.",
+          "interj": "Hush",
+          "s": "they",
+          "p": "are coming",
+          "note": "Declarative.  *they* is the subject;  *are coming*, the predicate.  *Hush* is an interjection;  it denotes some sudden emotion."
+        }
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Find the Interjection",
-      "instruction": "Name the interjection in each sentence.",
+      "heading": "Practice — Interjections (Set 1)",
+      "instruction": "Point out the interjection in each sentence.",
+      "answerInline": true,
       "items": [
-        "Hurrah! We won the game.",
-        "Oh, what a surprise!",
-        "Alas! The ship was lost.",
-        "Ouch! That hurts.",
-        "Hush! The baby is asleep.",
-        "Wow, look at that!"
+        "Ha! it freezes me.",
+        "Aha! you are a truant.",
+        "Ahem! I will think about it.",
+        "Hark! the clock strikes one.",
+        "Pshaw! I knew that yesterday.",
+        "Alas! we shall see him no more."
       ],
       "answers": [
-        "Hurrah",
+        "Ha",
+        "Aha",
+        "Ahem",
+        "Hark",
+        "Pshaw",
+        "Alas"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Interjections (Set 2)",
+      "instruction": "Point out the interjections in each sentence.",
+      "answerInline": true,
+      "items": [
+        "Tush! tush! man, I made no reference to you.",
+        "Ay, he is every inch a king.",
+        "Oh, what a noble mind is here o’erthrown!  (*o’erthrown* = overthrown)",
+        "Alas! they had been friends in youth.",
+        "Hark! hark! the lark at heaven’s gate sings.",
+        "Alas! for the rarity of Christian charity."
+      ],
+      "answers": [
+        "Tush, tush",
+        "Ay  (= yes)",
         "Oh",
         "Alas",
-        "Ouch",
-        "Hush",
-        "Wow"
+        "Hark, hark",
+        "Alas"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Parts of Speech (Set 1)",
+      "instruction": "Point out all the parts of speech in each sentence.",
+      "items": [
+        "Ha! it freezes me.",
+        "Aha! you are a truant.",
+        "Alas! they had been friends in youth.",
+        "Alas! we shall see him no more."
+      ],
+      "answers": [
+        "Ha — interjection;  it — pronoun;  freezes — verb;  me — pronoun",
+        "Aha — interjection;  you — pronoun;  are — verb;  a — adjective (article);  truant — noun",
+        "Alas — interjection;  they — pronoun;  had been — verb;  friends — noun;  in — preposition;  youth — noun",
+        "Alas — interjection;  we — pronoun;  shall see — verb;  him — pronoun;  no, more — adverbs"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Parts of Speech (Set 2)",
+      "instruction": "Point out all the parts of speech in each sentence.",
+      "items": [
+        "Ahem! I will think about it.",
+        "Hark! hark! the lark at heaven’s gate sings.",
+        "Tush! tush! man, I made no reference to you.",
+        "Alas! for the rarity of Christian charity."
+      ],
+      "answers": [
+        "Ahem — interjection;  I — pronoun;  will think — verb;  about — preposition;  it — pronoun",
+        "Hark, hark — interjections;  the — adjective (article);  lark — noun;  at — preposition;  heaven’s — noun;  gate — noun;  sings — verb",
+        "Tush, tush — interjections;  man — noun;  I — pronoun;  made — verb;  no — adjective;  reference — noun;  to — preposition;  you — pronoun",
+        "Alas — interjection;  for — preposition;  the — adjective (article);  rarity — noun;  of — preposition;  Christian — adjective;  charity — noun"
       ]
     },
     {
       "type": "concept",
       "heading": "The Eight Parts of Speech",
       "bullets": [
-        "Noun — names.   ·   Pronoun — stands in for a noun.",
-        "Verb — asserts action, being, or state.   ·   Adjective — describes or defines.",
-        "Adverb — modifies a verb, adjective, or adverb.   ·   Preposition — shows relation.",
-        "Conjunction — joins.   ·   Interjection — exclaims.",
-        "Every word you meet is doing one of these eight jobs — that is all of Part I."
+        "Noun — a name.",
+        "Pronoun — used instead of a noun.",
+        "Verb — expresses action, being, or state.",
+        "Adjective — describes or defines a noun.",
+        "Adverb — modifies a verb, an adjective, a participle, or an adverb.",
+        "Preposition — shows the relation between its object and some other word.",
+        "Conjunction — connects words, phrases, clauses, and members.",
+        "Interjection — denotes some sudden or strong emotion."
       ]
     },
     {
       "type": "questions",
       "items": [
         "What is a simple sentence?",
+        "How may several sentences be combined to form a single sentence?",
         "What is a compound sentence?",
-        "What are the members of a compound sentence?",
+        "What are its members?",
+        "How can a compound sentence containing common parts be changed to a simple sentence?",
         "What is a complex sentence?",
-        "What is a subordinate clause?",
-        "What is an interjection?",
-        "Name the eight parts of speech."
+        "What is a principal clause?"
       ],
       "answers": [
         "One that consists of a single proposition.",
-        "Two or more complete sentences joined together.",
-        "The complete sentences it is made of.",
-        "One in which some element is a clause.",
-        "A clause that does not make complete sense alone.",
-        "A word that expresses sudden feeling or emotion.",
-        "Noun, pronoun, verb, adjective, adverb, preposition, conjunction, interjection."
+        "By using their common part but once.",
+        "Two or more connected sentences, each making complete sense alone.",
+        "The sentences of which it is composed.",
+        "Unite the parts not common;  use the common parts but once.",
+        "One some element of which contains a subject and a predicate.",
+        "One that makes complete sense when separated from the rest."
+      ]
+    },
+    {
+      "type": "questions",
+      "items": [
+        "What is a subordinate clause?",
+        "Into what five classes may clauses be divided?",
+        "How may complex sentences be reduced?",
+        "How may simple sentences be enlarged?",
+        "What is an interjection?",
+        "What should usually be placed after an interjection?"
+      ],
+      "answers": [
+        "One that does not make complete sense when separated from the rest.",
+        "Subject, predicate, objective, adjective, adverbial.",
+        "By using words or phrases instead of subordinate propositions.",
+        "By using subordinate propositions instead of words or phrases.",
+        "A word used to denote some sudden or strong emotion.",
+        "An exclamation point."
       ]
     }
   ]
