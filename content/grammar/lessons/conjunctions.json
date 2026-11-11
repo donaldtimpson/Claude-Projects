@@ -144,7 +144,8 @@
       "heading": "Compound Elements & Truth",
       "bullets": [
         "“James and Samuel are kind” = *James is kind* and *Samuel is kind*:  true if both are true;  false if either is false.",
-        "“Ellen or Mary studies botany” — Harvey’s *or* shuts out both:  true if exactly one studies;  false if neither does, or both do.  (Logic also uses an inclusive *or*:  at least one.)",
+        "“Ellen or Mary studies botany”:  true if at least one studies;  false only if neither does.",
+        "“**Either** Ellen **or** Mary studies botany”:  true if exactly one studies;  false if neither does, or both do.",
         "Not every *and* divides so:  “Rome and Carthage were rivals” does not mean “Rome was rivals.”  The predicate is affirmed of the parts taken together."
       ]
     },
