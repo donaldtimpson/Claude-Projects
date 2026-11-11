@@ -359,25 +359,6 @@
       ]
     },
     {
-      "type": "analysis",
-      "heading": "Analyze — Parts Taken Together",
-      "rows": [
-        {
-          "sentence": "Two and two are four.",
-          "s": {
-            "parts": [
-              "Two",
-              "two"
-            ],
-            "conj": "and"
-          },
-          "c": "are",
-          "p": "four",
-          "note": "*Two and two*, the compound subject, taken together;  *four*, the predicate;  *are*, the copula."
-        }
-      ]
-    },
-    {
       "type": "concept",
       "heading": "Directions for Writing",
       "bullets": [
