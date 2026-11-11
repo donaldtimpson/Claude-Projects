@@ -12,7 +12,7 @@
       "type": "concept",
       "heading": "Oral Lesson",
       "bullets": [
-        "“Ellen **and** Mary study botany.” — *Ellen* and *Mary* together form the subject:  *study botany* is affirmed of both.  *and* connects them.",
+        "“Ellen **and** Mary study botany.” — *Ellen* and *Mary* are both used as the subject:  something is affirmed of each.  *and* connects them.",
         "“Ellen **or** Mary studies botany.” — not both are represented as studying:  if Ellen studies botany, Mary does not.  *or* connects them.",
         "“Ellen will study botany, **if** Mary studies algebra.” — two clauses;  *if* connects them.",
         "Words used merely to join words or groups of words are called *Conjunctions*."
@@ -26,7 +26,7 @@
         "Eli **and** Silas will improve.  (words)",
         "He looked under the bed **and** behind the door.  (phrases)",
         "Eli and Silas will improve, **if** they study.  (clauses)",
-        "Wheat grows in the field, **and** men reap it.  (members — sentences each making complete sense alone)"
+        "Wheat grows in the field, **and** men reap it.  (members — the sentences joined in a compound sentence)"
       ]
     },
     {
@@ -34,8 +34,8 @@
       "heading": "Conjunction or Preposition?",
       "bullets": [
         "Conjunctions merely connect;  unlike prepositions, they do not express relations.",
-        "“A man **of** wealth” — *of* shows the relation of its object, *wealth*, to *man*.",
-        "“Ellen **and** Mary” — *and* only joins;  *Mary* is not its object.",
+        "“He is a man **of** wealth.” — *of* shows the relation of its object, *wealth*, to *man*.",
+        "“Ellen **and** Mary study botany.” — *and* only joins;  *Mary* is not its object.",
         "Some words serve as both:  “Wait **until** noon” (preposition — object *noon*);  “Wait **until** I come” (conjunction — joins clauses)."
       ]
     },
@@ -46,16 +46,12 @@
       "items": [
         "We moved along silently and cautiously.",
         "I consent to the constitution, because I expect no better.",
-        "He heaped up great riches, but passed his time miserably.",
-        "He is both learned and wise.",
-        "I shall not go, if it rain.  (*rain* = *rains*)"
+        "He heaped up great riches, but passed his time miserably."
       ],
       "answers": [
         "and:  silently · cautiously",
         "because:  the clauses I consent to the constitution · I expect no better",
-        "but:  heaped up great riches · passed his time miserably",
-        "both … and:  learned · wise",
-        "if:  the clauses I shall not go · it rain"
+        "but:  the predicates heaped up great riches · passed his time miserably"
       ]
     },
     {
@@ -63,13 +59,26 @@
       "heading": "Practice — Point Out the Conjunctions (Set 2)",
       "instruction": "Name each conjunction and what it connects.  Model — “Eli and Silas will improve, if they study.” — and:  Eli · Silas;  if:  the clauses Eli and Silas will improve · they study.",
       "items": [
-        "Cold and hunger awake not her care.  (awake not = do not awaken)",
+        "He is both learned and wise.",
+        "I shall not go, if it rain.  (*if it rain* = *if it should rain*)",
+        "Cold and hunger awake not her care.  (*awake not* = *do not awaken*)"
+      ],
+      "answers": [
+        "both … and:  learned · wise",
+        "if:  the clauses I shall not go · it rain",
+        "and:  Cold · hunger"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Point Out the Conjunctions (Set 3)",
+      "instruction": "Name each conjunction and what it connects.  Model — “Eli and Silas will improve, if they study.” — and:  Eli · Silas;  if:  the clauses Eli and Silas will improve · they study.",
+      "items": [
         "They submit, since they can not conquer.",
         "He has many faults, still he is very popular.",
         "Emma or Susan will remain at home."
       ],
       "answers": [
-        "and:  Cold · hunger",
         "since:  the clauses They submit · they can not conquer",
         "still:  the members He has many faults · he is very popular",
         "or:  Emma · Susan"
@@ -80,23 +89,23 @@
       "heading": "Practice — Conjunction or Preposition?",
       "instruction": "Tell whether the marked word is a conjunction or a preposition.  If a preposition, name its object.",
       "items": [
-        "All **but** one escaped.",
         "He is poor, **but** honest.",
-        "I have not seen him **since** Monday.",
+        "All **but** one escaped.",
         "**Since** you ask, I will tell you.",
+        "I have not seen him **since** Monday.",
         "We rested **after** dinner.",
-        "We rested **after** we had dined.",
         "He rose **before** daybreak.",
+        "We rested **after** we had dined.",
         "He rose **before** the sun was up."
       ],
       "answers": [
+        "conjunction",
         "preposition — object:  one",
         "conjunction",
         "preposition — object:  Monday",
-        "conjunction",
         "preposition — object:  dinner",
-        "conjunction",
         "preposition — object:  daybreak",
+        "conjunction",
         "conjunction"
       ]
     },
@@ -125,16 +134,16 @@
       "type": "concept",
       "heading": "Remarks on Compound Elements",
       "bullets": [
-        "Any element of a proposition may be compound.",
-        "Rem. 1. — The conjunctions may be expressed or understood:  in “We run, jump, and talk,” an *and* is understood between *run* and *jump*.",
-        "A compound element is still one proposition:  in “James and Samuel are kind,” one copula, *are*, affirms *kind* of the subject *James and Samuel*."
+        "Rem. 1. — The conjunctions may be expressed or understood:  in “We run, jump, and talk,” an *and* is understood between *run* and *jump*.  Any element of a proposition may be compound.",
+        "*Similar* parts are of the same kind:  subjects with subjects, predicates with predicates, modifiers with modifiers.",
+        "A compound element is still one proposition:  in “James and Samuel are kind,” one copula, *are*, affirms *kind* of the subject *James and Samuel* — though it says what two propositions would."
       ]
     },
     {
       "type": "concept",
       "heading": "Compound Elements & Truth",
       "bullets": [
-        "“James and Samuel are kind” affirms what two propositions affirm:  *James is kind*;  *Samuel is kind*.  True if both are true;  false if either is false.",
+        "“James and Samuel are kind” = *James is kind* and *Samuel is kind*:  true if both are true;  false if either is false.",
         "“Ellen or Mary studies botany” — Harvey’s *or* shuts out both:  true if exactly one studies;  false if neither does, or both do.  (Logic also uses an inclusive *or*:  at least one.)",
         "Not every *and* divides so:  “Rome and Carthage were rivals” does not mean “Rome was rivals.”  The predicate is affirmed of the parts taken together."
       ]
@@ -225,38 +234,43 @@
     },
     {
       "type": "practice",
-      "heading": "Practice — Compound Elements (Set 1)",
-      "instruction": "Name every compound element and tell what kind it is.",
+      "heading": "Practice — Analyze (Set 1)",
+      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
       "items": [
         "Exercise and temperance strengthen the constitution.",
-        "Mr. Mann owns and cultivates a large and valuable farm.",
-        "Duty and interest forbid vicious and wicked indulgences.",
-        "Your levity and heedlessness will prevent all improvement."
+        "Mr. Mann owns and cultivates a large and valuable farm."
       ],
       "answers": [
-        "Exercise and temperance:  compound subject",
-        "owns and cultivates:  compound predicate;  large and valuable:  compound adjective element",
-        "Duty and interest:  compound subject;  vicious and wicked:  compound adjective element",
-        "levity and heedlessness:  compound subject"
+        "*Exercise and temperance*, the compound subject;  *strengthen*, the predicate, modified by *constitution*, an objective element, which *the* modifies.",
+        "*Mr. Mann*, the subject;  *owns and cultivates*, the compound predicate, modified by *farm*, an objective element, which *a* and *large and valuable*, a compound adjective element, modify."
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Compound Elements (Set 2)",
-      "instruction": "Name every compound element and tell what kind it is.",
+      "heading": "Practice — Analyze (Set 2)",
+      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
       "items": [
-        "Two and two are four.",
-        "Forty pupils study arithmetic, grammar, and geography.",
-        "The wearied soldiers fought bravely and successfully.",
-        "It was a bright, warm morning.",
-        "He will come today or tomorrow."
+        "Duty and interest forbid vicious and wicked indulgences.",
+        "Your levity and heedlessness will prevent all improvement."
       ],
       "answers": [
-        "Two and two:  compound subject  (taken together — not “Two is four”)",
-        "arithmetic, grammar, and geography:  compound objective element",
-        "bravely and successfully:  compound adverbial element",
-        "bright, warm:  compound adjective element  (conjunction understood)",
-        "today or tomorrow:  compound adverbial element"
+        "*Duty and interest*, the compound subject;  *forbid*, the predicate, modified by *indulgences*, an objective element, which *vicious and wicked*, a compound adjective element, modifies.",
+        "*levity and heedlessness*, the compound subject, modified by *Your*;  *will prevent*, the predicate, modified by *improvement*, an objective element, which *all* modifies."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Analyze (Set 3)",
+      "instruction": "Analyze each sentence, following the models;  name every compound element and tell what kind it is.",
+      "items": [
+        "Two and two are four.",
+        "The wearied soldiers fought bravely and successfully.",
+        "Forty pupils study arithmetic, grammar, and geography."
+      ],
+      "answers": [
+        "*Two and two*, the compound subject (taken together);  *four*, the predicate;  *are*, the copula.",
+        "*soldiers*, the subject;  *fought*, the predicate, modified by *bravely and successfully*, a compound adverbial element.",
+        "*pupils*, the subject, modified by *Forty*;  *study*, the predicate, modified by *arithmetic, grammar, and geography*, a compound objective element."
       ]
     },
     {
@@ -264,7 +278,7 @@
       "heading": "Directions for Writing",
       "bullets": [
         "More than two parts:  I. Place a comma after each part except the last.  II. Use the conjunction between the last two parts only. — “kind, honest, and faithful”",
-        "Two parts:  I. Connect them by a conjunction — “Ellen and Lucy.”  II. Or, omit the conjunction and use a comma in its stead — “a cold, dark night.”",
+        "Two parts:  I. Connect them by a conjunction — “Ellen and Lucy.”  II. Or, omit the conjunction and use a comma in its stead — “a tall, slender tree.”",
         "Rem. 2. — To make the parts emphatic, the conjunction and the comma may both be used between any two of them:  “kind, and honest, and faithful.”"
       ]
     },
@@ -277,19 +291,19 @@
         "The farmer plows sows and reaps.",
         "She bought apples pears and plums.",
         "The horse was old lame and blind.",
-        "Exercise temperance and rest strengthen the constitution.",
         "The wind blew fiercely steadily and coldly.",
         "It was a long dull day.",
-        "Mary and Jane sing in the choir."
+        "Mary and Jane sing in the choir.",
+        "Exercise temperance and rest strengthen the constitution."
       ],
       "answers": [
         "plows, sows, and reaps",
         "apples, pears, and plums",
         "old, lame, and blind",
-        "Exercise, temperance, and rest",
         "fiercely, steadily, and coldly",
-        "long, dull — or long and dull",
-        "Mary and Jane  (two parts joined by a conjunction:  no comma)"
+        "long, dull  or  long and dull",
+        "Mary and Jane — no comma",
+        "Exercise, temperance, and rest"
       ]
     },
     {
