@@ -174,7 +174,8 @@
       "bullets": [
         "Each member of a declarative compound sentence is a proposition, true or false by itself.  (A command — *Lead us not…* — is neither.)",
         "*and*, *but* — both members are affirmed:  true if both are true;  false if either is false.  *but* adds contrast, not a different truth.",
-        "*or* — Harvey’s *or* shuts out both:  true if exactly one member is true;  false if neither is, or both are.  (Logic also uses an inclusive *or*:  at least one.)"
+        "*or* — true if at least one member is true;  false only if neither is.",
+        "*either…or* — true if exactly one member is true;  false if neither is, or both are."
       ]
     },
     {
