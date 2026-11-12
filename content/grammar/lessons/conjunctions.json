@@ -30,6 +30,59 @@
       ]
     },
     {
+      "type": "analysis",
+      "heading": "Analyze — Joining Clauses",
+      "rows": [
+        {
+          "sentence": "Eli and Silas will improve, if they study.",
+          "s": {
+            "parts": [
+              "Eli",
+              "Silas"
+            ],
+            "conj": "and"
+          },
+          "p": "will improve",
+          "pclause": {
+            "s": "they",
+            "p": "study",
+            "rel": "p",
+            "link": "if"
+          },
+          "note": "*if* connects clauses.  *if they study* is an adverbial element:  it hangs from *will improve* inside one diagram."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Joining Members",
+      "rows": [
+        {
+          "sentence": "Wheat grows in the field, and men reap it.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "Wheat",
+              "p": "grows",
+              "pmod": [
+                {
+                  "prep": "in",
+                  "obj": "field",
+                  "mod": "the"
+                }
+              ]
+            },
+            {
+              "s": "men",
+              "p": "reap",
+              "o": "it"
+            }
+          ],
+          "note": "*and* connects members.  Each member is diagrammed as a sentence by itself;  neither is an element of the other."
+        }
+      ]
+    },
+    {
       "type": "concept",
       "heading": "Conjunction or Preposition?",
       "bullets": [
