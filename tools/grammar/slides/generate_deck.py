@@ -485,7 +485,10 @@ def _overhang(ws, smod, pmod):
     """Extra room after the subject when its word modifiers step right past it
     and the predicate's modifiers are laid out from the predicate's left edge."""
     sm, pm = _mlist(smod), _mlist(pmod)
-    if not sm or any(isinstance(m, dict) for m in sm) or not any(isinstance(m, dict) for m in pm):
+    if not sm or any(isinstance(m, dict) for m in sm):
+        return 0
+    # Three or more stepped modifiers run well under the predicate:  seat them all.
+    if len(sm) < 3 and not any(isinstance(m, dict) for m in pm):
         return 0
     return max(0, int(_mods_right(ws / 2, sm) + MOD_GAP - ws))
 

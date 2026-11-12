@@ -483,6 +483,41 @@
       ]
     },
     {
+      "type": "analysis",
+      "heading": "Analyze — Coordinate or Cumulative?",
+      "rows": [
+        {
+          "sentence": "A tall, slender tree shaded the house.",
+          "s": "tree",
+          "smod": [
+            "A",
+            {
+              "parts": [
+                "tall",
+                "slender"
+              ],
+              "conj": "x"
+            }
+          ],
+          "p": "shaded",
+          "o": "house",
+          "omod": "the",
+          "note": "Coordinate:  *tall, slender* is a compound adjective element, diagrammed like any compound.  The comma stands for an understood *and*, marked *x*."
+        },
+        {
+          "sentence": "A little old man smiled.",
+          "s": "man",
+          "smod": [
+            "A",
+            "little",
+            "old"
+          ],
+          "p": "smiled",
+          "note": "Cumulative:  *A*, *little*, and *old* are separate adjective elements, each on its own line under *man*.  No conjunction is understood, so no comma."
+        }
+      ]
+    },
+    {
       "type": "questions",
       "items": [
         "What is a conjunction?",
