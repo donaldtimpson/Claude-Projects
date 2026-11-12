@@ -422,6 +422,41 @@
       ]
     },
     {
+      "type": "concept",
+      "heading": "Recall — Commas with Adjectives",
+      "bullets": [
+        "Adjectives that form a compound element take commas — the comma stands in for an understood *and*:  a cold, dreary, endless night.",
+        "Test — coordinate adjectives can take *and* between them or be reversed:  “a cold and dreary night”;  “a dreary, cold night.”",
+        "If you can’t insert *and* or reverse them, they aren’t coordinate but cumulative — so no commas:  “a little old wooden chair” (not “a wooden old little chair”).",
+        "Never put a comma between the last adjective and its noun:  a kind, gentle man  (no comma after gentle)."
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Comma or No Comma?",
+      "instruction": "Add a comma between coordinate adjectives (those you could join with *and*); use none between cumulative adjectives. Write each phrase correctly.",
+      "items": [
+        "a cold dreary night",
+        "a big black dog",
+        "a brave honest man",
+        "an old stone bridge",
+        "a dark stormy sky",
+        "a tall wooden fence",
+        "a kind gentle teacher",
+        "a red silk dress"
+      ],
+      "answers": [
+        "a cold, dreary night",
+        "a big black dog  (no comma)",
+        "a brave, honest man",
+        "an old stone bridge  (no comma)",
+        "a dark, stormy sky",
+        "a tall wooden fence  (no comma)",
+        "a kind, gentle teacher",
+        "a red silk dress  (no comma)"
+      ]
+    },
+    {
       "type": "practice",
       "heading": "Practice — Punctuate the Compound Elements",
       "instruction": "Write each compound element correctly, following the Directions for Writing.",
@@ -432,6 +467,7 @@
         "The horse was old lame and blind.",
         "The wind blew fiercely steadily and coldly.",
         "It was a long dull day.",
+        "They lived in a little brick house.",
         "Mary and Jane sing in the choir.",
         "Exercise temperance and rest strengthen the constitution."
       ],
@@ -441,6 +477,7 @@
         "old, lame, and blind",
         "fiercely, steadily, and coldly",
         "long, dull  or  long and dull",
+        "little brick — no comma",
         "Mary and Jane — no comma",
         "Exercise, temperance, and rest"
       ]
