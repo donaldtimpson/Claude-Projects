@@ -1,22 +1,20 @@
 import SwiftUI
 
-// MARK: - The Fig Stall (Market · Money)
+// MARK: - The Fig Stall (Market · Money) — making change
 //
-// You run a fruit stall. A customer holds up an order; tap fruit from the crates into the bag
-// (tap the bag to take the last one out), then GIVE it. From Gradus III you also ring up the
-// total. Money is US cents (¢, as in Coin Count); from VII prices are dollars and cents.
+// You keep a fruit stall on a sunny market street. A customer buys fruit and puts their money on
+// the counter; you give the CHANGE by tapping coins (and later bills) out of the till into their
+// purse. A count-up strip does it the way real cashiers do: start at the price and count up to
+// what they paid — "37… 38, 39, 40, 50!". Too much change and the customer frowns; every miss
+// shows the change that was right.
 //
-// Ladder: I one fruit, 1–5, all pictures, 2 crates · II two fruits (or one, up to 8), pictures
-// + numbers, 3 crates · III prices on the crates; pick the total of 3 (≤ 20¢) · IV the order in
-// words ("half a dozen figs and three pears"), totals ≤ 50¢ · V budgets ("I have 23¢ — as many
-// pears as I can!") + a patience bar (45 s) · VI a melon plus as many as the rest buys; 4 totals
-// · VII dollar prices ($0.75), 4 totals · VIII+ dollar word orders and dollar budgets; patience
-// eases from 40 s to a floor of 25 s.
-// The goat eats a short bag; Granny pays in kisses.
+// Difficulty (continuous, `d`): paid with a nickel (I) → a dime → a quarter → a dollar → two
+// fruits (add them first) → $5 and $10 bills → $20 with three fruits. The count-up strip and the
+// value badges on the coins fade out; customers start to tap their feet (a patience bar that
+// tightens from 45 s to 20 s); from d≈7 the change must use the fewest coins and bills.
 
 struct FSFruit: Hashable {
     let id: String, emoji: String, one: String, many: String
-    func name(_ n: Int) -> String { n == 1 ? one : many }
 }
 
 let fsFruits: [FSFruit] = [
@@ -27,387 +25,286 @@ let fsFruits: [FSFruit] = [
     .init(id: "orange", emoji: "🍊", one: "orange", many: "oranges"),
     .init(id: "lemon", emoji: "🍋", one: "lemon", many: "lemons"),
     .init(id: "peach", emoji: "🍑", one: "peach", many: "peaches"),
-    .init(id: "strawberry", emoji: "🍓", one: "strawberry", many: "strawberries"),
-    .init(id: "kiwi", emoji: "🥝", one: "kiwi", many: "kiwis"),
+    .init(id: "grapes", emoji: "🍇", one: "bunch of grapes", many: "bunches of grapes"),
     .init(id: "melon", emoji: "🍉", one: "melon", many: "melons"),
 ]
 
 private func fsFruit(_ id: String) -> FSFruit { fsFruits.first { $0.id == id } ?? fsFruits[1] }
 
-private let fsWords = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
+// MARK: Sales
 
-func fsMoney(_ cents: Int, dollars: Bool) -> String {
-    dollars ? String(format: "$%d.%02d", cents / 100, cents % 100) : "\(cents)¢"
+struct FSSale {
+    var items: [(fruit: String, price: Int)]
+    var paid: [USMoney]            // what the customer hands over
+    var till: [USMoney]            // the compartments you can give change from
+    var showTrack = true
+    var showValues = true
+    var fewest = false             // must give the fewest pieces
+    var total: Int { items.reduce(0) { $0 + $1.price } }
+    var paidSum: Int { paid.reduce(0) { $0 + $1.cents } }
+    var change: Int { paidSum - total }
 }
 
-// MARK: Orders
-
-struct FSOrder {
-    enum Bubble: Equatable { case pictures, numbered, words(String), budget(String) }
-    var kinds: [String]                 // fruit ids wanted, in display order
-    var want: [String: Int]
-    var bubble: Bubble
-    var crates: [String]
-    var prices: [String: Int] = [:]     // cents; empty = no prices shown
-    var dollars = false
-    var totalOptions: [Int] = []        // non-empty = a ring-up step after the bag
-    var totalCorrect = 0
-    var bagNote = ""                    // teaching line when the bag is wrong ("half a dozen = 6")
-    var total: Int { kinds.reduce(0) { $0 + (prices[$1] ?? 0) * (want[$1] ?? 0) } }
-    var totalExplain: String {
-        kinds.map { "\(want[$0] ?? 0) × \(fsMoney(prices[$0] ?? 0, dollars: dollars))" }.joined(separator: " + ")
-            + " = " + fsMoney(total, dollars: dollars)
-    }
-    func money(_ c: Int) -> String { fsMoney(c, dollars: dollars) }
-}
-
-private func fsPick(_ n: Int, except: Set<String> = []) -> [String] {
-    Array(fsFruits.map(\.id).filter { !except.contains($0) }.shuffled().prefix(n))
-}
-
-private func fsCrates(_ kinds: [String], _ n: Int) -> [String] {
-    (kinds + fsPick(max(0, n - kinds.count), except: Set(kinds))).shuffled()
-}
-
-/// Ring-up choices: the total plus the likeliest slips (one too many/few of a fruit, then near misses).
-private func fsTotals(_ o: FSOrder, _ n: Int) -> ([Int], Int) {
-    let t = o.total, step = o.dollars ? 25 : 1
-    let likely = o.kinds.flatMap { k in [t - (o.prices[k] ?? 0), t + (o.prices[k] ?? 0)] }
-    let near = [t + step, t - step, t + 2 * step, t - 2 * step, t + 4 * step]
-    var opts = [t]
-    for c in likely.shuffled() + near.shuffled() where c > 0 && !opts.contains(c) && opts.count < n { opts.append(c) }
-    opts.shuffle()
-    return (opts, opts.firstIndex(of: t) ?? 0)
-}
-
-/// A price on every crate (so the crates don't give the order away); melons always cost more.
-private func fsPrices(_ crates: [String], dollars: Bool, maxCents: Int, fixed: [String: Int] = [:]) -> [String: Int] {
-    var p = fixed
-    for k in crates where p[k] == nil {
-        if k == "melon" { p[k] = dollars ? [200, 250, 300].randomElement()! : Int.random(in: 5...9) }
-        else { p[k] = dollars ? [25, 50, 75, 100, 125, 150, 200].filter { $0 <= maxCents }.randomElement()! : Int.random(in: 1...maxCents) }
-    }
-    return p
-}
-
-private func withTotals(_ o: FSOrder, _ n: Int) -> FSOrder {
-    var o = o
-    (o.totalOptions, o.totalCorrect) = fsTotals(o, n)
-    return o
-}
-
-/// Choices in the ring-up at a level: 3, then 4 from VI.
-private func fsChoices(_ level: Int) -> Int { level >= 6 ? 4 : 3 }
-
-private func fsWordsOrder(_ level: Int, dollars: Bool, maxPrice: Int, maxTotal: Int, crates: Int) -> FSOrder {
-    let specials: [(Int, String, String)] = [(12, "a dozen", "a dozen"), (6, "half a dozen", "half a dozen"), (2, "a pair of", "a pair")]
-    for _ in 0..<400 {
-        let kinds = fsPick(Bool.random() ? 2 : 1, except: ["melon"])
-        var want: [String: Int] = [:], parts: [String] = [], note = ""
-        let a = fsFruit(kinds[0])
-        if Int.random(in: 0..<4) < 3 {
-            let s = specials.randomElement()!
-            want[a.id] = s.0; parts.append("\(s.1) \(a.many)"); note = "\(s.2) = \(s.0)"
-        } else {
-            let q = Int.random(in: 2...9); want[a.id] = q; parts.append("\(fsWords[q]) \(a.name(q))")
-        }
-        if kinds.count > 1 {
-            let b = fsFruit(kinds[1]), q = Int.random(in: 1...5)
-            want[b.id] = q; parts.append("\(fsWords[q]) \(b.name(q))")
-        }
-        var text = parts.joined(separator: " and ") + ", please!"
-        text = text.prefix(1).uppercased() + text.dropFirst()
-        let cs = fsCrates(kinds, crates)
-        let o = FSOrder(kinds: kinds, want: want, bubble: .words(text), crates: cs,
-                        prices: fsPrices(cs, dollars: dollars, maxCents: maxPrice), dollars: dollars, bagNote: note)
-        if o.total <= maxTotal { return withTotals(o, fsChoices(level)) }
-    }
-    return fsPricedOrder(level, dollars: dollars)
-}
-
-private func fsPricedOrder(_ level: Int, dollars: Bool) -> FSOrder {
-    for _ in 0..<400 {
-        let kinds = fsPick(dollars || Bool.random() ? 2 : 1, except: ["melon"])
-        var want: [String: Int] = [:]
-        for k in kinds { want[k] = Int.random(in: 1...4) }
-        let cs = fsCrates(kinds, 3)
-        let o = FSOrder(kinds: kinds, want: want, bubble: .numbered, crates: cs,
-                        prices: fsPrices(cs, dollars: dollars, maxCents: dollars ? 200 : 3), dollars: dollars)
-        if o.total <= (dollars ? 1000 : 20) && o.total >= (dollars ? 0 : 3) { return withTotals(o, dollars ? 4 : fsChoices(level)) }
-    }
-    return FSOrder(kinds: ["apple"], want: ["apple": 2], bubble: .numbered, crates: ["apple", "pear", "fig"], prices: ["apple": 2])
-}
-
-/// "I have 23¢ — as many pears as I can!" (with `melon`: one melon first, then as many as the rest buys).
-private func fsBudgetOrder(_ level: Int, dollars: Bool, melon: Bool) -> FSOrder {
-    for _ in 0..<400 {
-        let k = fsPick(1, except: ["melon"])[0], f = fsFruit(k)
-        let p = dollars ? [50, 75, 100, 125].randomElement()! : Int.random(in: 2...(level >= 6 ? 6 : 5))
-        let n = Int.random(in: 2...(melon ? 6 : (level >= 6 ? 10 : 8)))
-        let m = melon ? (dollars ? [200, 250, 300].randomElement()! : Int.random(in: 5...9)) : 0
-        let r = dollars ? 25 * Int.random(in: 0..<(p / 25)) : Int.random(in: 0..<p)
-        let budget = m + p * n + r
-        guard budget <= (dollars ? 1500 : (level >= 6 ? 45 : 30)) else { continue }
-        let money = { (c: Int) in fsMoney(c, dollars: dollars) }
-        var kinds = [k], want = [k: n], prices = [k: p]
-        let text: String, note: String
-        if melon {
-            kinds = ["melon", k]; want["melon"] = 1; prices["melon"] = m
-            text = "I have \(money(budget)). One melon, then as many \(f.many) as I can!"
-            note = "\(money(budget)) − \(money(m)) melon = \(money(budget - m)) → \(n) \(f.name(n)) (\(money(n * p)))"
-        } else {
-            text = "I have \(money(budget)). As many \(f.many) as I can!"
-            note = "\(n) \(f.name(n)) cost \(money(n * p)) — \(n + 1) would cost \(money((n + 1) * p))"
-        }
-        let cs = fsCrates(kinds, level >= 6 ? 4 : 3)
-        return FSOrder(kinds: kinds, want: want, bubble: .budget(text), crates: cs,
-                       prices: fsPrices(cs, dollars: dollars, maxCents: dollars ? 200 : 6, fixed: prices), dollars: dollars, bagNote: note)
-    }
-    return fsPricedOrder(level, dollars: dollars)
-}
-
-func fsMakeOrder(_ level: Int) -> FSOrder {
-    switch level {
+@MainActor
+private func fsSale(_ m: ArcadeModel) -> FSSale {
+    let values = !m.chance(1, from: 3, to: 5.5)
+    let track = !m.chance(1, from: 3.5, to: 6.5)
+    let fewest = m.chance(1, from: 7, to: 9)
+    let pick = { (n: Int) in Array(fsFruits.map(\.id).shuffled().prefix(n)) }
+    let coinsTill: [USMoney] = USMoney.coins
+    switch m.tier([1, 2, 3, 4, 5.5, 6.5, 8]) {
+    case 0:
+        let p = Int.random(in: max(1, 4 - m.rampInt(1, 3, to: 2)) ... 4)
+        return FSSale(items: [(pick(1)[0], p)], paid: [.nickel], till: [.penny], showTrack: true, showValues: true)
     case 1:
-        let k = fsPick(2)
-        return FSOrder(kinds: [k[0]], want: [k[0]: Int.random(in: 1...5)], bubble: .pictures, crates: k.shuffled())
+        let p = Int.random(in: m.rampInt(5, 2, from: 2, to: 3)...9)
+        return FSSale(items: [(pick(1)[0], p)], paid: [.dime], till: [.penny, .nickel], showTrack: track || m.d < 3, showValues: values || m.d < 3)
     case 2:
-        if Int.random(in: 0..<10) < 3 {
-            let k = fsPick(1)
-            return FSOrder(kinds: k, want: [k[0]: Int.random(in: 5...8)], bubble: .numbered, crates: fsCrates(k, 3))
-        }
-        let k = fsPick(2)
-        return FSOrder(kinds: k, want: [k[0]: Int.random(in: 1...4), k[1]: Int.random(in: 1...4)], bubble: .numbered, crates: fsCrates(k, 3))
-    case 3: return fsPricedOrder(3, dollars: false)
-    case 4: return fsWordsOrder(4, dollars: false, maxPrice: 4, maxTotal: 50, crates: 3)
-    case 5: return Bool.random() ? fsBudgetOrder(5, dollars: false, melon: false)
-                                 : fsWordsOrder(5, dollars: false, maxPrice: 5, maxTotal: 60, crates: 3)
-    case 6:
-        switch Int.random(in: 0..<20) {
-        case 0..<7: return fsBudgetOrder(6, dollars: false, melon: true)
-        case 7..<13: return fsBudgetOrder(6, dollars: false, melon: false)
-        default: return fsWordsOrder(6, dollars: false, maxPrice: 6, maxTotal: 80, crates: 4)
-        }
-    case 7: return fsPricedOrder(7, dollars: true)
+        let p = Int.random(in: m.rampInt(15, 5, from: 3, to: 4)...24)
+        return FSSale(items: [(pick(1)[0], p)], paid: [.quarter], till: [.penny, .nickel, .dime], showTrack: track, showValues: values)
+    case 3:
+        let p = Int.random(in: m.rampInt(50, 10, from: 4, to: 5.5)...95)
+        return FSSale(items: [(pick(1)[0], p)], paid: [.one], till: coinsTill, showTrack: track, showValues: values, fewest: fewest)
+    case 4:
+        let f = pick(2)
+        let a = Int.random(in: 10...45), b = Int.random(in: 10...(95 - a))
+        return FSSale(items: [(f[0], a), (f[1], b)], paid: [.one], till: coinsTill, showTrack: track, showValues: values, fewest: fewest)
+    case 5:
+        let bill: USMoney = m.d > 7.5 && Bool.random() ? .ten : .five
+        let p = 5 * Int.random(in: 21...(bill == .five ? 95 : 190))
+        return FSSale(items: [(pick(1)[0], p)], paid: [bill], till: [.penny, .nickel, .dime, .quarter, .one, .five],
+                      showTrack: track, showValues: values, fewest: fewest)
     default:
-        switch Int.random(in: 0..<10) {
-        case 0..<4: return fsWordsOrder(level, dollars: true, maxPrice: 150, maxTotal: 1500, crates: 4)
-        case 4..<7: return fsBudgetOrder(level, dollars: true, melon: false)
-        default: return fsBudgetOrder(level, dollars: true, melon: true)
-        }
+        let f = pick(3)
+        let ps = (0..<3).map { _ in 5 * Int.random(in: 15...m.rampInt(80, 120, from: 8, to: 10)) }
+        return FSSale(items: zip(f, ps).map { ($0, $1) }, paid: [.twenty], till: [.penny, .nickel, .dime, .quarter, .one, .five, .ten],
+                      showTrack: track, showValues: values, fewest: fewest)
     }
 }
-
-/// Seconds of patience per customer: none below V, 45 s at V, easing to a 25 s floor.
-private func fsPatience(_ level: Int) -> Double { level < 5 ? 0 : max(25, 45 - Double(level - 5) * 5) }
-
-#if DEBUG
-/// Self-check: every generated order is solvable with exactly one right bag and one right total.
-func fsSelfCheck() -> [String] {
-    var errors: [String] = []
-    for level in 1...10 {
-        for _ in 0..<3000 {
-            let o = fsMakeOrder(level)
-            let n = o.want.values.reduce(0, +)
-            if Set(o.kinds) != Set(o.want.keys) || o.want.values.contains(where: { $0 < 1 }) { errors.append("L\(level) bad want \(o.want)") }
-            if !Set(o.kinds).isSubset(of: Set(o.crates)) { errors.append("L\(level) missing crate \(o.kinds) \(o.crates)") }
-            if Set(o.crates).count != o.crates.count { errors.append("L\(level) dup crates") }
-            if level == 1 && (n > 5 || o.crates.count != 2) { errors.append("L1 too big \(n)") }
-            if level <= 2 && n > 8 { errors.append("L2 too big \(n)") }
-            if level >= 3 && !o.crates.allSatisfy({ (o.prices[$0] ?? 0) > 0 }) { errors.append("L\(level) unpriced crate") }
-            if !o.totalOptions.isEmpty {
-                if o.totalOptions[o.totalCorrect] != o.total { errors.append("L\(level) total index") }
-                if Set(o.totalOptions).count != o.totalOptions.count { errors.append("L\(level) dup totals \(o.totalOptions)") }
-                if o.totalOptions.contains(where: { $0 <= 0 }) { errors.append("L\(level) non-positive total") }
-                if o.totalOptions.count != (level >= 6 ? 4 : 3) { errors.append("L\(level) \(o.totalOptions.count) totals") }
-                if level == 3 && o.total > 20 { errors.append("L3 total \(o.total)") }
-                if level == 4 && o.total > 50 { errors.append("L4 total \(o.total)") }
-            }
-            if case .budget(let text) = o.bubble {
-                // The bag is right iff it's the most of the cheap fruit the budget buys (after the melon).
-                guard let b = Int(text.filter(\.isNumber)) else { errors.append("budget parse"); continue }
-                let fixed = o.want["melon"].map { _ in o.prices["melon"]! } ?? 0
-                let k = o.kinds.last!, p = o.prices[k]!
-                if (b - fixed) / p != o.want[k]! { errors.append("L\(level) budget \(text) \(o.want)") }
-                if o.total > b || o.total + p <= b { errors.append("L\(level) budget not tight \(text)") }
-                if !o.totalOptions.isEmpty { errors.append("budget with ring-up") }
-            } else if level >= 3 && o.totalOptions.isEmpty { errors.append("L\(level) no ring-up") }
-        }
-    }
-    return errors
-}
-#endif
 
 // MARK: Customers
 
-private struct FSCustomer {
-    let emoji: String, yay: String, boo: String
-    var goat = false
-    var granny = false
+private struct FSCustomer: Equatable {
+    let face: String, tunic: UInt, yay: String
 }
 
 private let fsCustomers: [FSCustomer] = [
-    .init(emoji: "👵", yay: "💋 Thank you, dear!", boo: "Oh dear, oh dear…", granny: true),
-    .init(emoji: "🐐", yay: "Meh-eh-eh! Yum!", boo: "Not enough! CHOMP!", goat: true),
-    .init(emoji: "👨‍🌾", yay: "Grazie, friend!", boo: "That's not my order!"),
-    .init(emoji: "👧", yay: "Yay! Thank you!", boo: "Hmm… that's wrong!"),
-    .init(emoji: "🐻", yay: "Yum yum yum!", boo: "Grrr… count again!"),
-    .init(emoji: "🦊", yay: "Perfect! Ha-ha!", boo: "Sly try… but no!"),
-    .init(emoji: "🐵", yay: "Ooh-ooh! Bananas… I mean, thanks!", boo: "Eek! Wrong bag!"),
-    .init(emoji: "🤴", yay: "Splendid! Most royal!", boo: "Off with the bag!"),
+    .init(face: "👵", tunic: 0x7a6bc4, yay: "Thank you, dear!"),
+    .init(face: "🐻", tunic: 0x3f8f6a, yay: "Yum yum! Thanks!"),
+    .init(face: "🦊", tunic: 0xd0603a, yay: "Perfect change!"),
+    .init(face: "🐵", tunic: 0xd9a33a, yay: "Ooh-ooh! Thanks!"),
+    .init(face: "🐰", tunic: 0x5f8fd0, yay: "Hop-hop, hooray!"),
+    .init(face: "🐸", tunic: 0xa64d79, yay: "Ribbit! Thank you!"),
+    .init(face: "👴", tunic: 0x6d7f3a, yay: "Grazie, friend!"),
+    .init(face: "🐼", tunic: 0xc4553f, yay: "Bamboo-tiful!"),
+    .init(face: "👧", tunic: 0x3d79a6, yay: "Yay! Thank you!"),
+    .init(face: "🦁", tunic: 0x8a4fb0, yay: "A roaring good job!"),
 ]
 
 // MARK: - Model
 
 @MainActor
 private final class FigStallModel: ArcadeModel {
-    enum Stage { case bagging, ringing, done }
-    enum Mood { case waiting, happy, sad, eaten }
+    enum Stage { case giving, done }
+    enum Mood { case waiting, happy, cross }
 
-    @Published var order = fsMakeOrder(1)
+    @Published var sale = FSSale(items: [("fig", 3)], paid: [.nickel], till: [.penny])
     @Published var customer = fsCustomers[0]
-    @Published var serial = 0
-    @Published var bag: [String] = []
-    @Published var stage: Stage = .bagging
+    @Published var given: [USMoney] = []
+    @Published var stage: Stage = .giving
     @Published var mood: Mood = .waiting
-    @Published var revealBag = false
-    @Published var chosenTotal: Int?
-    @Published var patience: Double = 0
-    @Published var patienceMax: Double = 0
-    @Published var bursts = 0
+    @Published var serial = 0
+    @Published var reveal = false
+    @Published var note = ""
     @Published var sparks = 0
-    private var timer: Timer?
+    @Published var deadline: Date?
+    @Published var patience: Double = 0
 
     init() { super.init(key: GameID.figStall.rawValue) }
+    override func perLevel(_ level: Int) -> Int { level == 1 ? 4 : 5 }
 
-    override func perLevel(_ level: Int) -> Int { level == 1 ? 4 : level == 2 ? 6 : 5 }
+    var givenSum: Int { given.reduce(0) { $0 + $1.cents } }
+    var needsDone: Bool { !sale.showTrack || sale.fewest }
 
     override func onBegin() {
         #if DEBUG
-        let env = ProcessInfo.processInfo.environment
-        if env["LUDUS_SELFTEST"] != nil || env["LUDUS_SELFCHECK"] != nil {
-            let errs = fsSelfCheck()
-            marketLog("FIGSTALL SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors") \(Array(Set(errs)).prefix(12))")
-        }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
-        newCustomer()
+        next()
     }
 
-    func count(_ id: String) -> Int { bag.filter { $0 == id }.count }
-
-    private var bagRight: Bool {
-        Set(bag).isSubset(of: Set(order.kinds)) && order.kinds.allSatisfy { count($0) == order.want[$0] }
-    }
-
-    func newCustomer() {
+    func next() {
         var c = fsCustomers.randomElement()!
-        while c.emoji == customer.emoji { c = fsCustomers.randomElement()! }
+        while c == customer { c = fsCustomers.randomElement()! }
         customer = c
-        order = fsMakeOrder(level)
-        bag = []; stage = .bagging; mood = .waiting; revealBag = false; chosenTotal = nil
+        sale = fsSale(self)
+        given = []; stage = .giving; mood = .waiting; reveal = false; note = ""
         serial += 1
-        patienceMax = fsPatience(level); patience = patienceMax
-        startClock()
-    }
-
-    func tapCrate(_ id: String) {
-        guard phase == .playing, stage == .bagging else { return }
-        if bag.count >= 20 {                    // a silly heap bursts the bag — start over, no penalty
-            bag = []; bursts += 1; Haptics.error(); return
-        }
-        bag.append(id); Haptics.tap(0.4)
-    }
-
-    func tapBag() {
-        guard phase == .playing, stage == .bagging, !bag.isEmpty else { return }
-        bag.removeLast(); Haptics.light()
-    }
-
-    func give() {
-        guard phase == .playing, stage == .bagging, !bag.isEmpty else { return }
-        if bagRight {
-            if order.totalOptions.isEmpty { resolve(true) } else { stage = .ringing; Haptics.tap(0.6) }
-        } else {
-            let short = order.kinds.contains { count($0) < (order.want[$0] ?? 0) }
-            revealBag = true
-            resolve(false, eaten: short && customer.goat)
-        }
-    }
-
-    func chooseTotal(_ i: Int) {
-        guard phase == .playing, stage == .ringing, order.totalOptions.indices.contains(i) else { return }
-        chosenTotal = i
-        resolve(i == order.totalCorrect)
-    }
-
-    private func timeOut() {
-        guard stage != .done else { return }
-        revealBag = stage == .bagging
-        resolve(false)
-    }
-
-    private func resolve(_ right: Bool, eaten: Bool = false) {
-        stopClock()
-        stage = .done
-        let linger = right ? 1.2 : 2.6        // a miss lingers so the right answer sinks in
-        if right {
-            mood = .happy; sparks += 1
-            hit()
-        } else {
-            mood = eaten ? .eaten : .sad
-            miss(delay: linger)
+        patience = d < 3.5 ? 0 : ramp(45, 20, from: 3.5, to: 10)
+        deadline = patience > 0 ? Date().addingTimeInterval(patience) : nil
+        if d < 3 {
+            let f = fsFruit(sale.items[0].fruit)
+            LibraryVoice.say("One \(f.one), please. Here is \(sale.paidSum) cents.")
         }
         let s = serial
-        DispatchQueue.main.asyncAfter(deadline: .now() + linger) { [weak self] in
-            guard let self, self.serial == s, self.phase == .playing, !self.dying else { return }
-            self.newCustomer()
-        }
-    }
-
-    private func startClock() {
-        timer?.invalidate(); timer = nil
-        guard patienceMax > 0 else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.tick() }
-        }
-    }
-
-    private func stopClock() { timer?.invalidate(); timer = nil }
-
-    private func tick() {
-        guard phase == .playing, stage != .done else { stopClock(); return }
-        patience = max(0, patience - 0.1)
-        if patience <= 0 { timeOut() }
-    }
-
-    // One move per call, as a child would tap. The bot decides per customer whether it gets the
-    // order right; a wrong customer gets a bag one short (or one over), or a wrong total.
-    private var botSerial = -1, botGood = true, botErrBag = true, botDelta = 1
-    override func botAct(correct: Bool) {
-        guard stage != .done else { return }
-        if botSerial != serial {
-            botSerial = serial; botGood = correct
-            botErrBag = order.totalOptions.isEmpty || Bool.random()
-            botDelta = order.want.values.reduce(0, +) > 1 && Bool.random() ? -1 : 1
-        }
-        switch stage {
-        case .bagging:
-            var target = order.want
-            if !botGood && botErrBag {
-                let k = order.kinds[0]
-                target[k, default: 0] += botDelta
+        if patience > 0 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
+                guard let self, self.serial == s, self.stage == .giving, self.phase == .playing else { return }
+                self.note = "Too slow! The change was \(usMoney(self.sale.change))."
+                self.resolve(false)
             }
-            for k in order.crates where count(k) < (target[k] ?? 0) { tapCrate(k); return }
-            give()
-        case .ringing:
-            let wrong = order.totalOptions.indices.filter { $0 != order.totalCorrect }
-            chooseTotal(botGood ? order.totalCorrect : wrong.randomElement()!)
-        case .done: break
+        }
+    }
+
+    func give(_ k: USMoney) {
+        guard phase == .playing, stage == .giving else { return }
+        given.append(k)
+        Sfx.play(.coin, volume: 0.7); Haptics.tap(0.45)
+        if givenSum > sale.change {
+            note = "Too much! The change is \(usMoney(sale.change))."
+            resolve(false)
+        } else if givenSum == sale.change && !needsDone {
+            resolve(true)
+        }
+    }
+
+    /// Tap the purse: take the last piece back.
+    func takeBack() {
+        guard phase == .playing, stage == .giving, !given.isEmpty else { return }
+        given.removeLast(); Sfx.play(.tick); Haptics.light()
+    }
+
+    func done() {
+        guard phase == .playing, stage == .giving else { return }
+        if givenSum != sale.change {
+            note = givenSum < sale.change ? "Not enough! The change is \(usMoney(sale.change))."
+                                          : "Too much! The change is \(usMoney(sale.change))."
+            resolve(false)
+        } else if sale.fewest && given.count > usFewest(sale.change, from: sale.till).count {
+            note = "Right amount — but use fewer coins!"
+            resolve(false)
+        } else {
+            resolve(true)
+        }
+    }
+
+    private func resolve(_ right: Bool) {
+        stage = .done; deadline = nil
+        if right {
+            mood = .happy; sparks += 1
+            Sfx.play(.sparkle, volume: 0.5)
+            hit()
+        } else {
+            mood = .cross; reveal = true
+            miss(delay: 2.8)
+        }
+        let s = serial
+        DispatchQueue.main.asyncAfter(deadline: .now() + (right ? 1.3 : 3.0)) { [weak self] in
+            guard let self, self.serial == s, self.phase == .playing, !self.dying else { return }
+            self.next()
+        }
+    }
+
+    private var botSerial = -1, botGood = true
+    override func botAct(correct: Bool) {
+        guard stage == .giving else { return }
+        if botSerial != serial { botSerial = serial; botGood = correct }
+        let left = sale.change - givenSum
+        if left == 0 { done(); return }
+        if !botGood {
+            if let big = sale.till.first(where: { $0.cents > left }) { give(big) } else { done() }
+            return
+        }
+        give(usFewest(left, from: sale.till).first!)
+    }
+
+    #if DEBUG
+    private func selfTest() {
+        var errs: [String] = []
+        marketSweep(self) {
+            let s = fsSale(self)
+            if s.change <= 0 { errs.append("change \(s.change) paid \(s.paidSum) total \(s.total)") }
+            if s.items.contains(where: { $0.price <= 0 }) { errs.append("price") }
+            if s.till.allSatisfy({ $0.cents > s.change }) { errs.append("till can't make \(s.change)") }
+        }
+        marketLog("FIGSTALL SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors \(Array(Set(errs)).prefix(8))")")
+    }
+    #endif
+}
+
+// MARK: - Scene
+
+/// A sunny market street: sky, terracotta roofs and columns, and the stall's striped awning.
+private struct FSStreet: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack(alignment: .topLeading) {
+                LinearGradient(colors: [Color(hex: 0x7cc3ea), Color(hex: 0xcfe9f2)], startPoint: .top, endPoint: .bottom)
+                MarketCloud(w: 130).position(x: w * 0.2, y: h * 0.16)
+                MarketCloud(w: 90).position(x: w * 0.8, y: h * 0.11)
+                // Houses across the street
+                HStack(alignment: .bottom, spacing: 0) {
+                    ForEach(0..<5, id: \.self) { i in
+                        VStack(spacing: 0) {
+                            FSRoof().fill(Color(hex: 0xb5532e)).frame(height: 26)
+                            Rectangle().fill(Color(hex: [0xf1d9a8, 0xe8c48e, 0xf4e2bd, 0xdcb684, 0xefd09e][i]))
+                                .overlay(
+                                    HStack(spacing: 14) {
+                                        ForEach(0..<2, id: \.self) { _ in
+                                            RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0x6b4a2e).opacity(0.7)).frame(width: 14, height: 20)
+                                        }
+                                    }.padding(.top, 12), alignment: .top)
+                        }
+                        .frame(width: w / 5, height: CGFloat([110, 140, 96, 130, 116][i]))
+                    }
+                }
+                .frame(width: w, height: h * 0.5, alignment: .bottom)
+                // The street
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0xc9b08a), Color(hex: 0xa88d68)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: h * 0.5).offset(y: h * 0.5)
+                // Awning
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        ForEach(0..<8, id: \.self) { i in
+                            Rectangle().fill(Color(hex: i % 2 == 0 ? 0xd9473a : 0xfaf1dc))
+                        }
+                    }
+                    .frame(height: 70)
+                    HStack(spacing: 0) {
+                        ForEach(0..<8, id: \.self) { i in
+                            FSScallop().fill(Color(hex: i % 2 == 0 ? 0xd9473a : 0xfaf1dc))
+                        }
+                    }
+                    .frame(height: 18)
+                }
+                .frame(width: w)
+                .shadow(color: .black.opacity(0.25), radius: 4, y: 3)
+            }
         }
     }
 }
 
-// MARK: - Views
+private struct FSRoof: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX - 4, y: r.maxY)); p.addLine(to: CGPoint(x: r.midX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX + 4, y: r.maxY)); p.closeSubpath()
+        return p
+    }
+}
+
+private struct FSScallop: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.minX, y: r.minY), control: CGPoint(x: r.midX, y: r.maxY * 2))
+        return p
+    }
+}
+
+// MARK: - Pieces
 
 /// A fruit picture — the emoji, or a drawn fig.
 struct FSFruitIcon: View {
@@ -430,256 +327,307 @@ struct FSFruitIcon: View {
     }
 }
 
-/// Fruit pictures in a wrapping grid.
-private struct FSFruitPile: View {
-    let ids: [String]
-    var size: CGFloat
-    var cols: Int = 6
+/// The customer: a face over a tunic, arms resting on the counter.
+private struct FSCustomerView: View {
+    let c: FSCustomer
+    let mood: FigStallModel.Mood
+    @State private var bob = false
     var body: some View {
-        let rows = stride(from: 0, to: ids.count, by: cols).map { Array(ids[$0..<min($0 + cols, ids.count)]) }
-        VStack(spacing: 2) {
-            ForEach(rows.indices, id: \.self) { r in
-                HStack(spacing: 2) { ForEach(rows[r].indices, id: \.self) { i in FSFruitIcon(id: rows[r][i], size: size) } }
+        ZStack {
+            // Tunic + arms
+            FSTunic().fill(LinearGradient(colors: [luShade(c.tunic, 25), luShade(c.tunic, -30)], startPoint: .top, endPoint: .bottom))
+                .frame(width: 120, height: 90).offset(y: 52)
+            Capsule().fill(Color(hex: 0xdcb48c)).frame(width: 66, height: 8).offset(y: 44)       // the belt
+            Text(c.face).font(.system(size: 84))
+                .offset(y: -18 + (bob ? -3 : 0))
+                .rotationEffect(.degrees(mood == .happy ? -8 : 0))
+            if mood != .waiting {
+                Text(mood == .happy ? "😍" : "😠").font(.system(size: 30)).offset(x: 46, y: -54)
+                    .transition(.scale)
             }
         }
+        .frame(width: 130, height: 150)
+        .modifier(MarketShake(shakes: mood == .cross ? 1 : 0))
+        .animation(.spring(response: 0.3, dampingFraction: 0.45), value: mood)
+        .onAppear { withAnimation(.easeInOut(duration: 1.1).repeatForever()) { bob = true } }
     }
 }
 
-/// "3 ×" then three pictures — one line per fruit.
-private struct FSNumberedOrder: View {
-    let order: FSOrder
-    var size: CGFloat = 30
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(order.kinds, id: \.self) { k in
-                let n = order.want[k] ?? 0
-                HStack(spacing: 8) {
-                    Text("\(n)").font(luFont(28)).foregroundStyle(Color(hex: Lu.inkDark)).frame(minWidth: 30)
-                    FSFruitPile(ids: Array(repeating: k, count: n), size: n > 6 ? size * 0.8 : size, cols: 6)
-                }
-            }
-        }
+private struct FSTunic: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.midX - r.width * 0.2, y: r.minY))
+        p.addLine(to: CGPoint(x: r.midX + r.width * 0.2, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + r.height * 0.35), control: CGPoint(x: r.maxX - 6, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX - 8, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX + 8, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.minY + r.height * 0.35))
+        p.addQuadCurve(to: CGPoint(x: r.midX - r.width * 0.2, y: r.minY), control: CGPoint(x: r.minX + 6, y: r.minY))
+        p.closeSubpath()
+        return p
     }
 }
+
+/// A leather purse, open: the change you give lands in it.
+private struct FSPurse: View {
+    let given: [USMoney]
+    let showValues: Bool
+    var body: some View {
+        ZStack(alignment: .top) {
+            FSPurseShape().fill(LinearGradient(colors: [Color(hex: 0x9a5b2e), Color(hex: 0x6a3a18)], startPoint: .top, endPoint: .bottom))
+                .overlay(FSPurseShape().stroke(Color(hex: 0x3f210c), lineWidth: 3))
+            Ellipse().fill(Color(hex: 0x2c160a)).frame(height: 22).padding(.horizontal, 14).offset(y: 2)
+            // Coins piling up
+            let cols = 6
+            VStack(spacing: -10) {
+                ForEach(Array(stride(from: 0, to: given.count, by: cols)), id: \.self) { r in
+                    HStack(spacing: -8) {
+                        ForEach(r..<min(given.count, r + cols), id: \.self) { i in
+                            USMoneyView(kind: given[i], size: given[i].isBill ? 30 : 34, showValue: showValues)
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                        }
+                    }
+                }
+            }
+            .offset(y: -14)
+        }
+        .frame(width: 150, height: 84)
+        .animation(.spring(response: 0.3, dampingFraction: 0.65), value: given.count)
+    }
+}
+
+private struct FSPurseShape: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX + 6, y: r.minY + 10))
+        p.addLine(to: CGPoint(x: r.maxX - 6, y: r.minY + 10))
+        p.addQuadCurve(to: CGPoint(x: r.maxX - 22, y: r.maxY), control: CGPoint(x: r.maxX + 6, y: r.maxY - 6))
+        p.addLine(to: CGPoint(x: r.minX + 22, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.minX + 6, y: r.minY + 10), control: CGPoint(x: r.minX - 6, y: r.maxY - 6))
+        p.closeSubpath()
+        return p
+    }
+}
+
+// MARK: - View
 
 struct FigStallView: View {
     let onClose: () -> Void
     @StateObject private var model = FigStallModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.figStall.spec!, accent: Lu.tangerine, onClose: onClose) {
-            VStack(spacing: 10) {
-                Color.clear.frame(height: 52)
-                customerRow
-                patienceBar
-                Spacer(minLength: 4)
-                bagView
-                Spacer(minLength: 4)
-                bottom
-            }
-            .padding(.horizontal, 14).padding(.bottom, 8)
+        ArcadeShell(model: model, spec: GameID.figStall.spec!, accent: Lu.tangerine,
+                    onClose: { LibraryVoice.stop(); onClose() },
+                    backdrop: { FSStreet() }) {
+            FSPlay(model: model)
         }
-    }
-
-    // Customer + order bubble
-    private var customerRow: some View {
-        HStack(alignment: .center, spacing: 6) {
-            ZStack(alignment: .topTrailing) {
-                Text(model.customer.emoji).font(.system(size: 78))
-                    .scaleEffect(model.mood == .happy ? 1.15 : 1)
-                    .rotationEffect(.degrees(model.mood == .happy ? -8 : 0))
-                    .modifier(MarketShake(shakes: CGFloat(model.lastMiss)))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.4), value: model.mood)
-                    .animation(.linear(duration: 0.45), value: model.lastMiss)
-                if model.mood != .waiting {
-                    Text(model.mood == .happy ? (model.customer.granny ? "😘" : "😍") : model.mood == .eaten ? "😋" : "😠")
-                        .font(.system(size: 30)).offset(x: 8, y: -6)
-                        .transition(.scale)
-                }
-                MarketSparks(trigger: model.sparks, glyphs: model.customer.granny ? ["💋", "✨"] : ["✨", "⭐️", "🪙"])
-                    .frame(width: 1, height: 1).frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(width: 104, height: 110)
-            .id(model.serial)
-            .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
-
-            MarketBubble {
-                Group {
-                    if model.mood != .waiting {
-                        Text(model.mood == .happy ? model.customer.yay : model.customer.boo)
-                            .font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                    } else {
-                        orderContent
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 64)
-            }
-            .padding(.bottom, 12)
-        }
-        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: model.serial)
-        .frame(minHeight: 120)
-    }
-
-    @ViewBuilder private var orderContent: some View {
-        switch model.order.bubble {
-        case .pictures:
-            let k = model.order.kinds[0]
-            FSFruitPile(ids: Array(repeating: k, count: model.order.want[k] ?? 0), size: 44, cols: 5)
-        case .numbered:
-            FSNumberedOrder(order: model.order)
-        case .words(let t):
-            Text(t).font(luFont(21, .heavy)).foregroundStyle(Color(hex: Lu.inkDark)).multilineTextAlignment(.leading)
-                .fixedSize(horizontal: false, vertical: true)
-        case .budget(let t):
-            HStack(spacing: 8) {
-                Text("👛").font(.system(size: 34))
-                Text(t).font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private var patienceBar: some View {
-        GeometryReader { geo in
-            let f = model.patienceMax > 0 ? model.patience / model.patienceMax : 0
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color(hex: Lu.panel))
-                Capsule().fill(Color(hex: f < 0.3 ? Lu.coral : Lu.mint))
-                    .frame(width: max(0, geo.size.width * CGFloat(f)))
-            }
-        }
-        .frame(height: 8)
-        .opacity(model.patienceMax > 0 ? 1 : 0)
-    }
-
-    // The bag: tap it to take the last fruit back out.
-    private var bagView: some View {
-        let groups = model.bag.reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
-        let big = model.bag.count > 10
-        return Button(action: { model.tapBag() }) {
-            ZStack(alignment: .top) {
-                FSBagShape()
-                    .fill(LinearGradient(colors: [Color(hex: 0xd9a86a), Color(hex: 0xa87440)], startPoint: .top, endPoint: .bottom))
-                    .overlay(FSBagShape().stroke(Color(hex: 0x6e4a24), lineWidth: 3))
-                VStack(spacing: 4) {
-                    HStack(alignment: .top, spacing: 12) {
-                        ForEach(groups, id: \.self) { k in
-                            let n = model.count(k)
-                            VStack(spacing: 2) {
-                                FSFruitPile(ids: Array(repeating: k, count: n), size: big ? 24 : 34, cols: big ? 6 : 4)
-                                Text(model.order.prices[k].map { "\(n) × \(model.order.money($0))" } ?? "\(n)")
-                                    .font(luFont(model.level >= 2 ? 16 : 13, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                                    .opacity(model.level >= 2 ? 1 : 0.6)
-                            }
-                        }
-                    }
-                    .padding(.top, 34)
-                }
-                if model.mood == .eaten {
-                    Text("CHOMP!").font(luFont(34)).foregroundStyle(Color(hex: Lu.coral)).rotationEffect(.degrees(-12)).padding(.top, 60)
-                }
-            }
-            .frame(maxWidth: 300).frame(height: 230)
-            .scaleEffect(model.mood == .eaten ? 0.55 : 1)
-            .rotationEffect(.degrees(model.mood == .eaten ? 14 : 0))
-            .opacity(model.mood == .eaten ? 0.6 : 1)
-            .scaleEffect(model.mood == .happy ? 0.9 : 1)
-            .offset(x: model.mood == .happy ? -90 : 0, y: model.mood == .happy ? -60 : 0)
-            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: model.mood)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: model.bag.count)
-            .modifier(MarketShake(amount: 6, shakes: CGFloat(model.bursts)))
-            .animation(.linear(duration: 0.4), value: model.bursts)
-        }
-        .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-    }
-
-    @ViewBuilder private var bottom: some View {
-        if model.revealBag {
-            VStack(spacing: 8) {
-                Text("NEEDED").font(luFont(13, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
-                FSNumberedOrder(order: model.order, size: 28)
-                    .padding(10).background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.mint)))
-                if !model.order.bagNote.isEmpty {
-                    Text(model.order.bagNote).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.gold))
-                        .multilineTextAlignment(.center).minimumScaleFactor(0.7)
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 190)
-            .transition(.scale(scale: 0.8).combined(with: .opacity))
-        } else if model.stage == .ringing || (model.stage == .done && model.chosenTotal != nil) {
-            ringUp
-        } else {
-            VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    ForEach(model.order.crates, id: \.self) { k in crate(k) }
-                }
-                // Not ready yet: a readable pewter button (dark text on light), not a see-through one.
-                let ready = !model.bag.isEmpty && model.stage == .bagging
-                LudusButton(title: "Give 🤝", fill: ready ? [Lu.mint, 0x3f8f4a] : [Lu.silver, 0xa79f8b],
-                            shadow: ready ? 0x2a6a33 : 0x6f6857, fullWidth: true) { model.give() }
-                    .opacity(ready ? 1 : 0.85)
-            }
-        }
-    }
-
-    private func crate(_ k: String) -> some View {
-        Button(action: { model.tapCrate(k) }) {
-            VStack(spacing: 2) {
-                FSFruitIcon(id: k, size: model.order.crates.count >= 4 ? 44 : 54)
-                if let p = model.order.prices[k] {
-                    Text(model.order.money(p)).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                        .padding(.horizontal, 7).padding(.vertical, 1)
-                        .background(Capsule().fill(Color(hex: Lu.ink)))
-                }
-            }
-            .frame(maxWidth: .infinity, minHeight: 104)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(LinearGradient(colors: [Color(hex: 0x9a6a3c), Color(hex: 0x6e4524)], startPoint: .top, endPoint: .bottom))
-                    .overlay(VStack(spacing: 18) { ForEach(0..<3, id: \.self) { _ in Rectangle().fill(Color.black.opacity(0.12)).frame(height: 3) } })
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x4a2e16), lineWidth: 3))
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var ringUp: some View {
-        let o = model.order
-        let done = model.stage == .done
-        let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: o.totalOptions.count == 4 ? 2 : 3)
-        return VStack(spacing: 10) {
-            Text("HOW MUCH?").font(luFont(16, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.gold))
-            LazyVGrid(columns: cols, spacing: 10) {
-                ForEach(o.totalOptions.indices, id: \.self) { i in
-                    let st: MarketChoiceState = !done ? .open : i == o.totalCorrect ? .right : i == model.chosenTotal ? .wrong : .faded
-                    MarketChoiceButton(text: o.money(o.totalOptions[i]), state: st) { model.chooseTotal(i) }
-                }
-            }
-            Text(o.totalExplain).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                .minimumScaleFactor(0.6).lineLimit(1)
-                .opacity(done && model.chosenTotal != o.totalCorrect ? 1 : 0)
-        }
-        .frame(minHeight: 190)
+        .onDisappear { LibraryVoice.stop() }
     }
 }
 
-/// A paper grocery bag with a folded, zig-zag top.
-private struct FSBagShape: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        let top = r.minY + 22
-        p.move(to: CGPoint(x: r.minX + 10, y: top))
-        let teeth = 8
-        for i in 0...teeth {
-            let x = r.minX + 10 + (r.width - 20) * CGFloat(i) / CGFloat(teeth)
-            p.addLine(to: CGPoint(x: x, y: i % 2 == 0 ? top : top - 10))
+private struct FSPlay: View {
+    @ObservedObject var model: FigStallModel
+    private var s: FSSale { model.sale }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            Color.clear.frame(height: 96)
+            patienceBar
+            customerRow
+            counter
+            track
+            Spacer(minLength: 0)
+            Text("THE TILL — tap to give change").font(luFont(12, .heavy)).tracking(1)
+                .foregroundStyle(Color(hex: 0x4e2e15).opacity(0.8))
+            till
+            if model.needsDone {
+                let ready = model.stage == .giving
+                LudusButton(title: model.given.isEmpty ? "No change? 🤝" : "Give change 🤝",
+                            fill: ready ? [Lu.mint, 0x3f8f4a] : [Lu.silver, 0xa79f8b],
+                            shadow: ready ? 0x2a6a33 : 0x6f6857, fullWidth: true) { model.done() }
+                    .opacity(model.given.isEmpty ? 0.6 : 1)
+                    .disabled(model.given.isEmpty)
+            }
         }
-        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY - 14))
-        p.addQuadCurve(to: CGPoint(x: r.maxX - 14, y: r.maxY), control: CGPoint(x: r.maxX, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.minX + 14, y: r.maxY))
-        p.addQuadCurve(to: CGPoint(x: r.minX, y: r.maxY - 14), control: CGPoint(x: r.minX, y: r.maxY))
-        p.closeSubpath()
-        return p
+        .padding(.horizontal, 12).padding(.bottom, 6)
+    }
+
+    @ViewBuilder private var patienceBar: some View {
+        TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
+            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
+            let f = model.patience > 0 ? CGFloat(left / model.patience) : 0
+            HStack(spacing: 6) {
+                Text("⏳").font(.system(size: 14))
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.black.opacity(0.25))
+                        Capsule().fill(Color(hex: f < 0.3 ? Lu.coral : Lu.mint)).frame(width: max(0, g.size.width * f))
+                    }
+                }
+                .frame(height: 8)
+            }
+        }
+        .frame(height: 14)
+        .opacity(model.deadline != nil ? 1 : 0)
+    }
+
+    private var customerRow: some View {
+        HStack(alignment: .bottom, spacing: 4) {
+            FSCustomerView(c: model.customer, mood: model.mood)
+                .id(model.serial)
+                .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
+                .overlay(MarketSparks(trigger: model.sparks, glyphs: ["✨", "⭐️", "🪙"]))
+            MarketBubble(fill: 0xfdf6e3) {
+                VStack(alignment: .leading, spacing: 6) {
+                    if model.mood == .happy {
+                        Text(model.customer.yay).font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                    } else if model.reveal {
+                        Text(model.note).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0xa33a24))
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text(s.items.count == 1 ? "This one, please!" : "These, please!")
+                            .font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                        HStack(spacing: 4) {
+                            Text("Here's").font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                            Text(usMoney(s.paidSum)).font(luFont(22)).foregroundStyle(Color(hex: 0x2f7a3a))
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+            }
+            .padding(.bottom, 60)
+        }
+        .padding(.bottom, -14)
+        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: model.serial)
+    }
+
+    /// The counter: the fruit with price tags, their open purse (the change goes in), and the
+    /// money they paid.
+    private var counter: some View {
+        HStack(alignment: .center, spacing: 6) {
+            VStack(spacing: 4) {
+                ForEach(Array(s.items.enumerated()), id: \.offset) { _, it in
+                    HStack(spacing: 2) {
+                        FSFruitIcon(id: it.fruit, size: s.items.count > 1 ? 30 : 46)
+                        Text(usMoney(it.price)).font(luFont(s.items.count > 1 ? 14 : 18, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                            .padding(.horizontal, 5)
+                            .background(Capsule().fill(Color(hex: 0xfdf3d7)))
+                            .lineLimit(1).fixedSize()
+                    }
+                }
+            }
+            .frame(minWidth: 84)
+            Button(action: { model.takeBack() }) {
+                FSPurse(given: model.given, showValues: s.showValues)
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            VStack(spacing: 2) {
+                Text("PAID").font(luFont(11, .heavy)).tracking(1.5).foregroundStyle(Color(hex: 0xfdf3d7))
+                ForEach(Array(s.paid.enumerated()), id: \.offset) { _, k in USMoneyView(kind: k, size: k.isBill ? 34 : 50, showValue: true) }
+            }
+            .frame(minWidth: 70)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 120)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x7a4b25)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0x4e2e15), lineWidth: 3))
+                .shadow(color: .black.opacity(0.3), radius: 5, y: 3)
+        )
+    }
+
+    /// Count up from the price to what they paid.
+    private var track: some View {
+        let steps: [Int] = model.given.indices.map { i in s.total + model.given[0...i].reduce(0) { $0 + $1.cents } }
+        return VStack(spacing: 4) {
+            if s.showTrack || model.reveal {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 4) {
+                        chip(usMoney(s.total), Lu.ink, Lu.inkDark)
+                        ForEach(Array(steps.enumerated()), id: \.offset) { _, v in
+                            Text("→").font(luFont(14)).foregroundStyle(Color(hex: Lu.inkDark).opacity(0.6))
+                            chip(usMoney(v), v > s.paidSum ? Lu.coral : (v == s.paidSum ? Lu.mint : 0xfdf3d7), Lu.inkDark)
+                        }
+                        if steps.last != s.paidSum {
+                            Text("… →").font(luFont(14)).foregroundStyle(Color(hex: Lu.inkDark).opacity(0.6))
+                            chip(usMoney(s.paidSum), Lu.gold, Lu.inkDark).opacity(0.75)
+                        }
+                    }
+                    .padding(.horizontal, 4)
+                }
+                if model.reveal {
+                    HStack(spacing: 4) {
+                        Text("Change:").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                        ForEach(Array(usFewest(s.change, from: s.till).enumerated()), id: \.offset) { _, k in
+                            USMoneyView(kind: k, size: 32, showValue: true)
+                        }
+                        Text("= \(usMoney(s.change))").font(luFont(17)).foregroundStyle(Color(hex: 0x2f7a3a))
+                    }
+                    .lineLimit(1).minimumScaleFactor(0.5)
+                }
+            } else {
+                Text(s.items.count > 1 ? "Add it up, then count up to \(usMoney(s.paidSum))!" : "Count up from \(usMoney(s.total)) to \(usMoney(s.paidSum))!")
+                    .font(luFont(16, .heavy)).foregroundStyle(Color(hex: Lu.inkDark)).opacity(0.75)
+                    .lineLimit(1).minimumScaleFactor(0.6)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, minHeight: 58)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.6)))
+        .padding(.leading, 0)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: model.given.count)
+    }
+
+    private func chip(_ t: String, _ bg: UInt, _ fg: UInt) -> some View {
+        Text(t).font(luFont(model.d < 4 ? 24 : 18, .heavy)).foregroundStyle(Color(hex: fg)).monospacedDigit()
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(Capsule().fill(Color(hex: bg)))
+    }
+
+    /// The till: a drawer of compartments; tap one to give that coin or bill.
+    private var till: some View {
+        let bills = s.till.filter(\.isBill), coins = s.till.filter { !$0.isBill }
+        return VStack(spacing: 8) {
+            if !bills.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(bills, id: \.self) { k in compartment(k) }
+                }
+            }
+            HStack(spacing: 6) {
+                ForEach(coins, id: \.self) { k in compartment(k) }
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(LinearGradient(colors: [Color(hex: 0x5a3519), Color(hex: 0x3e230f)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0xc9a46a), lineWidth: 3))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
+        )
+    }
+
+    private func compartment(_ k: USMoney) -> some View {
+        Button(action: { model.give(k) }) {
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    USMoneyView(kind: k, size: k.isBill ? 36 : 64, showValue: false)
+                        .offset(x: k.isBill ? CGFloat(i) * 2 : 0, y: CGFloat(2 - i) * -3).opacity(0.85)
+                }
+                USMoneyView(kind: k, size: k.isBill ? 36 : 64, showValue: s.showValues)
+            }
+            .frame(maxWidth: .infinity, minHeight: k.isBill ? 54 : 80)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color(hex: 0x2a170a)))
+        }
+        .buttonStyle(FSPressStyle())
+        .disabled(model.stage != .giving)
+    }
+}
+
+private struct FSPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.scaleEffect(configuration.isPressed ? 0.92 : 1)
+            .animation(.spring(response: 0.2, dampingFraction: 0.6), value: configuration.isPressed)
     }
 }

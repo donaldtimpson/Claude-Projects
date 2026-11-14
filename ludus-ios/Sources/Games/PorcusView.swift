@@ -2,757 +2,664 @@ import SwiftUI
 
 // MARK: - Porcus the Piggy Bank (Market · Money)
 //
-// Porcus the talking piggy bank helps you save. Drag (or tap) each day's coin into him — he
-// gets fatter as he fills — and answer his money questions; every right answer puts a prize on
-// the shelf. Every question has one checkable answer (no "would you rather").
+// A ceramic piggy bank sits on a bedroom desk; a prize hangs on the shelf with its price tag.
+// Drag real US coins (and later dollar bills) from the tray into the slot on Porcus's back to
+// pay exactly the price. He gulps each coin, gets rounder, and his chalk tag counts along —
+// until the tag goes blank and YOU must count (then you press PAY). Too much and he coughs the
+// coins back out, and a miss always shows a set of coins that works.
 //
-// Ladder: I a prize costs 3–5 coins; 1 coin a day — drag each in, count up, tap BUY (buying
-// too early is the only slip) · II prizes up to 10: fill the pig the rest of the way, or "Can
-// you buy the 🪁 now?" 👍/👎 with Porcus's coins laid out next to the price · III temptations,
-// 1 coin a day: "Buy the 🍭 and still get the 🪁 by Day 7?" YES/NO, all within 10 · IV needs vs
-// wants (school shoes = need, toy dinosaur = want) + temptations at 2 coins a day, within 20 ·
-// V planning: "3 a week, the bike costs 18 — how many weeks?" (exact) · VI planning with savings
-// and a remainder; save/give/spend jars by halves · VII jars by percent (50/40/10 of 10–100) ·
-// VIII interest: 10% a week, one week, 4 choices · IX+ two weeks of interest (100 → 110 → 121),
-// 5/20/25% rates, "now or later?".
+// Difficulty (continuous, `d`): content kinds fade in by `tier` — pennies (I) → + nickels →
+// + dimes → + quarters → fewest coins → dollar bills → "feed the rest" (saving toward a goal) →
+// interest (10%, then 5/20/25/50%). Price ranges grow with `d` inside each kind; the value
+// badges on the coins fade away (recognise them by size and colour), and so does the running
+// total on Porcus's tag.
 
 struct PItem: Hashable { let emoji: String, name: String }
 
 private let pPrizes: [PItem] = [
     .init(emoji: "🪁", name: "kite"), .init(emoji: "⚽️", name: "ball"), .init(emoji: "🧸", name: "teddy"),
-    .init(emoji: "🛹", name: "skateboard"), .init(emoji: "🚲", name: "bike"), .init(emoji: "🎮", name: "game"),
-    .init(emoji: "🎨", name: "paint set"), .init(emoji: "🎸", name: "guitar"), .init(emoji: "🔭", name: "telescope"),
-    .init(emoji: "🛼", name: "roller skates"),
-]
-private let pTreats: [PItem] = [
-    .init(emoji: "🍭", name: "lollipop"), .init(emoji: "🍦", name: "ice cream"), .init(emoji: "🧁", name: "cupcake"),
-    .init(emoji: "🎈", name: "balloon"), .init(emoji: "🍬", name: "candy"), .init(emoji: "🥨", name: "pretzel"),
-]
-/// Needs and wants — only clear-cut cases a child would agree on.
-let pNeeds: [PItem] = [
-    .init(emoji: "👟", name: "Shoes for school"), .init(emoji: "🧥", name: "Warm winter coat"),
-    .init(emoji: "🪥", name: "Toothbrush"), .init(emoji: "💊", name: "Medicine when sick"),
-    .init(emoji: "🍞", name: "Bread for dinner"), .init(emoji: "🥛", name: "Milk for breakfast"),
-    .init(emoji: "🧼", name: "Soap"), .init(emoji: "✏️", name: "Pencils for school"),
-    .init(emoji: "👓", name: "Glasses to see"), .init(emoji: "💧", name: "Drinking water"),
-    .init(emoji: "🩹", name: "Bandage for a cut"), .init(emoji: "🥦", name: "Vegetables for dinner"),
-]
-let pWants: [PItem] = [
-    .init(emoji: "🦖", name: "Toy dinosaur"), .init(emoji: "🍭", name: "Lollipop"), .init(emoji: "🎮", name: "Video game"),
-    .init(emoji: "🪁", name: "Kite"), .init(emoji: "🎈", name: "Balloon"), .init(emoji: "🍦", name: "Ice cream"),
-    .init(emoji: "🛹", name: "Skateboard"), .init(emoji: "🪀", name: "Yo-yo"), .init(emoji: "🧁", name: "Cupcake"),
-    .init(emoji: "🎸", name: "Toy guitar"), .init(emoji: "🎟️", name: "Movie ticket"), .init(emoji: "🃏", name: "Trading cards"),
+    .init(emoji: "🛹", name: "skateboard"), .init(emoji: "🎨", name: "paint set"), .init(emoji: "🪀", name: "yo-yo"),
+    .init(emoji: "🎈", name: "balloon"), .init(emoji: "🦖", name: "dinosaur"), .init(emoji: "🚂", name: "toy train"),
+    .init(emoji: "🛼", name: "roller skate"), .init(emoji: "📚", name: "book"), .init(emoji: "🎲", name: "dice game"),
 ]
 
-// MARK: Rounds
+// MARK: Tasks
 
-struct PorcusRound {
-    enum Kind { case fill, afford, tempt, sort, choice }
+struct PorcusTask {
+    enum Kind { case count, fewest, dollars, goal, interest }
     var kind: Kind
     var prize: PItem
-    var cost = 0                  // prize price (fill / afford / tempt)
-    var startCoins = 0            // in Porcus when the round opens
-    var feed = 0                  // coins to drag in before the question
-    var perDay = 1                // tempt: coins a day
-    var day = 1                   // tempt: today (1…6); the week ends on Day 7
-    var treat: PItem?
-    var treatCost = 0
-    var prompt = ""
-    var options: [String] = []
-    var correct = 0
-    var explain = ""              // shown on a miss
-    var shelf = ""                // what a right answer puts on the shelf
+    var price: Int            // what the prize costs (cents)
+    var saved = 0             // already in Porcus (goal / interest)
+    var target: Int           // what you must feed
+    var tray: [USMoney]       // the stacks on the tray, small → big
+    var showTotal = true
+    var showValues = true
+    var line = ""             // what Porcus says (spoken too)
+    var explain = ""          // how the answer works (shown on a miss)
 }
 
-private func plural(_ n: Int, _ one: String, _ many: String) -> String { "\(n) \(n == 1 ? one : many)" }
-
-/// The answer plus distinct, positive distractors (likeliest first), shuffled.
-private func pOptions(_ ans: Int, _ cands: [Int], _ n: Int, _ fmt: (Int) -> String) -> ([String], Int) {
-    var nums = [ans]
-    for c in cands where c > 0 && !nums.contains(c) && nums.count < n { nums.append(c) }
-    var k = 1
-    while nums.count < n { if !nums.contains(ans + k) { nums.append(ans + k) }; k += 1 }
-    nums.shuffle()
-    return (nums.map(fmt), nums.firstIndex(of: ans)!)
-}
-
-private func pChoices(_ level: Int) -> Int { level >= 8 ? 4 : 3 }
-
-private func pFill() -> PorcusRound {
-    let c = Int.random(in: 3...5)
-    return PorcusRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, feed: c, shelf: "")
-}
-
-/// Gradus II fill: a 6–10 coin prize with some coins already saved — feed the last 2–4.
-private func pFillBig() -> PorcusRound {
-    let c = Int.random(in: 6...10), f = Int.random(in: 2...4)
-    return PorcusRound(kind: .fill, prize: pPrizes.randomElement()!, cost: c, startCoins: c - f, feed: f, shelf: "")
-}
-
-/// "Can you buy the 🪁 now?" — Porcus's coins are laid out beside the price (all within 10);
-/// balanced 👍/👎, never off by more than 4 so it's a count, not a glance.
-private func pAfford() -> PorcusRound {
-    let yes = Bool.random()
-    let k = Int.random(in: 3...10)
-    let h = yes ? Int.random(in: k...min(10, k + 3)) : Int.random(in: max(1, k - 4)...(k - 1))
-    let p = pPrizes.randomElement()!
-    return PorcusRound(kind: .afford, prize: p, cost: k, startCoins: h,
-                       prompt: "Can you buy the \(p.emoji) now?",
-                       options: ["👍 YES", "👎 NO"], correct: yes ? 0 : 1,
-                       explain: "Porcus has \(h) 🪙 · the \(p.emoji) costs \(k) 🪙",
-                       shelf: yes ? p.emoji : "⭐️")
-}
-
-/// "Buy the treat and still get the prize by Day 7?" — balanced YES/NO, and the prize is always
-/// reachable if you skip the treat (so NO only ever means "the treat costs the prize").
-private func pTempt(perDay: Int) -> PorcusRound {
-    let wantYes = Bool.random()
-    for _ in 0..<2000 {
-        let d = Int.random(in: 1...6), r = 7 - d
-        let k = perDay == 1 ? Int.random(in: 4...7) : Int.random(in: 8...16)
-        let h = Int.random(in: max(perDay, perDay * d - (perDay == 1 ? 2 : 4))...(perDay * d))
-        let c = perDay == 1 ? Int.random(in: 1...3) : Int.random(in: 2...5)
-        let end = h - c + r * perDay
-        guard h >= c, h + r * perDay >= k, h < k, (end >= k) == wantYes, h + r * perDay <= 20 else { continue }
-        let prize = pPrizes.randomElement()!, treat = pTreats.randomElement()!
-        return PorcusRound(kind: .tempt, prize: prize, cost: k, startCoins: h - perDay, feed: perDay, perDay: perDay, day: d,
-                      treat: treat, treatCost: c,
-                      prompt: "Buy the \(treat.emoji) and still get the \(prize.emoji) by Day 7?",
-                      options: ["✅ YES", "❌ NO"], correct: wantYes ? 0 : 1,
-                      explain: "\(h) − \(c) + \(r * perDay) more = \(end) 🪙 · the \(prize.emoji) costs \(k)",
-                      shelf: prize.emoji)
+/// A price that NEEDS the newest coin (so each kind teaches its coin).
+private func pPrice(_ lo: Int, _ hi: Int, needs coin: USMoney?) -> Int {
+    for _ in 0..<50 {
+        let p = Int.random(in: lo...max(lo, hi))
+        if let c = coin { if p >= c.cents { return p } } else { return p }
     }
-    return pFill()
+    return max(lo, coin?.cents ?? lo)
 }
 
-private func pSort() -> PorcusRound {
-    let need = Bool.random()
-    let it = (need ? pNeeds : pWants).randomElement()!
-    return PorcusRound(kind: .sort, prize: it, prompt: it.name, options: ["NEED", "WANT"], correct: need ? 0 : 1,
-                  explain: "\(it.emoji) \(it.name) is a \(need ? "NEED" : "WANT")", shelf: it.emoji)
-}
-
-private func pWeeks(_ n: Int) -> String { plural(n, "week", "weeks") }
-
-private func pPlanExact(_ level: Int) -> PorcusRound {
-    let a = Int.random(in: 2...5), w = Int.random(in: 2...6), p = pPrizes.randomElement()!
-    let (o, c) = pOptions(w, [w - 1, w + 1, w + 2].shuffled(), pChoices(level), pWeeks)
-    return PorcusRound(kind: .choice, prize: p,
-                  prompt: "You get \(a) 🪙 every week.\nThe \(p.emoji) costs \(a * w) 🪙.\nHow many weeks to save?",
-                  options: o, correct: c, explain: "\(a) × \(w) = \(a * w) → \(pWeeks(w))", shelf: p.emoji)
-}
-
-private func pPlanRemainder(_ level: Int) -> PorcusRound {
-    for _ in 0..<500 {
-        let h = Int.random(in: 1...9), a = Int.random(in: 2...6)
-        let cost = Int.random(in: (h + a + 1)...(level >= 9 ? 60 : 40))
-        let need = cost - h, w = (need + a - 1) / a
-        guard (2...8).contains(w), need % a != 0 || Bool.random() else { continue }
-        let p = pPrizes.randomElement()!
-        let (o, c) = pOptions(w, [w - 1, w + 1, w + 2].shuffled(), pChoices(level), pWeeks)
-        return PorcusRound(kind: .choice, prize: p, startCoins: h,
-                      prompt: "Porcus has \(h) 🪙. You get \(a) 🪙 a week.\nThe \(p.emoji) costs \(cost) 🪙.\nHow many weeks until you can buy it?",
-                      options: o, correct: c,
-                      explain: "Need \(need) more · \(w - 1) × \(a) = \((w - 1) * a) is short · \(w) × \(a) = \(w * a) ✓",
-                      shelf: p.emoji)
-    }
-    return pPlanExact(level)
-}
-
-private func pJarsHalf(_ level: Int) -> PorcusRound {
-    let t = [6, 8, 10, 12, 14, 16, 18, 20].randomElement()!, g = Int.random(in: 1...2)
-    let save = t / 2, spend = t - save - g
-    let askSave = Bool.random()
-    let ans = askSave ? save : spend
-    let (o, c) = pOptions(ans, [askSave ? spend : save, ans + 1, ans - 1, ans + 2, ans - 2], pChoices(level), { "\($0) 🪙" })
-    return PorcusRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
-                  prompt: "You got \(t) 🪙!\nHALF go in SAVE, \(g) in GIVE,\nthe rest in SPEND.\nHow many go in \(askSave ? "SAVE" : "SPEND")?",
-                  options: o, correct: c,
-                  explain: "Half of \(t) = \(save) SAVE · \(t) − \(save) − \(g) = \(spend) SPEND", shelf: "🫙")
-}
-
-private func pJarsPercent(_ level: Int) -> PorcusRound {
-    let splits = [(50, 40, 10), (60, 30, 10), (70, 20, 10), (50, 30, 20), (60, 20, 20)]
-    let s = splits.randomElement()!
-    let t = 10 * Int.random(in: 1...(level >= 9 ? 20 : 10))
-    let jars = [("SAVE", s.0), ("SPEND", s.1), ("GIVE", s.2)]
-    let ask = jars.randomElement()!
-    let tenth = t / 10, ans = t * ask.1 / 100
-    let others = jars.filter { $0.0 != ask.0 }.map { t * $0.1 / 100 }
-    let (o, c) = pOptions(ans, [ask.1 == 10 ? 0 : ask.1] + others + [ans + tenth, ans - tenth], pChoices(level), { "\($0) 🪙" })
-    return PorcusRound(kind: .choice, prize: PItem(emoji: "🫙", name: "jars"), startCoins: t,
-                  prompt: "Share out \(t) 🪙:\nSAVE \(s.0)% · SPEND \(s.1)% · GIVE \(s.2)%\nHow many go in \(ask.0)?",
-                  options: o, correct: c,
-                  explain: "10% of \(t) = \(tenth) → \(ask.1)% = \(ask.1 / 10) × \(tenth) = \(ans)", shelf: "🫙")
-}
-
-private func pInterest1(_ level: Int) -> PorcusRound {
-    let h = 10 * Int.random(in: 2...20), i = h / 10
-    if Bool.random() {
-        let (o, c) = pOptions(h + i, [h + 10, h + 1, h + i + 1, h + 2 * i, h + i - 1].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
-                      prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow many after 1 week?",
-                      options: o, correct: c, explain: "10% of \(h) = \(i) → \(h) + \(i) = \(h + i)", shelf: "💰")
-    }
-    let (o, c) = pOptions(i, [10, i + 1, i * 2, i - 1, i + 10].shuffled(), pChoices(level), { "\($0) 🪙" })
-    return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
-                  prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow much does he pay you this week?",
-                  options: o, correct: c, explain: "10% of \(h) = \(h) ÷ 10 = \(i)", shelf: "💰")
-}
-
-private func pInterestTop(_ level: Int) -> PorcusRound {
-    switch Int.random(in: 0..<3) {
-    case 0:     // two weeks of 10% — the second week pays interest on the interest too
-        let h = 100 * Int.random(in: 1...5), w1 = h + h / 10, w2 = w1 + w1 / 10
-        let (o, c) = pOptions(w2, [h + 2 * (h / 10), w1, w2 + 1, w2 - 1].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
-                      prompt: "Porcus pays 10% each week.\nHe holds \(h) 🪙.\nHow many after 2 weeks?",
-                      options: o, correct: c, explain: "\(h) → +\(h / 10) = \(w1) → +\(w1 / 10) = \(w2)", shelf: "💰")
-    case 1:     // other rates, chosen so the interest is whole
-        let (r, step) = [(5, 20), (20, 5), (25, 4)].randomElement()!
-        let h = step * Int.random(in: 2...(200 / step)), i = h * r / 100
-        let (o, c) = pOptions(h + i, [h + r, h + i + 1, h + 2 * i, h + i - 1, h + h / 10].shuffled(), pChoices(level), { "\($0) 🪙" })
-        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: h,
-                      prompt: "Porcus pays \(r)% this week.\nHe holds \(h) 🪙.\nHow many after 1 week?",
-                      options: o, correct: c, explain: "\(r)% of \(h) = \(i) → \(h) + \(i) = \(h + i)", shelf: "💰")
-    default:    // save now or later?
-        let x = 100 * Int.random(in: 1...2), y = x + 10 * Int.random(in: 0...4)
-        let a = x + x / 10 + (x + x / 10) / 10, b = y + y / 10
-        let correct = a > b ? 0 : a < b ? 1 : 2
-        return PorcusRound(kind: .choice, prize: PItem(emoji: "💰", name: "interest"), startCoins: x,
-                      prompt: "Porcus pays 10% a week.\nA: put in \(x) 🪙 now, wait 2 weeks.\nB: put in \(y) 🪙 next week, wait 1 week.\nWhich ends with more?",
-                      options: ["Plan A", "Plan B", "The same"], correct: correct,
-                      explain: "A: \(x) → \(x + x / 10) → \(a) · B: \(y) → \(b)", shelf: "💰")
+@MainActor
+private func porcusTask(_ m: ArcadeModel) -> PorcusTask {
+    let prize = pPrizes.randomElement()!
+    // Coin value badges fade out between d 2.5 and 5.5; the running total between 3 and 6.
+    let values = !m.chance(1, from: 2.5, to: 5.5)
+    let total = !m.chance(1, from: 3, to: 6)
+    switch m.tier([1, 1.8, 2.8, 3.8, 5, 6, 7, 8.5]) {
+    case 0:
+        let p = pPrice(2, m.rampInt(4, 9, to: 2.5), needs: nil)
+        return PorcusTask(kind: .count, prize: prize, price: p, target: p, tray: [.penny], showTotal: true, showValues: true,
+                          line: "Feed me \(p) cents for the \(prize.name)!", explain: "\(p) pennies = \(p)¢")
+    case 1:
+        let p = pPrice(5, m.rampInt(9, 19, from: 1.8, to: 3.5), needs: .nickel)
+        return PorcusTask(kind: .count, prize: prize, price: p, target: p, tray: [.penny, .nickel], showTotal: total || m.d < 3,
+                          showValues: values || m.d < 3, line: "\(p) cents, please! A nickel is 5.", explain: pExplain(p, [.penny, .nickel]))
+    case 2:
+        let p = pPrice(10, m.rampInt(25, 49, from: 2.8, to: 4.5), needs: .dime)
+        return PorcusTask(kind: .count, prize: prize, price: p, target: p, tray: [.penny, .nickel, .dime], showTotal: total,
+                          showValues: values, line: "\(p) cents! A dime is 10.", explain: pExplain(p, [.penny, .nickel, .dime]))
+    case 3:
+        let p = pPrice(25, m.rampInt(50, 99, from: 3.8, to: 5.5), needs: .quarter)
+        return PorcusTask(kind: .count, prize: prize, price: p, target: p, tray: USMoney.coins, showTotal: total,
+                          showValues: values, line: "\(p) cents! A quarter is 25.", explain: pExplain(p, USMoney.coins))
+    case 4:
+        let p = pPrice(m.rampInt(30, 55, from: 5, to: 7), 99, needs: .quarter)
+        let n = usFewest(p, from: USMoney.coins).count
+        return PorcusTask(kind: .fewest, prize: prize, price: p, target: p, tray: USMoney.coins, showTotal: total,
+                          showValues: values, line: "\(p) cents — with the FEWEST coins!",
+                          explain: "Fewest: \(n) coins — " + pExplain(p, USMoney.coins))
+    case 5:
+        let p = 5 * Int.random(in: 21...m.rampInt(60, 99, from: 6, to: 8))
+        return PorcusTask(kind: .dollars, prize: prize, price: p, target: p, tray: [.penny, .nickel, .dime, .quarter, .one],
+                          showTotal: total, showValues: values, line: "The \(prize.name) costs \(usMoney(p)).",
+                          explain: pExplain(p, [.penny, .nickel, .dime, .quarter, .one]))
+    case 6:
+        let p = 5 * Int.random(in: 12...m.rampInt(30, 80, from: 7, to: 9))
+        let s = 5 * Int.random(in: 2...(p / 5 - 3))
+        let need = p - s
+        return PorcusTask(kind: .goal, prize: prize, price: p, saved: s, target: need,
+                          tray: need >= 100 ? [.penny, .nickel, .dime, .quarter, .one] : USMoney.coins,
+                          showTotal: false, showValues: values,
+                          line: "I've saved \(usMoney(s)). The \(prize.name) costs \(usMoney(p)). Feed me the rest!",
+                          explain: "\(usMoney(p)) − \(usMoney(s)) = \(usMoney(need))")
+    default:
+        // Interest: whole-cent answers only.
+        let rates = [10] + (m.d > 9 ? [5, 20, 25, 50] : m.d > 8.8 ? [20, 50] : [])
+        let r = rates.randomElement()!
+        let step = r == 10 ? 10 : r == 5 ? 20 : r == 20 ? 5 : r == 25 ? 4 : 2
+        var held = 0
+        repeat { held = step * Int.random(in: max(1, 100 / step)...(1000 / step)) } while held % 100 != 0 && Bool.random()
+        let i = held * r / 100
+        return PorcusTask(kind: .interest, prize: PItem(emoji: "💰", name: "interest"), price: held + i, saved: held, target: i,
+                          tray: i >= 100 ? [.penny, .nickel, .dime, .quarter, .one] : USMoney.coins,
+                          showTotal: false, showValues: values,
+                          line: "I pay \(r)% interest! I hold \(usMoney(held)). Feed me my interest!",
+                          explain: "\(r)% of \(usMoney(held)) = \(usMoney(i))")
     }
 }
 
-func porcusRound(_ level: Int) -> PorcusRound {
-    let r = Int.random(in: 0..<20)
-    switch level {
-    case 1: return pFill()
-    case 2: return r < 10 ? pFillBig() : pAfford()
-    case 3: return pTempt(perDay: 1)
-    case 4: return r < 10 ? pSort() : pTempt(perDay: 2)
-    case 5: return r < 12 ? pPlanExact(5) : r < 16 ? pSort() : pTempt(perDay: 2)
-    case 6: return r < 8 ? pPlanRemainder(6) : r < 16 ? pJarsHalf(6) : pPlanExact(6)
-    case 7: return r < 10 ? pJarsPercent(7) : r < 16 ? pPlanRemainder(7) : pJarsHalf(7)
-    case 8: return r < 10 ? pInterest1(8) : r < 15 ? pJarsPercent(8) : pPlanRemainder(8)
-    default: return r < 10 ? pInterestTop(level) : r < 14 ? pInterest1(level) : r < 17 ? pJarsPercent(level) : pPlanRemainder(level)
+private func pExplain(_ p: Int, _ tray: [USMoney]) -> String {
+    let f = usFewest(p, from: tray)
+    let groups = tray.sorted(by: >).compactMap { k -> String? in
+        let n = f.filter { $0 == k }.count
+        return n == 0 ? nil : "\(n) × \(k.label)"
     }
+    return groups.joined(separator: " + ") + " = \(usMoney(p))"
 }
-
-#if DEBUG
-/// Self-check: each choice question's marked answer is the true one, and options are distinct.
-func porcusSelfCheck() -> [String] {
-    var errs: [String] = []
-    func nums(_ s: String) -> [Int] { s.split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) } }
-    for level in 1...10 {
-        for _ in 0..<3000 {
-            let r = porcusRound(level)
-            if Set(r.options).count != r.options.count { errs.append("L\(level) dup \(r.options)") }
-            if r.kind != .fill && !r.options.indices.contains(r.correct) { errs.append("L\(level) bad index") }
-            switch r.kind {
-            case .fill:
-                let ok = level == 1 ? (3...5).contains(r.cost) && r.feed == r.cost && r.startCoins == 0
-                    : level == 2 && (6...10).contains(r.cost) && r.startCoins + r.feed == r.cost && r.feed > 0 && r.startCoins > 0
-                if !ok { errs.append("fill L\(level) \(r.cost)") }
-            case .afford:
-                if level != 2 || r.cost > 10 || r.startCoins > 10 || r.startCoins < 1 || r.feed != 0
-                    || (r.startCoins >= r.cost) != (r.correct == 0) { errs.append("afford \(r.startCoins)/\(r.cost)") }
-            case .tempt:
-                let h = r.startCoins + r.feed, end = h - r.treatCost + (7 - r.day) * r.perDay
-                if (end >= r.cost) != (r.correct == 0) { errs.append("tempt answer") }
-                if level < 3 || h + (7 - r.day) * r.perDay > (level <= 3 ? 10 : 20) || r.cost > 20 { errs.append("tempt too big") }
-                if h < r.treatCost { errs.append("tempt can't afford treat") }
-            case .sort:
-                if level < 4 { errs.append("L\(level) sort too early") }
-                let need = pNeeds.contains(r.prize), want = pWants.contains(r.prize)
-                if need == want || (r.correct == 0) != need { errs.append("sort \(r.prize)") }
-            case .choice:
-                let opts = r.options.map { nums($0).first ?? -1 }
-                if r.prompt.contains("weeks to save") {
-                    let n = nums(r.prompt); if n[1] / n[0] != opts[r.correct] || n[1] % n[0] != 0 { errs.append("planExact") }
-                } else if r.prompt.contains("until you can buy") {
-                    let n = nums(r.prompt), w = opts[r.correct]
-                    if !(n[0] + w * n[1] >= n[2] && n[0] + (w - 1) * n[1] < n[2]) { errs.append("planRem \(r.prompt) \(w)") }
-                } else if r.prompt.contains("HALF") {
-                    let n = nums(r.prompt), t = n[0], g = n[1]
-                    let ans = r.prompt.hasSuffix("SAVE?") ? t / 2 : t - t / 2 - g
-                    if ans != opts[r.correct] || t % 2 != 0 { errs.append("jarsHalf") }
-                } else if r.prompt.contains("Share out") {
-                    let n = nums(r.prompt), t = n[0]
-                    let pct = r.prompt.hasSuffix("SAVE?") ? n[1] : r.prompt.hasSuffix("SPEND?") ? n[2] : n[3]
-                    if t * pct % 100 != 0 || t * pct / 100 != opts[r.correct] || n[1] + n[2] + n[3] != 100 { errs.append("jarsPct \(r.prompt)") }
-                } else if r.options.contains("Plan A") {
-                    let n = nums(r.prompt), x = n[1], y = n[3]
-                    let a = Double(x) * 1.1 * 1.1, b = Double(y) * 1.1
-                    let want = abs(a - b) < 0.001 ? 2 : a > b ? 0 : 1
-                    if want != r.correct { errs.append("nowLater \(x) \(y)") }
-                } else if r.prompt.contains("after 2 weeks") {
-                    let n = nums(r.prompt), h = n[1]
-                    if Double(opts[r.correct]) != (Double(h) * 1.21).rounded() || h * 121 % 100 != 0 { errs.append("int2") }
-                } else if r.prompt.contains("after 1 week") {
-                    let n = nums(r.prompt), rate = n[0], h = n[1]
-                    if h * rate % 100 != 0 || h + h * rate / 100 != opts[r.correct] { errs.append("int1 \(r.prompt)") }
-                } else if r.prompt.contains("pay you") {
-                    let n = nums(r.prompt)
-                    if n[1] * n[0] / 100 != opts[r.correct] || n[1] % 10 != 0 { errs.append("int pay") }
-                } else { errs.append("unchecked \(r.prompt)") }
-                if r.options.count != (r.options.contains("Plan A") ? 3 : pChoices(level)) { errs.append("L\(level) count \(r.options.count)") }
-                if level <= 3 { errs.append("L\(level) choice question too early") }
-                if opts.contains(where: { $0 <= 0 }) && !r.options.contains("Plan A") { errs.append("non-positive \(r.options)") }
-            }
-        }
-    }
-    let overlap = Set(pNeeds.map(\.emoji)).intersection(pWants.map(\.emoji))
-    if !overlap.isEmpty { errs.append("need/want overlap \(overlap)") }
-    return errs
-}
-#endif
 
 // MARK: - Model
 
 @MainActor
 private final class PorcusModel: ArcadeModel {
-    enum Stage { case feeding, asking, done }
-    enum Mood { case calm, happy, betrayed, sad }
+    enum Stage { case feeding, done }
+    enum Mood { case calm, gulp, happy, cough, sad }
 
-    @Published var round = pFill()
-    @Published var coins = 0
-    @Published var pending = 0
+    @Published var task = PorcusTask(kind: .count, prize: pPrizes[0], price: 3, target: 3, tray: [.penny])
+    @Published var fed: [USMoney] = []
     @Published var stage: Stage = .feeding
     @Published var mood: Mood = .calm
     @Published var say = ""
-    @Published var chosen: Int?
     @Published var shelf: [String] = []
     @Published var serial = 0
-    @Published var fed = 0                 // bumps per coin (Porcus gulps)
+    @Published var plinks = 0
     @Published var sparks = 0
-    @Published var showExplain = false
+    @Published var reveal = false
 
     init() { super.init(key: GameID.porcus.rawValue) }
-
     override func perLevel(_ level: Int) -> Int { level == 1 ? 4 : 5 }
+
+    var sum: Int { fed.reduce(0) { $0 + $1.cents } }
+    /// A PAY button is needed when the tag doesn't count for you, or the fewest-coins rule applies.
+    var needsPay: Bool { !task.showTotal || task.kind == .fewest }
 
     override func onBegin() {
         #if DEBUG
-        let env = ProcessInfo.processInfo.environment
-        if env["LUDUS_SELFTEST"] != nil || env["LUDUS_SELFCHECK"] != nil {
-            let errs = porcusSelfCheck()
-            marketLog("PORCUS SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors") \(Array(Set(errs)).prefix(12))")
-        }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         shelf = []
-        newRound()
+        newTask()
     }
 
-    func newRound() {
-        round = porcusRound(level)
-        coins = round.startCoins
-        pending = round.feed
-        stage = pending > 0 ? .feeding : .asking
-        mood = .calm; chosen = nil; showExplain = false
-        switch round.kind {
-        case .fill: say = round.startCoins > 0 ? "Fill me up! \(round.prize.emoji)" : "Save for the \(round.prize.emoji)!"
-        case .afford: say = "Can we buy it?"
-        case .tempt: say = "Day \(round.day)! Feed me!"
-        case .sort: say = "Need it or want it?"
-        case .choice: say = "Oink? Think…"
-        }
+    func newTask() {
+        task = porcusTask(self)
+        fed = []; stage = .feeding; mood = .calm; reveal = false
+        say = task.line
         serial += 1
+        if d < 4 { LibraryVoice.say(task.line) }
     }
 
-    /// One coin goes into Porcus (a drag that lands on him, or a tap on the coin).
-    func feedCoin() {
-        guard phase == .playing, stage == .feeding, pending > 0 else { return }
-        pending -= 1; coins += 1; fed += 1; mood = .calm
-        Haptics.tap(0.5)
-        say = round.kind == .fill ? "Oink! \(coins)!" : "Oink! Yum!"
-        if pending == 0 {
-            stage = .asking
-            if round.kind == .tempt { say = "A \(round.treat?.name ?? "treat")… 🤔" }
-        }
-    }
+    func sayAgain() { LibraryVoice.say(task.line) }
 
-    /// Level I: buy the prize — only once enough coins are in.
-    func buy() {
-        guard phase == .playing, round.kind == .fill, stage != .done else { return }
-        if coins >= round.cost {
-            stage = .done; coins -= round.cost; mood = .happy; say = "Hooray! Enjoy the \(round.prize.emoji)!"
-            shelf.append(round.prize.emoji); sparks += 1
-            hit()
-            next(after: 1.4)
-        } else {
-            mood = .sad; say = "Not yet! \(coins) of \(round.cost) 🪙"
-            miss(delay: 1.4)
-            if dying { stage = .done }
-        }
-    }
-
-    /// Answer a question (tempt / sort / choice): `i` indexes `round.options`.
-    func answer(_ i: Int) {
-        guard phase == .playing, stage == .asking, round.kind != .fill, round.options.indices.contains(i) else { return }
-        chosen = i; stage = .done
-        let right = i == round.correct
-        if right {
-            hit(); sparks += 1
-            if !round.shelf.isEmpty { shelf.append(round.shelf) }
-        } else {
-            miss(delay: 2.6); showExplain = true
-        }
-        // Porcus reacts — and in a temptation the right choice then happens either way.
-        if round.kind == .tempt && round.correct == 0 {
-            coins -= round.treatCost; mood = .betrayed
-            say = right ? "My coin! 😱 …OK, still enough." : "Yes! You can — still enough!"
-        } else if round.kind == .tempt {
-            mood = right ? .happy : .sad
-            say = right ? "Saved! Oink-oink! 💕" : "No! The \(round.prize.emoji) needs every coin!"
-        } else if round.kind == .afford {
-            mood = right ? .happy : .sad
-            let yes = round.correct == 0
-            say = right ? (yes ? "Yes! Enough! 💕" : "Right — not yet!") : (yes ? "We can! Count again!" : "Not enough yet!")
-        } else {
-            mood = right ? .happy : .sad
-            say = right ? ["Oink! Clever!", "Right! 💕", "Bravo!", "Oink-oink!"].randomElement()! : "Oops! Look…"
-        }
-        next(after: right ? 1.4 : 2.8)
-    }
-
-    private func next(after t: Double) {
+    func feed(_ k: USMoney) {
+        guard phase == .playing, stage == .feeding else { return }
+        fed.append(k); plinks += 1
+        Sfx.play(.coin, volume: 0.8); Haptics.tap(0.5)
+        mood = .gulp
         let s = serial
-        DispatchQueue.main.asyncAfter(deadline: .now() + t) { [weak self] in
-            guard let self, self.serial == s, self.phase == .playing, !self.dying else { return }
-            self.newRound()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self, self.serial == s, self.mood == .gulp else { return }
+            self.mood = .calm
+        }
+        if sum > task.target {
+            say = "Too much! *cough* That's \(usMoney(sum))."
+            resolve(false, cough: true)
+        } else if sum == task.target && !needsPay {
+            resolve(true)
+        } else if task.showTotal {
+            say = "\(usMoney(sum))…"
         }
     }
 
-    // One move per call. The bot decides per round whether it will be right; a wrong level-I
-    // round taps BUY too early, a wrong question taps a wrong answer.
+    /// Tap Porcus: shake the last coin back out.
+    func shakeOut() {
+        guard phase == .playing, stage == .feeding, !fed.isEmpty else { return }
+        fed.removeLast()
+        Sfx.play(.tick); Haptics.light()
+        say = task.showTotal ? "\(usMoney(sum))…" : "Clink! One back out."
+    }
+
+    func pay() {
+        guard phase == .playing, stage == .feeding, !fed.isEmpty else { return }
+        if sum != task.target {
+            say = sum < task.target ? "Not enough yet — that's \(usMoney(sum))." : "Too much — that's \(usMoney(sum))."
+            resolve(false)
+        } else if task.kind == .fewest && fed.count > usFewest(task.target, from: task.tray).count {
+            say = "Right amount — but fewer coins can do it!"
+            resolve(false)
+        } else {
+            resolve(true)
+        }
+    }
+
+    private func resolve(_ right: Bool, cough: Bool = false) {
+        stage = .done
+        if right {
+            mood = .happy; sparks += 1
+            say = ["Oink! Exactly right!", "Hooray! Oink-oink!", "Perfect! 💕", "Clink-clink — yes!"].randomElement()!
+            if task.kind != .interest || shelf.count < 12 { shelf.append(task.prize.emoji) }
+            Sfx.play(.sparkle, volume: 0.6)
+            hit()
+        } else {
+            mood = cough ? .cough : .sad
+            reveal = true
+            miss(delay: 2.8)
+        }
+        let s = serial
+        DispatchQueue.main.asyncAfter(deadline: .now() + (right ? 1.4 : 3.0)) { [weak self] in
+            guard let self, self.serial == s, self.phase == .playing, !self.dying else { return }
+            self.newTask()
+        }
+    }
+
+    // One move per call, as a child would: the right next coin (fewest-coins order), then PAY.
+    // A wrong round overshoots with a big coin, or pays one penny short.
     private var botSerial = -1, botGood = true
     override func botAct(correct: Bool) {
-        guard stage != .done else { return }
+        guard stage == .feeding else { return }
         if botSerial != serial { botSerial = serial; botGood = correct }
-        switch round.kind {
-        case .fill:
-            if pending > 0 && !botGood { botSerial = -1; buy() }     // too early (then re-decide)
-            else if pending > 0 { feedCoin() } else { buy() }
-        default:
-            if stage == .feeding { feedCoin(); return }
-            let wrong = round.options.indices.filter { $0 != round.correct }
-            answer(botGood ? round.correct : wrong.randomElement()!)
+        let left = task.target - sum
+        if !botGood {
+            if Bool.random(), let big = task.tray.first(where: { $0.cents > left }) { feed(big) }
+            else if left > 1 { feed(usFewest(left - 1, from: task.tray).first ?? .penny); if sum == task.target - 1 { pay() } }
+            else { feed(task.tray.max()!) }
+            return
+        }
+        if left == 0 { pay(); return }
+        feed(usFewest(left, from: task.tray).first!)
+    }
+
+    #if DEBUG
+    private func selfTest() {
+        var errs: [String] = []
+        marketSweep(self) {
+            let t = porcusTask(self)
+            if t.target <= 0 { errs.append("target \(t.target) \(t.kind)") }
+            if usFewest(t.target, from: t.tray).reduce(0, { $0 + $1.cents }) != t.target { errs.append("unmakeable \(t.target)") }
+            if t.kind == .goal && t.saved + t.target != t.price { errs.append("goal sum") }
+            if t.kind == .interest && t.saved + t.target != t.price { errs.append("interest sum") }
+        }
+        marketLog("PORCUS SELFTEST: \(errs.isEmpty ? "OK" : "\(errs.count) errors \(Array(Set(errs)).prefix(8))")")
+    }
+    #endif
+}
+
+// MARK: - Scene
+
+/// A cosy bedroom at dusk: striped wallpaper, a window with the moon, a wooden desk.
+private struct PorcusRoom: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack(alignment: .topLeading) {
+                LinearGradient(colors: [Color(hex: 0x6b4a6e), Color(hex: 0x8a5d6b)], startPoint: .top, endPoint: .bottom)
+                // Wallpaper stripes
+                HStack(spacing: 22) {
+                    ForEach(0..<Int(w / 44) + 2, id: \.self) { _ in
+                        Rectangle().fill(Color.white.opacity(0.05)).frame(width: 22)
+                    }
+                }
+                // Window with the night sky and moon
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x1d2a5c), Color(hex: 0x4a4f8f)],
+                                                                            startPoint: .top, endPoint: .bottom))
+                    Circle().fill(Color(hex: 0xfff4c9)).frame(width: 34).offset(x: 22, y: -26)
+                        .shadow(color: Color(hex: 0xfff4c9).opacity(0.8), radius: 10)
+                    ForEach(0..<6, id: \.self) { i in
+                        Circle().fill(Color.white.opacity(0.8)).frame(width: 2.5)
+                            .offset(x: CGFloat([-40, -20, 10, -46, 34, -8][i]), y: CGFloat([-40, 10, 30, 22, 26, -44][i]))
+                    }
+                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(width: 6)
+                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(height: 6)
+                    RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
+                }
+                .frame(width: 104, height: 108)
+                .position(x: w - 66, y: h * 0.205)
+                // Desk
+                VStack(spacing: 0) {
+                    Rectangle().fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x8d5a2e)], startPoint: .top, endPoint: .bottom))
+                        .frame(height: 16)
+                    Rectangle().fill(LinearGradient(colors: [Color(hex: 0x7a4b25), Color(hex: 0x4e2e15)], startPoint: .top, endPoint: .bottom))
+                }
+                .frame(height: h * 0.38)
+                .offset(y: h * 0.62)
+            }
         }
     }
 }
 
-// MARK: - Views
+// MARK: - Porcus himself
 
-/// A gold coin, drawn.
-private struct PCoin: View {
-    var size: CGFloat = 64
-    var ghost = false
+/// A pink ceramic piggy bank, side-on, facing left: coin slot on his back, curly tail, blushing
+/// cheeks. `fat` (0…1) rounds him out as coins go in.
+private struct PorcusPig: View {
+    let mood: PorcusModel.Mood
+    let fat: CGFloat
+    @State private var blink = false
+
+    private let pink = [Color(hex: 0xffc4d6), Color(hex: 0xf28aa8), Color(hex: 0xc9587a)]
+
     var body: some View {
-        Circle()
-            .fill(RadialGradient(colors: [Color(hex: 0xfff1a8), Color(hex: Lu.gold), Color(hex: 0xb8860b)],
-                                 center: UnitPoint(x: 0.35, y: 0.3), startRadius: 1, endRadius: size * 0.7))
-            .overlay(Circle().inset(by: size * 0.12).stroke(Color(hex: 0x9c7b33), lineWidth: max(1.5, size * 0.05)))
-            .overlay(Text("1").font(luSerif(size * 0.42, .black)).foregroundStyle(Color(hex: 0x7a5a12)))
-            .frame(width: size, height: size)
-            .opacity(ghost ? 0.3 : 1)
+        let bw: CGFloat = 200 + fat * 26, bh: CGFloat = 138 + fat * 18
+        ZStack {
+            // Legs
+            ForEach(0..<4, id: \.self) { i in
+                RoundedRectangle(cornerRadius: 9).fill(i % 2 == 0 ? pink[2] : pink[1])
+                    .frame(width: 30, height: 40)
+                    .offset(x: [-62, -30, 34, 66][i] * (bw / 200), y: bh * 0.42)
+            }
+            // Tail
+            PTail().stroke(pink[2], style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                .frame(width: 30, height: 30)
+                .offset(x: bw * 0.52, y: -bh * 0.08)
+                .rotationEffect(.degrees(mood == .happy ? 20 : 0))
+            // Body
+            Ellipse().fill(RadialGradient(colors: pink, center: UnitPoint(x: 0.38, y: 0.3), startRadius: 4, endRadius: bw * 0.62))
+                .frame(width: bw, height: bh)
+            Ellipse().fill(Color.white.opacity(0.35)).frame(width: bw * 0.36, height: bh * 0.16)
+                .rotationEffect(.degrees(-10)).offset(x: -bw * 0.06, y: -bh * 0.3)
+            // Coin slot
+            Capsule().fill(Color(hex: 0x5a1c33)).frame(width: 52, height: 10)
+                .overlay(Capsule().stroke(pink[2], lineWidth: 2))
+                .offset(x: bw * 0.06, y: -bh * 0.44)
+            // Ear (back) and ear (front)
+            PEar().fill(pink[2]).frame(width: 34, height: 40).rotationEffect(.degrees(-18)).offset(x: -bw * 0.26, y: -bh * 0.48)
+            PEar().fill(pink[1]).frame(width: 36, height: 44).rotationEffect(.degrees(-30)).offset(x: -bw * 0.36, y: -bh * 0.44)
+            // Snout
+            ZStack {
+                Ellipse().fill(LinearGradient(colors: [pink[0], pink[1]], startPoint: .top, endPoint: .bottom))
+                    .frame(width: 46, height: mood == .gulp ? 50 : 56)
+                    .overlay(Ellipse().stroke(pink[2], lineWidth: 2.5))
+                HStack(spacing: 9) {
+                    Capsule().fill(Color(hex: 0x8a2e4f)).frame(width: 8, height: 14)
+                    Capsule().fill(Color(hex: 0x8a2e4f)).frame(width: 8, height: 14)
+                }
+            }
+            .offset(x: -bw * 0.5, y: -bh * 0.02)
+            // Eye
+            eye.offset(x: -bw * 0.3, y: -bh * 0.17)
+            // Cheek
+            Circle().fill(Color(hex: 0xff6f91).opacity(mood == .gulp ? 0.75 : 0.45)).frame(width: mood == .gulp ? 32 : 24)
+                .offset(x: -bw * 0.3, y: bh * 0.1)
+            // Mouth
+            mouth.offset(x: -bw * 0.36, y: bh * 0.22)
+        }
+        .frame(width: 280, height: 220)
+        .animation(.spring(response: 0.3, dampingFraction: 0.5), value: fat)
+        .animation(.spring(response: 0.25, dampingFraction: 0.6), value: mood)
+        .onAppear { blinkLoop() }
+    }
+
+    @ViewBuilder private var eye: some View {
+        switch mood {
+        case .happy:
+            PSmileArc().stroke(Color(hex: 0x3a1424), style: StrokeStyle(lineWidth: 5, lineCap: .round)).frame(width: 24, height: 12)
+        case .cough:
+            Text("✕").font(luFont(22)).foregroundStyle(Color(hex: 0x3a1424))
+        default:
+            ZStack {
+                Ellipse().fill(Color.white).frame(width: 24, height: blink ? 3 : 28)
+                Circle().fill(Color(hex: 0x2a1020)).frame(width: 14).offset(x: -3, y: 2).opacity(blink ? 0 : 1)
+                Circle().fill(Color.white).frame(width: 5).offset(x: -6, y: -2).opacity(blink ? 0 : 1)
+                if mood == .sad {
+                    Capsule().fill(Color(hex: 0x3a1424)).frame(width: 26, height: 5).rotationEffect(.degrees(-16)).offset(y: -18)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var mouth: some View {
+        switch mood {
+        case .happy, .gulp:
+            Ellipse().fill(Color(hex: 0x8a2e4f)).frame(width: 22, height: mood == .gulp ? 10 : 16)
+        case .cough:
+            Ellipse().fill(Color(hex: 0x8a2e4f)).frame(width: 18, height: 20)
+        case .sad:      // ∩ — a frown
+            PSmileArc().stroke(Color(hex: 0x8a2e4f), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .frame(width: 18, height: 7)
+        case .calm:     // ∪ — a smile
+            PSmileArc().stroke(Color(hex: 0x8a2e4f), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .frame(width: 20, height: 8).rotationEffect(.degrees(180))
+        }
+    }
+
+    private func blinkLoop() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double.random(in: 2.2...4.5)) {
+            withAnimation(.easeInOut(duration: 0.08)) { blink = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+                withAnimation(.easeInOut(duration: 0.08)) { blink = false }
+                blinkLoop()
+            }
+        }
     }
 }
 
-private struct PFramesKey: PreferenceKey {
-    static var defaultValue: [String: CGRect] = [:]
-    static func reduce(value: inout [String: CGRect], nextValue: () -> [String: CGRect]) { value.merge(nextValue()) { $1 } }
-}
-
-private extension View {
-    func pFrame(_ name: String) -> some View {
-        background(GeometryReader { g in Color.clear.preference(key: PFramesKey.self, value: [name: g.frame(in: .named("pf"))]) })
+private struct PEar: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.midX, y: r.minY), control: CGPoint(x: r.minX, y: r.minY + r.height * 0.2))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.maxY), control: CGPoint(x: r.maxX, y: r.minY + r.height * 0.3))
+        p.closeSubpath()
+        return p
     }
 }
 
-/// Something the child can drag onto a target (or just tap): `drop` gets the release point in
-/// the "pf" space and says whether it landed.
-private struct PDraggable<Content: View>: View {
-    let drop: (CGPoint) -> Bool
-    let tap: () -> Void
-    @ViewBuilder let content: Content
-    @State private var drag: CGSize = .zero
-    var body: some View {
-        content
-            .offset(drag)
-            .scaleEffect(drag == .zero ? 1 : 1.1)
-            .gesture(DragGesture(minimumDistance: 6, coordinateSpace: .named("pf"))
-                .onChanged { drag = $0.translation }
-                .onEnded { v in
-                    if drop(v.location) { drag = .zero } else { withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { drag = .zero } }
-                })
-            .simultaneousGesture(TapGesture().onEnded { tap() })
+private struct PTail: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.midY))
+        p.addCurve(to: CGPoint(x: r.maxX * 0.8, y: r.minY), control1: CGPoint(x: r.width * 0.4, y: r.maxY), control2: CGPoint(x: r.maxX, y: r.maxY * 0.6))
+        p.addCurve(to: CGPoint(x: r.width * 0.45, y: r.height * 0.3), control1: CGPoint(x: r.width * 0.6, y: r.minY - r.height * 0.2), control2: CGPoint(x: r.width * 0.4, y: r.minY))
+        p.addCurve(to: CGPoint(x: r.maxX, y: r.height * 0.45), control1: CGPoint(x: r.width * 0.5, y: r.height * 0.6), control2: CGPoint(x: r.maxX, y: r.height * 0.7))
+        return p
     }
 }
+
+private struct PSmileArc: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.maxY), control: CGPoint(x: r.midX, y: r.minY - r.height * 0.8))
+        return p
+    }
+}
+
+// MARK: - View
 
 struct PorcusView: View {
     let onClose: () -> Void
     @StateObject private var model = PorcusModel()
-    @State private var frames: [String: CGRect] = [:]
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.porcus.spec!, accent: Lu.coral, onClose: onClose) {
-            VStack(spacing: 8) {
-                Color.clear.frame(height: 52)
-                shelfRow
-                pigRow
-                middle
-                Spacer(minLength: 4)
-                bottom
-            }
-            .padding(.horizontal, 14).padding(.bottom, 8)
-            .coordinateSpace(name: "pf")
-            .onPreferenceChange(PFramesKey.self) { frames = $0 }
+        ArcadeShell(model: model, spec: GameID.porcus.spec!, accent: Lu.coral,
+                    onClose: { LibraryVoice.stop(); onClose() },
+                    backdrop: { PorcusRoom() }) {
+            PorcusPlay(model: model)
         }
+        .onDisappear { LibraryVoice.stop() }
     }
+}
 
-    private func lands(_ p: CGPoint, on name: String) -> Bool {
-        frames[name]?.insetBy(dx: -30, dy: -30).contains(p) ?? false
-    }
+private struct PorcusPlay: View {
+    @ObservedObject var model: PorcusModel
+    @State private var frames: [String: CGRect] = [:]
+    @State private var hover = false
+    @State private var plunk = false
 
-    private var shelfRow: some View {
-        HStack(spacing: 4) {
-            Text("🏆").font(.system(size: 20))
-            if model.shelf.isEmpty {
-                Text("Your prizes go here").font(luFont(14, .heavy)).foregroundStyle(Color(hex: Lu.inkDim)).opacity(0.8)
-            }
-            ForEach(Array(model.shelf.suffix(9).enumerated()), id: \.offset) { _, e in
-                Text(e).font(.system(size: 24)).transition(.scale(scale: 0.2).combined(with: .opacity))
-            }
-            Spacer()
-        }
-        .frame(height: 34)
-        .padding(.horizontal, 10)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(hex: 0x6e4524).opacity(0.55)))
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: model.shelf.count)
-    }
+    private var t: PorcusTask { model.task }
 
-    // Porcus — fatter as he fills — with his coin count and what he's saying.
-    private var pigRow: some View {
-        let f = min(1, log2(1 + Double(model.coins)) / log2(31))
-        return HStack(alignment: .center, spacing: 8) {
-            ZStack {
-                Text("🐷").font(.system(size: 92))
-                    .scaleEffect(x: 0.85 + 0.45 * f, y: 0.85 + 0.22 * f)
-                    .scaleEffect(model.mood == .happy ? 1.12 : 1)
-                    .rotationEffect(.degrees(model.mood == .happy ? -10 : model.mood == .betrayed ? 12 : 0))
-                    .modifier(MarketShake(shakes: CGFloat(model.lastMiss + (model.mood == .betrayed ? 1 : 0))))
-                    .animation(.spring(response: 0.3, dampingFraction: 0.35), value: model.mood)
-                    .animation(.spring(response: 0.25, dampingFraction: 0.4), value: model.coins)
-                    .animation(.linear(duration: 0.45), value: model.lastMiss)
-                Text("\(model.coins)").font(luFont(22)).foregroundStyle(Color(hex: Lu.inkDark))
-                    .padding(.horizontal, 9).padding(.vertical, 2)
-                    .background(Capsule().fill(Color(hex: Lu.gold)).overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
-                    .offset(y: 54)
-                MarketSparks(trigger: model.sparks, glyphs: ["🪙", "✨", "💕"])
-            }
-            .frame(width: 136, height: 140)
-            .pFrame("pig")
-
-            MarketBubble {
-                Text(model.say).font(luFont(19, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                    .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.6)
-                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            }
-            .padding(.bottom, 30)
-        }
-    }
-
-    @ViewBuilder private var middle: some View {
-        let r = model.round
-        switch r.kind {
-        case .fill:
-            VStack(spacing: 8) {
-                HStack(spacing: 10) {
-                    Text(r.prize.emoji).font(.system(size: 54))
-                    Text("=").font(luFont(30)).foregroundStyle(Color(hex: Lu.inkDim))
-                    coinRows(total: r.cost, filled: model.coins)
-                }
-            }
-            .frame(maxWidth: .infinity).padding(.vertical, 12).background(luPanelShape(18))
-        case .afford:
-            VStack(spacing: 10) {
-                HStack(spacing: 10) {
-                    Text("🐷").font(.system(size: 34))
-                    coinRows(total: r.startCoins, filled: r.startCoins)
-                }
-                tag(r.prize.emoji, r.cost, goal: true)
-                Text(r.prompt).font(luFont(22, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-            }
-            .frame(maxWidth: .infinity).padding(12).background(luPanelShape(18))
-        case .tempt:
-            VStack(spacing: 10) {
-                calendar(r)
-                HStack(spacing: 14) {
-                    tag(r.prize.emoji, r.cost, goal: true)
-                    tag(r.treat?.emoji ?? "🍭", r.treatCost, goal: false)
-                }
-                if model.stage != .feeding && r.perDay == 1 {
-                    ifYouBuy(r)
-                }
-                if model.stage != .feeding {
-                    Text(r.prompt).font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                        .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity).padding(12).background(luPanelShape(18))
-        case .sort:
-            PDraggable(drop: { p in
-                if lands(p, on: "jar0") { model.answer(0); return true }
-                if lands(p, on: "jar1") { model.answer(1); return true }
-                return false
-            }, tap: {}) {
-                VStack(spacing: 4) {
-                    Text(r.prize.emoji).font(.system(size: 64))
-                    Text(r.prompt).font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                }
-                .padding(.horizontal, 22).padding(.vertical, 12)
-                .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: Lu.ink)))
-                .opacity(model.stage == .done ? 0 : 1)
-            }
-            .id(model.serial)
-        case .choice:
-            Text(r.prompt).font(luFont(r.prompt.count > 90 ? 18 : 21, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                .multilineTextAlignment(.center).lineSpacing(3).minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity).padding(14).background(luPanelShape(18))
-        }
-    }
-
-    /// Coins in rows of five (so 6–10 stay easy to count); the first `filled` are gold, the rest ghosts.
-    private func coinRows(total: Int, filled: Int) -> some View {
+    var body: some View {
         VStack(spacing: 6) {
-            ForEach(Array(stride(from: 0, to: total, by: 5)), id: \.self) { row in
-                HStack(spacing: 6) {
-                    ForEach(row..<min(total, row + 5), id: \.self) { i in PCoin(size: 38, ghost: i >= filled) }
-                }
-            }
+            Color.clear.frame(height: 54)
+            shelf
+            bubble.padding(.top, 26)
+            Spacer(minLength: 0)
+            pig
+            Spacer(minLength: 0)
+            bottom
+        }
+        .padding(.horizontal, 12).padding(.bottom, 6)
+        .coordinateSpace(name: "porcus")
+        .onPreferenceChange(MarketFrames.self) { frames = $0 }
+        .onChange(of: model.plinks) { _ in
+            plunk = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { plunk = false }
         }
     }
 
-    private func calendar(_ r: PorcusRound) -> some View {
-        HStack(spacing: 4) {
-            ForEach(1...7, id: \.self) { d in
-                VStack(spacing: 2) {
-                    Text("\(d)").font(luFont(13, .heavy)).foregroundStyle(Color(hex: d == r.day ? Lu.inkDark : Lu.inkDim))
-                    if d < r.day {
-                        Text("✓").font(luFont(16)).foregroundStyle(Color(hex: Lu.mint)).frame(height: 30)
-                    } else if d == r.day {
-                        Text("☀️").font(.system(size: 20)).frame(height: 30)
-                    } else {
-                        VStack(spacing: -12) { ForEach(0..<r.perDay, id: \.self) { _ in PCoin(size: 22, ghost: false).opacity(0.55) } }
-                            .frame(height: 30)
+    // The shelf: the prize standing on it with its price tag hanging below, and the prizes
+    // already bought lined up beside it.
+    private var shelf: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 6) {
+                Text(t.prize.emoji).font(.system(size: 52))
+                    .scaleEffect(model.stage == .done && model.mood == .happy ? 1.25 : 1)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.45), value: model.mood)
+                    .frame(width: 88)
+                    .id(model.serial)
+                    .transition(.scale.combined(with: .opacity))
+                HStack(spacing: 0) {
+                    ForEach(Array(model.shelf.suffix(7).enumerated()), id: \.offset) { _, e in
+                        Text(e).font(.system(size: 24)).transition(.scale(scale: 0.2).combined(with: .opacity))
                     }
                 }
-                .frame(maxWidth: .infinity).padding(.vertical, 4)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: d == r.day ? Lu.gold : Lu.panel)))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, 112)
+            }
+            ZStack(alignment: .topLeading) {
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0xa06a3a), Color(hex: 0x6e4524)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: 10).clipShape(RoundedRectangle(cornerRadius: 3))
+                    .padding(.trailing, 112)
+                Text(usMoney(t.price))
+                    .font(luFont(24)).foregroundStyle(Color(hex: Lu.inkDark))
+                    .padding(.leading, 16).padding(.trailing, 10).padding(.vertical, 3)
+                    .background(PTagShape().fill(Color(hex: 0xfdf3d7), style: FillStyle(eoFill: true))
+                        .overlay(PTagShape().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
+                    .rotationEffect(.degrees(-6))
+                    .offset(x: 14, y: 12)
+                    .opacity(t.kind == .interest ? 0 : 1)
             }
         }
+        .padding(.top, 6)
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: model.shelf.count)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: model.serial)
     }
 
-    /// Gradus II's counting aid: the coins left if you buy the treat (the treat's coins crossed
-    /// out) plus the coins still to come — count the gold ones and compare with the prize.
-    private func ifYouBuy(_ r: PorcusRound) -> some View {
-        let h = r.startCoins + r.feed, left = h - r.treatCost, future = 7 - r.day
-        return HStack(spacing: 3) {
-            ForEach(0..<max(0, left), id: \.self) { _ in PCoin(size: 26) }
-            Text(r.treat?.emoji ?? "🍭").font(.system(size: 22))
-            ForEach(0..<r.treatCost, id: \.self) { _ in
-                PCoin(size: 26).opacity(0.35).overlay(Text("✕").font(luFont(20)).foregroundStyle(Color(hex: Lu.coral)))
+    private var bubble: some View {
+        MarketBubble(fill: 0xfdf6e3) {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(model.say).font(luFont(t.line.count > 60 ? 17 : 20, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                        .lineLimit(3).minimumScaleFactor(0.6)
+                    if model.reveal {
+                        Text(t.explain).font(luFont(16, .heavy)).foregroundStyle(Color(hex: 0x2f7a3a))
+                            .lineLimit(2).minimumScaleFactor(0.6)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                LibrarySpeakerButton(size: 40) { model.sayAgain() }
             }
-            Text("+").font(luFont(20)).foregroundStyle(Color(hex: Lu.inkDim))
-            ForEach(0..<future, id: \.self) { _ in PCoin(size: 26).opacity(0.6) }
         }
+        .frame(minHeight: 70)
+        .animation(.easeOut(duration: 0.2), value: model.reveal)
     }
 
-    private func tag(_ emoji: String, _ cost: Int, goal: Bool) -> some View {
-        HStack(spacing: 6) {
-            Text(emoji).font(.system(size: 34))
-            Text("\(cost) 🪙").font(luFont(20)).foregroundStyle(Color(hex: Lu.inkDark))
+    private var pig: some View {
+        let fat = CGFloat(min(1, Double(model.sum + model.task.saved) / Double(max(1, model.task.price))))
+        return ZStack {
+            PorcusPig(mood: model.mood, fat: fat)
+                .scaleEffect(hover ? 1.06 : 1)
+                .scaleEffect(x: plunk ? 1.05 : 1, y: plunk ? 0.95 : 1, anchor: .bottom)
+                .modifier(MarketShake(shakes: CGFloat(model.lastMiss)))
+                .animation(.spring(response: 0.2, dampingFraction: 0.5), value: plunk)
+                .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hover)
+                .animation(.linear(duration: 0.5), value: model.lastMiss)
+                .onTapGesture { model.shakeOut() }
+                .marketFrame("pig", in: "porcus")
+            // Coins coughed back out
+            if model.mood == .cough {
+                MarketSparks(trigger: model.lastMiss, glyphs: ["🪙"], radius: 120)
+            }
+            MarketSparks(trigger: model.sparks, glyphs: ["💕", "✨", "🪙"], radius: 110)
+            tag.offset(x: 24, y: 64)
         }
-        .padding(.horizontal, 12).padding(.vertical, 4)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: goal ? Lu.mint : Lu.ink)))
+        .frame(height: 220)
+    }
+
+    /// The chalk tag around his neck: the running total, or "?" once you must count yourself.
+    private var tag: some View {
+        let text: String = {
+            if t.kind == .goal || t.kind == .interest {
+                return usMoney(t.saved) + (model.fed.isEmpty ? "" : " + ?")
+            }
+            return t.showTotal ? usMoney(model.sum) : (model.fed.isEmpty ? "0¢" : "?")
+        }()
+        return Text(text)
+            .font(luFont(22)).foregroundStyle(.white).monospacedDigit()
+            .padding(.horizontal, 12).padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: 0x2f3b33))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0xa07a46), lineWidth: 3)))
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: model.sum)
     }
 
     @ViewBuilder private var bottom: some View {
-        let r = model.round
-        VStack(spacing: 10) {
-            if model.showExplain {
-                Text(r.explain).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.gold))
-                    .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(3)
-                    .transition(.opacity)
-            }
-            if model.stage == .feeding {
+        VStack(spacing: 8) {
+            if model.reveal {
+                // A set of coins that works.
                 VStack(spacing: 4) {
-                    PDraggable(drop: { p in
-                        guard lands(p, on: "pig") else { return false }
-                        model.feedCoin(); return true
-                    }, tap: { model.feedCoin() }) {
-                        PCoin(size: 84)
-                    }
-                    .id(model.fed)
-                    .transition(.scale(scale: 0.3).combined(with: .opacity))
-                    Text("👆 ➜ 🐷").font(.system(size: 22)).opacity(0.8)
-                }
-                .frame(height: 130)
-            }
-            switch r.kind {
-            case .fill:
-                let ready = model.coins >= r.cost
-                LudusButton(title: "Buy \(r.prize.emoji)", fill: ready ? [Lu.gold, Lu.tangerine] : [Lu.silver, 0xa79f8b],
-                            shadow: ready ? 0xb96b1e : 0x6f6857, fullWidth: true) { model.buy() }
-                    .opacity(ready ? 1 : 0.85)
-                    .scaleEffect(model.coins >= r.cost && model.stage != .done ? 1.05 : 1)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.4), value: model.coins >= r.cost)
-            case .sort:
-                HStack(spacing: 14) {
-                    jar(0, "NEED", "🏠", Lu.sky)
-                    jar(1, "WANT", "🎈", Lu.grape)
-                }
-            case .afford, .tempt, .choice:
-                if model.stage != .feeding {
-                    let n = r.options.count
-                    let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: n == 4 ? 2 : n)
-                    LazyVGrid(columns: cols, spacing: 10) {
-                        ForEach(r.options.indices, id: \.self) { i in
-                            MarketChoiceButton(text: r.options[i], state: state(i), height: n <= 2 ? 88 : 72) { model.answer(i) }
+                    Text(t.kind == .fewest ? "FEWEST COINS" : "THIS WORKS").font(luFont(12, .heavy)).tracking(2)
+                        .foregroundStyle(Color(hex: Lu.ink).opacity(0.8))
+                    HStack(spacing: 4) {
+                        ForEach(Array(usFewest(t.target, from: t.tray).enumerated()), id: \.offset) { _, k in
+                            USMoneyView(kind: k, size: 40, showValue: true)
                         }
                     }
+                    .padding(8)
+                    .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.mint).opacity(0.85)))
                 }
+                .transition(.scale(scale: 0.8).combined(with: .opacity))
+            } else {
+                // What's already gone in, small (so you can recount).
+                HStack(spacing: 2) {
+                    ForEach(Array(model.fed.enumerated()), id: \.offset) { _, k in
+                        USMoneyView(kind: k, size: model.fed.count > 9 ? 22 : 30, showValue: t.showValues)
+                    }
+                }
+                .frame(height: 34)
+            }
+            tray
+            if model.needsPay {
+                let ready = !model.fed.isEmpty && model.stage == .feeding
+                LudusButton(title: "Pay 🛒", fill: ready ? [Lu.mint, 0x3f8f4a] : [Lu.silver, 0xa79f8b],
+                            shadow: ready ? 0x2a6a33 : 0x6f6857, fullWidth: true) { model.pay() }
+                    .opacity(ready ? 1 : 0.85)
             }
         }
-        .animation(.easeOut(duration: 0.2), value: model.showExplain)
+        .animation(.easeOut(duration: 0.2), value: model.reveal)
     }
 
-    private func state(_ i: Int) -> MarketChoiceState {
-        guard model.stage == .done, let c = model.chosen else { return .open }
-        return i == model.round.correct ? .right : i == c ? .wrong : .faded
-    }
-
-    private func jar(_ i: Int, _ label: String, _ icon: String, _ hex: UInt) -> some View {
-        let st = state(i)
-        return Button(action: { model.answer(i) }) {
-            VStack(spacing: 4) {
-                Text(icon).font(.system(size: 40))
-                Text(label).font(luFont(24)).foregroundStyle(Color(hex: Lu.inkDark))
-                if model.stage == .done && i == model.round.correct {
-                    Text(model.round.prize.emoji).font(.system(size: 30)).transition(.scale)
+    /// The coin tray: one stack per kind; drag a coin to Porcus's slot (or tap the stack).
+    private var tray: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            ForEach(t.tray, id: \.self) { k in
+                VStack(spacing: 2) {
+                    ZStack {
+                        if !k.isBill {
+                            ForEach(0..<3, id: \.self) { i in
+                                USMoneyView(kind: k, size: 58, showValue: false).offset(y: CGFloat(3 - i) * 3).opacity(0.9)
+                            }
+                        } else {
+                            USMoneyView(kind: k, size: 50, showValue: false).offset(x: 3, y: 4).opacity(0.9)
+                        }
+                        MarketDraggable(space: "porcus", enabled: model.stage == .feeding,
+                                        onDrag: { p in hover = p.map { frames["pig"]?.insetBy(dx: -20, dy: -20).contains($0) ?? false } ?? false },
+                                        drop: { p in
+                                            guard frames["pig"]?.insetBy(dx: -30, dy: -30).contains(p) ?? false else { return false }
+                                            model.feed(k); return true
+                                        },
+                                        tap: { model.feed(k) }) {
+                            USMoneyView(kind: k, size: k.isBill ? 50 : 58, showValue: t.showValues)
+                        }
+                        .id("\(k.rawValue)-\(model.plinks)")
+                    }
+                    .frame(minWidth: k.isBill ? 110 : 52, minHeight: 64)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity, minHeight: 150)
-            .background(RoundedRectangle(cornerRadius: 26).fill(Color(hex: st == .wrong ? Lu.coral : st == .right ? Lu.mint : hex))
-                .overlay(RoundedRectangle(cornerRadius: 26).stroke(Color.white.opacity(0.35), lineWidth: 3)))
-            .opacity(st == .faded ? 0.5 : 1)
         }
-        .buttonStyle(.plain)
-        .disabled(model.stage != .asking)
-        .pFrame("jar\(i)")
+        .padding(.horizontal, 10).padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 20).fill(LinearGradient(colors: [Color(hex: 0x2f5e46), Color(hex: 0x1f4232)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: 0xc9a46a), lineWidth: 4))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 4)
+        )
+        .id(model.serial)
+    }
+}
+
+/// A paper price tag with a punched hole.
+private struct PTagShape: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let n: CGFloat = 12
+        p.move(to: CGPoint(x: r.minX + n, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX - 4, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + 4), control: CGPoint(x: r.maxX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY - 4))
+        p.addQuadCurve(to: CGPoint(x: r.maxX - 4, y: r.maxY), control: CGPoint(x: r.maxX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX + n, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.midY))
+        p.closeSubpath()
+        p.addEllipse(in: CGRect(x: r.minX + 6, y: r.midY - 3, width: 6, height: 6))
+        return p
     }
 }
