@@ -13,7 +13,7 @@ enum GameID: String, Identifiable, Hashable {
     // Lighthouse · Geography
     case flagFrenzy, nameCountry, pharosBeam, zooFerry, pigeonPost, agrippaMap
     // Library · Language Arts
-    case wordSort, synonymSnake, polyphemus, scrollCatcher
+    case polyphemus, scrollCatcher, minervaOwl, wordBridge, synonymSnake
     // Colosseum · Logic  (trueFalseBlitz / oddOneOut / patternPop are retired — QuickFire still names them)
     case portaCustos, torches, chariotCode, whereLeo, mosaicMender, trueFalseBlitz, oddOneOut, patternPop
     // Vesuvius · Science
@@ -42,7 +42,8 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .zooFerry:        ZooFerryView(onClose: onClose)
     case .pigeonPost:      PigeonPostView(onClose: onClose)
     case .agrippaMap:      AgrippaMapView(onClose: onClose)
-    case .wordSort:        WordSortView(onClose: onClose)
+    case .minervaOwl:      MinervaOwlView(onClose: onClose)
+    case .wordBridge:      WordBridgeView(onClose: onClose)
     case .synonymSnake:    SynonymSnakeView(onClose: onClose)
     case .polyphemus:      PolyphemusView(onClose: onClose)
     case .scrollCatcher:   ScrollCatcherView(onClose: onClose)
@@ -148,12 +149,14 @@ let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Word Wizards", subject: "Language Arts", emoji: "✏️", colorHex: Lu.mint, games: [
         .init(title: "Polyphemus Is Hungry", mechanic: "feed", premise: "Feed the Cyclops only foods with his sound.", game: .polyphemus,
               icon: "👁️", howTo: how(("🅱️", "Look at his letter"), ("🍌", "Drag him a food with it"), ("🔊", "Tap to hear it"))),
-        .init(title: "Scroll Catcher", mechanic: "catch", premise: "Catch the falling letters to spell the picture.", game: .scrollCatcher,
-              icon: "📜", howTo: how(("🐱", "Look at the picture"), ("👉", "Drag the basket"), ("🔤", "Catch its letters in order"))),
-        .init(title: "Word Sort", mechanic: "lane-sorter", premise: "Drop each word in its bin — noun, verb and more.", game: .wordSort,
-              icon: "📚", howTo: how(("📖", "Read the word"), ("👆", "Tap its bin"), ("🧸", "Noun = a thing, verb = doing"))),
-        .init(title: "Synonym Snake", mechanic: "snake", premise: "Eat the words that mean the same — dodge the opposites.", game: .synonymSnake,
-              icon: "🐍", howTo: how(("👆", "Tap where to turn"), ("😋", "Eat the ones that match"), ("🚫", "Dodge the others"))),
+        .init(title: "Scroll Catcher", mechanic: "catch", premise: "Catch the falling letters to spell the word.", game: .scrollCatcher,
+              icon: "📜", howTo: how(("🐱", "Look at the picture"), ("👉", "Slide the scroll box"), ("🔤", "Catch its letters in order"))),
+        .init(title: "Minerva's Owl", mechanic: "aim", premise: "Aim the owl at the moth with the right kind of word.", game: .minervaOwl,
+              icon: "🦉", howTo: how(("🏃", "Hear what to catch"), ("✋", "Pull the owl back, aim"), ("🦋", "Let go — catch the word!"))),
+        .init(title: "Stepping Stones", mechanic: "build", premise: "Lay the word stones in sentence order so the frog can hop home.", game: .wordBridge,
+              icon: "🐸", howTo: how(("👂", "Hear the sentence"), ("🪨", "Tap the stones in order"), ("🪷", "Help the frog hop home!"))),
+        .init(title: "Synonym Snake", mechanic: "snake", premise: "Eat the words that fit the sign — dodge the rest.", game: .synonymSnake,
+              icon: "🐍", howTo: how(("👆", "Tap where to turn"), ("😋", "Eat the ones that fit"), ("🚫", "Dodge the others"))),
     ]),
     LudusWorld(name: "Brain Benders", subject: "Logic & Puzzles", emoji: "🧩", colorHex: Lu.grape, games: [
         .init(title: "Where's Leo?", mechanic: "track", premise: "Leo the lion cub hides — follow his helmet through the shuffle!", game: .whereLeo,
