@@ -250,7 +250,7 @@ private final class OwlModel: ArcadeModel {
         let real = oParts.values.filter { $0.tag != "s" && $0.tag != "o" }.first { t.tags.contains($0.tag) }
         if t.tags.contains("d") { return "*\(t.bare)* is an article — find the \(part.kid)" }
         if target == "s" || target == "o" {
-            return "*\(t.bare)* isn't the \(part.name.lowercased()) — that's who or what \(target == "s" ? "the sentence is about" : "gets the action")"
+            return "*\(t.bare)* isn't the \(part.name) — find who or what \(target == "s" ? "the sentence is about" : "gets the action")"
         }
         if let real { return "*\(t.bare)* is \(real.name.first.map { "AEIOU".contains($0) } == true ? "an" : "a") \(real.name) — \(real.hint)" }
         return "*\(t.bare)* isn't the \(part.name.lowercased())"
@@ -431,6 +431,14 @@ private struct OwlPlay: View {
                 let _ = model.track(live, perch: perch)
                 ZStack {
                     OliveBranch(width: size.width).position(x: size.width / 2, y: perch.y + 66)
+                    if model.d < 4.5 && !aiming && !model.busy {
+                        Text(model.tapFlies ? "👆 Tap a moth — or pull the owl back ✋" : "✋ Pull the owl back, aim, let go!")
+                            .font(luFont(14, .heavy)).foregroundStyle(Color(hex: 0xdfe8ff).opacity(0.9))
+                            .padding(.horizontal, 12).padding(.vertical, 6)
+                            .background(Capsule().fill(Color(hex: 0x0b1030).opacity(0.7)))
+                            .position(x: size.width / 2, y: min(size.height - 14, perch.y + 112))
+                            .allowsHitTesting(false)
+                    }
                     if aiming { aimLine(from: perch, live: live, size: size) }
                     ForEach(model.tokens.indices, id: \.self) { i in moth(i, at: live[i], perch: perch, t: t) }
                     OwlBird(look: lookDir(perch, live), flying: model.owlAt != nil, flap: flap,

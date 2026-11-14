@@ -13,7 +13,7 @@ import SwiftUI
 //   faint whole word in the slots: always below d 2, gone by d 3.2
 //   decoys 1 → 3 by d 5.5; look-alike decoys (b/d, m/n) phase in from d 2.5; the classic wrong
 //   letter (sep-E-rate) from d 7; a picture-word flashes then hides from d 5.5 (tricky words
-//   always flash first); fall time 6.5 s → 3.2 s by d 10; the scroll box narrows 30% → 20%.
+//   always flash first); fall time 5.2 s → 3 s by d 10; the scroll box narrows 30% → 20%.
 // Letting the right letter fall costs a heart from d 2.5 (before that it just falls again).
 // After 2 misses in a row the fall slows and the right letter glows (any level).
 
@@ -257,7 +257,7 @@ private final class ScrollModel: ArcadeModel {
             if waveIn <= 0 { spawnWave() }
         }
 
-        var fall = ramp(6.5, 3.2, to: 10)
+        var fall = ramp(5.2, 3.0, to: 10)
         if missRun >= 2 { fall *= 1.25 }
         let speed = (basketY - spawnY) / CGFloat(fall)
         let reach = basketW / 2 + 4

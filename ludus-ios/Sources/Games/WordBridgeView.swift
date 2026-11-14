@@ -43,15 +43,15 @@ private let wbTiers: [[WBSentence]] = [
     [wb("we went to the beach .", traps: ["two", "too"]), wb("there is a frog in the pond .", traps: ["their"]),
      wb("the dogs wagged their tails .", traps: ["there"]), wb("I ate two big apples .", traps: ["to", "too"]),
      wb("she knew the right answer .", traps: ["new", "write"]), wb("can we eat our lunch now ?", traps: ["hour"]),
-     wb("I can hear the sea .", traps: ["here", "see"]), wb("the wind blew the leaves away .", traps: ["blue"]),
+     wb("I can hear the sea .", traps: ["here", "see"]), wb("the wind blew the leaves away .", traps: ["blue"], alt: ["the wind blew away the leaves ."]),
      wb("the knight rode a white horse .", traps: ["night", "road"]), wb("did you see the shooting star ?", traps: ["sea"]),
      wb("the bear ate the berries .", traps: ["bare"]), wb("she swam faster than her brother .", traps: ["then"]),
      wb("we ran to the shop .", traps: ["runned", "two"]), wb("where are your shoes ?", traps: ["were", "wear"]),
      wb("watch out for the bee !", traps: ["be"])],
-    [wb("we need eggs, milk and bread .", traps: ["eggs"]), wb("yes, I would like some tea .", traps: ["yes"]),
+    [wb("we need eggs, milk and bread .", traps: ["eggs"], alt: ["we need eggs, bread and milk ."]), wb("yes, I would like some tea .", traps: ["yes"]),
      wb("after lunch, we went swimming .", traps: ["lunch"]), wb("Mom, can we go to the park ?", traps: ["Mom"]),
      wb("wow, that cake is huge !", traps: ["wow"]), wb("first, wash your hands .", traps: ["first"]),
-     wb("Rome, Athens and Paris are cities .", traps: ["Rome"]), wb("when the bell rang, we ran outside .", traps: ["rung"]),
+     wb("Rome, Athens and Paris are cities .", traps: ["Rome"], alt: ["Rome, Paris and Athens are cities ."]), wb("when the bell rang, we ran outside .", traps: ["rung"]),
      wb("oh no, the milk spilled !", traps: ["no"])],
     [wb("it's raining again .", traps: ["its"]), wb("the cat licked its paw .", traps: ["it's"]),
      wb("you're my best friend .", traps: ["your"]), wb("is that your coat ?", traps: ["you're"]),
@@ -65,7 +65,7 @@ private let wbTiers: [[WBSentence]] = [
      wb("her hands were as cold as ice .", traps: ["fire"], note: "cold as ice = very cold"),
      wb("that test was a piece of cake .", traps: ["pie"], note: "a piece of cake = very easy"),
      wb("don't let the cat out of the bag .", traps: ["dog"], note: "let the cat out of the bag = tell a secret"),
-     wb("tell me the story, I am all ears .", traps: ["eyes"], note: "all ears = listening closely"),
+     wb("the whole class was all ears .", traps: ["eyes"], note: "all ears = listening closely"),
      wb("time flies when you are having fun .", traps: ["walks"], note: "time flies = time seems to pass quickly"),
      wb("he was as quiet as a mouse .", traps: ["lion"], note: "quiet as a mouse = very quiet"),
      wb("my uncle is a couch potato .", traps: ["carrot"], note: "a couch potato = someone who sits around a lot")],
@@ -158,7 +158,7 @@ private final class BridgeModel: ArcadeModel {
     }
     private func pileFirstClue(_ s: WBStone) -> Bool {
         // Only one pile stone gets the clue capital, even if the first word repeats ("the … the").
-        pile.first { $0.text == sentence.words.first } == s
+        placed.isEmpty && pile.first { $0.text == sentence.words.first } == s
     }
 
     /// The stone the river wants next, if `text` would fit (any accepted order).
@@ -394,12 +394,12 @@ private struct BridgePlay: View {
     private var small: Bool { model.sentence.words.count > 6 }
     private func riverTop(_ s: CGSize) -> CGFloat { max(210, s.height * 0.3) }
     private func riverBottom(_ s: CGSize) -> CGFloat { s.height * 0.68 }
-    private func stoneW(_ s: String) -> CGFloat { CGFloat(max(s.count, 1)) * (small ? 11.5 : 13.5) + (small ? 22 : 28) }
+    private func stoneW(_ s: String) -> CGFloat { CGFloat(max(s.count, 1)) * (small ? 10.5 : 12) + (small ? 22 : 28) }
 
     /// Slots flow like text across the river, centred row by row.
     private func slotCenters(in size: CGSize) -> [CGPoint] {
         let words = model.sentence.words
-        let maxW = size.width - 96
+        let maxW = size.width - 74
         var rows: [[Int]] = [[]], widths: [CGFloat] = [0]
         for i in words.indices {
             let w = stoneW(words[i]) + 8
@@ -411,7 +411,7 @@ private struct BridgePlay: View {
         var out = [CGPoint](repeating: .zero, count: words.count)
         for (r, row) in rows.enumerated() {
             let y = mid + (CGFloat(r) - CGFloat(rows.count - 1) / 2) * gap
-            var x = 64 + (maxW - widths[r]) / 2
+            var x = 66 + (maxW - widths[r]) / 2
             for i in row { let w = stoneW(words[i]) + 8; out[i] = CGPoint(x: x + w / 2, y: y); x += w }
         }
         return out
@@ -445,7 +445,8 @@ private struct BridgePlay: View {
         }()
         return FrogView(happy: model.home, sad: model.lesson != nil && !model.home)
             .modifier(LibraryShake(amount: 7, shakes: shakes))
-            .offset(y: hop ? -34 : -26)
+            .scaleEffect(0.82)
+            .offset(y: hop ? -54 : -42)      // perched on the stone's top edge, so its word stays readable
             .position(p)
             .animation(.spring(response: 0.42, dampingFraction: 0.72), value: model.frogAt)
             .animation(.spring(response: 0.6, dampingFraction: 0.7), value: model.home)

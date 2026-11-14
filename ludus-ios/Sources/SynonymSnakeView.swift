@@ -1,29 +1,27 @@
 import SwiftUI
 
-// MARK: - Synonym Snake  (Library · grid snake, vocabulary)
+// MARK: - Synonym Snake  (Word Wizards · steer, vocabulary)
 //
-// A friendly snake crawls a chunky grid; steer it by tapping beside its head (it turns toward your
-// finger) or by swiping. Eat the foods that match the banner, dodge the rest. Built on GameKit.
-// No crash deaths — the snake wraps through the walls and may cross itself — so hearts are only
-// about words. A wrong bite says why ("*tiny* is the OPPOSITE of big").
+// Vipera the garden snake slithers round the hedges of a Roman garden. Steer her by tapping beside
+// her head (she turns toward your finger) or by swiping. The sign says what to eat — fruit, words
+// that MEAN the same, words that mean the OPPOSITE, words built on a Latin root — and the rest
+// make her sick. No crash deaths (she wraps through the hedges and may cross herself), so hearts
+// are only about words. A wrong bite says why ("*tiny* is the OPPOSITE of big").
 //
-// Level ladder:
-//   I    pictures: "eat the 🍎 FRUIT" — 2 good + 1 bad on the board, slow snake; big picture food
-//   II   pictures again, 2 good + 2 bad (no reading yet)
-//   III  easy synonyms with a picture hint (BIG 🐘 → large, huge, giant); bad = unrelated words
-//   IV   same words, but some bad ones are OPPOSITES (tiny for BIG)
-//   V    harder words (ANGRY → furious, cross); more food on the board
-//   VI   tier-2 vocabulary (ENORMOUS → immense, colossal; TIMID → meek, bashful) with opposite traps
-//   VII+ tier-2, fuller board, a little faster each level (capped)
+// Continuous difficulty (GameKit `d`); kinds fade in via `tier`, older kinds stay as review:
+//   pictures: "eat the FRUIT" (d 1) → easy synonyms with a picture hint (2.4) → easy OPPOSITES
+//   (3.6) → harder synonyms & opposites (4.8) → tier-2 vocabulary (6) → Latin & Greek roots:
+//   AUD = hear → audience, audible; dodge aunt, autumn (7.2)
+//   step time 0.62 s → 0.30 s by d 9 · good food 2 → 3 · bad food 1 → 4 by d 7
+//   opposite traps in synonym rounds: chance ramps 0 → 60% from d 2.6 to 4.5
 
 private struct SSSet {
     let target: String
-    let hint: String         // picture next to the target word
+    let hint: String         // picture next to the target word (for a root: the meaning)
     let good: [String]
-    let opposite: [String]
+    let opposite: [String]   // opposites (for a root: look-alikes that are NOT from it)
 }
 
-// Levels I–II: picture categories (good / bad are emoji).
 private let ssPictureSets: [SSSet] = [
     SSSet(target: "FRUIT", hint: "🍎", good: ["🍎", "🍌", "🍇", "🍓", "🍊", "🍐", "🍒", "🍉", "🍍"],
           opposite: ["🚗", "⚽️", "🧦", "🪑", "🐶", "🎈", "✏️", "🧸"]),
@@ -42,7 +40,7 @@ private let ssEasy: [SSSet] = [
     SSSet(target: "SAD", hint: "😢", good: ["unhappy", "upset", "gloomy"], opposite: ["happy", "glad", "cheerful"]),
     SSSet(target: "FAST", hint: "🐇", good: ["quick", "speedy", "rapid"], opposite: ["slow", "sluggish"]),
     SSSet(target: "COLD", hint: "🧊", good: ["chilly", "icy", "freezing"], opposite: ["hot", "warm", "boiling"]),
-    SSSet(target: "SHOUT", hint: "📣", good: ["yell", "scream", "holler"], opposite: ["whisper", "mumble"]),
+    SSSet(target: "SHOUT", hint: "📣", good: ["yell", "scream", "holler"], opposite: ["whisper", "murmur"]),
     SSSet(target: "WET", hint: "💧", good: ["damp", "soggy", "soaked"], opposite: ["dry", "parched"]),
     SSSet(target: "SCARED", hint: "😱", good: ["afraid", "frightened", "fearful"], opposite: ["brave", "bold", "calm"]),
     SSSet(target: "TIRED", hint: "😴", good: ["sleepy", "weary", "worn out"], opposite: ["awake", "lively", "rested"]),
@@ -76,9 +74,47 @@ private let ssHard: [SSSet] = [
 /// Unrelated words (bad food at III, mixed in later).
 private let ssFillers = ["dog", "table", "purple", "pizza", "tree", "sock", "river", "book", "seven", "window", "spoon", "cloud"]
 
-private func ssSets(_ level: Int) -> [SSSet] {
-    switch level { case 1, 2: return ssPictureSets; case 3, 4: return ssEasy; case 5: return ssMedium; default: return ssHard }
+/// Latin (and two Greek) roots. "good" really come from the root; "opposite" only look like it.
+private let ssRoots: [SSSet] = [
+    SSSet(target: "SCRIB", hint: "write ✍️", good: ["describe", "scribble", "script", "manuscript", "inscription"],
+          opposite: ["scrub", "scrap", "screen", "scream", "crib"]),
+    SSSet(target: "PORT", hint: "carry 📦", good: ["transport", "portable", "import", "export", "report"],
+          opposite: ["pork", "short", "popcorn", "forty"]),
+    SSSet(target: "AUD", hint: "hear 👂", good: ["audio", "audience", "audible", "auditorium", "audition"],
+          opposite: ["aunt", "autumn", "author", "August"]),
+    SSSet(target: "VIS / VID", hint: "see 👁️", good: ["vision", "visible", "video", "invisible", "television", "supervise"],
+          opposite: ["violin", "vinegar", "village", "vivid"]),
+    SSSet(target: "DICT", hint: "say 🗣️", good: ["dictionary", "predict", "dictate", "contradict", "verdict"],
+          opposite: ["dinosaur", "district", "dish", "dice"]),
+    SSSet(target: "SPECT", hint: "look 🔍", good: ["inspect", "spectator", "spectacles", "respect", "suspect"],
+          opposite: ["speech", "spend", "spell", "spill"]),
+    SSSet(target: "AQUA", hint: "water 💧", good: ["aquarium", "aquatic", "aqueduct", "aquamarine"],
+          opposite: ["equal", "acorn", "quack"]),
+    SSSet(target: "PED", hint: "foot 🦶", good: ["pedal", "pedestrian", "centipede", "pedicure", "biped"],
+          opposite: ["pebble", "pencil", "pepper", "petal"]),
+    SSSet(target: "RUPT", hint: "break 💥", good: ["erupt", "interrupt", "rupture", "bankrupt", "disrupt"],
+          opposite: ["rope", "rust", "rapid", "rabbit"]),
+    SSSet(target: "MANU", hint: "hand ✋", good: ["manual", "manuscript", "manicure", "manufacture"],
+          opposite: ["mango", "many", "mane", "menu"]),
+    SSSet(target: "TELE (Greek)", hint: "far 🔭", good: ["telephone", "telescope", "television", "telegram"],
+          opposite: ["tell", "tale", "telling", "tulip"]),
+    SSSet(target: "PHON (Greek)", hint: "sound 🔊", good: ["telephone", "microphone", "symphony", "phonics", "headphones"],
+          opposite: ["photo", "pony", "fond", "phase"]),
+]
+
+/// What a round asks for.
+private enum SSMode { case pictures, same, opposite, root }
+
+private struct SSRound {
+    var mode: SSMode = .pictures
+    var set: SSSet = ssPictureSets[0]
+    var good: [String] { mode == .opposite ? set.opposite : set.good }
+    /// Wrong answers that are a real trap: for "same" the opposites, for "opposite" the synonyms,
+    /// for a root the look-alikes.
+    var traps: [String] { mode == .opposite ? set.good : set.opposite }
 }
+
+private let ssTierStarts: [Double] = [1, 2.4, 3.6, 4.8, 6, 7.2]
 
 // MARK: - Engine
 
@@ -99,10 +135,10 @@ private struct SSFood: Identifiable, Equatable {
     var cell: SSCell
     let word: String
     let good: Bool
-    let opposite: Bool
+    let trap: Bool
 }
 
-private struct SSPop: Identifiable { let id = UUID(); let cell: SSCell; let text: String; let good: Bool }
+private struct SSPop: Identifiable { let id = UUID(); let cell: SSCell; let good: Bool }
 
 @MainActor
 private final class SynonymSnakeModel: ArcadeModel {
@@ -110,31 +146,40 @@ private final class SynonymSnakeModel: ArcadeModel {
 
     @Published var snake: [SSCell] = []
     @Published var foods: [SSFood] = []
-    @Published var set = ssPictureSets[0]
-    @Published var face = "🙂"
+    @Published var round = SSRound()
+    @Published var mood = 0                 // 0 calm, 1 yum, -1 yuck
     @Published var lesson: String?
     @Published var pops: [SSPop] = []
 
-    private var dir: SSDir = .right
+    /// Where the body was one step ago and when the last step happened (the view glides between).
+    private(set) var prevSnake: [SSCell] = []
+    private(set) var stepAt = Date()
+    private(set) var dir: SSDir = .right
     private var queued: SSDir?
     private var eatenThisSet = 0
     private var loop: Task<Void, Never>?
     private var botGoal: UUID?
     private var lessonToken = UUID()
 
-    init() { super.init(key: GameID.synonymSnake.rawValue) }
-
-    private var stepTime: Double {
-        level <= 8 ? [0.62, 0.56, 0.5, 0.46, 0.42, 0.38, 0.35, 0.32][level - 1] : max(0.26, 0.32 - Double(level - 8) * 0.01)
+    init() {
+        super.init(key: GameID.synonymSnake.rawValue)
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil { ssSelfCheck() }
+        #endif
     }
-    private var goodOnBoard: Int { level <= 4 ? 2 : 3 }
-    private var badOnBoard: Int { level == 1 ? 1 : (level <= 4 ? 2 : 3) }
-    /// Gradus I–II play with pictures, not words.
-    var pictures: Bool { level <= 2 }
+
+    var stepTime: Double { ramp(0.62, 0.30, to: 9) }
+    private var goodOnBoard: Int { rampInt(2, 3, from: 3, to: 5) }
+    private var badOnBoard: Int { rampInt(1, 4, from: 1, to: 7) }
+    var pictures: Bool { round.mode == .pictures }
+    var heading: CGFloat {
+        switch dir { case .right: return 0; case .down: return .pi / 2; case .left: return .pi; case .up: return -.pi / 2 }
+    }
 
     override func onBegin() {
         snake = [SSCell(col: 2, row: rows / 2), SSCell(col: 1, row: rows / 2), SSCell(col: 0, row: rows / 2)]
-        dir = .right; queued = nil; face = "🙂"; lesson = nil; pops = []; botGoal = nil
+        prevSnake = snake; stepAt = Date()
+        dir = .right; queued = nil; mood = 0; lesson = nil; pops = []; botGoal = nil
         newSet()
         loop?.cancel()
         loop = Task { @MainActor [weak self] in
@@ -147,22 +192,40 @@ private final class SynonymSnakeModel: ArcadeModel {
         }
     }
 
-    override func onLevelUp() { newSet() }
-
     func stop() { loop?.cancel() }
 
     private func newSet() {
-        var s = ssSets(level).randomElement()!
-        for _ in 0..<6 where s.target == set.target { s = ssSets(level).randomElement()! }
-        set = s; eatenThisSet = 0
+        let t = tier(ssTierStarts)
+        var r = SSRound()
+        for _ in 0..<8 {
+            switch t {
+            case 0: r = SSRound(mode: .pictures, set: ssPictureSets.randomElement()!)
+            case 1: r = SSRound(mode: .same, set: ssEasy.randomElement()!)
+            case 2: r = SSRound(mode: .opposite, set: ssEasy.randomElement()!)
+            case 3: r = SSRound(mode: Bool.random() ? .same : .opposite, set: ssMedium.randomElement()!)
+            case 4: r = SSRound(mode: Bool.random() ? .same : .opposite, set: ssHard.randomElement()!)
+            default: r = SSRound(mode: .root, set: ssRoots.randomElement()!)
+            }
+            if r.set.target != round.set.target && r.good.count >= 2 { break }
+        }
+        round = r; eatenThisSet = 0
         foods = []
         refill()
+        LibraryVoice.say(sayCue)
     }
 
-    /// Top the board up to `goodOnBoard` good + `badOnBoard` bad foods, away from the head and
-    /// from each other (word labels are wider than a cell).
+    var sayCue: String {
+        switch round.mode {
+        case .pictures: return "Eat all the \(round.set.target.lowercased())!"
+        case .same: return "Eat words that mean \(round.set.target.lowercased())!"
+        case .opposite: return "Eat the opposites of \(round.set.target.lowercased())!"
+        case .root: return "Eat words from the root that means \(round.set.hint.filter { $0.isLetter || $0 == " " }.trimmingCharacters(in: .whitespaces))!"
+        }
+    }
+
+    /// Top the board up, away from the head and from each other (word labels are wider than a cell).
     private func refill() {
-        func place(_ word: String, good: Bool, opposite: Bool) {
+        func place(_ word: String, good: Bool, trap: Bool) {
             let head = snake.first ?? SSCell(col: 0, row: 0)
             var free: [SSCell] = []
             for r in 0..<rows { for c in 0..<cols {
@@ -173,22 +236,26 @@ private final class SynonymSnakeModel: ArcadeModel {
                 free.append(cell)
             } }
             guard let cell = free.randomElement() else { return }
-            foods.append(SSFood(cell: cell, word: word, good: good, opposite: opposite))
+            foods.append(SSFood(cell: cell, word: word, good: good, trap: trap))
         }
         var guardCount = 0
         while foods.filter(\.good).count < goodOnBoard && guardCount < 10 {
             guardCount += 1
-            let unused = set.good.filter { w in !foods.contains { $0.word == w } }
-            place((unused.isEmpty ? set.good : unused).randomElement()!, good: true, opposite: false)
+            let unused = round.good.filter { w in !foods.contains { $0.word == w } }
+            place((unused.isEmpty ? round.good : unused).randomElement()!, good: true, trap: false)
         }
         guardCount = 0
         while foods.filter({ !$0.good }).count < badOnBoard && guardCount < 10 {
             guardCount += 1
-            // Opposite traps from IV on (pictures at I–II use their own "bad" list).
-            let useOpposite = pictures || (level >= 4 && Double.random(in: 0..<1) < 0.6)
-            let pool = (useOpposite ? set.opposite : ssFillers).filter { w in !foods.contains { $0.word == w } }
+            let useTrap: Bool
+            switch round.mode {
+            case .pictures, .root: useTrap = true
+            case .opposite: useTrap = Double.random(in: 0..<1) < 0.6
+            case .same: useTrap = chance(0.6, from: 2.6, to: 4.5)
+            }
+            let pool = (useTrap ? round.traps : ssFillers).filter { w in !foods.contains { $0.word == w } && !round.good.contains(w) }
             guard let w = pool.randomElement() else { continue }
-            place(w, good: false, opposite: useOpposite && !pictures)
+            place(w, good: false, trap: useTrap)
         }
     }
 
@@ -198,6 +265,7 @@ private final class SynonymSnakeModel: ArcadeModel {
         guard phase == .playing else { return }
         if d.isOpposite(queued ?? dir) || d == (queued ?? dir) { return }
         queued = d
+        Sfx.play(.tick, volume: 0.5)
     }
 
     /// Tap steering: turn toward the finger, relative to the head.
@@ -215,53 +283,66 @@ private final class SynonymSnakeModel: ArcadeModel {
         if let q = queued { dir = q; queued = nil }
         let (dc, dr) = dir.delta
         let next = SSCell(col: (head.col + dc + cols) % cols, row: (head.row + dr + rows) % rows)   // wrap
-        snake.insert(next, at: 0)
+        prevSnake = snake
+        stepAt = Date()
+        var body = snake
+        body.insert(next, at: 0)
         if let i = foods.firstIndex(where: { $0.cell == next }) {
             let f = foods.remove(at: i)
+            if f.good { if body.count > 12 { body.removeLast() } } else { body.removeLast(); if body.count > 3 { body.removeLast() } }
+            snake = body
+            // keep prevSnake aligned with the body for gliding
+            while prevSnake.count < snake.count { prevSnake.append(prevSnake.last ?? next) }
             eat(f, at: next)
         } else {
-            snake.removeLast()
+            body.removeLast()
+            snake = body
         }
     }
 
     private func eat(_ f: SSFood, at cell: SSCell) {
+        let p = SSPop(cell: cell, good: f.good)
+        pops.append(p)
         if f.good {
-            if snake.count > 12 { snake.removeLast() }    // grow, up to a point
-            face = "😋"
-            pops.append(SSPop(cell: cell, text: "✨", good: true))
+            mood = 1
+            Sfx.play(.chomp)
             let up = hit()
             eatenThisSet += 1
-            if !up && eatenThisSet >= 3 { newSet() } else if !up { refill() }
+            if eatenThisSet >= 3 { newSet() } else { refill() }
+            _ = up
         } else {
-            snake.removeLast()
-            face = "🤢"
-            pops.append(SSPop(cell: cell, text: "💥", good: false))
+            mood = -1
             say(lessonFor(f))
             miss(delay: 1.6)
             refill()
         }
-        let p = pops.last!.id
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
-            self?.pops.removeAll { $0.id == p }
-            if self?.phase == .playing { self?.face = "🙂" }
+            self?.pops.removeAll { $0.id == p.id }
+            if self?.phase == .playing { self?.mood = 0 }
         }
     }
 
     private func lessonFor(_ f: SSFood) -> String {
-        if pictures {
-            let one = ["FRUIT": "a fruit", "ANIMALS": "an animal", "THINGS THAT GO": "a thing that goes", "SWEETS": "a sweet"][set.target]
-                ?? set.target.lowercased()
-            return "\(f.word) isn't \(one) — eat \(set.good.prefix(2).joined(separator: " "))"
+        let t = round.set.target.lowercased()
+        let right = round.good.first { g in foods.contains { $0.word == g } } ?? round.good[0]
+        switch round.mode {
+        case .pictures:
+            let one = ["FRUIT": "a fruit", "ANIMALS": "an animal", "THINGS THAT GO": "a thing that goes", "SWEETS": "a sweet"][round.set.target] ?? t
+            return "\(f.word) isn't \(one) — eat \(round.good.prefix(2).joined(separator: " "))"
+        case .same:
+            return f.trap ? "*\(f.word)* is the OPPOSITE of \(t)" : "*\(f.word)* doesn't mean \(t) — *\(right)* does"
+        case .opposite:
+            return f.trap ? "*\(f.word)* means the SAME as \(t)" : "*\(f.word)* isn't the opposite of \(t) — *\(right)* is"
+        case .root:
+            let meaning = round.set.hint.filter { $0.isLetter || $0 == " " }.trimmingCharacters(in: .whitespaces)
+            return "*\(f.word)* isn't from \(round.set.target) (\(meaning)) — *\(right)* is"
         }
-        let t = set.target.lowercased()
-        if f.opposite { return "*\(f.word)* is the OPPOSITE of \(t)" }
-        return "*\(f.word)* doesn't mean \(t) — *\(set.good[0])* does"
     }
 
     private func say(_ s: String) {
         let t = UUID(); lessonToken = t
         lesson = s
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { [weak self] in if self?.lessonToken == t { self?.lesson = nil } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) { [weak self] in if self?.lessonToken == t { self?.lesson = nil } }
     }
 
     // MARK: Bot — picks a food, then steers toward it each step through `steer` (a swipe).
@@ -278,8 +359,6 @@ private final class SynonymSnakeModel: ArcadeModel {
         var want: [SSDir] = []
         if dc != 0 { want.append(dc > 0 ? .right : .left) }
         if dr != 0 { want.append(dr > 0 ? .down : .up) }
-        // Prefer: keep going if that's a wanted way, else a wanted turn, else any legal way —
-        // skipping any move that would bite a different food (a careful child steers around).
         let legal = [SSDir.up, .down, .left, .right].filter { !$0.isOpposite(dir) }
         let order = (want.contains(dir) ? [dir] : []) + want.filter { legal.contains($0) } + [dir] + legal
         let safe = order.first { d in
@@ -292,15 +371,22 @@ private final class SynonymSnakeModel: ArcadeModel {
 }
 
 #if DEBUG
-/// Good, opposite and filler words never overlap within a set, so every food has one honest answer.
+/// Good, trap and filler words never overlap within a set, so every food has one honest answer.
 private func ssSelfCheck() {
-    for s in ssPictureSets + ssEasy + ssMedium + ssHard {
-        precondition(Set(s.good).isDisjoint(with: s.opposite), "Synonym Snake: \(s.target) overlap")
-        precondition(Set(s.good).isDisjoint(with: ssFillers) && Set(s.opposite).isDisjoint(with: ssFillers) || ssPictureSets.contains { $0.target == s.target },
-                     "Synonym Snake: \(s.target) filler overlap")
-        precondition(s.good.count >= 2, "Synonym Snake: \(s.target) too few")
+    var problems: [String] = []
+    for s in ssPictureSets + ssEasy + ssMedium + ssHard + ssRoots {
+        if !Set(s.good).isDisjoint(with: s.opposite) { problems.append("\(s.target) overlap") }
+        if !ssPictureSets.contains(where: { $0.target == s.target }) &&
+            (!Set(s.good).isDisjoint(with: ssFillers) || !Set(s.opposite).isDisjoint(with: ssFillers)) { problems.append("\(s.target) filler overlap") }
+        if s.good.count < 2 || s.opposite.count < 2 { problems.append("\(s.target) too few") }
     }
-    print("SELFCHECK synonymSnake OK")
+    for s in ssRoots {
+        let root = s.target.split(separator: " ").first.map { String($0).lowercased() } ?? ""
+        if !s.target.contains("/") {
+            for g in s.good where !g.lowercased().contains(root.prefix(3)) { problems.append("\(g) lacks \(root)") }
+        }
+    }
+    print("SNAKE SELFCHECK: \(problems.isEmpty ? "OK" : problems.joined(separator: " | "))")
 }
 #endif
 
@@ -314,15 +400,41 @@ struct SynonymSnakeView: View {
 
     var body: some View {
         ArcadeShell(model: model, spec: GameID.synonymSnake.spec ?? GameSpec(title: "Synonym Snake", mechanic: "", premise: "", game: .synonymSnake),
-                    accent: Lu.mint, onClose: onClose) {
+                    accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() },
+                    backdrop: { SSGardenBackdrop() }) {
             SSPlayArea(model: model)
         }
-        .onAppear {
-            #if DEBUG
-            ssSelfCheck()
-            #endif
+        .onDisappear { model.stop(); LibraryVoice.stop() }
+    }
+}
+
+/// A Roman peristyle garden: warm stone colonnade above, clipped box hedges, roses.
+private struct SSGardenBackdrop: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack(alignment: .top) {
+                LinearGradient(colors: [Color(hex: 0x9ed0e8), Color(hex: 0xe8f1d8)], startPoint: .top, endPoint: .bottom)
+                // colonnade
+                HStack(spacing: 0) {
+                    ForEach(0..<7, id: \.self) { _ in
+                        Rectangle().fill(LinearGradient(colors: [Color(hex: 0xe9dcc0), Color(hex: 0xfaf3e2), Color(hex: 0xcdbd9c)], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: 18).frame(maxWidth: .infinity)
+                    }
+                }
+                .frame(height: h * 0.3)
+                Rectangle().fill(Color(hex: 0xc9744a)).frame(height: 26)          // tiled roof
+                    .overlay(HStack(spacing: 6) { ForEach(0..<30, id: \.self) { _ in Capsule().fill(Color(hex: 0xa85a36)).frame(width: 8) } })
+                    .clipped()
+                // lawn
+                LinearGradient(colors: [Color(hex: 0x7cbf5c), Color(hex: 0x5a9e43)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: h * 0.76).offset(y: h * 0.24)
+                ForEach(0..<8, id: \.self) { k in
+                    Text(k % 2 == 0 ? "🌹" : "🌿").font(.system(size: 20))
+                        .position(x: w * (0.06 + CGFloat(k) * 0.125), y: h * 0.255)
+                }
+            }
         }
-        .onDisappear { model.stop() }
     }
 }
 
@@ -331,31 +443,38 @@ private struct SSPlayArea: View {
     @State private var swiped = false
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             Color.clear.frame(height: 52)
-            SSBanner(set: model.set, picture: model.pictures, lesson: model.lesson, combo: model.combo)
+            SSBanner(model: model)
             GeometryReader { geo in
                 let cell = min(geo.size.width / CGFloat(model.cols), geo.size.height / CGFloat(model.rows))
                 let w = cell * CGFloat(model.cols), h = cell * CGFloat(model.rows)
                 let ox = (geo.size.width - w) / 2
                 let center = { (c: SSCell) in CGPoint(x: ox + (CGFloat(c.col) + 0.5) * cell, y: (CGFloat(c.row) + 0.5) * cell) }
                 ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 20).fill(Color(hex: Lu.ground2))
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: Lu.goldLine).opacity(0.6), lineWidth: 3))
-                        .frame(width: w, height: h).offset(x: ox)
+                    // hedge border + checker lawn
+                    RoundedRectangle(cornerRadius: 22).fill(Color(hex: 0x2f6b2a))
+                        .frame(width: w + 16, height: h + 16).offset(x: ox - 8, y: -8)
+                        .shadow(color: .black.opacity(0.3), radius: 6, y: 4)
                     Canvas { ctx, _ in
-                        for r in 0..<model.rows { for c in 0..<model.cols where (r + c) % 2 == 0 {
+                        for r in 0..<model.rows { for c in 0..<model.cols {
                             let p = center(SSCell(col: c, row: r))
-                            ctx.fill(Path(roundedRect: CGRect(x: p.x - cell / 2 + 2, y: p.y - cell / 2 + 2, width: cell - 4, height: cell - 4), cornerRadius: 8),
-                                     with: .color(Color(hex: Lu.panel).opacity(0.6)))
+                            ctx.fill(Path(CGRect(x: p.x - cell / 2, y: p.y - cell / 2, width: cell, height: cell)),
+                                     with: .color(Color(hex: (r + c) % 2 == 0 ? 0x8fd06a : 0x80c35c)))
                         } }
+                        // little hedge bumps on the border
+                        for k in 0..<Int((w + h) * 2 / 22) {
+                            let t = CGFloat(k) * 22
+                            let pt: CGPoint = t < w ? CGPoint(x: ox + t, y: -4)
+                                : t < w + h ? CGPoint(x: ox + w + 4, y: t - w)
+                                : t < 2 * w + h ? CGPoint(x: ox + w - (t - w - h), y: h + 4)
+                                : CGPoint(x: ox - 4, y: h - (t - 2 * w - h))
+                            ctx.fill(Path(ellipseIn: CGRect(x: pt.x - 9, y: pt.y - 9, width: 18, height: 18)), with: .color(Color(hex: 0x3d8a35)))
+                        }
                     }
                     .frame(width: geo.size.width, height: h)
+                    .clipShape(RoundedRectangle(cornerRadius: 16).offset(x: 0).size(width: geo.size.width, height: h))
 
-                    ForEach(Array(model.snake.enumerated().dropFirst().reversed()), id: \.offset) { i, s in
-                        SSSegment(head: false, face: "", cell: cell, t: CGFloat(i) / CGFloat(max(1, model.snake.count)))
-                            .position(center(s))
-                    }
                     ForEach(model.foods) { f in
                         let p = center(f.cell)
                         let half = model.pictures ? cell / 2 : cell * 0.8
@@ -363,12 +482,15 @@ private struct SSPlayArea: View {
                             .position(x: min(max(p.x, ox + half), ox + w - half), y: p.y)
                             .transition(.scale.combined(with: .opacity))
                     }
-                    if let h = model.snake.first {
-                        SSSegment(head: true, face: model.face, cell: cell, t: 0).position(center(h))
+                    TimelineView(.animation(paused: model.phase != .playing)) { tl in
+                        Canvas { ctx, _ in
+                            drawSnake(&ctx, now: tl.date, cell: cell, center: center)
+                        }
                     }
+                    .frame(width: geo.size.width, height: h)
+                    .allowsHitTesting(false)
                     ForEach(model.pops) { p in
-                        LaneSparkBurst(glyphs: p.good ? ["✨", "⭐️", "✨", "🌟", "✨"] : ["💥", "💢", "💥"])
-                            .position(center(p.cell))
+                        LibraryBurst(glyphs: p.good ? ["✨", "⭐️", "✨", "🌟", "✨"] : ["💥", "🤢", "💥"]).position(center(p.cell))
                     }
                 }
                 .frame(width: geo.size.width, height: h)
@@ -390,53 +512,135 @@ private struct SSPlayArea: View {
                         }
                 )
             }
-            .padding(.bottom, 10)
+            .padding(.top, 8).padding(.bottom, 12)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 16)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: model.foods)
+    }
+
+    /// The snake: one thick, rounded, striped tube that glides between grid steps, and a head
+    /// with eyes (happy squint on a good bite, queasy green on a bad one) and a flicking tongue.
+    private func drawSnake(_ ctx: inout GraphicsContext, now: Date, cell: CGFloat, center: (SSCell) -> CGPoint) {
+        let body = model.snake, prev = model.prevSnake
+        guard !body.isEmpty else { return }
+        let f = CGFloat(min(1, max(0, now.timeIntervalSince(model.stepAt) / max(0.05, model.stepTime * 0.9))))
+        var pts: [CGPoint] = []
+        for i in body.indices {
+            let to = center(body[i])
+            let from = center(prev.indices.contains(i) ? prev[i] : body[i])
+            if abs(to.x - from.x) > cell * 1.5 || abs(to.y - from.y) > cell * 1.5 { pts.append(to) }   // wrapped: no glide
+            else { pts.append(CGPoint(x: from.x + (to.x - from.x) * f, y: from.y + (to.y - from.y) * f)) }
+        }
+        // split the tube where it wraps through the hedge
+        // (each cut end gets a half-cell stub running out toward the edge it went through)
+        var runs: [[CGPoint]] = [[pts[0]]]
+        for i in 1..<pts.count {
+            let dx = pts[i].x - pts[i - 1].x, dy = pts[i].y - pts[i - 1].y
+            if hypot(dx, dy) > cell * 1.5 {
+                let sx: CGFloat = abs(dx) > cell * 1.5 ? (dx > 0 ? 1 : -1) : 0
+                let sy: CGFloat = abs(dy) > cell * 1.5 ? (dy > 0 ? 1 : -1) : 0
+                runs[runs.count - 1].append(CGPoint(x: pts[i - 1].x - sx * cell * 0.5, y: pts[i - 1].y - sy * cell * 0.5))
+                runs.append([CGPoint(x: pts[i].x + sx * cell * 0.5, y: pts[i].y + sy * cell * 0.5)])
+            }
+            runs[runs.count - 1].append(pts[i])
+        }
+        let sick = model.mood < 0
+        let skin = Color(hex: sick ? 0xa8b84a : 0x3f9a4a), belly = Color(hex: sick ? 0xd8e08a : 0xf2d66b)
+        for run in runs {
+            var p = Path()
+            p.addLines(run)
+            if run.count == 1 { p = Path(ellipseIn: CGRect(x: run[0].x - 1, y: run[0].y - 1, width: 2, height: 2)) }
+            ctx.stroke(p, with: .color(Color.black.opacity(0.18)), style: StrokeStyle(lineWidth: cell * 0.62, lineCap: .round, lineJoin: .round))
+            ctx.stroke(p, with: .color(skin), style: StrokeStyle(lineWidth: cell * 0.56, lineCap: .round, lineJoin: .round))
+            ctx.stroke(p, with: .color(belly), style: StrokeStyle(lineWidth: cell * 0.16, lineCap: .round, lineJoin: .round, dash: [cell * 0.22, cell * 0.2]))
+        }
+        // head
+        let h = pts[0]
+        let a = model.heading
+        let dx = cos(a), dy = sin(a)
+        let r = cell * 0.4
+        // tongue
+        if Int(now.timeIntervalSinceReferenceDate * 3) % 3 == 0 || model.mood > 0 {
+            var t = Path()
+            let tip = CGPoint(x: h.x + dx * r * 1.9, y: h.y + dy * r * 1.9)
+            t.move(to: CGPoint(x: h.x + dx * r * 0.9, y: h.y + dy * r * 0.9)); t.addLine(to: tip)
+            t.move(to: tip); t.addLine(to: CGPoint(x: tip.x + (dx - dy) * 5, y: tip.y + (dy + dx) * 5))
+            t.move(to: tip); t.addLine(to: CGPoint(x: tip.x + (dx + dy) * 5, y: tip.y + (dy - dx) * 5))
+            ctx.stroke(t, with: .color(Color(hex: 0xd8344a)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+        }
+        ctx.fill(Path(ellipseIn: CGRect(x: h.x - r, y: h.y - r, width: r * 2, height: r * 2)), with: .color(skin))
+        for s in [-1.0, 1.0] as [CGFloat] {
+            let e = CGPoint(x: h.x + dx * r * 0.35 - dy * r * 0.5 * s, y: h.y + dy * r * 0.35 + dx * r * 0.5 * s)
+            let er = r * 0.36
+            ctx.fill(Path(ellipseIn: CGRect(x: e.x - er, y: e.y - er, width: er * 2, height: er * 2)), with: .color(.white))
+            if model.mood > 0 {
+                var arc = Path()
+                arc.addArc(center: e, radius: er * 0.6, startAngle: .degrees(200), endAngle: .degrees(340), clockwise: false)
+                ctx.stroke(arc, with: .color(.black), lineWidth: 2.5)
+            } else {
+                let pr = er * (model.mood < 0 ? 0.35 : 0.55)
+                let pc = CGPoint(x: e.x + dx * er * 0.3, y: e.y + dy * er * 0.3)
+                ctx.fill(Path(ellipseIn: CGRect(x: pc.x - pr, y: pc.y - pr, width: pr * 2, height: pr * 2)), with: .color(.black))
+            }
+        }
+        // rosy cheek
+        ctx.fill(Path(ellipseIn: CGRect(x: h.x - dx * r * 0.2 - 4, y: h.y - dy * r * 0.2 - 4, width: 8, height: 8)), with: .color(Color(hex: 0xf28b82).opacity(0.0)))
     }
 }
 
 private struct SSBanner: View {
-    let set: SSSet
-    let picture: Bool
-    let lesson: String?
-    let combo: Int
+    @ObservedObject var model: SynonymSnakeModel
+
+    private var heading: String {
+        switch model.round.mode {
+        case .pictures: return "EAT ALL THE"
+        case .same: return "EAT WORDS THAT MEAN"
+        case .opposite: return "EAT THE OPPOSITES OF"
+        case .root: return "EAT WORDS FROM THE ROOT"
+        }
+    }
 
     var body: some View {
-        VStack(spacing: 6) {
-            VStack(spacing: 2) {
-                Text(picture ? "EAT ALL THE" : "EAT WORDS THAT MEAN").font(luFont(12, .heavy)).tracking(2)
-                    .foregroundStyle(Color(hex: Lu.inkDim))
-                HStack(spacing: 10) {
-                    Text(set.hint).font(.system(size: 34))
-                    Text(set.target).font(luSerif(30, .black))
-                        .foregroundStyle(LinearGradient(colors: [Color(hex: Lu.gold), Color(hex: Lu.tangerine)], startPoint: .top, endPoint: .bottom))
-                        .lineLimit(1).minimumScaleFactor(0.6)
+        let set = model.round.set
+        ZStack {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(heading).font(luFont(11, .heavy)).tracking(1.6).foregroundStyle(Color(hex: 0x6a4a22))
+                    HStack(spacing: 8) {
+                        if model.round.mode != .root { Text(set.hint).font(.system(size: 30)) }
+                        Text(set.target).font(luSerif(28, .black))
+                            .foregroundStyle(Color(hex: model.round.mode == .opposite ? 0xb0371c : 0x2a5a1c))
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                        if model.round.mode == .root {
+                            Text("= " + set.hint).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x2a1d10))
+                                .lineLimit(1).minimumScaleFactor(0.6)
+                        }
+                    }
                 }
+                Spacer(minLength: 0)
+                LibrarySpeakerButton(size: 44) { LibraryVoice.say(model.sayCue) }
             }
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(luPanelShape(16))
-            .id(set.target)
-            .transition(.scale(scale: 0.85).combined(with: .opacity))
-
-            ZStack {
-                if let lesson {
-                    luMarked(lesson, base: Lu.inkDark, mark: 0x9c2a14)
-                        .font(luFont(17, .heavy)).multilineTextAlignment(.center).minimumScaleFactor(0.6)
-                        .padding(.horizontal, 14).padding(.vertical, 7)
-                        .background(Capsule().fill(Color(hex: Lu.gold)))
-                        .transition(.scale(scale: 0.7).combined(with: .opacity))
-                } else if combo >= 2 {
-                    Text("COMBO ×\(combo)!").font(luFont(18)).foregroundStyle(Color(hex: Lu.mint))
-                        .id(combo).transition(.scale(scale: 1.3).combined(with: .opacity))
-                }
+            .opacity(model.lesson == nil ? 1 : 0)
+            if let lesson = model.lesson {
+                libMarked(lesson, base: 0x2a1d10, mark: 0xb0371c)
+                    .font(luFont(17, .heavy)).multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
+                    .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
-            .frame(height: 36)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 70)
+        .background(Parchment(radius: 16))
+        .overlay(alignment: .bottomTrailing) {
+            if model.combo >= 2 && model.lesson == nil {
+                Text("×\(model.combo)").font(luFont(16)).foregroundStyle(Color(hex: 0xfff3c4))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Capsule().fill(Color(hex: 0x2f6b2a)))
+                    .offset(x: 6, y: 10)
+                    .id(model.combo).transition(.scale(scale: 1.4).combined(with: .opacity))
+            }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: set.target)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: lesson)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: model.lesson)
     }
 }
 
@@ -449,39 +653,21 @@ private struct SSFoodView: View {
     var body: some View {
         Group {
             if picture {
-                Text(food.word).font(.system(size: cell * 0.74))
-                    .frame(width: cell * 0.98, height: cell * 0.98)
-                    .background(Circle().fill(Color.white.opacity(0.9)))
+                Text(food.word).font(.system(size: cell * 0.7))
+                    .frame(width: cell * 0.96, height: cell * 0.96)
+                    .background(Circle().fill(Color(hex: 0xfdf6e3)).shadow(color: .black.opacity(0.25), radius: 2, y: 2))
             } else {
-                Text(food.word).font(luFont(min(18, cell * 0.3), .black)).foregroundStyle(Color(hex: Lu.inkDark))
-                    .lineLimit(1).minimumScaleFactor(0.5)
+                Text(food.word).font(luFont(min(18, cell * 0.3), .black)).foregroundStyle(Color(hex: 0x2a1d10))
+                    .lineLimit(1).minimumScaleFactor(0.45)
                     .padding(.horizontal, 8)
-                    .frame(width: cell * 1.6, height: cell * 0.7)
-                    .background(Capsule().fill(LinearGradient(colors: [.white, Color(hex: Lu.silver)], startPoint: .top, endPoint: .bottom))
-                        .overlay(Capsule().stroke(Color(hex: Lu.grape).opacity(0.6), lineWidth: 2)))
+                    .frame(width: cell * 1.6, height: cell * 0.68)
+                    .background(Capsule().fill(LinearGradient(colors: [Color(hex: 0xfffaf0), Color(hex: 0xf0e2c0)], startPoint: .top, endPoint: .bottom))
+                        .overlay(Capsule().stroke(Color(hex: 0x6a4a22).opacity(0.6), lineWidth: 2))
+                        .shadow(color: .black.opacity(0.25), radius: 2, y: 2))
             }
         }
-        .scaleEffect(bob ? 1.05 : 0.95)
+        .scaleEffect(bob ? 1.04 : 0.96)
         .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: bob)
         .onAppear { bob = true }
-    }
-}
-
-private struct SSSegment: View {
-    let head: Bool
-    let face: String
-    let cell: CGFloat
-    let t: CGFloat     // 0 at head → 1 at tail
-
-    var body: some View {
-        let side = cell * (head ? 0.9 : 0.78 - t * 0.18)
-        ZStack {
-            RoundedRectangle(cornerRadius: side * 0.38, style: .continuous)
-                .fill(LinearGradient(colors: [Color(hex: Lu.mint), luShade(Lu.mint, head ? -35 : -60)], startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: side * 0.38, style: .continuous).stroke(.white.opacity(head ? 0.55 : 0.25), lineWidth: 2))
-            if head { Text(face).font(.system(size: side * 0.62)) }
-        }
-        .frame(width: side, height: side)
-        .zIndex(head ? 2 : 1)
     }
 }

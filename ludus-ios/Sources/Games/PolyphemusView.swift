@@ -6,17 +6,13 @@ import SwiftUI
 // his mouth: the right one he chomps; a wrong one turns him green — "BLEH!" — he spits it across
 // the room, then the right plate glows and he gulps it, so every miss shows the answer. A 🔊
 // button (and once per round, automatically) says the cue; tapping a plate says its word — and at
-// I–II a tap also feeds it to him (dragging works at every level).
+// the easy start (d < 3) a tap also feeds it to him (dragging works always). He sits in his cave on
+// the Sicilian shore; the plates are clay, on his wooden table.
 //
-// Ladder:
-//   I    first sound: bib letter + a picture with that sound ("B like 🐻"), 2 picture foods, no words
-//   II   first sound, 3 foods with their names; more letters (vowels, c/k, look-alike sounds)
-//   III  blends & digraphs at the start (ch, sh, br, st…), traps share the first letter (cake ≠ ch)
-//   IV   ending sounds (-ck, -sh, -ll, -ch) and long vowels (cake vs cat)
-//   V    rhymes, words only, spelling traps (height ✓, eight ✗); a patience bar appears (15 s)
-//   VI   prefixes & suffixes by meaning (un-, re-, pre-, -ful, -less, -er, -able, mis-), 13 s
-//   VII  rhymes + affixes, 4 choices, 11 s
-//   VIII+ everything from III up as words only, 4 choices, 10 s easing to 7 s
+// Difficulty is continuous (GameKit `d`) — see `PPlan` below: first sounds with pictures → named
+// foods → blends & digraphs → ending sounds & long vowels → rhymes → prefixes & suffixes by
+// meaning, each fading in while the older kinds stay as review; plates 2 → 4; pictures fade out of
+// the sound rounds; a patience bar from d 4.5 (16 s → 7 s).
 
 // MARK: Word data
 
