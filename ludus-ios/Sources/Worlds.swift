@@ -14,8 +14,8 @@ enum GameID: String, Identifiable, Hashable {
     case flagFrenzy, nameCountry, pharosBeam, zooFerry
     // Library · Language Arts
     case wordSort, synonymSnake, polyphemus, scrollCatcher
-    // Colosseum · Logic
-    case trueFalseBlitz, oddOneOut, patternPop, portaCustos, torches
+    // Colosseum · Logic  (trueFalseBlitz / oddOneOut / patternPop are retired — QuickFire still names them)
+    case portaCustos, torches, chariotCode, whereLeo, mosaicMender, trueFalseBlitz, oddOneOut, patternPop
     // Vesuvius · Science
     case critterSort, dressMarcus, zookeeper
     // Forum · History
@@ -49,6 +49,9 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .patternPop:      PatternPopView(onClose: onClose)
     case .portaCustos:     PortaCustosView(onClose: onClose)
     case .torches:         TorchesView(onClose: onClose)
+    case .chariotCode:     ChariotCodeView(onClose: onClose)
+    case .whereLeo:        WhereLeoView(onClose: onClose)
+    case .mosaicMender:    MosaicMenderView(onClose: onClose)
     case .critterSort:     CritterSortView(onClose: onClose)
     case .dressMarcus:     DressMarcusView(onClose: onClose)
     case .zookeeper:       ZookeeperView(onClose: onClose)
@@ -143,16 +146,16 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🐍", howTo: how(("👆", "Tap where to turn"), ("😋", "Eat the ones that match"), ("🚫", "Dodge the others"))),
     ]),
     LudusWorld(name: "Brain Benders", subject: "Logic & Puzzles", emoji: "🧩", colorHex: Lu.grape, games: [
+        .init(title: "Where's Leo?", mechanic: "track", premise: "Leo the lion cub hides — follow his helmet through the shuffle!", game: .whereLeo,
+              icon: "🦁", howTo: how(("👋", "Leo hides under a helmet"), ("👀", "Watch it as they shuffle"), ("👆", "Tap Leo's helmet!"))),
+        .init(title: "Mosaic Mender", mechanic: "pattern", premise: "Mus the mouse pinched a tile — find the one that fits the pattern.", game: .mosaicMender,
+              icon: "🐭", howTo: how(("🔴", "Look at the pattern"), ("🧺", "Pick the tile that fits"), ("☝️", "Drag it up into the gap"))),
+        .init(title: "Chariot Code", mechanic: "coding", premise: "Plan the chariot's route with arrows, then press GO.", game: .chariotCode,
+              icon: "🏇", howTo: how(("⬆️", "Tap arrows to plan the route"), ("🍎", "Eat every apple"), ("🏁", "Press GO — reach the flag!"))),
         .init(title: "Porta Custos", mechanic: "gatekeeper", premise: "Only gladiators who follow the rule may enter.", game: .portaCustos,
               icon: "🛡️", howTo: how(("🛡️", "Look at the rule"), ("🚪", "OPEN if he fits it"), ("✋", "SHUT if he doesn't"))),
         .init(title: "Torches of the Arena", mechanic: "lights-out", premise: "Light every torch — but each tap flips its neighbours.", game: .torches,
               icon: "🔥", howTo: how(("👆", "Tap a torch"), ("↔️", "Its neighbours flip too"), ("🔥", "Light them all!"))),
-        .init(title: "True / False Blitz", mechanic: "quick-fire", premise: "Snap-judge each statement, true or false.", game: .trueFalseBlitz,
-              icon: "⚖️", howTo: how(("📖", "Read the sentence"), ("✅", "Is it true or false?"))),
-        .init(title: "Odd One Out", mechanic: "quick-fire", premise: "Tap the one that doesn't belong.", game: .oddOneOut,
-              icon: "🔍", howTo: how(("👀", "Look at them all"), ("👆", "Tap the one that doesn't fit"))),
-        .init(title: "Pattern Pop", mechanic: "quick-fire", premise: "Tap what comes next in the pattern.", game: .patternPop,
-              icon: "🔮", howTo: how(("👀", "Find the pattern"), ("👆", "Tap what comes next"))),
     ]),
     LudusWorld(name: "Lab Rats", subject: "Science", emoji: "🔬", colorHex: Lu.tangerine, games: [
         .init(title: "Dress Marcus", mechanic: "dress-up", premise: "Dress Marcus for the weather — or he'll freeze!", game: .dressMarcus,

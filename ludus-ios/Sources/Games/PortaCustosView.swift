@@ -7,15 +7,17 @@ import SwiftUI
 // wait) to keep it down, and rule-breakers bonk off the bars. Every answer shows the rule ticked
 // or crossed against that gladiator, so a miss always says why.
 //
-// Ladder (6 right answers a level):
-//   I     one colour rule ("only 🔴 shields"), two shield colours, slow march (7 s)
-//   II    one rule — a shield colour OR an animal friend, three of each
-//   III   AND ("🔴 + 🦁") or NOT ("no 🐺"); weapons appear
-//   IV    OR, AND with a weapon, NOT; four of everything
-//   V     numbers on shields: even, odd, > 5, < 4 (alone, or with a colour / animal)
-//   VI    SECRET rule: a wall of ✓ / ✗ clue gladiators; work it out, then guard (one feature)
-//   VII   secret rules may be NOTs; some visible "this but not that" rules
-//   VIII+ secret AND rules join; the march quickens gently (floor 4.5 s visible, 5.5 s secret)
+// Difficulty is continuous (`d`, 6 right answers a level). Rule KINDS fade in by `tier`; older
+// kinds stay on as review (the numbered "kinds" below are the content tiers, not levels):
+//   kind 1 (d 1)    one colour rule ("only 🔴 shields"), two shield colours
+//   kind 2 (d 2)    one rule — a shield colour OR an animal friend, three of each
+//   kind 3 (d 3)    AND ("🔴 + 🦁") or NOT ("no 🐺"); weapons appear
+//   kind 4 (d 4)    OR, AND with a weapon, NOT; four of everything
+//   kind 5 (d 5)    numbers on shields: even, odd, > 5, < 4 (alone, or with a colour / animal)
+//   kind 6 (d 6.5)  "this but not that", OR across features, numbers + a feature
+//   SECRET rules fade in from d 5.5 (80 % of rules by d 7): a wall of ✓ / ✗ clue gladiators to
+//   work out — one feature (d 5.5), its NOT (d 7), colour + animal (d 8).
+// The march quickens smoothly: 7 s → 4.5 s for visible rules, 7.5 s → 5.5 s for secret ones.
 
 // MARK: Gladiators and rules
 
@@ -264,20 +266,6 @@ private func pcWalker(_ rule: PCRule, _ pool: PCPool) -> PCGladiator {
     return pool.random()
 }
 
-/// Seconds for a gladiator to march from the left edge to the gate.
-private func pcWalkTime(_ level: Int, hidden: Bool) -> Double {
-    switch level {
-    case 1: return 7
-    case 2, 3: return 6.5
-    case 4, 5: return 6
-    case 6: return 7.5
-    case 7: return 7
-    default:
-        let k = Double(level - 8)
-        return hidden ? max(5.5, 7 - 0.25 * k) : max(4.5, 6 - 0.3 * k)
-    }
-}
-
 // MARK: - Model
 
 private enum PCMood {
@@ -349,11 +337,11 @@ private final class PortaModel: ArcadeModel {
         let old = rule
         ruleStale = false
         sinceRule = 0
-        let secret = level >= 6 && (level == 6 || Int.random(in: 0..<4) > 0)
-        if secret, let h = pcHidden(level, avoiding: old) {
+        let secret = chance(0.8, from: 5.5, to: 7)
+        if secret, let h = pcHidden(6 + tier([5.5, 7, 8]), avoiding: old) {
             rule = h.0; pool = .all; clues = h.1; hidden = true
         } else {
-            (pool, rule) = pcVisible(level, avoiding: old)
+            (pool, rule) = pcVisible(1 + tier([1, 2, 3, 4, 5, 6.5]), avoiding: old)
             clues = []; hidden = false
         }
         ruleVersion += 1
@@ -361,7 +349,7 @@ private final class PortaModel: ArcadeModel {
 
     private func nextWalker() {
         gen += 1
-        let span = level == 1 ? 6 : (hidden ? 4 : 3)
+        let span = d < 2 ? 6 : (hidden ? 4 : 3)
         if ruleStale || sinceRule >= span { makeRule() }
         let w = pcWalker(rule, pool)
         var t = Transaction(); t.disablesAnimations = true
@@ -369,7 +357,7 @@ private final class PortaModel: ArcadeModel {
             walker = w; x = 0; mood = .walk; leaving = false; decision = nil
         }
         withAnimation(.easeOut(duration: 0.25)) { outcome = nil; gateOpen = false; crowd = "🙂" }
-        walkDur = pcWalkTime(level, hidden: hidden)
+        walkDur = hidden ? ramp(7.5, 5.5, from: 5.5, to: 11) : ramp(7, 4.5, to: 11)
         later(0.05) { [unowned self] in
             walkStart = Date()
             withAnimation(.linear(duration: walkDur)) { x = 1 }
@@ -406,6 +394,7 @@ private final class PortaModel: ArcadeModel {
             outcome = PCOutcome(walker: w, right: right, shouldEnter: should, reveal: hidden && !right)
             crowd = right ? "🙌" : "😱"
         }
+        Sfx.play(entered ? .whoosh : .thud, volume: 0.7)
         if hidden {
             addClue(w, should)
             if !right { ruleStale = true }       // the secret is out — a fresh one next
@@ -566,24 +555,183 @@ private struct PCRuleRow: View {
     }
 }
 
-/// A gladiator: animal friend at his heels, a face that reacts, a shield and a weapon.
+/// A gladiator, drawn: sandalled legs, a tunic, a face that reacts under a crested bronze helmet,
+/// his shield (colour + number) held in front, his weapon raised, and his animal friend at his heels.
 private struct PCFigure: View {
     let g: PCGladiator
-    let face: String
+    let mood: PCMood
     let size: CGFloat
     var body: some View {
-        HStack(alignment: .bottom, spacing: -size * 0.12) {
-            if let p = g.pet { Text(p.emoji).font(.system(size: size * 0.36)) }
-            VStack(spacing: -size * 0.07) {
-                Text(face).font(.system(size: size * 0.4))
-                PCShield(hex: g.colour.hex, label: g.number.map(String.init), size: size * 0.54)
+        let s = size
+        ZStack {
+            // Legs + sandals
+            ForEach([0.43, 0.57], id: \.self) { x in
+                Capsule().fill(Color(hex: 0xe0a878)).frame(width: s * 0.08, height: s * 0.26).position(x: s * x, y: s * 0.84)
+                Capsule().fill(Color(hex: 0x7a4a26)).frame(width: s * 0.12, height: s * 0.05).position(x: s * (x + 0.02), y: s * 0.97)
             }
-            .overlay(alignment: .trailing) {
-                Text(g.weapon.emoji).font(.system(size: size * 0.32)).offset(x: size * 0.24, y: -size * 0.06)
+            // Tunic
+            PCTunic().fill(LinearGradient(colors: [Color(hex: 0xb8a68a), Color(hex: 0x8a7458)], startPoint: .top, endPoint: .bottom))
+                .frame(width: s * 0.36, height: s * 0.36).position(x: s * 0.5, y: s * 0.6)
+            Capsule().fill(Color(hex: 0x6a4a26)).frame(width: s * 0.34, height: s * 0.04).position(x: s * 0.5, y: s * 0.62)
+            // Weapon arm (raised, behind the head)
+            Capsule().fill(Color(hex: 0xe0a878)).frame(width: s * 0.07, height: s * 0.22)
+                .rotationEffect(.degrees(-30)).position(x: s * 0.68, y: s * 0.44)
+            Text(g.weapon.emoji).font(.system(size: s * 0.28)).position(x: s * 0.78, y: s * 0.3)
+            // Head
+            Circle().fill(Color(hex: 0xf1c79a)).frame(width: s * 0.24).position(x: s * 0.5, y: s * 0.3)
+            PCFace(mood: mood, s: s * 0.24).position(x: s * 0.5, y: s * 0.31)
+            // Helmet: bronze dome + red crest + cheek guard
+            Circle().trim(from: 0.5, to: 1).fill(LinearGradient(colors: [Color(hex: 0xf2d38a), Color(hex: 0xb07e30)], startPoint: .top, endPoint: .bottom))
+                .frame(width: s * 0.27, height: s * 0.27).position(x: s * 0.5, y: s * 0.28)
+            Capsule().fill(Color(hex: 0xc9973e)).frame(width: s * 0.3, height: s * 0.035).position(x: s * 0.5, y: s * 0.28)
+            PCCrest().fill(LinearGradient(colors: [Color(hex: 0xe8503a), Color(hex: 0xa52a1e)], startPoint: .top, endPoint: .bottom))
+                .frame(width: s * 0.26, height: s * 0.1).position(x: s * 0.5, y: s * 0.13)
+            // Shield in front
+            PCShield(hex: g.colour.hex, label: g.number.map(String.init), size: s * 0.46)
+                .position(x: s * 0.4, y: s * 0.62)
+            // Animal friend at his heels
+            if let p = g.pet { Text(p.emoji).font(.system(size: s * 0.3)).position(x: s * 0.13, y: s * 0.86) }
+        }
+        .frame(width: s, height: s)
+        .background(alignment: .bottom) {
+            Ellipse().fill(Color.black.opacity(0.22)).frame(width: s * 0.8, height: s * 0.1).offset(y: s * 0.04)
+        }
+    }
+}
+
+private struct PCTunic: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX + r.width * 0.18, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX - r.width * 0.18, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.maxY))
+        p.closeSubpath()
+        return p
+    }
+}
+
+private struct PCCrest: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.maxY), control: CGPoint(x: r.midX, y: r.minY - r.height))
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// The gladiator's face: eyes, brows and mouth change with his mood.
+private struct PCFace: View {
+    let mood: PCMood
+    let s: CGFloat
+    var body: some View {
+        let ink = Color(hex: 0x2a1a10)
+        ZStack {
+            ForEach([-1.0, 1.0], id: \.self) { k in
+                Group {
+                    if mood == .dizzy {
+                        ZStack {
+                            Capsule().fill(ink).frame(width: s * 0.06, height: s * 0.2).rotationEffect(.degrees(45))
+                            Capsule().fill(ink).frame(width: s * 0.06, height: s * 0.2).rotationEffect(.degrees(-45))
+                        }
+                    } else if mood == .happy {
+                        PCArc().stroke(ink, style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+                            .frame(width: s * 0.16, height: s * 0.07).rotationEffect(.degrees(180))
+                    } else {
+                        Circle().fill(ink).frame(width: s * 0.13)
+                    }
+                }
+                .offset(x: CGFloat(k) * s * 0.18, y: s * 0.04)
+                // Brows: stern while marching, a raised one when sneaky
+                if mood == .walk || mood == .sneaky {
+                    Capsule().fill(ink).frame(width: s * 0.2, height: s * 0.05)
+                        .rotationEffect(.degrees(mood == .sneaky && k > 0 ? -20 : k * 18))
+                        .offset(x: CGFloat(k) * s * 0.18, y: -s * (mood == .sneaky && k > 0 ? 0.14 : 0.09))
+                }
+            }
+            switch mood {
+            case .happy:
+                PCArc().fill(Color(hex: 0x8a2a1a)).frame(width: s * 0.36, height: s * 0.14).offset(y: s * 0.24)
+            case .sad:
+                PCArc().stroke(Color(hex: 0x8a2a1a), style: StrokeStyle(lineWidth: s * 0.06, lineCap: .round))
+                    .frame(width: s * 0.28, height: s * 0.08).rotationEffect(.degrees(180)).offset(y: s * 0.28)
+                Ellipse().fill(Color(hex: 0x6ab8f0)).frame(width: s * 0.08, height: s * 0.12).offset(x: s * 0.24, y: s * 0.18)
+            case .sneaky:
+                Capsule().fill(Color(hex: 0x8a2a1a)).frame(width: s * 0.26, height: s * 0.05)
+                    .rotationEffect(.degrees(-12)).offset(x: s * 0.04, y: s * 0.26)
+            case .dizzy:
+                Ellipse().stroke(Color(hex: 0x8a2a1a), lineWidth: s * 0.05).frame(width: s * 0.16, height: s * 0.12).offset(y: s * 0.26)
+            case .walk:
+                Capsule().fill(Color(hex: 0x8a2a1a)).frame(width: s * 0.24, height: s * 0.05).offset(y: s * 0.26)
             }
         }
-        .background(alignment: .bottom) {
-            Ellipse().fill(Color.black.opacity(0.22)).frame(width: size * 0.8, height: size * 0.12).offset(y: size * 0.05)
+        .frame(width: s, height: s)
+    }
+}
+
+private struct PCArc: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY), control: CGPoint(x: r.midX, y: r.maxY * 2 - r.minY))
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// The arena outside the gate: sky, the packed stands, a sandstone wall and the sand.
+private struct PCBackdrop: View {
+    var body: some View {
+        GeometryReader { g in
+            let h = g.size.height
+            VStack(spacing: 0) {
+                LinearGradient(colors: [Color(hex: 0x5fa8e0), Color(hex: 0xa8d4f0)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: h * 0.07)
+                Canvas { ctx, size in
+                    let tiers = 4
+                    let th = size.height / CGFloat(tiers)
+                    let colours: [UInt] = [0xe0684f, 0x4fa6cf, 0xf5c542, 0x63b96b, 0xa96fd6, 0xf6ecd4]
+                    for t in 0..<tiers {
+                        let y = CGFloat(t) * th
+                        ctx.fill(Path(CGRect(x: 0, y: y, width: size.width, height: th)),
+                                 with: .color(Color(hex: t % 2 == 0 ? 0xb88a5c : 0xa77a4f)))
+                        var x: CGFloat = CGFloat(t % 2) * 7 + 3
+                        var i = t * 5
+                        while x < size.width {
+                            ctx.fill(Path(ellipseIn: CGRect(x: x, y: y + th * 0.12, width: 9, height: 9)), with: .color(Color(hex: 0xf1c79a)))
+                            ctx.fill(Path(roundedRect: CGRect(x: x - 1, y: y + th * 0.12 + 8, width: 11, height: th * 0.5), cornerRadius: 3),
+                                     with: .color(Color(hex: colours[(i * 7 + t) % colours.count])))
+                            x += 14; i += 1
+                        }
+                    }
+                }
+                .frame(height: h * 0.2)
+                Rectangle().fill(Color(hex: 0x7a5232)).frame(height: 6)
+                // Sandstone wall with block courses
+                Canvas { ctx, size in
+                    ctx.fill(Path(CGRect(origin: .zero, size: size)),
+                             with: .linearGradient(Gradient(colors: [Color(hex: 0xd2ac74), Color(hex: 0xb08550)]),
+                                                   startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                    let bh: CGFloat = 34, bw: CGFloat = 70
+                    var y: CGFloat = 0, row = 0
+                    while y < size.height {
+                        var line = Path()
+                        line.move(to: CGPoint(x: 0, y: y)); line.addLine(to: CGPoint(x: size.width, y: y))
+                        ctx.stroke(line, with: .color(.black.opacity(0.1)), lineWidth: 2)
+                        var x: CGFloat = row % 2 == 0 ? 0 : bw / 2
+                        while x < size.width {
+                            var v = Path()
+                            v.move(to: CGPoint(x: x, y: y)); v.addLine(to: CGPoint(x: x, y: y + bh))
+                            ctx.stroke(v, with: .color(.black.opacity(0.08)), lineWidth: 2)
+                            x += bw
+                        }
+                        y += bh; row += 1
+                    }
+                }
+                LinearGradient(colors: [Color(hex: 0xe6c98f), Color(hex: 0xd2ad6e)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: h * 0.24)
+            }
         }
     }
 }
@@ -685,7 +833,8 @@ struct PortaCustosView: View {
     var body: some View {
         ArcadeShell(model: model,
                     spec: GameID.portaCustos.spec ?? GameSpec(title: "Porta Custos", mechanic: "", premise: "", game: .portaCustos),
-                    accent: Lu.grape, onClose: onClose) {
+                    accent: Lu.grape, onClose: onClose,
+                    backdrop: { PCBackdrop() }) {
             VStack(spacing: 10) {
                 Color.clear.frame(height: 56)
                 plaque
@@ -724,8 +873,11 @@ struct PortaCustosView: View {
         .padding(.vertical, 10).padding(.horizontal, 10)
         .frame(maxWidth: .infinity)
         .frame(height: 168)
-        .background(luPanelShape(18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: Lu.goldLine), lineWidth: 2))
+        .background(RoundedRectangle(cornerRadius: 14)
+            .fill(LinearGradient(colors: [Color(hex: 0x6a4a34), Color(hex: 0x4a3224)], startPoint: .top, endPoint: .bottom)))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0xd9a84a), lineWidth: 3))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xd9a84a).opacity(0.4), lineWidth: 1).padding(5))
+        .shadow(color: .black.opacity(0.35), radius: 6, y: 4)
         .animation(.spring(response: 0.4, dampingFraction: 0.55), value: model.ruleVersion)
     }
 
@@ -826,27 +978,15 @@ private struct PCArena: View {
             let fig = min(150, h * 0.56)
             let start = -fig * 0.35, stop = gateX - gateW / 2 - fig * 0.36
             ZStack {
-                // Wall and sand
-                VStack(spacing: 0) {
-                    LinearGradient(colors: [Color(hex: 0xc79f6a), Color(hex: 0xa57a48)], startPoint: .top, endPoint: .bottom)
-                        .overlay(alignment: .top) {
-                            Text(String(repeating: model.crowd, count: 12))
-                                .font(.system(size: 17)).lineLimit(1).fixedSize()
-                                .frame(width: w, alignment: .center).clipped()
-                                .padding(.top, 6).opacity(0.85)
-                        }
-                        .overlay(alignment: .bottom) {
-                            VStack(spacing: 18) {
-                                ForEach(0..<3, id: \.self) { _ in Rectangle().fill(Color.black.opacity(0.08)).frame(height: 2) }
-                            }
-                            .padding(.bottom, 14)
-                        }
-                        .frame(height: h * 0.72)
-                    LinearGradient(colors: [Color(hex: 0xe6c98f), Color(hex: 0xd2ad6e)], startPoint: .top, endPoint: .bottom)
-                }
+                // The sand: from the gladiator's feet down past the buttons to the screen's edge
+                // (the strip and buttons draw on top of it), across the full width.
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0xe6c98f), Color(hex: 0xc99e62)], startPoint: .top, endPoint: .bottom))
+                    .overlay(alignment: .top) { Rectangle().fill(Color(hex: 0x9c7444)).frame(height: 4) }
+                    .frame(width: w + 60, height: h * 0.28 + 420)
+                    .position(x: w / 2, y: h * 0.72 + (h * 0.28 + 420) / 2)
                 // The gladiator
                 if let g = model.walker {
-                    PCFigure(g: g, face: model.mood.face, size: fig)
+                    PCFigure(g: g, mood: model.mood, size: fig)
                         .rotationEffect(.degrees(model.mood == .dizzy || model.mood == .sad ? -12 : 0))
                         .modifier(PCStride(x: model.x, from: start, to: stop, footY: footY, height: fig))
                         .opacity(model.leaving ? 0 : 1)
@@ -871,7 +1011,5 @@ private struct PCArena: View {
             }
             .animation(.spring(response: 0.3, dampingFraction: 0.5), value: model.mood)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: Lu.goldLine), lineWidth: 2))
     }
 }
