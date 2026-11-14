@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - TheatreKit — shared music theory + stage chrome for the Theatre (Music) games
 //
 // Spelled notes (a letter + accidental, so G♭ and F♯ stay distinct names for one key), chord
-// spelling by thirds, the sound-off hint, the "hear again" button and the theatre curtains.
+// spelling by thirds, the sound-off hint, the "hear again" button, the drawn mouse and the staff.
 
 // MARK: Notes
 
@@ -172,68 +172,6 @@ struct ReplayButton: View {
     }
 }
 
-// MARK: Stage
-
-/// Red velvet curtains with a gold valance — the Theatre's set, drawn with shapes.
-struct TheatreCurtains: View {
-    var light: Color = .clear
-    var body: some View {
-        GeometryReader { g in
-            let w = g.size.width, h = g.size.height
-            ZStack(alignment: .top) {
-                RoundedRectangle(cornerRadius: 18).fill(LinearGradient(colors: [Color(hex: 0x2a1530), Color(hex: 0x14091e)], startPoint: .top, endPoint: .bottom))
-                Ellipse().fill(RadialGradient(colors: [light.opacity(0.55), .clear], center: .center, startRadius: 0, endRadius: w * 0.45))
-                    .frame(width: w * 0.9, height: h * 0.8).offset(y: h * 0.15)
-                // Stage floor
-                VStack { Spacer(); Rectangle().fill(LinearGradient(colors: [Color(hex: 0x7a4a2a), Color(hex: 0x4a2a16)], startPoint: .top, endPoint: .bottom)).frame(height: h * 0.16) }
-                // Drapes
-                HStack(spacing: 0) {
-                    drape(flip: false).frame(width: w * 0.17)
-                    Spacer()
-                    drape(flip: true).frame(width: w * 0.17)
-                }
-                // Valance
-                HStack(spacing: 0) {
-                    ForEach(0..<7, id: \.self) { _ in
-                        Ellipse().fill(LinearGradient(colors: [Color(hex: 0xc0303a), Color(hex: 0x7a1220)], startPoint: .top, endPoint: .bottom))
-                            .frame(height: 34).offset(y: -12)
-                    }
-                }
-                .overlay(alignment: .top) { Rectangle().fill(Color(hex: Lu.gold)).frame(height: 4).offset(y: 18) }
-                .clipped()
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: Lu.goldLine), lineWidth: 2))
-        }
-    }
-
-    private func drape(flip: Bool) -> some View {
-        LinearGradient(colors: [Color(hex: 0xa01c2c), Color(hex: 0xd8404c), Color(hex: 0x8a1424), Color(hex: 0xc8323e), Color(hex: 0x6a0c1a)],
-                       startPoint: flip ? .trailing : .leading, endPoint: flip ? .leading : .trailing)
-            .clipShape(DrapeShape(flip: flip))
-    }
-}
-
-private struct DrapeShape: Shape {
-    let flip: Bool
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        if !flip {
-            p.move(to: CGPoint(x: r.minX, y: r.minY))
-            p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
-            p.addQuadCurve(to: CGPoint(x: r.minX + r.width * 0.35, y: r.maxY), control: CGPoint(x: r.maxX * 0.55, y: r.height * 0.55))
-            p.addLine(to: CGPoint(x: r.minX, y: r.maxY))
-        } else {
-            p.move(to: CGPoint(x: r.maxX, y: r.minY))
-            p.addLine(to: CGPoint(x: r.minX, y: r.minY))
-            p.addQuadCurve(to: CGPoint(x: r.maxX - r.width * 0.35, y: r.maxY), control: CGPoint(x: r.width * 0.45, y: r.height * 0.55))
-            p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
-        }
-        p.closeSubpath()
-        return p
-    }
-}
-
 extension View {
     /// Owns the synth for a Theatre game: on while the game is open, silenced between runs.
     func theatreSound(playing: Bool) -> some View {
@@ -241,5 +179,127 @@ extension View {
             .onAppear { ToneSynth.shared.start() }
             .onDisappear { ToneSynth.shared.stop() }
             .onChange(of: playing) { p in if !p { ToneSynth.shared.silence() } }
+    }
+}
+
+// MARK: The Theatre's mouse
+
+/// A small grey mouse drawn with shapes (side view, facing right) — Piano Mouse's cheese-hunter
+/// and Maestro Mouse's conductor. `scared` widens her eyes and lifts her ears; `glee` closes her
+/// eyes into happy arcs.
+struct StageMouse: View {
+    enum Mood { case calm, glee, scared }
+    var mood: Mood = .calm
+    var facingLeft = false
+    var body: some View {
+        Canvas { c, s in
+            let w = s.width, h = s.height
+            func r(_ x: Double, _ y: Double, _ rw: Double, _ rh: Double) -> CGRect {
+                CGRect(x: (x - rw / 2) * w, y: (y - rh / 2) * h, width: rw * w, height: rh * h)
+            }
+            let fur = Color(hex: 0x9b93ad), furDark = Color(hex: 0x6f6784), pink = Color(hex: 0xf3a0b4)
+            // Tail
+            var tail = Path()
+            tail.move(to: CGPoint(x: 0.22 * w, y: 0.74 * h))
+            tail.addCurve(to: CGPoint(x: 0.03 * w, y: 0.42 * h), control1: CGPoint(x: 0.0 * w, y: 0.92 * h), control2: CGPoint(x: -0.02 * w, y: 0.55 * h))
+            c.stroke(tail, with: .color(pink), style: StrokeStyle(lineWidth: max(2, w * 0.035), lineCap: .round))
+            // Feet
+            c.fill(Path(ellipseIn: r(0.36, 0.93, 0.16, 0.08)), with: .color(pink))
+            c.fill(Path(ellipseIn: r(0.6, 0.93, 0.16, 0.08)), with: .color(pink))
+            // Body + belly
+            c.fill(Path(ellipseIn: r(0.45, 0.68, 0.56, 0.48)), with: .linearGradient(Gradient(colors: [fur, furDark]),
+                startPoint: CGPoint(x: 0.4 * w, y: 0.45 * h), endPoint: CGPoint(x: 0.45 * w, y: 0.92 * h)))
+            c.fill(Path(ellipseIn: r(0.56, 0.75, 0.26, 0.28)), with: .color(Color(hex: 0xd9d3e2)))
+            // Ear (behind the head)
+            let earY = mood == .scared ? 0.13 : 0.2
+            c.fill(Path(ellipseIn: r(0.6, earY, 0.27, 0.3)), with: .color(fur))
+            c.fill(Path(ellipseIn: r(0.6, earY + 0.01, 0.17, 0.2)), with: .color(pink))
+            // Head + snout
+            c.fill(Path(ellipseIn: r(0.72, 0.44, 0.36, 0.38)), with: .color(fur))
+            var snout = Path()
+            snout.move(to: CGPoint(x: 0.7 * w, y: 0.3 * h))
+            snout.addQuadCurve(to: CGPoint(x: 0.97 * w, y: 0.5 * h), control: CGPoint(x: 0.9 * w, y: 0.33 * h))
+            snout.addQuadCurve(to: CGPoint(x: 0.72 * w, y: 0.62 * h), control: CGPoint(x: 0.88 * w, y: 0.62 * h))
+            snout.closeSubpath()
+            c.fill(snout, with: .color(fur))
+            c.fill(Path(ellipseIn: r(0.96, 0.49, 0.08, 0.09)), with: .color(Color(hex: 0xe0607e)))
+            c.fill(Path(ellipseIn: r(0.76, 0.54, 0.1, 0.07)), with: .color(pink.opacity(0.6)))
+            // Eye
+            let ink = Color(hex: 0x1a1022)
+            switch mood {
+            case .calm:
+                c.fill(Path(ellipseIn: r(0.79, 0.39, 0.075, 0.095)), with: .color(ink))
+                c.fill(Path(ellipseIn: r(0.8, 0.37, 0.025, 0.03)), with: .color(.white))
+            case .scared:
+                c.fill(Path(ellipseIn: r(0.79, 0.38, 0.13, 0.15)), with: .color(.white))
+                c.stroke(Path(ellipseIn: r(0.79, 0.38, 0.13, 0.15)), with: .color(furDark), lineWidth: 1)
+                c.fill(Path(ellipseIn: r(0.81, 0.38, 0.045, 0.055)), with: .color(ink))
+            case .glee:
+                var a = Path()
+                a.move(to: CGPoint(x: 0.75 * w, y: 0.41 * h))
+                a.addQuadCurve(to: CGPoint(x: 0.84 * w, y: 0.41 * h), control: CGPoint(x: 0.795 * w, y: 0.32 * h))
+                c.stroke(a, with: .color(ink), style: StrokeStyle(lineWidth: max(1.5, w * 0.03), lineCap: .round))
+            }
+            // Whiskers
+            for dy in [-0.03, 0.03] {
+                var p = Path()
+                p.move(to: CGPoint(x: 0.88 * w, y: (0.53 + dy) * h))
+                p.addLine(to: CGPoint(x: 1.06 * w, y: (0.5 + dy * 2.2) * h))
+                c.stroke(p, with: .color(Color(hex: 0x3a3048).opacity(0.7)), lineWidth: 1)
+            }
+        }
+        .scaleEffect(x: facingLeft ? -1 : 1)
+    }
+}
+
+/// A treble staff with one note on it (positions from middle C = 0, one per letter step), drawn
+/// with lines and an ellipse; the clef is drawn too (no music font needed).
+struct TrebleStaff: View {
+    /// Letter steps above middle C (0 = C4 … 9 = E5).
+    let step: Int
+    var accidental: Int = 0
+    var ink: Color = Color(hex: 0x2a1a10)
+    var noteColor: Color = Color(hex: 0x2a1a10)
+    var body: some View {
+        Canvas { c, s in
+            let gap = s.height / 6.6
+            let bottom = s.height * 0.5 + gap * 2          // E4 line
+            for i in 0..<5 {
+                var p = Path(); let y = bottom - CGFloat(i) * gap
+                p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: s.width, y: y))
+                c.stroke(p, with: .color(ink), lineWidth: 1.6)
+            }
+            // Clef: the G-clef glyph sized to the staff.
+            let clef = Text("𝄞").font(.system(size: gap * 6.4)).foregroundColor(ink)
+            c.draw(clef, at: CGPoint(x: gap * 1.6, y: bottom - gap * 1.55), anchor: .center)
+            // The note
+            let pos = step - 2                                // E4 = 0 on the bottom line
+            let y = bottom - CGFloat(pos) * gap / 2
+            let x = s.width * 0.62
+            if pos <= -2 {                                    // ledger lines below (C4)
+                var l = -2
+                while l >= pos { var p = Path(); let ly = bottom - CGFloat(l) * gap / 2
+                    p.move(to: CGPoint(x: x - gap * 1.1, y: ly)); p.addLine(to: CGPoint(x: x + gap * 1.1, y: ly))
+                    c.stroke(p, with: .color(ink), lineWidth: 1.6); l -= 2 }
+            }
+            if pos >= 10 {
+                var l = 10
+                while l <= pos { var p = Path(); let ly = bottom - CGFloat(l) * gap / 2
+                    p.move(to: CGPoint(x: x - gap * 1.1, y: ly)); p.addLine(to: CGPoint(x: x + gap * 1.1, y: ly))
+                    c.stroke(p, with: .color(ink), lineWidth: 1.6); l += 2 }
+            }
+            var head = Path(ellipseIn: CGRect(x: -gap * 0.68, y: -gap * 0.48, width: gap * 1.36, height: gap * 0.96))
+            head = head.applying(CGAffineTransform(rotationAngle: -0.35)).applying(CGAffineTransform(translationX: x, y: y))
+            c.fill(head, with: .color(noteColor))
+            // Stem: up for notes below the middle line, down from it.
+            var stem = Path()
+            if pos < 4 { stem.move(to: CGPoint(x: x + gap * 0.62, y: y - gap * 0.1)); stem.addLine(to: CGPoint(x: x + gap * 0.62, y: y - gap * 3.4)) }
+            else { stem.move(to: CGPoint(x: x - gap * 0.62, y: y + gap * 0.1)); stem.addLine(to: CGPoint(x: x - gap * 0.62, y: y + gap * 3.4)) }
+            c.stroke(stem, with: .color(noteColor), lineWidth: 1.8)
+            if accidental != 0 {
+                let a = Text(accidental > 0 ? "♯" : "♭").font(.system(size: gap * 2.2, weight: .bold)).foregroundColor(noteColor)
+                c.draw(a, at: CGPoint(x: x - gap * 1.9, y: y - (accidental < 0 ? gap * 0.5 : 0)), anchor: .center)
+            }
+        }
     }
 }

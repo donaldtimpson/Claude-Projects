@@ -7,15 +7,19 @@ import SwiftUI
 // slow. A wrong wave: the mouse conductor tumbles off her box, the right pad lights up, the band
 // plays it the right way and the sign's meaning is spelled out.
 //
-// Ladder (no clock anywhere; the band always finishes before the next sign):
-//   I     the sign is a picture: 🦁 = LOUD (up) / 🐭💤 = soft (down); the pads show the same pictures
-//   II    + tempo signs: 🐆 = FAST (up) / 🐌 = slow (down)
-//   III   + listen first: the band plays, was it loud or soft / fast or slow? (🔁 hear again)
-//   IV    Italian words: forte · piano · allegro · adagio
-//   V     marks: pp p f ff, and hairpins (crescendo < = getting louder, decrescendo > = softer)
-//   VI    + which is LOUDER/SOFTER (pp p mp mf f ff) or FASTER/SLOWER (largo adagio andante
-//         allegro presto); fortissimo, pianissimo, presto, largo, crescendo, diminuendo
-//   VII+  a score of 3 marks in a row: conduct each one in turn (4 marks from IX). Endless.
+// The band plays under a lamplit band shell in a night garden.
+//
+// Continuous ladder (all off `d`; each kind fades in and stays on as review; no clock anywhere,
+// the band always finishes before the next sign):
+//   1     the sign is a picture: 🦁 = LOUD (up) / 🐭💤 = soft (down); the pads show the same pictures
+//   1.8   + tempo signs: 🐆 = FAST (up) / 🐌 = slow (down)
+//   2.6   + listen first: the band plays, was it loud or soft / fast or slow? (🔁 hear again)
+//   3.6   Italian words: forte · piano · allegro · adagio
+//   4.8   marks: pp p f ff, and hairpins (crescendo < = getting louder, decrescendo > = softer);
+//         the listening questions add swells
+//   5.8   fortissimo, pianissimo, presto, largo, crescendo, diminuendo
+//   6.5   which is LOUDER/SOFTER (pp p mp mf f ff) or FASTER/SLOWER (largo adagio andante allegro presto)
+//   7.5   a score of marks in a row: conduct each one in turn (2 → 4 marks by ~9.5)
 
 // MARK: Content
 
@@ -150,19 +154,20 @@ private func compareCard() -> MMCard {
                   lesson: "\(w.word) = \(w.meaning)")
 }
 
-private func mmMake(_ level: Int) -> MMQuestion {
-    let r = Int.random(in: 0..<20)
+/// The next question, built off the model's continuous difficulty.
+@MainActor private func mmMake(_ m: ArcadeModel) -> MMQuestion {
     func one(_ c: MMCard, listen: Bool = false) -> MMQuestion { MMQuestion(cards: [c], listen: listen) }
-    switch level {
-    case 1: return one(emojiCard(tempo: false))
-    case 2: return one(emojiCard(tempo: Bool.random()))
-    case 3: return r < 12 ? one(listenCard(swells: false), listen: true) : one(emojiCard(tempo: Bool.random()))
-    case 4: return r < 12 ? one(wordCard(extended: false)) : r < 17 ? one(listenCard(swells: false), listen: true) : one(emojiCard(tempo: Bool.random()))
-    case 5: return r < 10 ? one(markCard()) : r < 15 ? one(wordCard(extended: false)) : one(listenCard(swells: true), listen: true)
-    case 6: return r < 8 ? one(compareCard()) : r < 14 ? one(wordCard(extended: true)) : r < 17 ? one(markCard()) : one(listenCard(swells: true), listen: true)
+    let swells = m.d >= 4.8
+    switch m.tier([1, 1.8, 2.6, 3.6, 4.8, 5.8, 6.5, 7.5]) {
+    case 0: return one(emojiCard(tempo: false))
+    case 1: return one(emojiCard(tempo: true))
+    case 2: return one(listenCard(swells: swells), listen: true)
+    case 3: return one(wordCard(extended: false))
+    case 4: return one(markCard())
+    case 5: return one(wordCard(extended: true))
+    case 6: return one(compareCard())
     default:
-        if level >= 8 && r < 5 { return one(compareCard()) }
-        let n = level >= 9 ? 4 : 3
+        let n = max(2, m.rampInt(2, 4, from: 7.5, to: 9.5))
         var cards: [MMCard] = []
         while cards.count < n {
             let c = Bool.random() ? markCard() : wordCard(extended: true)
@@ -222,7 +227,7 @@ private final class MaestroModel: ArcadeModel {
     private var bandToken = 0
 
     init() { super.init(key: GameID.maestroMouse.rawValue) }
-    override func perLevel(_ level: Int) -> Int { level >= 7 ? 4 : 6 }
+    override func perLevel(_ level: Int) -> Int { 6 }
     override func onBegin() { next() }
 
     var card: MMCard { q.cards[min(idx, q.cards.count - 1)] }
@@ -231,8 +236,8 @@ private final class MaestroModel: ArcadeModel {
 
     private func next() {
         // No more than two of the same direction in a row (single-sign questions).
-        var nq = mmMake(level)
-        for _ in 0..<6 where nq.cards.count == 1 && recent.suffix(2) == [nq.cards[0].answerUp, nq.cards[0].answerUp] { nq = mmMake(level) }
+        var nq = mmMake(self)
+        for _ in 0..<6 where nq.cards.count == 1 && recent.suffix(2) == [nq.cards[0].answerUp, nq.cards[0].answerUp] { nq = mmMake(self) }
         if nq.cards.count == 1 { recent.append(nq.cards[0].answerUp) }
         q = nq
         idx = 0; revealed = false; chosenUp = nil; lesson = nil; baton = 0
@@ -324,23 +329,28 @@ struct MaestroMouseView: View {
     @StateObject private var model = MaestroModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.maestroMouse.spec!, accent: Lu.coral, onClose: onClose) {
+        ArcadeShell(model: model, spec: GameID.maestroMouse.spec!, accent: Lu.coral, onClose: onClose,
+                    backdrop: { MMGarden() }) {
             VStack(spacing: 10) {
                 Color.clear.frame(height: 56)
                 MMSignBoard(model: model).frame(height: 132)
                 ZStack {
                     if let l = model.lesson {
-                        Text(l).font(luFont(19, .heavy)).foregroundStyle(Color(hex: Lu.gold))
+                        Text(l).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0xffe6a0))
                             .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(2)
+                            .padding(.horizontal, 14).padding(.vertical, 5)
+                            .background(Capsule().fill(Color.black.opacity(0.5)))
                             .transition(.scale.combined(with: .opacity))
                     } else if model.q.listen {
                         Text(model.busy ? "👂 Listen to the band…" : "Now wave your baton!")
-                            .font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDim))
+                            .font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                            .padding(.horizontal, 14).padding(.vertical, 5)
+                            .background(Capsule().fill(Color.black.opacity(0.35)))
                     }
                 }
                 .frame(height: 40)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: model.lesson)
-                MMBand(model: model).frame(height: 170)
+                MMBand(model: model).frame(height: 190)
                 HStack(spacing: 10) {
                     ReplayButton(enabled: model.q.listen && !model.busy && !model.revealed) { model.listen() }
                         .opacity(model.q.listen ? 1 : 0)
@@ -354,7 +364,7 @@ struct MaestroMouseView: View {
         }
         .theatreSound(playing: model.phase == .playing)
         #if DEBUG
-        .onAppear { if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil { mmSelfCheck() } }
+        .onAppear { if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil { mmSelfCheck(model) } }
         #endif
     }
 }
@@ -419,43 +429,52 @@ private struct Hairpin: Shape {
     }
 }
 
-/// The band on stage: each animal bounces with the beat, higher when the band plays louder.
+/// The band under a lamplit band shell: each player (a head, a coloured tunic, an instrument)
+/// bounces with the beat — higher when the band plays louder — and the mouse conducts from her
+/// box. On a miss the players topple and the conductor tumbles.
 private struct MMBand: View {
     @ObservedObject var model: MaestroModel
-    private let players = [("🐘", "🎺"), ("🐻", "🥁"), ("🐸", "🎻"), ("🐷", "🎷")]
+    private let players: [(String, String, UInt)] = [("🐘", "🎺", 0x4a7ac8), ("🐻", "🥁", 0xc84a3a), ("🐸", "🎻", 0x3a9a5a), ("🐷", "🎷", 0xc87ab8)]
 
     var body: some View {
         ZStack {
-            TheatreCurtains(light: Color(hex: Lu.gold))
+            MMShell()
             TimelineView(.animation(minimumInterval: 1 / 30, paused: !model.bandOn || model.phase != .playing)) { tl in
                 let (amp, beatFrac) = pulse(tl.date)
-                HStack(alignment: .bottom, spacing: 4) {
+                HStack(alignment: .bottom, spacing: 2) {
                     ForEach(Array(players.enumerated()), id: \.offset) { j, p in
-                        let bounce = model.bandOn ? abs(sin(.pi * (beatFrac + Double(j) * 0.25))) * Double(4 + 26 * amp) : 0
-                        VStack(spacing: -6) {
+                        let bounce = model.bandOn ? abs(sin(.pi * (beatFrac + Double(j) * 0.25))) * Double(3 + 22 * amp) : 0
+                        ZStack(alignment: .top) {
+                            RoundedRectangle(cornerRadius: 12).fill(Color(hex: p.2))
+                                .frame(width: 40, height: 40).offset(y: 32)
+                                .overlay(alignment: .top) { Capsule().fill(Color.white.opacity(0.3)).frame(width: 28, height: 5).offset(y: 36) }
                             Text(p.0).font(.system(size: 40))
-                            Text(p.1).font(.system(size: 24))
+                            Text(p.1).font(.system(size: 26)).offset(x: 14, y: 40)
                         }
+                        .frame(height: 78, alignment: .top)
                         .offset(y: -bounce)
-                        .scaleEffect(1 + (model.bandOn ? CGFloat(amp) * 0.12 : 0))
+                        .scaleEffect(1 + (model.bandOn ? CGFloat(amp) * 0.1 : 0), anchor: .bottom)
                         .rotationEffect(.degrees(model.revealed ? Double([-25, 18, -12, 30][j]) : 0))
                         .frame(maxWidth: .infinity)
                     }
-                    // The conductor on her box.
-                    VStack(spacing: -4) {
-                        Text("🪄").font(.system(size: 26))
-                            .rotationEffect(.degrees(-45 - model.baton * 50), anchor: .bottomLeading)
-                        Text("🐭").font(.system(size: 42))
-                            .rotationEffect(.degrees(model.revealed ? 80 : 0))
-                            .offset(y: model.revealed ? 16 : 0)
-                        RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0x8a5a30)).frame(width: 40, height: 12)
+                    // The conductor on her box, baton in hand.
+                    ZStack(alignment: .bottom) {
+                        RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0x8a5a30)).frame(width: 46, height: 16)
+                        Capsule().fill(Color.white).frame(width: 3, height: 34)
+                            .rotationEffect(.degrees(-30 - model.baton * 45), anchor: .bottom)
+                            .offset(x: -14, y: -44)
+                        StageMouse(mood: model.revealed ? .scared : .calm, facingLeft: true)
+                            .frame(width: 58, height: 48)
+                            .rotationEffect(.degrees(model.revealed ? -70 : 0))
+                            .offset(y: model.revealed ? -6 : -14)
                     }
                     .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 40).padding(.bottom, 14)
+                .padding(.horizontal, 26).padding(.bottom, 14)
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.45), value: model.revealed)
+            .animation(.spring(response: 0.25, dampingFraction: 0.5), value: model.baton)
             if model.ovation > 0 { Ovation(trigger: model.ovation) }
         }
     }
@@ -465,6 +484,71 @@ private struct MMBand: View {
         let i = min(max(0, Int(t)), max(0, model.bandVels.count - 1))
         let v = model.bandVels.isEmpty ? 0.5 : Double(model.bandVels[i])
         return (v, t - floor(t))
+    }
+}
+
+/// The band shell: a cream half-dome with ribbed arches over a wooden stage.
+private struct MMShell: View {
+    var body: some View {
+        Canvas { c, s in
+            let w = s.width, h = s.height
+            var dome = Path()
+            dome.move(to: CGPoint(x: w * 0.03, y: h * 0.86))
+            dome.addLine(to: CGPoint(x: w * 0.03, y: h * 0.45))
+            dome.addQuadCurve(to: CGPoint(x: w * 0.97, y: h * 0.45), control: CGPoint(x: w * 0.5, y: -h * 0.35))
+            dome.addLine(to: CGPoint(x: w * 0.97, y: h * 0.86))
+            dome.closeSubpath()
+            c.fill(dome, with: .radialGradient(Gradient(colors: [Color(hex: 0xfff2d6), Color(hex: 0xd8b888), Color(hex: 0x7a5a40)]),
+                                               center: CGPoint(x: w * 0.5, y: h * 0.75), startRadius: 10, endRadius: w * 0.6))
+            for k in 1..<4 {
+                let f = Double(k) * 0.11
+                var rib = Path()
+                rib.move(to: CGPoint(x: w * (0.03 + f), y: h * 0.86))
+                rib.addLine(to: CGPoint(x: w * (0.03 + f), y: h * (0.45 + f * 0.5)))
+                rib.addQuadCurve(to: CGPoint(x: w * (0.97 - f), y: h * (0.45 + f * 0.5)), control: CGPoint(x: w * 0.5, y: h * (-0.35 + f * 2.2)))
+                rib.addLine(to: CGPoint(x: w * (0.97 - f), y: h * 0.86))
+                c.stroke(rib, with: .color(Color(hex: 0xb08a5a).opacity(0.6)), lineWidth: 2)
+            }
+            c.stroke(dome, with: .color(Color(hex: 0xf5e0b0)), lineWidth: 5)
+            c.fill(Path(roundedRect: CGRect(x: 0, y: h * 0.84, width: w, height: h * 0.16), cornerRadius: 6),
+                   with: .linearGradient(Gradient(colors: [Color(hex: 0x9a6a3a), Color(hex: 0x5a3418)]), startPoint: CGPoint(x: 0, y: h * 0.84), endPoint: CGPoint(x: 0, y: h)))
+        }
+    }
+}
+
+/// Night garden: a deep sky with the moon, a string of coloured lanterns, dark hedges.
+private struct MMGarden: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack {
+                LinearGradient(colors: [Color(hex: 0x0e1238), Color(hex: 0x2a2060), Color(hex: 0x3a2a50)], startPoint: .top, endPoint: .bottom)
+                Canvas { c, s in
+                    let y0 = s.height * 0.27
+                    var wire = Path()
+                    wire.move(to: CGPoint(x: -10, y: y0))
+                    wire.addQuadCurve(to: CGPoint(x: s.width + 10, y: y0), control: CGPoint(x: s.width / 2, y: y0 + 60))
+                    c.stroke(wire, with: .color(.black.opacity(0.5)), lineWidth: 1.5)
+                    let hues: [UInt] = [0xffb040, 0xff6a5a, 0xffe070, 0x7ad0ff, 0xff8ad0]
+                    for i in 0..<9 {
+                        let tt = (Double(i) + 0.5) / 9
+                        let x = -10 + (s.width + 20) * tt
+                        let y = y0 + 60 * 2 * tt * (1 - tt) + 4
+                        let col = Color(hex: hues[i % hues.count])
+                        c.fill(Path(ellipseIn: CGRect(x: x - 18, y: y - 12, width: 36, height: 36)),
+                               with: .radialGradient(Gradient(colors: [col.opacity(0.6), .clear]), center: CGPoint(x: x, y: y + 6), startRadius: 1, endRadius: 18))
+                        c.fill(Path(roundedRect: CGRect(x: x - 6, y: y - 2, width: 12, height: 16), cornerRadius: 5), with: .color(col))
+                    }
+                    var hedge = Path()
+                    hedge.move(to: CGPoint(x: 0, y: s.height * 0.62))
+                    var x = 0.0
+                    while x < s.width { hedge.addQuadCurve(to: CGPoint(x: x + 40, y: s.height * 0.62), control: CGPoint(x: x + 20, y: s.height * 0.58)); x += 40 }
+                    hedge.addLine(to: CGPoint(x: s.width, y: s.height)); hedge.addLine(to: CGPoint(x: 0, y: s.height)); hedge.closeSubpath()
+                    c.fill(hedge, with: .linearGradient(Gradient(colors: [Color(hex: 0x1a3a2a), Color(hex: 0x0a1810)]),
+                                                        startPoint: CGPoint(x: 0, y: s.height * 0.6), endPoint: CGPoint(x: 0, y: s.height)))
+                }
+            }
+        }
     }
 }
 
@@ -517,7 +601,7 @@ private struct MMPads: View {
             if let m = p.mark {
                 Text(m).font(.system(size: m.count <= 2 ? 48 : 34, weight: .bold, design: .serif).italic())
                     .foregroundStyle(Color(hex: Lu.ink)).minimumScaleFactor(0.5).lineLimit(1)
-                if model.revealed { Text(p.text).font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim)) }
+                if model.revealed { Text(p.text).font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.ink)) }
             } else {
                 Text(p.icon).font(.system(size: 50))
                 Text(p.text).font(luFont(p.text.count > 6 ? 22 : 30, .black)).foregroundStyle(Color(hex: Lu.ink))
@@ -530,8 +614,9 @@ private struct MMPads: View {
         .padding(.horizontal, 18)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(RoundedRectangle(cornerRadius: 22)
-            .fill(Color(hex: right ? Lu.mint : (wrong ? Lu.coral : (picked ? Lu.panel2 : Lu.panel))).opacity(right || wrong ? 0.85 : 1))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(hex: right ? Lu.mint : Lu.line), lineWidth: right ? 4 : 2)))
+            .fill(LinearGradient(colors: [Color(hex: 0x8a5a2e), Color(hex: 0x5a3418)], startPoint: .top, endPoint: .bottom))
+            .overlay(RoundedRectangle(cornerRadius: 22).fill(Color(hex: right ? Lu.mint : (wrong ? Lu.coral : 0xffffff)).opacity(right || wrong ? 0.8 : (picked ? 0.12 : 0))))
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(hex: right ? Lu.mint : (isUp ? Lu.gold : Lu.sky)), lineWidth: right ? 4 : 2.5)))
         .scaleEffect(right ? 1.03 : 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.55), value: model.revealed)
     }
@@ -540,13 +625,13 @@ private struct MMPads: View {
 #if DEBUG
 /// LUDUS_SELFCHECK: every card's answer pad matches its sign's meaning (mark/word tables), and
 /// every comparison has a strictly louder/faster side and never pits largo against adagio.
-@MainActor private func mmSelfCheck() {
+@MainActor private func mmSelfCheck(_ model: ArcadeModel) {
     var fails: [String] = []
     let loudWords: Set<String> = ["forte", "fortissimo", "f", "ff", "🦁"], softWords: Set<String> = ["piano", "pianissimo", "p", "pp", "🐭💤"]
     let fastWords: Set<String> = ["allegro", "presto", "🐆"], slowWords: Set<String> = ["adagio", "largo", "🐌"]
-    for level in 1...10 {
-        for _ in 0..<1000 {
-            let q = mmMake(level)
+    for level in 1...1 {
+        for _ in 0..<3000 {
+            let q = mmMake(model)
             if q.cards.isEmpty || (q.listen && q.cards.count != 1) { fails.append("shape L\(level)") }
             for c in q.cards {
                 var key: String?
