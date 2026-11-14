@@ -6,15 +6,15 @@ import SwiftUI
 // beams and strolls out of the door; dressed wrong he shivers blue, sweats red or gets soaked —
 // then the right gear flies onto him, so every miss teaches. One outfit = one answer.
 //
-// Ladder
-//   I    picture weather only (☀️ hot · 🌧️ · ❄️): pick 1 of 2.
-//   II   pick 1 of 3; words under the pictures.
-//   III  pick 2 of 4; a picture thermometer (°C) joins the window.
-//   IV   the thermometer decides — a sunny or cloudy day may be hot OR freezing; windy days.
-//   V    mixed weather (cold rain, hot rain, windy snow): pick 3 of 5.
-//   VI   digital thermometer only, in °C or °F: pick 3 of 6.
-//   VII+ "why" rounds (light vs dark colours, waterproof stuff, layers) between bigger outfits:
-//        3 of 7 at VII, 4 of 8 from VIII on. No clock at any level.
+// Continuous difficulty (all off `d`):
+//   • weather kinds fade in by `tier`: the three picture days (hot sun, rain, snow) → the
+//     thermometer decides (a sunny or cloudy day may be hot OR freezing; windy days) → anything
+//     (cold rain, hot rain, windy snow);
+//   • a picture thermometer (°C) appears from d≈2.6; a digital one in °C or °F fades in from d≈5;
+//   • items to put on 1 → 4 (from d≈1.6 to 8.5); extra wrong items in the chest 1 → 4;
+//   • boots / flip-flops join after the first few rounds; words under the clothes from d≈1.5;
+//   • "why" rounds (light vs dark colours, waterproof stuff, layers) between outfits from d≈6.
+//   No clock at any level.
 //
 // Uniqueness: every gear item is rated need / wrong / unsure for the day's weather; a round offers
 // only `need` items (all of them right) and `wrong` items, never an `unsure` one — so exactly the
@@ -190,13 +190,15 @@ private func temp(_ h: Heat) -> Int {
     }
 }
 
-/// The day's weather for a level (see the ladder above).
-private func dmWeather(_ level: Int) -> Weather {
+/// The day's weather. `kind` 0 = the three picture days (hot sun, rain, snow); 1 = the thermometer
+/// decides (a sunny or cloudy day may be hot OR freezing; windy days); 2 = anything (cold rain,
+/// hot rain, windy snow…). `gauge` is how the temperature is shown.
+private func dmWeather(kind: Int, gauge: Gauge) -> Weather {
     var w: Weather
-    switch level {
-    case ...3:
+    switch kind {
+    case 0:
         w = [Weather(sky: .sunny, heat: .hot), Weather(sky: .rain, heat: .mild), Weather(sky: .snow, heat: .cold)].randomElement()!
-    case 4:
+    case 1:
         if Int.random(in: 0..<5) == 0 {
             w = Weather(sky: .snow, heat: .cold, windy: Bool.random())
         } else {
@@ -211,7 +213,8 @@ private func dmWeather(_ level: Int) -> Weather {
     }
     // Cold rain stays above freezing (below it, it would be sleet or snow).
     w.celsius = w.sky == .rain && w.heat == .cold ? Int.random(in: 1...5) : temp(w.heat)
-    w.gauge = level <= 2 ? .none : level <= 5 ? .bar : (Bool.random() ? .digitalC : .digitalF)
+    // Without a thermometer only the picture days are fair.
+    w.gauge = kind > 0 && gauge == .none ? .bar : gauge
     return w
 }
 
@@ -239,19 +242,19 @@ private func whyRound(base: Int) -> DMRound {
     return DMRound(weather: w, items: [a, b].shuffled(), need: 1, ask: q.ask, because: q.because)
 }
 
-private func dmRound(_ level: Int, count: Int, base: Int) -> DMRound {
-    switch level {
-    case 1: return outfit(dmWeather(1), need: 1, offer: 2, simple: true, base: base)
-    case 2: return outfit(dmWeather(2), need: 1, offer: 3, simple: false, base: base)
-    case 3, 4: return outfit(dmWeather(level), need: 2, offer: 4, simple: false, base: base)
-    case 5: return outfit(dmWeather(5), need: 3, offer: 5, simple: false, base: base)
-    case 6: return outfit(dmWeather(6), need: 3, offer: 6, simple: false, base: base)
-    default:
-        if count % 2 == 1 { return whyRound(base: base) }
-        let need = level >= 8 ? 4 : 3
-        let offer = min(8, 6 + (level - 6))
-        return outfit(dmWeather(level), need: need, offer: offer, simple: false, base: base)
-    }
+/// The knobs of one round (all read off the continuous difficulty `d` by the model).
+private struct DMKnobs {
+    var kind = 0            // weather kind (see dmWeather)
+    var gauge = Gauge.none
+    var need = 1            // items to put on
+    var offer = 2           // items in the wardrobe
+    var simple = true       // picture-obvious gear only (no feet items)
+    var why = false         // a "why" round (light vs dark, waterproof, layers…)
+}
+
+private func dmRound(_ k: DMKnobs, base: Int) -> DMRound {
+    if k.why { return whyRound(base: base) }
+    return outfit(dmWeather(kind: k.kind, gauge: k.gauge), need: k.need, offer: k.offer, simple: k.simple, base: base)
 }
 
 #if DEBUG
@@ -259,22 +262,28 @@ private func dmRound(_ level: Int, count: Int, base: Int) -> DMRound {
 /// all `need`, the rest all `wrong`, the count to pick equals the right ones offered, and at
 /// least one wrong item is offered. Returns a failure description, or nil.
 private func dmSelfCheck() -> String? {
-    for level in 1...12 {
-        for i in 0..<300 {
-            let r = dmRound(level, count: i, base: 0)
-            let rights = r.items.filter(\.right)
-            if rights.count != r.need || r.need < 1 { return "L\(level): need \(r.need) vs \(rights.count) right" }
-            if r.items.count == rights.count { return "L\(level): no wrong item" }
-            if Set(r.items.map(\.label)).count != r.items.count { return "L\(level): duplicate item" }
-            if r.weather.sky == .snow && r.weather.heat != .cold { return "L\(level): warm snow" }
-            if r.weather.sky == .rain && r.weather.celsius <= 0 { return "L\(level): freezing rain" }
-            if r.ask == nil {
-                for it in r.items {
-                    guard let g = it.gear else { return "L\(level): gear-less outfit item" }
-                    let f = fit(g, r.weather)
-                    if f == .unsure || (f == .need) != it.right { return "L\(level): \(g) misrated" }
+    for kind in 0...2 {
+        for need in 1...4 {
+            for extra in 1...4 {
+                for i in 0..<60 {
+                    let k = DMKnobs(kind: kind, gauge: [Gauge.none, .bar, .digitalC, .digitalF][i % 4], need: need,
+                                    offer: need + extra, simple: kind == 0 && i % 2 == 0, why: i % 7 == 6)
+                    let r = dmRound(k, base: 0)
+                    let rights = r.items.filter(\.right)
+                    if rights.count != r.need || r.need < 1 { return "k\(kind): need \(r.need) vs \(rights.count) right" }
+                    if r.items.count == rights.count { return "k\(kind): no wrong item" }
+                    if Set(r.items.map(\.label)).count != r.items.count { return "k\(kind): duplicate item" }
+                    if r.weather.sky == .snow && r.weather.heat != .cold { return "warm snow" }
+                    if r.weather.sky == .rain && r.weather.celsius <= 0 { return "freezing rain" }
+                    if kind > 0 && r.weather.gauge == .none { return "thermometer-day without a thermometer" }
+                    if r.ask == nil {
+                        for it in r.items {
+                            guard let g = it.gear else { return "gear-less outfit item" }
+                            let f = fit(g, r.weather)
+                            if f == .unsure || (f == .need) != it.right { return "\(g) misrated" }
+                        }
+                    }
                 }
-                if level == 1 && r.items.count != 2 { return "L1: \(r.items.count) items" }
             }
         }
     }
@@ -375,14 +384,31 @@ private final class DressModel: ArcadeModel {
     private func newRound() {
         locked = false; placed = []; revealing = false; mood = .calm; bubble = nil; wrongID = nil
         roundID += 1
-        var r = dmRound(level, count: served, base: roundID * 100)
-        // Don't serve the same sky + heat twice running at the picture levels.
-        if level <= 3, r.weather.sky == round.weather.sky, r.weather.heat == round.weather.heat {
-            r = dmRound(level, count: served, base: roundID * 100)
+        let k = knobs()
+        var r = dmRound(k, base: roundID * 100)
+        // Don't serve the same sky + heat twice running.
+        if r.weather.sky == round.weather.sky, r.weather.heat == round.weather.heat {
+            r = dmRound(k, base: roundID * 100)
         }
         round = r
         served += 1
     }
+
+    /// Everything about the next round, read off the continuous difficulty `d`.
+    private func knobs() -> DMKnobs {
+        var k = DMKnobs()
+        k.kind = tier([1, 3.2, 5])
+        let digital = chance(0.85, from: 5.2, to: 7.5)
+        k.gauge = digital ? (Bool.random() ? .digitalC : .digitalF) : (d >= 2.6 || k.kind > 0 ? .bar : .none)
+        k.need = rampInt(1, 4, from: 1.6, to: 8.5)
+        k.offer = k.need + rampInt(1, 4, from: 1.2, to: 8)
+        k.simple = !chance(1, from: 1.2, to: 2.2)
+        k.why = served % 2 == 1 && chance(1, from: 6.2, to: 8)
+        return k
+    }
+
+    /// Words under the clothes fade in once reading is likely.
+    var labels: Double { ramp(0, 1, from: 1.5, to: 2.1) }
 
     override func botAct(correct: Bool) {
         guard !locked else { return }
@@ -404,14 +430,17 @@ struct DressMarcusView: View {
 
     var body: some View {
         ArcadeShell(model: model, spec: GameID.dressMarcus.spec ?? GameSpec(title: "Dress Marcus", mechanic: "", premise: "", game: .dressMarcus),
-                    accent: Lu.tangerine, onClose: onClose) {
+                    accent: Lu.tangerine, onClose: onClose,
+                    backdrop: { MarcusRoom() }) {
             VStack(spacing: 8) {
                 Color.clear.frame(height: 54)
                 WeatherWindow(w: model.round.weather, live: model.phase == .playing)
                     .frame(height: 138)
                 if let ask = model.round.ask {
-                    Text(ask).font(luFont(18, .heavy)).foregroundStyle(Color(hex: Lu.gold))
+                    Text(ask).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
                         .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
+                        .padding(.horizontal, 14).padding(.vertical, 6)
+                        .background(Capsule().fill(Color(hex: 0xf7ecd0)))
                         .transition(.opacity)
                 }
                 stage
@@ -429,8 +458,9 @@ struct DressMarcusView: View {
         GeometryReader { geo in
             let scale = min(1.3, geo.size.height / 262)
             ZStack {
-                Text("🚪").font(.system(size: 84 * scale))
-                    .position(x: geo.size.width - 40, y: geo.size.height - 52 * scale)
+                WoodDoor(open: model.mood == .happy)
+                    .frame(width: 70 * scale, height: 150 * scale)
+                    .position(x: geo.size.width - 40 * scale, y: geo.size.height - 75 * scale)
                 ZStack {
                     MarcusFigure(worn: model.worn, mood: model.mood, beat: model.beat, glow: model.revealing)
                         .scaleEffect(scale)
@@ -479,13 +509,21 @@ struct DressMarcusView: View {
                 VesDragToken(space: space, enabled: !used,
                              onRelease: { p in model.release(item, at: p) },
                              onTap: { model.dress(item) }) {
-                    GearCard(item: item, big: big, showLabel: model.level >= 2 || item.shirt != nil,
+                    GearCard(item: item, big: big, labels: item.shirt != nil ? 1 : model.labels,
                              wrong: model.wrongID == item.id)
                 }
                 .opacity(used ? 0.15 : 1)
                 .id(item.id)
             }
         }
+        .padding(10)
+        .background(
+            // Marcus's wooden clothes chest
+            RoundedRectangle(cornerRadius: 16)
+                .fill(LinearGradient(colors: [Color(hex: 0x9a6232), Color(hex: 0x6e4220)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x3e230e), lineWidth: 3))
+                .overlay(alignment: .top) { Rectangle().fill(Color(hex: 0xd6a648)).frame(height: 4).padding(.horizontal, 10).padding(.top, 5) }
+        )
         .zIndex(2)
     }
 }
@@ -510,23 +548,22 @@ private struct GearGlyph: View {
 private struct GearCard: View {
     let item: DMItem
     let big: Bool
-    let showLabel: Bool
+    let labels: Double
     let wrong: Bool
     var body: some View {
         VStack(spacing: 2) {
             GearGlyph(item: item, size: big ? 66 : 46)
-            if showLabel {
-                Text(item.label).font(luFont(13, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                    .lineLimit(1).minimumScaleFactor(0.6)
-            }
+            Text(item.label).font(luFont(13, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
+                .lineLimit(1).minimumScaleFactor(0.6)
+                .opacity(labels)
         }
         .frame(maxWidth: .infinity, minHeight: big ? 120 : 84)
         .padding(.horizontal, 4)
         .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(LinearGradient(colors: [Color(hex: Lu.panel2), Color(hex: Lu.panel)], startPoint: .top, endPoint: .bottom))
-                .overlay(RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color(hex: wrong ? Lu.coral : Lu.goldLine), lineWidth: wrong ? 3 : 2))
+            RoundedRectangle(cornerRadius: 14)
+                .fill(LinearGradient(colors: [Color(hex: 0xfbf3df), Color(hex: 0xe9d9b6)], startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color(hex: wrong ? Lu.coral : 0xb08a4a), lineWidth: wrong ? 4 : 2))
         )
         .contentShape(Rectangle())
     }
@@ -574,7 +611,7 @@ private struct MarcusFigure: View {
                 Rectangle().fill(Color(hex: Lu.gold)).frame(width: 88, height: 8).position(x: 90, y: 168)
             }
             .colorMultiply(tint)
-            Text(face).font(.system(size: 80)).position(x: 90, y: 52)
+            MarcusHead(mood: mood).frame(width: 84, height: 92).position(x: 90, y: 50)
             ForEach(worn) { item in
                 gear(item)
                     .transition(.scale(scale: 2.2).combined(with: .opacity))
@@ -690,11 +727,13 @@ private struct WeatherWindow: View {
                     }
                 }
                 // window bars
-                Rectangle().fill(Color(hex: Lu.goldLine)).frame(width: 4)
-                Rectangle().fill(Color(hex: Lu.goldLine)).frame(height: 4)
+                Rectangle().fill(Color(hex: 0x6e4220)).frame(width: 6)
+                Rectangle().fill(Color(hex: 0x6e4220)).frame(height: 6)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: Lu.goldLine), lineWidth: 5))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0x6e4220), lineWidth: 8))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0xe8c46a), lineWidth: 2).padding(-5))
+            .shadow(color: .black.opacity(0.35), radius: 4, y: 3)
             if w.gauge != .none {
                 Thermometer(w: w).frame(width: 84)
                     .transition(.scale.combined(with: .opacity))
@@ -775,6 +814,148 @@ private struct Thermometer: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(luPanelShape(18))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0x2a1a12).opacity(0.75))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0xe8c46a).opacity(0.6), lineWidth: 2)))
+    }
+}
+
+/// Marcus's face, drawn: hair, eyes that squeeze shut when he grins, rosy cheeks, a mouth that
+/// shows how he feels (smile, grin, chattering teeth, a hot pant, a soggy frown).
+private struct MarcusHead: View {
+    let mood: Mood
+    private let skin = Color(hex: 0xe8b48a)
+    var body: some View {
+        ZStack {
+            // ears
+            HStack(spacing: 68) { Circle().fill(skin).frame(width: 16); Circle().fill(skin).frame(width: 16) }.offset(y: 6)
+            // face
+            Ellipse().fill(skin).frame(width: 72, height: 78)
+                .overlay(Ellipse().stroke(Color(hex: 0xb7805a), lineWidth: 2).frame(width: 72, height: 78))
+            // tint by mood
+            Ellipse().fill(tint).frame(width: 72, height: 78)
+            // hair (dark brown curls across the top)
+            HStack(spacing: -6) {
+                ForEach(0..<6, id: \.self) { i in Circle().fill(Color(hex: 0x3b2414)).frame(width: 20, height: 20).offset(y: CGFloat(i % 2) * 3) }
+            }
+            .offset(y: -34)
+            // eyes
+            HStack(spacing: 20) { eye; eye }.offset(y: -2)
+            // cheeks
+            HStack(spacing: 34) {
+                Circle().fill(Color(hex: 0xf08a7a).opacity(0.55)).frame(width: 12)
+                Circle().fill(Color(hex: 0xf08a7a).opacity(0.55)).frame(width: 12)
+            }
+            .offset(y: 12)
+            mouth.offset(y: 22)
+        }
+    }
+
+    private var tint: Color {
+        switch mood {
+        case .cold: return Color(hex: 0x7fb6ff).opacity(0.35)
+        case .hot: return Color(hex: 0xff6a4a).opacity(0.3)
+        case .soaked: return Color(hex: 0x8aa0c0).opacity(0.25)
+        default: return .clear
+        }
+    }
+
+    @ViewBuilder private var eye: some View {
+        if mood == .happy {
+            Arc().stroke(Color(hex: 0x2a1a10), style: StrokeStyle(lineWidth: 3, lineCap: .round)).frame(width: 12, height: 7)
+        } else if mood == .hot || mood == .soaked {
+            Capsule().fill(Color(hex: 0x2a1a10)).frame(width: 11, height: 3)
+        } else {
+            ZStack {
+                Ellipse().fill(.white).frame(width: 12, height: 14)
+                Circle().fill(Color(hex: 0x3a2410)).frame(width: 7).offset(y: 1)
+            }
+        }
+    }
+
+    @ViewBuilder private var mouth: some View {
+        switch mood {
+        case .calm:
+            Arc().stroke(Color(hex: 0x7a2a1a), style: StrokeStyle(lineWidth: 3, lineCap: .round)).frame(width: 20, height: 7)
+        case .happy:
+            Arc().fill(Color(hex: 0x7a2a1a)).frame(width: 28, height: 14)
+                .overlay(Arc().fill(Color(hex: 0xf06a6a)).frame(width: 14, height: 6).offset(y: 3))
+        case .cold:   // chattering teeth
+            RoundedRectangle(cornerRadius: 3).fill(.white).frame(width: 24, height: 9)
+                .overlay(HStack(spacing: 3) { ForEach(0..<4, id: \.self) { _ in Rectangle().fill(Color(hex: 0x9a9a9a)).frame(width: 1) } })
+                .overlay(Rectangle().fill(Color(hex: 0x9a9a9a)).frame(height: 1))
+        case .hot:    // panting
+            Ellipse().fill(Color(hex: 0x7a2a1a)).frame(width: 16, height: 14)
+                .overlay(Capsule().fill(Color(hex: 0xf06a6a)).frame(width: 9, height: 7).offset(y: 4))
+        case .soaked:
+            Arc().stroke(Color(hex: 0x7a2a1a), style: StrokeStyle(lineWidth: 3, lineCap: .round)).frame(width: 20, height: 7)
+                .rotationEffect(.degrees(180))
+        }
+    }
+}
+
+/// A downward arc (a smile) filling its rect.
+private struct Arc: Shape {
+    func path(in r: CGRect) -> Path {
+        Path { p in
+            p.move(to: CGPoint(x: r.minX, y: r.minY))
+            p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY), control: CGPoint(x: r.midX, y: r.maxY * 2 - r.minY))
+        }
+    }
+}
+
+/// A plank door with iron studs; swings open when Marcus heads out.
+private struct WoodDoor: View {
+    let open: Bool
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 4).fill(Color(hex: 0x1e120a))   // the doorway (dark beyond)
+            HStack(spacing: 3) {
+                ForEach(0..<3, id: \.self) { _ in
+                    Rectangle().fill(LinearGradient(colors: [Color(hex: 0x9a6232), Color(hex: 0x7a4a22)], startPoint: .top, endPoint: .bottom))
+                }
+            }
+            .overlay(VStack { Rectangle().fill(Color(hex: 0x3a2a1a)).frame(height: 6); Spacer(); Rectangle().fill(Color(hex: 0x3a2a1a)).frame(height: 6) }.padding(.vertical, 18))
+            .overlay(Circle().fill(Color(hex: 0xd6a648)).frame(width: 9).offset(x: 20))
+            .rotation3DEffect(.degrees(open ? 62 : 0), axis: (x: 0, y: 1, z: 0), anchor: .trailing, perspective: 0.5)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: open)
+        }
+        .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(hex: 0xe8dcc0), lineWidth: 5).padding(-3))
+    }
+}
+
+/// Marcus's bedroom in a house in Pompeii: Pompeian-red frescoed walls with ochre panels, a black
+/// dado, a terracotta tile floor, an oil lamp on a shelf.
+private struct MarcusRoom: View {
+    var body: some View {
+        GeometryReader { g in
+            let W = g.size.width, H = g.size.height
+            ZStack(alignment: .top) {
+                Color(hex: 0x9e2f26)
+                // fresco panels
+                HStack(spacing: 14) {
+                    ForEach(0..<3, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 2).stroke(Color(hex: 0xe0a83e), lineWidth: 3)
+                            .background(RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0xb5402f)))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .frame(height: H * 0.5).offset(y: H * 0.08)
+                // frieze
+                Rectangle().fill(Color(hex: 0x1f1714)).frame(height: 20)
+                    .overlay(VesMosaicBand(a: 0xe0a83e, b: 0x2f5d8a).frame(height: 8))
+                    .offset(y: H * 0.04)
+                // black dado
+                Rectangle().fill(Color(hex: 0x1f1714)).frame(height: H * 0.16).offset(y: H * 0.6)
+                Rectangle().fill(Color(hex: 0xe0a83e)).frame(height: 3).offset(y: H * 0.6)
+                // tile floor
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0xc4703e), Color(hex: 0x9c5228)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: H * 0.26).offset(y: H * 0.74)
+                Path { p in
+                    for i in 0..<9 { let x = W * CGFloat(i) / 8; p.move(to: CGPoint(x: x, y: H * 0.74)); p.addLine(to: CGPoint(x: x + (x - W / 2) * 0.4, y: H)) }
+                    for j in 0..<4 { let y = H * (0.74 + 0.065 * CGFloat(j)); p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: W, y: y)) }
+                }
+                .stroke(Color(hex: 0x7a3a18).opacity(0.5), lineWidth: 1.5)
+            }
+        }
     }
 }

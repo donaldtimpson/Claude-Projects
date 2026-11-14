@@ -7,14 +7,13 @@ import SwiftUI
 // shown going in. Later rounds sort animals into diet pens, fill gaps in food chains, and sort
 // living things into producers, consumers and decomposers.
 //
-// Ladder
-//   I    feed an easy animal: its food vs one clearly wrong food (🐰 → 🥕 or 🥩).
-//   II   3 foods; more animals (koala, owl, frog, bee…); words under the pictures.
-//   III  feeding mixed with two pens: HERBIVORE vs CARNIVORE.
-//   IV   + the OMNIVORE pen (bear, pig, fox are the traps); 4 foods.
-//   V    food chains: fill the gap in a 3-link chain (3 choices), mixed with pens.
-//   VI   PRODUCER / CONSUMER / DECOMPOSER pens, and 4-link chains.
-//   VII+ everything mixed, 4 choices in chains and feeding. No clock at any level.
+// Continuous difficulty (all off `d`):
+//   • round kinds fade in by `tier` (old kinds stay as review): feeding → diet pens (HERBIVORE /
+//     CARNIVORE, then OMNIVORE from d≈3.4) → food chains (fill the gap; 4-link chains from
+//     d≈5.6) → PRODUCER / CONSUMER / DECOMPOSER;
+//   • feeding offers 2 foods at first, up to 4 by d≈4.5; harder animals (koala, owl, frog, bee…)
+//     join after the first few rounds; words under the pictures from d≈1.5;
+//   • chain choices 3 → 4; the "drag it to the pen" hint fades out by d≈5. No clock at any level.
 //
 // One right answer, by construction: a plant-eater is only ever offered animal foods as
 // distractors and a meat-eater only plant foods (so no "well, sometimes" pairs); chain gaps are
@@ -40,20 +39,20 @@ private struct Eater {
 }
 
 private let eaters: [Eater] = [
-    Eater(emoji: "🐰", name: "rabbit", diet: .herbivore, food: Food(emoji: "🥕", name: "carrot"), easy: true),
-    Eater(emoji: "🐼", name: "panda", diet: .herbivore, food: Food(emoji: "🎋", name: "bamboo"), easy: true),
-    Eater(emoji: "🐮", name: "cow", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
-    Eater(emoji: "🐴", name: "horse", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
+    Eater(emoji: "🐇", name: "rabbit", diet: .herbivore, food: Food(emoji: "🥕", name: "carrot"), easy: true),
+    Eater(emoji: "🦛", name: "hippo", diet: .herbivore, food: Food(emoji: "🌾", name: "grass"), easy: false),
+    Eater(emoji: "🐄", name: "cow", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
+    Eater(emoji: "🐎", name: "horse", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
     Eater(emoji: "🦒", name: "giraffe", diet: .herbivore, food: Food(emoji: "🍃", name: "leaves"), easy: true),
     Eater(emoji: "🐘", name: "elephant", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: false),
     Eater(emoji: "🦓", name: "zebra", diet: .herbivore, food: Food(emoji: "🌾", name: "grass"), easy: false),
     Eater(emoji: "🦘", name: "kangaroo", diet: .herbivore, food: Food(emoji: "🌾", name: "grass"), easy: false),
     Eater(emoji: "🐐", name: "goat", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: false),
-    Eater(emoji: "🐨", name: "koala", diet: .herbivore, food: Food(emoji: "🍃", name: "eucalyptus"), easy: false),
+    Eater(emoji: "🦌", name: "deer", diet: .herbivore, food: Food(emoji: "🍃", name: "leaves"), easy: false),
     Eater(emoji: "🐛", name: "caterpillar", diet: .herbivore, food: Food(emoji: "🍃", name: "leaves"), easy: false),
     Eater(emoji: "🐝", name: "bee", diet: .herbivore, food: Food(emoji: "🌸", name: "flower nectar"), easy: false),
-    Eater(emoji: "🦁", name: "lion", diet: .carnivore, food: Food(emoji: "🥩", name: "meat"), easy: true),
-    Eater(emoji: "🐯", name: "tiger", diet: .carnivore, food: Food(emoji: "🥩", name: "meat"), easy: true),
+    Eater(emoji: "🐆", name: "leopard", diet: .carnivore, food: Food(emoji: "🥩", name: "meat"), easy: true),
+    Eater(emoji: "🐅", name: "tiger", diet: .carnivore, food: Food(emoji: "🥩", name: "meat"), easy: true),
     Eater(emoji: "🦈", name: "shark", diet: .carnivore, food: Food(emoji: "🐟", name: "fish"), easy: true),
     Eater(emoji: "🐧", name: "penguin", diet: .carnivore, food: Food(emoji: "🐟", name: "fish"), easy: true),
     Eater(emoji: "🦭", name: "seal", diet: .carnivore, food: Food(emoji: "🐟", name: "fish"), easy: false),
@@ -67,14 +66,14 @@ private let eaters: [Eater] = [
 
 /// Animals for the diet pens, textbook classes only (no panda, no "mostly" cases).
 private let penAnimals: [(String, String, Diet)] = [
-    ("🐰", "rabbit", .herbivore), ("🐮", "cow", .herbivore), ("🐴", "horse", .herbivore),
+    ("🐇", "rabbit", .herbivore), ("🐄", "cow", .herbivore), ("🐎", "horse", .herbivore),
     ("🦒", "giraffe", .herbivore), ("🐘", "elephant", .herbivore), ("🦓", "zebra", .herbivore),
-    ("🐨", "koala", .herbivore), ("🦘", "kangaroo", .herbivore), ("🐐", "goat", .herbivore),
-    ("🦁", "lion", .carnivore), ("🐯", "tiger", .carnivore), ("🦈", "shark", .carnivore),
+    ("🦛", "hippo", .herbivore), ("🦘", "kangaroo", .herbivore), ("🐐", "goat", .herbivore),
+    ("🐆", "leopard", .carnivore), ("🐅", "tiger", .carnivore), ("🦈", "shark", .carnivore),
     ("🦉", "owl", .carnivore), ("🐍", "snake", .carnivore), ("🦅", "eagle", .carnivore),
     ("🐧", "penguin", .carnivore), ("🦭", "seal", .carnivore), ("🐸", "frog", .carnivore),
-    ("🐻", "bear", .omnivore), ("🐷", "pig", .omnivore), ("🐔", "chicken", .omnivore),
-    ("🦝", "raccoon", .omnivore), ("🦊", "fox", .omnivore), ("🐀", "rat", .omnivore),
+    ("🦡", "badger", .omnivore), ("🐖", "pig", .omnivore), ("🐓", "chicken", .omnivore),
+    ("🐒", "monkey", .omnivore), ("🦨", "skunk", .omnivore), ("🐀", "rat", .omnivore),
 ]
 
 private typealias Org = (emoji: String, name: String)
@@ -140,8 +139,8 @@ private let roleZones: [ZKZone] = [
     ZKZone(id: 2, emoji: "♻️", title: "DECOMPOSER", sub: "breaks down dead things"),
 ]
 
-private func feedRound(_ level: Int, choices: Int, base: Int) -> ZKRound {
-    let pool = level <= 1 ? eaters.filter(\.easy) : eaters
+private func feedRound(easy: Bool, choices: Int, base: Int) -> ZKRound {
+    let pool = easy ? eaters.filter(\.easy) : eaters
     let a = pool.randomElement()!
     let wrongPool = a.diet == .herbivore ? animalFoods : plantFoods
     let wrong = wrongPool.filter { $0.emoji != a.food.emoji }.shuffled().prefix(choices - 1)
@@ -204,23 +203,22 @@ private func chainRound(links: Int?, choices: Int, base: Int) -> ZKRound {
                    chain: c, gap: gap, lesson: lesson)
 }
 
-private func zkRound(_ level: Int, base: Int) -> ZKRound {
-    let r = Double.random(in: 0..<1)
-    switch level {
-    case 1: return feedRound(1, choices: 2, base: base)
-    case 2: return feedRound(2, choices: 3, base: base)
-    case 3: return r < 0.5 ? feedRound(3, choices: 3, base: base) : penRound(omnivores: false, base: base)
-    case 4: return r < 0.4 ? feedRound(4, choices: 4, base: base) : penRound(omnivores: true, base: base)
-    case 5:
-        if r < 0.5 { return chainRound(links: 3, choices: 3, base: base) }
-        return r < 0.75 ? penRound(omnivores: true, base: base) : feedRound(5, choices: 4, base: base)
-    case 6:
-        if r < 0.35 { return roleRound(base: base) }
-        return r < 0.7 ? chainRound(links: nil, choices: 3, base: base) : penRound(omnivores: true, base: base)
-    default:
-        if r < 0.3 { return roleRound(base: base) }
-        if r < 0.65 { return chainRound(links: r < 0.5 ? 4 : nil, choices: 4, base: base) }
-        return r < 0.85 ? penRound(omnivores: true, base: base) : feedRound(level, choices: 4, base: base)
+/// The knobs of one round (read off the continuous difficulty `d` by the model).
+private struct ZKKnobs {
+    var kind = 0             // 0 feed · 1 diet pens · 2 food chain · 3 producer/consumer/decomposer
+    var easy = true          // level-I animals only
+    var choices = 2          // foods on the tray (feed)
+    var omnivores = false    // the third pen
+    var links: Int? = 3      // chain length (nil = any)
+    var chainChoices = 3
+}
+
+private func zkRound(_ k: ZKKnobs, base: Int) -> ZKRound {
+    switch k.kind {
+    case 0: return feedRound(easy: k.easy, choices: k.choices, base: base)
+    case 1: return penRound(omnivores: k.omnivores, base: base)
+    case 2: return chainRound(links: k.links, choices: k.chainChoices, base: base)
+    default: return roleRound(base: base)
     }
 }
 
@@ -231,9 +229,12 @@ private func zkSelfCheck() -> String? {
     let plantSet = Set(plantFoods.map(\.emoji) + ["🌾", "🍃", "🌸"]), meatSet = Set(animalFoods.map(\.emoji))
     let herbs = Set(strictHerbivores.map(\.emoji)), carns = Set(strictCarnivores.map(\.emoji))
     let plants = Set(chainPlants.map(\.emoji)), bigs = Set(bigBeasts.map(\.emoji))
-    for level in 1...10 {
-        for _ in 0..<300 {
-            let r = zkRound(level, base: 0)
+    for kind in 0...3 {
+        for i in 0..<400 {
+            let level = kind
+            let k = ZKKnobs(kind: kind, easy: i % 3 == 0, choices: 2 + i % 3, omnivores: i % 2 == 0,
+                            links: [3, 4, nil][i % 3], chainChoices: 3 + i % 2)
+            let r = zkRound(k, base: 0)
             guard r.tray.contains(where: { $0.id == r.answerItem }), r.zones.contains(where: { $0.id == r.answerZone }) else {
                 return "L\(level): answer missing"
             }
@@ -245,7 +246,8 @@ private func zkSelfCheck() -> String? {
                     let ok = e.diet == .herbivore ? meatSet.contains(it.emoji) : plantSet.contains(it.emoji) && !meatSet.contains(it.emoji)
                     if !ok { return "L\(level): \(e.name) offered \(it.emoji)" }
                 }
-                if level == 1 && (r.tray.count != 2 || !e.easy) { return "L1 feed too hard" }
+                if k.easy && !e.easy { return "easy feed round with a hard animal" }
+                if r.tray.count != k.choices { return "feed with \(r.tray.count) foods" }
             case .pens, .roles:
                 if r.tray.count != 1 { return "pen round with \(r.tray.count) items" }
             case .chain:
@@ -333,13 +335,29 @@ private final class ZooModel: ArcadeModel {
     private func newRound() {
         locked = false; outcome = .none; revealing = false; wrongItem = nil; wrongZone = nil
         roundID += 1
-        var r = zkRound(level, base: roundID * 100)
+        let k = knobs()
+        var r = zkRound(k, base: roundID * 100)
         // Avoid the same animal / chain twice in a row.
         if r.tray.map(\.emoji) == round.tray.map(\.emoji) || (r.kind == .feed && r.animal.emoji == round.animal.emoji) {
-            r = zkRound(level, base: roundID * 100)
+            r = zkRound(k, base: roundID * 100)
         }
         round = r
     }
+
+    /// Everything about the next round, read off the continuous difficulty `d`.
+    private func knobs() -> ZKKnobs {
+        var k = ZKKnobs()
+        k.kind = tier([1, 2.6, 4.6, 5.8])
+        k.easy = !chance(1, from: 1.3, to: 2.3)
+        k.choices = rampInt(2, 4, from: 1.4, to: 4.5)
+        k.omnivores = chance(1, from: 3.4, to: 4.4)
+        k.links = chance(0.6, from: 5.6, to: 7.5) ? 4 : 3
+        k.chainChoices = rampInt(3, 4, from: 5.5, to: 7.5)
+        return k
+    }
+
+    var words: Double { ramp(0, 1, from: 1.5, to: 2.1) }
+    var penHint: Double { ramp(1, 0, from: 4, to: 5) }
 
     override func botAct(correct: Bool) {
         guard !locked, !round.tray.isEmpty else { return }
@@ -363,11 +381,14 @@ struct ZookeeperView: View {
 
     var body: some View {
         ArcadeShell(model: model, spec: GameID.zookeeper.spec ?? GameSpec(title: "Zookeeper's Breakfast", mechanic: "", premise: "", game: .zookeeper),
-                    accent: Lu.mint, onClose: onClose) {
+                    accent: Lu.mint, onClose: onClose,
+                    backdrop: { Menagerie() }) {
             VStack(spacing: 10) {
                 Color.clear.frame(height: 54)
-                Text(header).font(luSerif(15, .bold)).textCase(.uppercase).tracking(2)
-                    .foregroundStyle(Color(hex: Lu.inkDim))
+                Text(header).font(luSerif(17, .black)).textCase(.uppercase).tracking(2)
+                    .foregroundStyle(Color(hex: 0x3a2410))
+                    .padding(.horizontal, 16).padding(.vertical, 5)
+                    .background(Capsule().fill(Color(hex: 0xf7ecd0).opacity(0.92)).overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
                 Group {
                     switch model.round.kind {
                     case .feed: feedStage
@@ -394,7 +415,7 @@ struct ZookeeperView: View {
         }
     }
 
-    private var showWords: Bool { model.level >= 2 }
+    private var showWords: Bool { model.words > 0.5 }
 
     /// The fact behind the answer — after every answer, right or wrong.
     private var lesson: some View {
@@ -402,6 +423,8 @@ struct ZookeeperView: View {
             .font(luFont(17, .heavy)).foregroundStyle(Color(hex: model.outcome == .yum ? Lu.mint : Lu.gold))
             .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.7)
             .frame(maxWidth: .infinity, minHeight: 46)
+            .padding(.horizontal, 10)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.black.opacity(0.45)))
             .opacity(model.outcome == .yum || model.revealing ? 1 : 0)
     }
 
@@ -415,12 +438,20 @@ struct ZookeeperView: View {
         let rightFood = r.tray.first { $0.id == r.answerItem }
         return VStack(spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 26)
-                    .fill(LinearGradient(colors: [Color(hex: 0x3d6b3a), Color(hex: 0x24452a)], startPoint: .top, endPoint: .bottom))
-                    .overlay(RoundedRectangle(cornerRadius: 26).stroke(Color(hex: Lu.goldLine), lineWidth: 3))
-                // Enclosure fence.
-                HStack(spacing: 18) { ForEach(0..<9, id: \.self) { _ in Capsule().fill(Color(hex: 0x8a6a3d).opacity(0.55)).frame(width: 7) } }
-                    .frame(height: 70).frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 8)
+                // The enclosure: a fence across the back, trampled earth, a stone water trough.
+                VStack(spacing: 14) {
+                    Rectangle().fill(Color(hex: 0x8a5a2e)).frame(height: 6)
+                    Rectangle().fill(Color(hex: 0x8a5a2e)).frame(height: 6)
+                }
+                .overlay(HStack { ForEach(0..<8, id: \.self) { _ in Spacer(); Rectangle().fill(Color(hex: 0x6e4220)).frame(width: 8, height: 50) }; Spacer() })
+                .frame(maxHeight: .infinity, alignment: .top).padding(.top, 30)
+                Ellipse().fill(RadialGradient(colors: [Color(hex: 0xc9a46a), Color(hex: 0xb08850).opacity(0)], center: .center, startRadius: 10, endRadius: 170))
+                    .frame(width: 330, height: 120)
+                    .frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 20)
+                RoundedRectangle(cornerRadius: 6).fill(Color(hex: 0xbdb3a2))
+                    .overlay(RoundedRectangle(cornerRadius: 4).fill(Color(hex: 0x5fa8d8)).padding(5))
+                    .frame(width: 70, height: 26)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading).padding(16)
                 AnimalActor(emoji: r.animal.emoji, outcome: model.outcome, beat: model.beat, size: 160)
                 if model.outcome == .yum || model.revealing, let f = rightFood {
                     Text(f.emoji).font(.system(size: 54))
@@ -519,10 +550,11 @@ struct ZookeeperView: View {
                 VesDragToken(space: space, enabled: model.outcome == .none, onRelease: release(item)) {
                     VStack(spacing: 2) {
                         AnimalActor(emoji: item.emoji, outcome: model.outcome, beat: model.beat, size: 92)
-                        Text(item.label).font(luFont(18, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                        Text(item.label).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
                     }
                     .frame(width: 176, height: 176)
-                    .background(Circle().fill(Color(hex: Lu.panel2)).overlay(Circle().stroke(Color(hex: Lu.goldLine), lineWidth: 3)))
+                    .background(Circle().fill(RadialGradient(colors: [Color(hex: 0xf3dc9a), Color(hex: 0xd9b464)], center: .center, startRadius: 10, endRadius: 90))
+                        .overlay(Circle().stroke(Color(hex: 0x9c7b33), style: StrokeStyle(lineWidth: 4, dash: [3, 3]))))
                     .contentShape(Circle())
                 }
                 .opacity(placed ? 0.2 : 1)
@@ -530,7 +562,7 @@ struct ZookeeperView: View {
             }
             .zIndex(2)
             Text("Drag it to the right pen").font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
-                .opacity(model.level <= 4 ? 1 : 0)
+                .opacity(model.penHint)
             Spacer(minLength: 0)
             HStack(spacing: 10) {
                 ForEach(r.zones) { z in
@@ -595,7 +627,7 @@ private struct ZKCard: View {
         VStack(spacing: 2) {
             Text(item.emoji).font(.system(size: big ? 66 : 46))
             if words {
-                Text(item.label).font(luFont(13, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                Text(item.label).font(luFont(13, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
                     .lineLimit(1).minimumScaleFactor(0.6)
             }
         }
@@ -603,11 +635,11 @@ private struct ZKCard: View {
         .padding(.horizontal, 4)
         .background(
             RoundedRectangle(cornerRadius: 18)
-                .fill(state == .right ? AnyShapeStyle(Color(hex: Lu.mint).opacity(0.45))
-                                      : AnyShapeStyle(LinearGradient(colors: [Color(hex: Lu.panel2), Color(hex: Lu.panel)], startPoint: .top, endPoint: .bottom)))
+                .fill(state == .right ? AnyShapeStyle(Color(hex: 0xc8eec0))
+                                      : AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xe9c98e), Color(hex: 0xc99a5a)], startPoint: .top, endPoint: .bottom)))
                 .overlay(RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color(hex: state == .right ? Lu.mint : state == .wrong ? Lu.coral : Lu.goldLine),
-                            lineWidth: state == .plain ? 2 : 3))
+                    .stroke(Color(hex: state == .right ? Lu.mint : state == .wrong ? Lu.coral : 0x8a5a2e),
+                            lineWidth: state == .plain ? 3 : 4))
         )
         .scaleEffect(state == .right ? 1.06 : 1)
         .contentShape(Rectangle())
@@ -657,11 +689,48 @@ private struct PenView: View {
         .frame(maxWidth: .infinity, minHeight: 170)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(hex: state == .right ? 0x2f5a35 : state == .wrong ? 0x5a2a2a : Lu.panel))
+                .fill(Color(hex: state == .right ? 0x3f7a45 : state == .wrong ? 0x8a3a2a : 0x6e4a2a).opacity(0.92))
                 .overlay(RoundedRectangle(cornerRadius: 20)
                     .stroke(Color(hex: state == .right ? Lu.mint : state == .wrong ? Lu.coral : Lu.goldLine),
                             lineWidth: state == .plain ? 2 : 4))
         )
         .contentShape(Rectangle())
+    }
+}
+
+/// The Emperor's menagerie at breakfast time: a dawn sky, Vesuvius, cypresses, a stone wall and
+/// a meadow with a wooden fence, a water trough and a hay bale.
+private struct Menagerie: View {
+    var body: some View {
+        GeometryReader { g in
+            let W = g.size.width, H = g.size.height
+            ZStack {
+                LinearGradient(colors: [Color(hex: 0xf7b878), Color(hex: 0xfbe0b0), Color(hex: 0xcfe8d0)], startPoint: .top, endPoint: .center)
+                Circle().fill(Color(hex: 0xffe08a)).frame(width: 90).blur(radius: 2).position(x: W * 0.2, y: H * 0.16)
+                VesMountain(smoke: true, tint: 0x8a6f7c).frame(width: W * 0.8, height: H * 0.16).position(x: W * 0.6, y: H * 0.2)
+                ForEach(0..<6, id: \.self) { i in
+                    Capsule().fill(Color(hex: 0x40663a)).frame(width: 16, height: 60 + CGFloat(i % 3) * 10)
+                        .position(x: W * (0.06 + CGFloat(i) * 0.18), y: H * 0.27 - CGFloat(i % 3) * 5)
+                }
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0x9cc46e), Color(hex: 0x6f9e4c)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: H * 0.72).position(x: W / 2, y: H * 0.66)
+                // stone wall along the back of the meadow
+                Rectangle().fill(Color(hex: 0xcdbb98)).frame(height: 16).position(x: W / 2, y: H * 0.305)
+                    .overlay(Rectangle().fill(Color(hex: 0x9c8a6a)).frame(height: 2).position(x: W / 2, y: H * 0.315))
+                // grass tufts
+                ForEach(0..<14, id: \.self) { i in
+                    Text("🌱").font(.system(size: 14)).opacity(0.45)
+                        .position(x: W * CGFloat((i * 37) % 100) / 100, y: H * (0.36 + CGFloat((i * 53) % 60) / 100))
+                }
+                // fence at the bottom
+                VStack(spacing: 10) {
+                    Rectangle().fill(Color(hex: 0x8a5a2e)).frame(height: 7)
+                    Rectangle().fill(Color(hex: 0x8a5a2e)).frame(height: 7)
+                }
+                .frame(height: 30).position(x: W / 2, y: H * 0.965)
+                HStack(spacing: W / 7) { ForEach(0..<7, id: \.self) { _ in Rectangle().fill(Color(hex: 0x6e4220)).frame(width: 8, height: 46) } }
+                    .position(x: W / 2, y: H * 0.96)
+            }
+        }
     }
 }
