@@ -144,7 +144,7 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🐍", howTo: how(("👆", "Tap where to turn"), ("😋", "Eat the ones that match"), ("🚫", "Dodge the others"))),
     ]),
     LudusWorld(name: "Brain Benders", subject: "Logic & Puzzles", emoji: "🧩", colorHex: Lu.grape, games: [
-        .init(title: "Where's Leo?", mechanic: "track", premise: "Leo the lion cub hides under a helmet — follow it through the shuffle!", game: .whereLeo,
+        .init(title: "Where's Leo?", mechanic: "track", premise: "Leo the lion cub hides — follow his helmet through the shuffle!", game: .whereLeo,
               icon: "🦁", howTo: how(("👋", "Leo hides under a helmet"), ("👀", "Watch it as they shuffle"), ("👆", "Tap Leo's helmet!"))),
         .init(title: "Mosaic Mender", mechanic: "pattern", premise: "Mus the mouse pinched a tile — find the one that fits the pattern.", game: .mosaicMender,
               icon: "🐭", howTo: how(("🔴", "Look at the pattern"), ("🧺", "Pick the tile that fits"), ("☝️", "Drag it up into the gap"))),

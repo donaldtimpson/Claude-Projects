@@ -423,8 +423,7 @@ private struct TBackdrop: View {
                         ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r)), with: .color(.white.opacity(i % 3 == 0 ? 0.9 : 0.5)))
                     }
                 }
-                Circle().fill(Color(hex: 0xf6ecd4)).frame(width: 46).shadow(color: .white.opacity(0.5), radius: 16)
-                    .overlay(Circle().fill(Color(hex: 0x0b0d26)).frame(width: 40).offset(x: 12, y: -6))
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xfff8e4), Color(hex: 0xe8dcc0)], center: .topLeading, startRadius: 2, endRadius: 50)).frame(width: 52).shadow(color: .white.opacity(0.5), radius: 16)
                     .position(x: w * 0.12, y: h * 0.235)
                 // Ring of arches (two tiers), dark against the sky
                 VStack(spacing: 0) {

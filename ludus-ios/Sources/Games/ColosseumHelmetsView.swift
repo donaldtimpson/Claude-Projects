@@ -414,7 +414,7 @@ struct WhereLeoView: View {
                             .transition(.scale.combined(with: .opacity))
                     }
                     HLHelmetView(s: hs, glow: model.stage == .reveal && isLeo && !model.right && up)
-                        .offset(y: up ? -hs * 0.95 : 0)
+                        .offset(y: up ? -hs * 1.2 : 0)
                         .rotationEffect(.degrees(up ? -8 : 0))
                 }
                 .frame(width: hs, height: hs)
@@ -454,6 +454,5 @@ struct WhereLeoView: View {
             .padding(.horizontal, 18).padding(.vertical, 10)
             .background(Capsule().fill(Color.black.opacity(0.35)))
             .shadow(color: .black.opacity(0.5), radius: 4)
-            .animation(.easeOut(duration: 0.2), value: model.stage)
     }
 }
