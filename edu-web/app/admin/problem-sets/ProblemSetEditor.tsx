@@ -540,10 +540,6 @@ export default function ProblemSetEditor({
 
   async function togglePublish() {
     const nextVal = !isDraft;
-    if (isDraft) {
-      const unchecked = review.rows.length - checkedCount;
-      if (unchecked > 0 && !confirm(`${unchecked} of ${review.rows.length} problems aren't checked yet. Publish anyway?`)) return;
-    }
     if (dirty && !(await save())) return;
     const fd = new FormData();
     fd.set("id", ps.id);
