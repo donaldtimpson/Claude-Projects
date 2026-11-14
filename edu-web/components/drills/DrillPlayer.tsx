@@ -254,7 +254,7 @@ export default function DrillPlayer({
             {onExit && (
               <button
                 onClick={onExit}
-                className="px-4 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+                className="px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
               >
                 Change settings
               </button>
@@ -277,7 +277,7 @@ export default function DrillPlayer({
           return (
             <li key={idx}>
               <button
-                className={`w-full px-4 py-3 rounded-lg border text-base transition-colors border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment ${
+                className={`w-full px-4 py-3 rounded-lg border text-base transition-colors border-crimson-700 bg-field hover:border-gold-400 text-parchment ${
                   img ? "flex flex-col items-center gap-2" : ""
                 }`}
                 onClick={() => choose(idx)}

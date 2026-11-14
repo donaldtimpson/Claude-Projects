@@ -45,7 +45,7 @@ export default function ResourceCreateForm() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Stewart Calculus 8th ed."
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
             required
           />
         </div>
@@ -54,7 +54,7 @@ export default function ResourceCreateForm() {
           <select
             value={kind}
             onChange={(e) => setKind(e.target.value as ResourceKind)}
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
           >
             {RESOURCE_KIND_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -68,7 +68,7 @@ export default function ResourceCreateForm() {
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://github.com/.../releases/download/textbooks-v1/calculus.pdf"
-          className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+          className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
           required
         />
       </div>
@@ -78,7 +78,7 @@ export default function ResourceCreateForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Short note shown under the title"
-          className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+          className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
         />
       </div>
       {error && <p className="text-red-400 text-sm">{error}</p>}

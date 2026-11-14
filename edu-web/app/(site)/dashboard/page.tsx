@@ -16,7 +16,7 @@ const gradePct = (v: number | null | undefined) =>
 function gradeColor(v: number | null | undefined): string {
   if (v === null || v === undefined) return "text-parchment-dim";
   if (v >= 90) return "text-green-400";
-  if (v >= 70) return "text-gold-300";
+  if (v >= 70) return "text-amber-300";
   return "text-red-400";
 }
 
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/drills"
-            className="px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors shrink-0"
+            className="px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors shrink-0"
           >
             Practice drills
           </Link>

@@ -144,7 +144,7 @@ export default async function ProblemSetPage({
               href={ps.attachmentUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+              className="px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
             >
               Open attachment ↗
             </a>

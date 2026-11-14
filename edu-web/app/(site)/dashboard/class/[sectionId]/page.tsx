@@ -14,7 +14,7 @@ const pct = (v: number | null | undefined) => (v === null || v === undefined ? "
 function pctClass(v: number | null | undefined): string {
   if (v === null || v === undefined) return "text-parchment-dim";
   if (v >= 90) return "text-green-400";
-  if (v >= 70) return "text-gold-300";
+  if (v >= 70) return "text-amber-300";
   return "text-red-400";
 }
 

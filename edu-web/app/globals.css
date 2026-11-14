@@ -21,6 +21,13 @@
   --color-parchment: var(--lyc-parchment);
   --color-parchment-dim: var(--lyc-parchment-dim);
 
+  /* Secondary buttons: a crimson fill in dark, a white button with a firm rule
+     in light. Pair with `border border-crimson-700`. */
+  --color-btn: var(--lyc-btn);
+  --color-btn-hover: var(--lyc-btn-hover);
+  /* Bordered form fields and choices (inputs, textareas, quiz options). */
+  --color-field: var(--lyc-field);
+
   /* Body text a touch larger than the Tailwind defaults. `text-sm` (15px) is the
      workhorse body size; `text-xs` (13px) carries secondary copy — badge/achievement
      blurbs, counts, resource descriptions, labels. Truly-tiny chrome uses the literal
@@ -31,8 +38,14 @@
   --text-xs--line-height: 1.4;
 }
 
-/* Dark theme (default): the Lyceum's crimson night. */
-:root {
+/* Dark theme (default): the Lyceum's crimson night.
+   Also applied to any element with data-theme="dark" — the site header and the
+   admin sidebar wear it in both themes, a crimson-and-gold binding around the
+   page. Status colors are reset here so those bands keep their dark-theme shades
+   inside a light page. */
+:root,
+[data-theme="dark"],
+[data-theme="print"] {
   color-scheme: dark;
   --lyc-crimson-950: #0f0404;
   --lyc-crimson-900: #190808;
@@ -48,47 +61,86 @@
 
   --lyc-parchment: #f5ecd8;
   --lyc-parchment-dim: #c4af8e;
+
+  --lyc-btn: #4a1a1a;
+  --lyc-btn-hover: #6e2020;
+  --lyc-field: #2d1212;
 }
 
-/* Light theme, built for projecting onto a whiteboard: a white page, near-black
-   ink, warm paper cards, and accents dark enough to survive a washed-out
-   projector. The token names keep their dark-theme roles — crimson-950 is still
-   "the page", parchment is still "the text" — so components need no changes.
-   Toggled by data-theme on <html> (see components/ThemeToggle.tsx). */
+/* Print/PDF pages are always white paper inked in the brand crimson, whatever
+   the site theme — fixed brand values, light form controls. */
+[data-theme="print"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --color-red-100: oklch(93.6% 0.032 17.717);
+  --color-red-300: oklch(80.8% 0.114 19.571);
+  --color-red-400: oklch(70.4% 0.191 22.216);
+  --color-red-800: oklch(44.4% 0.177 26.899);
+  --color-red-900: oklch(39.6% 0.141 25.723);
+  --color-green-200: oklch(92.5% 0.084 155.995);
+  --color-green-300: oklch(87.1% 0.15 154.449);
+  --color-green-400: oklch(79.2% 0.209 151.711);
+  --color-green-700: oklch(52.7% 0.154 150.069);
+  --color-green-900: oklch(39.3% 0.095 152.535);
+  --color-amber-50: oklch(98.7% 0.022 95.277);
+  --color-amber-300: oklch(87.9% 0.169 91.605);
+  --color-amber-400: oklch(82.8% 0.189 84.429);
+  --color-amber-700: oklch(55.5% 0.163 48.998);
+  --color-amber-900: oklch(41.4% 0.112 45.904);
+  --color-sky-200: oklch(90.1% 0.058 230.902);
+}
+
+/* Light theme — "the rubricated page", built for projecting onto a whiteboard.
+   Medieval scribes wrote in black on white vellum and set headings in red ink
+   (rubrics); gold was never ink. So here every gold accent becomes a deep
+   crimson rubric, the page is pure white, the text is near-black, and cards are
+   warm paper with firm rules that survive a washed-out projector. The token
+   names keep their roles (crimson-950 = the page, parchment = the text,
+   gold = the accent), so components need no per-theme classes.
+   Toggled by data-theme on <html> (components/ThemeToggle.tsx). */
 :root[data-theme="light"] {
   color-scheme: light;
   --lyc-crimson-950: #ffffff;
-  --lyc-crimson-900: #f7f2ea;
-  --lyc-crimson-800: #ece3d6;
-  --lyc-crimson-700: #c9b6a2;
-  --lyc-crimson-600: #b09a84;
+  --lyc-crimson-900: #faf6ef;
+  --lyc-crimson-800: #efe6da;
+  --lyc-crimson-700: #d5c3ae;
+  --lyc-crimson-600: #b9a28a;
 
-  --lyc-gold-600: #6b4800;
-  --lyc-gold-500: #8a5d00;
-  --lyc-gold-400: #7d5300;
-  --lyc-gold-300: #744d00;
-  --lyc-gold-200: #6b4800;
+  /* Rubric ramp: vermilion headings (400), deep crimson accent text (300),
+     oxblood fills (500/600). Distinct steps so paired uses stay tellable. */
+  --lyc-gold-600: #6b1212;
+  --lyc-gold-500: #8a1a1a;
+  --lyc-gold-400: #b3352a;
+  --lyc-gold-300: #962020;
+  --lyc-gold-200: #b8432f;
 
-  --lyc-parchment: #1b1410;
-  --lyc-parchment-dim: #4f4237;
+  --lyc-parchment: #17110d;
+  --lyc-parchment-dim: #4a3d33;
 
-  /* Status colors: the pale dark-theme shades vanish on white, so remap the
-     ones the site uses to deep inks and pale fills. */
-  --color-red-300: #b91c1c;
-  --color-red-400: #b91c1c;
+  --lyc-btn: #ffffff;
+  --lyc-btn-hover: #efe6da;
+  --lyc-field: #ffffff;
+
+  /* Status colors: the pale dark-theme shades vanish on white — deep inks and
+     pale fills instead. Failing red is a brighter scarlet than the rubric so
+     the two never read as the same thing. */
   --color-red-100: #7f1d1d;
-  --color-red-800: #f87171;
-  --color-red-900: #fee2e2;
-  --color-green-200: #166534;
+  --color-red-300: #d42020;
+  --color-red-400: #d42020;
+  --color-red-800: #f5a3a3;
+  --color-red-900: #fde4e4;
+  --color-green-200: #14532d;
   --color-green-300: #166534;
   --color-green-400: #15803d;
-  --color-green-700: #4ade80;
-  --color-green-900: #dcfce7;
+  --color-green-700: #7fd6a0;
+  --color-green-900: #dcf5e6;
   --color-amber-50: #78350f;
-  --color-amber-300: #a16207;
-  --color-amber-400: #a16207;
-  --color-amber-700: #d97706;
-  --color-amber-900: #fef3c7;
+  --color-amber-300: #b45309;
+  --color-amber-400: #b45309;
+  --color-amber-700: #f0b45c;
+  --color-amber-900: #fdf0d5;
   --color-sky-200: #075985;
 }
 

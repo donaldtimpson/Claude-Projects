@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 function scoreColor(p: number) {
   if (p === 100) return "text-green-400";
-  if (p >= 70) return "text-gold-400";
+  if (p >= 70) return "text-amber-300";
   return "text-red-400";
 }
 

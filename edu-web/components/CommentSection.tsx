@@ -227,7 +227,7 @@ export default function CommentSection({
               <button
                 key={r.value}
                 onClick={() => submitReport(c.id, r.value)}
-                className="text-xs px-2 py-0.5 rounded-md bg-crimson-800 border border-crimson-600 text-parchment hover:border-gold-400 transition-colors"
+                className="text-xs px-2 py-0.5 rounded-md bg-field border border-crimson-600 text-parchment hover:border-gold-400 transition-colors"
               >
                 {r.label}
               </button>
@@ -284,7 +284,7 @@ export default function CommentSection({
                     placeholder="Write a reply…"
                     rows={2}
                     autoFocus
-                    className="w-full bg-crimson-800 border border-crimson-600 rounded-lg px-3 py-2 text-sm text-parchment placeholder-parchment-500 focus:outline-none focus:border-gold-400 resize-none"
+                    className="w-full bg-field border border-crimson-600 rounded-lg px-3 py-2 text-sm text-parchment placeholder-parchment-500 focus:outline-none focus:border-gold-400 resize-none"
                   />
                   {replyError && <p className="text-red-400 text-xs">{replyError}</p>}
                   <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export default function CommentSection({
             onChange={(e) => setBody(e.target.value)}
             placeholder="Ask a question or leave a comment…"
             rows={3}
-            className="w-full bg-crimson-800 border border-crimson-600 rounded-lg px-4 py-3 text-sm text-parchment placeholder-parchment-500 focus:outline-none focus:border-gold-400 resize-none"
+            className="w-full bg-field border border-crimson-600 rounded-lg px-4 py-3 text-sm text-parchment placeholder-parchment-500 focus:outline-none focus:border-gold-400 resize-none"
           />
           {error && <p className="text-red-400 text-xs">{error}</p>}
           <button

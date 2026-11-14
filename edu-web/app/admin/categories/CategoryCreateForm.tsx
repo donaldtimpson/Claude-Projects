@@ -50,7 +50,7 @@ export default function CategoryCreateForm() {
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="e.g. Mathematics"
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
             required
           />
         </div>
@@ -60,7 +60,7 @@ export default function CategoryCreateForm() {
             value={slug}
             onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
             placeholder="e.g. mathematics"
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
             required
           />
         </div>

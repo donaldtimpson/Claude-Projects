@@ -90,7 +90,7 @@ export default function AdminSidebar() {
 
   if (collapsed) {
     return (
-      <aside className="md:w-10 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex md:flex-col items-center px-2 py-2 md:px-0 md:py-4 gap-3">
+      <aside data-theme="dark" className="bg-crimson-900 md:w-10 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex md:flex-col items-center px-2 py-2 md:px-0 md:py-4 gap-3">
         <button
           type="button"
           onClick={() => setCollapsed(false)}
@@ -109,7 +109,8 @@ export default function AdminSidebar() {
   }
 
   return (
-    <aside className="md:w-56 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex flex-col">
+    // data-theme="dark": the sidebar stays a crimson band in both themes.
+    <aside data-theme="dark" className="bg-crimson-900 md:w-56 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex flex-col">
       <div className="px-4 py-4 flex items-center justify-between md:block gap-3">
         <div className="flex items-center justify-between gap-3">
           <span className="font-display text-sm tracking-[0.15em] uppercase text-gold-300">Admin</span>

@@ -19,7 +19,7 @@ export default function DrillTester({ drills }: { drills: DrillCard[] }) {
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${
               slug === d.slug
                 ? "border-gold-500 bg-crimson-800 text-gold-300"
-                : "border-crimson-700 bg-crimson-800 text-parchment-dim hover:border-gold-400 hover:text-parchment"
+                : "border-crimson-700 bg-field text-parchment-dim hover:border-gold-400 hover:text-parchment"
             }`}
           >
             <span aria-hidden>{d.icon}</span>

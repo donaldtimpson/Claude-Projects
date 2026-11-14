@@ -98,7 +98,7 @@ export default function SyllabusEditor({
               onChange={(e) => setContent(e.target.value)}
               rows={18}
               placeholder="## Course Syllabus&#10;&#10;### Grading&#10;| Category | Weight |&#10;| :--- | ---: |&#10;| … | … |&#10;&#10;### Schedule&#10;…"
-              className="w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
+              className="w-full px-3 py-2 bg-field border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
             />
           ) : (
             <div className="px-4 py-3 bg-crimson-900 border border-crimson-700 rounded-lg min-h-[8rem]">

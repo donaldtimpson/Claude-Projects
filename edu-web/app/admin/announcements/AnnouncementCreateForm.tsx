@@ -45,7 +45,7 @@ export default function AnnouncementCreateForm({ courses }: { courses: CourseOpt
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Class canceled tonight"
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500"
             required
           />
         </div>
@@ -54,7 +54,7 @@ export default function AnnouncementCreateForm({ courses }: { courses: CourseOpt
           <select
             value={courseId}
             onChange={(e) => setCourseId(e.target.value)}
-            className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
+            className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
           >
             <option value="">Site-wide</option>
             {courses.map((c) => (
@@ -70,7 +70,7 @@ export default function AnnouncementCreateForm({ courses }: { courses: CourseOpt
           onChange={(e) => setBody(e.target.value)}
           rows={3}
           placeholder="Optional details shown below the title"
-          className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500 resize-y"
+          className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment placeholder:text-parchment-dim/50 focus:outline-none focus:border-gold-500 resize-y"
         />
       </div>
       <label className="flex items-center gap-2 text-sm text-parchment-dim cursor-pointer select-none">

@@ -88,6 +88,19 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 
 **Quiz authoring (admin):** `app/admin/QuizEditor.tsx` is a shared client component used by both the per-video editor (`/admin/courses/[courseId]`) and the playlist test editor (`/admin/test/[courseId]`). It reads the admin password from the cookie to attach to API calls.
 
+## Theming (dark default + light "rubricated page")
+
+Colors come from the brand tokens in `app/globals.css` (`crimson-*`, `gold-*`, `parchment*`, plus
+`btn`/`btn-hover` and `field`). Each resolves through a `--lyc-*` variable that is redefined under
+`html[data-theme="light"]`, so **use tokens by role, never per-theme classes**: `crimson-950` = the
+page, `crimson-900` = cards, `crimson-800` = tints/tracks, `crimson-700` = rules/borders,
+`parchment` = text, `gold-*` = the accent (gold in dark, crimson "rubric" ink in light).
+Secondary buttons use `bg-btn hover:bg-btn-hover border border-crimson-700`; bordered inputs and
+choice buttons use `bg-field`. Mid-tier grades (70–89) are `text-amber-300`, not gold, so they never
+read as the light theme's red accent. `data-theme="dark"` on an element keeps it dark in both themes
+(the site header and admin sidebar); `data-theme="print"` pins the `(print)` pages to the fixed
+brand palette. `components/ThemeToggle.tsx` switches themes and remembers the choice in localStorage.
+
 ## Route Map
 
 Public pages live under the `app/(site)/` route group; the table lists paths as seen by users.

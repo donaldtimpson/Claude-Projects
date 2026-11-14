@@ -230,7 +230,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               {reviewQuestionCount > 0 && (
                 <Link
                   href={`/courses/${course.id}/review`}
-                  className="inline-block px-5 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+                  className="inline-block px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
                 >
                   Review Course ({reviewQuestionCount} questions)
                 </Link>

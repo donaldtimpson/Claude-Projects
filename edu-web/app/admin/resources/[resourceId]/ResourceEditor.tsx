@@ -102,7 +102,7 @@ export default function ResourceEditor({
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
+                className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
                 required
               />
             </div>
@@ -111,7 +111,7 @@ export default function ResourceEditor({
               <select
                 value={kind}
                 onChange={(e) => setKind(e.target.value as ResourceKind)}
-                className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
+                className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
               >
                 {RESOURCE_KIND_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -124,7 +124,7 @@ export default function ResourceEditor({
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono focus:outline-none focus:border-gold-500"
+              className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment font-mono focus:outline-none focus:border-gold-500"
               required
             />
           </div>
@@ -133,7 +133,7 @@ export default function ResourceEditor({
             <input
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-crimson-800 border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
+              className="w-full bg-field border border-crimson-700 rounded-lg px-3 py-2 text-sm text-parchment focus:outline-none focus:border-gold-500"
             />
           </div>
           {metaError && <p className="text-red-400 text-sm">{metaError}</p>}

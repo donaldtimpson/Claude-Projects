@@ -111,7 +111,7 @@ export default function QuizPlayer({
           <span className="text-xl text-parchment-dim ml-2">({pct}%)</span>
         </p>
         {pct === 100 ? (
-          <div className="rounded-lg border border-gold-500 bg-crimson-800 px-4 py-3">
+          <div className="rounded-lg border border-gold-500 bg-field px-4 py-3">
             <p className="font-display text-sm uppercase tracking-[0.15em] text-gold-300">
               ✦ Perfect — you aced this lecture
             </p>
@@ -125,7 +125,7 @@ export default function QuizPlayer({
         <div className="flex gap-3">
           <button
             onClick={() => setReviewing(true)}
-            className="px-4 py-2 bg-crimson-700 hover:bg-crimson-600 text-parchment text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
           >
             Review Answers
           </button>
@@ -156,13 +156,13 @@ export default function QuizPlayer({
           let style =
             "w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ";
           if (!answered) {
-            style += "border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment";
+            style += "border-crimson-700 bg-field hover:border-gold-400 text-parchment";
           } else if (idx === q.correctIndex) {
             style += "border-green-500 bg-green-900/30 text-green-300";
           } else if (idx === selected) {
             style += "border-red-500 bg-red-900/30 text-red-300";
           } else {
-            style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
+            style += "border-crimson-700 bg-field text-parchment-dim";
           }
 
           return (

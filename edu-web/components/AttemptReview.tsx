@@ -32,7 +32,7 @@ export default function AttemptReview({
                 } else if (oi === chosen && !isCorrect) {
                   style += "border-red-500 bg-red-900/30 text-red-300";
                 } else {
-                  style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
+                  style += "border-crimson-700 bg-field text-parchment-dim";
                 }
                 return (
                   <li key={oi} className={style}>

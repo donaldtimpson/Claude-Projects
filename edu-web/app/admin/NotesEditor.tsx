@@ -128,7 +128,7 @@ export default function NotesEditor({
               onChange={(e) => setContent(e.target.value)}
               rows={14}
               placeholder="## Overview&#10;…&#10;&#10;## Key Concepts&#10;- **Term** — definition&#10;&#10;## Worked Example&#10;1. step&#10;&#10;## Summary&#10;- takeaway"
-              className="w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
+              className="w-full px-3 py-2 bg-field border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
             />
           ) : (
             <div className="px-4 py-3 bg-crimson-900 border border-crimson-700 rounded-lg min-h-[8rem]">

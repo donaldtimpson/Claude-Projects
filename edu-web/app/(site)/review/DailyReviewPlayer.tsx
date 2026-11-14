@@ -113,13 +113,13 @@ export default function DailyReviewPlayer({
         {card.options.map((opt, idx) => {
           let style = "w-full text-left px-4 py-3 rounded-lg border text-sm transition-colors ";
           if (!answered) {
-            style += "border-crimson-700 bg-crimson-800 hover:border-gold-400 text-parchment";
+            style += "border-crimson-700 bg-field hover:border-gold-400 text-parchment";
           } else if (idx === card.correctIndex) {
             style += "border-green-500 bg-green-900/30 text-green-300";
           } else if (idx === selected) {
             style += "border-red-500 bg-red-900/30 text-red-300";
           } else {
-            style += "border-crimson-700 bg-crimson-800 text-parchment-dim";
+            style += "border-crimson-700 bg-field text-parchment-dim";
           }
 
           return (

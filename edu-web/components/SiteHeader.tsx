@@ -14,7 +14,8 @@ export default async function SiteHeader() {
   const isAdmin = cookieStore.get("admin_auth")?.value === process.env.ADMIN_PASSWORD;
 
   return (
-    <header className="bg-crimson-900 border-b border-crimson-700 px-6">
+    // data-theme="dark": the header stays a crimson-and-gold band in both themes.
+    <header data-theme="dark" className="bg-crimson-900 border-b border-crimson-700 px-6">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 h-16">
         <div className="flex items-center gap-3 min-w-0">
           <SiteNav isAdmin={isAdmin} />

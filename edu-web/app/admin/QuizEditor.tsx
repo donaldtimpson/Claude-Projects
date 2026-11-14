@@ -161,7 +161,7 @@ export default function QuizEditor({
             value={form.prompt}
             onChange={(e) => setForm((f) => ({ ...f, prompt: e.target.value }))}
             rows={2}
-            className="mt-1 w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500 resize-none"
+            className="mt-1 w-full px-3 py-2 bg-field border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500 resize-none"
           />
         </div>
 
@@ -186,7 +186,7 @@ export default function QuizEditor({
                   opts[i] = e.target.value;
                   setForm((f) => ({ ...f, options: opts }));
                 }}
-                className="flex-1 px-3 py-1.5 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500"
+                className="flex-1 px-3 py-1.5 bg-field border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500"
               />
             </div>
           ))}
@@ -200,7 +200,7 @@ export default function QuizEditor({
             onChange={(e) => setForm((f) => ({ ...f, explanation: e.target.value }))}
             rows={2}
             placeholder="Shown after the student answers…"
-            className="mt-1 w-full px-3 py-2 bg-crimson-800 border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500 resize-none"
+            className="mt-1 w-full px-3 py-2 bg-field border border-crimson-700 rounded-lg text-parchment text-sm focus:outline-none focus:border-gold-500 resize-none"
           />
         </div>
 
