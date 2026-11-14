@@ -24,6 +24,9 @@ type Cell = number | "Z" | "X" | null;
 type Column = { key: string; name: string; category: string; points: number; date: string; scores: Record<string, Cell> };
 
 const day = (d: Date | null | undefined) => (d ?? new Date()).toISOString().slice(0, 10);
+// Tests items carry no date in edu-web; pin known/estimated ones here.
+// Test 1 (Ch 1) is a guess: the week after Lecture 4 (10/6), before Lecture 5.
+const TEST_DATES: Record<string, string> = { "Test 1": "2026-10-08" };
 // cuid v1 embeds its creation time (base36 ms) in chars 1–8.
 const cuidDate = (id: string) => new Date(parseInt(id.slice(1, 9), 36));
 
@@ -89,7 +92,7 @@ const cuidDate = (id: string) => new Date(parseInt(id.slice(1, 9), 36));
       const scores: Record<string, Cell> = {};
       for (const s of gb.students) scores[s.email] = s.customScores[it.id] ?? null;
       if (Object.values(scores).every((v) => v === null)) continue;
-      columns.push({ key: `item:${it.id}`, name: it.name, category: "Unit Tests", points: it.maxPoints, date: day(cuidDate(it.id)), scores });
+      columns.push({ key: `item:${it.id}`, name: it.name, category: "Unit Tests", points: it.maxPoints, date: TEST_DATES[it.name] ?? day(cuidDate(it.id)), scores });
     }
   }
 
