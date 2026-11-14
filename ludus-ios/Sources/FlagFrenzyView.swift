@@ -285,10 +285,12 @@ private final class FlagFrenzyModel: ArcadeModel {
 
     func tap(_ p: CGPoint) {
         guard phase == .playing, !dying else { return }
-        guard let i = bubbles.indices.reversed().first(where: { i in
+        // Overlapping balloons: the one whose middle is nearest the finger wins.
+        func dist(_ b: FFBubble) -> CGFloat { hypot(p.x - b.x, (p.y - b.y) * 0.85) }
+        guard let i = bubbles.indices.filter({ i in
             let b = bubbles[i]
-            return b.pop == 0 && b.burst == 0 && hypot(p.x - b.x, p.y - b.y) <= b.r + 10
-        }) else { return }
+            return b.pop == 0 && b.burst == 0 && dist(b) <= b.r + 10
+        }).min(by: { dist(bubbles[$0]) < dist(bubbles[$1]) }) else { return }
         let b = bubbles[i]
         if target.isRight(b.country) {
             bubbles[i].pop = 0.001

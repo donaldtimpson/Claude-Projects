@@ -474,7 +474,7 @@ private struct ZFBoat: View {
                 Circle().fill(.white.opacity(0.7)).frame(width: 12, height: 12)
                 Circle().fill(.white.opacity(0.5)).frame(width: 16, height: 16).offset(y: -8)
             }
-            .offset(x: 44, y: puff ? -42 : -36).opacity(puff ? 0.9 : 0.4)
+            .offset(x: 48, y: puff ? -30 : -26).opacity(puff ? 0.85 : 0.35)
             // funnel
             RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0x2c2c3a)).frame(width: 12, height: 18)
                 .overlay(Rectangle().fill(Color(hex: Lu.coral)).frame(height: 4).offset(y: -4))

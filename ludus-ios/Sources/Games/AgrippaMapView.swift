@@ -501,15 +501,9 @@ private struct APDesk: View {
                         ctx.stroke(p, with: .color(.black.opacity(i % 3 == 0 ? 0.16 : 0.08)), lineWidth: i % 3 == 0 ? 2 : 1)
                     }
                 }
-                // Inkwell + quill peeking from the top corner.
-                ZStack {
-                    Ellipse().fill(Color(hex: 0x1d1d2b)).frame(width: 40, height: 16).offset(y: 14)
-                    RoundedRectangle(cornerRadius: 8).fill(Color(hex: 0x23233a)).frame(width: 36, height: 28)
-                    Capsule().fill(Color(hex: 0xf3ead8)).frame(width: 6, height: 70).rotationEffect(.degrees(28)).offset(x: 14, y: -30)
-                    Ellipse().fill(Color(hex: 0xf8f1e2)).frame(width: 14, height: 40).rotationEffect(.degrees(28)).offset(x: 24, y: -50)
-                }
-                .position(x: g.size.width - 40, y: g.size.height - 30)
-                .opacity(0.9)
+                // Lamp-light pooling on the desk.
+                RadialGradient(colors: [Color(hex: 0xffd27a).opacity(0.22), .clear], center: .init(x: 0.5, y: 0.45),
+                               startRadius: 10, endRadius: g.size.height * 0.6)
             }
         }
     }
