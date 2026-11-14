@@ -52,7 +52,7 @@ private func bkTask(_ m: ArcadeModel) -> BKTask {
     let ing = Int.random(in: 0..<bkIngredients.count)
     let nm = bkIngredients[ing].name
     let labels = !m.chance(1, from: 5, to: 7.5)
-    switch m.tier([1, 2, 3, 4.2, 5.4, 6.5, 7.8, 9]) {
+    switch m.tier([1, 2, 3, 4.2, 5.4, 6.5, 7.8, 9], keep: 0.08) {
     case 0:
         let t = [6, 9, 12, 3].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 12, grid: 3, labels: false, star: true,
@@ -405,7 +405,6 @@ private struct BKPlay: View {
                     .overlay(MarketSparks(trigger: model.bakes.count, glyphs: ["✨", "⭐️", model.bakes.last ?? "🥧"]))
                 recipeCard
             }
-            patienceBar
             ZStack(alignment: .top) {
                 station
             }
@@ -433,8 +432,8 @@ private struct BKPlay: View {
                 Text(t.line).font(luFont(t.line.count > 40 ? 17 : 22, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
                     .fixedSize(horizontal: false, vertical: true).lineLimit(4).minimumScaleFactor(0.7)
             }
-            HStack {
-                Spacer()
+            HStack(spacing: 8) {
+                patienceBar
                 LibrarySpeakerButton(size: 38) { model.sayAgain() }
             }
         }

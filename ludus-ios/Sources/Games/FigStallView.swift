@@ -52,7 +52,7 @@ private func fsSale(_ m: ArcadeModel) -> FSSale {
     let fewest = m.chance(1, from: 7, to: 9)
     let pick = { (n: Int) in Array(fsFruits.map(\.id).shuffled().prefix(n)) }
     let coinsTill: [USMoney] = USMoney.coins
-    switch m.tier([1, 2, 3, 4, 5.5, 6.5, 8]) {
+    switch m.tier([1, 2, 3, 4, 5.5, 6.5, 8], keep: 0.08) {
     case 0:
         let p = Int.random(in: max(1, 4 - m.rampInt(1, 3, to: 2)) ... 4)
         return FSSale(items: [(pick(1)[0], p)], paid: [.nickel], till: [.penny], showTrack: true, showValues: true)
@@ -377,6 +377,19 @@ private struct FSPurse: View {
             FSPurseShape().fill(LinearGradient(colors: [Color(hex: 0x9a5b2e), Color(hex: 0x6a3a18)], startPoint: .top, endPoint: .bottom))
                 .overlay(FSPurseShape().stroke(Color(hex: 0x3f210c), lineWidth: 3))
             Ellipse().fill(Color(hex: 0x2c160a)).frame(height: 22).padding(.horizontal, 14).offset(y: 2)
+            // The gold kiss-lock frame, sprung open
+            HStack(spacing: 0) {
+                FSClasp().stroke(Color(hex: Lu.gold), style: StrokeStyle(lineWidth: 4, lineCap: .round)).frame(width: 60, height: 20)
+                    .rotationEffect(.degrees(-14), anchor: .bottomTrailing)
+                Spacer()
+                FSClasp().stroke(Color(hex: Lu.gold), style: StrokeStyle(lineWidth: 4, lineCap: .round)).frame(width: 60, height: 20)
+                    .scaleEffect(x: -1).rotationEffect(.degrees(14), anchor: .bottomLeading)
+            }
+            .padding(.horizontal, 8).offset(y: -10)
+            if given.isEmpty {
+                Text("CHANGE").font(luFont(13, .heavy)).tracking(2).foregroundStyle(Color(hex: 0xf3d9b0).opacity(0.7))
+                    .offset(y: 44)
+            }
             // Coins piling up
             let cols = 6
             VStack(spacing: -10) {
@@ -393,6 +406,17 @@ private struct FSPurse: View {
         }
         .frame(width: 150, height: 84)
         .animation(.spring(response: 0.3, dampingFraction: 0.65), value: given.count)
+    }
+}
+
+/// Half of a purse's clasp: an arc ending in a little ball.
+private struct FSClasp: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.maxY), control: CGPoint(x: r.minX + r.width * 0.2, y: r.minY))
+        p.addEllipse(in: CGRect(x: r.maxX - 5, y: r.maxY - 12, width: 9, height: 9))
+        return p
     }
 }
 
@@ -442,7 +466,7 @@ private struct FSPlay: View {
             till
             if model.needsDone {
                 let ready = model.stage == .giving
-                LudusButton(title: model.given.isEmpty ? "No change? 🤝" : "Give change 🤝",
+                LudusButton(title: "Give change 🤝",
                             fill: ready ? [Lu.mint, 0x3f8f4a] : [Lu.silver, 0xa79f8b],
                             shadow: ready ? 0x2a6a33 : 0x6f6857, fullWidth: true) { model.done() }
                     .opacity(model.given.isEmpty ? 0.6 : 1)

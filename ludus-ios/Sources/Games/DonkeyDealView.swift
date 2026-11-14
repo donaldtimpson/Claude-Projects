@@ -41,6 +41,14 @@ private let ddGoods: [(String, String)] = [
     ("🍎", "apples"), ("🍌", "bananas"), ("🥕", "carrots"), ("🍪", "cookies"), ("🥚", "eggs"), ("🍋", "lemons"),
     ("🧦", "socks"), ("✏️", "pencils"), ("🍐", "pears"), ("🧃", "juice boxes"),
 ]
+private let ddCheap: [(String, String)] = [
+    ("🍪", "Cookie"), ("🍎", "Apple"), ("🧃", "Juice box"), ("🎈", "Balloon"), ("🍭", "Lollipop"), ("✏️", "Pencil"),
+    ("🍌", "Banana"), ("🧁", "Cupcake"), ("🍬", "Candy"), ("📒", "Notebook"),
+]
+private let ddPricey: [(String, String)] = [
+    ("🎮", "Video game"), ("🛹", "Skateboard"), ("🧸", "Big teddy"), ("🎧", "Headphones"), ("👟", "Sneakers"),
+    ("🧥", "Winter coat"), ("⚽️", "Soccer ball"), ("🎒", "Backpack"),
+]
 private let ddSized: [(String, String)] = [("🥣", "Cereal"), ("🥜", "Peanut butter"), ("🍯", "Honey"), ("🧃", "Juice"), ("🧀", "Cheese")]
 
 @MainActor
@@ -48,7 +56,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
     func pair(_ a: DDOffer, _ b: DDOffer, aRight: Bool) -> ([DDOffer], Int) {
         Bool.random() ? ([a, b], aRight ? 0 : 1) : ([b, a], aRight ? 1 : 0)
     }
-    switch m.tier([1, 1.8, 2.8, 3.8, 5, 6.2, 7.4, 8.6]) {
+    switch m.tier([1, 1.8, 2.8, 3.8, 5, 6.2, 7.4, 8.6], keep: 0.08) {
     case 0:
         let g = ddGoods.randomElement()!
         let a = Int.random(in: 1...m.rampInt(6, 9, to: 1.8))
@@ -67,7 +75,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
         let budget = 5 * Int.random(in: m.rampInt(2, 6, from: 2.8, to: 4)...m.rampInt(6, 19, from: 2.8, to: 4.5))
         let ok = Int.random(in: max(1, budget - 15)...budget)
         let no = Int.random(in: (budget + 1)...(budget + 20))
-        let g = ddWants.shuffled().prefix(2).map { $0 }
+        let g = ddCheap.shuffled().prefix(2).map { $0 }
         let (o, c) = pair(DDOffer(pic: g[0].0, title: usMoney(ok), sub: g[0].1), DDOffer(pic: g[1].0, title: usMoney(no), sub: g[1].1), aRight: true)
         return DDRound(ask: "You have \(usMoney(budget)). Which can you buy?", askPic: "👛", say: "You have \(budget) cents. Which one can you buy?",
                        offers: o, correct: c, why: "\(usMoney(ok)) ≤ \(usMoney(budget)) — \(usMoney(no)) is too much")
@@ -115,7 +123,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
     case 6:
         // Percent discounts against a plain price.
         for _ in 0..<200 {
-            let g = ddWants.randomElement()!
+            let g = ddPricey.randomElement()!
             let (pct, step) = [(10, 10), (20, 5), (25, 4), (50, 2), (30, 10), (40, 5), (75, 4)].randomElement()!
             let base = step * Int.random(in: max(1, 8 / step)...(m.d > 8 ? 120 / step : 60 / step))
             let sale = base - base * pct / 100

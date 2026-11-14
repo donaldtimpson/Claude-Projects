@@ -78,7 +78,7 @@ private func ctTask(_ m: ArcadeModel) -> CTTask {
         while (abs(x - t) < 40 || abs(x - t) > 680) && n < 50 { x = anyStart(); n += 1 }
         return x
     }
-    let k = m.tier([1, 2.2, 3.2, 4.2, 5.4, 6.4, 7.5, 9])
+    let k = m.tier([1, 2.2, 3.2, 4.2, 5.4, 6.4, 7.5, 9], keep: 0.08)
     let h = Int.random(in: 1...12)
     switch k {
     case 0:

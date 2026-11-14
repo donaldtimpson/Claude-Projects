@@ -54,7 +54,7 @@ private func porcusTask(_ m: ArcadeModel) -> PorcusTask {
     // Coin value badges fade out between d 2.5 and 5.5; the running total between 3 and 6.
     let values = !m.chance(1, from: 2.5, to: 5.5)
     let total = !m.chance(1, from: 3, to: 6)
-    switch m.tier([1, 1.8, 2.8, 3.8, 5, 6, 7, 8.5]) {
+    switch m.tier([1, 1.8, 2.8, 3.8, 5, 6, 7, 8.5], keep: 0.08) {
     case 0:
         let p = pPrice(2, m.rampInt(4, 9, to: 2.5), needs: nil)
         return PorcusTask(kind: .count, prize: prize, price: p, target: p, tray: [.penny], showTotal: true, showValues: true,
@@ -537,7 +537,7 @@ private struct PorcusPlay: View {
         let fat = CGFloat(min(1, Double(model.sum + model.task.saved) / Double(max(1, model.task.price))))
         return ZStack {
             PorcusPig(mood: model.mood, fat: fat)
-                .scaleEffect(hover ? 1.06 : 1)
+                .scaleEffect(hover ? 1.24 : 1.16)
                 .scaleEffect(x: plunk ? 1.05 : 1, y: plunk ? 0.95 : 1, anchor: .bottom)
                 .modifier(MarketShake(shakes: CGFloat(model.lastMiss)))
                 .animation(.spring(response: 0.2, dampingFraction: 0.5), value: plunk)
@@ -550,9 +550,9 @@ private struct PorcusPlay: View {
                 MarketSparks(trigger: model.lastMiss, glyphs: ["🪙"], radius: 120)
             }
             MarketSparks(trigger: model.sparks, glyphs: ["💕", "✨", "🪙"], radius: 110)
-            tag.offset(x: 24, y: 64)
+            tag.offset(x: 24, y: 78)
         }
-        .frame(height: 220)
+        .frame(height: 250)
     }
 
     /// The chalk tag around his neck: the running total, or "?" once you must count yourself.
