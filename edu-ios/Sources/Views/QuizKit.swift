@@ -29,10 +29,9 @@ struct QuizProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(Theme.parchmentDeep)
+                Capsule().fill(Theme.tint)
                 Capsule()
-                    .fill(LinearGradient(colors: [Theme.gold500, Theme.gold300],
-                                         startPoint: .leading, endPoint: .trailing))
+                    .fill(Theme.accent)
                     .frame(width: max(0, min(1, fraction)) * geo.size.width)
             }
         }
@@ -47,10 +46,10 @@ struct StreakPill: View {
     var body: some View {
         HStack(spacing: 4) {
             Text("🔥").font(.caption)
-            Text("\(streak)").font(.subheadline.weight(.bold)).foregroundStyle(Theme.gold300)
+            Text("\(streak)").font(.ui(15, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
         }
         .padding(.horizontal, 10).padding(.vertical, 4)
-        .background(Theme.parchmentDeep).clipShape(Capsule())
+        .background(Theme.tint).clipShape(Capsule())
         .opacity(streak > 0 ? 1 : 0.4)
     }
 }
@@ -107,8 +106,8 @@ struct OptionButtons: View {
                     Text(flag).font(.system(size: 30))
                 }
                 Text(rest)
-                    .font(.system(size: hasVisual ? 18 : 24, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
+                    .font(.ui(hasVisual ? 18 : 24, .semibold))
+                    .foregroundStyle(foreground(i))
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.6)
                     .lineLimit(2)
@@ -130,7 +129,8 @@ struct OptionButtons: View {
             HStack(spacing: 8) {
                 if let flag { Text(flag).font(.system(size: 20)) }
                 Text(rest)
-                    .font(.serif(17)).foregroundStyle(Theme.ink)
+                    .font(.serif(17, revealed && i == correctIndex ? .semibold : .regular))
+                    .foregroundStyle(foreground(i))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if revealed && i == correctIndex {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
@@ -151,17 +151,23 @@ struct OptionButtons: View {
         if !revealed { Haptics.tap(); onSelect(i) }
     }
 
+    // Same answer states as the web: the right answer solid green with ✓, a wrong
+    // pick solid red with ✗, everything else dimmed.
     private func background(_ i: Int) -> Color {
-        guard revealed else { return i == selected ? Theme.parchmentDeep : Theme.card }
-        if i == correctIndex { return Color(hex: 0x1e3a24) }
-        if i == selected { return Color(hex: 0x3a1e1e) }
-        return Theme.card
+        guard revealed else { return i == selected ? Theme.tint : Theme.field }
+        if i == correctIndex { return Theme.successFill }
+        if i == selected { return Theme.dangerFill }
+        return Theme.field
     }
     private func border(_ i: Int) -> Color {
-        guard revealed else { return i == selected ? Theme.gold300 : Theme.line }
-        if i == correctIndex { return Theme.success }
-        if i == selected { return Theme.danger }
+        guard revealed else { return i == selected ? Theme.accentText : Theme.line }
+        if i == correctIndex { return Theme.successLine }
+        if i == selected { return Theme.dangerLine }
         return Theme.line
+    }
+    private func foreground(_ i: Int) -> Color {
+        guard revealed else { return Theme.ink }
+        return i == correctIndex || i == selected ? Theme.ink : Theme.inkSoft
     }
 }
 
@@ -180,23 +186,24 @@ struct NumericKeypad: View {
             HStack(spacing: 6) {
                 Spacer(minLength: 0)
                 Text(entry.isEmpty ? "0" : entry)
-                    .font(.system(size: 40, weight: .semibold, design: .rounded))
+                    .font(.ui(40, .semibold))
+                    .monospacedDigit()
                     .foregroundStyle(entry.isEmpty ? Theme.inkSoft : Theme.ink)
                     .contentTransition(.numericText())
-                if let unit { Text(unit).font(.title3).foregroundStyle(Theme.inkSoft) }
+                if let unit { Text(unit).font(.ui(20)).foregroundStyle(Theme.inkSoft) }
                 Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 14)
-            .background(Theme.parchmentDeep).clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(Theme.tint).clipShape(RoundedRectangle(cornerRadius: 12))
 
             LazyVGrid(columns: cols, spacing: 10) {
                 ForEach(keys, id: \.self) { key in
                     Button { tap(key) } label: {
                         Text(key)
-                            .font(.system(size: 26, weight: .medium, design: .rounded))
+                            .font(.ui(26, .medium))
                             .foregroundStyle(key == "C" ? Theme.danger : Theme.ink)
                             .frame(maxWidth: .infinity, minHeight: 54)
-                            .background(Theme.card)
+                            .background(Theme.field)
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }

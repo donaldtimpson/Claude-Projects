@@ -34,7 +34,7 @@ final class NotesPDFExporter: NSObject, WKScriptMessageHandler {
         webView = web
         web.loadHTMLString(
             Self.printHTML(markdown: markdown, title: title),
-            baseURL: URL(string: "https://timpson-lyceum.vercel.app")
+            baseURL: URL(string: AppConfig.siteOrigin)
         )
 
         // Wait for the page to report its rendered height (with a safety timeout so

@@ -43,10 +43,9 @@ struct AssignmentDetailView: View {
             }
             .padding()
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle(assignment.title)
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
         // Same presentation the drills hub and lecture screen use, so a lesson-drill
         // homework opened here behaves identically to one opened elsewhere.
         .fullScreenCover(item: $activeDrill) { drill in
@@ -57,7 +56,7 @@ struct AssignmentDetailView: View {
                             Button { activeDrill = nil } label: {
                                 Image(systemName: "xmark").font(.body.weight(.semibold))
                             }
-                            .tint(Theme.gold300)
+                            .tint(Theme.link)
                         }
                     }
             }
@@ -68,10 +67,9 @@ struct AssignmentDetailView: View {
 
     @ViewBuilder private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(route.courseTitle)
-                .font(.serif(14)).foregroundStyle(Theme.inkSoft)
-            Text(metaLine)
-                .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+            Text(assignment.title).font(.serif(24, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
+            Text(route.courseTitle).font(.ui(14)).foregroundStyle(Theme.inkSoft)
+            Text(metaLine).font(.ui(14)).foregroundStyle(Theme.inkSoft)
         }
     }
 
@@ -97,17 +95,17 @@ struct AssignmentDetailView: View {
 
     @ViewBuilder private var lessonBody: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Pass the 30-question homework run flawlessly to earn full credit — the ✦ is your record.")
-                .font(.serif(16)).foregroundStyle(Theme.ink)
+            Text("Pass the 30-question homework run without a miss to earn full credit. The ✦ is your record.")
+                .font(.serif(17)).foregroundStyle(Theme.ink)
 
             HStack {
-                Text("Status").font(.display(12)).kerning(1).foregroundStyle(Theme.gold400)
+                Eyebrow("Status")
                 Spacer()
                 if aced {
-                    Text("✦ aced · \(assignment.points)/\(assignment.points)")
-                        .font(.serif(15)).foregroundStyle(Theme.gold300)
+                    Text("✦ Aced · \(assignment.points)/\(assignment.points)")
+                        .font(.ui(15, .semibold)).foregroundStyle(Theme.accentText)
                 } else {
-                    Text("not yet aced").font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                    Text("Not yet aced").font(.ui(15)).foregroundStyle(Theme.inkSoft)
                 }
             }
             .lyceumCard()
@@ -117,8 +115,8 @@ struct AssignmentDetailView: View {
                     activeDrill = ActiveDrill(id: slug)
                 }
             } else {
-                Text("This lesson isn't available in this version of the app.")
-                    .font(.serif(14)).foregroundStyle(Theme.inkSoft)
+                Text("This lesson isn't available in this version of the app. Update the app to do it here.")
+                    .font(.serif(16)).foregroundStyle(Theme.inkSoft)
             }
         }
     }
@@ -132,18 +130,8 @@ struct AssignmentDetailView: View {
                 NavigationLink(value: ProblemSetRoute(
                     courseId: courseId, problemSetId: psId, title: assignment.title
                 )) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("View the problem set")
-                                .font(.display(14)).foregroundStyle(Theme.ink)
-                            Text((assignment.solutionsAvailable ?? false)
-                                 ? "Problems with worked solutions" : "Problems")
-                                .font(.serif(13)).foregroundStyle(Theme.inkSoft)
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
-                    }
-                    .lyceumCard()
+                    LinkRow(icon: "doc.text", title: "View the problem set",
+                            subtitle: (assignment.solutionsAvailable ?? false) ? "Problems with worked solutions" : "Problems")
                 }
                 .buttonStyle(.lyceumPress)
             }
@@ -157,18 +145,18 @@ struct AssignmentDetailView: View {
     @ViewBuilder private var gradeSection: some View {
         if assignment.status == .graded, let sub = assignment.submission {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("YOUR GRADE").font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+                HStack(alignment: .firstTextBaseline) {
+                    Eyebrow("Your grade")
                     Spacer()
                     Text("\(sub.score ?? 0)/\(assignment.points)")
-                        .font(.system(size: 22, weight: .bold)).foregroundStyle(Theme.gold300)
+                        .font(.ui(24, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
                 }
                 if let feedback = sub.feedback, !feedback.isEmpty {
                     Text(feedback)
-                        .font(.serif(15)).foregroundStyle(Theme.ink)
+                        .font(.serif(16)).foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 10)
-                        .overlay(Rectangle().fill(Theme.line).frame(width: 2), alignment: .leading)
+                        .padding(.leading, 12)
+                        .overlay(Rectangle().fill(Theme.ornament).frame(width: 3), alignment: .leading)
                 }
             }
             .lyceumCard()
@@ -177,27 +165,26 @@ struct AssignmentDetailView: View {
 
     @ViewBuilder private var submitSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(assignment.submission == nil ? "SUBMIT YOUR WORK" : "UPDATE YOUR SUBMISSION")
-                .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+            Eyebrow(assignment.submission == nil ? "Turn in your work" : "Update your submission")
 
-            Text("Paste a link to your solution (Google Doc, PDF, photo album, etc.).")
-                .font(.serif(14)).foregroundStyle(Theme.inkSoft)
+            Text("Paste a link to your solution (a Google Doc, a PDF, a photo album).")
+                .font(.serif(16)).foregroundStyle(Theme.inkSoft)
 
             TextField("https://…", text: $urlText)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .keyboardType(.URL)
-                .font(.serif(16)).foregroundStyle(Theme.ink)
+                .font(.ui(16)).foregroundStyle(Theme.ink)
                 .padding(12)
-                .background(Theme.parchmentDeep, in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.field, in: RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
 
             if let submitError {
-                Text(submitError).font(.footnote).foregroundStyle(Theme.danger)
+                Text(submitError).font(.ui(14)).foregroundStyle(Theme.danger)
             }
             if justSubmitted {
-                Text("Submitted — your instructor can now see your link.")
-                    .font(.footnote).foregroundStyle(Theme.success)
+                Text("Submitted. Your teacher can see your link now.")
+                    .font(.ui(14)).foregroundStyle(Theme.success)
             }
 
             PrimaryButton(
@@ -210,7 +197,7 @@ struct AssignmentDetailView: View {
 
             if let sub = assignment.submission, let at = sub.submittedAt.flatMap(dueDisplay) {
                 Text("Last submitted \(at).")
-                    .font(.caption).foregroundStyle(Theme.inkSoft)
+                    .font(.ui(13)).foregroundStyle(Theme.inkSoft)
             }
         }
         .lyceumCard()

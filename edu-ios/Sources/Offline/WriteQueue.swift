@@ -41,7 +41,9 @@ final class WriteQueueManager: ObservableObject {
     /// result when it went through, or nil when queued / dropped.
     func submit<B: Encodable>(path: String, body: B, clientId: String) async -> WriteResult? {
         do {
-            return try await APIClient.shared.post(path, body: body)
+            let result: WriteResult = try await APIClient.shared.post(path, body: body)
+            Celebrations.shared.celebrate(result.badges)
+            return result
         } catch let e as APIError where e.status >= 400 && e.status < 500 && e.status != 429 {
             return nil // permanent client error — nothing to retry
         } catch {

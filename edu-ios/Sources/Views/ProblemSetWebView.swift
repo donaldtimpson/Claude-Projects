@@ -56,8 +56,8 @@ struct ProblemSetWebView: UIViewRepresentable {
             let cls = part.isSection ? "part section" : "part"
             let sol = part.solution.map { s in
                 """
-                <details class='sol'><summary>Show solution \(part.label)</summary>
-                <div class='solbody' data-md='s\(idx)'></div></details>
+                <details class='sol'><summary><span class='show'>Show</span><span class='hide'>Hide</span> solution \(part.label)</summary>
+                <div class='solbody'><div class='eyebrow'>Solution</div><div data-md='s\(idx)'></div></div></details>
                 """
             } ?? ""
             return "<div class='\(cls)'><div data-md='p\(idx)'></div>\(sol)</div>"
@@ -78,28 +78,25 @@ struct ProblemSetWebView: UIViewRepresentable {
         <meta name='viewport' content='width=device-width, initial-scale=1'>
         \(NoteWeb.head)
         <style>
-        html,body{margin:0;background:transparent;color:#f5ecd8;
-        font:16px/1.6 Georgia,'EB Garamond',serif;padding:2px}
-        h1,h2,h3{color:#cfa135;font-family:Georgia,serif}
-        h2{font-size:20px} h3{font-size:17px}
-        a{color:#ddb954}
-        code{background:#2d1212;color:#e8cb7e;padding:1px 4px;border-radius:4px}
-        pre{background:#2d1212;padding:10px;border-radius:8px;overflow-x:auto}
-        .katex{color:#f5ecd8}
-        .katex-display{overflow-x:auto;overflow-y:hidden}
-        .preamble{margin-bottom:14px}
-        .part{border:1px solid #4a1a1a;background:rgba(25,8,8,.5);
-          border-radius:12px;padding:2px 16px 14px;margin:0 0 18px}
+        \(NoteWeb.css)
+        :root{--card:#1a0909;--sol:#cfa135}
+        @media (prefers-color-scheme: light){:root{--card:#ffffff}}
+        .preamble{margin-bottom:14px;color:var(--soft)}
+        /* Each problem is a card, as on the web; solutions sit on a gold rule. */
+        .part{border:1px solid var(--rule);background:var(--card);border-radius:12px;
+          padding:2px 16px 14px;margin:0 0 16px}
+        @media (prefers-color-scheme: light){.part{box-shadow:0 1px 2px rgba(60,40,20,.05),0 2px 8px rgba(60,40,20,.04)}}
         /* Extra Credit is its own block of work, not another item in the run. */
-        .part.section{border-color:rgba(207,161,53,.4);background:rgba(15,4,4,.6);margin-top:28px}
-        details.sol{margin-top:6px}
+        .part.section{border-color:var(--ornament);margin-top:26px}
+        details.sol{margin-top:4px}
         details.sol summary{cursor:pointer;list-style:none;display:inline-block;
-          font:600 11px/1 -apple-system,Georgia,serif;letter-spacing:.15em;text-transform:uppercase;
-          color:#c4af8e;border:1px solid #4a1a1a;border-radius:9px;padding:9px 12px}
+          font:600 15px/1.2 'Inter',-apple-system,sans-serif;color:var(--link);padding:6px 0}
+        details.sol summary::before{content:'▸';display:inline-block;width:1.1em}
+        details[open].sol summary::before{content:'▾'}
         details.sol summary::-webkit-details-marker{display:none}
-        details[open].sol summary{color:#ddb954;border-color:#b8860b}
-        .solbody{border:1px solid rgba(207,161,53,.3);background:rgba(15,4,4,.5);
-          border-radius:10px;padding:2px 14px;margin-top:10px}
+        details.sol .hide{display:none} details[open].sol .show{display:none} details[open].sol .hide{display:inline}
+        .solbody{border-left:3px solid var(--ornament);padding:2px 0 2px 14px;margin-top:8px}
+        .eyebrow{font:600 12px/1.4 'Inter',-apple-system,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--soft);margin-top:6px}
         </style></head>
         <body><div id='c'>\(preambleDiv)\(blocks)</div>
         <script>

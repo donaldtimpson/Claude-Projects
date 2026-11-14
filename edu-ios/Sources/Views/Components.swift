@@ -1,26 +1,28 @@
 import SwiftUI
 
+// Buttons follow the web's one button system: Inter semibold, sentence case.
+// Primary = accent fill; secondary = quiet bordered fill; destructive = danger.
 struct PrimaryButton: View {
     let title: String
     var enabled: Bool = true
     var loading: Bool = false
+    var role: ButtonRole? = nil
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(role: role, action: action) {
             Group {
                 if loading {
                     ProgressView().tint(Theme.onAccent)
                 } else {
-                    Text(title).font(.display(16)).kerning(1)
+                    Text(title).font(.ui(16, .semibold))
                 }
             }
-            .foregroundStyle(Theme.onAccent)
+            .foregroundStyle(enabled ? Theme.onAccent : Theme.inkSoft.opacity(0.8))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Theme.accent)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .opacity(enabled ? 1 : 0.5)
+            .background(enabled ? (role == .destructive ? Theme.dangerLine : Theme.accent) : Theme.tint)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .disabled(!enabled || loading)
     }
@@ -28,19 +30,152 @@ struct PrimaryButton: View {
 
 struct SecondaryButton: View {
     let title: String
+    var systemImage: String? = nil
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(.display(16)).kerning(1)
-                .foregroundStyle(Theme.gold300)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Theme.parchmentDeep)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.line, lineWidth: 1))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+            Label {
+                Text(title).font(.ui(16, .semibold))
+            } icon: {
+                if let systemImage { Image(systemName: systemImage) }
+            }
+            .labelStyle(.titleAndIcon)
+            .foregroundStyle(Theme.ink)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(Theme.button)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
+    }
+}
+
+/// Section heading, as on the web: Cinzel caps beside a short gold bar, over a rule.
+struct SectionTitle: View {
+    let title: String
+    var trailing: AnyView? = nil
+
+    init(_ title: String) { self.title = title }
+    init<T: View>(_ title: String, @ViewBuilder trailing: () -> T) {
+        self.title = title
+        self.trailing = AnyView(trailing())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Theme.ornament)
+                    .frame(width: 4, height: 17)
+                    .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
+                Text(title.uppercased())
+                    .font(.display(15))
+                    .kerning(1.1)
+                    .foregroundStyle(Theme.ink)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                if let trailing { trailing }
+            }
+            Rectangle().fill(Theme.line).frame(height: 1)
+        }
+        .padding(.top, 8)
+    }
+}
+
+/// Small uppercase label (the web's `.eyebrow`).
+struct Eyebrow: View {
+    let text: String
+    var color: Color = Theme.inkSoft
+    init(_ text: String, color: Color = Theme.inkSoft) {
+        self.text = text
+        self.color = color
+    }
+    var body: some View {
+        Text(text.uppercased())
+            .font(.ui(12, .semibold, relativeTo: .caption))
+            .kerning(0.8)
+            .foregroundStyle(color)
+    }
+}
+
+/// A compact status chip: "Live", "Test", "Draft", "You".
+struct Pill: View {
+    enum Tone { case accent, quiet, success, warning, danger }
+    let text: String
+    var tone: Tone = .quiet
+    init(_ text: String, tone: Tone = .quiet) {
+        self.text = text
+        self.tone = tone
+    }
+    var body: some View {
+        Text(text)
+            .font(.ui(12, .semibold, relativeTo: .caption))
+            .foregroundStyle(fg)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background(bg)
+            .clipShape(Capsule())
+    }
+    private var fg: Color {
+        switch tone {
+        case .accent: Theme.onAccent
+        case .quiet: Theme.inkSoft
+        case .success: Theme.success
+        case .warning: Theme.warning
+        case .danger: Theme.danger
+        }
+    }
+    private var bg: Color {
+        switch tone {
+        case .accent: Theme.accent
+        case .quiet: Theme.tint
+        case .success: Theme.successFill
+        case .warning: Theme.warningFill
+        case .danger: Theme.dangerFill
+        }
+    }
+}
+
+/// A load failure with a way out: what went wrong and a Try again button.
+struct LoadFailedView: View {
+    var title: String = "Couldn't load this"
+    var message: String = "Check your connection and try again."
+    let retry: () async -> Void
+    @State private var retrying = false
+
+    var body: some View {
+        ContentUnavailableView {
+            Label(title, systemImage: "wifi.slash")
+                .font(.serif(20, .semibold))
+                .foregroundStyle(Theme.ink)
+        } description: {
+            Text(message).font(.serif(16)).foregroundStyle(Theme.inkSoft)
+        } actions: {
+            Button {
+                Task {
+                    retrying = true
+                    await retry()
+                    retrying = false
+                }
+            } label: {
+                if retrying { ProgressView() } else { Text("Try again").font(.ui(16, .semibold)) }
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.link)
+        }
+    }
+}
+
+/// A quiet empty state inside a section.
+struct EmptyNote: View {
+    let text: String
+    init(_ text: String) { self.text = text }
+    var body: some View {
+        Text(text)
+            .font(.serif(16))
+            .foregroundStyle(Theme.inkSoft)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lyceumCard()
     }
 }
 
@@ -75,11 +210,11 @@ struct ExpandableText: View {
                 .background(measurers)
 
             if isTruncated {
-                Button(expanded ? "Show less" : "more") {
+                Button(expanded ? "Show less" : "More") {
                     withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() }
                 }
-                .font(.serif(15))
-                .foregroundStyle(Theme.gold400)
+                .font(.ui(15, .semibold))
+                .foregroundStyle(Theme.link)
             }
         }
         .onPreferenceChange(FullHeightKey.self) { fullHeight = $0; updateTruncation() }
@@ -121,14 +256,15 @@ struct MCQCard: View {
             if let progressFraction { QuizProgressBar(fraction: progressFraction) }
 
             Text(progress)
-                .font(.serif(14))
+                .font(.ui(14, .medium))
+                .monospacedDigit()
                 .foregroundStyle(Theme.inkSoft)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             if prompt.contains("$") {
                 MathWebView(markdown: prompt, height: $promptHeight).frame(height: promptHeight)
             } else {
-                Text(prompt).font(.serif(20)).foregroundStyle(Theme.ink)
+                Text(prompt).font(.serif(20, .medium)).foregroundStyle(Theme.ink)
             }
 
             // Tap an option to answer — it grades and reveals immediately (no Check).
@@ -141,17 +277,17 @@ struct MCQCard: View {
 
             if revealed {
                 if !explanation.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Explanation").font(.display(11)).kerning(1).foregroundStyle(Theme.gold400)
-                        Text(explanation).font(.serif(15)).foregroundStyle(Theme.ink)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Eyebrow("Explanation")
+                        Text(explanation).font(.serif(16)).foregroundStyle(Theme.ink)
                     }
                     .padding()
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.parchmentDeep)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .background(Theme.tint)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 Text("Tap to continue")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    .font(.ui(14)).foregroundStyle(Theme.inkSoft)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 2)
             }

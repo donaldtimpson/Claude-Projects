@@ -1,10 +1,16 @@
 import SwiftUI
 
+// The Courses tab: the web home page. Announcements, then (signed in) Continue
+// Watching, Currently Teaching, Browse by Category, and All Courses; search filters
+// courses instantly and searches lecture transcripts on the server.
 struct LearnView: View {
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var courses: [CourseListItem] = []
     @State private var categories: [CategoryItem] = []
+    @State private var announcements: [Announcement] = []
+    @State private var continueWatching: [CourseProgressItem] = []
     @State private var loading = true
-    @State private var error: String?
+    @State private var failed = false
 
     @State private var query = ""
     @State private var results: SearchResults?
@@ -13,53 +19,38 @@ struct LearnView: View {
 
     var body: some View {
         content
-            // The catalog is "Courses" on the web; it was "Learn" in the tab bar and
-            // "Timpson Lyceum" in the title bar here — three names for one screen. The
-            // wordmark still opens the app on the splash.
             .navigationTitle("Courses")
             .navigationBarTitleDisplayMode(.inline)
-            // The board is public and the web keeps it in the always-available nav
-            // drawer. There's no drawer here, so it hangs off the home tab — reachable
-            // signed out, which matters because My Progress is the sign-in form then.
+            // The map and the board are public and live in the web's nav drawer;
+            // here they hang off the home tab, reachable signed out.
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink { CourseMapView() } label: {
+                    NavigationLink(value: CourseMapRoute()) {
                         Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                     }
-                    .tint(Theme.gold400)
                     .accessibilityLabel("Course Map")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink { ScholarsView() } label: {
+                    NavigationLink(value: LeaderboardRoute()) {
                         Image(systemName: "trophy")
                     }
-                    .tint(Theme.gold400)
                     .accessibilityLabel("Hall of Scholars")
                 }
             }
             .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
-            .navigationDestination(for: CourseListItem.self) { CourseDetailView(courseId: $0.id) }
-            .navigationDestination(for: CourseHit.self) { CourseDetailView(courseId: $0.id) }
-            .navigationDestination(for: CategoryItem.self) { CategoryView(category: $0) }
-            .navigationDestination(for: LectureHit.self) { hit in
-                LectureView(route: LectureRoute(courseId: hit.courseId, videoId: hit.videoId, title: hit.title))
-            }
-            // A search hit pushes a lecture straight onto THIS stack, so the routes
-            // reachable from there (Practice -> problem set -> its Covers lectures)
-            // must be registered here too, not only on CourseDetailView.
-            .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
-            .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
             .task { if courses.isEmpty { await loadCatalog() } }
+            .task(id: auth.user?.id) { await loadContinueWatching() }
     }
 
     @ViewBuilder private var content: some View {
         if !query.isEmpty {
             searchResults
         } else if loading {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.parchment)
-        } else if let error {
-            ContentUnavailableView("Couldn't load courses", systemImage: "wifi.slash", description: Text(error))
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.page)
+        } else if failed {
+            LoadFailedView(title: "Couldn't load courses") { await loadCatalog() }
+                .background(Theme.page)
         } else {
             catalog
         }
@@ -71,26 +62,52 @@ struct LearnView: View {
     @ViewBuilder private var catalog: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
+                if !announcements.isEmpty {
+                    SectionTitle("Announcements")
+                    ForEach(announcements) { AnnouncementCard(announcement: $0) }
+                }
+
+                if !continueWatching.isEmpty {
+                    SectionTitle("Continue Watching")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(continueWatching) { item in
+                                if let next = item.nextLecture {
+                                    NavigationLink(value: LectureRoute(courseId: item.id, videoId: next.id, title: next.title)) {
+                                        ContinueCard(item: item, next: next)
+                                    }
+                                    .buttonStyle(.lyceumPress)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .scrollClipDisabled()
+                }
+
                 if !currentCourses.isEmpty {
-                    SectionHeader(title: "Currently Teaching")
+                    SectionTitle("Currently Teaching")
                     ForEach(currentCourses) { courseLink($0) }
                 }
 
                 if !categories.isEmpty {
-                    SectionHeader(title: "Browse by Category")
+                    SectionTitle("Browse by Category")
                     ForEach(categories) { category in
                         NavigationLink(value: category) { CategoryRow(category: category) }
                             .buttonStyle(.lyceumPress)
                     }
                 }
 
-                SectionHeader(title: "All Courses")
+                SectionTitle("All Courses")
                 ForEach(courses) { courseLink($0) }
             }
             .padding()
         }
-        .background(Theme.parchment)
-        .refreshable { await loadCatalog() }
+        .background(Theme.page)
+        .refreshable {
+            await loadCatalog()
+            await loadContinueWatching()
+        }
     }
 
     private func courseLink(_ course: CourseListItem) -> some View {
@@ -118,7 +135,7 @@ struct LearnView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 if !courseHits.isEmpty {
-                    SectionHeader(title: "Courses")
+                    SectionTitle("Courses")
                     ForEach(courseHits) { course in
                         NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
                             .buttonStyle(.lyceumPress)
@@ -126,7 +143,7 @@ struct LearnView: View {
                 }
 
                 if !categoryHits.isEmpty {
-                    SectionHeader(title: "Categories")
+                    SectionTitle("Categories")
                     ForEach(categoryHits) { category in
                         NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
                             .buttonStyle(.lyceumPress)
@@ -136,11 +153,11 @@ struct LearnView: View {
                 // Deep search across lecture notes/transcripts — needs the server,
                 // so it fills in after the instant local results above.
                 if searching || !lectureHits.isEmpty {
-                    SectionHeader(title: "In Lectures")
+                    SectionTitle("In Lectures")
                     if searching {
                         HStack(spacing: 8) {
                             ProgressView()
-                            Text("Searching lectures…").font(.serif(14)).foregroundStyle(Theme.inkSoft)
+                            Text("Searching lectures…").font(.ui(14)).foregroundStyle(Theme.inkSoft)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
@@ -163,19 +180,43 @@ struct LearnView: View {
     }
 
     private func lectureResultRow(_ hit: LectureHit) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(hit.title).font(.display(14)).kerning(0.3).foregroundStyle(Theme.ink).lineLimit(2)
-            Text(hit.courseTitle).font(.serif(13)).foregroundStyle(Theme.gold400)
+        VStack(alignment: .leading, spacing: 5) {
+            Text(hit.title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).lineLimit(2)
+            HStack(spacing: 6) {
+                Text(hit.courseTitle).lineLimit(1)
+                if let t = hit.startSeconds {
+                    Text("· jump to \(formatDuration(t))").foregroundStyle(Theme.link)
+                }
+            }
+            .font(.ui(13)).foregroundStyle(Theme.inkSoft)
             if let snippet = hit.snippet, !snippet.isEmpty {
-                Text(cleanSnippet(snippet)).font(.serif(14)).foregroundStyle(Theme.inkSoft).lineLimit(3)
+                VStack(alignment: .leading, spacing: 3) {
+                    Eyebrow("From transcript")
+                    Text(highlightedSnippet(snippet)).font(.serif(15)).foregroundStyle(Theme.inkSoft).lineLimit(3)
+                }
+                .padding(.top, 2)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .lyceumCard()
     }
 
-    private func cleanSnippet(_ s: String) -> String {
-        s.replacingOccurrences(of: "[[hl]]", with: "").replacingOccurrences(of: "[[/hl]]", with: "")
+    // The server marks matches with [[hl]]…[[/hl]]; show them in ink, semibold.
+    private func highlightedSnippet(_ s: String) -> AttributedString {
+        var out = AttributedString()
+        var rest = Substring(s)
+        while let open = rest.range(of: "[[hl]]") {
+            out += AttributedString(String(rest[..<open.lowerBound]))
+            rest = rest[open.upperBound...]
+            let close = rest.range(of: "[[/hl]]")
+            var hit = AttributedString(String(rest[..<(close?.lowerBound ?? rest.endIndex)]))
+            hit.foregroundColor = Theme.ink
+            hit.font = .serif(15, .semibold)
+            out += hit
+            rest = close.map { rest[$0.upperBound...] } ?? ""
+        }
+        out += AttributedString(String(rest))
+        return out
     }
 
     // MARK: data
@@ -183,11 +224,19 @@ struct LearnView: View {
         loading = courses.isEmpty
         async let coursesResult: CoursesResponse? = try? await APIClient.shared.get("/courses", auth: false)
         async let categoriesResult: CategoriesResponse? = try? await APIClient.shared.get("/categories", auth: false)
-        let c = await coursesResult
-        let cats = await categoriesResult
-        if let c { courses = c.courses; error = nil } else if courses.isEmpty { error = "Couldn't reach the server." }
-        categories = cats?.categories ?? []
+        async let announcementsResult: AnnouncementsResponse? = try? await APIClient.shared.get("/announcements", auth: false)
+        let (c, cats, ann) = await (coursesResult, categoriesResult, announcementsResult)
+        if let c { courses = c.courses; failed = false } else if courses.isEmpty { failed = true }
+        if let cats { categories = cats.categories }
+        if let ann { announcements = ann.announcements }
         loading = false
+    }
+
+    private func loadContinueWatching() async {
+        guard auth.user != nil else { continueWatching = []; return }
+        if let p: ProgressResponse = try? await APIClient.shared.get("/me/progress") {
+            continueWatching = Array(p.inProgress.filter { $0.nextLecture != nil }.prefix(6))
+        }
     }
 
     private func scheduleSearch(_ raw: String) {
@@ -215,4 +264,67 @@ struct LearnView: View {
         }
         searching = false
     }
+}
+
+// One announcement. Pinned ones get an accent wash and a pin.
+struct AnnouncementCard: View {
+    let announcement: Announcement
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(announcement.title).font(.serif(18, .semibold)).foregroundStyle(Theme.ink)
+                Spacer(minLength: 4)
+                if announcement.pinned { Pill("Pinned", tone: .accent) }
+            }
+            Text(formatDate(announcement.createdAt)).font(.ui(13)).foregroundStyle(Theme.inkSoft)
+            ExpandableText(text: announcement.body, lineLimit: 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lyceumCard()
+        .overlay(alignment: .leading) {
+            if announcement.pinned {
+                UnevenRoundedRectangle(topLeadingRadius: 12, bottomLeadingRadius: 12)
+                    .fill(Theme.ornament).frame(width: 4)
+            }
+        }
+    }
+}
+
+// Continue Watching: the next unwatched lecture of a course in progress.
+struct ContinueCard: View {
+    let item: CourseProgressItem
+    let next: NextLecture
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            AsyncImage(url: URL(string: next.thumbnailUrl ?? "")) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Rectangle().fill(Theme.tint)
+            }
+            .frame(width: 236, height: 133)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+
+            Text(item.title).font(.serif(16, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+            Text("Up next: \(next.title)").font(.ui(13)).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                .frame(height: 34, alignment: .top)
+            HStack(spacing: 8) {
+                ProgressView(value: item.fraction).tint(Theme.accent)
+                Text("\(item.watchedCount)/\(item.totalCount)").font(.ui(12, .medium)).monospacedDigit()
+                    .foregroundStyle(Theme.inkSoft)
+            }
+        }
+        .frame(width: 236)
+        .lyceumCard(padding: 12)
+    }
+}
+
+/// "Nov 14, 2026" from an ISO-8601 timestamp.
+func formatDate(_ iso: String, time: Bool = false) -> String {
+    let f = ISO8601DateFormatter()
+    f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    let date = f.date(from: iso) ?? ISO8601DateFormatter().date(from: iso)
+    guard let date else { return "" }
+    return time
+        ? date.formatted(date: .abbreviated, time: .shortened)
+        : date.formatted(date: .abbreviated, time: .omitted)
 }

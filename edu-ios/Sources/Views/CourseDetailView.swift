@@ -4,6 +4,8 @@ struct LectureRoute: Hashable {
     let courseId: String
     let videoId: String
     let title: String
+    /// Start the video here (a transcript search hit's moment).
+    var startSeconds: Int? = nil
 }
 
 struct SyllabusRoute: Hashable {
@@ -11,10 +13,15 @@ struct SyllabusRoute: Hashable {
     let markdown: String
 }
 
+// A course: the web course page. Header with the test and review actions, your
+// class (or registration), resources, syllabus, lectures with watched marks,
+// problem sets, other offerings, connections, and course announcements.
 struct CourseDetailView: View {
     let courseId: String
+    @EnvironmentObject private var auth: AuthViewModel
     @State private var course: CourseDetail?
-    @State private var error: String?
+    @State private var announcements: [Announcement] = []
+    @State private var failed = false
     @State private var loading = true
     @State private var query = ""
 
@@ -23,14 +30,7 @@ struct CourseDetailView: View {
             .navigationTitle(course?.shortTitle ?? course?.title ?? "Course")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, prompt: "Filter lectures")
-            .navigationDestination(for: LectureRoute.self) { LectureView(route: $0) }
-            .navigationDestination(for: ProblemSetRoute.self) { ProblemSetView(route: $0) }
-            .navigationDestination(for: CourseTestRoute.self) {
-                CourseTestView(courseId: $0.courseId, courseTitle: $0.title)
-            }
-            .navigationDestination(for: CourseOffering.self) { CourseDetailView(courseId: $0.id) }
-            .navigationDestination(for: SyllabusRoute.self) { SyllabusView(title: $0.title, markdown: $0.markdown) }
-            .task { if course == nil { await load() } }
+            .task(id: auth.user?.id) { await load() }
     }
 
     private func filteredVideos(_ course: CourseDetail) -> [VideoListItem] {
@@ -40,101 +40,237 @@ struct CourseDetailView: View {
     }
 
     @ViewBuilder private var content: some View {
-        if loading {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.parchment)
-        } else if let error {
-            ContentUnavailableView("Couldn't load", systemImage: "wifi.slash", description: Text(error))
+        if loading && course == nil {
+            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.page)
         } else if let course {
             let videos = filteredVideos(course)
+            let watched = Set(course.viewer?.watchedVideoIds ?? [])
             ScrollView {
-                VStack(alignment: .leading, spacing: 10) {
-                    // Hide the description while filtering to keep results focused.
-                    if query.isEmpty, !course.description.isEmpty {
-                        ExpandableText(text: course.description)
-                    }
-
-                    // The syllabus, when set — grading, policies, and the schedule.
-                    if query.isEmpty, let syl = course.syllabus, !syl.isEmpty {
-                        NavigationLink(value: SyllabusRoute(title: "Syllabus", markdown: syl)) {
-                            HStack {
-                                Text("📘").font(.system(size: 26))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Syllabus").font(.display(15)).foregroundStyle(Theme.ink)
-                                    Text("Grading, policies, and the full schedule")
-                                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
-                                }
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
-                            }
-                            .lyceumCard()
+                VStack(alignment: .leading, spacing: 12) {
+                    if query.isEmpty {
+                        header(course, watchedCount: watched.count)
+                        classStatus(course)
+                        if !course.resources.isEmpty {
+                            SectionTitle("Resources")
+                            ForEach(course.resources) { ResourceRow(resource: $0) }
                         }
-                        .buttonStyle(.lyceumPress)
-                    }
-
-                    // The course test, when the course has one. Sits above the
-                    // lectures like the web course page's CTA does.
-                    if query.isEmpty, let n = course.testQuestionCount, n > 0 {
-                        NavigationLink(value: CourseTestRoute(courseId: course.id, title: course.title)) {
-                            HStack {
-                                Text("📜").font(.system(size: 26))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Course Test").font(.display(15)).foregroundStyle(Theme.ink)
-                                    Text("\(n) questions covering the whole course")
-                                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
-                                }
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+                        if let syl = course.syllabus, !syl.isEmpty {
+                            SectionTitle("Syllabus")
+                            NavigationLink(value: SyllabusRoute(title: "Syllabus", markdown: syl)) {
+                                LinkRow(icon: "doc.text", title: "Course syllabus",
+                                        subtitle: "Grading, policies, and the full schedule")
                             }
-                            .lyceumCard()
+                            .buttonStyle(.lyceumPress)
                         }
-                        .buttonStyle(.lyceumPress)
                     }
 
-                    SectionHeader(title: "Lectures")
-
-                    if videos.isEmpty {
+                    SectionTitle("Lectures")
+                    if course.videos.isEmpty {
+                        EmptyNote("No lectures yet. Check back soon.")
+                    } else if videos.isEmpty {
                         Text("No lectures match “\(query)”.")
-                            .font(.serif(15)).foregroundStyle(Theme.inkSoft).padding(.top, 8)
+                            .font(.serif(16)).foregroundStyle(Theme.inkSoft).padding(.top, 4)
                     } else {
                         ForEach(videos) { video in
                             NavigationLink(value: LectureRoute(courseId: courseId, videoId: video.id, title: video.title)) {
-                                LectureRow(video: video, highlight: query)
+                                LectureRow(video: video, watched: watched.contains(video.id), highlight: query)
                             }
                             .buttonStyle(.lyceumPress)
                         }
                     }
 
-                    // Problem sets sit below the lectures, like the web course page.
-                    if query.isEmpty, !course.problemSets.isEmpty {
-                        SectionHeader(title: "Problem Sets")
-                        ForEach(course.problemSets) { ps in
-                            NavigationLink(value: ProblemSetRoute(
-                                courseId: courseId, problemSetId: ps.id, title: ps.title)
-                            ) {
-                                problemSetRow(ps)
-                            }
-                            .buttonStyle(.lyceumPress)
-                        }
-                    }
-
-                    if query.isEmpty, let offerings = course.offerings, !offerings.isEmpty {
-                        SectionHeader(title: "Other Offerings")
-                        ForEach(offerings) { offering in
-                            NavigationLink(value: offering) { offeringRow(offering) }
+                    if query.isEmpty {
+                        if !course.problemSets.isEmpty {
+                            SectionTitle("Problem Sets")
+                            ForEach(course.problemSets) { ps in
+                                NavigationLink(value: ProblemSetRoute(courseId: courseId, problemSetId: ps.id, title: ps.title)) {
+                                    ProblemSetRow(ps: ps)
+                                }
                                 .buttonStyle(.lyceumPress)
+                            }
+                        }
+                        if let offerings = course.offerings, !offerings.isEmpty {
+                            SectionTitle("Other Offerings")
+                            ChipFlow(items: offerings.map { o in
+                                // The year only when the title doesn't already include it.
+                                let label = o.year.map { y in o.title.contains(String(y)) ? o.title : "\(o.title) (\(y))" } ?? o.title
+                                return (label, AnyHashable(o))
+                            })
+                        }
+                        if let c = course.connections, !c.isEmpty {
+                            connectionGroup("Builds on", c.buildsOn)
+                            connectionGroup("Leads to", c.leadsTo)
+                            connectionGroup("Related Courses", c.related)
+                        }
+                        if !announcements.isEmpty {
+                            SectionTitle("Announcements")
+                            ForEach(announcements) { AnnouncementCard(announcement: $0) }
                         }
                     }
                 }
                 .padding()
             }
-            .background(Theme.parchment)
+            .background(Theme.page)
+            .refreshable { await load() }
+        } else if failed {
+            LoadFailedView(title: "Couldn't load this course") { await load() }.background(Theme.page)
         }
     }
 
-    private func problemSetRow(_ ps: ProblemSetItem) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(ps.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
+    @ViewBuilder private func header(_ course: CourseDetail, watchedCount: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(course.title).font(.serif(26, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
+            HStack(spacing: 6) {
+                Text(course.videos.isEmpty ? "Coming soon" : "\(course.videos.count) lecture\(course.videos.count == 1 ? "" : "s")")
+                    .foregroundStyle(Theme.inkSoft)
+                if watchedCount > 0 {
+                    Text("· \(watchedCount) watched").foregroundStyle(Theme.success)
+                }
+            }
+            .font(.ui(14))
+            if !course.description.isEmpty { ExpandableText(text: course.description) }
+
+            let test = course.testQuestionCount ?? 0
+            let review = course.reviewQuestionCount ?? 0
+            if test > 0 || review > 0 {
+                VStack(spacing: 10) {
+                    if test > 0 {
+                        NavigationLink(value: CourseTestRoute(courseId: course.id, title: course.title)) {
+                            ButtonLabel(title: "Take the course test (\(test) questions)", primary: true)
+                        }
+                    }
+                    if review > 0 {
+                        NavigationLink(value: CourseReviewRoute(courseId: course.id, title: course.title)) {
+                            ButtonLabel(title: "Review the course (\(review) questions)", primary: test == 0)
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(.bottom, 4)
+    }
+
+    @ViewBuilder private func classStatus(_ course: CourseDetail) -> some View {
+        if let enr = course.viewer?.enrollment {
+            NavigationLink(value: ClassRoute(sectionId: enr.sectionId, sectionName: enr.sectionName, courseTitle: course.title)) {
+                LinkRow(icon: "checkmark.seal.fill", iconColor: Theme.success,
+                        title: "You're in this class",
+                        subtitle: "\(enr.sectionName): your grade and homework")
+            }
+            .buttonStyle(.lyceumPress)
+        } else if course.registrationOpen == true {
+            RegisterCard(courseTitle: course.title) { await load() }
+        }
+    }
+
+    @ViewBuilder private func connectionGroup(_ title: String, _ courses: [CourseRef]) -> some View {
+        if !courses.isEmpty {
+            SectionTitle(title)
+            ChipFlow(items: courses.map { ($0.title, AnyHashable($0)) })
+        }
+    }
+
+    private func load() async {
+        do {
+            let res: CourseDetailResponse = try await APIClient.shared.get("/courses/\(courseId)")
+            course = res.course
+            failed = false
+        } catch {
+            if course == nil { failed = true }
+        }
+        loading = false
+        if let res: AnnouncementsResponse = try? await APIClient.shared.get("/announcements?courseId=\(courseId)", auth: false) {
+            // Site-wide announcements are on the home tab; here, just this course's.
+            announcements = res.announcements.filter { $0.courseId == courseId }
+        }
+    }
+}
+
+/// A button-shaped label for a NavigationLink (primary or secondary style).
+struct ButtonLabel: View {
+    let title: String
+    var primary: Bool = true
+    var body: some View {
+        Text(title)
+            .font(.ui(16, .semibold))
+            .foregroundStyle(primary ? Theme.onAccent : Theme.ink)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 13)
+            .background(primary ? Theme.accent : Theme.button)
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(primary ? .clear : Theme.line, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+}
+
+/// A tappable card row: icon, title, subtitle, chevron.
+struct LinkRow: View {
+    let icon: String
+    var iconColor: Color = Theme.link
+    let title: String
+    var subtitle: String? = nil
+    var external: Bool = false
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).font(.ui(20)).foregroundStyle(iconColor).frame(width: 28)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
+                if let subtitle {
+                    Text(subtitle).font(.ui(13)).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.leading)
+                }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: external ? "arrow.up.right" : "chevron.right")
+                .font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+        }
+        .lyceumCard(padding: 14)
+    }
+}
+
+struct ResourceRow: View {
+    let resource: CourseResourceItem
+    var body: some View {
+        if let url = URL(string: resource.url) {
+            Link(destination: url) {
+                LinkRow(icon: icon, title: resource.title, subtitle: kindLabel, external: true)
+            }
+            .buttonStyle(.lyceumPress)
+        }
+    }
+    private var kindLabel: String {
+        switch resource.kind {
+        case "TEXTBOOK": "Textbook"
+        case "SLIDES": "Slides"
+        case "PROBLEM_SET": "Problem set"
+        case "TOOL": "Tool / applet"
+        case "VIDEO": "Video"
+        case "DOCUMENT": "Document"
+        default: "Link"
+        }
+    }
+    private var icon: String {
+        switch resource.kind {
+        case "TEXTBOOK": "book.closed"
+        case "SLIDES": "rectangle.on.rectangle"
+        case "PROBLEM_SET": "pencil.and.list.clipboard"
+        case "TOOL": "function"
+        case "VIDEO": "play.rectangle"
+        case "DOCUMENT": "doc"
+        default: "link"
+        }
+    }
+}
+
+struct ProblemSetRow: View {
+    let ps: ProblemSetItem
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(ps.title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
+                        .multilineTextAlignment(.leading)
+                    if ps.isTest == true { Pill("Test") }
+                }
                 // Same subtitle as the web card: lecture span · solutions · points.
                 let bits = [
                     ps.lectureSpan,
@@ -142,40 +278,106 @@ struct CourseDetailView: View {
                     ps.points > 0 ? "\(ps.points) pts" : nil,
                 ].compactMap { $0 }
                 if !bits.isEmpty {
-                    Text(bits.joined(separator: " · "))
-                        .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                    Text(bits.joined(separator: " · ")).font(.ui(13)).foregroundStyle(Theme.inkSoft)
                 }
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
         }
-        .lyceumCard()
+        .lyceumCard(padding: 14)
     }
+}
 
-    private func offeringRow(_ offering: CourseOffering) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(offering.title).font(.display(15)).kerning(0.5).foregroundStyle(Theme.ink).lineLimit(2)
-                // Show the year only when the title doesn't already include it.
-                if let year = offering.year, !offering.title.contains(String(year)) {
-                    Text(String(year)).font(.serif(14)).foregroundStyle(Theme.inkSoft)
+/// Wrapping row of course chips that push their value.
+struct ChipFlow: View {
+    let items: [(String, AnyHashable)]
+    var body: some View {
+        FlowLayout(spacing: 8) {
+            ForEach(items.indices, id: \.self) { i in
+                NavigationLink(value: items[i].1) {
+                    Text(items[i].0)
+                        .font(.ui(14, .medium))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Theme.field)
+                        .overlay(Capsule().stroke(Theme.line, lineWidth: 1))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+/// "Taking this class for a grade?" Register with the class code; signed out,
+/// it offers sign-in first. Registration never gates the materials.
+struct RegisterCard: View {
+    let courseTitle: String
+    let onRegistered: () async -> Void
+    @EnvironmentObject private var auth: AuthViewModel
+    @State private var code = ""
+    @State private var busy = false
+    @State private var message: String?
+    @State private var success = false
+    @State private var showAuth = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Taking this class for a grade?").font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
+            Text("Register with the class code from your teacher to see your grade and turn in homework.")
+                .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+            if auth.user == nil {
+                Button("Sign in to register") { showAuth = true }
+                    .font(.ui(15, .semibold)).foregroundStyle(Theme.link)
+            } else {
+                HStack(spacing: 8) {
+                    TextField("Class code", text: $code)
+                        .font(.ui(17, .semibold))
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .padding(.horizontal, 12).padding(.vertical, 10)
+                        .background(Theme.field)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    Button {
+                        Task { await register() }
+                    } label: {
+                        Group {
+                            if busy { ProgressView().tint(Theme.onAccent) } else { Text("Register") }
+                        }
+                        .font(.ui(16, .semibold))
+                        .foregroundStyle(Theme.onAccent)
+                        .padding(.horizontal, 16).padding(.vertical, 11)
+                        .background(code.trimmingCharacters(in: .whitespaces).isEmpty ? Theme.strongLine : Theme.accent)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right").foregroundStyle(Theme.gold400)
+            if let message {
+                Text(message).font(.ui(14)).foregroundStyle(success ? Theme.success : Theme.danger)
+            }
         }
         .lyceumCard()
+        .sheet(isPresented: $showAuth) { AuthSheet(reason: "Sign in to register for \(courseTitle).") }
     }
 
-    private func load() async {
+    private func register() async {
+        busy = true
+        defer { busy = false }
+        struct Body: Encodable { let code: String }
         do {
-            let res: CourseDetailResponse = try await APIClient.shared.get("/courses/\(courseId)", auth: false)
-            course = res.course
-            error = nil
+            let res: RegisterResponse = try await APIClient.shared.post("/me/classes/register", body: Body(code: code))
+            success = true
+            message = "You're registered for \(res.sectionName)."
+            await onRegistered()
+        } catch let e as APIError {
+            success = false
+            message = e.message
         } catch {
-            self.error = error.localizedDescription
+            success = false
+            message = "Couldn't reach the server. Try again."
         }
-        loading = false
     }
 }
 
@@ -192,7 +394,7 @@ struct SyllabusView: View {
                 .frame(height: webHeight)
                 .padding()
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
