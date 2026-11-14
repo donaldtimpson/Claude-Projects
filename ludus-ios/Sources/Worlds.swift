@@ -23,7 +23,7 @@ enum GameID: String, Identifiable, Hashable {
     // Market · Money
     case coinCount, figStall, porcus
     // Theatre · Music
-    case pianoMouse, maestroMouse, comedyTragedy
+    case pianoMouse, maestroMouse, comedyTragedy, galleyDrum, echoCave
     var id: String { rawValue }
 }
 
@@ -61,6 +61,8 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .pianoMouse:      PianoMouseView(onClose: onClose)
     case .maestroMouse:    MaestroMouseView(onClose: onClose)
     case .comedyTragedy:   ComedyTragedyView(onClose: onClose)
+    case .galleyDrum:      GalleyDrumView(onClose: onClose)
+    case .echoCave:        EchoCaveView(onClose: onClose)
     }
 }
 
@@ -177,11 +179,15 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🪙", howTo: how(("👀", "Count the coins"), ("👆", "Tap how much money"))),
     ]),
     LudusWorld(name: "Sound Lab", subject: "Music", emoji: "🎵", colorHex: Lu.coral, games: [
-        .init(title: "Piano Mouse", mechanic: "keyboard", premise: "Find the key where the mouse hid her cheese.", game: .pianoMouse,
-              icon: "🐭", howTo: how(("✨", "Look for the shiny key"), ("👆", "Tap it to play it"), ("🧀", "Find the mouse's cheese!"))),
+        .init(title: "Echo's Cave", mechanic: "echo", premise: "Echo sings on the crystals — sing her tune back.", game: .echoCave,
+              icon: "💎", howTo: how(("👂", "Listen to Echo sing"), ("💎", "Big crystal LOW, small one HIGH"), ("👆", "Tap her tune back"))),
+        .init(title: "Galley Drum", mechanic: "rhythm", premise: "Drum the beat so the rowers keep time.", game: .galleyDrum,
+              icon: "🥁", howTo: how(("🔢", "The captain counts 1-2-3-4"), ("🥁", "Tap the drum on every beat"), ("🔁", "Then drum his rhythm back"))),
         .init(title: "Maestro Mouse", mechanic: "conduct", premise: "Conduct the animal band: loud, soft, fast, slow.", game: .maestroMouse,
               icon: "🎼", howTo: how(("🪧", "Look at the sign"), ("⬆️", "🦁 Swipe UP for LOUD"), ("⬇️", "🐭 Swipe DOWN for soft"))),
+        .init(title: "Piano Mouse", mechanic: "keyboard", premise: "Find the key where the mouse hid her cheese.", game: .pianoMouse,
+              icon: "🐭", howTo: how(("✨", "Look for the shiny key"), ("👆", "Tap it to play it"), ("🧀", "Find the mouse's cheese!"))),
         .init(title: "Comedy & Tragedy", mechanic: "ear", premise: "Is the music happy or sad? Pick the mask that fits.", game: .comedyTragedy,
-              icon: "🎭", howTo: how(("👂", "Listen to the music"), ("😀", "Happy? Tap the happy mask"), ("😢", "Sad? Tap the sad mask"))),
+              icon: "🎭", howTo: how(("👂", "Listen to the music"), ("😀", "Happy? Tap the smiling mask"), ("😢", "Sad? Tap the crying mask"))),
     ]),
 ]

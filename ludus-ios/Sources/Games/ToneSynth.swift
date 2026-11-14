@@ -1,5 +1,6 @@
 import AVFoundation
 import Accelerate
+import QuartzCore
 
 // MARK: - ToneSynth — the Theatre's little piano
 //
@@ -17,7 +18,9 @@ import Accelerate
 // with the ringer switch on silent plays nothing (iOS gives apps no way to read the switch).
 // `SoundCheck` (TheatreKit) shows a "turn sound on" hint when the volume is at zero.
 
-enum ToneVoice: Int { case piano, drum }
+/// piano = plucky keys; drum = soft kick; tom = the galley's big drum (pitched by `midi`);
+/// block = a woodblock click (metronome); chime = a glassy crystal bell (Echo's cave).
+enum ToneVoice: Int { case piano, drum, tom, block, chime }
 
 /// One sound in a `play` call: `at` seconds from now, a MIDI note (60 = middle C), a velocity
 /// (0…1, i.e. how hard the key is struck) and how long it's held before it's damped.
@@ -41,6 +44,22 @@ final class ToneSynth {
     private var engine: AVAudioEngine?
     private var players: [AVAudioPlayerNode] = []
     private var nextPlayer = 0
+    private var reserved: [Int: Date] = [:]     // timed phrases keep their player until they end
+
+    /// The next player in turn, skipping any still busy with a timed phrase (a quick tap must
+    /// never `.interrupts` the click track a rhythm game is judging against).
+    private func playerIndex() -> Int {
+        let now = Date()
+        for _ in 0..<players.count {
+            let i = nextPlayer
+            nextPlayer = (nextPlayer + 1) % players.count
+            if (reserved[i] ?? .distantPast) <= now { return i }
+        }
+        let i = nextPlayer
+        nextPlayer = (nextPlayer + 1) % players.count
+        return i
+    }
+    private func takePlayer() -> AVAudioPlayerNode { players[playerIndex()] }
     private var cache: [Int: [Float]] = [:]
     private var active = false
     private var busyUntil = Date.distantPast
@@ -76,6 +95,7 @@ final class ToneSynth {
     func silence() {
         guard engine?.isRunning == true else { return }
         players.forEach { $0.stop() }
+        reserved = [:]
         busyUntil = .distantPast
     }
 
@@ -99,13 +119,41 @@ final class ToneSynth {
         samples.withUnsafeBufferPointer { src in
             buf.floatChannelData![0].update(from: src.baseAddress!, count: samples.count)
         }
-        let p = players[nextPlayer]
-        nextPlayer = (nextPlayer + 1) % players.count
+        let p = takePlayer()
         p.scheduleBuffer(buf, at: nil, options: .interrupts)
         p.play()
         busyUntil = max(busyUntil, Date().addingTimeInterval(length))
         scheduleIdlePause(after: Double(samples.count) / sr + 4)
         return length
+    }
+
+    /// Like `play`, but starts the sound exactly `lead` seconds from now on the audio clock and
+    /// returns WHEN (in `CACurrentMediaTime()` seconds) its first sample reaches the speaker —
+    /// output latency included — so rhythm games can judge taps against the real beat.
+    @discardableResult
+    func playTimed(_ events: [ToneEvent], lead: Double = 0.12) -> Double {
+        let now = CACurrentMediaTime()
+        guard active, !events.isEmpty, let engine else { return now + lead }
+        if !engine.isRunning {
+            do { try engine.start() } catch { return now + lead }
+        }
+        let samples = render(events)
+        guard let buf = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(samples.count)) else { return now + lead }
+        buf.frameLength = AVAudioFrameCount(samples.count)
+        samples.withUnsafeBufferPointer { src in
+            buf.floatChannelData![0].update(from: src.baseAddress!, count: samples.count)
+        }
+        let idx = playerIndex()
+        let p = players[idx]
+        p.stop()
+        p.scheduleBuffer(buf, at: nil, options: [])
+        let t = CACurrentMediaTime() + lead
+        p.play(at: AVAudioTime(hostTime: AVAudioTime.hostTime(forSeconds: t)))
+        let length = events.map { $0.at + $0.dur }.max() ?? 0
+        reserved[idx] = Date().addingTimeInterval(lead + Double(samples.count) / sr)   // quick sounds won't steal it
+        busyUntil = max(busyUntil, Date().addingTimeInterval(lead + length))
+        scheduleIdlePause(after: lead + Double(samples.count) / sr + 4)
+        return t + AVAudioSession.sharedInstance().outputLatency
     }
 
     @discardableResult
@@ -166,7 +214,14 @@ final class ToneSynth {
     private func samples(_ voice: ToneVoice, _ midi: Int) -> [Float] {
         let k = voice.rawValue * 1000 + midi
         if let s = cache[k] { return s }
-        let s = voice == .drum ? Self.synthDrum(sr: sr) : Self.synthPiano(midi: midi, sr: sr)
+        let s: [Float]
+        switch voice {
+        case .piano: s = Self.synthPiano(midi: midi, sr: sr)
+        case .drum: s = Self.synthDrum(sr: sr)
+        case .tom: s = Self.synthTom(midi: midi, sr: sr)
+        case .block: s = Self.synthBlock(midi: midi, sr: sr)
+        case .chime: s = Self.synthChime(midi: midi, sr: sr)
+        }
         cache[k] = s
         return s
     }
@@ -254,6 +309,48 @@ final class ToneSynth {
             let phase = 2 * Double.pi * (50 * t + 110 * 0.04 * (1 - exp(-t / 0.04)))
             let a = min(1, t / 0.002) * exp(-t / 0.11)
             return Float(sin(phase) * a)
+        }
+    }
+
+    /// A big hand drum: a low sine bending down a little onto its pitch, a skin-slap of noise on top.
+    nonisolated static func synthTom(midi: Int, sr: Double) -> [Float] {
+        let f = 440 * pow(2, Double(midi - 69) / 12)
+        let len = Int(sr * 0.6)
+        var rng = SystemRandomNumberGenerator()
+        var y = 0.0
+        return (0..<len).map { i in
+            let t = Double(i) / sr
+            let phase = 2 * Double.pi * (f * t + f * 0.6 * 0.03 * (1 - exp(-t / 0.03)))
+            let body = sin(phase) * exp(-t / 0.18) + 0.3 * sin(2.02 * phase) * exp(-t / 0.06)
+            let x = Double.random(in: -1...1, using: &rng)
+            y += 0.35 * (x - y)
+            let slap = y * exp(-t / 0.012) * 0.8
+            return Float((body + slap) * min(1, t / 0.0015))
+        }
+    }
+
+    /// A woodblock: two short inharmonic partials, gone in 60 ms. Higher `midi` = the accented click.
+    nonisolated static func synthBlock(midi: Int, sr: Double) -> [Float] {
+        let f = 440 * pow(2, Double(midi - 69) / 12)
+        let len = Int(sr * 0.09)
+        return (0..<len).map { i in
+            let t = Double(i) / sr
+            let a = min(1, t / 0.0008) * exp(-t / 0.014)
+            return Float((sin(2 * .pi * f * t) + 0.5 * sin(2 * .pi * f * 2.71 * t)) * a / 1.5)
+        }
+    }
+
+    /// A glassy chime: a pure fundamental with a bright, quickly fading upper partial (4.2×, like a
+    /// struck glass bar) and a long ring — clear pitch, distinct from the piano.
+    nonisolated static func synthChime(midi: Int, sr: Double) -> [Float] {
+        let f = 440 * pow(2, Double(midi - 69) / 12)
+        let len = Int(sr * 1.8)
+        return (0..<len).map { i in
+            let t = Double(i) / sr
+            let a = min(1, t / 0.002) * min(1, (1.8 - t) / 0.05)
+            let v = sin(2 * .pi * f * t) * exp(-t / 0.9) + 0.35 * sin(2 * .pi * f * 2 * t) * exp(-t / 0.3)
+                + 0.25 * sin(2 * .pi * f * 4.2 * t) * exp(-t / 0.08)
+            return Float(v * a / 1.4)
         }
     }
 
