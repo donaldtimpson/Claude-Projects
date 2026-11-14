@@ -4,20 +4,22 @@
   --font-sans: var(--font-garamond);
   --font-display: var(--font-cinzel);
 
-  --color-crimson-950: #0f0404;
-  --color-crimson-900: #190808;
-  --color-crimson-800: #2d1212;
-  --color-crimson-700: #4a1a1a;
-  --color-crimson-600: #6e2020;
+  /* Brand colors resolve through the --lyc-* variables below so the whole site
+     can flip between the dark (default) and light themes at runtime. */
+  --color-crimson-950: var(--lyc-crimson-950);
+  --color-crimson-900: var(--lyc-crimson-900);
+  --color-crimson-800: var(--lyc-crimson-800);
+  --color-crimson-700: var(--lyc-crimson-700);
+  --color-crimson-600: var(--lyc-crimson-600);
 
-  --color-gold-600: #9a7209;
-  --color-gold-500: #b8860b;
-  --color-gold-400: #cfa135;
-  --color-gold-300: #ddb954;
-  --color-gold-200: #e8cb7e;
+  --color-gold-600: var(--lyc-gold-600);
+  --color-gold-500: var(--lyc-gold-500);
+  --color-gold-400: var(--lyc-gold-400);
+  --color-gold-300: var(--lyc-gold-300);
+  --color-gold-200: var(--lyc-gold-200);
 
-  --color-parchment: #f5ecd8;
-  --color-parchment-dim: #c4af8e;
+  --color-parchment: var(--lyc-parchment);
+  --color-parchment-dim: var(--lyc-parchment-dim);
 
   /* Body text a touch larger than the Tailwind defaults. `text-sm` (15px) is the
      workhorse body size; `text-xs` (13px) carries secondary copy — badge/achievement
@@ -27,6 +29,67 @@
   --text-sm--line-height: 1.45;
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.4;
+}
+
+/* Dark theme (default): the Lyceum's crimson night. */
+:root {
+  color-scheme: dark;
+  --lyc-crimson-950: #0f0404;
+  --lyc-crimson-900: #190808;
+  --lyc-crimson-800: #2d1212;
+  --lyc-crimson-700: #4a1a1a;
+  --lyc-crimson-600: #6e2020;
+
+  --lyc-gold-600: #9a7209;
+  --lyc-gold-500: #b8860b;
+  --lyc-gold-400: #cfa135;
+  --lyc-gold-300: #ddb954;
+  --lyc-gold-200: #e8cb7e;
+
+  --lyc-parchment: #f5ecd8;
+  --lyc-parchment-dim: #c4af8e;
+}
+
+/* Light theme, built for projecting onto a whiteboard: a white page, near-black
+   ink, warm paper cards, and accents dark enough to survive a washed-out
+   projector. The token names keep their dark-theme roles — crimson-950 is still
+   "the page", parchment is still "the text" — so components need no changes.
+   Toggled by data-theme on <html> (see components/ThemeToggle.tsx). */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --lyc-crimson-950: #ffffff;
+  --lyc-crimson-900: #f7f2ea;
+  --lyc-crimson-800: #ece3d6;
+  --lyc-crimson-700: #c9b6a2;
+  --lyc-crimson-600: #b09a84;
+
+  --lyc-gold-600: #6b4800;
+  --lyc-gold-500: #8a5d00;
+  --lyc-gold-400: #7d5300;
+  --lyc-gold-300: #744d00;
+  --lyc-gold-200: #6b4800;
+
+  --lyc-parchment: #1b1410;
+  --lyc-parchment-dim: #4f4237;
+
+  /* Status colors: the pale dark-theme shades vanish on white, so remap the
+     ones the site uses to deep inks and pale fills. */
+  --color-red-300: #b91c1c;
+  --color-red-400: #b91c1c;
+  --color-red-100: #7f1d1d;
+  --color-red-800: #f87171;
+  --color-red-900: #fee2e2;
+  --color-green-200: #166534;
+  --color-green-300: #166534;
+  --color-green-400: #15803d;
+  --color-green-700: #4ade80;
+  --color-green-900: #dcfce7;
+  --color-amber-50: #78350f;
+  --color-amber-300: #a16207;
+  --color-amber-400: #a16207;
+  --color-amber-700: #d97706;
+  --color-amber-900: #fef3c7;
+  --color-sky-200: #075985;
 }
 
 /* Site-wide zoom: bump the root font size so every rem-based size — text AND

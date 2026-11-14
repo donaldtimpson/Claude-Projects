@@ -7,6 +7,7 @@ import SiteNav from "@/components/SiteNav";
 import NavBreadcrumb from "@/components/NavBreadcrumb";
 import SearchBox from "@/components/SearchBox";
 import StreakBadge from "@/components/StreakBadge";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default async function SiteHeader() {
   const cookieStore = await cookies();
@@ -38,6 +39,7 @@ export default async function SiteHeader() {
           <Suspense fallback={null}>
             <StreakBadge />
           </Suspense>
+          <ThemeToggle />
           <UserMenu />
         </div>
       </div>

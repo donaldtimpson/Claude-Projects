@@ -59,7 +59,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
           className={`absolute inset-0 bg-black/60 transition-opacity duration-200 ${open ? "opacity-100" : "opacity-0"}`}
         />
         <nav
-          className={`absolute left-0 top-0 h-full w-72 max-w-[80vw] bg-crimson-900 border-r border-crimson-700 shadow-2xl flex flex-col transition-transform duration-200 ease-out ${open ? "translate-x-0" : "-translate-x-full"}`}
+          className={`absolute left-0 top-0 h-full w-72 max-w-[80vw] bg-crimson-900 border-r border-crimson-700 flex flex-col transition-transform duration-200 ease-out ${open ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
         >
           <div className="flex items-center justify-between px-5 h-16 border-b border-crimson-700 shrink-0">
             <span className="font-display text-sm tracking-[0.2em] uppercase text-gold-300">Menu</span>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SyncButton from "./SyncButton";
+import ThemeToggle from "@/components/ThemeToggle";
 
 // Grouped admin nav. Course-scoped editors (test / connections / problem sets)
 // are no longer top-level — they live as tabs inside the course hub, so
@@ -99,6 +100,7 @@ export default function AdminSidebar() {
         >
           »
         </button>
+        <ThemeToggle className="w-7 h-7" />
         <span className="font-display text-[10px] tracking-[0.15em] uppercase text-parchment-dim/60 md:[writing-mode:vertical-rl]">
           Admin
         </span>
@@ -158,6 +160,7 @@ export default function AdminSidebar() {
 
       <div className="px-4 py-4 border-t border-crimson-700 flex items-center justify-between gap-3">
         <SyncButton />
+        <ThemeToggle />
         <button
           type="button"
           onClick={logout}
