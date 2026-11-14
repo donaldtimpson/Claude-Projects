@@ -19,7 +19,7 @@ enum GameID: String, Identifiable, Hashable {
     // Vesuvius · Science
     case critterSort, dressMarcus, zookeeper
     // Forum · History
-    case timeline, timeGuard, caesarWheel
+    case timeline, timeGuard, caesarWheel, milestone, dig, chariot
     // Market · Money (coinCount: retired — its view still lives in QuickFire.swift)
     case coinCount, figStall, porcus, clockTower, bakery, donkeyDeal
     // Theatre · Music
@@ -60,6 +60,9 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .timeline:        TimeOrderView(onClose: onClose)
     case .timeGuard:       TimeGuardView(onClose: onClose)
     case .caesarWheel:     CaesarWheelView(onClose: onClose)
+    case .milestone:       MilestoneMasonView(onClose: onClose)
+    case .dig:             TheDigView(onClose: onClose)
+    case .chariot:         ChariotRaceView(onClose: onClose)
     case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        FigStallView(onClose: onClose)
     case .porcus:          PorcusView(onClose: onClose)
@@ -173,12 +176,16 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🦎", howTo: how(("👀", "Look at the animal"), ("👆", "Tap its group"), ("🦇", "Watch for tricky ones!"))),
     ]),
     LudusWorld(name: "Time Travelers", subject: "History", emoji: "🏛️", colorHex: Lu.gold, games: [
-        .init(title: "Time Guard", mechanic: "spot", premise: "Something in old Rome doesn't belong. Catch it!", game: .timeGuard,
+        .init(title: "Milestone Mason", mechanic: "carve", premise: "Carve Roman numerals on the milestones of the Via Appia.", game: .milestone,
+              icon: "🪨", howTo: how(("🧳", "How far to Rome? Count it"), ("🪨", "Tap stone letters: I V X"), ("🔨", "Hit DONE to carve it!"))),
+        .init(title: "The Dig", mechanic: "dig", premise: "Bury each find in its layer — the deeper, the older.", game: .dig,
+              icon: "🦴", howTo: how(("🏺", "Look at the find"), ("👇", "Drag it down to its layer"), ("🦖", "Deeper = longer ago!"))),
+        .init(title: "Time Guard", mechanic: "spot", premise: "Something in the old scene is from the wrong time. Zap it home!", game: .timeGuard,
               icon: "⏳", howTo: how(("👀", "Look at the old scene"), ("📱", "Tap the wrong-time thing"), ("🌀", "Zap it home!"))),
+        .init(title: "Circus Maximus", mechanic: "race", premise: "Steer your chariot through the right gate.", game: .chariot,
+              icon: "🐎", howTo: how(("🪔", "Look at the Roman thing"), ("👈", "Steer to its gate"), ("🏆", "Win the race!"))),
         .init(title: "Caesar's Wheel", mechanic: "cipher", premise: "Turn Caesar's secret wheel to read the message.", game: .caesarWheel,
               icon: "🔐", howTo: how(("🔄", "Turn the wheel"), ("🔤", "Watch the word appear"), ("👆", "Tap what it says!"))),
-        .init(title: "Timeline", mechanic: "order", premise: "Which came first? Put history in order.", game: .timeline,
-              icon: "🏺", howTo: how(("👀", "Look at the events"), ("👆", "Tap the oldest one"))),
     ]),
     LudusWorld(name: "The Money Stall", subject: "Money & Life Skills", emoji: "🪙", colorHex: Lu.gold, games: [
         .init(title: "Porcus the Piggy Bank", mechanic: "drag coins", premise: "Feed Porcus real coins — exactly the price of the prize.", game: .porcus,

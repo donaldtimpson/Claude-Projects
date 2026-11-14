@@ -2,22 +2,19 @@ import SwiftUI
 
 // MARK: - Caesar's Wheel (Forum · History)
 //
-// A secret message from Caesar arrives in code. Turn the cipher wheel (drag it round, or tap the
-// ↺ ↻ buttons) so the real letters line up under the code letters, then pick what the message
-// says. The outer ring holds the CODE letters, the inner disc the REAL letters; the key is where
-// the inner A sits (A→D = shift 3). Tapping a letter tile lights it and its partner on the wheel.
+// A secret message from Caesar arrives in code, in his command tent by lamplight. Turn the
+// cipher wheel (drag it round, or tap the ↺ ↻ buttons) so the real letters line up under the code
+// letters, then pick what the message says. The outer ring holds the CODE letters, the inner disc
+// the REAL letters; the key is where the inner A sits (A→D = shift 3). Tapping a letter tile
+// lights it and its partner on the wheel.
 //
-// Level ladder (4 puzzles a level at I–II, then 5):
-//   I    3-letter picture word, shift 1 — the whole instruction is a big "Tap ↻ once!"; the
-//        answer reads out live and glows when right; pick from 2 pictures
-//   II   3–4 letter words, shift 1–2 told, 3 picture choices
-//   III  Caesar's own shift 3 (told), 4–5 letter words, 3 picture choices
-//   IV   unknown key — turn until it makes a word (the wheel glows); 3 choices
-//   V    short Roman orders ("MEET AT DAWN"), unknown key, live read-out without the glow
-//   VI   encode: write a word IN code with a told key; 3 coded choices
-//   VII  no live read-out: tap each tile to read it through the wheel; told key, 4 same-length
-//        words
-//   VIII+ phrases, decode or encode, told key, no read-out, 4 close choices
+// Difficulty runs on `d` (GameKit), no level tables:
+//   • choices 2 → 4 (rampInt); words 3 letters → 4–5 letters as d climbs;
+//   • puzzle kinds — tier([1, 3.5, 4.8, 5.8, 7, 8.5]), each new kind fading in while the old ones
+//     stay as review: told key with live read-out (shift 1 = Augustus, then 3 = Caesar) → find
+//     the key yourself (the wheel glows when it's right) → Roman orders, no glow → ENCODE a word
+//     with a told key → no live read-out (tap each tile to read it) → phrases, either way;
+//   • "Tap ↻ once!" hand-holding only at the very start.
 // Facts used: Suetonius says Julius Caesar wrote D for A (shift 3) and Augustus B for A (shift 1).
 
 // MARK: Cipher
@@ -105,19 +102,26 @@ private struct CWPuzzle {
 // MARK: Generator
 
 private enum CWGen {
-    static func puzzle(_ level: Int, avoid: String?) -> CWPuzzle {
-        switch level {
-        case 1: return decode(pool: cwPic3, shift: 1, told: true, live: true, glow: true, n: 2, pics: true, avoid: avoid)
-        case 2: return decode(pool: cwPic3 + cwPic4, shift: Int.random(in: 1...2), told: true, live: true, glow: true, n: 3, pics: true, avoid: avoid)
-        case 3: return decode(pool: cwPic4 + cwPic5, shift: 3, told: true, live: true, glow: true, n: 3, pics: true, avoid: avoid)
-        case 4: return decode(pool: cwPic4 + cwPic5, shift: Int.random(in: 1...25), told: false, live: true, glow: true, n: 3, pics: true, avoid: avoid)
-        case 5: return decode(pool: phrasePool, shift: Int.random(in: 1...25), told: false, live: true, glow: false, n: 3, pics: false, avoid: avoid)
-        case 6: return encode(pool: cwPic4 + cwPic5, shift: Int.random(in: 4...12), n: 3, avoid: avoid)
-        case 7: return decode(pool: cwPic4 + cwPic5 + cwRoman, shift: Int.random(in: 4...22), told: true, live: false, glow: false, n: 4, pics: false, avoid: avoid)
+    /// A puzzle of kind `k` (see the header) with `n` choices; `d` tunes word length and shift.
+    static func puzzle(kind k: Int, d: Double, n: Int, avoid: String?) -> CWPuzzle {
+        let words: [CWWord] = d < 1.8 ? cwPic3 : d < 3 ? cwPic3 + cwPic4 : cwPic4 + cwPic5
+        switch k {
+        case 0:
+            // Augustus's shift of 1 first, then 2, then mostly Caesar's own 3.
+            let shift = d < 1.7 ? 1 : d < 2.6 ? Int.random(in: 1...2) : [3, 3, 3, 1, 2].randomElement()!
+            return decode(pool: words, shift: shift, told: true, live: true, glow: true, n: n, pics: true, hint: d < 3.5, avoid: avoid)
+        case 1:
+            return decode(pool: cwPic4 + cwPic5, shift: Int.random(in: 1...25), told: false, live: true, glow: true, n: n, pics: true, hint: false, avoid: avoid)
+        case 2:
+            return decode(pool: phrasePool, shift: Int.random(in: 1...25), told: false, live: true, glow: false, n: max(3, n), pics: false, hint: false, avoid: avoid)
+        case 3:
+            return encode(pool: cwPic4 + cwPic5, shift: Int.random(in: 4...12), n: max(3, n), avoid: avoid)
+        case 4:
+            return decode(pool: cwPic4 + cwPic5 + cwRoman, shift: Int.random(in: 4...22), told: true, live: false, glow: false, n: n, pics: false, hint: false, avoid: avoid)
         default:
             return Bool.random()
-                ? decode(pool: phrasePool, shift: Int.random(in: 2...24), told: true, live: false, glow: false, n: 4, pics: false, avoid: avoid)
-                : encode(pool: phrasePool, shift: Int.random(in: 2...24), n: 4, avoid: avoid)
+                ? decode(pool: phrasePool, shift: Int.random(in: 2...24), told: true, live: false, glow: false, n: n, pics: false, hint: false, avoid: avoid)
+                : encode(pool: phrasePool, shift: Int.random(in: 2...24), n: n, avoid: avoid)
         }
     }
 
@@ -126,7 +130,7 @@ private enum CWGen {
     /// Decode: the answer plus real-word distractors, closest in shape first (so word lengths
     /// alone rarely give it away), never a Caesar shift of the answer (that would be a 2nd answer).
     static func decode(pool: [CWWord], shift: Int, told: Bool, live: Bool, glow: Bool, n: Int,
-                       pics: Bool, avoid: String?) -> CWPuzzle {
+                       pics: Bool, hint: Bool, avoid: String?) -> CWPuzzle {
         let ans = pool.filter { $0.word != avoid }.randomElement()!
         let others = pool.filter { $0.word != ans.word && !isShift(ans.word, $0.word) }
             .shuffled()
@@ -134,7 +138,7 @@ private enum CWGen {
         let picks = [ans] + others.prefix(n - 1)
         let choices = picks.map { CWChoice(text: $0.word, emoji: pics ? $0.emoji : nil) }.shuffled()
         return CWPuzzle(mode: .decode, plain: ans.word, shift: shift, told: told, live: live, glow: glow,
-                        turnHint: told && shift <= 3, choices: choices,
+                        turnHint: hint && told && shift <= 3, choices: choices,
                         correct: choices.firstIndex { $0.text == ans.word }!)
     }
 
@@ -157,13 +161,14 @@ private enum CWGen {
     /// code under ANY key; an encode's right choice is the only one made with the given key.
     static func selfCheck() {
         var problems: [String] = [], count = 0
-        for lv in 1...10 {
+        for k in 0...5 {
             for _ in 0..<1500 {
-                let p = puzzle(lv, avoid: nil); count += 1
+                let d = Double.random(in: 1...11), n = Int.random(in: 2...4)
+                let p = puzzle(kind: k, d: d, n: n, avoid: nil); count += 1
+                let lv = k
                 let texts = p.choices.map(\.text)
                 var ok = Set(texts).count == texts.count && texts[p.correct] == p.answer
                     && texts.filter { $0 == p.answer }.count == 1 && p.shift % 26 != 0
-                    && texts.count == (lv == 1 ? 2 : lv <= 6 ? 3 : 4)
                 switch p.mode {
                 case .decode:
                     ok = ok && caesar(p.coded, -p.shift) == p.plain
@@ -185,7 +190,7 @@ private enum CWGen {
 private final class CaesarWheelModel: ArcadeModel {
     enum Stage: Equatable { case asking, right, wrong(Int) }
 
-    @Published var puzzle = CWGen.puzzle(1, avoid: nil)
+    @Published var puzzle = CWGen.puzzle(kind: 0, d: 1, n: 2, avoid: nil)
     @Published var stage: Stage = .asking
     @Published var turn: Double = 0           // wheel position in clicks (unbounded; snaps to whole)
     @Published var lit: Int?                  // the tile last tapped
@@ -199,7 +204,7 @@ private final class CaesarWheelModel: ArcadeModel {
         #endif
     }
 
-    override func perLevel(_ level: Int) -> Int { level <= 2 ? 4 : 5 }
+    override func perLevel(_ level: Int) -> Int { 5 }
     override func onBegin() { next() }
 
     /// The key the wheel is set to now (0…25): the inner A sits under code letter `rot`.
@@ -213,7 +218,7 @@ private final class CaesarWheelModel: ArcadeModel {
     }
 
     func next() {
-        puzzle = CWGen.puzzle(level, avoid: puzzle.plain)
+        puzzle = CWGen.puzzle(kind: tier([1, 3.5, 4.8, 5.8, 7, 8.5]), d: d, n: rampInt(2, 4, to: 6.5), avoid: puzzle.plain)
         stage = .asking
         lit = nil; read = []
         puzzleNo += 1
@@ -225,7 +230,7 @@ private final class CaesarWheelModel: ArcadeModel {
         guard phase == .playing, stage == .asking else { return }
         let before = rot
         turn = t
-        if rot != before { Haptics.tap(0.35); clickedTo() }
+        if rot != before { Haptics.tap(0.35); Sfx.play(.tick, volume: 0.6); clickedTo() }
     }
     func release() {
         withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) { turn = turn.rounded() }
@@ -233,10 +238,10 @@ private final class CaesarWheelModel: ArcadeModel {
     func step(_ d: Int) {
         guard phase == .playing, stage == .asking else { return }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.65)) { turn = turn.rounded() + Double(d) }
-        Haptics.tap(0.35); clickedTo()
+        Haptics.tap(0.35); Sfx.play(.tick, volume: 0.6); clickedTo()
     }
     private func clickedTo() {
-        if puzzle.glow && keyed { Haptics.success() }
+        if puzzle.glow && keyed { Haptics.success(); Sfx.play(.sparkle, volume: 0.6) }
     }
 
     func tapTile(_ i: Int) {
@@ -252,6 +257,7 @@ private final class CaesarWheelModel: ArcadeModel {
         if i == puzzle.correct {
             stage = .right
             hit()
+            Sfx.play(.sparkle)
             after(1.7) { $0.next() }
         } else {
             stage = .wrong(i)
@@ -272,13 +278,13 @@ private final class CaesarWheelModel: ArcadeModel {
 
     override func botAct(correct: Bool) {
         guard stage == .asking else { return }
-        if !correct {
-            choose(puzzle.choices.indices.filter { $0 != puzzle.correct }.randomElement()!)
-        } else if !keyed {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { drag(to: nearestTurn(to: puzzle.shift)) }
+        // Turn first (a slip turns to the wrong key — no harm done), then answer (a slip there is a miss).
+        if !keyed {
+            let k = correct ? puzzle.shift : Int.random(in: 1...25)
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { drag(to: nearestTurn(to: k)) }
             release()
         } else {
-            choose(puzzle.correct)
+            choose(correct ? puzzle.correct : puzzle.choices.indices.filter { $0 != puzzle.correct }.randomElement()!)
         }
     }
 
@@ -298,7 +304,8 @@ struct CaesarWheelView: View {
     @StateObject private var model = CaesarWheelModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.caesarWheel.spec!, accent: Lu.coral, onClose: onClose) {
+        ArcadeShell(model: model, spec: GameID.caesarWheel.spec!, accent: Lu.coral, onClose: onClose,
+                    backdrop: { CWTent() }) {
             VStack(spacing: 10) {
                 Color.clear.frame(height: 56)
                 CWHeader(model: model)
@@ -325,56 +332,60 @@ private struct CWHeader: View {
 
     var body: some View {
         let p = model.puzzle
-        HStack(spacing: 10) {
-            Text(face).font(.system(size: 38))
-                .scaleEffect(model.stage == .right ? 1.25 : 1)
-                .rotationEffect(.degrees(model.stage == .right ? -10 : 0))
+        HStack(spacing: 8) {
+            ForumPerson(mood: face, hat: .helmet, tunic: 0xa82820, skin: 0xe8b88e, size: 70)
+                .scaleEffect(model.stage == .right ? 1.1 : 1)
                 .animation(.spring(response: 0.3, dampingFraction: 0.4), value: model.stage)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(luFont(bigTitle ? 28 : 17, .heavy)).foregroundStyle(Color(hex: titleHex))
                     .lineLimit(2).minimumScaleFactor(0.7)
-                Text(sub).font(luFont(12, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
+                Text(sub).font(luFont(12, .bold)).foregroundStyle(Color(hex: 0x6a5a48))
                     .lineLimit(2).minimumScaleFactor(0.7)
             }
             Spacer(minLength: 4)
             if p.told {
                 VStack(spacing: 1) {
-                    Text("KEY").font(luFont(9, .heavy)).tracking(1.4).foregroundStyle(Color(hex: Lu.inkDim))
+                    Text("KEY").font(luFont(9, .heavy)).tracking(1.4).foregroundStyle(Color(hex: 0xf3d9a8))
                     Text("A→\(String(cwLetter(p.shift)))").font(luSerif(20, .black)).foregroundStyle(Color(hex: Lu.gold))
                     if p.turnHint {
                         Text("↻ \(p.shift)").font(luFont(13, .heavy)).foregroundStyle(Color(hex: Lu.mint))
                     }
                 }
                 .padding(.horizontal, 10).padding(.vertical, 4)
-                .background(luPanelShape(12))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: 0x7a2a1a))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: Lu.goldLine), lineWidth: 2)))
             }
         }
-        .frame(minHeight: 56)
+        .padding(.trailing, 10).padding(.vertical, 4)
+        .frame(minHeight: 72)
+        .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: 0xf3e3c0))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: Lu.goldLine), lineWidth: 2)))
+        .shadow(color: .black.opacity(0.35), radius: 6, y: 3)
     }
 
-    private var face: String {
+    private var face: ForumPerson.Mood {
         switch model.stage {
-        case .asking: return "🕵️"
-        case .right: return "🥳"
-        case .wrong: return "😮"
+        case .asking: return model.keyed && model.puzzle.glow ? .happy : .talk
+        case .right: return .cheer
+        case .wrong: return .oops
         }
     }
     private var titleHex: UInt {
         switch model.stage {
-        case .asking: return Lu.ink
-        case .right: return Lu.mint
-        case .wrong: return Lu.gold
+        case .asking: return Lu.inkDark
+        case .right: return 0x2f6a2a
+        case .wrong: return 0x9a3a1a
         }
     }
     /// Gradus I asks for one thing only, in big letters.
-    private var bigTitle: Bool { model.level == 1 && model.stage == .asking }
+    private var bigTitle: Bool { model.puzzle.turnHint && model.puzzle.shift == 1 && model.d < 2 && model.stage == .asking }
     private var title: String {
         let p = model.puzzle
         switch model.stage {
         case .right: return "Ave! You cracked it!"
         case .wrong: return p.mode == .decode ? "It said: \(p.plain)" : "In code: \(p.coded)"
         case .asking:
-            if model.level == 1 && p.shift == 1 { return "Tap ↻ once!" }
+            if bigTitle { return "Tap ↻ once!" }
             if p.mode == .encode { return "Write \(p.plain) in code!" }
             return p.told ? "Turn the wheel to the key!" : "Find the key! Turn till it's a word"
         }
@@ -382,13 +393,11 @@ private struct CWHeader: View {
     private var sub: String {
         let p = model.puzzle
         if case .wrong = model.stage { return "The key was A→\(cwLetter(p.shift)) — a shift of \(p.shift)." }
-        switch model.level {
-        case 1, 2: return "Emperor Augustus wrote B for A — a shift of 1!"
-        case 3: return "Julius Caesar wrote D for A — a shift of 3!"
-        default:
-            if p.mode == .encode { return "Find each letter inside, read the code outside." }
-            return p.live ? "The real words read out under the code." : "Tap each code letter to read it."
-        }
+        if p.told && p.live && p.shift == 1 { return "Emperor Augustus wrote B for A — a shift of 1!" }
+        if p.told && p.live && p.shift == 3 { return "Julius Caesar wrote D for A — a shift of 3!" }
+        if p.mode == .encode { return "Find each letter inside, read the code outside." }
+        if !p.told { return p.glow ? "The wheel glows when the key is right." : "Turn until the bottom row makes sense." }
+        return p.live ? "The real words read out under the code." : "Tap each code letter to read it."
     }
 }
 
@@ -436,9 +445,17 @@ private struct CWTiles: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(height: ls.count > 1 ? 152 : 96)
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .frame(height: ls.count > 1 ? 168 : 112)
+        .background(
+            RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0x3a2616))
+                .overlay(RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x5a4224), Color(hex: 0x4a3418)],
+                                                                                 startPoint: .top, endPoint: .bottom)).padding(6))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x8a5a34), lineWidth: 3))
+                .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
+        )
     }
 
     private func tile(_ i: Int, _ c: Character, _ w: CGFloat) -> some View {
@@ -457,9 +474,9 @@ private struct CWTiles: View {
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: lit ? Lu.gold : Lu.line), lineWidth: lit ? 3 : 1.5))
                 Text(showPartner ? String(partner) : "?")
                     .font(luSerif(w * 0.6, .black))
-                    .foregroundStyle(Color(hex: good ? Lu.mint : (showPartner ? Lu.gold : Lu.line)))
+                    .foregroundStyle(Color(hex: good ? Lu.mint : (showPartner ? Lu.gold : 0x8a6a44)))
                     .frame(width: w, height: w * 0.9)
-                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: good ? Lu.mint : Lu.line), lineWidth: 1.5))
+                    .background(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: good ? Lu.mint : 0x8a6a44), lineWidth: 1.5))
                     .scaleEffect(good ? 1.08 : 1)
             }
         }
@@ -517,7 +534,8 @@ private struct CWWheel: View {
                 .position(pt(a, r * 0.66, r))
             }
             // Hub.
-            Circle().fill(Color(hex: Lu.panel)).frame(width: r * 0.62, height: r * 0.62)
+            Circle().fill(RadialGradient(colors: [Color(hex: 0x6a3a1e), Color(hex: 0x3a1e0e)], center: .center, startRadius: 0, endRadius: r * 0.31))
+                .frame(width: r * 0.62, height: r * 0.62)
                 .overlay(Circle().stroke(Color(hex: Lu.goldLine), lineWidth: 2))
             VStack(spacing: 0) {
                 Text("A→\(String(cwLetter(model.rot)))").font(luSerif(r * 0.15, .black))
@@ -574,10 +592,13 @@ private struct CWTurnButtons: View {
         let hint = model.puzzle.turnHint && d == 1 && !model.keyed && model.stage == .asking
         return Button { model.step(d) } label: {
             Image(systemName: icon).font(.system(size: 24, weight: .heavy))
-                .foregroundStyle(Color(hex: hint ? Lu.inkDark : Lu.ink))
+                .foregroundStyle(Color(hex: hint ? Lu.inkDark : 0xfdf0d0))
                 .frame(width: 64, height: 64)
-                .background(Circle().fill(Color(hex: hint ? Lu.mint : Lu.panel2))
-                    .overlay(Circle().stroke(Color(hex: Lu.line), lineWidth: 2)))
+                .background(Circle().fill(hint ? AnyShapeStyle(Color(hex: Lu.mint))
+                                               : AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xc08a4a), Color(hex: 0x7a4a22)],
+                                                                              startPoint: .top, endPoint: .bottom)))
+                    .overlay(Circle().stroke(Color(hex: 0x4a2c16), lineWidth: 2.5)))
+                .shadow(color: .black.opacity(0.35), radius: 4, y: 3)
         }
         .buttonStyle(.plain)
         .animation(.easeOut(duration: 0.2), value: hint)
@@ -603,12 +624,12 @@ private struct CWChoices: View {
         let p = model.puzzle
         let fill: UInt = {
             switch model.stage {
-            case .asking: return Lu.panel
-            case .right: return i == p.correct ? Lu.mint : Lu.panel
-            case .wrong(let w): return i == p.correct ? Lu.mint : (i == w ? Lu.coral : Lu.panel)
+            case .asking: return 0xf3e3c0
+            case .right: return i == p.correct ? Lu.mint : 0xf3e3c0
+            case .wrong(let w): return i == p.correct ? Lu.mint : (i == w ? Lu.coral : 0xf3e3c0)
             }
         }()
-        let dark = fill != Lu.panel
+        let dark = true
         return VStack(spacing: 2) {
             if let e = c.emoji { Text(e).font(.system(size: 44)) }
             Text(c.text).font(luSerif(c.emoji != nil ? 17 : 16, .black)).tracking(1)
@@ -618,8 +639,40 @@ private struct CWChoices: View {
         .padding(.horizontal, 6)
         .frame(maxWidth: .infinity, minHeight: c.emoji != nil ? 96 : 58)
         .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: fill))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: Lu.line), lineWidth: 2)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: Lu.goldLine), lineWidth: 2)))
+        .shadow(color: .black.opacity(0.3), radius: 4, y: 3)
         .scaleEffect(model.stage != .asking && i == p.correct ? 1.05 : 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.5), value: model.stage)
+    }
+}
+
+/// Caesar's command tent at night: striped canvas walls, a hanging lamp's warm glow, a map table.
+private struct CWTent: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack {
+                Color(hex: 0x3a1a14)
+                // Canvas stripes, falling from the ridge.
+                HStack(spacing: 0) {
+                    ForEach(0..<8, id: \.self) { i in
+                        Rectangle().fill(Color(hex: i.isMultiple(of: 2) ? 0x8a2a1e : 0xb89a6a))
+                    }
+                }
+                .opacity(0.85)
+                // Tent folds: darker toward the edges.
+                LinearGradient(colors: [.black.opacity(0.55), .clear, .clear, .black.opacity(0.55)], startPoint: .leading, endPoint: .trailing)
+                // The ridge pole and drape.
+                ForumTriangle().fill(Color(hex: 0x2a120c)).frame(width: w * 1.3, height: h * 0.12).rotationEffect(.degrees(180))
+                    .position(x: w / 2, y: h * 0.04)
+                // Lamp glow.
+                RadialGradient(colors: [Color(hex: 0xffc46a).opacity(0.55), .clear], center: UnitPoint(x: 0.5, y: 0.42),
+                               startRadius: 0, endRadius: w * 0.9)
+                // A map table along the bottom.
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0x7a4a26), Color(hex: 0x4a2a14)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: h * 0.2).position(x: w / 2, y: h * 0.9)
+                Rectangle().fill(Color(hex: 0x9a6a3a)).frame(height: 4).position(x: w / 2, y: h * 0.8)
+            }
+        }
     }
 }
