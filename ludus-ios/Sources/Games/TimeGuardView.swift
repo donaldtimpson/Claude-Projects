@@ -2,20 +2,18 @@ import SwiftUI
 
 // MARK: - Time Guard (Forum · History)
 //
-// A clumsy time-wizard keeps dropping things from the wrong time into history. Each round is a
-// painted scene from one era with a few things in it; exactly ONE is from the wrong time. Tap it
-// and a time-portal zaps it away while the locals cheer. A miss lights up the intruder and says
-// why in one line ("Phones are from our time!").
+// A clumsy time-wizard keeps dropping things from the wrong time into history. Each round you
+// stand IN a painted scene from one era (it fills the screen) with a few things in it; exactly ONE
+// is from the wrong time. Tap it and a time-portal zaps it home while the locals cheer. A miss
+// lights up the intruder and the Time Guard says why in one line ("Phones are from our time!").
 //
-// Level ladder (5 scenes a level):
-//   I    Roman street, 3 things, a blatant modern gadget (📱 🚗 📺 🚀 …) — no clock, practice
-//   II   4 things; Egypt, the castle and a Roman feast join; still modern gadgets
-//   III  5 things; Wild West and the Ice-Age cave join; 1800s–1900s inventions (💡 🚲 📷 🚂)
-//   IV   5 things; food from the Americas at Old-World tables (🍅 🥔 🌽 🍫 before 1492)
-//   V    6 things; subtle inventions (👓 in Rome, 🔭 in the castle, 🛞 in the cave); a slow
-//        hourglass (20 s) appears
-//   VI   6 things, mostly subtle, 16 s
-//   VII  7 things, 13 s · VIII+ 8 things, the hourglass eases down to a 9 s floor
+// Difficulty runs on `d` (GameKit), no level tables:
+//   • things in the scene: 3 → 8 (rampInt);
+//   • scenes — tier([1, 1.8, 3]): Roman street → + feast, Egypt, castle → + Wild West, Ice-Age cave;
+//   • intruders — tier([1, 2.6, 3.8, 5]): modern gadgets (📱 🚗) → 1800s–1900s inventions (💡 🚲)
+//     → food from the Americas at Old-World tables (🍅 🥔 before 1492) → subtle (👓 in Rome, 🛞 in
+//     the cave). Below d≈1.8 only the unmistakable gadgets and classic Roman things appear;
+//   • from d≈4.5 an hourglass drains, 22 s easing to 9 s.
 // The Wild West deliberately shows corn, potatoes and trains as RIGHT-time things, so a child
 // who has learned "potatoes = wrong" has to think about where and when.
 
@@ -125,71 +123,34 @@ private struct TGRound {
     var answer: Int { items.firstIndex(where: \.intruder) ?? 0 }
 }
 
+
 // MARK: Generator
 
 private enum TGGen {
-    static func count(_ level: Int) -> Int { [3, 4, 5, 5, 6, 6, 7][min(max(level, 1), 7) - 1] + (level >= 8 ? 1 : 0) }
-
-    /// Hourglass seconds (0 = none): from level V, 20 → 16 → 13 → easing to a 9 s floor.
-    static func time(_ level: Int) -> Double {
-        switch level {
-        case ..<5: return 0
-        case 5: return 20
-        case 6: return 16
-        case 7: return 13
-        default: return max(9, 12 - Double(level - 8))
+    /// A round in `era` with `n` things whose intruder is of `tier`. `classic` = the gentlest
+    /// version (only unmistakable gadgets among classic Roman things). Nil if no intruder fits.
+    static func round(era: TGEra, tier: Int, n: Int, classic: Bool, avoid: String?) -> TGRound? {
+        let scene = tgScenes.first { $0.era == era }!
+        var pool = tgIntruders.filter {
+            $0.tier == tier && $0.bad.contains(era) && !scene.things.contains($0.emoji) && $0.emoji != avoid
         }
+        if classic { pool = pool.filter { tgLevelOne.contains($0.emoji) } }
+        guard let intruder = pool.randomElement() else { return nil }
+        let things = classic && era == .rome ? tgClassicRome : scene.things
+        let pick = Array(things.shuffled().prefix(n - 1)) + [intruder.emoji]
+        let slots = layout(n)
+        let items = pick.shuffled().enumerated().map { i, e in
+            TGItem(id: i, emoji: e, pos: slots[i], intruder: e == intruder.emoji)
+        }
+        return TGRound(scene: scene, items: items, intruder: intruder)
     }
 
-    static func eras(_ level: Int) -> [TGEra] {
-        switch level {
-        case 1: return [.rome]
-        case 2: return [.rome, .feast, .egypt, .castle]
-        case 4: return [.feast, .feast, .castle, .egypt, .rome, .west, .cave]   // mostly tables
-        default: return TGEra.allCases
-        }
-    }
-
-    static func tiers(_ level: Int) -> [Int] {
-        switch level {
-        case 1, 2: return [0]
-        case 3: return [0, 1, 1]
-        case 4: return [1, 2, 2, 2]
-        case 5: return [1, 2, 3, 3]
-        default: return [2, 3, 3]
-        }
-    }
-
-    static func round(_ level: Int, avoid: String?) -> TGRound {
-        for _ in 0..<60 {
-            let era = eras(level).randomElement()!
-            let scene = tgScenes.first { $0.era == era }!
-            let tier = tiers(level).randomElement()!
-            var pool = tgIntruders.filter {
-                $0.tier == tier && $0.bad.contains(era) && !scene.things.contains($0.emoji) && $0.emoji != avoid
-            }
-            if level == 1 { pool = pool.filter { tgLevelOne.contains($0.emoji) } }
-            guard let intruder = pool.randomElement() else { continue }
-            let n = count(level)
-            let things = level == 1 ? tgClassicRome : scene.things
-            let pick = Array(things.shuffled().prefix(n - 1)) + [intruder.emoji]
-            let order = pick.shuffled()
-            let slots = layout(n)
-            let items = order.enumerated().map { i, e in
-                TGItem(id: i, emoji: e, pos: slots[i], intruder: e == intruder.emoji)
-            }
-            return TGRound(scene: scene, items: items, intruder: intruder)
-        }
-        fatalError("Time Guard: no round for level \(level)")
-    }
-
-    /// Spread positions over the scene (a jittered grid, cells shuffled), clear of the locals'
-    /// strip at the bottom.
+    /// Spread positions over the scene (a jittered grid, cells shuffled).
     static func layout(_ n: Int) -> [CGPoint] {
         let cols = n <= 4 ? 2 : 3
         let rows = n <= 4 ? 2 : (n <= 6 ? 2 : 3)
         let cells = (0..<(cols * rows)).shuffled().prefix(n)
-        let x0 = 0.12, x1 = 0.88, y0 = 0.22, y1 = 0.78
+        let x0 = 0.1, x1 = 0.9, y0 = 0.3, y1 = 0.97
         return cells.map { c in
             let cx = x0 + (x1 - x0) * (Double(c % cols) + 0.5) / Double(cols)
             let cy = y0 + (y1 - y0) * (Double(c / cols) + 0.5) / Double(rows)
@@ -211,13 +172,20 @@ private enum TGGen {
             }
         }
         var rounds = 0
-        for lv in 1...12 {
-            for _ in 0..<400 {
-                let r = round(lv, avoid: nil); rounds += 1
-                let wrong = r.items.filter { e in tgIntruders.contains { $0.emoji == e.emoji && $0.bad.contains(r.scene.era) } }
-                if wrong.count != 1 || r.items.filter(\.intruder).count != 1 || r.items.count != count(lv)
-                    || Set(r.items.map(\.emoji)).count != r.items.count {
-                    problems.append("L\(lv) \(r.scene.title): \(r.items.map(\.emoji).joined())")
+        for era in TGEra.allCases {
+            for tier in 0...3 {
+                for n in 3...8 {
+                    for classic in [false, true] {
+                        for _ in 0..<30 {
+                            guard let r = round(era: era, tier: tier, n: n, classic: classic, avoid: nil) else { continue }
+                            rounds += 1
+                            let wrong = r.items.filter { e in tgIntruders.contains { $0.emoji == e.emoji && $0.bad.contains(r.scene.era) } }
+                            if wrong.count != 1 || r.items.filter(\.intruder).count != 1 || r.items.count != n
+                                || Set(r.items.map(\.emoji)).count != r.items.count {
+                                problems.append("\(r.scene.title): \(r.items.map(\.emoji).joined())")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -232,7 +200,7 @@ private enum TGGen {
 private final class TimeGuardModel: ArcadeModel {
     enum Stage: Equatable { case asking, zapped, missed(tapped: Int?) }
 
-    @Published var round = TGGen.round(1, avoid: nil)
+    @Published var round = TGGen.round(era: .rome, tier: 0, n: 3, classic: true, avoid: nil)!
     @Published var stage: Stage = .asking
     @Published var roundNo = 0
     @Published var tLeft: Double = 0
@@ -249,10 +217,20 @@ private final class TimeGuardModel: ArcadeModel {
     override func onBegin() { next() }
 
     func next() {
-        round = TGGen.round(level, avoid: round.intruder.emoji)
+        let n = rampInt(3, 8, to: 8.5)
+        let classic = d < 1.8
+        let groups: [[TGEra]] = [[.rome], [.feast, .egypt, .castle], [.west, .cave]]
+        var made: TGRound?
+        for _ in 0..<40 where made == nil {
+            let era = groups[tier([1, 1.8, 3])].randomElement()!
+            let t = classic ? 0 : tier([1, 2.6, 3.8, 5])
+            made = TGGen.round(era: era, tier: t, n: n, classic: classic, avoid: round.intruder.emoji)
+        }
+        round = made ?? TGGen.round(era: .rome, tier: 0, n: n, classic: false, avoid: nil)!
         stage = .asking
         roundNo += 1
-        perQ = TGGen.time(level); tLeft = perQ
+        perQ = d >= 4.5 ? ramp(22, 9, from: 4.5, to: 10) : 0
+        tLeft = perQ
     }
 
     func tap(_ i: Int) {
@@ -260,11 +238,12 @@ private final class TimeGuardModel: ArcadeModel {
         if i == round.answer {
             stage = .zapped
             hit()
-            after(1.5) { $0.next() }
+            Sfx.play(.sparkle)
+            forumAfter(self, 1.5, round: { $0.roundNo }) { $0.next() }
         } else {
             stage = .missed(tapped: i)
             let last = miss(reason: i < 0 ? "The hourglass ran out!" : "Out of hearts!", delay: 2.3)
-            if !last { after(2.4) { $0.next() } }
+            if !last { forumAfter(self, 2.4, round: { $0.roundNo }) { $0.next() } }
         }
     }
 
@@ -279,14 +258,6 @@ private final class TimeGuardModel: ArcadeModel {
         let wrong = round.items.indices.filter { $0 != round.answer }
         tap(correct ? round.answer : wrong.randomElement()!)
     }
-
-    private func after(_ s: Double, _ f: @escaping (TimeGuardModel) -> Void) {
-        let n = roundNo
-        DispatchQueue.main.asyncAfter(deadline: .now() + s) { [weak self] in
-            guard let self, self.phase == .playing, self.roundNo == n else { return }
-            f(self)
-        }
-    }
 }
 
 // MARK: View
@@ -297,75 +268,89 @@ struct TimeGuardView: View {
     private let tick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.timeGuard.spec!, accent: Lu.gold, onClose: onClose) {
-            VStack(spacing: 10) {
+        let era = model.phase == .intro ? TGEra.rome : model.round.scene.era
+        ArcadeShell(model: model, spec: GameID.timeGuard.spec!, accent: Lu.gold, onClose: onClose,
+                    backdrop: {
+                        TGBackdrop(era: era)
+                            .id(era)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.5), value: era)
+                    }) {
+            VStack(spacing: 6) {
                 Color.clear.frame(height: 58)
                 header
                 TGSceneView(model: model)
                     .id(model.roundNo)
-                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .move(edge: .leading).combined(with: .opacity)))
+                    .transition(.asymmetric(insertion: .scale(scale: 0.9).combined(with: .opacity),
+                                            removal: .opacity))
                 caption
             }
-            .padding(.horizontal, 14).padding(.bottom, 8)
+            .padding(.horizontal, 12).padding(.bottom, 6)
             .animation(.spring(response: 0.45, dampingFraction: 0.85), value: model.roundNo)
         }
         .onReceive(tick) { _ in model.tick(0.1) }
     }
 
+    /// A carved sign: where and when we are, and the hourglass once there's a rush.
     private var header: some View {
         HStack(alignment: .center, spacing: 10) {
             VStack(alignment: .leading, spacing: 1) {
-                Text(model.round.scene.title).font(luSerif(22, .black)).foregroundStyle(Color(hex: Lu.ink))
+                Text(model.round.scene.title).font(luSerif(22, .black)).foregroundStyle(Color(hex: 0x3a2412))
                 Text(model.round.scene.when.uppercased()).font(luFont(11, .heavy)).tracking(1.5)
-                    .foregroundStyle(Color(hex: Lu.gold))
+                    .foregroundStyle(Color(hex: 0x8a5a2a))
             }
             Spacer()
             if model.perQ > 0 { TGHourglass(frac: model.tLeft / model.perQ) }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 14).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0xf3e3c0).opacity(0.94))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: Lu.goldLine), lineWidth: 2)))
+        .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
     }
 
-    /// Below the scene: the job (while asking), or the one-line why after a zap or a miss.
+    /// The Time Guard himself, saying the job — or why, after a zap or a miss.
     private var caption: some View {
         let why = model.round.intruder.why
-        return Group {
+        let mood: ForumPerson.Mood = {
             switch model.stage {
-            case .asking:
-                HStack(spacing: 10) {
-                    Text("🧙").font(.system(size: 34))
-                    Text("Tap the thing from the WRONG time!").font(luFont(18, .heavy))
-                        .foregroundStyle(Color(hex: Lu.ink))
-                }
-            case .zapped:
-                HStack(spacing: 10) {
-                    Text(model.round.intruder.emoji).font(.system(size: 34))
-                    Text("Zapped! " + why).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.mint))
-                }
-            case .missed:
-                HStack(spacing: 10) {
-                    Text(model.round.intruder.emoji).font(.system(size: 34))
-                    Text("That one! " + why).font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.gold))
+            case .asking: return .talk
+            case .zapped: return .cheer
+            case .missed: return .oops
+            }
+        }()
+        let (text, hex): (String, UInt) = {
+            switch model.stage {
+            case .asking: return ("Tap the thing from the WRONG time!", Lu.inkDark)
+            case .zapped: return ("Zapped! " + why, 0x2f6a2a)
+            case .missed: return ("That one! " + why, 0x9a3a1a)
+            }
+        }()
+        return HStack(alignment: .bottom, spacing: 4) {
+            ForumPerson(mood: mood, hat: .helmet, tunic: 0x6a3fa0, skin: 0xf0c49a, size: 92)
+            ForumBubble(fill: 0xfdf6e3, tailX: 0.06) {
+                HStack(spacing: 8) {
+                    if model.stage != .asking { Text(model.round.intruder.emoji).font(.system(size: 30)) }
+                    Text(text).font(luFont(17, .heavy)).foregroundStyle(Color(hex: hex))
+                        .lineLimit(3).minimumScaleFactor(0.7)
+                    Spacer(minLength: 0)
                 }
             }
+            .frame(minHeight: 64)
+            .padding(.bottom, 26)
         }
-        .multilineTextAlignment(.leading).lineLimit(3).minimumScaleFactor(0.7)
-        .frame(maxWidth: .infinity, minHeight: 74)
-        .padding(.horizontal, 12)
-        .background(luPanelShape(18))
         .animation(.easeOut(duration: 0.2), value: model.stage)
     }
 }
 
-/// A sand-glass that drains (shown from level V).
+/// A sand-glass that drains (from d≈4.5).
 private struct TGHourglass: View {
     let frac: Double
     var body: some View {
         HStack(spacing: 6) {
             Text("⏳").font(.system(size: 22))
             ZStack(alignment: .leading) {
-                Capsule().fill(Color(hex: Lu.panel))
-                Capsule().fill(Color(hex: frac < 0.3 ? Lu.coral : Lu.gold))
+                Capsule().fill(Color(hex: 0xd9c49a))
+                Capsule().fill(Color(hex: frac < 0.3 ? Lu.coral : 0xc98a2a))
                     .frame(width: 90 * max(0, min(1, frac)))
             }
             .frame(width: 90, height: 10)
@@ -381,47 +366,71 @@ private struct TGSceneView: View {
 
     var body: some View {
         GeometryReader { geo in
-            let size = geo.size
+            let size = CGSize(width: geo.size.width, height: geo.size.height - 92)   // the locals' strip below
             let n = model.round.items.count
-            let glyph: CGFloat = n <= 3 ? 72 : (n <= 4 ? 62 : (n <= 6 ? 54 : 48))
-            ZStack {
-                TGBackdrop(era: model.round.scene.era)
+            let glyph: CGFloat = n <= 3 ? 74 : (n <= 4 ? 64 : (n <= 6 ? 56 : 50))
+            ZStack(alignment: .topLeading) {
                 ForEach(model.round.items) { item in
                     TGThingView(item: item, glyph: glyph, stage: model.stage,
                                 live: model.phase == .playing) { model.tap(item.id) }
                         .position(x: item.pos.x * size.width, y: item.pos.y * size.height)
                 }
-                locals(size)
+                locals(geo.size)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color(hex: Lu.goldLine), lineWidth: 3))
             .modifier(TGShake(amount: CGFloat(shake)))
             .onChange(of: model.lastMiss) { _ in withAnimation(.linear(duration: 0.4)) { shake += 1 } }
         }
     }
 
-    /// The scene's locals along the bottom: they cheer on a zap and gasp on a miss.
+    /// The scene's locals along the bottom, dressed for their time: they cheer on a zap and gasp
+    /// on a miss.
     private func locals(_ size: CGSize) -> some View {
-        let mood: String? = {
+        let mood: ForumPerson.Mood = {
             switch model.stage {
-            case .asking: return nil
-            case .zapped: return "🎉"
-            case .missed: return "😱"
+            case .asking: return .idle
+            case .zapped: return .cheer
+            case .missed: return .oops
             }
         }()
-        return HStack(spacing: 22) {
-            ForEach(Array(model.round.scene.people.enumerated()), id: \.offset) { i, p in
-                VStack(spacing: 0) {
-                    Text(mood ?? " ").font(.system(size: 20)).opacity(mood == nil ? 0 : 1)
-                        .scaleEffect(mood == nil ? 0.3 : 1)
-                    Text(p).font(.system(size: 34))
-                }
-                .offset(y: model.stage == .zapped ? -14 : 0)
-                .animation(.spring(response: 0.28, dampingFraction: 0.35).delay(Double(i) * 0.07), value: model.stage)
+        let folk = tgFolk(model.round.scene.era)
+        return HStack(spacing: 18) {
+            ForEach(Array(folk.enumerated()), id: \.offset) { i, f in
+                ForumPerson(mood: mood, hat: f.hat, tunic: f.tunic, skin: f.skin, size: 84, beard: f.beard,
+                            lookX: CGFloat(i - 1) * -0.8)
+                    .offset(y: model.stage == .zapped ? -12 : 0)
+                    .animation(.spring(response: 0.28, dampingFraction: 0.35).delay(Double(i) * 0.07), value: model.stage)
             }
         }
-        .position(x: size.width / 2, y: size.height * 0.915)
+        .position(x: size.width / 2, y: size.height - 44)
         .allowsHitTesting(false)
+    }
+}
+
+private struct TGFolk { let hat: ForumPerson.Hat; let tunic: UInt; let skin: UInt; let beard: Bool }
+
+/// Three locals per scene, dressed for when they live.
+private func tgFolk(_ era: TGEra) -> [TGFolk] {
+    switch era {
+    case .rome, .feast:
+        return [TGFolk(hat: .laurel, tunic: 0xf2ead8, skin: 0xe8b88e, beard: false),
+                TGFolk(hat: .hair(0x3a2412), tunic: 0xb5493a, skin: 0xd9a27a, beard: false),
+                TGFolk(hat: .helmet, tunic: 0xa82820, skin: 0xf0c49a, beard: true)]
+    case .egypt:
+        return [TGFolk(hat: .hair(0x1a1410), tunic: 0xf4eedc, skin: 0xb07a4e, beard: false),
+                TGFolk(hat: .hair(0x1a1410), tunic: 0x3f8fb0, skin: 0xa86f44, beard: false),
+                TGFolk(hat: .hair(0x1a1410), tunic: 0xe8c45a, skin: 0xb98454, beard: false)]
+    case .castle:
+        return [TGFolk(hat: .helmet, tunic: 0x6b7a8a, skin: 0xf0c49a, beard: true),
+                TGFolk(hat: .hood, tunic: 0x6b5a8a, skin: 0xe8b88e, beard: false),
+                TGFolk(hat: .cap, tunic: 0x7a8a4a, skin: 0xd9a27a, beard: false)]
+    case .west:
+        return [TGFolk(hat: .sunHat, tunic: 0x8a4a2a, skin: 0xe8b88e, beard: true),
+                TGFolk(hat: .hair(0x8a5a2a), tunic: 0x4f7fb0, skin: 0xf0c49a, beard: false),
+                TGFolk(hat: .sunHat, tunic: 0x6a7a3a, skin: 0xc98d62, beard: false)]
+    case .cave:
+        return [TGFolk(hat: .hair(0x3a2412), tunic: 0x9a7a5a, skin: 0xd9a27a, beard: true),
+                TGFolk(hat: .hair(0x5a3a22), tunic: 0x8a6a4a, skin: 0xe0b088, beard: false),
+                TGFolk(hat: .hair(0x2a1a10), tunic: 0xa5865e, skin: 0xc98d62, beard: false)]
     }
 }
 
@@ -590,11 +599,16 @@ private struct TGBackdrop: View {
             .opacity(0.55)
         case .feast:
             ZStack {
-                ForEach(0..<3, id: \.self) { i in   // painted wall panels
-                    RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xe8b04a).opacity(0.5), lineWidth: 3)
-                        .frame(width: w * 0.26, height: h * 0.36)
-                        .position(x: w * (0.2 + 0.3 * Double(i)), y: h * 0.38)
+                ForEach(0..<3, id: \.self) { i in   // painted wall panels with garlands
+                    RoundedRectangle(cornerRadius: 6).fill(Color(hex: 0x6e2219).opacity(0.5))
+                        .frame(width: w * 0.24, height: h * 0.16)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xe8b04a).opacity(0.6), lineWidth: 3))
+                        .position(x: w * (0.2 + 0.3 * Double(i)), y: h * 0.33)
+                    ForumArc().stroke(Color(hex: 0x5f9e3a), style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .frame(width: w * 0.26, height: h * 0.03).rotationEffect(.degrees(180))
+                        .position(x: w * (0.2 + 0.3 * Double(i)), y: h * 0.23)
                 }
+                Rectangle().fill(Color(hex: 0x2a1410).opacity(0.6)).frame(height: h * 0.05).position(x: w / 2, y: h * 0.54)
             }
         case .egypt:
             ZStack {
