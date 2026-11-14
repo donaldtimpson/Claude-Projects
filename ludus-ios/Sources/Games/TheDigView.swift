@@ -191,9 +191,15 @@ private struct DigBackdrop: View {
     var body: some View {
         GeometryReader { g in
             ZStack(alignment: .top) {
-                Color(hex: 0x3a281c)
-                LinearGradient(colors: [Color(hex: 0x7cc0ea), Color(hex: 0xcfe8f0)], startPoint: .top, endPoint: .bottom)
-                    .frame(height: g.size.height * 0.3)
+                // The cut face of the dig: bands of soil, darker the deeper they go.
+                VStack(spacing: 0) {
+                    LinearGradient(colors: [Color(hex: 0x7cc0ea), Color(hex: 0xcfe8f0)], startPoint: .top, endPoint: .bottom)
+                        .frame(height: g.size.height * 0.3)
+                    Color(hex: 0x5f9a3a).frame(height: 22)
+                    ForEach(0..<6, id: \.self) { k in
+                        DigWavy(seed: k + 2).fill(luShade(0x8a7a62, -k * 14))
+                    }
+                }
             }
         }
     }

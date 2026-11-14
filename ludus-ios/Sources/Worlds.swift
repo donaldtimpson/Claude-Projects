@@ -165,7 +165,7 @@ let ludusWorlds: [LudusWorld] = [
     ]),
     LudusWorld(name: "Time Travelers", subject: "History", emoji: "🏛️", colorHex: Lu.gold, games: [
         .init(title: "Milestone Mason", mechanic: "carve", premise: "Carve Roman numerals on the milestones of the Via Appia.", game: .milestone,
-              icon: "🗿", howTo: how(("🧳", "How far to Rome? Count it"), ("🪨", "Tap stone letters: I V X"), ("🔨", "Hit DONE to carve it!"))),
+              icon: "🪨", howTo: how(("🧳", "How far to Rome? Count it"), ("🪨", "Tap stone letters: I V X"), ("🔨", "Hit DONE to carve it!"))),
         .init(title: "The Dig", mechanic: "dig", premise: "Bury each find in its layer — the deeper, the older.", game: .dig,
               icon: "🦴", howTo: how(("🏺", "Look at the find"), ("👇", "Drag it down to its layer"), ("🦖", "Deeper = longer ago!"))),
         .init(title: "Time Guard", mechanic: "spot", premise: "Something in the old scene is from the wrong time. Zap it home!", game: .timeGuard,
