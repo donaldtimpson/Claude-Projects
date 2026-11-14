@@ -694,7 +694,29 @@ private struct PenView: View {
                     .stroke(Color(hex: state == .right ? Lu.mint : state == .wrong ? Lu.coral : Lu.goldLine),
                             lineWidth: state == .plain ? 2 : 4))
         )
+        // a picket fence along the top: it's a pen
+        .overlay(alignment: .top) {
+            HStack(spacing: 0) {
+                ForEach(0..<6, id: \.self) { _ in
+                    Spacer(minLength: 0)
+                    PenPicket().fill(Color(hex: 0xc9965a)).frame(width: 8, height: 22)
+                    Spacer(minLength: 0)
+                }
+            }
+            .overlay(Rectangle().fill(Color(hex: 0x9a6a3a)).frame(height: 4).offset(y: 3))
+            .offset(y: -12)
+        }
         .contentShape(Rectangle())
+    }
+}
+
+private struct PenPicket: Shape {
+    func path(in r: CGRect) -> Path {
+        Path { p in
+            p.move(to: CGPoint(x: r.minX, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.minY + r.width / 2))
+            p.addLine(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.minY + r.width / 2))
+            p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.closeSubpath()
+        }
     }
 }
 

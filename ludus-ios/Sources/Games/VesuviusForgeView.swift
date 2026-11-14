@@ -409,7 +409,7 @@ private struct ForgePlay: View {
         .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: 0x1c0d0a).opacity(0.82))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: 0x9c5a2a), lineWidth: 2)))
         .id(model.roundID)
-        .transition(.move(edge: .top).combined(with: .opacity))
+        .transition(.scale(scale: 0.9).combined(with: .opacity))
     }
 
     @ViewBuilder private var lineView: some View {

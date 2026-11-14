@@ -317,6 +317,12 @@ private struct SeesawPlay: View {
                 VesBurst(trigger: model.cheers, emojis: ["✨", "⭐️", "⚖️", "💛"], radius: 140, size: 30)
                     .position(x: pivot.x, y: pivot.y - 40)
 
+                // Minerva's owl stands on the terrace and watches the beam.
+                SeesawOwl(mood: model.stage == .balanced ? .cheer : (model.stage == .slam || model.stage == .fix ? .shock : .watch),
+                          lean: model.angle)
+                    .frame(width: 64, height: 70)
+                    .position(x: W - 44, y: pivot.y + 84)
+
                 // Bench of weights
                 bench(width: W, y: H - 110, blockW: min(56, max(44, blockW * 1.1)), pivot: pivot, gap: gap)
                 // The weight in the hand (it hangs just above the finger so it isn't hidden).
@@ -353,6 +359,14 @@ private struct SeesawPlay: View {
         let s = r.answerPeg > 0 ? 1 : -1
         let each = r.fixed.filter { $0.peg * s > 0 }.reduce(a * abs(r.answerPeg)) { $0 + $1.w * abs($1.peg) }
         return "\(a) on peg \(abs(r.answerPeg)): weight × distance = \(each) on each side"
+    }
+
+    /// Where the garden's right-hand column ends (the backdrop is laid out full-screen, the play
+    /// area inside the safe area).
+    private func columnTop(_ g: GeometryProxy) -> CGFloat {
+        let top = g.frame(in: .global).minY
+        let fullH = g.size.height + top + g.safeAreaInsets.bottom
+        return fullH * 0.42 - fullH * 0.25 - top
     }
 
     /// The signed peg nearest to a point (nil if far from the beam).
@@ -448,6 +462,61 @@ private struct SeesawPlay: View {
                 }
             }
             .position(x: width / 2, y: y)
+        }
+    }
+}
+
+/// A little drawn owl: watches (tilting its head with the beam), cheers (wings up), or gasps.
+private struct SeesawOwl: View {
+    enum Mood { case watch, cheer, shock }
+    let mood: Mood
+    let lean: Double
+    var body: some View {
+        let brown = Color(hex: 0x8a5a34), light = Color(hex: 0xe9cfa4)
+        ZStack {
+            // wings
+            Ellipse().fill(Color(hex: 0x6e4424)).frame(width: 20, height: 34)
+                .rotationEffect(.degrees(mood == .cheer ? 60 : 10), anchor: .top).position(x: 12, y: 40)
+            Ellipse().fill(Color(hex: 0x6e4424)).frame(width: 20, height: 34)
+                .rotationEffect(.degrees(mood == .cheer ? -60 : -10), anchor: .top).position(x: 52, y: 40)
+            // body
+            Ellipse().fill(brown).frame(width: 46, height: 52).position(x: 32, y: 42)
+            Ellipse().fill(light).frame(width: 28, height: 32).position(x: 32, y: 48)
+            // head
+            ZStack {
+                Ellipse().fill(brown).frame(width: 48, height: 36)
+                // ear tufts
+                Triangle().fill(brown).frame(width: 12, height: 12).offset(x: -16, y: -18)
+                Triangle().fill(brown).frame(width: 12, height: 12).offset(x: 16, y: -18)
+                ForEach([-11.0, 11.0], id: \.self) { x in
+                    ZStack {
+                        Circle().fill(.white).frame(width: mood == .shock ? 19 : 16)
+                        if mood == .cheer {
+                            Capsule().fill(Color(hex: 0x2a1a10)).frame(width: 10, height: 3).offset(y: 1)
+                        } else {
+                            Circle().fill(Color(hex: 0x2a1a10)).frame(width: mood == .shock ? 6 : 8)
+                        }
+                    }
+                    .offset(x: x, y: -1)
+                }
+                Triangle().fill(Color(hex: 0xf0a030)).frame(width: 8, height: 7).rotationEffect(.degrees(180)).offset(y: 10)
+            }
+            .rotationEffect(.degrees(lean * 1.5))
+            .position(x: 32, y: 18)
+            // feet
+            HStack(spacing: 8) { Capsule().fill(Color(hex: 0xf0a030)).frame(width: 8, height: 5); Capsule().fill(Color(hex: 0xf0a030)).frame(width: 8, height: 5) }
+                .position(x: 32, y: 68)
+        }
+        .frame(width: 64, height: 70)
+        .animation(.spring(response: 0.3, dampingFraction: 0.5), value: mood)
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in r: CGRect) -> Path {
+        Path { p in
+            p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
+            p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.closeSubpath()
         }
     }
 }
