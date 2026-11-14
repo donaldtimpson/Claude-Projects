@@ -172,3 +172,77 @@ final class VesRunClock {
         }
     }
 }
+
+// MARK: - Scenery shared by the Vesuvius games (each game composes its own place from these)
+
+/// Vesuvius on the horizon: a two-humped cone (Somma + the main cone), optional smoke plume.
+struct VesMountain: View {
+    var smoke = true
+    var tint: UInt = 0x7a6a78
+    var body: some View {
+        GeometryReader { g in
+            let W = g.size.width, H = g.size.height
+            ZStack {
+                if smoke {
+                    TimelineView(.animation(minimumInterval: 1.0 / 20)) { tl in
+                        let t = tl.date.timeIntervalSinceReferenceDate
+                        ZStack {
+                            ForEach(0..<5, id: \.self) { i in
+                                let k = (t * 0.08 + Double(i) / 5).truncatingRemainder(dividingBy: 1)
+                                Circle().fill(Color.white.opacity(0.55 * (1 - k)))
+                                    .frame(width: 26 + k * 70, height: 26 + k * 70)
+                                    .position(x: W * 0.56 + CGFloat(k) * W * 0.18 + CGFloat(sin(t + Double(i))) * 4,
+                                              y: H * 0.08 - CGFloat(k) * H * 0.7)
+                            }
+                        }
+                    }
+                }
+                Path { p in
+                    p.move(to: CGPoint(x: 0, y: H))
+                    p.addCurve(to: CGPoint(x: W * 0.3, y: H * 0.28), control1: CGPoint(x: W * 0.14, y: H * 0.8), control2: CGPoint(x: W * 0.22, y: H * 0.34))
+                    p.addLine(to: CGPoint(x: W * 0.38, y: H * 0.34))
+                    p.addLine(to: CGPoint(x: W * 0.5, y: H * 0.06))
+                    p.addLine(to: CGPoint(x: W * 0.62, y: H * 0.08))
+                    p.addCurve(to: CGPoint(x: W, y: H), control1: CGPoint(x: W * 0.76, y: H * 0.4), control2: CGPoint(x: W * 0.86, y: H * 0.86))
+                    p.closeSubpath()
+                }
+                .fill(LinearGradient(colors: [Color(hex: tint), luShade(tint, -30)], startPoint: .top, endPoint: .bottom))
+            }
+        }
+    }
+}
+
+/// A Roman mosaic strip (alternating tesserae on a cream ground).
+struct VesMosaicBand: View {
+    var a: UInt = 0x2f5d8a
+    var b: UInt = 0xb5523b
+    var body: some View {
+        GeometryReader { g in
+            let n = Int(g.size.width / 18) + 1
+            HStack(spacing: 2) {
+                ForEach(0..<n, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 2).fill(Color(hex: i % 2 == 0 ? a : b))
+                        .frame(width: 16, height: g.size.height)
+                }
+            }
+            .frame(width: g.size.width, alignment: .leading)
+            .clipped()
+            .background(Color(hex: 0xf3e7cc))
+        }
+    }
+}
+
+/// A fluted marble column with capital and base.
+struct VesColumn: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0xf2ead9)).frame(height: 12)
+            ZStack {
+                Rectangle().fill(LinearGradient(colors: [Color(hex: 0xd8cdb6), Color(hex: 0xfaf4e6), Color(hex: 0xcfc3aa)], startPoint: .leading, endPoint: .trailing))
+                HStack(spacing: 5) { ForEach(0..<3, id: \.self) { _ in Rectangle().fill(Color(hex: 0xbdb096).opacity(0.6)).frame(width: 1.5) } }
+            }
+            .padding(.horizontal, 4)
+            RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0xe6dcc7)).frame(height: 14)
+        }
+    }
+}

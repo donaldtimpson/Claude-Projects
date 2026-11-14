@@ -17,7 +17,7 @@ enum GameID: String, Identifiable, Hashable {
     // Colosseum · Logic  (trueFalseBlitz / oddOneOut / patternPop are retired — QuickFire still names them)
     case portaCustos, torches, chariotCode, whereLeo, mosaicMender, trueFalseBlitz, oddOneOut, patternPop
     // Vesuvius · Science
-    case critterSort, dressMarcus, zookeeper
+    case critterSort, dressMarcus, zookeeper, seesaw, forge
     // Forum · History
     case timeline, timeGuard, caesarWheel, milestone, dig, chariot
     // Market · Money (coinCount: retired — its view still lives in QuickFire.swift)
@@ -55,7 +55,9 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .chariotCode:     ChariotCodeView(onClose: onClose)
     case .whereLeo:        WhereLeoView(onClose: onClose)
     case .mosaicMender:    MosaicMenderView(onClose: onClose)
-    case .critterSort:     CritterSortView(onClose: onClose)
+    case .critterSort:     CritterSwipeView(onClose: onClose)
+    case .seesaw:          SeesawView(onClose: onClose)
+    case .forge:           ForgeView(onClose: onClose)
     case .dressMarcus:     DressMarcusView(onClose: onClose)
     case .zookeeper:       ZookeeperView(onClose: onClose)
     case .timeline:        TimeOrderView(onClose: onClose)
@@ -171,12 +173,16 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🔥", howTo: how(("👆", "Tap a torch"), ("↔️", "Its neighbours flip too"), ("🔥", "Light them all!"))),
     ]),
     LudusWorld(name: "Lab Rats", subject: "Science", emoji: "🔬", colorHex: Lu.tangerine, games: [
+        .init(title: "Vulcan's Forge", mechanic: "heat & cool", premise: "Melt, boil and freeze things in the fire inside Vesuvius.", game: .forge,
+              icon: "🔥", howTo: how(("🧊", "Look what to make"), ("🔥", "HOLD to heat it up"), ("❄️", "HOLD snow to cool it"))),
         .init(title: "Dress Marcus", mechanic: "dress-up", premise: "Dress Marcus for the weather — or he'll freeze!", game: .dressMarcus,
               icon: "🧥", howTo: how(("🌦️", "Look out the window"), ("🧣", "Drag clothes onto Marcus"), ("😄", "Keep him comfy!"))),
+        .init(title: "Archimedes' Seesaw", mechanic: "balance", premise: "Put the weight on the right peg to balance the beam.", game: .seesaw,
+              icon: "⚖️", howTo: how(("🧱", "Drag the weight"), ("📍", "Drop it on a peg"), ("⚖️", "Make it balance!"))),
         .init(title: "Zookeeper's Breakfast", mechanic: "feed", premise: "Give every animal the food it really eats.", game: .zookeeper,
               icon: "🦁", howTo: how(("🐼", "An animal is hungry"), ("🎋", "Drag it the right food"), ("😋", "Watch it munch!"))),
-        .init(title: "Critter Sort", mechanic: "lane-sorter", premise: "Sort each animal into its group — mammal, bird, fish and more.", game: .critterSort,
-              icon: "🦎", howTo: how(("👀", "Look at the animal"), ("👆", "Tap its group"), ("🦇", "Watch for tricky ones!"))),
+        .init(title: "Critter Sort", mechanic: "swipe", premise: "Fling each animal into its house — mammal, bird, fish and more.", game: .critterSort,
+              icon: "🦎", howTo: how(("👀", "Look at the animal"), ("👉", "Swipe it to its house"), ("🦇", "Watch for tricky ones!"))),
     ]),
     LudusWorld(name: "Time Travelers", subject: "History", emoji: "🏛️", colorHex: Lu.gold, games: [
         .init(title: "Milestone Mason", mechanic: "carve", premise: "Carve Roman numerals on the milestones of the Via Appia.", game: .milestone,
