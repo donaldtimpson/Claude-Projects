@@ -1,19 +1,23 @@
 import SwiftUI
 
-// MARK: - Flag Frenzy  (Lighthouse · pop-the-bubble, geography)
+// MARK: - Flag Festival  (Lighthouse · pop the balloons; GameID .flagFrenzy)
 //
-// Flag bubbles float up; the banner says which one to pop. Built on GameKit. A wrong pop shows
-// that flag's name and makes the right bubble(s) glow — a miss always teaches. Escaped bubbles
-// cost nothing, and the right flag is always kept on screen.
+// It's the festival of nations on the lighthouse quay: balloons printed with flags float up into
+// the dusk sky and the herald's banner calls which one to pop. A wrong pop shows that flag's name
+// and makes the right balloon(s) glow — a miss always teaches. Escaped balloons cost nothing, and
+// the right flag is always kept on screen.
 //
-// Level ladder:
-//   I    MATCH: the banner shows the flag itself; only 3 very different flags float, slowly
-//   II   MATCH: 22 famous flags, 4 kinds at once
-//   III  NAME: the banner shows the country's name + its continent (picture & colour)
-//   IV   CONTINENT: "pop a flag from 🦘 Oceania" — bubbles ringed in their continent's colour
-//   V    CONTINENT without the colour rings, more flags
-//   VI   NAME among look-alikes (Ireland / Italy / Ivory Coast, Indonesia / Poland / Austria…)
-//   VII+ look-alikes and continents mixed; a little faster each level (capped)
+// Continuous difficulty (tuned off `d`, never the level) — kinds of call fade in by tier, old
+// kinds stay as review:
+//   1    MATCH: the banner shows the flag itself; very different flags
+//   2    MATCH among 22 famous flags
+//   3    NAME: the banner shows the country's name (+ its continent chip)
+//   4.5  CONTINENT: "pop a flag from 🦘 Oceania" — balloons coloured by continent
+//   5.5  CONTINENT without the colours, more flags
+//   6.5  NAME among look-alikes (Ireland / Italy / Ivory Coast, Indonesia / Poland / Austria…)
+//   7.5  CAPITAL: "pop the flag of the country whose capital is Nairobi"
+// Rise speed 55 → 115 pt/s, spawn gap 1.9 → 0.85 s, balloons on screen 3 → 9, size 58 → 44 —
+// all smooth ramps of `d`.
 //
 // Continents follow the usual 7-continent school model with Oceania for Australia & the Pacific;
 // countries that span two continents (Russia, Turkey, Egypt, Indonesia…) never appear in a
@@ -90,7 +94,22 @@ private func ffNoTwins(_ list: [FFCountry]) -> [FFCountry] {
     return kept
 }
 
-private enum FFMode: Equatable { case match, name, continent }
+private enum FFMode: Equatable { case match, name, continent, capital }
+
+/// Capitals asked in CAPITAL rounds (only countries with one clear, official capital city).
+private let ffCapitals: [String: String] = [
+    "Japan": "Tokyo", "Canada": "Ottawa", "Brazil": "Brasília", "United States": "Washington, D.C.",
+    "United Kingdom": "London", "Kenya": "Nairobi", "Australia": "Canberra", "China": "Beijing",
+    "France": "Paris", "Italy": "Rome", "Germany": "Berlin", "Mexico": "Mexico City", "India": "New Delhi",
+    "Argentina": "Buenos Aires", "South Korea": "Seoul", "Greece": "Athens", "Jamaica": "Kingston",
+    "New Zealand": "Wellington", "Nigeria": "Abuja", "Spain": "Madrid", "Ireland": "Dublin", "Norway": "Oslo",
+    "Sweden": "Stockholm", "Poland": "Warsaw", "Peru": "Lima", "Chile": "Santiago", "Thailand": "Bangkok",
+    "Vietnam": "Hanoi", "Cuba": "Havana", "Austria": "Vienna", "Hungary": "Budapest", "Denmark": "Copenhagen",
+    "Finland": "Helsinki", "Iceland": "Reykjavík", "Colombia": "Bogotá", "Ghana": "Accra", "Morocco": "Rabat",
+    "Ethiopia": "Addis Ababa", "Philippines": "Manila", "Pakistan": "Islamabad", "Bangladesh": "Dhaka",
+    "Belgium": "Brussels", "Romania": "Bucharest", "Bulgaria": "Sofia", "Uruguay": "Montevideo",
+    "Venezuela": "Caracas", "Ecuador": "Quito", "Fiji": "Suva", "Egypt": "Cairo",
+]
 
 /// What to pop right now, and which flags may float meanwhile.
 private struct FFTarget: Hashable {
@@ -102,9 +121,11 @@ private struct FFTarget: Hashable {
     func isRight(_ x: FFCountry) -> Bool {
         mode == .continent ? x.cont == cont : x.name == country?.name
     }
+    var capital: String { country.flatMap { ffCapitals[$0.name] } ?? "" }
 }
 
-private func ffTarget(_ level: Int, avoid: String?) -> FFTarget {
+/// `kind` 0…6 (see the header); `n` = how many different flags float.
+private func ffTarget(_ kind: Int, n: Int = 4, avoid: String?) -> FFTarget {
     func pick(_ pool: [FFCountry]) -> FFCountry {
         var t = pool.randomElement()!
         for _ in 0..<8 where t.name == avoid { t = pool.randomElement()! }
@@ -125,20 +146,22 @@ private func ffTarget(_ level: Int, avoid: String?) -> FFTarget {
         let t = pick(g)
         return FFTarget(mode: .name, country: t, cont: nil, rings: false, kinds: [t] + others(g, not: t, 3))
     }
-    switch level {
-    case 1:
+    switch kind {
+    case 0:
         let t = pick(ffTierA)
-        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(ffTierA, not: t, 2))
+        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(ffTierA, not: t, max(2, n - 1)))
+    case 1:
+        let pool = ffTierA + ffTierB, t = pick(pool)
+        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, n - 1))
     case 2:
         let pool = ffTierA + ffTierB, t = pick(pool)
-        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, 3))
-    case 3:
-        let pool = ffTierA + ffTierB, t = pick(pool)
-        return FFTarget(mode: .name, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, 3))
-    case 4: return continent(ffTierA + ffTierB, rings: true)
-    case 5: return continent(ffAll, rings: false)
-    case 6: return lookalike()
-    default: return Bool.random() ? lookalike() : continent(ffAll, rings: false)
+        return FFTarget(mode: .name, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, n - 1))
+    case 3: return continent(ffTierA + ffTierB, rings: true)
+    case 4: return continent(ffAll, rings: false)
+    case 5: return lookalike()
+    default:
+        let pool = ffAll.filter { ffCapitals[$0.name] != nil }, t = pick(pool)
+        return FFTarget(mode: .capital, country: t, cont: nil, rings: false, kinds: [t] + others(ffAll, not: t, n - 1))
     }
 }
 
@@ -156,7 +179,7 @@ private struct FFSpark { var x, y, vx, vy, life: CGFloat; var glyph: String }
 
 @MainActor
 private final class FlagFrenzyModel: ArcadeModel {
-    @Published var target = ffTarget(1, avoid: nil)
+    @Published var target = ffTarget(0, avoid: nil)
     @Published var note: String?
 
     private(set) var bubbles: [FFBubble] = []
@@ -170,16 +193,20 @@ private final class FlagFrenzyModel: ArcadeModel {
 
     init() { super.init(key: GameID.flagFrenzy.rawValue) }
 
-    // Level → pace. Rise speed in pt/s, seconds between spawns, most bubbles at once, radius.
-    private var speed: CGFloat { level <= 8 ? [55, 62, 68, 74, 80, 86, 94, 100][level - 1] : min(130, 100 + CGFloat(level - 8) * 5) }
-    private var spawnEvery: Double { max(0.8, 1.9 - Double(level - 1) * 0.15) }
-    private var maxBubbles: Int { min(9, 3 + level) }
-    private var radius: CGFloat { level == 1 ? 58 : (level <= 3 ? 52 : (level <= 5 ? 48 : 44)) }
+    // Pace, all smooth in `d`: rise speed (pt/s), seconds between spawns, most balloons at once, radius.
+    private var speed: CGFloat { CGFloat(ramp(55, 115, to: 9.5)) }
+    private var spawnEvery: Double { ramp(1.9, 0.85, to: 9) }
+    private var maxBubbles: Int { rampInt(3, 9, to: 8) }
+    private var radius: CGFloat { CGFloat(ramp(58, 44, to: 6)) }
+
+    private func nextTarget(avoid: String?) -> FFTarget {
+        ffTarget(tier([1, 2, 3, 4.5, 5.5, 6.5, 7.5]), n: rampInt(3, 5, to: 6), avoid: avoid)
+    }
 
     override func onBegin() {
         bubbles = []; floaters = []; sparks = []; note = nil
         lastTick = nil; spawnAcc = 0; glowUntil = .distantPast
-        target = ffTarget(level, avoid: nil)
+        target = nextTarget(avoid: nil)
     }
 
     // MARK: Simulation (runs inside the Canvas; touches no @Published state)
@@ -258,21 +285,26 @@ private final class FlagFrenzyModel: ArcadeModel {
 
     func tap(_ p: CGPoint) {
         guard phase == .playing, !dying else { return }
-        guard let i = bubbles.indices.reversed().first(where: { i in
+        // Overlapping balloons: the one whose middle is nearest the finger wins.
+        func dist(_ b: FFBubble) -> CGFloat { hypot(p.x - b.x, (p.y - b.y) * 0.85) }
+        guard let i = bubbles.indices.filter({ i in
             let b = bubbles[i]
-            return b.pop == 0 && b.burst == 0 && hypot(p.x - b.x, p.y - b.y) <= b.r + 10
-        }) else { return }
+            return b.pop == 0 && b.burst == 0 && dist(b) <= b.r + 10
+        }).min(by: { dist(bubbles[$0]) < dist(bubbles[$1]) }) else { return }
         let b = bubbles[i]
         if target.isRight(b.country) {
             bubbles[i].pop = 0.001
-            for k in 0..<7 {
-                let a = Double(k) / 7 * 2 * .pi
-                sparks.append(FFSpark(x: b.x, y: b.y, vx: CGFloat(cos(a) * 170), vy: CGFloat(sin(a) * 170 - 60),
-                                      life: 1, glyph: ["✨", "⭐️"][k % 2]))
+            for k in 0..<14 {
+                let a = Double(k) / 14 * 2 * .pi + Double.random(in: 0...0.3)
+                let v = Double.random(in: 120...220)
+                sparks.append(FFSpark(x: b.x, y: b.y, vx: CGFloat(cos(a) * v), vy: CGFloat(sin(a) * v - 80),
+                                      life: 1, glyph: ""))
             }
-            floaters.append(FFFloater(x: b.x, y: b.y - b.r - 8, text: b.country.name, life: 1, hex: Lu.mint))
+            let label = target.mode == .capital ? "\(target.capital) → \(b.country.name)" : b.country.name
+            floaters.append(FFFloater(x: b.x, y: b.y - b.r - 8, text: label, life: 1.2, hex: 0xffffff))
             hit()
-            target = ffTarget(level, avoid: b.country.name)
+            Sfx.play(.pop)
+            target = nextTarget(avoid: b.country.name)
         } else {
             bubbles[i].burst = 0.001
             floaters.append(FFFloater(x: b.x, y: b.y - b.r - 10, text: "\(b.country.flag) \(b.country.name)", life: 1.6, hex: Lu.coral))
@@ -282,6 +314,8 @@ private final class FlagFrenzyModel: ArcadeModel {
             case .continent:
                 let k = b.country.cont.flatMap { ffConts[$0] }
                 why = k.map { "\(b.country.name) is in \($0.icon) \($0.name)" } ?? "\(b.country.name) isn't in \(ffConts[target.cont!]!.name)"
+            case .capital:
+                why = "That's \(b.country.name). \(target.capital) is in \(target.country!.name)!"
             default: why = "That's \(b.country.name) — find the glowing one!"
             }
             say(why)
@@ -309,36 +343,74 @@ private final class FlagFrenzyModel: ArcadeModel {
             var r = b.r
             var alpha = 1.0
             var dx: CGFloat = 0
-            if b.pop > 0 { r *= 1 + b.pop * 0.5; alpha = Double(1 - b.pop) }
-            if b.burst > 0 { dx = sin(b.burst * 40) * 8 * (1 - b.burst); alpha = Double(1 - b.burst * b.burst) }
-            alpha *= Double(min(1, max(0, (b.y - 170) / 140)))      // fade out under the banner
-            let rect = CGRect(x: b.x - r + dx, y: b.y - r, width: r * 2, height: r * 2)
-            ctx.opacity = alpha * 0.95
-            ctx.fill(Path(ellipseIn: rect), with: .color(Color(hex: b.burst > 0 ? 0xf6d0c6 : 0xfef6e9)))
-            let ringHex = target.rings ? (b.country.cont.flatMap { ffConts[$0]?.tint } ?? Lu.line) : Lu.line
+            var squash: CGFloat = 1
+            if b.pop > 0 { r *= 1 + b.pop * 0.6; alpha = Double(1 - b.pop) }
+            if b.burst > 0 { dx = sin(b.burst * 40) * 8 * (1 - b.burst); alpha = Double(1 - b.burst * b.burst); squash = 1 - b.burst * 0.35 }
+            alpha *= Double(min(1, max(0, (b.y - 190) / 130)))      // fade out under the banner
+            let cx = b.x + dx, cy = b.y
+            let w = r * 1.84 * squash, h = r * 2.16 * squash
+            let body = CGRect(x: cx - w / 2, y: cy - h / 2, width: w, height: h)
+            let hex: UInt = target.rings ? (b.country.cont.flatMap { ffConts[$0]?.tint } ?? Lu.line)
+                                         : ffBalloonHexes[abs(b.country.name.hashValue) % ffBalloonHexes.count]
             ctx.opacity = alpha
-            ctx.stroke(Path(ellipseIn: rect.insetBy(dx: 2, dy: 2)), with: .color(Color(hex: ringHex)), lineWidth: target.rings ? 6 : 3)
+            // string
+            var s = Path()
+            s.move(to: CGPoint(x: cx, y: body.maxY + 4))
+            for k in 1...6 {
+                let yy = body.maxY + 4 + CGFloat(k) * r * 0.22
+                s.addLine(to: CGPoint(x: cx + sin(CGFloat(t) * 3 + b.phase + CGFloat(k)) * 4, y: yy))
+            }
+            ctx.stroke(s, with: .color(.white.opacity(0.75)), lineWidth: 1.3)
             if glow && b.pop == 0 && b.burst == 0 && target.isRight(b.country) {
                 let pulse = 0.5 + 0.5 * sin(t * 10)
-                ctx.opacity = 0.6 + 0.4 * pulse
-                ctx.stroke(Path(ellipseIn: rect.insetBy(dx: -6, dy: -6)), with: .color(Color(hex: Lu.gold)), lineWidth: 6)
+                ctx.opacity = alpha * (0.5 + 0.5 * pulse)
+                ctx.fill(Path(ellipseIn: body.insetBy(dx: -12, dy: -12)), with: .color(Color(hex: Lu.gold).opacity(0.7)))
                 ctx.opacity = alpha
             }
-            ctx.draw(ctx.resolve(Text(b.country.flag).font(.system(size: r * 1.35))), at: CGPoint(x: b.x + dx, y: b.y))
+            // knot
+            var knot = Path()
+            knot.move(to: CGPoint(x: cx - 6, y: body.maxY + 6)); knot.addLine(to: CGPoint(x: cx + 6, y: body.maxY + 6))
+            knot.addLine(to: CGPoint(x: cx, y: body.maxY - 2)); knot.closeSubpath()
+            ctx.fill(knot, with: .color(Color(hex: hex).opacity(0.9)))
+            // balloon body
+            ctx.fill(Path(ellipseIn: body), with: .radialGradient(
+                Gradient(colors: [Color(hex: hex).opacity(0.8), Color(hex: hex), Color(hex: hex).opacity(0.85)]),
+                center: CGPoint(x: cx - w * 0.2, y: cy - h * 0.25), startRadius: 2, endRadius: h * 0.8))
+            ctx.stroke(Path(ellipseIn: body), with: .color(.black.opacity(0.18)), lineWidth: 1.5)
+            // flag patch
+            let pr = r * 0.66
+            ctx.fill(Path(ellipseIn: CGRect(x: cx - pr, y: cy - pr - h * 0.04, width: pr * 2, height: pr * 2)), with: .color(Color(hex: 0xfffaf0)))
+            ctx.draw(ctx.resolve(Text(b.country.flag).font(.system(size: r * 1.05))), at: CGPoint(x: cx, y: cy - h * 0.04))
+            // shine
+            ctx.fill(Path(ellipseIn: CGRect(x: cx - w * 0.36, y: cy - h * 0.38, width: w * 0.16, height: h * 0.22)), with: .color(.white.opacity(0.55)))
         }
         for s in sparks {
             ctx.opacity = Double(max(0, s.life))
-            ctx.draw(ctx.resolve(Text(s.glyph).font(.system(size: 20))), at: CGPoint(x: s.x, y: s.y))
+            if s.glyph.isEmpty {
+                let hex = ffBalloonHexes[Int(abs(s.vx)) % ffBalloonHexes.count]
+                var c = ctx
+                c.translateBy(x: s.x, y: s.y)
+                c.rotate(by: .radians(Double(s.life) * 9 + Double(s.vx)))
+                c.fill(Path(CGRect(x: -4, y: -2.5, width: 8, height: 5)), with: .color(Color(hex: hex)))
+            } else {
+                ctx.draw(ctx.resolve(Text(s.glyph).font(.system(size: 20))), at: CGPoint(x: s.x, y: s.y))
+            }
         }
         for f in floaters {
             ctx.opacity = Double(min(1, max(0, f.life)))
             let t = ctx.resolve(Text(f.text).font(luFont(20)).foregroundColor(Color(hex: f.hex)))
-            let half = t.measure(in: CGSize(width: 400, height: 40)).width / 2 + 8
-            ctx.draw(t, at: CGPoint(x: min(max(f.x, half), size.width - half), y: f.y))
+            let m = t.measure(in: CGSize(width: 400, height: 40))
+            let half = m.width / 2 + 10
+            let p = CGPoint(x: min(max(f.x, half), size.width - half), y: f.y)
+            ctx.fill(Path(roundedRect: CGRect(x: p.x - half, y: p.y - m.height / 2 - 4, width: half * 2, height: m.height + 8), cornerRadius: 10),
+                     with: .color(.black.opacity(0.45)))
+            ctx.draw(t, at: p)
         }
         ctx.opacity = 1
     }
 }
+
+private let ffBalloonHexes: [UInt] = [0xe0684f, 0xf5c542, 0x63b96b, 0x4fa6cf, 0xa96fd6, 0xe8973a, 0xff8fb1]
 
 #if DEBUG
 /// Every target has at least one right flag among its kinds, and (except continent rounds) exactly
@@ -346,9 +418,9 @@ private final class FlagFrenzyModel: ArcadeModel {
 private func ffSelfCheck() {
     precondition(Set(ffAll.map(\.name)).count == ffAll.count && Set(ffAll.map(\.flag)).count == ffAll.count, "Flag Frenzy: duplicate")
     for g in ffLookalikes { for n in g { _ = ffFind(n) } }
-    for lv in 1...12 {
+    for lv in 0...6 {
         for _ in 0..<300 {
-            let t = ffTarget(lv, avoid: nil)
+            let t = ffTarget(lv, n: Int.random(in: 3...5), avoid: nil)
             let right = t.kinds.filter(t.isRight).count
             precondition(right >= 1, "Flag Frenzy: no right flag at \(lv)")
             for a in t.kinds { for b in t.kinds { precondition(!ffClashes(a, b), "Flag Frenzy: twin flags together at \(lv)") } }
@@ -367,8 +439,8 @@ struct FlagFrenzyView: View {
     @StateObject private var model = FlagFrenzyModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.flagFrenzy.spec ?? GameSpec(title: "Flag Frenzy", mechanic: "", premise: "", game: .flagFrenzy),
-                    accent: Lu.sky, onClose: onClose) {
+        ArcadeShell(model: model, spec: GameID.flagFrenzy.spec ?? GameSpec(title: "Flag Festival", mechanic: "", premise: "", game: .flagFrenzy),
+                    accent: Lu.sky, onClose: onClose, backdrop: { FFFestival() }) {
             ZStack(alignment: .top) {
                 TimelineView(.animation(paused: model.phase != .playing)) { tl in
                     Canvas { ctx, sz in
@@ -381,7 +453,7 @@ struct FlagFrenzyView: View {
                 .ignoresSafeArea(edges: .bottom)
 
                 FFBanner(target: model.target, note: model.note, combo: model.combo)
-                    .padding(.top, 62).padding(.horizontal, 16)
+                    .padding(.top, 58).padding(.horizontal, 14)
                     .allowsHitTesting(false)
             }
         }
@@ -393,43 +465,54 @@ struct FlagFrenzyView: View {
     }
 }
 
+/// The herald's banner: a cloth pennant hung from a rope of bunting.
 private struct FFBanner: View {
     let target: FFTarget
     let note: String?
     let combo: Int
 
     var body: some View {
-        VStack(spacing: 8) {
-            VStack(spacing: 4) {
+        VStack(spacing: 6) {
+            VStack(spacing: 3) {
                 switch target.mode {
                 case .match:
-                    Text("POP THIS FLAG").font(luFont(12, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
+                    caption("POP THIS FLAG")
                     HStack(spacing: 12) {
                         Text(target.country!.flag).font(.system(size: 54))
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(target.country!.name).font(luFont(22)).foregroundStyle(Color(hex: Lu.ink))
+                            Text(target.country!.name).font(luSerif(22, .black)).foregroundStyle(Color(hex: lhInk))
                                 .lineLimit(1).minimumScaleFactor(0.6)
                             chip(target.country!.cont)
                         }
                     }
                 case .name:
-                    Text("FIND THE FLAG OF").font(luFont(12, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
-                    Text(target.country!.name).font(luFont(30)).foregroundStyle(Color(hex: Lu.ink))
+                    caption("FIND THE FLAG OF")
+                    Text(target.country!.name).font(luSerif(30, .black)).foregroundStyle(Color(hex: lhInk))
                         .lineLimit(1).minimumScaleFactor(0.6)
                     if target.rings { chip(target.country!.cont) }
                 case .continent:
-                    Text("POP A FLAG FROM").font(luFont(12, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
+                    caption("POP A FLAG FROM")
                     let k = ffConts[target.cont!]!
                     HStack(spacing: 10) {
-                        Text(k.icon).font(.system(size: 40))
-                        Text(k.name).font(luFont(28)).foregroundStyle(Color(hex: k.tint))
+                        Text(k.icon).font(.system(size: 38))
+                        Text(k.name).font(luSerif(28, .black)).foregroundStyle(Color(hex: lhInk))
+                            .lineLimit(1).minimumScaleFactor(0.6)
+                        if target.rings { Circle().fill(Color(hex: k.tint)).frame(width: 18, height: 18) }
+                    }
+                case .capital:
+                    caption("WHOSE CAPITAL CITY IS")
+                    HStack(spacing: 8) {
+                        Text("🏛️").font(.system(size: 30))
+                        Text(target.capital).font(luSerif(28, .black)).foregroundStyle(Color(hex: lhInk))
                             .lineLimit(1).minimumScaleFactor(0.6)
                     }
                 }
             }
-            .padding(.horizontal, 18).padding(.vertical, 10)
+            .padding(.horizontal, 18).padding(.top, 12).padding(.bottom, 16)
             .frame(maxWidth: .infinity)
-            .background(luPanelShape(18))
+            .background(FFPennant().fill(LinearGradient(colors: [Color(hex: 0xfbf0d6), Color(hex: 0xefdcb2)], startPoint: .top, endPoint: .bottom))
+                .overlay(FFPennant().stroke(Color(hex: 0x9c7b33), lineWidth: 2))
+                .shadow(color: .black.opacity(0.35), radius: 6, y: 3))
             .id(target)
             .transition(.scale(scale: 0.85).combined(with: .opacity))
 
@@ -441,7 +524,8 @@ private struct FFBanner: View {
                         .background(Capsule().fill(Color(hex: Lu.gold)))
                         .transition(.scale(scale: 0.7).combined(with: .opacity))
                 } else if combo >= 2 {
-                    Text("COMBO ×\(combo)!").font(luFont(18)).foregroundStyle(Color(hex: Lu.mint))
+                    Text("COMBO ×\(combo)!").font(luFont(18)).foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.5), radius: 2)
                         .id(combo).transition(.scale(scale: 1.3).combined(with: .opacity))
                 }
             }
@@ -452,6 +536,10 @@ private struct FFBanner: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.5), value: combo)
     }
 
+    private func caption(_ s: String) -> some View {
+        Text(s).font(luFont(11, .heavy)).tracking(2).foregroundStyle(Color(hex: lhInkSoft))
+    }
+
     @ViewBuilder private func chip(_ cont: String?) -> some View {
         if let k = cont.flatMap({ ffConts[$0] }) {
             HStack(spacing: 4) {
@@ -460,6 +548,100 @@ private struct FFBanner: View {
             }
             .padding(.horizontal, 10).padding(.vertical, 4)
             .background(Capsule().fill(Color(hex: k.tint)))
+        }
+    }
+}
+
+/// A banner with a swallow-tail notch along the bottom edge.
+private struct FFPennant: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX + 8, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX - 8, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + 8), control: CGPoint(x: r.maxX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.midX + 22, y: r.maxY - 8))
+        p.addLine(to: CGPoint(x: r.midX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.midX - 22, y: r.maxY - 8))
+        p.addLine(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.minY + 8))
+        p.addQuadCurve(to: CGPoint(x: r.minX + 8, y: r.minY), control: CGPoint(x: r.minX, y: r.minY))
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// Festival dusk over the harbour town: a warm sky, a low sun, bunting, rooftops and the Pharos.
+private struct FFFestival: View {
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 24)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, size in
+                let w = size.width, h = size.height
+                ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(
+                    Gradient(colors: [Color(hex: 0x2b3a7a), Color(hex: 0x7a4f9a), Color(hex: 0xe9806a), Color(hex: 0xffc983)]),
+                    startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+                // Sun.
+                let sc = CGPoint(x: w * 0.3, y: h * 0.82)
+                ctx.fill(Path(ellipseIn: CGRect(x: sc.x - 90, y: sc.y - 90, width: 180, height: 180)), with: .color(Color(hex: 0xffe3a3).opacity(0.25)))
+                ctx.fill(Path(ellipseIn: CGRect(x: sc.x - 46, y: sc.y - 46, width: 92, height: 92)), with: .color(Color(hex: 0xffd27a)))
+                // Drifting clouds.
+                for i in 0..<3 {
+                    let x = (CGFloat(t) * (6 + CGFloat(i) * 4) + CGFloat(i) * 160).truncatingRemainder(dividingBy: w + 200) - 100
+                    let y = h * [0.32, 0.5, 0.62][i]
+                    for (dx, dy, rr) in [(0.0, 0.0, 22.0), (24, -8, 28), (52, 0, 20), (26, 8, 26)] {
+                        let r = CGFloat(rr)
+                        ctx.fill(Path(ellipseIn: CGRect(x: x + CGFloat(dx) - r, y: y + CGFloat(dy) - r * 0.6, width: r * 2, height: r * 1.2)),
+                                 with: .color(Color(hex: 0xffe9d6).opacity(0.35)))
+                    }
+                }
+                // Rooftops + the Pharos silhouette.
+                let base = h - 70
+                var town = Path()
+                town.move(to: CGPoint(x: 0, y: h))
+                var x: CGFloat = 0
+                var i = 0
+                while x < w {
+                    let bw: CGFloat = [46, 34, 58, 40, 52][i % 5]
+                    let bh: CGFloat = [40, 62, 34, 70, 48][i % 5]
+                    town.addLine(to: CGPoint(x: x, y: base - bh))
+                    if i % 3 == 1 { town.addLine(to: CGPoint(x: x + bw / 2, y: base - bh - 16)) }   // a gable
+                    town.addLine(to: CGPoint(x: x + bw, y: base - bh))
+                    x += bw; i += 1
+                }
+                town.addLine(to: CGPoint(x: w, y: h)); town.closeSubpath()
+                ctx.fill(town, with: .color(Color(hex: 0x3a2350)))
+                let lx = w * 0.82
+                var tower = Path()
+                tower.move(to: CGPoint(x: lx - 22, y: base - 30)); tower.addLine(to: CGPoint(x: lx - 12, y: base - 170))
+                tower.addLine(to: CGPoint(x: lx + 12, y: base - 170)); tower.addLine(to: CGPoint(x: lx + 22, y: base - 30)); tower.closeSubpath()
+                ctx.fill(tower, with: .color(Color(hex: 0x2c1a40)))
+                let flick = 1 + 0.12 * sin(t * 11)
+                ctx.fill(Path(ellipseIn: CGRect(x: lx - 22 * flick, y: base - 196 - 22 * flick, width: 44 * flick, height: 44 * flick)),
+                         with: .color(Color(hex: 0xffd27a).opacity(0.45)))
+                ctx.fill(Path(ellipseIn: CGRect(x: lx - 7, y: base - 196, width: 14, height: 20)), with: .color(Color(hex: 0xfff1b8)))
+                // Lit windows.
+                for k in 0..<9 {
+                    let wx = CGFloat((k * 97) % 100) / 100 * w * 0.7 + 10
+                    ctx.fill(Path(CGRect(x: wx, y: base - 22, width: 7, height: 10)), with: .color(Color(hex: 0xffd27a).opacity(0.8)))
+                }
+                // Bunting across the top (behind the herald's banner).
+                for row in 0..<2 {
+                    let y0 = h * (0.2 + CGFloat(row) * 0.06)
+                    var rope = Path()
+                    rope.move(to: CGPoint(x: -10, y: y0))
+                    rope.addQuadCurve(to: CGPoint(x: w + 10, y: y0), control: CGPoint(x: w / 2, y: y0 + 40))
+                    ctx.stroke(rope, with: .color(.white.opacity(0.5)), lineWidth: 1.2)
+                    for k in 0..<12 {
+                        let u = CGFloat(k) / 11
+                        let px = -10 + (w + 20) * u
+                        let py = y0 + 2 * (1 - u) * u * 40
+                        var flag = Path()
+                        flag.move(to: CGPoint(x: px - 8, y: py)); flag.addLine(to: CGPoint(x: px + 8, y: py)); flag.addLine(to: CGPoint(x: px, y: py + 16)); flag.closeSubpath()
+                        ctx.fill(flag, with: .color(Color(hex: ffBalloonHexes[(k + row * 3) % ffBalloonHexes.count]).opacity(0.85)))
+                    }
+                }
+            }
         }
     }
 }

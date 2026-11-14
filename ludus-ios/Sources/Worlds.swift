@@ -11,7 +11,7 @@ enum GameID: String, Identifiable, Hashable {
     // Temple · Math
     case ballista, omnibus, timesTableNinja, fountain, libra
     // Lighthouse · Geography
-    case flagFrenzy, nameCountry, pharosBeam, zooFerry
+    case flagFrenzy, nameCountry, pharosBeam, zooFerry, pigeonPost, agrippaMap
     // Library · Language Arts
     case wordSort, synonymSnake, polyphemus, scrollCatcher
     // Colosseum · Logic  (trueFalseBlitz / oddOneOut / patternPop are retired — QuickFire still names them)
@@ -40,6 +40,8 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .nameCountry:     NameCountryView(onClose: onClose)
     case .pharosBeam:      PharosBeamView(onClose: onClose)
     case .zooFerry:        ZooFerryView(onClose: onClose)
+    case .pigeonPost:      PigeonPostView(onClose: onClose)
+    case .agrippaMap:      AgrippaMapView(onClose: onClose)
     case .wordSort:        WordSortView(onClose: onClose)
     case .synonymSnake:    SynonymSnakeView(onClose: onClose)
     case .polyphemus:      PolyphemusView(onClose: onClose)
@@ -126,14 +128,16 @@ let ludusWorlds: [LudusWorld] = [
               icon: "⚖️", howTo: how(("🍎", "Look at the other pan"), ("👆", "Tap weights into the sack"), ("⚖️", "Weigh it — make it level!"))),
     ]),
     LudusWorld(name: "Globe Trotters", subject: "Geography", emoji: "🌍", colorHex: Lu.sky, games: [
-        .init(title: "Pharos Beam", mechanic: "spinner", premise: "Swing the lighthouse beam to the ship that calls.", game: .pharosBeam,
-              icon: "🔦", howTo: how(("⛵️", "A ship calls for light"), ("👆", "Drag the beam to it"), ("📯", "Let go — toot toot!"))),
-        .init(title: "Lost Zoo Ferry", mechanic: "ferry", premise: "Sail each animal home to the right land.", game: .zooFerry,
-              icon: "🦒", howTo: how(("🦘", "An animal is lost"), ("👆", "Drag it to a ferry"), ("⛴️", "Sail it home!"))),
-        .init(title: "Flag Frenzy", mechanic: "pop", premise: "Pop the flag the banner calls for — then names and continents.", game: .flagFrenzy,
-              icon: "🚩", howTo: how(("👀", "Look at the flag on top"), ("👆", "Pop the same flag"), ("🌍", "Later: names and continents"))),
-        .init(title: "Orbis", mechanic: "map", premise: "Name the country from its outline.", game: .nameCountry,
-              icon: "🗺️", howTo: how(("👀", "Look at the shape"), ("👆", "Tap the country's name"))),
+        .init(title: "Pigeon Post", mechanic: "map-tap", premise: "Pippa the pigeon flies your letters anywhere on the real world map.", game: .pigeonPost,
+              icon: "🕊️", howTo: how(("✉️", "Read where the letter goes"), ("👆", "Tap that place on the map"), ("🕊️", "Pippa flies it there!"))),
+        .init(title: "Agrippa's Map", mechanic: "jigsaw", premise: "Finish Agrippa's great map — drag each land into its place.", game: .agrippaMap,
+              icon: "🧩", howTo: how(("🧩", "Pick a piece from the tray"), ("👆", "Drag it to its place"), ("🗺️", "Finish the map!"))),
+        .init(title: "Pharos Beam", mechanic: "compass", premise: "Swing the lighthouse beam to the ship that calls.", game: .pharosBeam,
+              icon: "🗼", howTo: how(("⛵️", "A ship calls from the fog"), ("👆", "Drag the beam to it"), ("🧭", "N is up — until it isn't!"))),
+        .init(title: "Lost Zoo Ferry", mechanic: "ferry", premise: "Sail each lost animal home to the right land.", game: .zooFerry,
+              icon: "🦒", howTo: how(("🦘", "An animal is lost"), ("👆", "Drag it onto a ferry"), ("⛴️", "Sail it home!"))),
+        .init(title: "Flag Festival", mechanic: "pop", premise: "Pop the balloon with the flag the herald calls — then names, continents and capitals.", game: .flagFrenzy,
+              icon: "🎈", howTo: how(("🚩", "Look at the herald's flag"), ("🎈", "Pop the balloon with it"), ("🌍", "Later: names and capitals"))),
     ]),
     LudusWorld(name: "Word Wizards", subject: "Language Arts", emoji: "✏️", colorHex: Lu.mint, games: [
         .init(title: "Polyphemus Is Hungry", mechanic: "feed", premise: "Feed the Cyclops only foods with his sound.", game: .polyphemus,
