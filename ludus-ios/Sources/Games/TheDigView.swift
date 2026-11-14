@@ -24,6 +24,16 @@ private struct DigEra {
     let name: String
     let dates: String
     let tint: UInt              // the layer's soil colour
+    /// "It's from …": the Stone Age, Ancient Egypt, the 1900s, today.
+    var from: String {
+        switch name {
+        case "Stone Age", "Middle Ages", "Steam Age", "1900s": return "the " + name
+        case "Dinosaurs": return "dinosaur times"
+        case "Explorers": return "the age of explorers"
+        case "Today": return "today"
+        default: return name
+        }
+    }
 }
 
 private let digEras: [DigEra] = [
@@ -240,15 +250,15 @@ private struct DigPlay: View {
                     .offset(y: 8)
                 VStack(alignment: .leading, spacing: 6) {
                     caption
-                    HStack(spacing: 10) {
-                        findView
-                        if model.limit > 0 { sunTimer }
-                    }
+                    findView
                 }
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 12)
             .padding(.bottom, 16)
+            if model.limit > 0 {
+                sunTimer.frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 18).padding(.bottom, 22)
+            }
         }
         .frame(height: 176)
     }
@@ -259,8 +269,8 @@ private struct DigPlay: View {
         let text: String = {
             switch model.stage {
             case .waiting: return model.showName ? f.name : "Where does it go?"
-            case .placed: return "Yes! \(era.name)"
-            case .missed: return "It's from \(era.name)!"
+            case .placed: return "Yes! \(era.name)!"
+            case .missed: return "It's from \(era.from)!"
             }
         }()
         let hex: UInt = {
@@ -338,14 +348,11 @@ private struct DigPlay: View {
         TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
             let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
             let f = model.limit > 0 ? left / model.limit : 0
-            ZStack {
-                Circle().fill(Color(hex: f < 0.3 ? 0xe8743b : 0xffd95a)).frame(width: 34, height: 34)
-                    .shadow(color: Color(hex: 0xffb340), radius: 8)
-                    .offset(y: CGFloat(1 - f) * 30)
-                Rectangle().fill(Color(hex: 0x4f8a32)).frame(width: 52, height: 22).offset(y: 34)
-            }
-            .frame(width: 52, height: 70)
-            .clipped()
+            Circle().fill(Color(hex: f < 0.3 ? 0xe8743b : 0xffd95a)).frame(width: 46, height: 46)
+                .shadow(color: Color(hex: 0xffb340), radius: 10)
+                .offset(y: 8 + CGFloat(1 - f) * 52)
+                .frame(width: 70, height: 60, alignment: .top)
+                .clipped()
         }
     }
 

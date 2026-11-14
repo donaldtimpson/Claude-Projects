@@ -278,13 +278,13 @@ private final class CaesarWheelModel: ArcadeModel {
 
     override func botAct(correct: Bool) {
         guard stage == .asking else { return }
-        if !correct {
-            choose(puzzle.choices.indices.filter { $0 != puzzle.correct }.randomElement()!)
-        } else if !keyed {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { drag(to: nearestTurn(to: puzzle.shift)) }
+        // Turn first (a slip turns to the wrong key — no harm done), then answer (a slip there is a miss).
+        if !keyed {
+            let k = correct ? puzzle.shift : Int.random(in: 1...25)
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) { drag(to: nearestTurn(to: k)) }
             release()
         } else {
-            choose(puzzle.correct)
+            choose(correct ? puzzle.correct : puzzle.choices.indices.filter { $0 != puzzle.correct }.randomElement()!)
         }
     }
 

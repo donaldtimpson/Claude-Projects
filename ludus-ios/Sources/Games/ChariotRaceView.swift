@@ -14,7 +14,7 @@ import SwiftUI
 //   • LATIN IN ENGLISH: AQUA means water → aquarium; DENS means tooth → dentist
 //   • GODS, MONTHS & PLANETS: Named for Janus, god of doorways → January; OCTO means eight → October
 //   • FAMOUS ROME: the volcano that buried Pompeii → Vesuvius; Rome's first emperor → Augustus
-// Lanes: 2 → 3 by d≈2.8. The gates come faster as d climbs (8 s → 3.4 s, a little longer for words).
+// Lanes: 2 → 3 by d≈2.8. The gates come faster as d climbs (6 s → 3 s, a little longer for words).
 
 // MARK: Content
 
@@ -180,7 +180,7 @@ private final class ChariotModel: ArcadeModel {
         lane = min(lane.rounded(), Double(lanes - 1))
         stage = .racing
         roundNo += 1
-        travel = ramp(8, 3.4, to: 9.5) + (q.kind >= 2 ? ramp(2.5, 1.6, from: 4, to: 9) : 0)
+        travel = ramp(6, 3, to: 9) + (q.kind >= 2 ? ramp(2.5, 1.6, from: 4, to: 9) : 0)
         gateStart = Date().addingTimeInterval(0.4)
         forumAfter(self, travel + 0.4, round: { $0.roundNo }) { $0.reachGate() }
         LibraryVoice.say(q.say)
@@ -198,6 +198,7 @@ private final class ChariotModel: ArcadeModel {
         lane = lane.rounded()
         if target == correct {
             stage = .right
+            Sfx.play(.whoosh, volume: 0.6)
             hit()
             forumAfter(self, 1.4, round: { $0.roundNo }) { $0.next() }
         } else {
@@ -347,6 +348,10 @@ private struct CRTrack: View {
                 chariot(t)
                     .position(x: laneX(model.lane, depth: 0, w: w), y: h - 64)
                     .modifier(ForumShake(amount: 10, shakes: skid))
+                if model.stage == .right {
+                    CRCheer().position(x: w / 2, y: h * 0.42)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .contentShape(Rectangle())
@@ -504,6 +509,27 @@ private struct CRTrack: View {
         .frame(width: 150, height: 150)
         .rotationEffect(.degrees(model.stage == .wrong ? 8 : (model.lane - model.lane.rounded()) * 14))
         .animation(.spring(response: 0.3, dampingFraction: 0.5), value: model.stage)
+    }
+}
+
+/// "AVE!" and a shower of rose petals when a gate is right (the crowd throws flowers).
+private struct CRCheer: View {
+    @State private var go = false
+    var body: some View {
+        ZStack {
+            ForEach(0..<9, id: \.self) { i in
+                let a = Double(i) / 9 * 2 * .pi
+                Text(["🌹", "🌸", "✨"][i % 3]).font(.system(size: 22))
+                    .offset(x: go ? CGFloat(cos(a)) * 110 : 0, y: go ? CGFloat(sin(a)) * 70 + 40 : 0)
+                    .opacity(go ? 0 : 1)
+            }
+            Text("AVE!").font(luSerif(40, .black))
+                .foregroundStyle(LinearGradient(colors: [.white, Color(hex: Lu.gold)], startPoint: .top, endPoint: .bottom))
+                .shadow(color: .black.opacity(0.5), radius: 4, y: 2)
+                .scaleEffect(go ? 1 : 0.3)
+                .offset(y: go ? -10 : 20)
+        }
+        .onAppear { withAnimation(.spring(response: 0.45, dampingFraction: 0.55)) { go = true } }
     }
 }
 

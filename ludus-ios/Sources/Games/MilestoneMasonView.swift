@@ -63,7 +63,7 @@ private let mmYears: [(Int, String, String)] = [
     (80, "🏟️", "The Colosseum opens"),
     (117, "🦅", "The Roman Empire at its biggest"),
     (122, "🧱", "Hadrian's Wall is begun"),
-    (476, "🏛️", "The last emperor in Rome loses his throne"),
+    (476, "🏛️", "The last emperor of the West loses his throne"),
     (1066, "⚔️", "The Battle of Hastings"),
     (1215, "📜", "Magna Carta is sealed"),
     (1492, "⛵️", "Columbus crosses the Atlantic"),
@@ -72,7 +72,7 @@ private let mmYears: [(Int, String, String)] = [
     (1903, "✈️", "The first airplane flight"),
     (1912, "🧊", "The Titanic sinks"),
     (1969, "🌕", "People walk on the Moon"),
-    (2000, "🎆", "A new millennium begins"),
+    (2000, "🎆", "The whole world parties for the year 2000"),
 ]
 
 private struct MMOrder {
@@ -141,8 +141,8 @@ private final class MasonModel: ArcadeModel {
         case 3: n = Int.random(in: 40...rampInt(60, 100, from: 5, to: 6.5))
         default:
             if chance(0.5, from: 7.5, to: 10) {
-                n = Int.random(in: 1000...2030)
-                year = ("🏛️", "A new temple is finished")
+                n = Int.random(in: 1000...2025)
+                year = ("🏛️", "A cornerstone for a new building")
             } else if Double.random(in: 0..<1) < 0.12 {
                 n = Calendar.current.component(.year, from: Date())
                 year = ("🎂", "This year — now!")
@@ -207,20 +207,17 @@ private final class MasonModel: ArcadeModel {
 
     override func botAct(correct: Bool) {
         guard stage == .carving || stage == .hint else { return }
+        // One tap per act, like a child: a slip is a wrong letter (fixed with undo next time) or,
+        // once the stone is wrong, striking DONE anyway.
         let ans = Array(order.answer)
-        if !correct {
-            let wrong = romanStandard(max(1, order.n + (Bool.random() ? 1 : -1)))
-            carved = Array(wrong)
-            done()
-            return
-        }
-        if carved.count < ans.count && Array(ans.prefix(carved.count)) == carved {
-            carve(ans[carved.count])
-            if carved.count == ans.count { done() }
-        } else if carved == ans {
-            done()
+        let onTrack = carved.count <= ans.count && Array(ans.prefix(carved.count)) == carved
+        let letters = mmSymbols.prefix(symbolsShown).map(\.0)
+        if onTrack && carved.count < ans.count {
+            carve(correct ? ans[carved.count] : (letters.filter { $0 != ans[carved.count] }.randomElement() ?? "I"))
+        } else if onTrack {
+            if correct { done() } else { carve(letters.randomElement() ?? "I"); done() }
         } else {
-            carved = []
+            if correct { undo() } else { done() }
         }
     }
 }
@@ -332,12 +329,12 @@ private struct MMYard: View {
                 .position(x: size.width * 0.5, y: size.height - stoneH / 2)
             // The mason with his mallet, left of the stone.
             ZStack(alignment: .topTrailing) {
-                ForumPerson(mood: masonMood, hat: .cap, tunic: 0x6f8f4e, skin: 0xe6b48a, size: 120, beard: true, lookX: 1)
+                ForumPerson(mood: masonMood, hat: .cap, tunic: 0x6f8f4e, skin: 0xe6b48a, size: 140, beard: true, lookX: 1)
                 MMMallet()
                     .rotationEffect(.degrees(swing ? 35 : -30), anchor: .bottomLeading)
-                    .offset(x: 18, y: 44)
+                    .offset(x: 16, y: 54)
             }
-            .position(x: size.width * 0.5 - stoneW / 2 - 40, y: size.height - 64)
+            .position(x: size.width * 0.5 - stoneW / 2 - 34, y: size.height - 72)
         }
         .onChange(of: model.strikes) { _ in
             withAnimation(.easeIn(duration: 0.08)) { swing = true }
@@ -359,7 +356,7 @@ private struct MMYard: View {
 
     private var traveller: some View {
         let mood: ForumPerson.Mood = model.stage == .right ? .cheer : (model.stage == .wrong ? .oops : .talk)
-        let near = CGPoint(x: size.width * 0.5 + min(size.height * 0.94, 330) * 0.3 + 46, y: size.height - 64)
+        let near = CGPoint(x: size.width * 0.5 + min(size.height * 0.94, 330) * 0.3 + 40, y: size.height - 72)
         return TimelineView(.animation(minimumInterval: 1 / 20, paused: model.deadline == nil || model.phase != .playing)) { tl in
             let t: CGFloat = {
                 guard let dl = model.deadline, model.order.limit > 0 else { return 1 }
@@ -370,7 +367,7 @@ private struct MMYard: View {
             let walking = model.deadline != nil
             let step = walking ? sin(tl.date.timeIntervalSinceReferenceDate * 9) : 0
             ForumPerson(mood: mood, hat: model.order.year == nil ? .hood : .laurel,
-                        tunic: model.order.year == nil ? 0x4f7fb0 : 0xf2ead8, skin: 0xd9a27a, size: 120, lookX: -1)
+                        tunic: model.order.year == nil ? 0x4f7fb0 : 0xf2ead8, skin: 0xd9a27a, size: 140, lookX: -1)
                 .scaleEffect(0.45 + 0.55 * t)
                 .rotationEffect(.degrees(step * 4))
                 .offset(y: CGFloat(abs(step)) * -3)
