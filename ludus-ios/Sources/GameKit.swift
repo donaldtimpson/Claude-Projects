@@ -167,9 +167,12 @@ class ArcadeModel: ObservableObject {
     /// levels; once the NEXT tier is fully in, it drops to `keep` (review) rather than vanishing.
     func tierWeights(_ starts: [Double], fadeIn: Double = 1.5, keep: Double = 0.3) -> [Double] {
         let inW = starts.map { s in max(0, min(1, (d - s) / fadeIn + (s <= 1 ? 1 : 0))) }
+        // Review weight is shared out over the superseded tiers, so a game with many tiers isn't
+        // swamped by its early content (8 tiers × 0.3 each would outweigh the newest one).
+        let k = min(keep, 0.6 / Double(max(1, starts.count - 1)))
         return inW.indices.map { i in
             let next = i + 1 < inW.count ? inW[i + 1] : 0
-            return inW[i] * (keep + (1 - keep) * (1 - next))
+            return inW[i] * (k + (1 - k) * (1 - next))
         }
     }
     /// Picks a content tier at random by `tierWeights` (always returns a valid index).
