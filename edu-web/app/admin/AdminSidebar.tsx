@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import SyncButton from "./SyncButton";
 
@@ -41,9 +42,41 @@ const GROUPS: { title: string; items: { label: string; href: string; match: (p: 
   },
 ];
 
+// Collapsed state is a per-device preference in localStorage, read through
+// useSyncExternalStore so the server render (expanded) and client agree.
+const COLLAPSED_KEY = "admin-sidebar-collapsed";
+const CHANGE_EVENT = "admin-sidebar-change";
+
+function subscribe(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(CHANGE_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(CHANGE_EVENT, onChange);
+  };
+}
+
+function readCollapsed() {
+  try {
+    return localStorage.getItem(COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setCollapsed(value: boolean) {
+  try {
+    localStorage.setItem(COLLAPSED_KEY, value ? "1" : "0");
+  } catch {
+    // Storage blocked — the toggle still works until the next reload.
+  }
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
 export default function AdminSidebar() {
   const pathname = usePathname() ?? "";
   const router = useRouter();
+  const collapsed = useSyncExternalStore(subscribe, readCollapsed, () => false);
 
   // The login screen has no session — keep it chrome-free.
   if (pathname === "/admin/login") return null;
@@ -54,10 +87,40 @@ export default function AdminSidebar() {
     router.refresh();
   }
 
+  if (collapsed) {
+    return (
+      <aside className="md:w-10 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex md:flex-col items-center px-2 py-2 md:px-0 md:py-4 gap-3">
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          title="Show sidebar"
+          aria-label="Show sidebar"
+          className="w-7 h-7 rounded-md text-parchment-dim hover:text-gold-300 hover:bg-crimson-800 transition-colors"
+        >
+          »
+        </button>
+        <span className="font-display text-[10px] tracking-[0.15em] uppercase text-parchment-dim/60 md:[writing-mode:vertical-rl]">
+          Admin
+        </span>
+      </aside>
+    );
+  }
+
   return (
     <aside className="md:w-56 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex flex-col">
       <div className="px-4 py-4 flex items-center justify-between md:block gap-3">
-        <span className="font-display text-sm tracking-[0.15em] uppercase text-gold-300">Admin</span>
+        <div className="flex items-center justify-between gap-3">
+          <span className="font-display text-sm tracking-[0.15em] uppercase text-gold-300">Admin</span>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            title="Hide sidebar"
+            aria-label="Hide sidebar"
+            className="w-7 h-7 rounded-md text-parchment-dim hover:text-gold-300 hover:bg-crimson-800 transition-colors"
+          >
+            «
+          </button>
+        </div>
         <Link
           href="/"
           className="text-parchment-dim hover:text-parchment text-xs transition-colors md:block md:mt-1"
