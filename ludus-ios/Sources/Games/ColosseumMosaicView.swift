@@ -189,23 +189,15 @@ private final class MosaicModel: ArcadeModel {
         withTransaction(t) {
             puzzle = p
             basket = (decoys + [p.answer]).shuffled()
-            holeOpen = false; placed = nil; bounced = nil; glowRight = false; sparkle = false
+            holeOpen = true; placed = nil; bounced = nil; glowRight = false; sparkle = false
             mouseX = -0.25
-            busy = true
+            busy = false
             roundID += 1
         }
-        // Mus the mouse runs across and pinches the tile.
-        let gapX = (CGFloat(p.gap % p.cols) + 0.5) / CGFloat(p.cols)
-        let run = 0.9
-        later(0.35) { [unowned self] in
+        // Mus the mouse scampers off with his loot (the tile's in his sack — no peeking!).
+        later(0.2) { [unowned self] in
             Sfx.play(.whoosh, volume: 0.5)
-            withAnimation(.linear(duration: run * Double(gapX + 0.25))) { mouseX = gapX }
-            later(run * Double(gapX + 0.25)) { [unowned self] in
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) { holeOpen = true }
-                Sfx.play(.pop)
-                withAnimation(.linear(duration: run * Double(1.25 - gapX))) { mouseX = 1.25 }
-                later(0.3) { [unowned self] in busy = false }
-            }
+            withAnimation(.linear(duration: 1.3)) { mouseX = 1.25 }
         }
     }
 
@@ -425,9 +417,9 @@ struct MosaicMenderView: View {
                 : (model.puzzle.mirror ? "Mus! Make both sides match!" : "Mus took a tile! Which fits?")
         }
         return HStack(spacing: 6) {
-            MEmperor(s: 96, mood: mood)
+            MEmperor(s: 118, mood: mood)
             Text(line)
-                .font(luSerif(19, .black)).foregroundStyle(Color(hex: Lu.inkDark))
+                .font(luSerif(21, .black)).foregroundStyle(Color(hex: Lu.inkDark))
                 .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.7)
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
@@ -481,11 +473,12 @@ struct MosaicMenderView: View {
             // Mus the mouse, running along the bottom edge with the tile.
             MMouse(s: min(70, s * 0.9))
                 .overlay(alignment: .top) {
-                    if model.holeOpen && model.mouseX < 1.2 {
-                        MTileView(tile: p.answer, s: min(70, s * 0.9) * 0.36)
-                            .rotationEffect(.degrees(-15)).offset(x: 6, y: 2)
-                            .opacity(model.mouseX > 1 ? 0 : 1)
+                    // His loot sack
+                    ZStack {
+                        Circle().fill(Color(hex: 0xa0703a)).frame(width: 22, height: 22)
+                        Capsule().fill(Color(hex: 0x6a4a22)).frame(width: 12, height: 4).offset(y: -10)
                     }
+                    .offset(x: -4, y: 4)
                 }
                 .position(x: -20 + (w + 40) * model.mouseX, y: h + frameW + 6)
                 .opacity(model.mouseX > -0.2 && model.mouseX < 1.2 ? 1 : 0)

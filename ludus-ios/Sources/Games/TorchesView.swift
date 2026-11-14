@@ -425,13 +425,13 @@ private struct TBackdrop: View {
                 }
                 Circle().fill(Color(hex: 0xf6ecd4)).frame(width: 46).shadow(color: .white.opacity(0.5), radius: 16)
                     .overlay(Circle().fill(Color(hex: 0x0b0d26)).frame(width: 40).offset(x: 12, y: -6))
-                    .position(x: w * 0.82, y: h * 0.13)
+                    .position(x: w * 0.12, y: h * 0.235)
                 // Ring of arches (two tiers), dark against the sky
                 VStack(spacing: 0) {
                     TArches(count: 9).fill(Color(hex: 0x3a2e3e), style: FillStyle(eoFill: true)).frame(height: h * 0.09)
                     TArches(count: 11).fill(Color(hex: 0x2e2434), style: FillStyle(eoFill: true)).frame(height: h * 0.08)
                 }
-                .padding(.top, h * 0.17)
+                .padding(.top, h * 0.19)
                 // Arena floor in torchlight
                 VStack(spacing: 0) {
                     Spacer().frame(height: h * 0.34)

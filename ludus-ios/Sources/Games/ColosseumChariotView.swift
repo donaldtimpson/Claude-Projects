@@ -175,7 +175,7 @@ private final class ChariotModel: ArcadeModel {
         let cols = rampInt(3, 6, to: 8)
         let rows = rampInt(3, 7, to: 9)
         let want = rampInt(2, 13, to: 9)
-        let density = ramp(0, 0.24, from: 1.5, to: 8)
+        let density = ramp(0, 0.28, from: 1.5, to: 7.5)
         let appleN = Int((ramp(0, 2.6, from: 2.6, to: 9) + Double.random(in: 0..<0.8)).rounded(.down))
         let loopsOn = d >= 3.5 && (chance(1, from: 3.5, to: 5) || want > 8)
         let spare = rampInt(3, 0, from: 1, to: 8)
@@ -623,7 +623,7 @@ struct ChariotCodeView: View {
                     .transition(.scale(scale: 0.3).combined(with: .opacity))
             }
             if model.cheer {
-                Text("🎉").font(.system(size: cs * 0.7)).position(x: centre(pz.goal).x, y: centre(pz.goal).y - cs * 0.6)
+                Text("🎉").font(.system(size: cs * 0.6)).position(x: min(gw - cs * 0.3, centre(pz.goal).x + cs * 0.55), y: centre(pz.goal).y + cs * 0.1)
                     .transition(.scale(scale: 0.2).combined(with: .opacity))
             }
         }
