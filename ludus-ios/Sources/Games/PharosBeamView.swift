@@ -7,16 +7,18 @@ import SwiftUI
 // a miss swings the beam to where the ship really was. The sea disc is the real map around
 // Alexandria (Mercator, so on-map directions are true compass directions).
 //
-// Ladder:  I    the ship is VISIBLE; "a ship from the TOP ⬆️ (North)"; 4 directions
-//          II   ships hide in fog — read NORTH ⬆️ / SOUTH ⬇️ / EAST ➡️ / WEST ⬅️ off the rose (the arrow
-//               still shows the way); 4 directions
-//          III  8 directions (NORTH-EAST …)
-//          IV   the rose (and map) is turned 90/180/270° — find N first; 4 directions
-//          V    turned by any 45° step; 8 directions; a slow clock appears (20 s)
-//          VI   "a ship from Rome" — Mediterranean places relative to Alexandria; 8 directions
-//          VII  bearings in degrees (045°, 270°…) on 45° steps
-//          VIII bearings on 30° steps (12 spots)
-//          IX+  a mix of V–VIII on a turned rose, clock tightening to 7 s.
+// Continuous difficulty (tuned off `d`, never the level): kinds of call fade in by tier and old
+// kinds stay as review —
+//   1    the ship is VISIBLE; "a ship from the TOP ⬆️ (North)"; 4 directions
+//   2    ships hide in fog — NORTH ⬆️ / SOUTH ⬇️ / EAST ➡️ / WEST ⬅️ off the rose
+//   3    8 directions (NORTH-EAST …)
+//   4    the rose (and map) is turned 90/180/270° — find N first
+//   5    turned by any 45° step; 8 directions
+//   6    "a ship from Rome" — Mediterranean places relative to Alexandria
+//   7    bearings in degrees (045°, 270°…) on 45° steps
+//   8    bearings on 30° steps (12 spots)
+// From d 8 the place / degree calls may come on a turned rose too (chance → 60 % by d 10); a
+// patience clock appears at d 4.5 (20 s) and tightens smoothly to 7 s by d 10.
 
 private enum PBLabels { case four, eight, degrees }
 
@@ -91,13 +93,10 @@ private struct PBRound {
 
 private func pbDeg(_ b: Double) -> String { String(format: "%03.0f°", b) }
 
-private func makeRound(_ level: Int) -> PBRound {
-    var lv = level
-    var rose: Double = 0
-    if lv >= 9 {                        // endless: a turned rose over the hardest kinds
-        lv = [5, 6, 7, 8].randomElement()!
-        rose = Double(Int.random(in: 1...3) * 90)
-    }
+/// `kind` 1…8 (see the header); `turned` puts the harder kinds on a turned rose.
+private func makeRound(_ kind: Int, turned: Bool = false) -> PBRound {
+    let lv = kind
+    let rose: Double = turned ? Double(Int.random(in: 1...3) * 90) : 0
     let four: [Double] = [0, 90, 180, 270]
     let eight: [Double] = (0..<8).map { Double($0) * 45 }
     switch lv {
@@ -140,8 +139,6 @@ private func makeRound(_ level: Int) -> PBRound {
     }
 }
 
-/// Seconds a ship waits (0 = no clock): none to IV, then 20 s easing to 7 s.
-private func pbPatience(_ level: Int) -> Double { level <= 4 ? 0 : max(7, 20 - Double(level - 5) * 2) }
 
 /// Signed shortest turn from a to b, degrees.
 private func pbDelta(_ a: Double, _ b: Double) -> Double {
@@ -172,13 +169,18 @@ private final class PharosModel: ArcadeModel {
 
     override func onBegin() { next() }
 
+    private func roll() -> PBRound {
+        let kind = tier([1, 2, 3, 4, 5, 6, 7, 8]) + 1
+        return makeRound(kind, turned: kind >= 6 && chance(0.6, from: 8, to: 10))
+    }
+
     func next() {
-        var r = makeRound(level)
+        var r = roll()
         // Don't repeat the same spot twice running.
-        if r.answer == round.answer && r.bearings.count == round.bearings.count && roundID > 0 { r = makeRound(level) }
+        if r.answer == round.answer && r.bearings.count == round.bearings.count && roundID > 0 { r = roll() }
         round = r
         chosen = nil; outcome = .none; showAnswer = false; locked = false
-        perQ = pbPatience(level); tLeft = perQ
+        perQ = d < 4.5 ? 0 : ramp(20, 7, from: 4.5, to: 10); tLeft = perQ
         roundID += 1
     }
 
@@ -348,20 +350,88 @@ private struct PBBeamShape: Shape {
 }
 
 /// The Pharos: three stacked tiers and a fire on top.
+/// The Pharos seen from the gallery: a stone tower with a living flame on top.
 private struct PBTower: View {
     let glow: Bool
     var body: some View {
-        VStack(spacing: 0) {
-            Circle().fill(RadialGradient(colors: [.white, Color(hex: Lu.gold), Color(hex: Lu.tangerine).opacity(0)],
-                                         center: .center, startRadius: 1, endRadius: 14))
-                .frame(width: 26, height: 26).scaleEffect(glow ? 1.5 : 1)
-            RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0xe9dcc0)).frame(width: 10, height: 10)
-            RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0xd9c8a4)).frame(width: 16, height: 14)
-            RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0xc8b48c)).frame(width: 24, height: 20)
-            Capsule().fill(Color(hex: 0x8a7350)).frame(width: 38, height: 7)
+        TimelineView(.animation(minimumInterval: 1 / 20)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            let flick = 1 + 0.08 * sin(t * 13) + 0.05 * sin(t * 7.3)
+            VStack(spacing: 0) {
+                ZStack {
+                    Circle().fill(RadialGradient(colors: [Color(hex: 0xfff3c4).opacity(0.9), Color(hex: Lu.tangerine).opacity(0)],
+                                                 center: .center, startRadius: 2, endRadius: 30))
+                        .frame(width: 60, height: 60).scaleEffect(glow ? 1.6 : flick)
+                    Ellipse().fill(LinearGradient(colors: [.white, Color(hex: Lu.gold), Color(hex: 0xe0602a)], startPoint: .top, endPoint: .bottom))
+                        .frame(width: 14, height: 22 * flick).offset(y: 2)
+                }
+                .frame(height: 30)
+                // lantern room
+                ZStack {
+                    RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0x3b2a18)).frame(width: 22, height: 8)
+                    HStack(spacing: 3) { ForEach(0..<3, id: \.self) { _ in Rectangle().fill(Color(hex: 0xffe7a0)).frame(width: 4, height: 6) } }
+                }
+                Trapezoid(top: 0.7).fill(LinearGradient(colors: [Color(hex: 0xf1e6cc), Color(hex: 0xc9b58c)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: 22, height: 14)
+                Trapezoid(top: 0.75).fill(LinearGradient(colors: [Color(hex: 0xe9dcc0), Color(hex: 0xbca57a)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: 30, height: 18)
+                Trapezoid(top: 0.8).fill(LinearGradient(colors: [Color(hex: 0xdccba5), Color(hex: 0xa98f62)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: 40, height: 22)
+                Capsule().fill(Color(hex: 0x5a4a35)).frame(width: 56, height: 9)
+            }
+            .offset(y: -30)
+            .shadow(color: .black.opacity(0.6), radius: 4, y: 3)
         }
-        .offset(y: -18)
-        .shadow(color: .black.opacity(0.5), radius: 3, y: 2)
+    }
+}
+
+private struct Trapezoid: Shape {
+    var top: CGFloat
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let inset = r.width * (1 - top) / 2
+        p.move(to: CGPoint(x: r.minX + inset, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX - inset, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.closeSubpath()
+        return p
+    }
+}
+
+/// Night over the harbour: deep sky, twinkling stars, a moon, rolling swell.
+private struct PBNight: View {
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 24)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, size in
+                let w = size.width, h = size.height
+                ctx.fill(Path(CGRect(origin: .zero, size: size)),
+                         with: .linearGradient(Gradient(colors: [Color(hex: 0x0b1030), Color(hex: 0x15285a), Color(hex: 0x0e3a5c)]),
+                                               startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+                for i in 0..<70 {
+                    let x = CGFloat((i * 7919) % 1000) / 1000 * w
+                    let y = CGFloat((i * 104729) % 1000) / 1000 * h * 0.5
+                    let tw = 0.45 + 0.55 * (0.5 + 0.5 * sin(t * (1.5 + Double(i % 5) * 0.4) + Double(i)))
+                    let r: CGFloat = i % 9 == 0 ? 1.8 : 1.1
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(.white.opacity(tw)))
+                }
+                // Moon.
+                let mc = CGPoint(x: w * 0.84, y: h * 0.13)
+                ctx.fill(Path(ellipseIn: CGRect(x: mc.x - 46, y: mc.y - 46, width: 92, height: 92)), with: .color(Color(hex: 0xfff4c8).opacity(0.12)))
+                ctx.fill(Path(ellipseIn: CGRect(x: mc.x - 22, y: mc.y - 22, width: 44, height: 44)), with: .color(Color(hex: 0xfff4c8)))
+                ctx.fill(Path(ellipseIn: CGRect(x: mc.x - 9, y: mc.y - 12, width: 9, height: 9)), with: .color(Color(hex: 0xe6d9a8)))
+                // Swell.
+                for k in 0..<7 {
+                    let y0 = h * (0.66 + CGFloat(k) * 0.055)
+                    var p = Path()
+                    p.move(to: CGPoint(x: 0, y: y0))
+                    var x: CGFloat = 0
+                    while x <= w {
+                        p.addLine(to: CGPoint(x: x, y: y0 + CGFloat(sin(Double(x) / 28 + t * (0.8 + Double(k) * 0.15) + Double(k))) * 4))
+                        x += 8
+                    }
+                    ctx.stroke(p, with: .color(Color(hex: 0x6fb3d9).opacity(0.10 + Double(k) * 0.025)), lineWidth: 2)
+                }
+            }
+        }
     }
 }
 
@@ -373,17 +443,17 @@ struct PharosBeamView: View {
 
     var body: some View {
         ArcadeShell(model: m, spec: GameID.pharosBeam.spec ?? GameSpec(title: "Pharos Beam", mechanic: "", premise: "", game: .pharosBeam),
-                    accent: Lu.sky, onClose: onClose) {
-            VStack(spacing: 10) {
+                    accent: Lu.sky, onClose: onClose, backdrop: { PBNight() }) {
+            VStack(spacing: 12) {
                 Color.clear.frame(height: 56)
                 banner
                 GeometryReader { geo in
-                    let R = min(geo.size.width, geo.size.height) / 2 - 6
+                    let R = min(geo.size.width, geo.size.height) / 2 - 14
                     disc(R).position(x: geo.size.width / 2, y: geo.size.height / 2)
                 }
-                footer.frame(height: 56)
+                footer.frame(height: 54)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14).padding(.bottom, 8)
         }
         .onReceive(clock) { _ in m.tick(0.1) }
         .onChange(of: m.phase) { p in
@@ -392,33 +462,31 @@ struct PharosBeamView: View {
         }
     }
 
+    /// The call: a signal note pinned up in the lamp room.
     private var banner: some View {
         let r = m.round
         return HStack(spacing: 12) {
-            Text(r.traveller).font(.system(size: 44))
+            Text(r.traveller).font(.system(size: 42))
                 .rotationEffect(.degrees(bob ? -6 : 6))
-            VStack(alignment: .leading, spacing: 2) {
-                Text(r.lead).font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
-                Text(r.title).font(luSerif(30, .black)).foregroundStyle(Color(hex: Lu.gold))
+                .frame(width: 54)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(r.lead.uppercased()).font(luFont(11, .heavy)).tracking(1.4).foregroundStyle(Color(hex: lhInkSoft))
+                Text(r.title).font(luSerif(30, .black)).foregroundStyle(Color(hex: lhInk))
                     .lineLimit(1).minimumScaleFactor(0.5)
                 if !r.sub.isEmpty {
-                    Text(r.sub).font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.ink))
+                    Text(r.sub).font(luFont(13, .bold)).foregroundStyle(Color(hex: lhInkSoft))
                         .lineLimit(1).minimumScaleFactor(0.6)
                 }
             }
             Spacer(minLength: 0)
-            Text("📯").font(.system(size: 30)).scaleEffect(bob ? 1.12 : 0.92)
+            Text("📯").font(.system(size: 28)).scaleEffect(bob ? 1.12 : 0.92)
         }
-        .padding(.horizontal, 16).padding(.vertical, 10)
-        .frame(maxWidth: .infinity)
-        .background(luPanelShape(18))
+        .padding(.horizontal, 14).padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 84)
+        .background(LHParchment())
         .overlay(alignment: .bottom) {
-            if m.perQ > 0 {
-                GeometryReader { g in
-                    Capsule().fill(Color(hex: m.tLeft / m.perQ < 0.3 ? Lu.coral : Lu.sky))
-                        .frame(width: max(0, g.size.width * CGFloat(m.tLeft / m.perQ)), height: 5)
-                }
-                .frame(height: 5).padding(.horizontal, 14).padding(.bottom, 3)
+            if m.perQ > 0 && m.outcome == .none {
+                LHPatienceBar(left: m.tLeft, total: m.perQ).padding(.horizontal, 16).padding(.bottom, 5)
             }
         }
         .id(m.roundID)
@@ -430,27 +498,40 @@ struct PharosBeamView: View {
         let r = m.round
         let text: String, hex: UInt
         switch m.outcome {
-        case .none: (text, hex) = ("👆 Drag the beam — let go to shine!", Lu.inkDim)
+        case .none: (text, hex) = ("👆 Drag the beam — let go to shine!", Lu.ink)
         case .lit: (text, hex) = ("TOOT TOOT! Thank you, keeper! 📯", Lu.mint)
-        case .missed: (text, hex) = (r.labels == .degrees ? "It was at \(r.answerName)" : "It was in the \(r.answerName)!", Lu.coral)
+        case .missed: (text, hex) = (r.labels == .degrees ? "It was at \(r.answerName)" : "It was in the \(r.answerName)!", 0xffb3a3)
         }
         return Text(text).font(luFont(18, .heavy)).foregroundStyle(Color(hex: hex))
-            .multilineTextAlignment(.center).minimumScaleFactor(0.6)
+            .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(1)
+            .padding(.horizontal, 16).padding(.vertical, 10)
+            .background(Capsule().fill(Color.black.opacity(0.35)))
             .transaction { $0.animation = nil }
     }
 
     private func disc(_ R: CGFloat) -> some View {
         let r = m.round
-        let beamHex: UInt = m.outcome == .lit ? Lu.mint : (m.showAnswer ? Lu.mint : (m.outcome == .missed ? Lu.coral : Lu.gold))
+        let beamHex: UInt = m.outcome == .lit ? Lu.mint : (m.showAnswer ? Lu.mint : (m.outcome == .missed ? Lu.coral : 0xfff1b8))
         return ZStack {
+            // The brass gallery ring.
+            Circle().fill(LinearGradient(colors: [Color(hex: 0xe2c06a), Color(hex: 0x8a6a22)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: R * 2 + 22, height: R * 2 + 22)
+                .shadow(color: .black.opacity(0.6), radius: 10, y: 6)
+            ForEach(0..<24, id: \.self) { k in
+                let u = pbUnit(Double(k) * 15)
+                Circle().fill(Color(hex: 0x5e4512)).frame(width: 4, height: 4)
+                    .position(x: R + 11 + u.x * (R + 6), y: R + 11 + u.y * (R + 6))
+            }
+            .frame(width: R * 2 + 22, height: R * 2 + 22)
             PBSea(rose: r.rose, strong: r.mapStrong).frame(width: R * 2, height: R * 2)
-            Circle().stroke(Color(hex: Lu.goldLine), lineWidth: 4).frame(width: R * 2, height: R * 2)
+            Circle().stroke(Color(hex: 0x5e4512), lineWidth: 2).frame(width: R * 2, height: R * 2)
             PBRose(round: r, R: R)
             PBBeamShape()
-                .fill(RadialGradient(colors: [Color(hex: beamHex).opacity(0.85), Color(hex: beamHex).opacity(0.12)],
+                .fill(RadialGradient(colors: [Color(hex: beamHex).opacity(0.9), Color(hex: beamHex).opacity(0.08)],
                                      center: .center, startRadius: 4, endRadius: R))
                 .frame(width: R * 2, height: R * 2)
                 .rotationEffect(.degrees(m.beam))
+                .blendMode(.screen)
                 .allowsHitTesting(false)
             ForEach(r.bearings.indices, id: \.self) { i in spot(i, R) }
             PBTower(glow: m.outcome == .lit)

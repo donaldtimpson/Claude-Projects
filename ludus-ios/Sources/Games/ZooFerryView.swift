@@ -6,15 +6,12 @@ import SwiftUI
 // the ferry bound for its home (or tap that ferry). The ferry sails across the world map from
 // Alexandria; at home the animal cheers. A wrong ferry turns back and the right home glows.
 //
-// Ladder:  I    Africa vs Australia only: giraffe, zebra, hippo / kangaroo, koala
-//          II   3 continents, picture-famous animals (+ panda, bison, penguin …)
-//          III  4 continents, the whole animal list
-//          IV   all 7 continents
-//          V    countries (panda → China, kiwi → New Zealand …), 3 ferries; a slow clock (20 s)
-//          VI   countries, 4 ferries
-//          VII  habitats: desert, rainforest, polar ice, grassland, mountains, ocean (4 ferries)
-//          VIII continent + habitat ("snow leopard → Asia · mountains"), 4 ferries
-//          IX+  a mix of IV–VIII, clock tightening to 8 s.
+// Continuous difficulty (tuned off `d`, never the level):
+//   kinds fade in by tier — continents (1) → countries (4: panda → China, kiwi → New Zealand) →
+//   habitats (5.5: desert, rainforest, polar ice, grassland, mountains, ocean) → continent +
+//   habitat (7: "snow leopard → Asia · mountains") — old kinds stay as review;
+//   continent rounds: Africa-vs-Australia starters only below d 2, picture-famous animals below
+//   d 3, then the whole deck; ferries 2 → 4 (by d 3.5); a patience clock from d 4 (20 s → 8 s).
 //
 // Facts are conservative: only animals whose wild home is unambiguous. Where a range spills over
 // (sloths and macaws reach Central America; the fennec fox reaches Sinai) the other home is never
@@ -93,7 +90,7 @@ private struct ZFAnimal {
     var country: String? = nil
     var biome: ZFBiome? = nil
     var also: Set<String> = []      // continents/countries that are ALSO home — never offered as wrong
-    var famous = false              // level II pool (level I: `zfStarters`)
+    var famous = false              // the early pool (the very first: `zfStarters`)
 }
 
 /// The deck. Sources of truth: native wild range (not zoos, not introductions).
@@ -118,7 +115,7 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🦅", name: "Bald eagle", continent: "North America", country: "United States", also: ["Canada", "Mexico"]),
     .init(emoji: "🐊", name: "American alligator", continent: "North America", country: "United States"),
     .init(emoji: "🐐", name: "Mountain goat", continent: "North America", biome: .mountains, also: ["Canada"]),
-    .init(emoji: "🦙", name: "Guanaco", continent: "South America", biome: .mountains),   // not before III
+    .init(emoji: "🦙", name: "Llama", continent: "South America", biome: .mountains),
     .init(emoji: "🦥", name: "Sloth", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🦜", name: "Scarlet macaw", continent: "South America", biome: .rainforest, also: ["North America"]),
     .init(emoji: "🐸", name: "Poison dart frog", continent: "South America", biome: .rainforest, also: ["North America"]),
@@ -184,20 +181,6 @@ private struct ZFQuestion {
 
 private enum ZFKind { case continent, country, biome, both }
 
-private func zfKind(_ level: Int) -> (ZFKind, Int) {
-    switch level {
-    case 1: return (.continent, 2)
-    case 2: return (.continent, 3)
-    case 3: return (.continent, 4)
-    case 4: return (.continent, 7)
-    case 5: return (.country, 3)
-    case 6: return (.country, 4)
-    case 7: return (.biome, 4)
-    case 8: return (.both, 4)
-    default: return [(.continent, 7), (.country, 4), (.biome, 4), (.both, 4)].randomElement()!
-    }
-}
-
 /// Is `d` a true home for `a`? (The answer, or a home listed in `also`.)
 private func zfTrue(_ a: ZFAnimal, _ d: ZFDest) -> Bool {
     switch d {
@@ -208,11 +191,12 @@ private func zfTrue(_ a: ZFAnimal, _ d: ZFDest) -> Bool {
     }
 }
 
-private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
-    let (kind, n) = zfKind(level)
+/// `starter` = Africa/Australia only; `famousOnly` = the picture-famous animals; `n` ferries.
+private func zfQuestion(_ kind: ZFKind, n: Int, starter: Bool = false, famousOnly: Bool = false,
+                        avoiding last: String?) -> ZFQuestion {
     let pool: [ZFAnimal] = zfAnimals.filter { a in
         switch kind {
-        case .continent: return a.continent != nil && (level > 2 || a.famous) && (level > 1 || zfStarters.contains(a.emoji))
+        case .continent: return a.continent != nil && (!famousOnly || a.famous) && (!starter || zfStarters.contains(a.emoji))
         case .country: return a.country != nil
         case .biome: return a.biome != nil
         case .both: return a.continent != nil && a.biome != nil
@@ -226,7 +210,7 @@ private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
     switch kind {
     case .continent:
         answer = .continent(animal.continent!)
-        wrong = (level == 1 ? zfStarterHomes : zfContinents).map { ZFDest.continent($0) }
+        wrong = (starter ? zfStarterHomes : zfContinents).map { ZFDest.continent($0) }
     case .country:
         answer = .country(animal.country!)
         wrong = zfCountries.map { ZFDest.country($0.name) }
@@ -242,12 +226,7 @@ private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
     }
     wrong = wrong.filter { !zfTrue(animal, $0) }.shuffled()
     var opts = [answer] + wrong.prefix(n - 1)
-    if kind == .continent && n == 7 {
-        // All seven, in a fixed order, so the cards stay put level after level.
-        opts = zfContinents.map { ZFDest.continent($0) }.filter { $0 == answer || !zfTrue(animal, $0) }
-    } else {
-        opts.shuffle()
-    }
+    opts.shuffle()
     return ZFQuestion(animal: animal, options: opts, answer: opts.firstIndex(of: answer)!)
 }
 
@@ -255,33 +234,35 @@ private func zfQuestion(_ level: Int, avoiding last: String?) -> ZFQuestion {
 /// Every generated question: one true option, no repeats, the asked size (all-7 may drop a
 /// second home). Run once per launch in DEBUG; prints the result.
 private func zfSelfCheck() {
-    var n = 0
-    for level in 1...12 {
-        for _ in 0..<400 {
-            let q = zfQuestion(level, avoiding: nil)
-            let truths = q.options.filter { zfTrue(q.animal, $0) }
-            precondition(truths.count == 1 && zfTrue(q.animal, q.options[q.answer]), "ZooFerry: \(q.animal.name) \(q.options)")
-            precondition(Set(q.options).count == q.options.count, "ZooFerry: duplicate options")
-            for case .country(let c) in q.options { precondition(GeoAtlas.named(c) != nil, "ZooFerry: no map for \(c)") }
-            if level == 1 {
-                precondition(zfStarters.contains(q.animal.emoji), "ZooFerry: L1 animal \(q.animal.name)")
-                for case .continent(let c) in q.options { precondition(zfStarterHomes.contains(c), "ZooFerry: L1 ferry \(c)") }
+    var n_ = 0
+    let kinds: [ZFKind] = [.continent, .country, .biome, .both]
+    for kind in kinds {
+        for (starter, famous) in [(true, true), (false, true), (false, false)] where kind == .continent || !starter {
+            for n in 2...4 {
+                for _ in 0..<60 {
+                    let q = zfQuestion(kind, n: n, starter: starter, famousOnly: famous, avoiding: nil)
+                    let truths = q.options.filter { zfTrue(q.animal, $0) }
+                    precondition(truths.count == 1 && zfTrue(q.animal, q.options[q.answer]), "ZooFerry: \(q.animal.name) \(q.options)")
+                    precondition(Set(q.options).count == q.options.count, "ZooFerry: duplicate options")
+                    for case .country(let c) in q.options { precondition(GeoAtlas.named(c) != nil, "ZooFerry: no map for \(c)") }
+                    if starter {
+                        precondition(zfStarters.contains(q.animal.emoji), "ZooFerry: starter animal \(q.animal.name)")
+                        for case .continent(let c) in q.options { precondition(zfStarterHomes.contains(c), "ZooFerry: starter ferry \(c)") }
+                    }
+                    n_ += 1
+                }
             }
-            precondition(level >= 3 || q.animal.name != "Guanaco", "ZooFerry: guanaco before III")
-            n += 1
         }
     }
-    print("ZooFerry self-check OK: \(n) questions")
+    print("ZooFerry self-check OK: \(n_) questions")
 }
 #endif
 
-/// Seconds an animal waits (0 = no clock): none to IV, then 20 s easing to 8 s.
-private func zfPatience(_ level: Int) -> Double { level <= 4 ? 0 : max(8, 20 - Double(level - 5) * 2) }
 
 @MainActor
 private final class ZooFerryModel: ArcadeModel {
     enum Stage { case waiting, sailing, home, lost }
-    @Published var q = zfQuestion(1, avoiding: nil)
+    @Published var q = zfQuestion(.continent, n: 2, starter: true, famousOnly: true, avoiding: nil)
     @Published var stage: Stage = .waiting
     @Published var picked: Int?
     @Published var boat: CGPoint = GeoAtlas.point(lat: 31.2, lon: 29.92)
@@ -302,10 +283,12 @@ private final class ZooFerryModel: ArcadeModel {
     override func onBegin() { next() }
 
     func next() {
-        q = zfQuestion(level, avoiding: q.animal.name)
+        let kind = [ZFKind.continent, .country, .biome, .both][tier([1, 4, 5.5, 7])]
+        let n = kind == .continent ? rampInt(2, 4, to: 3.5) : (kind == .country ? rampInt(3, 4, from: 4, to: 6) : 4)
+        q = zfQuestion(kind, n: n, starter: d < 2, famousOnly: d < 3, avoiding: q.animal.name)
         stage = .waiting; picked = nil; showRight = false; boatShown = false
         boat = Self.port
-        perQ = zfPatience(level); tLeft = perQ
+        perQ = d < 4 ? 0 : ramp(20, 8, from: 4, to: 10); tLeft = perQ
         qid += 1
     }
 
@@ -480,6 +463,92 @@ private struct ZFCardFrame: PreferenceKey {
 
 private let zfCardHexes: [UInt] = [Lu.tangerine, Lu.sky, Lu.mint, Lu.grape]
 
+/// A little ferry: coloured hull, white cabin with portholes, a funnel that puffs.
+private struct ZFBoat: View {
+    let hex: UInt
+    var puff: Bool
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            // smoke
+            HStack(spacing: -4) {
+                Circle().fill(.white.opacity(0.7)).frame(width: 12, height: 12)
+                Circle().fill(.white.opacity(0.5)).frame(width: 16, height: 16).offset(y: -8)
+            }
+            .offset(x: 44, y: puff ? -42 : -36).opacity(puff ? 0.9 : 0.4)
+            // funnel
+            RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0x2c2c3a)).frame(width: 12, height: 18)
+                .overlay(Rectangle().fill(Color(hex: Lu.coral)).frame(height: 4).offset(y: -4))
+                .offset(x: 22, y: -34)
+            // cabin
+            RoundedRectangle(cornerRadius: 4).fill(Color(hex: 0xfdf8ee)).frame(width: 70, height: 20)
+                .overlay(HStack(spacing: 7) { ForEach(0..<4, id: \.self) { _ in Circle().fill(Color(hex: 0x2f6f95)).frame(width: 7, height: 7) } })
+                .offset(x: -4, y: -20)
+            // hull
+            ZFHull().fill(LinearGradient(colors: [Color(hex: hex), Color(hex: hex).opacity(0.75)], startPoint: .top, endPoint: .bottom))
+                .overlay(ZFHull().stroke(Color.black.opacity(0.35), lineWidth: 1.5))
+                .frame(width: 120, height: 24)
+        }
+        .frame(width: 124, height: 62)
+    }
+}
+
+private struct ZFHull: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX - r.width * 0.14, y: r.maxY), control: CGPoint(x: r.maxX - 2, y: r.maxY - 2))
+        p.addLine(to: CGPoint(x: r.minX + r.width * 0.06, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.minY))
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// The harbour by day: sky, sea with sparkle, a stone quay along the bottom.
+private struct ZFHarbour: View {
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 24)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, size in
+                let w = size.width, h = size.height
+                let sea = h * 0.30
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: w, height: sea)),
+                         with: .linearGradient(Gradient(colors: [Color(hex: 0x7cc6ea), Color(hex: 0xcdeaf3)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: sea)))
+                ctx.fill(Path(CGRect(x: 0, y: sea, width: w, height: h - sea)),
+                         with: .linearGradient(Gradient(colors: [Color(hex: 0x2f8fb8), Color(hex: 0x1d5f86)]), startPoint: CGPoint(x: 0, y: sea), endPoint: CGPoint(x: 0, y: h)))
+                for k in 0..<12 {
+                    let y0 = sea + 14 + CGFloat(k) * (h - sea) / 13
+                    var p = Path()
+                    var x: CGFloat = -10 + CGFloat(k % 2) * 20
+                    while x < w {
+                        let xx = x + CGFloat(sin(t * 0.7 + Double(k))) * 10
+                        p.move(to: CGPoint(x: xx, y: y0)); p.addQuadCurve(to: CGPoint(x: xx + 18, y: y0), control: CGPoint(x: xx + 9, y: y0 - 5))
+                        x += 60
+                    }
+                    ctx.stroke(p, with: .color(.white.opacity(0.22)), lineWidth: 1.6)
+                }
+                // Quay.
+                let qy = h - 150
+                ctx.fill(Path(CGRect(x: 0, y: qy, width: w, height: h - qy)),
+                         with: .linearGradient(Gradient(colors: [Color(hex: 0xc9b48e), Color(hex: 0x9c8762)]), startPoint: CGPoint(x: 0, y: qy), endPoint: CGPoint(x: 0, y: h)))
+                ctx.fill(Path(CGRect(x: 0, y: qy, width: w, height: 8)), with: .color(Color(hex: 0x7d6a48)))
+                var row = 0
+                var y = qy + 8
+                while y < h {
+                    var x: CGFloat = row % 2 == 0 ? 0 : -24
+                    while x < w {
+                        ctx.stroke(Path(roundedRect: CGRect(x: x + 1, y: y + 1, width: 46, height: 22), cornerRadius: 3),
+                                   with: .color(Color(hex: 0x7d6a48).opacity(0.45)), lineWidth: 1.2)
+                        x += 48
+                    }
+                    y += 24; row += 1
+                }
+            }
+        }
+    }
+}
+
 struct ZooFerryView: View {
     let onClose: () -> Void
     @StateObject private var m = ZooFerryModel()
@@ -491,15 +560,19 @@ struct ZooFerryView: View {
 
     var body: some View {
         ArcadeShell(model: m, spec: GameID.zooFerry.spec ?? GameSpec(title: "Lost Zoo Ferry", mechanic: "", premise: "", game: .zooFerry),
-                    accent: Lu.sky, onClose: onClose) {
-            VStack(spacing: 8) {
-                Color.clear.frame(height: 56)
-                map
-                dock.zIndex(2)
-                ferries
-                Spacer(minLength: 0)
+                    accent: Lu.sky, onClose: onClose, backdrop: { ZFHarbour() }) {
+            GeometryReader { root in
+                VStack(spacing: 6) {
+                    Color.clear.frame(height: 56)
+                    map
+                    Spacer(minLength: 0)
+                    ferries
+                    Spacer(minLength: 0)
+                    dock.frame(height: 132)
+                }
+                .padding(.horizontal, 12).padding(.bottom, 6)
+                .frame(width: root.size.width, height: root.size.height)
             }
-            .padding(.horizontal, 12)
             .coordinateSpace(name: "zf")
             .onPreferenceChange(ZFCardFrame.self) { cards = $0 }
         }
@@ -517,6 +590,7 @@ struct ZooFerryView: View {
         return d.continent.map(zfHex) ?? Lu.ink
     }
 
+    /// The sea chart pinned up in the harbour master's window.
     private var map: some View {
         GeometryReader { geo in
             let k = min(geo.size.width / zfMapRect.width, geo.size.height / zfMapRect.height)
@@ -525,16 +599,16 @@ struct ZooFerryView: View {
             ZStack {
                 ZFMap(q: m.q, showRight: m.showRight, stage: m.stage)
                 Circle().fill(Color(hex: Lu.gold)).frame(width: 9, height: 9)          // the Pharos, home port
-                    .overlay(Circle().stroke(Color(hex: Lu.ink), lineWidth: 2)).position(toView(ZooFerryModel.port))
+                    .overlay(Circle().stroke(Color(hex: lhInk), lineWidth: 2)).position(toView(ZooFerryModel.port))
                 if m.boatShown {
                     ZStack {
-                        Text("⛴️").font(.system(size: 26))
+                        Text("⛴️").font(.system(size: 24))
                         if m.stage == .home {
-                            Text(m.q.animal.emoji + "🎉").font(.system(size: 22)).offset(y: -24)
+                            Text(m.q.animal.emoji + "🎉").font(.system(size: 20)).offset(y: -22)
                                 .transition(.scale.combined(with: .opacity))
                         }
                         if m.stage == .lost && !m.showRight {
-                            Text("❌").font(.system(size: 18)).offset(y: -20).transition(.scale)
+                            Text("❌").font(.system(size: 16)).offset(y: -18).transition(.scale)
                         }
                     }
                     .position(toView(m.boat))
@@ -542,55 +616,67 @@ struct ZooFerryView: View {
             }
         }
         .aspectRatio(zfMapRect.width / zfMapRect.height, contentMode: .fit)
-        .background(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: Lu.goldLine), lineWidth: 2))
+        .frame(maxHeight: 210)
+        .padding(6)
+        .background(LHParchment(radius: 12))
     }
 
-    /// The lost animal on the dock — drag it to a ferry.
+    /// The quay: the lost animal with its suitcase — drag it onto a ferry.
     private var dock: some View {
         let a = m.q.animal
         let face: String = m.stage == .home ? "🥳" : (m.stage == .lost ? "😢" : "😟")
-        return HStack(spacing: 14) {
-            ZStack(alignment: .topTrailing) {
-                Text(a.emoji).font(.system(size: 76))
-                    .rotationEffect(.degrees(dragging ? 0 : (bob ? -5 : 5)))
-                    .scaleEffect(dragging ? 1.15 : 1)
-                Text(face).font(.system(size: 26)).offset(x: 10, y: -6)
+        return HStack(alignment: .bottom, spacing: 12) {
+            ZStack(alignment: .bottomTrailing) {
+                Ellipse().fill(Color.black.opacity(0.25)).frame(width: 90, height: 16).offset(x: -6, y: 6)
+                Text(a.emoji).font(.system(size: 82))
+                    .rotationEffect(.degrees(dragging ? 0 : (bob ? -4 : 4)), anchor: .bottom)
+                    .scaleEffect(dragging ? 1.12 : 1)
+                    .frame(width: 104, height: 96)
+                // suitcase with a luggage tag
+                ZStack {
+                    RoundedRectangle(cornerRadius: 4).fill(Color(hex: 0x8a4b24)).frame(width: 30, height: 22)
+                    Rectangle().fill(Color(hex: 0x5e3216)).frame(width: 30, height: 3)
+                    Capsule().stroke(Color(hex: 0x5e3216), lineWidth: 2.5).frame(width: 14, height: 8).offset(y: -13)
+                    Text("?").font(luFont(12, .black)).foregroundStyle(Color(hex: lhInk))
+                        .frame(width: 14, height: 14).background(RoundedRectangle(cornerRadius: 2).fill(Color(hex: 0xfbf0d6)))
+                        .rotationEffect(.degrees(14)).offset(x: 16, y: -8)
+                }
+                .offset(x: 8, y: 0)
+                Text(face).font(.system(size: 24)).offset(x: 6, y: -70)
             }
-            .frame(width: 100, height: 96)
             .offset(drag)
-            .opacity(m.stage == .waiting ? 1 : 0.35)
+            .opacity(m.stage == .waiting ? 1 : 0.4)
             .gesture(DragGesture(coordinateSpace: .named("zf"))
                 .onChanged { g in
-                    guard m.stage == .waiting else { return }
+                    guard m.stage == .waiting, m.phase == .playing else { return }
+                    if !dragging { Sfx.play(.tick) }
                     dragging = true; drag = g.translation
                 }
                 .onEnded { g in
                     dragging = false
-                    let hitCard = cards.first { $0.value.insetBy(dx: -14, dy: -14).contains(g.location) }?.key
+                    let hitCard = cards.first { $0.value.insetBy(dx: -10, dy: -10).contains(g.location) }?.key
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { drag = .zero }
                     if let hitCard { m.send(hitCard) }
                 })
-            VStack(alignment: .leading, spacing: 3) {
-                Text(m.stage == .home ? "Home at last!" : "I'm lost!").font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
-                Text(a.name).font(luSerif(26, .black)).foregroundStyle(Color(hex: Lu.gold))
+            .zIndex(3)
+            // Speech bubble.
+            VStack(alignment: .leading, spacing: 2) {
+                Text(m.stage == .home ? "Home at last!" : "I'm lost!").font(luFont(13, .bold)).foregroundStyle(Color(hex: lhInkSoft))
+                Text(a.name).font(luSerif(24, .black)).foregroundStyle(Color(hex: lhInk))
                     .lineLimit(1).minimumScaleFactor(0.5)
-                Text(prompt).font(luFont(14, .bold)).foregroundStyle(Color(hex: m.stage == .lost ? Lu.coral : Lu.ink))
+                Text(prompt).font(luFont(14, .heavy)).foregroundStyle(Color(hex: m.stage == .lost ? 0xb23a26 : lhInk))
                     .lineLimit(2).minimumScaleFactor(0.7)
                     .transaction { $0.animation = nil }
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12).padding(.vertical, 6)
-        .background(luPanelShape(18))
-        .overlay(alignment: .bottom) {
-            if m.perQ > 0 && m.stage == .waiting {
-                GeometryReader { g in
-                    Capsule().fill(Color(hex: m.tLeft / m.perQ < 0.3 ? Lu.coral : Lu.sky))
-                        .frame(width: max(0, g.size.width * CGFloat(m.tLeft / m.perQ)), height: 5)
+                if m.perQ > 0 && m.stage == .waiting {
+                    LHPatienceBar(left: m.tLeft, total: m.perQ).padding(.top, 2)
                 }
-                .frame(height: 5).padding(.horizontal, 14).padding(.bottom, 3)
             }
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(LHParchment(radius: 14))
+            .padding(.bottom, 26)
         }
+        .padding(.horizontal, 4)
     }
 
     private var prompt: String {
@@ -600,7 +686,7 @@ struct ZooFerryView: View {
         case .home: return "Thank you! 💛"
         default:
             switch m.q.options[m.q.answer] {
-            case .continent: return "👆 Drag me to my home land"
+            case .continent: return "👆 Drag me onto my ferry home"
             case .country: return "👆 Which country is my home?"
             case .biome: return "👆 Where do I live?"
             case .both: return "👆 Which land, which place?"
@@ -609,60 +695,60 @@ struct ZooFerryView: View {
     }
 
     private var ferries: some View {
-        let n = m.q.options.count
-        let compact = n > 4
         let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: 2)
-        return LazyVGrid(columns: cols, spacing: 10) {
+        return LazyVGrid(columns: cols, spacing: 8) {
             ForEach(Array(m.q.options.enumerated()), id: \.offset) { i, d in
-                card(i, d, compact: compact)
+                ferry(i, d)
                     .background(GeometryReader { g in
                         Color.clear.preference(key: ZFCardFrame.self, value: [i: g.frame(in: .named("zf"))])
                     })
             }
         }
         .id(m.qid)
+        .transition(.move(edge: .leading).combined(with: .opacity))
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: m.qid)
     }
 
-    private func card(_ i: Int, _ d: ZFDest, compact: Bool) -> some View {
+    /// One ferry at its berth: a destination signboard above a bobbing boat.
+    private func ferry(_ i: Int, _ d: ZFDest) -> some View {
         let hex = color(i)
         let isRight = i == m.q.answer
-        let fill: UInt = (m.showRight || m.stage == .home) && isRight ? Lu.mint : (m.picked == i && m.stage == .lost ? Lu.coral : Lu.panel)
+        let glow = (m.showRight || m.stage == .home) && isRight
+        let wrongPick = m.picked == i && m.stage == .lost
+        let big = m.q.options.count <= 2
+        let sailing = m.picked == i && m.stage != .waiting
         let art = Group {
             switch d {
-            case .biome(let b): Text(b.icon).font(.system(size: compact ? 30 : 46))
+            case .biome(let b): Text(b.icon).font(.system(size: big ? 54 : 40))
             case .both(_, let b):
                 ZStack(alignment: .bottomTrailing) {
                     ZFSilhouette(dest: d, hex: hex)
-                    Text(b.icon).font(.system(size: 28))
+                    Text(b.icon).font(.system(size: 26))
                 }
             default: ZFSilhouette(dest: d, hex: hex)
             }
         }
         return Button { m.send(i) } label: {
-            Group {
-                if compact {
-                    HStack(spacing: 8) {
-                        art.frame(width: 46, height: 40)
-                        Text(d.label).font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.ink))
-                            .lineLimit(2).minimumScaleFactor(0.6)
-                        Spacer(minLength: 0)
-                    }
-                    .frame(height: 52)
-                } else {
-                    VStack(spacing: 4) {
-                        HStack { Text("⛴️").font(.system(size: 20)); Spacer() }
-                        art.frame(height: m.q.options.count <= 2 ? 120 : 64)
-                        Text(d.label).font(luFont(m.q.options.count <= 2 ? 20 : 16, .heavy))
-                            .foregroundStyle(Color(hex: Lu.ink))
-                            .lineLimit(2).minimumScaleFactor(0.6).multilineTextAlignment(.center)
-                    }
+            VStack(spacing: 0) {
+                VStack(spacing: 2) {
+                    art.frame(height: big ? 92 : 52)
+                    Text(d.label).font(luFont(big ? 19 : 15, .heavy)).foregroundStyle(Color(hex: lhInk))
+                        .lineLimit(2).minimumScaleFactor(0.6).multilineTextAlignment(.center)
                 }
+                .padding(.horizontal, 8).padding(.vertical, 6)
+                .frame(maxWidth: .infinity)
+                .background(RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(hex: glow ? 0xd6f0c8 : (wrongPick ? 0xfbd6cb : 0xfbf0d6)))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: glow ? Lu.mint : hex), lineWidth: glow ? 4 : 3)))
+                // posts holding the sign
+                HStack { Rectangle().fill(Color(hex: 0x6b4a2a)).frame(width: 4, height: 8); Spacer(); Rectangle().fill(Color(hex: 0x6b4a2a)).frame(width: 4, height: 8) }
+                    .padding(.horizontal, 30)
+                ZFBoat(hex: hex, puff: bob)
+                    .offset(x: sailing ? 260 : 0, y: bob ? -2 : 2)
+                    .opacity(sailing && m.stage != .waiting ? 0 : 1)
+                    .animation(.easeIn(duration: 0.8), value: sailing)
             }
-            .padding(.horizontal, 10).padding(.vertical, 8)
-            .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: fill).opacity(fill == Lu.panel ? 1 : 0.55))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: hex), lineWidth: 3)))
-            .scaleEffect(m.showRight && isRight ? 1.05 : 1)
+            .scaleEffect(glow ? 1.04 : 1)
         }
         .buttonStyle(.plain)
         .allowsHitTesting(m.stage == .waiting)
