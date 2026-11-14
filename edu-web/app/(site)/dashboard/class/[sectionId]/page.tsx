@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getSectionGradebook } from "@/lib/gradebook";
+import { getSectionGradebook, studentBreakdown } from "@/lib/gradebook";
 import SubmitForm from "@/components/SubmitForm";
 import { getAcedLessonSlugs } from "@/lib/lessons";
 import { grammarLessonDrills } from "@/lib/drills/grammar";
@@ -82,14 +82,8 @@ export default async function ClassHubPage({
     else if (a.courseId === courseId) bestTest = Math.max(bestTest ?? 0, p);
   }
 
-  const breakdown = [
-    { label: "Attendance", pctv: row.attendancePct, weight: w.attendance, detail: `${row.watchedCount}/${gb.totalLectures} lectures` },
-    { label: "Quizzes", pctv: row.quizAvgPct, weight: w.quizzes, detail: `${row.quizzesTaken}/${gb.totalQuizzes} taken` },
-    { label: "Homework", pctv: row.hwPct, weight: w.homework, detail: `${row.hwGradedCount}/${gb.totalAssignments} graded` },
-    { label: "Course Test", pctv: row.testPct, weight: w.test, detail: gb.hasTest ? "best attempt" : "no test yet" },
-    { label: "Midterm", pctv: row.midtermPct, weight: w.midterm, detail: "in class" },
-    { label: "Final", pctv: row.finalPct, weight: w.final, detail: "in class" },
-  ];
+  const breakdown = studentBreakdown(gb, row);
+  const showCourseTest = gb.hasTest && w.test > 0;
 
   return (
     <main className="flex-1">
@@ -134,14 +128,14 @@ export default async function ClassHubPage({
               </thead>
               <tbody className="divide-y divide-crimson-800">
                 {breakdown.map((c) => (
-                  <tr key={c.label} className="bg-crimson-950/40">
+                  <tr key={c.key} className="bg-crimson-950/40">
                     <td className="px-4 py-2.5">
                       <span className="text-parchment">{c.label}</span>
                       <span className="text-xs text-parchment-dim"> · {c.detail}</span>
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className={pctClass(c.pctv)}>{pct(c.pctv)}</span>
-                      {c.pctv === null && <span className="text-xs text-parchment-dim"> (pending)</span>}
+                      <span className={pctClass(c.pct)}>{pct(c.pct)}</span>
+                      {c.pct === null && <span className="text-xs text-parchment-dim"> (pending)</span>}
                     </td>
                     <td className="px-4 py-2.5 text-parchment-dim">{c.weight}%</td>
                   </tr>
@@ -154,6 +148,38 @@ export default async function ClassHubPage({
             categories still marked <em>pending</em> don&apos;t count against you yet.
           </p>
         </section>
+
+        {/* Instructor-defined categories (e.g. Tests), one score per item */}
+        {gb.customCategories
+          .filter((c) => c.weight > 0 && c.items.length > 0)
+          .map((c) => (
+            <section key={c.id} className="space-y-4">
+              <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+                {c.name}
+              </h2>
+              <ul className="space-y-2">
+                {c.items.map((it) => {
+                  const sc = row.customScores[it.id];
+                  const has = sc !== null && sc !== undefined;
+                  return (
+                    <li
+                      key={it.id}
+                      className="flex items-center justify-between gap-4 bg-crimson-900 border border-crimson-700 rounded-lg px-4 py-2.5"
+                    >
+                      <span className="text-sm text-parchment truncate">{it.name}</span>
+                      {has ? (
+                        <span className={`text-sm shrink-0 ${pctClass((sc / it.maxPoints) * 100)}`}>
+                          {sc}/{it.maxPoints}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-parchment-dim shrink-0">not graded yet</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
 
         {/* Homework */}
         <section className="space-y-4">
@@ -249,13 +275,13 @@ export default async function ClassHubPage({
         </section>
 
         {/* Quizzes & test */}
-        {(quizVideos.length > 0 || gb.hasTest) && (
+        {(quizVideos.length > 0 || showCourseTest) && (
           <section className="space-y-4">
             <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
-              Quizzes &amp; Test
+              {showCourseTest ? <>Quizzes &amp; Test</> : "Quizzes"}
             </h2>
             <p className="text-xs text-parchment-dim">
-              Best attempt counts — retake any quiz or the test to improve your score.
+              Best attempt counts — retake any quiz{showCourseTest ? " or the test" : ""} to improve your score.
             </p>
             <ul className="space-y-2">
               {quizVideos.map((v) => {
@@ -276,7 +302,7 @@ export default async function ClassHubPage({
                   </li>
                 );
               })}
-              {gb.hasTest && (
+              {showCourseTest && (
                 <li>
                   <Link
                     href={`/courses/${courseId}/test`}

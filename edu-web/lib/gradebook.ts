@@ -410,3 +410,54 @@ export async function getSectionGradebook(sectionId: string): Promise<SectionGra
 
   return { ...base, students };
 }
+
+export type BreakdownCategory = {
+  key: string;
+  label: string;
+  pct: number | null;
+  weight: number;
+  detail: string;
+};
+
+// One student's grade categories as shown to them: the built-in ones plus the
+// instructor's custom categories (e.g. Tests), dropping any with zero weight —
+// a zero-weight category doesn't count in that class. Shared by the web class
+// hub, the dashboard card, and the mobile progress API so they always agree.
+export function studentBreakdown(gb: SectionGradebook, row: StudentRow): BreakdownCategory[] {
+  const w = gb.config.weights;
+  // Attendance credit as computed above (watch-derived, manual marks override),
+  // so the detail line matches the percentage beside it.
+  const statuses = Object.values(row.attendanceByVideo);
+  const attended = statuses.filter((st) => st === "present" || st === "late").length;
+  const attCounted = statuses.filter((st) => st !== "excused").length;
+
+  const custom = gb.customCategories.map((c) => {
+    let earned = 0;
+    let possible = 0;
+    let scored = 0;
+    for (const it of c.items) {
+      const sc = row.customScores[it.id];
+      if (sc === null || sc === undefined) continue;
+      earned += sc;
+      possible += it.maxPoints;
+      scored += 1;
+    }
+    return {
+      key: `custom:${c.id}`,
+      label: c.name,
+      pct: possible > 0 ? (earned / possible) * 100 : null,
+      weight: c.weight,
+      detail: `${scored}/${c.items.length} graded`,
+    };
+  });
+
+  return [
+    { key: "attendance", label: "Attendance", pct: row.attendancePct, weight: w.attendance, detail: `${attended}/${attCounted} lectures` },
+    { key: "quizzes", label: "Quizzes", pct: row.quizAvgPct, weight: w.quizzes, detail: `${row.quizzesTaken}/${gb.totalQuizzes} taken` },
+    { key: "homework", label: "Homework", pct: row.hwPct, weight: w.homework, detail: `${row.hwGradedCount}/${gb.totalAssignments} graded` },
+    ...custom,
+    { key: "test", label: "Course Test", pct: row.testPct, weight: w.test, detail: gb.hasTest ? "best attempt" : "no test yet" },
+    { key: "midterm", label: "Midterm", pct: row.midtermPct, weight: w.midterm, detail: "in class" },
+    { key: "final", label: "Final", pct: row.finalPct, weight: w.final, detail: "in class" },
+  ].filter((c) => c.weight > 0);
+}

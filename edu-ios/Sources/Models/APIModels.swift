@@ -372,20 +372,34 @@ struct ClassGrade: Codable, Identifiable, Hashable {
     let totalAssignments: Int
     let hasTest: Bool
     let weights: GradeWeights
+    /// Server-built categories that count in this class (zero weights dropped,
+    /// custom ones like Tests included). Absent from older servers.
+    var categories: [GradeCategoryRow]? = nil
 
     var id: String { sectionId }
 
-    /// The six categories in the web's order, with their weights and denominators.
+    /// The categories in the web's order, with their weights and denominators.
     var breakdown: [(label: String, pct: Double?, weight: Int, detail: String)] {
-        [
+        if let categories {
+            return categories.map { ($0.label, $0.pct, $0.weight, $0.detail) }
+        }
+        return [
             ("Attendance", attendancePct, weights.attendance, "\(watchedCount)/\(totalLectures) lectures"),
             ("Quizzes", quizAvgPct, weights.quizzes, "\(quizzesTaken)/\(totalQuizzes) taken"),
             ("Homework", hwPct, weights.homework, "\(hwGradedCount)/\(totalAssignments) graded"),
             ("Course Test", testPct, weights.test, hasTest ? "best attempt" : "no test yet"),
             ("Midterm", midtermPct, weights.midterm, "in class"),
             ("Final", finalPct, weights.final, "in class"),
-        ]
+        ].filter { $0.weight > 0 }
     }
+}
+
+struct GradeCategoryRow: Codable, Hashable {
+    let key: String
+    let label: String
+    let pct: Double?
+    let weight: Int
+    let detail: String
 }
 
 struct GradeWeights: Codable, Hashable {

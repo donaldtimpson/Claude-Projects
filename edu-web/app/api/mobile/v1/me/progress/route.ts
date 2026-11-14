@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { withUser } from "@/lib/mobile/guard";
 import { ok } from "@/lib/mobile/respond";
-import { getSectionGradebook } from "@/lib/gradebook";
+import { getSectionGradebook, studentBreakdown } from "@/lib/gradebook";
 
 // The app's Progress screen — the mobile half of the web /dashboard. Everything the
 // web page computes inline, minus what /me and /me/badges already serve (streak,
@@ -54,6 +54,10 @@ export async function GET(req: Request) {
             totalAssignments: gb.totalAssignments,
             hasTest: gb.hasTest,
             weights: gb.config.weights,
+            // The categories that count in this class (zero weights dropped,
+            // custom ones like Tests included), already labelled — preferred
+            // over the fixed six above, which older app builds still read.
+            categories: studentBreakdown(gb, row),
           };
         }),
       )

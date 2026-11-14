@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateHandle, getUserBadges, getStreak } from "@/lib/gamification/engine";
 import { getDueCount } from "@/lib/srs";
-import { getSectionGradebook } from "@/lib/gradebook";
+import { getSectionGradebook, studentBreakdown } from "@/lib/gradebook";
 import HandleForm from "./HandleForm";
 import AchievementsGrid from "../leaderboard/AchievementsGrid";
 
@@ -52,12 +52,14 @@ export default async function DashboardPage() {
   const classGrades = await Promise.all(
     myClasses.map(async (e) => {
       const gb = await getSectionGradebook(e.sectionId);
+      const row = gb?.students.find((s) => s.userId === userId) ?? null;
       return {
         sectionId: e.sectionId,
         courseId: e.section.course.id,
         courseTitle: e.section.course.title,
         sectionName: e.section.name,
-        row: gb?.students.find((s) => s.userId === userId) ?? null,
+        row,
+        categories: gb && row ? studentBreakdown(gb, row) : [],
       };
     }),
   );
@@ -163,12 +165,11 @@ export default async function DashboardPage() {
                     </div>
                     {c.row && (
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-parchment-dim">
-                        <span>Attendance <span className={gradeColor(c.row.attendancePct)}>{gradePct(c.row.attendancePct)}</span></span>
-                        <span>Quizzes <span className={gradeColor(c.row.quizAvgPct)}>{gradePct(c.row.quizAvgPct)}</span></span>
-                        <span>Homework <span className={gradeColor(c.row.hwPct)}>{gradePct(c.row.hwPct)}</span></span>
-                        <span>Course Test <span className={gradeColor(c.row.testPct)}>{gradePct(c.row.testPct)}</span></span>
-                        <span>Midterm <span className={gradeColor(c.row.midtermPct)}>{gradePct(c.row.midtermPct)}</span></span>
-                        <span>Final <span className={gradeColor(c.row.finalPct)}>{gradePct(c.row.finalPct)}</span></span>
+                        {c.categories.map((cat) => (
+                          <span key={cat.key}>
+                            {cat.label} <span className={gradeColor(cat.pct)}>{gradePct(cat.pct)}</span>
+                          </span>
+                        ))}
                       </div>
                     )}
                   </Link>
