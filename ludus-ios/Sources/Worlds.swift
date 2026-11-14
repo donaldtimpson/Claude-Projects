@@ -20,8 +20,8 @@ enum GameID: String, Identifiable, Hashable {
     case critterSort, dressMarcus, zookeeper
     // Forum · History
     case timeline, timeGuard, caesarWheel
-    // Market · Money
-    case coinCount, figStall, porcus
+    // Market · Money (coinCount: retired — its view still lives in QuickFire.swift)
+    case coinCount, figStall, porcus, clockTower, bakery, donkeyDeal
     // Theatre · Music
     case pianoMouse, maestroMouse, comedyTragedy, galleyDrum, echoCave
     var id: String { rawValue }
@@ -63,6 +63,9 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        FigStallView(onClose: onClose)
     case .porcus:          PorcusView(onClose: onClose)
+    case .clockTower:      ClockTowerView(onClose: onClose)
+    case .bakery:          BakeryView(onClose: onClose)
+    case .donkeyDeal:      DonkeyDealView(onClose: onClose)
     case .pianoMouse:      PianoMouseView(onClose: onClose)
     case .maestroMouse:    MaestroMouseView(onClose: onClose)
     case .comedyTragedy:   ComedyTragedyView(onClose: onClose)
@@ -178,12 +181,16 @@ let ludusWorlds: [LudusWorld] = [
               icon: "🏺", howTo: how(("👀", "Look at the events"), ("👆", "Tap the oldest one"))),
     ]),
     LudusWorld(name: "The Money Stall", subject: "Money & Life Skills", emoji: "🪙", colorHex: Lu.gold, games: [
-        .init(title: "The Fig Stall", mechanic: "shop", premise: "Bag exactly what each customer asks for.", game: .figStall,
-              icon: "🧺", howTo: how(("👵", "Look at the order"), ("🍎", "Tap fruit into the bag"), ("🤝", "Give it to them!"))),
-        .init(title: "Porcus the Piggy Bank", mechanic: "save", premise: "Save up with Porcus to buy the prize.", game: .porcus,
-              icon: "🐷", howTo: how(("🪙", "Drag coins into Porcus"), ("🔢", "Count up to the price"), ("🪁", "Then buy the prize!"))),
-        .init(title: "Coin Count", mechanic: "count", premise: "Add up the coins — how much?", game: .coinCount,
-              icon: "🪙", howTo: how(("👀", "Count the coins"), ("👆", "Tap how much money"))),
+        .init(title: "Porcus the Piggy Bank", mechanic: "drag coins", premise: "Feed Porcus real coins — exactly the price of the prize.", game: .porcus,
+              icon: "🐷", howTo: how(("🪁", "Look at the price tag"), ("🪙", "Drag coins into Porcus"), ("🎉", "Exactly right? He buys it!"))),
+        .init(title: "The Fig Stall", mechanic: "make change", premise: "Run the fruit stall — count up and give the right change.", game: .figStall,
+              icon: "🧺", howTo: how(("💵", "They pay you"), ("👆", "Tap coins from the till"), ("➡️", "Count up to what they paid"))),
+        .init(title: "The Clock Tower", mechanic: "turn the hands", premise: "Set the town clock to the time people need.", game: .clockTower,
+              icon: "🕰️", howTo: how(("👀", "Look at the time they want"), ("👆", "Turn the clock hands"), ("🔔", "Ring the bell!"))),
+        .init(title: "Ursa's Bakery", mechanic: "pour", premise: "Measure just right for the baker bear's recipes.", game: .bakery,
+              icon: "🥧", howTo: how(("📜", "Read the recipe"), ("👇", "HOLD to pour, let go at the line"), ("🥣", "Into the bowl!"))),
+        .init(title: "Donkey Deals", mechanic: "swipe", premise: "Steer the donkey cart to the cheaper stall, the better deal, the thing you need.", game: .donkeyDeal,
+              icon: "🛒", howTo: how(("🪧", "Read the shopping sign"), ("👈", "Swipe the donkey to a stall 👉"), ("🏷️", "Pick the best one!"))),
     ]),
     LudusWorld(name: "Sound Lab", subject: "Music", emoji: "🎵", colorHex: Lu.coral, games: [
         .init(title: "Echo's Cave", mechanic: "echo", premise: "Echo sings on the crystals — sing her tune back.", game: .echoCave,
