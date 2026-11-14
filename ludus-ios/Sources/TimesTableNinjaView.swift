@@ -104,9 +104,9 @@ private final class TTNEngine: ArcadeModel {
 
     /// Choose the next table (or ÷ answer) by the difficulty tiers.
     private func pickTarget(avoidSame: Bool) {
-        var idx = tier(ttnStarts)
+        var idx = tier(ttnStarts, keep: 0.15)
         var tries = 0
-        while avoidSame && idx == tableIndex && tries < 4 && d > 2 { idx = tier(ttnStarts); tries += 1 }
+        while avoidSame && idx == tableIndex && tries < 4 && d > 2 { idx = tier(ttnStarts, keep: 0.15); tries += 1 }
         tableIndex = idx
         if ttnTables[idx] == 0 {
             division = true
@@ -587,9 +587,9 @@ private struct TTNBanner: View {
             }
         }
         .padding(.horizontal, 18).padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 14).fill(LinearGradient(colors: [Color(hex: 0xf6e7c4), Color(hex: 0xdcc394)], startPoint: .top, endPoint: .bottom)))
+        .background(RoundedRectangle(cornerRadius: 14).fill(LinearGradient(colors: [Color(hex: 0xf6e7c4), Color(hex: 0xdcc394)], startPoint: .top, endPoint: .bottom))
+            .shadow(color: .black.opacity(0.4), radius: 0, x: 0, y: 4))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x8a5a2b), lineWidth: 3))
-        .shadow(color: .black.opacity(0.4), radius: 0, x: 0, y: 4)
         .id("\(target)\(division)")
         .transition(.scale(scale: 0.8).combined(with: .opacity))
         .animation(.spring(response: 0.35, dampingFraction: 0.6), value: target)

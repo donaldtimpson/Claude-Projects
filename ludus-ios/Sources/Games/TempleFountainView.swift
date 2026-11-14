@@ -162,12 +162,12 @@ private final class FountainModel: ArcadeModel {
     private func makeOrder() -> FOrder {
         func r(_ a: Int, _ b: Int) -> Int { Int.random(in: a...b) }
         let marksGone = chance(1, from: 3.6, to: 5.6)          // the jug's side marks fade out
-        let k = tier([1, 2, 3, 4.3, 5.3, 6.3, 7.3])
+        let k = tier([1, 2, 3, 4.3, 5.3, 6.3, 7.3], keep: 0.15)
         switch k {
         case 0:   // halves and quarters, with a ribbon at the level
             let (n, dd) = [(1, 2), (1, 4), (3, 4), (1, 2)].randomElement()!
             return FOrder(target: Double(n) / Double(dd), parts: [.frac(n, dd)], say: fSay(n, dd),
-                          ribbon: d < 1.8, marks: dd, picture: true)
+                          ribbon: d < 1.8, marks: marksGone ? 0 : dd, picture: d < 2.6)
         case 1:   // halves & quarters & whole-ish, marks only
             let (n, dd) = [(1, 2), (1, 4), (3, 4), (2, 4)].randomElement()!
             return FOrder(target: Double(n) / Double(dd), parts: [.frac(n, dd)], say: fSay(n, dd),
@@ -301,7 +301,7 @@ private struct FountainPlay: View {
             let jugW = min(150, w * 0.38), jugH = min(250, h * 0.32)
             let jugBottom = h * 0.79
             let jugRect = CGRect(x: w / 2 - jugW / 2, y: jugBottom - jugH, width: jugW, height: jugH)
-            let mouth = CGPoint(x: w / 2, y: jugRect.minY - 56)
+            let mouth = CGPoint(x: w / 2, y: jugRect.minY - 64)
 
             ZStack(alignment: .topLeading) {
                 // Hold anywhere to pour.
@@ -373,9 +373,9 @@ private struct FountainPlay: View {
             LibrarySpeakerButton(size: 46) { model.sayOrder() }
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(RoundedRectangle(cornerRadius: 16).fill(LinearGradient(colors: [Color(hex: 0xf8f3e6), Color(hex: 0xe3d7b8)], startPoint: .top, endPoint: .bottom)))
+        .background(RoundedRectangle(cornerRadius: 16).fill(LinearGradient(colors: [Color(hex: 0xf8f3e6), Color(hex: 0xe3d7b8)], startPoint: .top, endPoint: .bottom))
+            .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 4))
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(hex: 0x2f6f99), lineWidth: 3))
-        .shadow(color: .black.opacity(0.25), radius: 0, x: 0, y: 4)
         .id(model.roundID)
         .transition(.scale(scale: 0.9).combined(with: .opacity))
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: model.roundID)

@@ -159,7 +159,7 @@ private final class LibraModel: ArcadeModel {
     private func makePuzzle() -> LPuzzle {
         func r(_ a: Int, _ b: Int) -> Int { Int.random(in: min(a, b)...max(a, b)) }
         let fruits = ["🍎", "🍐", "🍋", "🍇", "🫒", "🍑"]
-        let k = tier([1, 2, 3, 4.1, 5.1, 6.1, 7, 8])
+        let k = tier([1, 2, 3, 4.1, 5.1, 6.1, 7, 8], keep: 0.15)
         switch k {
         case 0:   // count the fruit
             let n = r(1, rampInt(4, 10, to: 2.2))
@@ -383,9 +383,9 @@ private struct LibraPlay: View {
         }
         .padding(.vertical, 8).padding(.horizontal, 14)
         .frame(maxWidth: .infinity)
-        .background(RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0xf6edd8), Color(hex: 0xdccba5)], startPoint: .top, endPoint: .bottom)))
+        .background(RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0xf6edd8), Color(hex: 0xdccba5)], startPoint: .top, endPoint: .bottom))
+            .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 4))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0x9c7b33), lineWidth: 3))
-        .shadow(color: .black.opacity(0.35), radius: 0, x: 0, y: 4)
         .id(model.roundID)
         .transition(.opacity)
     }
@@ -492,9 +492,9 @@ private struct LibraPlay: View {
             }
             .foregroundStyle(Color(hex: Lu.inkDark))
             .frame(width: 220, height: 56)
-            .background(Capsule().fill(LinearGradient(colors: [Color(hex: 0xffe08a), Color(hex: Lu.gold)], startPoint: .top, endPoint: .bottom)))
+            .background(Capsule().fill(LinearGradient(colors: [Color(hex: 0xffe08a), Color(hex: Lu.gold)], startPoint: .top, endPoint: .bottom))
+                .shadow(color: .black.opacity(0.4), radius: 0, x: 0, y: 4))
             .overlay(Capsule().stroke(Color(hex: 0x7a5a12), lineWidth: 3))
-            .shadow(color: .black.opacity(0.4), radius: 0, x: 0, y: 4)
         }
         .buttonStyle(PressScale())
         .disabled(model.sack.isEmpty || model.stage != .filling)

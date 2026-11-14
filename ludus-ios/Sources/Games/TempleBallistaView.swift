@@ -147,7 +147,7 @@ private final class BallistaModel: ArcadeModel {
 
     private func makeQ() -> BQ {
         let share = ramp(0.05, 0.018, from: 3, to: 9.5)       // hit window as a share of the line
-        let k = tier([1, 2.2, 3.2, 4.5, 5.6, 6.6, 7.6])
+        let k = tier([1, 2.2, 3.2, 4.5, 5.6, 6.6, 7.6], keep: 0.15)
         func r(_ x: ClosedRange<Int>) -> Int { Int.random(in: x) }
         /// Thins the milestone labels as `d` climbs past `start`: every one → the given middle set → the ends.
         func thin(_ start: Double, all: [Double], mid: [Double], ends: [Double]) -> [Double] {
