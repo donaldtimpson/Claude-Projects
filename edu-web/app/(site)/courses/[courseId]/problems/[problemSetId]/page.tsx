@@ -9,6 +9,7 @@ import ProblemSetHomework, {
   type ProblemSetAssignment,
 } from "@/components/ProblemSetHomework";
 import { pairProblemSet, canSeeSolutions } from "@/lib/problem-sets";
+import { sortLectures } from "@/lib/lectures";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function ProblemSetPage({
   const ps = await db.problemSet.findUnique({
     where: { id: problemSetId },
     include: {
-      course: { select: { id: true, title: true } },
+      course: { select: { id: true, title: true, manualOrder: true } },
       videos: {
         include: { video: { select: { id: true, title: true, position: true } } },
       },
@@ -40,9 +41,18 @@ export default async function ProblemSetPage({
     ps.solution.trim().length > 0;
   const paired = pairProblemSet(ps.body, ps.solution, showSolutions);
 
+  // Covered lectures in course order (lib/lectures: chronological unless the
+  // course is hand-ordered; Video.position alone runs backwards on some playlists).
+  const courseVideos = await db.video.findMany({
+    where: { courseId },
+    select: { id: true, position: true, publishedAt: true },
+  });
+  const order = new Map(
+    sortLectures(courseVideos, ps.course.manualOrder).map((v, i) => [v.id, i]),
+  );
   const lectures = ps.videos
     .map((v) => v.video)
-    .sort((a, b) => a.position - b.position);
+    .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
 
   // Sibling problem sets (published only) for prev/next nav — same order as the
   // course page lists them (oldest first).

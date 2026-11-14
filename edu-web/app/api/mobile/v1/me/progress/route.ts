@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { withUser } from "@/lib/mobile/guard";
 import { ok } from "@/lib/mobile/respond";
 import { getSectionGradebook, studentBreakdown } from "@/lib/gradebook";
+import { sortLectures } from "@/lib/lectures";
 
 // The app's Progress screen — the mobile half of the web /dashboard. Everything the
 // web page computes inline, minus what /me and /me/badges already serve (streak,
@@ -20,10 +21,17 @@ export async function GET(req: Request) {
         orderBy: { enrolledAt: "desc" },
       }),
       db.course.findMany({
-        select: { id: true, title: true, videos: { select: { id: true } } },
+        select: {
+          id: true,
+          title: true,
+          manualOrder: true,
+          videos: {
+            select: { id: true, title: true, thumbnailUrl: true, position: true, publishedAt: true },
+          },
+        },
         orderBy: { createdAt: "asc" },
       }),
-      db.videoProgress.findMany({ where: { userId }, select: { videoId: true } }),
+      db.videoProgress.findMany({ where: { userId }, select: { videoId: true, watchedAt: true } }),
     ]);
 
     const classes = (
@@ -66,18 +74,41 @@ export async function GET(req: Request) {
     // Courses the student has started, split the same way the web page splits them:
     // a course counts once at least one lecture is watched, and moves to "completed"
     // only when every lecture is.
-    type CourseEntry = { id: string; title: string; watchedCount: number; totalCount: number };
-    const watchedIds = new Set(watched.map((p) => p.videoId));
+    //
+    // In-progress entries also carry the next unwatched lecture (in course order)
+    // and when the student last watched anything there, for Continue Watching.
+    type NextLecture = { id: string; title: string; thumbnailUrl: string | null };
+    type CourseEntry = {
+      id: string;
+      title: string;
+      watchedCount: number;
+      totalCount: number;
+      nextLecture?: NextLecture | null;
+      lastWatchedAt?: string | null;
+    };
+    const watchedAt = new Map(watched.map((p) => [p.videoId, p.watchedAt]));
     const inProgress: CourseEntry[] = [];
     const completed: CourseEntry[] = [];
     for (const c of courses) {
       const totalCount = c.videos.length;
       if (totalCount === 0) continue;
-      const watchedCount = c.videos.filter((v) => watchedIds.has(v.id)).length;
+      const watchedCount = c.videos.filter((v) => watchedAt.has(v.id)).length;
       if (watchedCount === 0) continue;
       const entry: CourseEntry = { id: c.id, title: c.title, watchedCount, totalCount };
-      (watchedCount === totalCount ? completed : inProgress).push(entry);
+      if (watchedCount === totalCount) {
+        completed.push(entry);
+        continue;
+      }
+      const next = sortLectures(c.videos, c.manualOrder).find((v) => !watchedAt.has(v.id));
+      const last = Math.max(...c.videos.map((v) => watchedAt.get(v.id)?.getTime() ?? 0));
+      inProgress.push({
+        ...entry,
+        nextLecture: next ? { id: next.id, title: next.title, thumbnailUrl: next.thumbnailUrl } : null,
+        lastWatchedAt: last > 0 ? new Date(last).toISOString() : null,
+      });
     }
+    // Most recently watched first, as Continue Watching orders them.
+    inProgress.sort((a, b) => (b.lastWatchedAt ?? "").localeCompare(a.lastWatchedAt ?? ""));
 
     return ok({ classes, inProgress, completed });
   });

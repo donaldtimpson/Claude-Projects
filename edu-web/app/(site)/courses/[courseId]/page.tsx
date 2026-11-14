@@ -9,6 +9,7 @@ import { RESOURCE_KIND_LABELS } from "@/lib/resource-kinds";
 import AnnouncementsFeed from "@/components/AnnouncementsFeed";
 import MarkdownNotes from "@/components/MarkdownNotes";
 import RegisterForm from "./RegisterForm";
+import { isTestTitle, lectureLabels, lectureSpan } from "@/lib/lectures";
 
 export const dynamic = "force-dynamic";
 
@@ -152,15 +153,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
     },
   });
 
-  // Problem-set cards name the lectures they cover. Label each by the number in
-  // its own title ("Lecture 3", "Lesson 9"), which is what students see on the
-  // video; fall back to its place in this page's lecture list. Never use
-  // Video.position — active playlists are newest-first, so it runs backwards.
-  const listIndex = new Map(course.videos.map((v, i) => [v.id, i]));
-  const lectureLabel = (v: { id: string; title: string }) => {
-    const m = v.title.match(/\b(Lecture|Lesson)\s+(\d+)/i);
-    return m ? { word: m[1][0].toUpperCase() + m[1].slice(1).toLowerCase(), n: m[2] } : { word: "Lecture", n: String((listIndex.get(v.id) ?? 0) + 1) };
-  };
+  // Problem-set cards name the lectures they cover, labelled like the lectures
+  // themselves (lib/lectures, shared with the mobile API).
+  const labels = lectureLabels(course.videos);
 
   // (Homework moved to the student's class hub: /dashboard/class/[sectionId].)
 
@@ -381,20 +376,11 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {problemSets.map((ps) => {
                 const hasSolutions = ps.solutionsPublic && ps.solution.trim().length > 0;
-                const lectures = ps.videos
-                  .map((v) => v.video)
-                  .sort((a, b) => (listIndex.get(a.id) ?? 0) - (listIndex.get(b.id) ?? 0))
-                  .map(lectureLabel);
-                // "Lectures 4–5" reads better than listing full lecture titles
-                // on a compact card.
-                const first = lectures[0];
-                const last = lectures[lectures.length - 1];
-                const span =
-                  lectures.length === 0
-                    ? null
-                    : lectures.length === 1
-                      ? `${first.word} ${first.n}`
-                      : `${first.word}s ${first.n}–${last.n}`;
+                const span = lectureSpan(
+                  ps.videos.map((v) => v.video.id),
+                  course.videos,
+                  labels,
+                );
                 return (
                   <li key={ps.id}>
                     <Link
@@ -405,7 +391,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                         <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
                           {ps.title}
                         </span>
-                        {/\b(test|exam|midterm|final)\b/i.test(ps.title) && (
+                        {isTestTitle(ps.title) && (
                           <span className="eyebrow text-[0.65rem] px-1.5 py-0.5 rounded bg-crimson-800 text-gold-400">Test</span>
                         )}
                       </span>

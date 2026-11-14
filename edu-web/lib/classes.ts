@@ -11,6 +11,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { assertAdmin } from "@/lib/admin-auth";
+import { registerWithCode } from "@/lib/class-hub";
 
 // Human-friendly join code: 6 chars, no ambiguous 0/O/1/I/L. crypto.randomInt so
 // codes aren't guessable (a valid code is the only thing gating registration).
@@ -39,25 +40,12 @@ export async function registerForClass(_prev: RegisterState, formData: FormData)
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return { error: "You must be signed in to register." };
 
-  const code = String(formData.get("joinCode") ?? "").trim().toUpperCase();
-  if (!code) return { error: "Enter a class code." };
+  const result = await registerWithCode(session.user.id, String(formData.get("joinCode") ?? ""));
+  if (!result.ok) return { error: result.error };
 
-  const section = await db.section.findUnique({
-    where: { joinCode: code },
-    include: { course: { select: { id: true, isCurrent: true } } },
-  });
-  if (!section) return { error: "That class code isn't valid." };
-  if (!section.course.isCurrent) return { error: "Registration for that class is closed." };
-
-  await db.enrollment.upsert({
-    where: { sectionId_userId: { sectionId: section.id, userId: session.user.id } },
-    create: { sectionId: section.id, userId: session.user.id },
-    update: { status: "active" },
-  });
-
-  revalidatePath(`/courses/${section.course.id}`);
+  revalidatePath(`/courses/${result.courseId}`);
   revalidatePath("/dashboard");
-  return { success: `You're registered for ${section.name}.` };
+  return { success: `You're registered for ${result.sectionName}.` };
 }
 
 // ---- Admin ----
