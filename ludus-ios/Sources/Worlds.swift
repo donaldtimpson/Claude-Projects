@@ -11,17 +11,17 @@ enum GameID: String, Identifiable, Hashable {
     // Temple · Math
     case ballista, omnibus, timesTableNinja, fountain, libra
     // Lighthouse · Geography
-    case flagFrenzy, nameCountry, pharosBeam, zooFerry, pigeonPost, agrippaMap
+    case flagFrenzy, pharosBeam, zooFerry, pigeonPost, agrippaMap
     // Library · Language Arts
     case polyphemus, scrollCatcher, minervaOwl, wordBridge, synonymSnake
-    // Colosseum · Logic  (trueFalseBlitz / oddOneOut / patternPop are retired — QuickFire still names them)
-    case portaCustos, torches, chariotCode, whereLeo, mosaicMender, trueFalseBlitz, oddOneOut, patternPop
+    // Colosseum · Logic
+    case portaCustos, torches, chariotCode, whereLeo, mosaicMender
     // Vesuvius · Science
     case critterSort, dressMarcus, zookeeper, seesaw, forge
     // Forum · History
-    case timeline, timeGuard, caesarWheel, milestone, dig, chariot
-    // Market · Money (coinCount: retired — its view still lives in QuickFire.swift)
-    case coinCount, figStall, porcus, clockTower, bakery, donkeyDeal
+    case timeGuard, caesarWheel, milestone, dig, chariot
+    // Market · Money
+    case figStall, porcus, clockTower, bakery, donkeyDeal
     // Theatre · Music
     case pianoMouse, maestroMouse, comedyTragedy, galleyDrum, echoCave
     var id: String { rawValue }
@@ -37,7 +37,6 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .fountain:        TempleFountainView(onClose: onClose)
     case .libra:           TempleLibraView(onClose: onClose)
     case .flagFrenzy:      FlagFrenzyView(onClose: onClose)
-    case .nameCountry:     NameCountryView(onClose: onClose)
     case .pharosBeam:      PharosBeamView(onClose: onClose)
     case .zooFerry:        ZooFerryView(onClose: onClose)
     case .pigeonPost:      PigeonPostView(onClose: onClose)
@@ -47,9 +46,6 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .synonymSnake:    SynonymSnakeView(onClose: onClose)
     case .polyphemus:      PolyphemusView(onClose: onClose)
     case .scrollCatcher:   ScrollCatcherView(onClose: onClose)
-    case .trueFalseBlitz:  TrueFalseBlitzView(onClose: onClose)
-    case .oddOneOut:       OddOneOutView(onClose: onClose)
-    case .patternPop:      PatternPopView(onClose: onClose)
     case .portaCustos:     PortaCustosView(onClose: onClose)
     case .torches:         TorchesView(onClose: onClose)
     case .chariotCode:     ChariotCodeView(onClose: onClose)
@@ -60,13 +56,11 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .forge:           ForgeView(onClose: onClose)
     case .dressMarcus:     DressMarcusView(onClose: onClose)
     case .zookeeper:       ZookeeperView(onClose: onClose)
-    case .timeline:        TimeOrderView(onClose: onClose)
     case .timeGuard:       TimeGuardView(onClose: onClose)
     case .caesarWheel:     CaesarWheelView(onClose: onClose)
     case .milestone:       MilestoneMasonView(onClose: onClose)
     case .dig:             TheDigView(onClose: onClose)
     case .chariot:         ChariotRaceView(onClose: onClose)
-    case .coinCount:       CoinCountView(onClose: onClose)
     case .figStall:        FigStallView(onClose: onClose)
     case .porcus:          PorcusView(onClose: onClose)
     case .clockTower:      ClockTowerView(onClose: onClose)
@@ -77,22 +71,6 @@ func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     case .comedyTragedy:   ComedyTragedyView(onClose: onClose)
     case .galleyDrum:      GalleyDrumView(onClose: onClose)
     case .echoCave:        EchoCaveView(onClose: onClose)
-    }
-}
-
-/// Placeholder for a game whose id exists but whose view isn't built yet.
-struct ComingSoonGame: View {
-    let id: GameID
-    let onClose: () -> Void
-    var body: some View {
-        ZStack {
-            LudusBackground().ignoresSafeArea()
-            VStack(spacing: 16) {
-                Text(id.spec?.icon ?? "🚧").font(.system(size: 64))
-                Text("Coming soon").font(luSerif(28, .black)).foregroundStyle(Color(hex: Lu.ink))
-                LudusButton(title: "Back", action: onClose)
-            }
-        }
     }
 }
 
