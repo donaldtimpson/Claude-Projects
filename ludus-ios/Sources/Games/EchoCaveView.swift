@@ -12,7 +12,7 @@ import SwiftUI
 // Continuous ladder (all off `d`):
 //   crystals   2 (C4 and C5: plainly LOW and HIGH) → 3 → … → 8 (a C-major octave) by ~6.5;
 //              early sets are spread wide, later ones step by step (harder to tell apart)
-//   tune       1 note (which one did she sing? = high or low) → 7 notes by ~9
+//   tune       1 note (which one did she sing? = high or low) → 6–7 notes by ~9.5
 //   tempo      0.7 s → 0.32 s between notes
 //   melody     random jumps early; mostly steps and repeats later (real tunes move by step)
 //   colour     each crystal has its own colour and lights as she sings — from ~6 the lights
@@ -57,7 +57,7 @@ private final class EchoModel: ArcadeModel {
     override func onBegin() { next(after: 0.7) }
 
     func makeTune(n: Int) -> [Int] {
-        let len = max(1, min(8, rampInt(1, 7, from: 1, to: 9) + (chance(0.5, from: 2, to: 4) && Bool.random() ? 1 : 0)))
+        let len = max(1, min(8, rampInt(1, 6, from: 1, to: 9.5) + (chance(0.5, from: 2, to: 4) && Bool.random() ? 1 : 0)))
         let stepwise = ramp(0, 0.8, from: 3, to: 7)
         var t = [Int.random(in: 0..<n)]
         while t.count < len {
