@@ -34,7 +34,20 @@ struct LudusApp: App {
         // LUDUS_GAME=<GameID raw value> opens straight into that game (for checks and screenshots);
         // LUDUS_WORLD=<subject> opens straight onto that world's landing page.
         let env = ProcessInfo.processInfo.environment
-        if let g = env["LUDUS_GAME"], let id = GameID(rawValue: g) {
+        // LUDUS_GRANT=n sets the denarii bank; LUDUS_OWN=id,id… marks villa items owned;
+        // LUDUS_SCREEN=villa|records opens those pages.
+        let _ = {
+            if let n = Int(env["LUDUS_GRANT"] ?? "") { UserDefaults.standard.set(n, forKey: LudusStore.denariiKey) }
+            if let o = env["LUDUS_OWN"] {
+                UserDefaults.standard.set(o == "all" ? villaCatalog.map(\.id) : o.split(separator: ",").map(String.init),
+                                          forKey: LudusEconomy.ownedKey)
+            }
+        }()
+        if env["LUDUS_SCREEN"] == "villa" {
+            VillaView(onClose: {})
+        } else if env["LUDUS_SCREEN"] == "records" {
+            TabulariumView(onClose: {})
+        } else if let g = env["LUDUS_GAME"], let id = GameID(rawValue: g) {
             ludusGame(id, onClose: {})
         } else if let sub = env["LUDUS_WORLD"], let w = ludusWorlds.first(where: { $0.subject == sub }) {
             NavigationStack { WorldView(world: w) }

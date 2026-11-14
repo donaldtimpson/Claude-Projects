@@ -109,12 +109,9 @@ func luShade(_ hex: UInt, _ amt: Int) -> Color {
 }
 
 /// Roman rank from total banked denarii — the app-wide progression marker.
-func ludusRank(forDenarii den: Int) -> String {
-    if den >= 750 { return "Consul" }
-    if den >= 300 { return "Centurion" }
-    if den >= 100 { return "Legionary" }
-    return "Tiro"
-}
+/// The child's Roman rank. Pinned to aurei EARNED from laurels (see Economy.swift) — never to the
+/// denarii balance, so spending at the Villa can't demote anyone. (The parameter is legacy; ignored.)
+func ludusRank(forDenarii _: Int = 0) -> String { LudusEconomy.rank.name }
 
 // MARK: Shared keys (one economy across every game)
 

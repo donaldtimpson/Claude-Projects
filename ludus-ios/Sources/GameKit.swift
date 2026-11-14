@@ -205,10 +205,11 @@ class ArcadeModel: ObservableObject {
         combo += 1
         ease = max(0, ease - 0.15)
         let pts = points * min(combo, 5)
-        score += pts; den += pts
+        score += pts; den += 1          // denarii are fair across games: 1 a right answer…
         progress += 1
         if progress >= perLevel(level) {
             progress = 0; level += 1; levelUps += 1
+            den += 5                         // …and 5 for every level climbed
             hearts = min(maxHearts, hearts + 1)
             LudusProgress.record(level: level, for: key)
             Haptics.success()
@@ -558,6 +559,12 @@ private struct ArcadeOverView: View {
                         Text(result.medalAfter == .bronze ? "You won \(spec.title)!" : result.medalAfter.name + "!")
                             .font(luSerif(26, .black)).foregroundStyle(Color(hex: result.medalAfter.hex))
                             .multilineTextAlignment(.center)
+                        let gained = [0, 1, 3, 6][result.medalAfter.rawValue] - [0, 1, 3, 6][result.medalBefore.rawValue]
+                        HStack(spacing: 6) {
+                            Image("CoinGold").resizable().frame(width: 24, height: 24)
+                            Text("+\(gained) aure\(gained == 1 ? "us" : "i") for your villa")
+                                .font(luFont(16, .heavy)).foregroundStyle(Color(hex: Lu.gold))
+                        }
                     }
                 } else {
                     LaurelFrame(size: 30) {
@@ -581,7 +588,7 @@ private struct ArcadeOverView: View {
                 HStack(spacing: 8) {          // flexible cards: never wider than the screen
                     OverStat(label: "SCORE", value: "\(result.score)", hex: Lu.gold)
                     OverStat(label: "BEST", value: "\(result.best)", hex: Lu.mint)
-                    OverStat(label: "DENARII", value: "🪙\(result.den)", hex: Lu.silver)
+                    OverStat(label: "DENARII", value: "+\(result.den)", hex: Lu.silver, coin: "CoinSilver")
                 }
                 .padding(.top, 4)
                 if result.newBest && !result.newMedal {
@@ -607,11 +614,15 @@ private struct ArcadeOverView: View {
 private struct OverStat: View {
     let label: String, value: String
     var hex: UInt = Lu.ink
+    var coin: String? = nil
     var body: some View {
         VStack(spacing: 2) {
             Text(label).font(luFont(10, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
-            Text(value).font(luFont(26)).monospacedDigit().foregroundStyle(Color(hex: hex))
-                .lineLimit(1).minimumScaleFactor(0.5)
+            HStack(spacing: 4) {
+                if let coin { Image(coin).resizable().frame(width: 22, height: 22) }
+                Text(value).font(luFont(26)).monospacedDigit().foregroundStyle(Color(hex: hex))
+                    .lineLimit(1).minimumScaleFactor(0.5)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

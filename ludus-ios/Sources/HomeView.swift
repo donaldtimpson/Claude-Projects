@@ -192,6 +192,8 @@ struct HomeView: View {
     @State private var zoom: CGFloat = 0             // 0 = map, 1 = zoomed into the landmark
     @State private var zoomAnchor = UnitPoint.center
     @State private var mapHidden = false             // map + its ambience off while a landing page covers it
+    @State private var showRecords = false           // the Tabularium (rank, laurels, sound) — opened from the rank
+    @State private var showVilla = false             // the Villa (where coins are spent) — opened from the bar's coins
 
     // Floating chrome the camera must keep the traveler clear of.
     private let topInset: CGFloat = 150
@@ -257,6 +259,8 @@ struct HomeView: View {
             .navigationBarHidden(true)
         }
         .tint(Prov.red)
+        .fullScreenCover(isPresented: $showVilla) { VillaView(onClose: { showVilla = false }) }
+        .fullScreenCover(isPresented: $showRecords) { TabulariumView(onClose: { showRecords = false }) }
     }
 
     // The scrolling world: painted map, the eight seals on their buildings, and the traveler.
@@ -299,7 +303,8 @@ struct HomeView: View {
     }
 
     private var rankIndex: Int {
-        ["Tiro", "Legionary", "Centurion", "Consul"].firstIndex(of: ludusRank(forDenarii: denarii)) ?? 0
+        _ = denarii   // re-read on every bank change
+        return LudusEconomy.rank.index
     }
 
     /// Games in a world vs. games the child has WON (reached the bronze-laurel level) (re-read whenever the view updates, e.g.
@@ -508,30 +513,60 @@ struct HomeView: View {
                            startPoint: .top, endPoint: .bottom)
                 .frame(height: 46)
                 .padding(.bottom, -(Chrome.barTab + Chrome.barShadow - Chrome.barSide))
+                .allowsHitTesting(false)
             ZStack(alignment: .top) {
                 Image("BottomBar").resizable()
+                    .allowsHitTesting(false)
                     .frame(width: Chrome.barW, height: Chrome.barTab + Chrome.barShadow)
-                Image("Rank\(rankIndex)").resizable()
-                    .frame(width: Chrome.rank.width, height: Chrome.rank.height)
-                    .padding(.top, Chrome.barShadow)
-                    .accessibilityLabel("Rank: \(ludusRank(forDenarii: denarii))")
+                Button { openRecords() } label: {
+                    Image("Rank\(rankIndex)").resizable()
+                        .frame(width: Chrome.rank.width, height: Chrome.rank.height)
+                }
+                .buttonStyle(PlaqueButtonStyle())
+                .padding(.top, Chrome.barShadow)
+                .accessibilityLabel("Rank: \(ludusRank()). Open the hall of records")
             }
             .frame(width: w, height: Chrome.barTab + Chrome.barShadow)
             .clipped()
             .overlay(alignment: .bottom) {
+                // The coin corners open the Villa — the place the arcade's coins are spent.
                 HStack(spacing: 5.5) {
-                    Image("CoinSilver").resizable().frame(width: Chrome.coin, height: Chrome.coin)
-                    coinText("\(denarii)")
+                    Button { openVilla() } label: {
+                        HStack(spacing: 5.5) {
+                            Image("CoinSilver").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                            coinText("\(denarii)")
+                        }
+                        .padding(.vertical, 10).padding(.trailing, 14).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("\(denarii) denarii. Open your villa")
                     Spacer(minLength: 0)
-                    coinText("\(denarii / 25)")
-                    Image("CoinGold").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                    Button { openVilla() } label: {
+                        HStack(spacing: 5.5) {
+                            coinText("\(LudusEconomy.aurei)")
+                            Image("CoinGold").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                        }
+                        .padding(.vertical, 10).padding(.leading, 14).contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("\(LudusEconomy.aurei) aurei. Open your villa")
                 }
+                .buttonStyle(PlaqueButtonStyle())
                 .padding(.horizontal, 25.5)
                 .frame(height: Chrome.coin)
                 .padding(.bottom, 14)       // coin row centred in the side's lacquer, under its fillet
             }
         }
-        .allowsHitTesting(false)
+    }
+
+    private func openRecords() {
+        guard !isTraveling else { return }
+        Haptics.tap(); Sfx.play(.tick)
+        showRecords = true
+    }
+
+    private func openVilla() {
+        guard !isTraveling else { return }
+        Haptics.tap(); Sfx.play(.coin)
+        showVilla = true
     }
 
     private func coinText(_ v: String) -> some View {
