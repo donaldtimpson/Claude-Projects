@@ -62,7 +62,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
           className={`absolute left-0 top-0 h-full w-72 max-w-[80vw] bg-crimson-900 border-r border-crimson-700 flex flex-col transition-transform duration-200 ease-out ${open ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
         >
           <div className="flex items-center justify-between px-5 h-16 border-b border-crimson-700 shrink-0">
-            <span className="font-display text-sm tracking-[0.2em] uppercase text-gold-300">Menu</span>
+            <span className="font-ui font-semibold text-sm tracking-[0.06em] uppercase text-gold-300">Menu</span>
             <button
               onClick={() => setOpen(false)}
               aria-label="Close menu"
@@ -75,7 +75,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto py-4 font-display text-xs tracking-[0.15em] uppercase">
+          <div className="flex-1 overflow-y-auto py-4 font-ui font-semibold text-xs tracking-[0.06em] uppercase">
             <DrawerLink href="/" label="Courses" active={isActive("/")} />
             <DrawerLink href="/map" label="Course Map" active={isActive("/map")} />
             <DrawerLink href="/drills" label="Practice Drills" active={isActive("/drills")} />
@@ -103,13 +103,13 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
                 </p>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="w-full text-left font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 transition-colors px-1 py-1"
+                  className="w-full text-left font-ui font-semibold text-xs tracking-[0.06em] uppercase text-parchment-dim hover:text-gold-300 transition-colors px-1 py-1"
                 >
                   Sign Out
                 </button>
               </>
             ) : (
-              <div className="space-y-2 font-display text-xs tracking-[0.15em] uppercase">
+              <div className="space-y-2 font-ui font-semibold text-xs tracking-[0.06em] uppercase">
                 <Link
                   href="/auth/signin"
                   className="block text-center text-parchment-dim hover:text-gold-300 transition-colors py-2"
@@ -118,7 +118,7 @@ export default function SiteNav({ isAdmin }: { isAdmin: boolean }) {
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="block text-center bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded py-2 font-semibold transition-colors"
+                  className="font-ui font-semibold block text-center bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded py-2 transition-colors"
                 >
                   Sign Up
                 </Link>

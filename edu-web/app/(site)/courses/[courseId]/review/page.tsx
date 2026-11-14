@@ -71,8 +71,8 @@ export default async function CourseReviewPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link
             href={`/courses/${courseId}`}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"

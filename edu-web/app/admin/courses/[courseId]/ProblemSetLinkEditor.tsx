@@ -18,21 +18,21 @@ export default function ProblemSetLinkEditor({
   return (
     <form action={setVideoProblemSets} className="space-y-2">
       <input type="hidden" name="videoId" value={videoId} />
-      <p className="font-display text-xs tracking-[0.15em] uppercase text-gold-400">Problem sets covering this lecture</p>
+      <p className="font-ui font-semibold text-xs tracking-[0.06em] uppercase text-gold-400">Problem sets covering this lecture</p>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {problemSets.map((ps) => (
           <label key={ps.id} className="flex items-center gap-2 text-sm text-parchment-dim">
             <input type="checkbox" name="problemSetId" value={ps.id} defaultChecked={linkedSet.has(ps.id)} />
             <span>
               {ps.title}
-              {ps.isDraft && <span className="ml-1.5 text-[10px] uppercase tracking-wider text-amber-300">draft</span>}
+              {ps.isDraft && <span className="font-ui font-semibold ml-1.5 text-[11px] uppercase tracking-wider text-amber-300">draft</span>}
             </span>
           </label>
         ))}
       </div>
       <button
         type="submit"
-        className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+        className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
       >
         Save sets
       </button>

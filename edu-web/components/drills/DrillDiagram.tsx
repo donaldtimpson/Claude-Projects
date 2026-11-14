@@ -9,10 +9,10 @@ import type { DiagramSpec } from "@/lib/drills/types";
 const SIZE = 240;
 const C = SIZE / 2; // center x/y
 
-const AXIS = "var(--color-crimson-600)";
+const AXIS = "var(--color-parchment-dim)";
 const GOLD = "var(--color-gold-400)";
 const GOLD_DIM = "var(--color-gold-600)";
-const FAINT = "var(--color-crimson-700)";
+const FAINT = "var(--color-crimson-600)";
 const TEXT = "var(--color-parchment-dim)";
 
 // Sample a circular arc (CCW from 0 to `deg`) as an SVG path string.
@@ -57,8 +57,8 @@ export default function DrillDiagram({
 function Axes() {
   return (
     <>
-      <line x1={14} y1={C} x2={SIZE - 14} y2={C} stroke={AXIS} strokeWidth={1} />
-      <line x1={C} y1={14} x2={C} y2={SIZE - 14} stroke={AXIS} strokeWidth={1} />
+      <line x1={14} y1={C} x2={SIZE - 14} y2={C} stroke={AXIS} strokeWidth={1.25} opacity={0.6} />
+      <line x1={C} y1={14} x2={C} y2={SIZE - 14} stroke={AXIS} strokeWidth={1.25} opacity={0.6} />
     </>
   );
 }
@@ -118,7 +118,7 @@ function UnitCircleDiagram({ spec }: { spec: Extract<DiagramSpec, { kind: "unit-
 
   return (
     <>
-      <circle cx={C} cy={C} r={R} fill="none" stroke={FAINT} strokeWidth={1} />
+      <circle cx={C} cy={C} r={R} fill="none" stroke={AXIS} strokeWidth={1.5} opacity={0.7} />
       <Axes />
       {/* reference triangle legs: horizontal = cos, vertical = sin */}
       <line

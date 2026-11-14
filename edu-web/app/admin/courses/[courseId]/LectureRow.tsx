@@ -153,7 +153,7 @@ export default function LectureRow({
                 <span className="text-sm font-medium text-parchment">Quiz Questions</span>
               </span>
               <span
-                className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${PILL[quizStatus.tone]}`}
+                className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${PILL[quizStatus.tone]}`}
               >
                 {quizStatus.text}
               </span>
@@ -183,7 +183,7 @@ export default function LectureRow({
                 <span className="text-sm font-medium text-parchment">Practice links</span>
               </span>
               <span
-                className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${PILL[linksTone]}`}
+                className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${PILL[linksTone]}`}
               >
                 {parts.length > 0 ? parts.join(" · ") : "None"}
               </span>

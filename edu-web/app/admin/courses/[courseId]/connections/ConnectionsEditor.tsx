@@ -93,7 +93,7 @@ export default function ConnectionsEditor({
 
       {GROUPS.map((group) => (
         <section key={group.key}>
-          <h2 className="font-display tracking-wider uppercase text-sm text-gold-300">{group.title}</h2>
+          <h2 className="section-title">{group.title}</h2>
           <p className="text-xs text-parchment-dim mt-0.5 mb-3">{group.blurb}</p>
           <div className="flex flex-wrap gap-2">
             {others.map((c) => {
@@ -110,11 +110,7 @@ export default function ConnectionsEditor({
                   type="button"
                   disabled={busy === tag || (conflict && !on)}
                   onClick={() => toggle(group, c.id)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors disabled:opacity-40 ${
-                    on
-                      ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
-                      : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
-                  }`}
+                  className={`font-ui font-semibold text-sm px-3 py-1.5 rounded-full border transition-colors disabled:opacity-40 ${ on ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400" : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300" }`}
                 >
                   {c.title}
                 </button>

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -54,7 +55,11 @@ export default async function ClassHubPage({
         submissions: { where: { userId }, select: { url: true, score: true, feedback: true } },
       },
     })
-  ).map((a) => ({ ...a, sub: a.submissions[0] ?? null }));
+  )
+    .map((a) => ({ ...a, sub: a.submissions[0] ?? null }))
+    // Open work first; graded problem sets sink to the bottom as compact rows.
+    .sort((x, y) => Number(x.sub?.score != null && !x.lessonSlug) - Number(y.sub?.score != null && !y.lessonSlug));
+  const firstGraded = assignments.findIndex((a) => a.sub?.score != null && !a.lessonSlug);
 
   // Lesson-drill assignments are auto-graded by an ace — resolve titles + this
   // student's passed lessons so we can show pass status instead of a submit form.
@@ -87,8 +92,8 @@ export default async function ClassHubPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link href="/dashboard" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← My Progress
           </Link>
@@ -114,24 +119,24 @@ export default async function ClassHubPage({
 
         {/* Grade breakdown */}
         <section className="space-y-3">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             How your grade is calculated
           </h2>
-          <div className="overflow-x-auto rounded-xl border border-crimson-700">
+          <div className="overflow-x-auto rounded-xl border border-crimson-700 bg-crimson-900 shadow-card">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-crimson-900 text-left">
-                  <th className="px-4 py-2.5 font-medium text-parchment-dim">Category</th>
-                  <th className="px-4 py-2.5 font-medium text-parchment-dim">Your score</th>
-                  <th className="px-4 py-2.5 font-medium text-parchment-dim">Weight</th>
+                <tr className="bg-crimson-800/60 text-left">
+                  <th className="px-4 py-2.5 eyebrow text-parchment-dim">Category</th>
+                  <th className="px-4 py-2.5 eyebrow text-parchment-dim">Your score</th>
+                  <th className="px-4 py-2.5 eyebrow text-parchment-dim">Weight</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-crimson-800">
                 {breakdown.map((c) => (
-                  <tr key={c.key} className="bg-crimson-950/40">
+                  <tr key={c.key}>
                     <td className="px-4 py-2.5">
                       <span className="text-parchment">{c.label}</span>
-                      <span className="text-xs text-parchment-dim"> · {c.detail}</span>
+                      <span className="block sm:inline text-xs text-parchment-dim"><span className="hidden sm:inline"> · </span>{c.detail}</span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className={pctClass(c.pct)}>{pct(c.pct)}</span>
@@ -145,7 +150,7 @@ export default async function ClassHubPage({
           </div>
           <p className="text-xs text-parchment-dim">
             Your current grade is the weighted average of the categories that have data so far —
-            categories still marked <em>pending</em> don&apos;t count against you yet.
+            categories still marked <em>pending</em>{" "}don&apos;t count against you yet.
           </p>
         </section>
 
@@ -154,7 +159,7 @@ export default async function ClassHubPage({
           .filter((c) => c.weight > 0 && c.items.length > 0)
           .map((c) => (
             <section key={c.id} className="space-y-4">
-              <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+              <h2 className="section-title">
                 {c.name}
               </h2>
               <ul className="space-y-2">
@@ -168,11 +173,11 @@ export default async function ClassHubPage({
                     >
                       <span className="text-sm text-parchment truncate">{it.name}</span>
                       {has ? (
-                        <span className={`text-sm shrink-0 ${pctClass((sc / it.maxPoints) * 100)}`}>
+                        <span className={`font-ui text-sm font-semibold tabular-nums shrink-0 ${pctClass((sc / it.maxPoints) * 100)}`}>
                           {sc}/{it.maxPoints}
                         </span>
                       ) : (
-                        <span className="text-xs text-parchment-dim shrink-0">not graded yet</span>
+                        <span className="text-xs text-parchment-dim shrink-0">Not graded yet</span>
                       )}
                     </li>
                   );
@@ -183,14 +188,14 @@ export default async function ClassHubPage({
 
         {/* Homework */}
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Homework
           </h2>
           {assignments.length === 0 ? (
             <p className="text-parchment-dim text-sm">No homework assigned yet.</p>
           ) : (
             <ul className="space-y-3">
-              {assignments.map((a) => {
+              {assignments.map((a, i) => {
                 // Lesson-drill homework: auto-graded by acing the 30-run. No URL
                 // submission — the student just does the drill; ✦ = full credit.
                 if (a.lessonSlug) {
@@ -211,9 +216,9 @@ export default async function ClassHubPage({
                           </p>
                         </div>
                         {aced ? (
-                          <span className="text-sm text-gold-300 shrink-0">✦ aced · {a.points}/{a.points}</span>
+                          <span className="font-ui text-sm font-semibold text-gold-300 shrink-0">✦ Aced · {a.points}/{a.points}</span>
                         ) : (
-                          <span className="text-xs text-parchment-dim shrink-0">not yet aced</span>
+                          <span className="text-xs text-parchment-dim shrink-0">Not yet aced</span>
                         )}
                       </div>
                       <Link
@@ -228,6 +233,43 @@ export default async function ClassHubPage({
 
                 const ps = a.problemSet!;
                 const graded = a.sub && a.sub.score !== null;
+                const solutionsLink = ps.solutionsPublic && ps.solution.trim() && (
+                  <Link
+                    href={`/courses/${courseId}/problems/${ps.id}`}
+                    className="text-sm text-gold-400 hover:text-gold-300 transition-colors"
+                  >
+                    {graded ? "Solutions →" : "View problems & worked solutions →"}
+                  </Link>
+                );
+                // Graded work collapses to a compact row: title, solutions, score.
+                if (graded) {
+                  return (
+                    <Fragment key={a.id}>
+                    {i === firstGraded && i > 0 && (
+                      <li className="eyebrow text-parchment-dim pt-4">Graded</li>
+                    )}
+                    <li className="bg-crimson-900 border border-crimson-700 rounded-xl px-4 py-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0 flex items-baseline gap-3 flex-wrap">
+                          <Link
+                            href={`/courses/${courseId}/problems/${ps.id}`}
+                            className="font-medium text-parchment hover:text-gold-300 transition-colors"
+                          >
+                            {a.title ?? ps.title}
+                          </Link>
+                          {solutionsLink}
+                        </div>
+                        <span className="font-ui text-sm font-semibold tabular-nums text-parchment shrink-0">
+                          {a.sub!.score}/{a.points}
+                        </span>
+                      </div>
+                      {a.sub!.feedback && (
+                        <p className="mt-2 text-sm text-parchment-dim border-l-2 border-crimson-700 pl-3">{a.sub!.feedback}</p>
+                      )}
+                    </li>
+                    </Fragment>
+                  );
+                }
                 return (
                   <li key={a.id} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
                     <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -243,30 +285,16 @@ export default async function ClassHubPage({
                           {a.dueAt ? `Due ${new Date(a.dueAt).toLocaleString()}` : "No due date"} · {a.points} pts
                         </p>
                       </div>
-                      {graded ? (
-                        <span className="text-sm text-gold-300 shrink-0">
-                          {a.sub!.score}/{a.points}
-                        </span>
-                      ) : a.sub ? (
-                        <span className="text-xs text-green-400 shrink-0">submitted · awaiting grade</span>
+                      {a.sub ? (
+                        <span className="text-xs text-green-400 shrink-0">Submitted · awaiting grade</span>
                       ) : (
-                        <span className="text-xs text-parchment-dim shrink-0">not submitted</span>
+                        <span className="text-xs text-parchment-dim shrink-0">Not submitted</span>
                       )}
                     </div>
-                    {graded && a.sub!.feedback && (
-                      <p className="text-sm text-parchment-dim border-l-2 border-crimson-700 pl-3">{a.sub!.feedback}</p>
-                    )}
                     <SubmitForm assignmentId={a.id} currentUrl={a.sub?.url ?? null} />
                     {/* Solutions live inline with the problems they answer, so
                         point there rather than duplicating them here. */}
-                    {ps.solutionsPublic && ps.solution.trim() && (
-                        <Link
-                          href={`/courses/${courseId}/problems/${ps.id}`}
-                          className="inline-block text-sm text-gold-400 hover:text-gold-300 transition-colors"
-                        >
-                          View problems &amp; worked solutions →
-                        </Link>
-                      )}
+                    {solutionsLink && <div>{solutionsLink}</div>}
                   </li>
                 );
               })}
@@ -277,7 +305,7 @@ export default async function ClassHubPage({
         {/* Quizzes & test */}
         {(quizVideos.length > 0 || showCourseTest) && (
           <section className="space-y-4">
-            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            <h2 className="section-title">
               {showCourseTest ? <>Quizzes &amp; Test</> : "Quizzes"}
             </h2>
             <p className="text-xs text-parchment-dim">
@@ -295,9 +323,11 @@ export default async function ClassHubPage({
                       <span className="text-sm text-parchment group-hover:text-gold-300 transition-colors truncate">
                         {v.title}
                       </span>
-                      <span className={`text-sm shrink-0 ${pctClass(best)}`}>
-                        {best === null ? "not taken" : pct(best)}
-                      </span>
+                      {best === null ? (
+                        <span className="text-xs text-parchment-dim shrink-0">Not taken</span>
+                      ) : (
+                        <span className={`font-ui text-sm font-semibold tabular-nums shrink-0 ${pctClass(best)}`}>{pct(best)}</span>
+                      )}
                     </Link>
                   </li>
                 );

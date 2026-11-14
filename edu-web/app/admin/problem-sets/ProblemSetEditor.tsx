@@ -43,7 +43,7 @@ function Pane({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="font-display text-xs tracking-[0.15em] uppercase text-gold-400">{label}</span>
+        <span className="font-ui font-semibold text-xs tracking-[0.06em] uppercase text-gold-400">{label}</span>
         <div className="flex gap-1 text-xs">
           {(["edit", "preview"] as const).map((m) => (
             <button
@@ -65,7 +65,7 @@ function Pane({
           onChange={(e) => onChange(e.target.value)}
           rows={14}
           placeholder={placeholder}
-          className="w-full px-3 py-2 bg-crimson-950 border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
+          className="w-full px-3 py-2 bg-field border border-crimson-700 rounded-lg text-parchment text-sm font-mono leading-relaxed focus:outline-none focus:border-gold-500 resize-y"
         />
       ) : (
         <div className="px-4 py-3 bg-crimson-900 border border-crimson-700 rounded-lg min-h-[8rem]">
@@ -162,10 +162,10 @@ export default function ProblemSetEditor({
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="flex-1 min-w-[16rem] bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment text-lg font-semibold transition-colors"
+          className="flex-1 min-w-[16rem] bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment text-lg font-semibold transition-colors"
         />
         <span
-          className={`text-[10px] uppercase tracking-wider px-2 py-1 rounded border ${
+          className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-2 py-1 rounded border ${
             isDraft ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-green-900/30 border-green-700 text-green-300"
           }`}
         >
@@ -181,7 +181,7 @@ export default function ProblemSetEditor({
             min={0}
             value={points}
             onChange={(e) => setPoints(parseInt(e.target.value, 10) || 0)}
-            className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
+            className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
           />
         </label>
         <label className="text-parchment-dim flex items-center gap-2">
@@ -191,7 +191,7 @@ export default function ProblemSetEditor({
             min={0}
             value={extraCredit}
             onChange={(e) => setExtraCredit(parseInt(e.target.value, 10) || 0)}
-            className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
+            className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment transition-colors"
           />
         </label>
         <span className="text-xs text-parchment-dim/70">
@@ -234,7 +234,7 @@ export default function ProblemSetEditor({
       {/* Many-to-many: a set usually spans several lectures. Tagging makes it
           show up under "Practice" on each of those lecture pages. */}
       <div className="space-y-2">
-        <span className="font-display text-xs tracking-[0.15em] uppercase text-gold-400">
+        <span className="font-ui font-semibold text-xs tracking-[0.06em] uppercase text-gold-400">
           Covers lectures
         </span>
         {lectures.length === 0 ? (
@@ -267,14 +267,14 @@ export default function ProblemSetEditor({
         value={attachmentUrl}
         onChange={(e) => setAttachmentUrl(e.target.value)}
         placeholder="Optional attachment URL (e.g. a hosted PDF)"
-        className="w-full bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
+        className="w-full bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
       />
 
       <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-crimson-800">
         <button
           onClick={save}
           disabled={saving}
-          className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
         >
           {saving ? "Saving…" : "Save changes"}
         </button>

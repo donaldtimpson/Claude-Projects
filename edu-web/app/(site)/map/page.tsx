@@ -39,7 +39,7 @@ export default async function CourseMapPage() {
   if (connectedIds.length === 0) {
     return (
       <main className="max-w-4xl mx-auto px-6 py-16 text-center">
-        <h1 className="text-3xl font-bold text-parchment mb-3">Course Map</h1>
+        <h1 className="font-bold text-3xl text-parchment mb-3">Course Map</h1>
         <p className="text-parchment-dim">No course connections have been added yet.</p>
       </main>
     );
@@ -194,7 +194,7 @@ export default async function CourseMapPage() {
   return (
     <main className="max-w-6xl mx-auto px-6 py-10">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-parchment mb-2">Course Map</h1>
+        <h1 className="font-bold text-3xl text-parchment mb-2">Course Map</h1>
         <p className="text-parchment-dim">
           How the courses build on and relate to one another. These are recommendations, not
           requirements — watch anything in any order.{" "}

@@ -57,7 +57,7 @@ export default function GrantPanel({ users, catalog }: { users: UserView[]; cata
               <button
                 onClick={() => grant(u.id)}
                 disabled={pending}
-                className="font-display text-xs tracking-wider uppercase bg-gold-600 hover:bg-gold-500 disabled:opacity-50 text-crimson-950 rounded px-3 py-1.5 font-semibold transition-colors"
+                className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed text-crimson-950 rounded px-3 py-1.5 transition-colors"
               >
                 Grant
               </button>

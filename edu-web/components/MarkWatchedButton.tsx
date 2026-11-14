@@ -24,7 +24,7 @@ export default function MarkWatchedButton({
 
   if (watched) {
     return (
-      <div className="flex items-center gap-2 text-green-400 text-sm font-display tracking-wider">
+      <div className="flex items-center gap-2 text-green-400 text-sm font-ui font-semibold">
         <span>✓</span>
         <span>Watched</span>
       </div>
@@ -34,9 +34,9 @@ export default function MarkWatchedButton({
   return (
     <button
       onClick={handleClick}
-      className="text-sm font-display tracking-wider text-parchment-dim hover:text-gold-300 border border-crimson-600 hover:border-gold-500 px-4 py-1.5 rounded transition-colors"
+      className="font-ui font-semibold text-sm text-parchment-dim hover:text-gold-300 border border-crimson-600 hover:border-gold-500 px-4 py-1.5 rounded transition-colors"
     >
-      Mark as Watched
+      Mark as watched
     </button>
   );
 }

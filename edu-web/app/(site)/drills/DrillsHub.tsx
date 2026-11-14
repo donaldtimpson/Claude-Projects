@@ -62,7 +62,7 @@ function DrillRow({ d, aced, query = "" }: { d: DrillMeta; aced?: boolean; query
     >
       <span className="text-3xl leading-none shrink-0" aria-hidden>{d.icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-lg text-parchment">
+        <span className="block text-lg font-semibold text-parchment">
           <Highlight text={d.title} query={query} />
         </span>
         <span className="block text-sm text-parchment-dim">
@@ -84,7 +84,7 @@ function WorksheetRow({ w, query = "" }: { w: WorksheetMeta; query?: string }) {
     >
       <span className="text-3xl leading-none shrink-0" aria-hidden>{w.icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-lg text-parchment">
+        <span className="block text-lg font-semibold text-parchment">
           <Highlight text={w.title} query={query} />
         </span>
         <span className="block text-sm text-parchment-dim">
@@ -97,7 +97,7 @@ function WorksheetRow({ w, query = "" }: { w: WorksheetMeta; query?: string }) {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="font-display text-sm tracking-[0.15em] uppercase text-gold-400">{children}</h2>
+    <h2 className="section-title">{children}</h2>
   );
 }
 
@@ -295,7 +295,7 @@ function CategoryRow({
     >
       <span className="text-3xl leading-none shrink-0" aria-hidden>{c.icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block font-display text-lg text-parchment">
+        <span className="block text-lg font-semibold text-parchment">
           <Highlight text={c.title} query={query} />
         </span>
         <span

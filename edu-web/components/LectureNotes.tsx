@@ -19,7 +19,7 @@ export default function LectureNotes({ content, printHref }: { content: string; 
   }, []);
 
   return (
-    <section className="border border-crimson-700 rounded-xl overflow-hidden">
+    <section className="bg-crimson-900 border border-crimson-700 rounded-xl overflow-hidden">
       <div className="flex items-center justify-between pr-4 hover:bg-crimson-800/40 transition-colors">
         <button
           onClick={() => setOpen((o) => !o)}
@@ -34,7 +34,7 @@ export default function LectureNotes({ content, printHref }: { content: string; 
           >
             <path d="M6 6l8 4-8 4V6z" />
           </svg>
-          <span className="font-display text-sm tracking-[0.15em] uppercase text-parchment">Lecture Notes</span>
+          <span className="text-lg font-semibold text-parchment">Lecture notes</span>
         </button>
         <a
           href={printHref}
@@ -49,7 +49,7 @@ export default function LectureNotes({ content, printHref }: { content: string; 
         </a>
       </div>
       {open && (
-        <div className="px-5 pb-5 pt-1">
+        <div className="px-5 pb-5 pt-1 max-w-[75ch] lg:text-lg">
           <MarkdownNotes content={content} />
         </div>
       )}

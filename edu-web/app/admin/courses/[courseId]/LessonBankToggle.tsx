@@ -38,11 +38,7 @@ export default function LessonBankToggle({
       onClick={toggle}
       disabled={pending}
       aria-pressed={on}
-      className={`text-xs font-display tracking-wider uppercase px-2.5 py-1 rounded border transition-colors ${
-        on
-          ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
-          : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
-      } disabled:opacity-50`}
+      className={`font-ui font-semibold text-sm px-2.5 py-1 rounded border transition-colors ${ on ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400" : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300" } disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed`}
     >
       {on ? "✓ Grammar lessons" : "Grammar lessons: off"}
     </button>

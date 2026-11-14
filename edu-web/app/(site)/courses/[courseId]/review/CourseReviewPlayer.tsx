@@ -145,13 +145,13 @@ export default function CourseReviewPlayer({
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => start(false)}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
           >
             Start review
           </button>
           <button
             onClick={() => start(true)}
-            className="px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors"
           >
             ∞ Endless mode
           </button>
@@ -174,7 +174,7 @@ export default function CourseReviewPlayer({
         </p>
         {perfect ? (
           <div className="rounded-lg border border-gold-500 bg-field px-4 py-3">
-            <p className="font-display text-sm uppercase tracking-[0.15em] text-gold-300">
+            <p className="font-ui text-sm font-semibold text-gold-300">
               ✦ Flawless — every question right on the first try
             </p>
           </div>
@@ -186,13 +186,13 @@ export default function CourseReviewPlayer({
         <div className="flex flex-wrap gap-3">
           <button
             onClick={() => start(false)}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
           >
             Review again
           </button>
           <button
             onClick={continueEndless}
-            className="px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors"
           >
             ∞ Endless mode
           </button>
@@ -227,9 +227,9 @@ export default function CourseReviewPlayer({
           if (!answered) {
             style += "border-crimson-700 bg-field hover:border-gold-400 text-parchment";
           } else if (idx === q.correctIndex) {
-            style += "border-green-500 bg-green-900/30 text-green-300";
+            style += "border-green-500 bg-green-900 text-parchment font-medium relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✓'] after:text-green-400";
           } else if (idx === selected) {
-            style += "border-red-500 bg-red-900/30 text-red-300";
+            style += "border-red-500 bg-red-900 text-parchment relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✗'] after:text-red-400";
           } else {
             style += "border-crimson-700 bg-field text-parchment-dim";
           }
@@ -253,7 +253,7 @@ export default function CourseReviewPlayer({
           {q.explanation && <p className="text-sm text-parchment-dim">{q.explanation}</p>}
           <button
             onClick={advance}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
           >
             {willClear ? "Finish review" : "Next →"}
           </button>

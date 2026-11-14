@@ -203,8 +203,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-4xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-4xl mx-auto px-6">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Courses
           </Link>
@@ -213,7 +213,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
       <div className="max-w-4xl mx-auto px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-parchment mb-2">{course.title}</h1>
+          <h1 className="text-3xl font-bold leading-tight text-parchment mb-2">{course.title}</h1>
           <p className="text-parchment-dim">
             {course.videos.length === 0
               ? "Coming soon"
@@ -232,7 +232,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               {course._count.quizQuestions > 0 && (
                 <Link
                   href={`/courses/${course.id}/test`}
-                  className="inline-block px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+                  className="font-ui font-semibold inline-block px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
                 >
                   Take the Course Test ({course._count.quizQuestions} questions)
                 </Link>
@@ -240,9 +240,9 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               {reviewQuestionCount > 0 && (
                 <Link
                   href={`/courses/${course.id}/review`}
-                  className="inline-block px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
+                  className="font-ui font-semibold inline-block px-5 py-2.5 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
                 >
-                  Review Course ({reviewQuestionCount} questions)
+                  Review course ({reviewQuestionCount} questions)
                 </Link>
               )}
             </div>
@@ -280,7 +280,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
         {course.resources.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Resources</h2>
+            <h2 className="section-title mb-4">Resources</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {course.resources.map(({ resource }) => (
                 <li key={resource.id}>
@@ -292,7 +292,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="font-medium text-parchment group-hover:text-gold-300 transition-colors truncate">
+                        <p className="font-medium leading-snug text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                           {resource.title}
                         </p>
                         <p className="text-xs text-parchment-dim mt-0.5">
@@ -310,8 +310,8 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
         {course.syllabus.trim() && (
           <section className="mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm uppercase tracking-wider text-parchment-dim">Syllabus</h2>
+            <div className="flex items-baseline justify-between gap-4 mb-4 border-b border-crimson-700">
+              <h2 className="section-title border-0">Syllabus</h2>
               <a
                 href={`/courses/${course.id}/syllabus`}
                 target="_blank"
@@ -346,10 +346,10 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
               <li key={video.id}>
                 <Link
                   href={`/courses/${course.id}/${video.id}`}
-                  className="group flex gap-4 items-start bg-crimson-900 border border-crimson-700 rounded-xl p-4 hover:border-gold-500 transition-colors"
+                  className="group flex gap-4 items-center bg-crimson-900 border border-crimson-700 rounded-xl px-4 py-3 hover:border-gold-500 transition-colors"
                 >
-                  <span className="text-parchment-dim text-sm w-6 shrink-0 mt-0.5">{idx + 1}</span>
-                  <div className="relative w-32 aspect-video shrink-0 rounded-md overflow-hidden bg-crimson-800">
+                  <span className="font-ui text-parchment-dim text-sm tabular-nums w-6 shrink-0 text-right">{idx + 1}</span>
+                  <div className="relative w-28 aspect-video shrink-0 rounded-md overflow-hidden bg-crimson-800">
                     <VideoThumb videoId={video.youtubeVideoId} src={video.thumbnailUrl} alt={video.title} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -366,7 +366,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                     </p>
                   </div>
                   {isWatched && (
-                    <span className="shrink-0 text-green-400 text-sm self-center" title="Watched">✓</span>
+                    <span className="shrink-0 text-green-400 text-base" title="Watched">✓</span>
                   )}
                 </Link>
               </li>
@@ -377,7 +377,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
         {problemSets.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-3">Problem Sets</h2>
+            <h2 className="section-title mb-4">Problem Sets</h2>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {problemSets.map((ps) => {
                 const hasSolutions = ps.solutionsPublic && ps.solution.trim().length > 0;
@@ -401,8 +401,13 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
                       href={`/courses/${course.id}/problems/${ps.id}`}
                       className="block bg-crimson-900 border border-crimson-700 hover:border-gold-500 rounded-xl p-4 transition-colors group"
                     >
-                      <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
-                        {ps.title}
+                      <span className="flex items-center gap-2">
+                        <span className="font-medium text-parchment group-hover:text-gold-300 transition-colors">
+                          {ps.title}
+                        </span>
+                        {/\b(test|exam|midterm|final)\b/i.test(ps.title) && (
+                          <span className="eyebrow text-[0.65rem] px-1.5 py-0.5 rounded bg-crimson-800 text-gold-400">Test</span>
+                        )}
                       </span>
                       <span className="block text-xs text-parchment-dim mt-1">
                         {[
@@ -423,7 +428,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
 
         {otherOfferings.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-2">Other Offerings</h2>
+            <h2 className="section-title mb-4">Other Offerings</h2>
             <div className="flex flex-wrap gap-2">
               {otherOfferings.map((o) => {
                 const year = o.publishedAt?.getUTCFullYear();
@@ -446,7 +451,7 @@ export default async function CoursePage({ params }: { params: Promise<{ courseI
           <section className="mb-8 space-y-4">
             {connectionGroups.map((group) => (
               <div key={group.title}>
-                <h2 className="text-sm uppercase tracking-wider text-parchment-dim mb-2">
+                <h2 className="section-title mb-4">
                   {group.title}
                 </h2>
                 <div className="flex flex-wrap gap-2">

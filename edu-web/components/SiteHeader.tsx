@@ -33,10 +33,24 @@ export default async function SiteHeader() {
           </Link>
           <NavBreadcrumb />
         </div>
-        <Suspense fallback={<div className="flex-1 max-w-xs sm:max-w-sm" />}>
-          <SearchBox />
-        </Suspense>
+        {/* Type-ahead search from sm up; on phones it would be a sliver, so an
+            icon opens the full search page instead. */}
+        <div className="hidden sm:flex flex-1 min-w-0 justify-center">
+          <Suspense fallback={<div className="flex-1 max-w-sm" />}>
+            <SearchBox />
+          </Suspense>
+        </div>
         <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="sm:hidden w-9 h-9 inline-flex items-center justify-center rounded-lg text-parchment-dim hover:text-gold-300 hover:bg-crimson-800 transition-colors"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+          </Link>
           <Suspense fallback={null}>
             <StreakBadge />
           </Suspense>

@@ -117,7 +117,7 @@ export default function QuizEditor({
                 <p className="font-medium text-parchment">
                   <span className="text-parchment-dim mr-2">{idx + 1}.</span>
                   {q.isDraft && (
-                    <span className="inline-block mr-2 px-1.5 py-0.5 bg-amber-900/40 border border-amber-700 text-amber-300 text-[10px] uppercase tracking-wider rounded">
+                    <span className="font-ui font-semibold inline-block mr-2 px-1.5 py-0.5 bg-amber-900/40 border border-amber-700 text-amber-300 text-[11px] uppercase tracking-wider rounded">
                       Draft
                     </span>
                   )}
@@ -210,7 +210,7 @@ export default function QuizEditor({
           <button
             onClick={save}
             disabled={saving}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
           >
             {saving ? "Saving…" : editingId ? "Save Changes" : "Add Question"}
           </button>

@@ -95,8 +95,8 @@ export default async function ProblemSetPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link
             href={`/courses/${ps.course.id}`}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"
@@ -121,7 +121,7 @@ export default async function ProblemSetPage({
             is usually a span rather than a single lecture. */}
         {lectures.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-display text-[0.65rem] tracking-[0.2em] uppercase text-gold-400">
+            <span className="font-ui font-semibold text-[0.65rem] tracking-[0.06em] uppercase text-gold-400">
               Covers
             </span>
             {lectures.map((v) => (
@@ -138,13 +138,13 @@ export default async function ProblemSetPage({
 
         <HomeworkBanner assignments={myAssignments} />
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-x-5 gap-y-2 flex-wrap">
           {ps.attachmentUrl && (
             <a
               href={ps.attachmentUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
+              className="font-ui font-semibold px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors"
             >
               Open attachment ↗
             </a>
@@ -155,7 +155,7 @@ export default async function ProblemSetPage({
             href={`/courses/${courseId}/problems/${ps.id}/print`}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-2 transition-colors"
+            className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
           >
             Print problems
           </a>
@@ -164,7 +164,7 @@ export default async function ProblemSetPage({
               href={`/courses/${courseId}/problems/${ps.id}/print?solutions=1`}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-2 transition-colors"
+              className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
             >
               Print with solutions
             </a>
@@ -181,7 +181,7 @@ export default async function ProblemSetPage({
             {prevSet ? (
               <Link
                 href={`/courses/${courseId}/problems/${prevSet.id}`}
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+                className="font-ui font-semibold text-sm text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
                 ← Previous
               </Link>
@@ -191,7 +191,7 @@ export default async function ProblemSetPage({
             {nextSet ? (
               <Link
                 href={`/courses/${courseId}/problems/${nextSet.id}`}
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+                className="font-ui font-semibold text-sm text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
                 Next →
               </Link>

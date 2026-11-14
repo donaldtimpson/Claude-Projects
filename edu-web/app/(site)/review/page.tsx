@@ -24,8 +24,8 @@ export default async function DailyReviewPage() {
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link href="/dashboard" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← My Progress
           </Link>
@@ -33,7 +33,7 @@ export default async function DailyReviewPage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
-        <h1 className="text-2xl font-bold text-parchment">Daily Review</h1>
+        <h1 className="font-bold text-2xl text-parchment">Daily Review</h1>
 
         {due.length > 0 ? (
           <DailyReviewPlayer cards={due} onGrade={gradeReview} onFinish={finishDailyReview} />

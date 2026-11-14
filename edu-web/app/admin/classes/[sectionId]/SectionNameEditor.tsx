@@ -64,12 +64,12 @@ export default function SectionNameEditor({ sectionId, initialName }: { sectionI
             setName(initialName);
           }
         }}
-        className="text-xl font-bold bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-1.5 text-parchment"
+        className="text-xl font-bold bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-1.5 text-parchment"
       />
       <button
         onClick={save}
         disabled={saving}
-        className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-3 py-1.5 font-semibold transition-colors disabled:opacity-50"
+        className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-3 py-1.5 transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
       >
         {saving ? "Saving…" : "Save"}
       </button>

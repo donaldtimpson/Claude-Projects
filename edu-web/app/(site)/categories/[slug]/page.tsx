@@ -79,7 +79,7 @@ export default async function CategoryPage({
         {/* Scroll layer — sits on top, scrolls independently */}
         <div className="absolute inset-0 overflow-y-auto">
           <div className="px-6 pt-12 pb-[36rem] space-y-10">
-            <h1 className="font-display text-4xl text-parchment">{category.name}</h1>
+            <h1 className="font-bold text-4xl text-parchment">{category.name}</h1>
 
             {courses.length === 0 ? (
               <p className="text-parchment-dim text-sm">No courses in this category yet.</p>
@@ -97,10 +97,10 @@ export default async function CategoryPage({
                       videoCount={course._count.videos}
                     />
                     <div className="p-4">
-                      <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+                      <h3 className="text-base font-semibold leading-snug text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                         {course.title}
                       </h3>
-                      <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
+                      <p className="text-xs font-medium text-parchment-dim mt-1.5">
                         {course._count.videos === 0
                           ? "Coming soon"
                           : `${course._count.videos} video${course._count.videos !== 1 ? "s" : ""}`}

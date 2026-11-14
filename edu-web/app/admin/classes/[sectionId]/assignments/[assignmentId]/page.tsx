@@ -99,7 +99,7 @@ export default async function GradeAssignmentPage({
                       max={assignment.points + ps.extraCreditPoints}
                       defaultValue={sub.score ?? ""}
                       placeholder="—"
-                      className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                      className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
                     />
                     <span className="text-parchment-dim">
                       / {assignment.points}
@@ -110,11 +110,11 @@ export default async function GradeAssignmentPage({
                     name="feedback"
                     defaultValue={sub.feedback ?? ""}
                     placeholder="Feedback (optional)"
-                    className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
+                    className="flex-1 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
                   />
                   <button
                     type="submit"
-                    className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+                    className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
                   >
                     Save
                   </button>

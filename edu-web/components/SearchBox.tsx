@@ -177,7 +177,7 @@ export default function SearchBox() {
 
           {courses.length > 0 && (
             <div className="border-b border-crimson-800 py-1">
-              <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
+              <p className="px-4 pt-1 pb-0.5 font-ui font-semibold text-[0.65rem] uppercase tracking-[0.06em] text-gold-300/80">
                 Courses
               </p>
               {courses.map((c, i) => (
@@ -199,7 +199,7 @@ export default function SearchBox() {
 
           {lectures.length > 0 && (
             <div className="py-1">
-              <p className="px-4 pt-1 pb-0.5 font-display text-[0.65rem] uppercase tracking-[0.15em] text-gold-300/80">
+              <p className="px-4 pt-1 pb-0.5 font-ui font-semibold text-[0.65rem] uppercase tracking-[0.06em] text-gold-300/80">
                 Lectures
               </p>
               {lectures.map((l, j) => {

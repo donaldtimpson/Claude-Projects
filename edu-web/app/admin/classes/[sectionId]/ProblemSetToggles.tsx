@@ -28,7 +28,7 @@ export default function ProblemSetToggles({
     });
   }
 
-  const chip = "text-[11px] uppercase tracking-wider px-2 py-0.5 rounded border transition-colors disabled:opacity-50";
+  const chip = "font-ui font-semibold text-[12px] uppercase tracking-wide px-2 py-0.5 rounded border transition-colors disabled:opacity-50";
   const green = "bg-green-900/30 border-green-700 text-green-300 hover:bg-green-900/50";
   const amber = "bg-amber-900/40 border-amber-700 text-amber-300 hover:bg-amber-900/60";
 

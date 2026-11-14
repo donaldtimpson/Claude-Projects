@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 export default function JrPage() {
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← The Timpson Lyceum
           </Link>
@@ -21,10 +21,10 @@ export default function JrPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-14 space-y-12">
         <div className="space-y-4">
-          <p className="font-display text-xs tracking-[0.25em] uppercase text-gold-400">
+          <p className="font-ui font-semibold text-xs tracking-[0.06em] uppercase text-gold-400">
             Timpson Lyceum · Junior
           </p>
-          <h1 className="font-display text-4xl text-parchment leading-tight">Lyceum Jr</h1>
+          <h1 className="font-bold text-4xl text-parchment leading-tight">Lyceum Jr</h1>
           <p className="text-parchment-dim text-lg leading-relaxed">
             The Lyceum teaches older students grammar, logic, mathematics, and physics. Lyceum Jr is
             its junior branch — the same care, made for the youngest learners, and just as calm and
@@ -33,7 +33,7 @@ export default function JrPage() {
         </div>
 
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             The first app
           </h2>
           <Link
@@ -48,7 +48,7 @@ export default function JrPage() {
               className="rounded-2xl shrink-0"
             />
             <div className="min-w-0">
-              <p className="font-display text-xl text-parchment">Sound It Out</p>
+              <p className="text-xl font-semibold text-parchment">Sound It Out</p>
               <p className="text-parchment-dim text-sm leading-relaxed">
                 A phonics reading app for young children — sound out letters and words, trace them
                 with a finger, and play. Learn more →

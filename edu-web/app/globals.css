@@ -1,11 +1,25 @@
 @import "tailwindcss";
 
+/* ───────────────────────────── Type ─────────────────────────────
+   Three faces, each with one job:
+   - font-sans (Source Serif 4): reading text. Sturdy strokes and a generous
+     x-height, so it holds up small and on a washed-out projector.
+   - font-ui (Inter): chrome — labels, eyebrows, metadata, buttons, chips. All
+     `text-xs` copy is set in it (see below), so small print is always crisp.
+   - font-display (Cinzel): the brand voice — section titles and the wordmark,
+     always at a size and weight where its capitals read. */
+
 @theme inline {
-  --font-sans: var(--font-garamond);
+  --font-sans: var(--font-serif-body);
+  --font-ui: var(--font-inter);
   --font-display: var(--font-cinzel);
 
-  /* Brand colors resolve through the --lyc-* variables below so the whole site
-     can flip between the dark (default) and light themes at runtime. */
+  /* Colors resolve through --lyc-* variables (below) so the whole site flips
+     between dark (default) and light at runtime. Names are roles, not hues:
+       crimson-950 page · 900 card · 800 tint/track · 700 rule · 600 strong rule
+       parchment text · parchment-dim secondary text
+       gold-* the accent: links, highlights, primary fills, focus
+       ornament  decorative gold — section-title bars, stars, rules */
   --color-crimson-950: var(--lyc-crimson-950);
   --color-crimson-900: var(--lyc-crimson-900);
   --color-crimson-800: var(--lyc-crimson-800);
@@ -21,34 +35,33 @@
   --color-parchment: var(--lyc-parchment);
   --color-parchment-dim: var(--lyc-parchment-dim);
 
-  /* Secondary buttons: a crimson fill in dark, a white button with a firm rule
-     in light. Pair with `border border-crimson-700`. */
+  --color-ornament: var(--lyc-ornament);
+
+  /* Secondary buttons (pair with `border border-crimson-700`) and bordered
+     form fields / choice buttons. */
   --color-btn: var(--lyc-btn);
   --color-btn-hover: var(--lyc-btn-hover);
-  /* Bordered form fields and choices (inputs, textareas, quiz options). */
   --color-field: var(--lyc-field);
 
-  /* Body text a touch larger than the Tailwind defaults. `text-sm` (15px) is the
-     workhorse body size; `text-xs` (13px) carries secondary copy — badge/achievement
-     blurbs, counts, resource descriptions, labels. Truly-tiny chrome uses the literal
-     text-[10px] (tier chips), which is left untouched. */
+  --shadow-card: var(--lyc-shadow-card);
+
+  /* `text-sm` (15px at the 18px root... see html below) is the workhorse body
+     size; `text-xs` carries metadata and is set in the UI face. */
   --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.45;
+  --text-sm--line-height: 1.5;
   --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.4;
+  --text-xs--line-height: 1.45;
 }
 
-/* Dark theme (default): the Lyceum's crimson night.
-   Also applied to any element with data-theme="dark" — the site header and the
-   admin sidebar wear it in both themes, a crimson-and-gold binding around the
-   page. Status colors are reset here so those bands keep their dark-theme shades
-   inside a light page. */
+/* ──────────────────────────── Themes ────────────────────────────
+   Dark (default): the Lyceum's crimson night. Also applied to any element with
+   data-theme="dark", which stays dark inside a light page. */
 :root,
 [data-theme="dark"],
 [data-theme="print"] {
   color-scheme: dark;
   --lyc-crimson-950: #0f0404;
-  --lyc-crimson-900: #190808;
+  --lyc-crimson-900: #1a0909;
   --lyc-crimson-800: #2d1212;
   --lyc-crimson-700: #4a1a1a;
   --lyc-crimson-600: #6e2020;
@@ -60,95 +73,182 @@
   --lyc-gold-200: #e8cb7e;
 
   --lyc-parchment: #f5ecd8;
-  --lyc-parchment-dim: #c4af8e;
+  --lyc-parchment-dim: #c9b596;
+
+  --lyc-ornament: #cfa135;
 
   --lyc-btn: #4a1a1a;
   --lyc-btn-hover: #6e2020;
   --lyc-field: #2d1212;
+
+  --lyc-shadow-card: 0 0 #0000;
+
+  /* Status colors tuned to the brand instead of stock neon: laurel green,
+     gold for "watch", rose for trouble. Tailwind's status classes resolve to
+     these, so every grade/attendance tint follows. */
+  --color-green-300: #9fd3a9;
+  --color-green-400: #86c595;
+  --color-green-500: #5fa872;
+  --color-green-700: #3f7a4f;
+  --color-green-900: #16301e;
+  --color-amber-300: #e3bf5c;
+  --color-amber-400: #e3bf5c;
+  --color-amber-700: #8a6a1c;
+  --color-amber-900: #2e2408;
+  --color-red-300: #eda3a3;
+  --color-red-400: #e58a8a;
+  --color-red-500: #d06464;
+  --color-red-700: #8a3434;
+  --color-red-900: #3a1414;
 }
 
-/* Print/PDF pages are always white paper inked in the brand crimson, whatever
-   the site theme — fixed brand values, light form controls. */
+/* Print/PDF pages are always white paper inked in the brand crimson. */
 [data-theme="print"] {
   color-scheme: light;
 }
 
+/* Status shades inside a dark island on a light page: same tuned values. */
 [data-theme="dark"] {
-  --color-red-100: oklch(93.6% 0.032 17.717);
-  --color-red-300: oklch(80.8% 0.114 19.571);
-  --color-red-400: oklch(70.4% 0.191 22.216);
-  --color-red-800: oklch(44.4% 0.177 26.899);
-  --color-red-900: oklch(39.6% 0.141 25.723);
-  --color-green-200: oklch(92.5% 0.084 155.995);
-  --color-green-300: oklch(87.1% 0.15 154.449);
-  --color-green-400: oklch(79.2% 0.209 151.711);
-  --color-green-700: oklch(52.7% 0.154 150.069);
-  --color-green-900: oklch(39.3% 0.095 152.535);
-  --color-amber-50: oklch(98.7% 0.022 95.277);
-  --color-amber-300: oklch(87.9% 0.169 91.605);
-  --color-amber-400: oklch(82.8% 0.189 84.429);
-  --color-amber-700: oklch(55.5% 0.163 48.998);
-  --color-amber-900: oklch(41.4% 0.112 45.904);
-  --color-sky-200: oklch(90.1% 0.058 230.902);
+  --color-green-300: #9fd3a9;
+  --color-green-400: #86c595;
+  --color-green-500: #5fa872;
+  --color-green-700: #3f7a4f;
+  --color-green-900: #16301e;
+  --color-amber-300: #e3bf5c;
+  --color-amber-400: #e3bf5c;
+  --color-amber-700: #8a6a1c;
+  --color-amber-900: #2e2408;
+  --color-red-300: #eda3a3;
+  --color-red-400: #e58a8a;
+  --color-red-500: #d06464;
+  --color-red-700: #8a3434;
+  --color-red-900: #3a1414;
 }
 
-/* Light theme — "the rubricated page", built for projecting onto a whiteboard.
-   Medieval scribes wrote in black on white vellum and set headings in red ink
-   (rubrics); gold was never ink. So here every gold accent becomes a deep
-   crimson rubric, the page is pure white, the text is near-black, and cards are
-   warm paper with firm rules that survive a washed-out projector. The token
-   names keep their roles (crimson-950 = the page, parchment = the text,
-   gold = the accent), so components need no per-theme classes.
-   Toggled by data-theme on <html> (components/ThemeToggle.tsx). */
+/* Light: a warm paper page with white cards that lift off it, near-black ink,
+   crimson for links and primary actions, and gold kept for ornament (where it
+   sits on a fill or as a bar, never as thin text). Built to project well. */
 :root[data-theme="light"] {
   color-scheme: light;
-  --lyc-crimson-950: #ffffff;
-  --lyc-crimson-900: #faf6ef;
-  --lyc-crimson-800: #efe6da;
-  --lyc-crimson-700: #d5c3ae;
-  --lyc-crimson-600: #b9a28a;
+  --lyc-crimson-950: #f6f2ec;
+  --lyc-crimson-900: #ffffff;
+  --lyc-crimson-800: #f0eae1;
+  --lyc-crimson-700: #ddd2c3;
+  --lyc-crimson-600: #c2b29d;
 
-  /* Rubric ramp: vermilion headings (400), deep crimson accent text (300),
-     oxblood fills (500/600). Distinct steps so paired uses stay tellable. */
-  --lyc-gold-600: #6b1212;
-  --lyc-gold-500: #8a1a1a;
-  --lyc-gold-400: #b3352a;
-  --lyc-gold-300: #962020;
-  --lyc-gold-200: #b8432f;
+  --lyc-gold-600: #5e1414;
+  --lyc-gold-500: #7c1d1d;
+  --lyc-gold-400: #8f2222;
+  --lyc-gold-300: #8a1f1f;
+  --lyc-gold-200: #9c2b2b;
 
-  --lyc-parchment: #17110d;
-  --lyc-parchment-dim: #4a3d33;
+  --lyc-parchment: #1d1814;
+  --lyc-parchment-dim: #5a4f46;
+
+  --lyc-ornament: #b8860b;
 
   --lyc-btn: #ffffff;
-  --lyc-btn-hover: #efe6da;
+  --lyc-btn-hover: #f0eae1;
   --lyc-field: #ffffff;
 
-  /* Status colors: the pale dark-theme shades vanish on white — deep inks and
-     pale fills instead. Failing red is a brighter scarlet than the rubric so
-     the two never read as the same thing. */
+  --lyc-shadow-card: 0 1px 2px rgb(60 40 20 / 0.05), 0 2px 8px rgb(60 40 20 / 0.04);
+
   --color-red-100: #7f1d1d;
-  --color-red-300: #d42020;
-  --color-red-400: #d42020;
-  --color-red-800: #f5a3a3;
-  --color-red-900: #fde4e4;
+  --color-red-300: #b42318;
+  --color-red-400: #b42318;
+  --color-red-500: #c8341f;
+  --color-red-700: #e8a29a;
+  --color-red-800: #f2b8b0;
+  --color-red-900: #fdebe8;
   --color-green-200: #14532d;
-  --color-green-300: #166534;
-  --color-green-400: #15803d;
-  --color-green-700: #7fd6a0;
-  --color-green-900: #dcf5e6;
-  --color-amber-50: #78350f;
-  --color-amber-300: #b45309;
-  --color-amber-400: #b45309;
-  --color-amber-700: #f0b45c;
-  --color-amber-900: #fdf0d5;
+  --color-green-300: #17663a;
+  --color-green-400: #1b7a43;
+  --color-green-500: #2f8f55;
+  --color-green-700: #8fd0a6;
+  --color-green-900: #e3f4e8;
+  --color-amber-50: #6b3b00;
+  --color-amber-300: #8a4b00;
+  --color-amber-400: #8a4b00;
+  --color-amber-700: #e2b263;
+  --color-amber-900: #fbf0d9;
   --color-sky-200: #075985;
 }
 
+/* ──────────────────────────── Base ──────────────────────────── */
+
 /* Site-wide zoom: bump the root font size so every rem-based size — text AND
-   spacing — scales up together, like a baked-in cmd-+. Dial this one number to
-   taste (100% = browser default 16px). */
+   spacing — scales up together, like a baked-in cmd-+. */
 html {
   font-size: 112.5%; /* 18px */
+}
+
+body {
+  font-optical-sizing: auto;
+}
+
+@layer base {
+  /* Small print is UI, not prose: every text-xs is set in the UI face. */
+  .text-xs {
+    font-family: var(--font-ui);
+  }
+
+  /* Cinzel only reads at weight; utilities (font-bold, …) still override. */
+  .font-display {
+    font-weight: 600;
+  }
+
+  /* Native checkboxes/radios/ranges take the accent, not browser blue. */
+  input,
+  progress {
+    accent-color: var(--color-gold-500);
+  }
+
+  /* Cards: every bordered card surface gets the theme's lift (none in dark). */
+  .bg-crimson-900.border {
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* KaTeX defaults to 1.21em, which makes inline math tower over Source Serif.
+   Unlayered (and body-scoped) so it beats katex.min.css wherever that loads. */
+body .katex {
+  font-size: 1.06em;
+}
+
+/* ────────────────────────── Components ────────────────────────── */
+@layer components {
+  /* Section heading: Cinzel at a size and weight that reads, with a gold bar.
+     Ornament gold works on both backgrounds because it is a fill, not a stroke. */
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--color-crimson-700);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-parchment);
+  }
+  .section-title::before {
+    content: "";
+    flex: none;
+    width: 4px;
+    height: 1.1em;
+    border-radius: 2px;
+    background: var(--color-ornament);
+  }
+
+  /* Small uppercase label (card kickers, field labels, table headers). */
+  .eyebrow {
+    font-family: var(--font-ui);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
 }
 
 /* Used by the achievement toast (components/Toast.tsx) and the drill feedback

@@ -19,12 +19,12 @@ export default function RegisterForm() {
           autoComplete="off"
           autoCapitalize="characters"
           maxLength={12}
-          className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 uppercase tracking-widest transition-colors"
+          className="flex-1 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 uppercase tracking-widest transition-colors"
         />
         <button
           type="submit"
           disabled={pending}
-          className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 disabled:opacity-50 text-crimson-950 rounded px-4 py-2.5 font-semibold transition-colors"
+          className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed text-crimson-950 rounded px-4 py-2.5 transition-colors"
         >
           {pending ? "Registering…" : "Register"}
         </button>

@@ -90,7 +90,7 @@ export default function LectureOrderEditor({
           <span className="text-sm font-medium text-parchment">Lecture order</span>
         </span>
         <span
-          className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+          className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
             manual ? "bg-gold-900/30 border-gold-700 text-gold-300" : "border-crimson-700 text-parchment-dim"
           }`}
         >
@@ -110,11 +110,7 @@ export default function LectureOrderEditor({
               type="button"
               onClick={toggleManual}
               aria-pressed={manual}
-              className={`shrink-0 text-xs font-display tracking-wider uppercase px-2.5 py-1 rounded border transition-colors ${
-                manual
-                  ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
-                  : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
-              }`}
+              className={`font-ui font-semibold shrink-0 text-sm px-2.5 py-1 rounded border transition-colors ${ manual ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400" : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300" }`}
             >
               {manual ? "✓ Manual order" : "Manual order"}
             </button>

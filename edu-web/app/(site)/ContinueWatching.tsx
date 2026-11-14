@@ -86,7 +86,7 @@ export default async function ContinueWatching() {
 
   return (
     <section>
-      <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+      <h2 className="section-title mb-8">
         Continue Watching
       </h2>
       <div
@@ -105,7 +105,7 @@ export default async function ContinueWatching() {
             <Link
               key={e.courseId}
               href={`/courses/${e.courseId}/${e.nextVideoId}`}
-              className="group bg-crimson-900 border border-crimson-700 rounded-lg overflow-hidden hover:border-gold-500 transition-colors"
+              className="group flex flex-col bg-crimson-900 border border-crimson-700 rounded-lg overflow-hidden hover:border-gold-500 transition-colors"
             >
               {thumb ? (
                 <div className="relative aspect-video">
@@ -121,14 +121,14 @@ export default async function ContinueWatching() {
                   <span className="text-parchment-dim text-sm">No thumbnail</span>
                 </div>
               )}
-              <div className="p-4">
-                <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+              <div className="p-4 flex-1 flex flex-col">
+                <h3 className="text-base font-semibold leading-snug text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                   {e.courseTitle}
                 </h3>
                 <p className="text-sm text-parchment-dim mt-2 line-clamp-2">
                   Up next: {e.nextVideoTitle}
                 </p>
-                <div className="mt-3 flex items-center gap-3">
+                <div className="mt-auto pt-3 flex items-center gap-3">
                   <div className="flex-1 h-1.5 bg-crimson-800 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-gold-500 transition-all"

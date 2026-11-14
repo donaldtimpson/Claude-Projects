@@ -57,8 +57,8 @@ export default async function DashboardCoursePage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-4xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-4xl mx-auto px-6">
           <Link href="/dashboard" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← My Progress
           </Link>
@@ -99,7 +99,7 @@ export default async function DashboardCoursePage({
 
         {/* Video quiz attempts */}
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Video Quizzes
           </h2>
           {videoAttempts.length === 0 ? (
@@ -127,7 +127,7 @@ export default async function DashboardCoursePage({
         {/* Playlist test attempts */}
         {course._count.quizQuestions > 0 && (
           <section className="space-y-4">
-            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            <h2 className="section-title">
               Course Tests
             </h2>
             {testAttempts.length === 0 ? (

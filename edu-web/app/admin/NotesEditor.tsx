@@ -92,7 +92,7 @@ export default function NotesEditor({
           <span className="text-sm font-medium text-parchment">Lecture Notes</span>
         </span>
         <span
-          className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+          className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
             status === "Published"
               ? "bg-green-900/30 border-green-700 text-green-300"
               : status === "Draft"
@@ -144,7 +144,7 @@ export default function NotesEditor({
             <button
               onClick={save}
               disabled={saving || !dirty}
-              className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
             >
               {saving ? "Saving…" : note ? "Save Changes" : "Save Draft"}
             </button>

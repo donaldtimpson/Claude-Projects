@@ -40,7 +40,7 @@ export default function AdminLogin() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="font-ui font-semibold w-full py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
         >
           {loading ? "Checking…" : "Login"}
         </button>

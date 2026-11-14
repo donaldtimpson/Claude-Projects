@@ -63,7 +63,7 @@ export default async function AdminCourseLectures({ params }: { params: Promise<
       <SyllabusEditor courseId={course.id} initialSyllabus={course.syllabus} />
 
       <section className="space-y-3">
-        <h2 className="font-display text-sm tracking-[0.15em] uppercase text-parchment-dim">Lectures</h2>
+        <h2 className="section-title">Lectures</h2>
         {course.videos.map((video, idx) => {
           const questions = allQuestions
             .filter((q) => q.videoId === video.id)

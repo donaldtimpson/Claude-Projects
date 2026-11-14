@@ -33,8 +33,8 @@ export default async function DrillSessionPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link
             href={cat ? `/drills/c/${cat.slug}` : "/drills"}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"
@@ -46,7 +46,7 @@ export default async function DrillSessionPage({
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
         <div>
-          <h1 className="font-display text-2xl text-parchment mb-1">{def.title}</h1>
+          <h1 className="font-bold text-2xl text-parchment mb-1">{def.title}</h1>
           <p className="text-parchment-dim text-sm">{def.blurb}</p>
         </div>
         {/* The DrillDef holds functions, which can't cross the server→client

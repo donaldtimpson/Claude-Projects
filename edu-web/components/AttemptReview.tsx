@@ -28,9 +28,9 @@ export default function AttemptReview({
               {question.options.map((opt, oi) => {
                 let style = "px-3 py-2 rounded text-sm border ";
                 if (oi === question.correctIndex) {
-                  style += "border-green-500 bg-green-900/30 text-green-300";
+                  style += "border-green-500 bg-green-900 text-parchment font-medium relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✓'] after:text-green-400";
                 } else if (oi === chosen && !isCorrect) {
-                  style += "border-red-500 bg-red-900/30 text-red-300";
+                  style += "border-red-500 bg-red-900 text-parchment relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✗'] after:text-red-400";
                 } else {
                   style += "border-crimson-700 bg-field text-parchment-dim";
                 }

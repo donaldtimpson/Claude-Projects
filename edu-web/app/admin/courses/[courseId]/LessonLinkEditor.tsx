@@ -17,7 +17,7 @@ export default function LessonLinkEditor({
   return (
     <form action={setVideoLessons} className="space-y-2">
       <input type="hidden" name="videoId" value={videoId} />
-      <p className="font-display text-xs tracking-[0.15em] uppercase text-gold-400">Grammar lessons covered</p>
+      <p className="font-ui font-semibold text-xs tracking-[0.06em] uppercase text-gold-400">Grammar lessons covered</p>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {lessons.map((l) => (
           <label key={l.slug} className="flex items-center gap-2 text-sm text-parchment-dim">
@@ -28,7 +28,7 @@ export default function LessonLinkEditor({
       </div>
       <button
         type="submit"
-        className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+        className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
       >
         Save lessons
       </button>

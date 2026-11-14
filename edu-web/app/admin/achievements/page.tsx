@@ -35,7 +35,7 @@ export default async function AdminAchievementsPage() {
           <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← Admin
           </Link>
-          <h1 className="font-display text-2xl text-parchment mt-2 mb-1">Grant Achievements</h1>
+          <h1 className="font-bold text-2xl text-parchment mt-2 mb-1">Grant Achievements</h1>
           <p className="text-parchment-dim text-sm">
             Hand-award special badges (contest wins, events, recognition). Auto-earned badges aren't shown
             here — only instructor grants, which you can revoke.

@@ -33,7 +33,7 @@ export default function AchievementsGrid({ badges }: { badges: Badge[] }) {
         </p>
         <button
           onClick={() => setShowAll((v) => !v)}
-          className="font-display text-xs tracking-[0.15em] uppercase text-gold-400 hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+          className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
         >
           {showAll ? "Show only earned" : "Show all achievements"}
         </button>
@@ -51,7 +51,7 @@ export default function AchievementsGrid({ badges }: { badges: Badge[] }) {
         return (
           <section key={cat.key} className="space-y-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-display text-sm text-parchment">
+              <h3 className="text-base font-semibold text-parchment">
                 <span className="mr-2">{cat.icon}</span>
                 {cat.label}
                 <span className="text-parchment-dim font-sans text-xs ml-3">{cat.blurb}</span>
@@ -79,7 +79,7 @@ function BadgeCard({ badge }: { badge: Badge }) {
   if (!badge.unlocked) {
     return (
       <div className="rounded-xl p-4 border border-crimson-800 bg-crimson-950 text-center opacity-50">
-        <span className="inline-block text-[10px] uppercase tracking-widest rounded px-2 py-0.5 mb-2 font-display bg-crimson-800 text-parchment-dim">
+        <span className="inline-block text-[11px] uppercase tracking-[0.06em] rounded px-2 py-0.5 mb-2 font-ui font-semibold bg-crimson-800 text-parchment-dim">
           {tier.label} · Locked
         </span>
         <p className="text-sm font-medium text-parchment-dim">{badge.name}</p>
@@ -90,7 +90,7 @@ function BadgeCard({ badge }: { badge: Badge }) {
 
   return (
     <div className={`rounded-xl p-4 border bg-crimson-900 text-center ${style.ring}`}>
-      <span className={`inline-block text-[10px] uppercase tracking-widest rounded px-2 py-0.5 mb-2 font-display ${style.chip}`}>
+      <span className={`inline-block text-[11px] uppercase tracking-[0.06em] rounded px-2 py-0.5 mb-2 font-ui font-semibold ${style.chip}`}>
         {tier.label}
       </span>
       <p className={`text-sm font-medium ${style.name}`}>{badge.name}</p>
@@ -106,7 +106,7 @@ function OmniscientCard({ badge }: { badge: Badge }) {
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-gold-300 via-parchment to-gold-300 opacity-40 blur-md animate-pulse pointer-events-none" />
       <div className="relative rounded-2xl bg-crimson-950 px-6 py-5 flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <span className="inline-block text-[10px] uppercase tracking-[0.3em] rounded px-2 py-0.5 mb-2 font-display bg-gradient-to-r from-gold-200 via-parchment to-gold-300 text-crimson-950">
+          <span className="inline-block text-[11px] uppercase tracking-[0.06em] rounded px-2 py-0.5 mb-2 font-ui font-semibold bg-gradient-to-r from-gold-200 via-parchment to-gold-300 text-crimson-950">
             Omniscient · {TIERS.omniscient.points.toLocaleString()} pts
           </span>
           <p className="font-display text-2xl bg-gradient-to-r from-gold-200 via-parchment to-gold-300 bg-clip-text text-transparent">
@@ -114,7 +114,7 @@ function OmniscientCard({ badge }: { badge: Badge }) {
           </p>
           <p className="text-xs text-parchment-dim mt-1 max-w-md leading-snug">{badge.blurb}</p>
         </div>
-        <div className="shrink-0 text-right font-display text-xs uppercase tracking-widest">
+        <div className="shrink-0 text-right font-ui font-semibold text-xs uppercase tracking-[0.06em]">
           {badge.unlocked ? (
             <span className="text-gold-300">Attained</span>
           ) : (

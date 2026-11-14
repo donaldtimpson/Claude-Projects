@@ -46,7 +46,7 @@ function AchievementToast({ badge, onClose }: { badge: ToastItem; onClose: () =>
   return (
     <div className="pointer-events-auto relative rounded-xl p-[1.5px] bg-gradient-to-r from-gold-400 via-gold-200 to-gold-400 shadow-[0_0_25px_-8px] shadow-gold-400/60 animate-[fadeIn_0.25s_ease-out]">
       <div className="rounded-xl bg-crimson-950 px-4 py-3 pr-8">
-        <p className="font-display text-[10px] uppercase tracking-[0.2em] text-gold-300 mb-0.5">
+        <p className="font-ui font-semibold text-[11px] uppercase tracking-[0.06em] text-gold-300 mb-0.5">
           ✦ Achievement Unlocked
         </p>
         <p className="text-sm font-medium text-parchment">

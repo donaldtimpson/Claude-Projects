@@ -114,7 +114,10 @@ export default async function VideoPage({
       where: { videoId: video.id, problemSet: { isDraft: false } },
       include: { problemSet: { select: { id: true, title: true, points: true } } },
     })
-  ).map((link) => link.problemSet);
+  )
+    .map((link) => link.problemSet)
+    // "1.5 < 1.6 < 1.7 < 1.10", not insertion order.
+    .sort((a, b) => a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: "base" }));
 
   // Lesson drills tagged as covering this lecture (VideoLesson). Same many-to-many
   // shape as problem sets, and they render in the same Practice section — from a
@@ -159,8 +162,8 @@ export default async function VideoPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-5xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-5xl mx-auto px-6">
           <Link
             href={`/courses/${courseId}`}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"
@@ -188,7 +191,7 @@ export default async function VideoPage({
             {prevVideo ? (
               <Link
                 href={`/courses/${courseId}/${prevVideo.id}`}
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+                className="font-ui font-semibold text-sm text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
                 ← Previous
               </Link>
@@ -198,14 +201,14 @@ export default async function VideoPage({
             {nextVideo ? (
               <Link
                 href={`/courses/${courseId}/${nextVideo.id}`}
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
+                className="font-ui font-semibold text-sm text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-4 py-2 transition-colors"
               >
                 Next →
               </Link>
             ) : hasTest ? (
               <Link
                 href={`/courses/${courseId}/test`}
-                className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 font-semibold rounded-lg px-4 py-2 transition-colors"
+                className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded-lg px-4 py-2 transition-colors"
               >
                 Take Test →
               </Link>
@@ -215,13 +218,13 @@ export default async function VideoPage({
           </div>
         )}
 
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-parchment">{video.title}</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold leading-tight text-parchment">{video.title}</h1>
             {video.description && <VideoDescription text={video.description} />}
           </div>
           {userId && (
-            <div className="flex-shrink-0 pt-1">
+            <div className="flex-shrink-0 sm:pt-1">
               <MarkWatchedButton videoId={video.id} initialWatched={!!watched} />
             </div>
           )}
@@ -229,11 +232,12 @@ export default async function VideoPage({
 
         {/* In-page jump nav — skip straight to notes / quiz / discussion */}
         {(hasNotes || hasQuiz) && (
-          <nav className="flex flex-wrap gap-2">
+          <nav className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+            <span className="basis-full sm:basis-auto text-xs text-parchment-dim">Jump to</span>
             {hasNotes && (
               <a
                 href="#notes"
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+                className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
               >
                 Notes
               </a>
@@ -241,7 +245,7 @@ export default async function VideoPage({
             {hasQuiz && (
               <a
                 href="#quiz"
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+                className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
               >
                 Quiz
               </a>
@@ -249,14 +253,14 @@ export default async function VideoPage({
             {hasPractice && (
               <a
                 href="#practice"
-                className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+                className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
               >
                 Practice
               </a>
             )}
             <a
               href="#discussion"
-              className="font-display text-xs tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+              className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 underline-offset-4 hover:underline transition-colors"
             >
               Discussion
             </a>
@@ -266,7 +270,7 @@ export default async function VideoPage({
         {/* Problem sets and lesson drills covering this lecture. */}
         {hasPractice && (
           <section id="practice" className="scroll-mt-24 space-y-4">
-            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            <h2 className="section-title">
               Practice
             </h2>
             <ul className="space-y-2">
@@ -309,7 +313,7 @@ export default async function VideoPage({
                       </span>
                       <span className="flex items-center gap-3 shrink-0">
                         {aced && (
-                          <span className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-gold-300">
+                          <span className="font-ui font-semibold text-[0.65rem] tracking-[0.06em] uppercase text-gold-300">
                             ✦ Aced
                           </span>
                         )}

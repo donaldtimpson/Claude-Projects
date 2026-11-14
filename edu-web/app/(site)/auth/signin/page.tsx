@@ -29,7 +29,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-crimson-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-crimson-900 rounded-xl border border-crimson-700 p-8">
-        <h1 className="font-display text-2xl text-parchment-100 text-center mb-6">Sign In</h1>
+        <h1 className="font-bold text-2xl text-parchment text-center mb-6">Sign In</h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -60,7 +60,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gold-600 hover:bg-gold-500 text-crimson-950 font-semibold py-2 rounded-lg transition-colors disabled:opacity-50"
+            className="font-ui font-semibold w-full bg-gold-500 hover:bg-gold-400 text-crimson-950 py-2 rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in…" : "Sign In"}
           </button>

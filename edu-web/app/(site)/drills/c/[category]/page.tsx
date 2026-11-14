@@ -39,8 +39,8 @@ export default async function CategoryDrillsPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link href="/drills" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Drills
           </Link>
@@ -51,7 +51,7 @@ export default async function CategoryDrillsPage({
         <div className="flex items-center gap-3">
           <span className="text-4xl leading-none" aria-hidden>{cat.icon}</span>
           <div>
-            <h1 className="font-display text-2xl text-parchment">{cat.title}</h1>
+            <h1 className="font-bold text-2xl text-parchment">{cat.title}</h1>
             <p className="text-parchment-dim text-sm">
               {cat.slug === LESSON_CATEGORY_SLUG
                 ? aced.size > 0
@@ -71,7 +71,7 @@ export default async function CategoryDrillsPage({
               >
                 <span className="text-3xl leading-none shrink-0" aria-hidden>{d!.icon}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-display text-lg text-parchment">{d!.title}</span>
+                  <span className="block text-lg font-semibold text-parchment">{d!.title}</span>
                   <span className="block text-sm text-parchment-dim">{d!.blurb}</span>
                   {aced.has(d!.slug) && (
                     <span className="block text-xs font-semibold text-gold-300 mt-1">✦ Aced</span>

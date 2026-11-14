@@ -9,26 +9,27 @@ import "katex/dist/katex.min.css";
 
 // Shared renderer for lecture-note Markdown. Used by the public LectureNotes
 // section, the admin editor's Preview tab, and the print/PDF page.
-//   variant "dark"  → parchment/crimson/gold theme for the on-site dark UI
+//   variant "dark"  → the on-site theme (token colors, so it follows light/dark)
 //   variant "print" → dark text on white for the print/PDF page
 type Variant = "dark" | "print";
 
 function buildComponents(variant: Variant): Components {
   const dark = variant === "dark";
-  const body = dark ? "text-parchment-dim" : "text-zinc-700";
+  const body = dark ? "text-parchment" : "text-zinc-700";
   const heading = dark ? "text-parchment" : "text-zinc-900";
-  const section = dark ? "text-gold-300" : "text-zinc-800";
+  const section = dark ? "" : "text-zinc-800";
   const strong = dark ? "text-parchment" : "text-zinc-900";
   const link = dark ? "text-gold-300 hover:text-gold-200" : "text-zinc-900";
   const codeBg = dark ? "bg-crimson-950/60 text-gold-200" : "bg-zinc-100 text-zinc-800";
   const preBg = dark ? "bg-crimson-950/60 text-parchment-dim" : "bg-zinc-100 text-zinc-800";
   const quote = dark ? "border-gold-500/50 text-parchment-dim" : "border-zinc-300 text-zinc-600";
   const rule = dark ? "border-crimson-700" : "border-zinc-200";
-  // Print runs a notch larger than the on-screen dark UI, with heavier section headers.
-  const bodyText = dark ? "text-sm" : "text-base";
+  // Reading size on screen and in print; on screen, section headers use the site's section-title style.
+  // On-site notes step up on wide screens, where they are often projected.
+  const bodyText = dark ? "text-base lg:text-lg" : "text-base";
   const h1Cls = dark ? "text-lg font-bold" : "text-xl font-bold";
   const sectionCls = dark
-    ? "font-display text-sm tracking-[0.15em]"
+    ? "font-ui text-sm font-semibold tracking-[0.06em] text-parchment-dim"
     : "font-display text-base font-bold tracking-[0.12em]";
 
   return {

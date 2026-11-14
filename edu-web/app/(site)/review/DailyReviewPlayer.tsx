@@ -88,7 +88,7 @@ export default function DailyReviewPlayer({
         </p>
         <Link
           href="/dashboard"
-          className="inline-block px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+          className="font-ui font-semibold inline-block px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
         >
           Back to dashboard
         </Link>
@@ -99,14 +99,14 @@ export default function DailyReviewPlayer({
   if (!card) return null;
   return (
     <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-bold text-parchment">Daily Review</h2>
-        <span className="text-sm text-parchment-dim">
+      {/* The page already says "Daily Review"; the card leads with where the
+          question comes from and how far along the session is. */}
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-xs text-parchment-dim min-w-0">{card.source}</p>
+        <span className="font-ui text-sm tabular-nums text-parchment-dim shrink-0">
           {index + 1} / {total}
         </span>
       </div>
-
-      <p className="text-xs uppercase tracking-wider text-parchment-dim">{card.source}</p>
       <p className="text-parchment font-medium">{card.prompt}</p>
 
       <ol className="space-y-2">
@@ -115,9 +115,9 @@ export default function DailyReviewPlayer({
           if (!answered) {
             style += "border-crimson-700 bg-field hover:border-gold-400 text-parchment";
           } else if (idx === card.correctIndex) {
-            style += "border-green-500 bg-green-900/30 text-green-300";
+            style += "border-green-500 bg-green-900 text-parchment font-medium relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✓'] after:text-green-400";
           } else if (idx === selected) {
-            style += "border-red-500 bg-red-900/30 text-red-300";
+            style += "border-red-500 bg-red-900 text-parchment relative pr-10 after:absolute after:right-4 after:top-1/2 after:-translate-y-1/2 after:font-ui after:font-bold after:content-['✗'] after:text-red-400";
           } else {
             style += "border-crimson-700 bg-field text-parchment-dim";
           }
@@ -141,7 +141,7 @@ export default function DailyReviewPlayer({
           {card.explanation && <p className="text-sm text-parchment-dim">{card.explanation}</p>}
           <button
             onClick={advance}
-            className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
           >
             {index < total - 1 ? "Next →" : "Finish"}
           </button>

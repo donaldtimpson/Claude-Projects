@@ -88,18 +88,31 @@ YOUTUBE_OAUTH_REFRESH_TOKEN
 
 **Quiz authoring (admin):** `app/admin/QuizEditor.tsx` is a shared client component used by both the per-video editor (`/admin/courses/[courseId]`) and the playlist test editor (`/admin/test/[courseId]`). It reads the admin password from the cookie to attach to API calls.
 
-## Theming (dark default + light "rubricated page")
+## Design system & theming (dark default + light)
 
-Colors come from the brand tokens in `app/globals.css` (`crimson-*`, `gold-*`, `parchment*`, plus
-`btn`/`btn-hover` and `field`). Each resolves through a `--lyc-*` variable that is redefined under
-`html[data-theme="light"]`, so **use tokens by role, never per-theme classes**: `crimson-950` = the
-page, `crimson-900` = cards, `crimson-800` = tints/tracks, `crimson-700` = rules/borders,
-`parchment` = text, `gold-*` = the accent (gold in dark, crimson "rubric" ink in light).
-Secondary buttons use `bg-btn hover:bg-btn-hover border border-crimson-700`; bordered inputs and
-choice buttons use `bg-field`. Mid-tier grades (70–89) are `text-amber-300`, not gold, so they never
-read as the light theme's red accent. `data-theme="dark"` on an element keeps it dark in both themes
-(the site header and admin sidebar); `data-theme="print"` pins the `(print)` pages to the fixed
-brand palette. `components/ThemeToggle.tsx` switches themes and remembers the choice in localStorage.
+Everything lives in `app/globals.css`; follow it rather than inventing per-page styles.
+
+- **Type:** `font-sans` = Source Serif 4 (reading text), `font-ui` = Inter (labels, metadata,
+  buttons, chips; every `text-xs` is set in Inter automatically), `font-display` = Cinzel (section
+  titles and the header wordmark only, never small or on buttons). Page titles are serif bold
+  (`text-2xl font-bold`); card titles serif semibold.
+- **Components:** `.section-title` (Cinzel caps + gold bar + rule) for every section heading;
+  `.eyebrow` for small uppercase labels. Buttons are `font-ui font-semibold`, sentence case:
+  primary `bg-gold-500 hover:bg-gold-400 text-crimson-950`; secondary
+  `bg-btn hover:bg-btn-hover border border-crimson-700`; disabled
+  `disabled:bg-crimson-800 disabled:text-parchment-dim/70`. Bordered inputs and choice buttons use
+  `bg-field`. Bordered `bg-crimson-900` cards get the theme's shadow automatically.
+- **Color tokens are roles, not hues:** `crimson-950` page · `900` card · `800` tint/track/table
+  header · `700` rule · `600` strong rule; `parchment` text · `parchment-dim` secondary;
+  `gold-*` = the accent (gold in dark, crimson in light: links, primary fills, focus);
+  `ornament` = decorative gold in both themes (bars, rules). Never put gold *text* on a light
+  surface by hand; use the tokens. Status colors (Tailwind green/amber/red) are remapped to
+  brand-tuned shades in both themes; grade tiers are green ≥90, `text-amber-300` 70–89, red <70.
+  Scores/points are ink (`text-parchment`), not accent.
+- **Scopes:** light is `html[data-theme="light"]` (warm paper page, white cards, crimson accents,
+  gold only as ornament, built to project). `data-theme="dark"` keeps an element dark in both
+  themes (site header, admin sidebar); `data-theme="print"` pins `(print)` pages to the fixed
+  brand palette. `components/ThemeToggle.tsx` switches and remembers the theme.
 
 ## Route Map
 

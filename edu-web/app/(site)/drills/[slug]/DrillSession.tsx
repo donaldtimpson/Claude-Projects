@@ -53,7 +53,7 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
     <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-6">
       {isLesson ? (
         <div className="space-y-3">
-          <h2 className="font-display text-sm tracking-[0.15em] uppercase text-gold-400">Session</h2>
+          <h2 className="eyebrow text-parchment-dim">Session</h2>
           <div className="flex flex-wrap gap-2">
             <Chip active={mode.type === "count" && mode.n === 30} onClick={() => setMode({ type: "count", n: 30 })}>
               Homework · 30 questions
@@ -70,7 +70,7 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
       ) : (
         <>
           <div className="space-y-3">
-            <h2 className="font-display text-sm tracking-[0.15em] uppercase text-gold-400">Difficulty</h2>
+            <h2 className="eyebrow text-parchment-dim">Difficulty</h2>
             <div className="flex flex-wrap gap-2">
               {def.levels.map((l) => (
                 <Chip key={l.value} active={level === l.value} onClick={() => setLevel(l.value)}>
@@ -81,7 +81,7 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
           </div>
 
           <div className="space-y-3">
-            <h2 className="font-display text-sm tracking-[0.15em] uppercase text-gold-400">Session</h2>
+            <h2 className="eyebrow text-parchment-dim">Session</h2>
             <div className="flex flex-wrap gap-2">
               {COUNT_OPTIONS.map((n) => (
                 <Chip
@@ -125,7 +125,7 @@ export default function DrillSession({ slug, persist = true }: { slug: string; p
           setSessionKey((k) => k + 1);
           setPlaying(true);
         }}
-        className="px-5 py-2.5 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+        className="font-ui font-semibold px-7 py-3 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-base rounded-lg transition-colors"
       >
         Start drill →
       </button>
@@ -145,12 +145,14 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
+      aria-pressed={active}
+      className={`font-ui px-3.5 py-2 rounded-lg border text-sm transition-colors ${
         active
-          ? "border-gold-500 bg-crimson-800 text-gold-300"
+          ? "border-gold-500 bg-gold-500/10 text-gold-300 font-semibold ring-1 ring-gold-500"
           : "border-crimson-700 bg-field text-parchment-dim hover:border-gold-400 hover:text-parchment"
       }`}
     >
+      {active && <span aria-hidden="true">✓ </span>}
       {children}
     </button>
   );

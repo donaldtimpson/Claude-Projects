@@ -11,8 +11,8 @@ import type { PairedProblemSet } from "@/lib/problem-sets";
 
 function SolutionPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-3 rounded-lg border border-gold-500/30 bg-crimson-950/40 px-4 py-1">
-      <p className="font-display text-[0.65rem] tracking-[0.2em] uppercase text-gold-400 pt-3">
+    <div className="mt-3 border-l-[3px] border-ornament pl-4 py-1">
+      <p className="eyebrow text-gold-400 pt-1">
         Solution
       </p>
       {children}
@@ -34,8 +34,9 @@ function ToggleButton({
       type="button"
       onClick={onClick}
       aria-expanded={open}
-      className="font-display text-[0.65rem] tracking-[0.15em] uppercase text-parchment-dim hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors"
+      className="font-ui font-semibold text-sm text-gold-400 hover:text-gold-300 transition-colors"
     >
+      <span aria-hidden="true" className="mr-1">{open ? "▾" : "▸"}</span>
       {children}
     </button>
   );
@@ -129,8 +130,8 @@ export default function ProblemSetView({ data }: { data: PairedProblemSet }) {
               id={anchor}
               className={`group scroll-mt-24 border rounded-xl px-5 py-1 ${
                 isSection
-                  ? "bg-crimson-950/60 border-gold-500/40 mt-8"
-                  : "bg-crimson-900/40 border-crimson-700"
+                  ? "bg-crimson-900 border-gold-500/50 shadow-card mt-8"
+                  : "bg-crimson-900 border-crimson-700 shadow-card"
               }`}
             >
               <div className="flex items-start gap-2">

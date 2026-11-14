@@ -23,7 +23,7 @@ export default function QuizAces({
   return (
     <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 space-y-3">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400">✦ Hall of Aces</h3>
+        <h3 className="section-title border-0 pb-0">Hall of Aces</h3>
         {total > 0 && (
           <span className="text-xs text-parchment-dim">
             {total} perfect {total === 1 ? "score" : "scores"}

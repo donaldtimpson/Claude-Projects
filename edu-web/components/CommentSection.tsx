@@ -248,9 +248,9 @@ export default function CommentSection({
   }
 
   return (
-    <section className="space-y-6 pt-4 border-t border-crimson-700">
-      <h2 className="text-lg font-bold text-parchment">
-        Discussion {count > 0 && <span className="text-parchment-dim font-normal text-base">({count})</span>}
+    <section className="space-y-6">
+      <h2 className="section-title">
+        Discussion {count > 0 && <span className="font-ui text-sm font-medium normal-case tracking-normal text-parchment-dim">({count})</span>}
       </h2>
 
       {/* Comment list */}
@@ -291,7 +291,7 @@ export default function CommentSection({
                     <button
                       type="submit"
                       disabled={replySubmitting || !replyBody.trim()}
-                      className="px-3 py-1.5 bg-gold-600 hover:bg-gold-500 text-crimson-950 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
+                      className="font-ui font-semibold px-3 py-1.5 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
                     >
                       {replySubmitting ? "Posting…" : "Reply"}
                     </button>
@@ -326,9 +326,9 @@ export default function CommentSection({
           <button
             type="submit"
             disabled={submitting || !body.trim()}
-            className="px-4 py-2 bg-gold-600 hover:bg-gold-500 text-crimson-950 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+            className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed"
           >
-            {submitting ? "Posting…" : "Post Comment"}
+            {submitting ? "Posting…" : "Post comment"}
           </button>
         </form>
       ) : (

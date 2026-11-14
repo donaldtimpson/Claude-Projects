@@ -101,7 +101,7 @@ export default function AdminSidebar() {
           »
         </button>
         <ThemeToggle className="w-7 h-7" />
-        <span className="font-display text-[10px] tracking-[0.15em] uppercase text-parchment-dim/60 md:[writing-mode:vertical-rl]">
+        <span className="font-ui font-semibold text-[11px] tracking-[0.06em] uppercase text-parchment-dim/60 md:[writing-mode:vertical-rl]">
           Admin
         </span>
       </aside>
@@ -113,7 +113,7 @@ export default function AdminSidebar() {
     <aside data-theme="dark" className="bg-crimson-900 md:w-56 md:shrink-0 md:min-h-screen border-b md:border-b-0 md:border-r border-crimson-700 flex flex-col">
       <div className="px-4 py-4 flex items-center justify-between md:block gap-3">
         <div className="flex items-center justify-between gap-3">
-          <span className="font-display text-sm tracking-[0.15em] uppercase text-gold-300">Admin</span>
+          <span className="font-ui font-semibold text-sm tracking-[0.06em] uppercase text-gold-300">Admin</span>
           <button
             type="button"
             onClick={() => setCollapsed(true)}
@@ -135,7 +135,7 @@ export default function AdminSidebar() {
       <nav className="flex-1 px-2 pb-4 flex flex-row flex-wrap md:flex-col gap-y-4 gap-x-6">
         {GROUPS.map((group) => (
           <div key={group.title} className="space-y-1 md:w-full">
-            <p className="px-2 text-[10px] font-display tracking-[0.15em] uppercase text-parchment-dim/60">
+            <p className="px-2 text-[11px] font-ui font-semibold tracking-[0.06em] uppercase text-parchment-dim/60">
               {group.title}
             </p>
             {group.items.map((item) => {
@@ -159,16 +159,18 @@ export default function AdminSidebar() {
         ))}
       </nav>
 
-      <div className="px-4 py-4 border-t border-crimson-700 flex items-center justify-between gap-3">
+      <div className="px-4 py-4 border-t border-crimson-700 space-y-3">
         <SyncButton />
-        <ThemeToggle />
-        <button
-          type="button"
-          onClick={logout}
-          className="text-sm text-parchment-dim hover:text-red-400 transition-colors"
-        >
-          Logout
-        </button>
+        <div className="flex items-center justify-between gap-3">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={logout}
+            className="font-ui text-sm text-parchment-dim hover:text-red-400 transition-colors"
+          >
+            Logout
+          </button>
+        </div>
       </div>
     </aside>
   );

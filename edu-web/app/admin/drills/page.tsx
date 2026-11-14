@@ -20,7 +20,7 @@ export default function AdminDrillsPage() {
           <Link href="/admin" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← Admin
           </Link>
-          <h1 className="font-display text-2xl text-parchment mt-2 mb-1">Practice Drills</h1>
+          <h1 className="font-bold text-2xl text-parchment mt-2 mb-1">Practice Drills</h1>
           <p className="text-parchment-dim text-sm">
             Try out any drill here. These test runs are not recorded — no streak, no badges. The live
             student version is at{" "}

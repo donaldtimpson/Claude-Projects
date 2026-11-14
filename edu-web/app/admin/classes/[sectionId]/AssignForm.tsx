@@ -33,7 +33,7 @@ export default function AssignForm({
   }
 
   const inputCls =
-    "bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors";
+    "bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors";
 
   return (
     <form action={createAssignment} className="bg-crimson-900 border border-crimson-700 rounded-xl p-4 space-y-3">
@@ -94,7 +94,7 @@ export default function AssignForm({
             ))}
           </select>
         )}
-        <select name="videoId" defaultValue="" className={`flex-1 ${inputCls}`}>
+        <select name="videoId" defaultValue="" className={`flex-1 min-w-0 w-full ${inputCls}`}>
           <option value="">(optional) relates to lecture…</option>
           {videos.map((v) => (
             <option key={v.id} value={v.id}>
@@ -118,7 +118,7 @@ export default function AssignForm({
         </label>
         <button
           type="submit"
-          className="sm:ml-auto font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+          className="font-ui font-semibold sm:ml-auto text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
         >
           Assign
         </button>

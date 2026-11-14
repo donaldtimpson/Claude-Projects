@@ -99,7 +99,7 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                 type="number"
                 min={0}
                 defaultValue={gb.config.weights[key]}
-                className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+                className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
               />
             </label>
           ))}
@@ -117,13 +117,13 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                 type="number"
                 min={1}
                 defaultValue={val}
-                className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
+                className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors"
               />
             </label>
           ))}
           <button
             type="submit"
-            className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+            className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
           >
             Save weights
           </button>
@@ -142,7 +142,7 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
 
       {/* Assignments */}
       <section className="space-y-4 pt-4">
-        <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+        <h2 className="section-title">
           Homework Assignments
         </h2>
         <AssignForm sectionId={sectionId} problemSets={problemSets} videos={videos} lessons={lessons} />
@@ -188,7 +188,7 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                           <p className="text-xs text-amber-300 mt-0.5">⚠ no lecture linked</p>
                         ))}
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 text-sm">
+                    <div className="flex items-center gap-4 shrink-0 font-ui text-sm">
                       {a.problemSet && (
                         <>
                           <ProblemSetToggles
@@ -201,34 +201,34 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                             className="text-parchment-dim hover:text-gold-300 transition-colors"
                             title="Edit problem set"
                           >
-                            edit ↗
+                            Edit set ↗
                           </Link>
                         </>
                       )}
                       {isLesson ? (
                         <Link href={`/drills/${a.lessonSlug}`} className="text-gold-400 hover:text-gold-300 transition-colors">
-                          open drill →
+                          Open drill →
                         </Link>
                       ) : (
                         <Link
                           href={`/admin/classes/${sectionId}/assignments/${a.id}`}
-                          className="text-gold-400 hover:text-gold-300 transition-colors"
+                          className="text-parchment hover:text-gold-300 transition-colors"
                         >
-                          submissions →
+                          Submissions →
                         </Link>
                       )}
                       <form action={deleteAssignment}>
                         <input type="hidden" name="id" value={a.id} />
-                        <button type="submit" className="text-parchment-dim hover:text-red-400 transition-colors">
-                          delete
+                        <button type="submit" className="text-red-400 hover:underline underline-offset-4 transition-colors">
+                          Delete
                         </button>
                       </form>
                     </div>
                   </div>
 
                   <details className="text-sm">
-                    <summary className="cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
-                      edit
+                    <summary className="font-ui cursor-pointer text-parchment-dim hover:text-gold-300 transition-colors w-fit">
+                      Assignment settings
                     </summary>
                     <form action={updateAssignment} className="mt-3 flex flex-wrap items-end gap-3">
                       <input type="hidden" name="id" value={a.id} />
@@ -238,7 +238,7 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                           name="title"
                           defaultValue={a.title ?? ""}
                           placeholder={a.problemSet?.title ?? lessonTitle.get(a.lessonSlug ?? "") ?? ""}
-                          className="w-56 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
+                          className="w-56 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm placeholder:text-parchment-dim/60 transition-colors"
                         />
                       </label>
                       <label className="flex flex-col gap-1 text-xs text-parchment-dim">
@@ -248,12 +248,12 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
                           type="number"
                           min={0}
                           defaultValue={a.points}
-                          className="w-20 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
+                          className="w-20 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment text-sm transition-colors"
                         />
                       </label>
                       <button
                         type="submit"
-                        className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2 font-semibold transition-colors"
+                        className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2 transition-colors"
                       >
                         Save
                       </button>
@@ -268,7 +268,7 @@ export default async function GradebookPage({ params }: { params: Promise<{ sect
 
       {/* Roster */}
       <section className="space-y-3 pt-4">
-        <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+        <h2 className="section-title">
           Roster
         </h2>
         {gb.students.length === 0 ? (

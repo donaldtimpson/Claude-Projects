@@ -18,7 +18,7 @@ export default function DrillTester({ drills }: { drills: DrillCard[] }) {
             onClick={() => setSlug(d.slug)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${
               slug === d.slug
-                ? "border-gold-500 bg-crimson-800 text-gold-300"
+                ? "border-gold-500 bg-gold-500 text-crimson-950 font-semibold"
                 : "border-crimson-700 bg-field text-parchment-dim hover:border-gold-400 hover:text-parchment"
             }`}
           >

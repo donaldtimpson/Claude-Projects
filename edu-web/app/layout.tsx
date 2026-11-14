@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cinzel, EB_Garamond } from "next/font/google";
+import { Cinzel, Inter, Source_Serif_4 } from "next/font/google";
 import SessionProvider from "@/components/SessionProvider";
 import { THEME_INIT_SCRIPT } from "@/components/ThemeToggle";
 import "./globals.css";
@@ -10,10 +10,17 @@ const cinzel = Cinzel({
   weight: ["400", "600", "700"],
 });
 
-const ebGaramond = EB_Garamond({
+// Reading text: sturdy enough for small sizes and projectors (see globals.css).
+const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
-  variable: "--font-garamond",
-  weight: ["400", "500", "600"],
+  variable: "--font-serif-body",
+  axes: ["opsz"],
+});
+
+// UI chrome: labels, metadata, buttons.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 // Use `||` (not `??`) so an empty-string env var also falls back — an empty
@@ -45,7 +52,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // suppressHydrationWarning: THEME_INIT_SCRIPT may set data-theme before hydration.
-    <html lang="en" className={`${cinzel.variable} ${ebGaramond.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${cinzel.variable} ${sourceSerif.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

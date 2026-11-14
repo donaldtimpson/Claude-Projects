@@ -34,7 +34,7 @@ export default function SyncButton() {
       <button
         onClick={sync}
         disabled={status === "loading"}
-        className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+        className="font-ui font-semibold whitespace-nowrap px-3 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {status === "loading" ? "Syncing…" : "Sync YouTube"}
       </button>

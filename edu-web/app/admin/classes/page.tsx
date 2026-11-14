@@ -34,7 +34,7 @@ export default async function AdminClassesPage() {
             name="courseId"
             required
             defaultValue={courses.find((c) => c.isCurrent)?.id ?? ""}
-            className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment transition-colors"
+            className="flex-1 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment transition-colors"
           >
             <option value="" disabled>
               Choose a course…
@@ -51,11 +51,11 @@ export default async function AdminClassesPage() {
             required
             placeholder="Section name (e.g. Fall 2026 · Period 3)"
             autoComplete="off"
-            className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
+            className="flex-1 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
           />
           <button
             type="submit"
-            className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2.5 font-semibold transition-colors"
+            className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2.5 transition-colors"
           >
             Create
           </button>
@@ -109,7 +109,7 @@ export default async function AdminClassesPage() {
               </div>
               <Link
                 href={`/admin/classes/${s.id}`}
-                className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded-lg px-5 py-2.5 font-semibold transition-colors"
+                className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded-lg px-5 py-2.5 transition-colors"
               >
                 Open Gradebook →
               </Link>

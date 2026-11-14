@@ -31,8 +31,8 @@ export default async function DrillsHubPage() {
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-5xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-5xl mx-auto px-6">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Courses
           </Link>
@@ -41,7 +41,7 @@ export default async function DrillsHubPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-8">
         <div>
-          <h1 className="font-display text-2xl text-parchment mb-1">Practice Drills</h1>
+          <h1 className="font-bold text-2xl text-parchment mb-1">Practice Drills</h1>
           <p className="text-parchment-dim text-sm">
             Fluency comes from reps. Each drill generates an endless stream of fresh problems —
             practice a fixed set or race the clock.

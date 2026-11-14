@@ -86,7 +86,7 @@ export default function AnnouncementCreateForm({ courses }: { courses: CourseOpt
       <button
         type="submit"
         disabled={saving || !title.trim()}
-        className="px-4 py-2 bg-gold-500 hover:bg-gold-400 disabled:opacity-50 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+        className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed text-crimson-950 text-sm rounded-lg transition-colors"
       >
         {saving ? "Posting…" : "Post Announcement"}
       </button>

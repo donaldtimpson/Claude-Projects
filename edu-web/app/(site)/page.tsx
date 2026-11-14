@@ -62,7 +62,7 @@ export default async function HomePage() {
         {/* Currently Teaching */}
         {currentCourses.length > 0 && (
           <section>
-            <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+            <h2 className="section-title mb-8">
               Currently Teaching
             </h2>
             <div
@@ -80,7 +80,7 @@ export default async function HomePage() {
                   <Link
                     key={course.id}
                     href={`/courses/${course.id}`}
-                    className="group bg-crimson-900 border-2 border-gold-500 rounded-lg overflow-hidden hover:border-gold-300 transition-colors shadow-lg shadow-gold-500/10"
+                    className="group flex flex-col bg-crimson-900 border-2 border-gold-500 rounded-lg overflow-hidden hover:border-gold-300 transition-colors shadow-lg shadow-gold-500/10"
                   >
                     <div className="relative">
                       {latest?.thumbnailUrl ? (
@@ -95,12 +95,12 @@ export default async function HomePage() {
                       ) : (
                         <ComingSoonThumb />
                       )}
-                      <span className="absolute top-2 left-2 bg-gold-500 text-crimson-950 text-[10px] font-display tracking-widest uppercase px-2 py-0.5 rounded">
+                      <span className="absolute top-2 left-2 bg-gold-500 text-crimson-950 text-[11px] font-ui font-semibold tracking-[0.06em] uppercase px-2 py-0.5 rounded">
                         Live
                       </span>
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+                    <div className="p-4 flex-1 flex flex-col">
+                      <h3 className="text-base font-semibold leading-snug text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                         {course.title}
                       </h3>
                       {latest ? (
@@ -108,10 +108,10 @@ export default async function HomePage() {
                           Latest: {latest.title}
                         </p>
                       ) : (
-                        <p className="text-sm text-gold-500 mt-2 font-display tracking-wider">Coming soon</p>
+                        <p className="eyebrow text-gold-400 mt-2">Coming soon</p>
                       )}
                       {latest?.publishedAt && (
-                        <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
+                        <p className="text-xs font-medium text-parchment-dim mt-auto pt-2">
                           {new Date(latest.publishedAt).toLocaleDateString()}
                         </p>
                       )}
@@ -126,10 +126,10 @@ export default async function HomePage() {
         {/* Categories */}
         {categories.length > 0 && (
           <section>
-            <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+            <h2 className="section-title mb-8">
               Browse by Category
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {categories.map((cat) => (
                 <Link
                   key={cat.id}
@@ -139,7 +139,7 @@ export default async function HomePage() {
                   {/* Image slot — drop /public/categories/{slug}.png to fill */}
                   <CategoryImageSlot slug={cat.slug} name={cat.name} />
                   <div className="px-4 py-3">
-                    <p className="font-display text-sm tracking-wide text-parchment group-hover:text-gold-300 transition-colors">
+                    <p className="text-base font-semibold text-parchment group-hover:text-gold-300 transition-colors">
                       {cat.name}
                     </p>
                     <p className="text-xs text-parchment-dim mt-0.5">
@@ -154,7 +154,7 @@ export default async function HomePage() {
 
         {/* All Courses */}
         <section>
-          <h2 className="font-display text-lg tracking-[0.25em] uppercase text-gold-400 mb-8 pb-3 border-b border-crimson-700">
+          <h2 className="section-title mb-8">
             All Courses
           </h2>
           {courses.length === 0 ? (
@@ -179,10 +179,10 @@ export default async function HomePage() {
                     videoCount={course._count.videos}
                   />
                   <div className="p-4">
-                    <h3 className="font-display text-xs tracking-wider uppercase text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
+                    <h3 className="text-base font-semibold leading-snug text-parchment group-hover:text-gold-300 transition-colors line-clamp-2">
                       {course.title}
                     </h3>
-                    <p className="text-xs text-gold-500 mt-1 font-display tracking-wider">
+                    <p className="text-xs font-medium text-parchment-dim mt-1.5">
                       {course._count.videos === 0
                         ? "Coming soon"
                         : `${course._count.videos} video${course._count.videos !== 1 ? "s" : ""}`}

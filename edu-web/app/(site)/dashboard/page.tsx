@@ -85,8 +85,8 @@ export default async function DashboardPage() {
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-4xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-4xl mx-auto px-6">
           <Link href="/" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← All Courses
           </Link>
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
 
       <div className="max-w-4xl mx-auto px-6 py-10 space-y-12">
         <div>
-          <h1 className="font-display text-2xl text-parchment mb-1">My Progress</h1>
+          <h1 className="font-bold text-2xl text-parchment mb-1">My Progress</h1>
           <p className="text-parchment-dim text-sm">
             Signed in as <span className="text-parchment">{session.user.name}</span>
           </p>
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/review"
-            className="px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors shrink-0"
+            className="font-ui font-semibold px-5 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors shrink-0"
           >
             {dueCount > 0 ? "Start daily review" : "Open review"}
           </Link>
@@ -131,7 +131,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/drills"
-            className="px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors shrink-0"
+            className="font-ui font-semibold px-5 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors shrink-0"
           >
             Practice drills
           </Link>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
 
         {classGrades.length > 0 && (
           <section className="space-y-4">
-            <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+            <h2 className="section-title">
               My Classes
             </h2>
             <ul className="space-y-3">
@@ -180,7 +180,7 @@ export default async function DashboardPage() {
         )}
 
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Your Handle
           </h2>
           <div className="bg-crimson-900 border border-crimson-700 rounded-xl p-5 space-y-3">
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             In Progress
           </h2>
           {inProgress.length === 0 ? (
@@ -218,7 +218,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Completed
           </h2>
           {completed.length === 0 ? (
@@ -235,7 +235,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Your Achievements
           </h2>
           <AchievementsGrid badges={myBadges} />

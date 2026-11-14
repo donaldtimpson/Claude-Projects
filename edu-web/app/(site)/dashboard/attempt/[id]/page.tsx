@@ -68,8 +68,8 @@ export default async function AttemptPage({
 
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link
             href={courseId ? `/dashboard/course/${courseId}` : "/dashboard"}
             className="text-sm text-parchment-dim hover:text-parchment transition-colors"
@@ -130,7 +130,7 @@ export default async function AttemptPage({
 
         {/* Full review */}
         <div className="space-y-4">
-          <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+          <h2 className="section-title">
             Answer Review
           </h2>
           {questions.length === 0 ? (

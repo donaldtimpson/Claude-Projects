@@ -47,7 +47,7 @@ export default function OfferingControl({
 
   return (
     <section className="bg-crimson-900 border border-crimson-700 rounded-lg px-4 py-3">
-      <h2 className="font-display tracking-wider uppercase text-sm text-gold-300">Subject</h2>
+      <h2 className="eyebrow text-parchment-dim">Subject</h2>
 
       {hasOfferings ? (
         <p className="text-xs text-parchment-dim mt-1">
@@ -67,7 +67,7 @@ export default function OfferingControl({
               value={canonicalCourseId ?? ""}
               disabled={busy}
               onChange={(e) => setCanonical(e.target.value)}
-              className="bg-crimson-950 border border-crimson-700 rounded px-2 py-1 text-parchment focus:border-gold-500 outline-none disabled:opacity-50 max-w-xs"
+              className="bg-field border border-crimson-700 rounded px-2 py-1 text-parchment focus:border-gold-500 outline-none disabled:opacity-50 max-w-xs"
             >
               <option value="">its own subject</option>
               {representatives.map((c) => (

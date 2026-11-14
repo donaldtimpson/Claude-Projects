@@ -27,7 +27,7 @@ export function HomeworkBanner({ assignments }: { assignments: ProblemSetAssignm
       className="flex items-center justify-between gap-4 flex-wrap bg-crimson-900 border border-gold-600/50 hover:border-gold-500 rounded-xl px-4 py-3 transition-colors"
     >
       <span className="text-sm text-parchment">
-        <span className="font-display text-[0.65rem] tracking-[0.2em] uppercase text-gold-400 mr-2">
+        <span className="font-ui font-semibold text-[0.65rem] tracking-[0.06em] uppercase text-gold-400 mr-2">
           Homework
         </span>
         {many
@@ -55,7 +55,7 @@ export default function ProblemSetHomework({
 
   return (
     <section id="submit-homework" className="space-y-3 pt-4 border-t border-crimson-700">
-      <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400">
+      <h2 className="section-title">
         Turn in your homework
       </h2>
       <ul className="space-y-3">
@@ -76,7 +76,7 @@ export default function ProblemSetHomework({
                   </p>
                 </div>
                 {graded ? (
-                  <span className="text-sm text-gold-300 shrink-0">
+                  <span className="font-ui text-sm font-semibold tabular-nums text-parchment shrink-0">
                     {a.sub!.score}/{a.points}
                   </span>
                 ) : a.sub ? (

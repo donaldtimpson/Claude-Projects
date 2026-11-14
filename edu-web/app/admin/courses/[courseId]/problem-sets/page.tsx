@@ -44,11 +44,11 @@ export default async function AdminCourseProblemSets({
             required
             placeholder="Title (e.g. 1.1 Exercises)"
             autoComplete="off"
-            className="flex-1 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
+            className="flex-1 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-4 py-2.5 text-parchment placeholder:text-parchment-dim/60 transition-colors"
           />
           <button
             type="submit"
-            className="shrink-0 font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-4 py-2.5 font-semibold transition-colors"
+            className="font-ui font-semibold shrink-0 text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-4 py-2.5 transition-colors"
           >
             Create &amp; edit
           </button>
@@ -70,7 +70,7 @@ export default async function AdminCourseProblemSets({
                     {ps.title}
                   </span>
                   <span
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
+                    className={`font-ui font-semibold text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                       ps.isDraft ? "bg-amber-900/40 border-amber-700 text-amber-300" : "bg-green-900/30 border-green-700 text-green-300"
                     }`}
                   >

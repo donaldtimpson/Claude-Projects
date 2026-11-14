@@ -35,11 +35,7 @@ export default function CurrentToggle({
       onClick={toggle}
       disabled={pending}
       aria-pressed={isCurrent}
-      className={`text-xs font-display tracking-wider uppercase px-2.5 py-1 rounded border transition-colors ${
-        isCurrent
-          ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400"
-          : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300"
-      } disabled:opacity-50`}
+      className={`font-ui font-semibold text-sm px-2.5 py-1 rounded border transition-colors ${ isCurrent ? "bg-gold-500 text-crimson-950 border-gold-500 hover:bg-gold-400" : "bg-transparent text-parchment-dim border-crimson-700 hover:border-gold-500 hover:text-gold-300" } disabled:bg-crimson-800 disabled:text-parchment-dim/70 disabled:cursor-not-allowed`}
     >
       {isCurrent ? "★ Current" : "Mark Current"}
     </button>

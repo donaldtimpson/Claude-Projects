@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export default function SoundItOutPrivacyPage() {
   return (
     <main className="flex-1">
-      <header className="border-b border-crimson-700 px-6 py-4">
-        <div className="max-w-3xl mx-auto">
+      <header className="border-b border-crimson-700 py-4">
+        <div className="max-w-3xl mx-auto px-6">
           <Link href="/jr/sound-it-out" className="text-sm text-parchment-dim hover:text-parchment transition-colors">
             ← Sound It Out
           </Link>
@@ -25,7 +25,7 @@ export default function SoundItOutPrivacyPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-10 space-y-10">
         <div>
-          <h1 className="font-display text-2xl text-parchment mb-1">Sound It Out — Privacy Policy</h1>
+          <h1 className="font-bold text-2xl text-parchment mb-1">Sound It Out — Privacy Policy</h1>
           <p className="text-parchment-dim text-sm">Last updated {UPDATED}</p>
         </div>
 
@@ -97,7 +97,7 @@ export default function SoundItOutPrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-4">
-      <h2 className="font-display text-sm tracking-[0.2em] uppercase text-gold-400 pb-2 border-b border-crimson-700">
+      <h2 className="section-title">
         {title}
       </h2>
       <div className="space-y-4 text-sm text-parchment-dim leading-relaxed">{children}</div>

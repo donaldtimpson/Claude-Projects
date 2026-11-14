@@ -14,7 +14,7 @@ export default function UserMenu() {
     return (
       <Link
         href="/dashboard"
-        className="shrink-0 hover:text-gold-300 transition-colors text-parchment-dim text-xs tracking-widest uppercase font-display max-w-[8rem] truncate"
+        className="shrink-0 hover:text-gold-300 transition-colors text-parchment-dim text-xs tracking-[0.06em] uppercase font-ui font-semibold max-w-[8rem] truncate"
       >
         {session.user.name}
       </Link>
@@ -22,13 +22,13 @@ export default function UserMenu() {
   }
 
   return (
-    <div className="flex items-center gap-4 shrink-0 font-display text-xs tracking-[0.15em] uppercase text-parchment-dim">
+    <div className="flex items-center gap-4 shrink-0 font-ui font-semibold text-xs tracking-[0.06em] uppercase text-parchment-dim">
       <Link href="/auth/signin" className="hidden sm:inline hover:text-gold-300 transition-colors">
         Sign In
       </Link>
       <Link
         href="/auth/signup"
-        className="bg-gold-600 hover:bg-gold-500 text-crimson-950 px-3 py-1.5 rounded text-xs font-semibold normal-case tracking-normal transition-colors"
+        className="font-ui font-semibold bg-gold-500 hover:bg-gold-400 text-crimson-950 px-3 py-1.5 rounded text-sm normal-case tracking-normal transition-colors"
       >
         Sign Up
       </Link>

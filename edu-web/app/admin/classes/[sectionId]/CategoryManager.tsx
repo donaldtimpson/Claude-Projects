@@ -24,11 +24,11 @@ export default function CategoryManager({
   }
 
   const input =
-    "bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors";
+    "bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-2 py-1.5 text-parchment text-sm transition-colors";
 
   return (
     <div className="border-t border-crimson-800 pt-3 mt-4 space-y-2">
-      <p className="text-xs font-display tracking-[0.15em] uppercase text-gold-400">Custom categories</p>
+      <p className="text-xs font-ui font-semibold tracking-[0.06em] uppercase text-gold-400">Custom categories</p>
       {categories.map((c) => (
         <div key={c.id} className="flex items-center gap-2 flex-wrap">
           <input
@@ -65,7 +65,7 @@ export default function CategoryManager({
             await call(addGradeCategory, { sectionId, name: newName.trim() });
             setNewName("");
           }}
-          className="font-display text-xs tracking-[0.15em] uppercase bg-gold-600 hover:bg-gold-500 text-crimson-950 rounded px-3 py-1.5 font-semibold transition-colors"
+          className="font-ui font-semibold text-sm bg-gold-500 hover:bg-gold-400 text-crimson-950 rounded px-3 py-1.5 transition-colors"
         >
           Add
         </button>

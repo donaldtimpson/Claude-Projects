@@ -110,11 +110,7 @@ function FilterPill({
   return (
     <Link
       href={href}
-      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-        active
-          ? "bg-gold-500 border-gold-500 text-crimson-950"
-          : "bg-crimson-900 border-crimson-700 text-parchment hover:border-gold-500 hover:text-gold-300"
-      }`}
+      className={`font-ui font-semibold px-3 py-1.5 rounded-full text-sm border transition-colors ${ active ? "bg-gold-500 border-gold-500 text-crimson-950" : "bg-crimson-900 border-crimson-700 text-parchment hover:border-gold-500 hover:text-gold-300" }`}
     >
       {label} <span className={active ? "text-crimson-900/70" : "text-parchment-dim"}>{count}</span>
     </Link>

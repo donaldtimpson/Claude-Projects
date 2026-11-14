@@ -247,14 +247,14 @@ export default function DrillPlayer({
           <div className="flex gap-3 pt-1">
             <button
               onClick={restart}
-              className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+              className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
             >
               Practice again
             </button>
             {onExit && (
               <button
                 onClick={onExit}
-                className="px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm font-medium rounded-lg transition-colors"
+                className="font-ui font-semibold px-4 py-2 bg-btn hover:bg-btn-hover border border-crimson-700 text-parchment text-sm rounded-lg transition-colors"
               >
                 Change settings
               </button>
@@ -277,7 +277,7 @@ export default function DrillPlayer({
           return (
             <li key={idx}>
               <button
-                className={`w-full px-4 py-3 rounded-lg border text-base transition-colors border-crimson-700 bg-field hover:border-gold-400 text-parchment ${
+                className={`w-full min-h-14 px-4 py-3 rounded-lg border text-xl transition-colors border-crimson-700 bg-field hover:border-gold-400 text-parchment ${
                   img ? "flex flex-col items-center gap-2" : ""
                 }`}
                 onClick={() => choose(idx)}
@@ -286,7 +286,8 @@ export default function DrillPlayer({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={img} alt="" className="h-8 w-auto rounded-sm ring-1 ring-crimson-700" />
                 )}
-                <Tex value={opt} />
+                {/* Display style so fractions render full size, not shrunk inline. */}
+                <Tex value={typeof opt === "string" ? opt : { ...opt, tex: `\\displaystyle ${opt.tex}` }} />
               </button>
             </li>
           );
@@ -319,7 +320,7 @@ export default function DrillPlayer({
                   return n;
                 })
               }
-              className="w-28 bg-crimson-950 border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment placeholder:text-parchment-dim/60 transition-colors"
+              className="w-28 bg-field border border-crimson-700 focus:border-gold-500 outline-none rounded-lg px-3 py-2 text-parchment placeholder:text-parchment-dim/60 transition-colors"
               placeholder="?"
             />
             {f.unit && <span className="text-parchment-dim text-sm">{f.unit}</span>}
@@ -327,7 +328,7 @@ export default function DrillPlayer({
         ))}
         <button
           type="submit"
-          className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm font-medium rounded-lg transition-colors"
+          className="font-ui font-semibold px-4 py-2 bg-gold-500 hover:bg-gold-400 text-crimson-950 text-sm rounded-lg transition-colors"
         >
           Submit
         </button>
@@ -337,18 +338,21 @@ export default function DrillPlayer({
   return (
     <>
       <section className="bg-crimson-900 border border-crimson-700 rounded-xl p-6 space-y-5">
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <h2 className="text-lg font-bold text-parchment">{def.title}</h2>
+        <div className="flex items-center justify-end gap-3 font-ui text-sm">
           <div className="flex items-center gap-4 text-parchment-dim">
             <span>
-              <span className="text-parchment">{correctCount}</span>/{total}
+              Score <span className="font-semibold tabular-nums text-parchment">{correctCount}/{total}</span>
             </span>
-            <span title="current streak">🔥 {streak}</span>
+            <span>
+              Streak <span className="font-semibold tabular-nums text-parchment">{streak}</span>
+            </span>
             {mode.type === "timed" && <span title="score" className="text-gold-300">★ {score}</span>}
             {mode.type === "timed" ? (
               <span className={remaining <= 10 ? "text-red-400" : "text-gold-300"}>⏱ {remaining}s</span>
             ) : (
-              <span>{Math.max(0, mode.n - total)} left</span>
+              <span>
+                <span className="font-semibold tabular-nums text-parchment">{Math.max(0, mode.n - total)}</span> left
+              </span>
             )}
           </div>
         </div>

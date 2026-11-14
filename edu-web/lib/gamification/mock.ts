@@ -240,12 +240,3 @@ export function badgesForScholar(scholar: Scholar): Badge[] {
   if (scholar.handle === MOCK_ME.handle) return MOCK_BADGES;
   return deriveBadges(activityOf(scholar), MAX_ACTIVITY);
 }
-
-// Gold / silver / bronze for the top three; gold-dim for the rest.
-// Mirrors the `scoreColor` helper idiom in components/AttemptRow.tsx.
-export function rankMedal(rank: number): { color: string; medal: string } {
-  if (rank === 1) return { color: "text-gold-300", medal: "🥇" };
-  if (rank === 2) return { color: "text-parchment", medal: "🥈" };
-  if (rank === 3) return { color: "text-gold-500", medal: "🥉" };
-  return { color: "text-parchment-dim", medal: "" };
-}

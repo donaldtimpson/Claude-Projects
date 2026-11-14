@@ -18,7 +18,7 @@ export default function AnnouncementsFeed({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm uppercase tracking-wider text-parchment-dim">Announcements</h2>
+      <h2 className="section-title">Announcements</h2>
       <ul className="space-y-3">
         {announcements.map((a) => (
           <li
@@ -31,7 +31,7 @@ export default function AnnouncementsFeed({
           >
             <div className="flex items-center gap-2 flex-wrap">
               {a.pinned && (
-                <span className="text-[10px] uppercase tracking-wider bg-gold-500 text-crimson-950 px-1.5 py-0.5 rounded font-semibold">
+                <span className="font-ui font-semibold text-[11px] uppercase tracking-wider bg-gold-500 text-crimson-950 px-1.5 py-0.5 rounded font-semibold">
                   Pinned
                 </span>
               )}
