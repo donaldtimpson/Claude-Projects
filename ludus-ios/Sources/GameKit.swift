@@ -124,12 +124,66 @@ class ArcadeModel: ObservableObject {
     func begin(level start: Int? = nil) {
         let lv = max(1, debugStart ?? start ?? startLevel)
         startLevel = lv
-        score = 0; den = 0; hearts = maxHearts; combo = 0
+        score = 0; den = 0; hearts = maxHearts; combo = 0; ease = 0
         level = lv; progress = 0; result = nil
         medalAtStart = LudusProgress.medal(key, goal: goal)
         phase = .playing
         Haptics.prime()
         onBegin()
+    }
+
+    // MARK: Continuous difficulty
+    //
+    // `level` (Gradus) is the MILESTONE a child sees and the laurels are pinned to — but games should
+    // NOT tune off it directly (that made difficulty jump in big steps at every level-up). Tune off
+    // `d` instead: a smooth number that climbs a little with EVERY correct answer (2.5 = halfway
+    // through Gradus II) and eases back a bit after a miss (rubber-banding), so the game always sits
+    // just at the edge of what this child can do.
+    //
+    //   speed   = ramp(60, 140, to: 8)            // 60 at the start → 140 by Gradus VIII, smoothly
+    //   maxN    = rampInt(5, 100, to: 9)          // numbers grow one answer at a time
+    //   kind    = tier([1, 2.5, 4, 6])            // which content KIND to ask next: a new kind fades
+    //                                             // in over ~1.5 levels and old kinds stay as review
+
+    /// Relief after misses (0…1.2): each miss adds some, each hit takes a little back.
+    @Published private(set) var ease: Double = 0
+
+    /// Position on the ladder without relief: `level` plus the fraction of it already climbed.
+    var skill: Double { Double(level) + Double(progress) / Double(max(1, perLevel(level))) }
+
+    /// THE difficulty to tune by. Starts at the start level, never drops below it.
+    var d: Double { max(Double(startLevel), skill - ease) }
+
+    /// A value that moves linearly from `a` (at difficulty `from`) to `b` (at difficulty `to`), clamped.
+    func ramp(_ a: Double, _ b: Double, from: Double = 1, to: Double) -> Double {
+        let t = max(0, min(1, (d - from) / max(0.0001, to - from)))
+        return a + (b - a) * t
+    }
+    func rampInt(_ a: Int, _ b: Int, from: Double = 1, to: Double) -> Int {
+        Int(ramp(Double(a), Double(b), from: from, to: to).rounded())
+    }
+
+    /// Weights of content tiers that start at the given difficulties. A tier fades in over `fadeIn`
+    /// levels; once the NEXT tier is fully in, it drops to `keep` (review) rather than vanishing.
+    func tierWeights(_ starts: [Double], fadeIn: Double = 1.5, keep: Double = 0.3) -> [Double] {
+        let inW = starts.map { s in max(0, min(1, (d - s) / fadeIn + (s <= 1 ? 1 : 0))) }
+        return inW.indices.map { i in
+            let next = i + 1 < inW.count ? inW[i + 1] : 0
+            return inW[i] * (keep + (1 - keep) * (1 - next))
+        }
+    }
+    /// Picks a content tier at random by `tierWeights` (always returns a valid index).
+    func tier(_ starts: [Double], fadeIn: Double = 1.5, keep: Double = 0.3) -> Int {
+        let w = tierWeights(starts, fadeIn: fadeIn, keep: keep)
+        let total = w.reduce(0, +)
+        guard total > 0 else { return 0 }
+        var r = Double.random(in: 0..<total)
+        for (i, x) in w.enumerated() { if r < x { return i }; r -= x }
+        return 0
+    }
+    /// True with a probability that ramps from 0 at `from` to `p` at `to` — e.g. how often a trap appears.
+    func chance(_ p: Double, from: Double, to: Double) -> Bool {
+        Double.random(in: 0..<1) < ramp(0, p, from: from, to: to)
     }
 
     /// Reset the game's own board for a fresh run (`level` is already set).
@@ -149,6 +203,7 @@ class ArcadeModel: ObservableObject {
     func hit(points: Int = 1) -> Bool {
         guard phase == .playing else { return false }
         combo += 1
+        ease = max(0, ease - 0.15)
         let pts = points * min(combo, 5)
         score += pts; den += pts
         progress += 1
@@ -157,10 +212,12 @@ class ArcadeModel: ObservableObject {
             hearts = min(maxHearts, hearts + 1)
             LudusProgress.record(level: level, for: key)
             Haptics.success()
+            Sfx.play(.levelUp)
             onLevelUp()
             return true
         }
         Haptics.tap(0.5 + Double(min(combo, 6)) * 0.06)
+        Sfx.play(.correct(combo: combo))
         return false
     }
 
@@ -171,6 +228,8 @@ class ArcadeModel: ObservableObject {
         guard phase == .playing else { return false }
         combo = 0
         lastMiss += 1
+        ease = min(1.2, ease + 0.4)
+        Sfx.play(.wrong)
         // Level I is practice: a miss costs no heart (the game still shows the right answer).
         if level == 1 { Haptics.light(); return false }
         hearts -= 1
@@ -198,7 +257,7 @@ class ArcadeModel: ObservableObject {
                               level: level, startLevel: startLevel, newBest: isBest,
                               medalBefore: before, medalAfter: after)
         phase = .over
-        if after > before { Haptics.success() }
+        if after > before { Haptics.success(); Sfx.play(.win) }
     }
 
     /// The laurel held when the run began (`record(level:)` runs mid-run on each level-up).
@@ -217,19 +276,32 @@ extension GameID {
 
 /// Wraps a game's play area with the shared HUD, intro card, level-up banner and game-over card.
 /// The play area should do nothing (no timers, no spawns) unless `model.phase == .playing`.
-struct ArcadeShell<Model: ArcadeModel, Content: View>: View {
+///
+/// Every game should feel like its OWN place: pass a `backdrop` (the game's scene — a cave, a sea,
+/// a kitchen…) and it is used behind play, the intro card and the game-over card alike. Without
+/// one, the shell falls back to the house Tyrian-purple field.
+struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
     @ObservedObject var model: Model
     let spec: GameSpec
     var accent: UInt = Lu.gold
     var showHearts = true
     let onClose: () -> Void
-    @ViewBuilder let content: Content
+    let backdrop: Backdrop
+    let content: Content
+
+    init(model: Model, spec: GameSpec, accent: UInt = Lu.gold, showHearts: Bool = true,
+         onClose: @escaping () -> Void,
+         @ViewBuilder backdrop: () -> Backdrop,
+         @ViewBuilder content: () -> Content) {
+        self.model = model; self.spec = spec; self.accent = accent; self.showHearts = showHearts
+        self.onClose = onClose; self.backdrop = backdrop(); self.content = content()
+    }
 
     @State private var banner = false
 
     var body: some View {
         ZStack {
-            LudusBackground().ignoresSafeArea()
+            backdrop.ignoresSafeArea()
             content
             hud
             if banner {
@@ -238,8 +310,12 @@ struct ArcadeShell<Model: ArcadeModel, Content: View>: View {
                     .allowsHitTesting(false)
             }
             if model.phase == .intro {
-                ArcadeIntroView(spec: spec, model: model, accent: accent, onClose: onClose)
-                    .transition(.opacity)
+                ZStack {
+                    backdrop.ignoresSafeArea()
+                    Color.black.opacity(0.35).ignoresSafeArea()
+                    ArcadeIntroView(spec: spec, model: model, accent: accent, onClose: onClose)
+                }
+                .transition(.opacity)
             }
             if model.phase == .over, let r = model.result {
                 ArcadeOverView(spec: spec, result: r, goal: model.goal, accent: accent,
@@ -292,6 +368,16 @@ struct ArcadeShell<Model: ArcadeModel, Content: View>: View {
         }
         .padding(.horizontal, 12).padding(.top, 4)
         .opacity(model.phase == .playing ? 1 : 0)
+    }
+}
+
+extension ArcadeShell where Backdrop == LudusBackground {
+    /// The house look (no custom scene).
+    init(model: Model, spec: GameSpec, accent: UInt = Lu.gold, showHearts: Bool = true,
+         onClose: @escaping () -> Void,
+         @ViewBuilder content: () -> Content) {
+        self.init(model: model, spec: spec, accent: accent, showHearts: showHearts, onClose: onClose,
+                  backdrop: { LudusBackground() }, content: content)
     }
 }
 
@@ -365,7 +451,6 @@ private struct ArcadeIntroView: View {
         let reached = LudusProgress.maxLevel(model.key)
         let medal = LudusProgress.medal(model.key, goal: model.goal)
         ZStack {
-            LudusBackground().ignoresSafeArea()
             VStack(spacing: 14) {
                 HStack { LudusCloseButton(action: onClose); Spacer() }
                 Spacer(minLength: 0)
