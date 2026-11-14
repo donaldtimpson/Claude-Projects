@@ -400,7 +400,7 @@ struct LevelPill: View {
         }
         .padding(.horizontal, 10).padding(.vertical, 5)
         .frame(minWidth: 64)
-        .background(luPanelShape(14))
+        .background(luGlass(14))
         .animation(.easeOut(duration: 0.2), value: progress)
     }
 }
@@ -469,7 +469,7 @@ private struct ArcadeIntroView: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(luPanelShape(18))
+                .background(luGlass(18))
 
                 // Goals: the three laurels and the level each needs.
                 HStack(spacing: 0) {
@@ -484,7 +484,7 @@ private struct ArcadeIntroView: View {
                     }
                 }
                 .padding(.vertical, 10)
-                .background(luPanelShape(18))
+                .background(luGlass(18))
                 if medal == .none {
                     Text(reached > 1 ? "Best so far: Gradus \(romanNumeral(reached)) — reach \(romanNumeral(model.goal.won)) to win!"
                                      : "Reach Gradus \(romanNumeral(model.goal.won)) to win!")
@@ -503,8 +503,8 @@ private struct ArcadeIntroView: View {
                                         .foregroundStyle(Color(hex: model.startLevel == lv ? Lu.inkDark : Lu.ink))
                                         .frame(width: 58, height: 44)
                                         .background(RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(hex: model.startLevel == lv ? accent : Lu.panel))
-                                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: Lu.line), lineWidth: 2)))
+                                            .fill(model.startLevel == lv ? Color(hex: accent) : Color.black.opacity(0.35))
+                                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.22), lineWidth: 1)))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -626,6 +626,6 @@ private struct OverStat: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(luPanelShape(16))
+        .background(luGlass(16))
     }
 }

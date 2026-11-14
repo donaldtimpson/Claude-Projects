@@ -220,8 +220,18 @@ struct StatPill: View {
             Text(value).font(luFont(20)).monospacedDigit().foregroundStyle(Color(hex: valueHex))
         }
         .padding(.horizontal, 12).padding(.vertical, 6)
-        .background(luPanelShape(14))
+        .background(luGlass(14))
     }
+}
+
+/// Smoked glass — the in-game HUD surface. Neutral on purpose, so it sits on ANY game's scene
+/// (a sunny field, a night garden, a cave) without dragging the house purple into it.
+func luGlass(_ radius: CGFloat) -> some View {
+    RoundedRectangle(cornerRadius: radius, style: .continuous)
+        .fill(.ultraThinMaterial)
+        .environment(\.colorScheme, .dark)
+        .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(Color.black.opacity(0.22)))
+        .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).stroke(Color.white.opacity(0.22), lineWidth: 1))
 }
 
 /// A rounded panel fill + border — the standard Ludus surface.
@@ -241,8 +251,7 @@ struct LudusCloseButton: View {
                 .font(.system(size: 16, weight: .heavy))
                 .foregroundStyle(Color(hex: Lu.inkDim))
                 .frame(width: 38, height: 38)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: Lu.panel))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: Lu.line), lineWidth: 2)))
+                .background(luGlass(12))
         }
         .buttonStyle(.plain)
     }
@@ -261,7 +270,7 @@ struct HeartsRow: View {
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
-        .background(luPanelShape(14))
+        .background(luGlass(14))
     }
 }
 
