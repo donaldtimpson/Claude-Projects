@@ -269,65 +269,66 @@ private struct PRound {
     }
 }
 
-/// Choices per level: 2, then 3, then 4 from VII.
-private func pChoices(_ level: Int) -> Int { level <= 1 ? 2 : level <= 6 ? 3 : 4 }
-
-/// Seconds of patience per round (0 = none): none through IV, then 15 s easing to 7 s.
-private func pPatience(_ level: Int) -> Double {
-    switch level {
-    case ...4: return 0
-    case 5: return 15
-    case 6: return 13
-    case 7: return 11
-    default: return max(7, 10 - Double(level - 8) * 0.5)
-    }
+/// What the next round asks — tuned off the continuous difficulty `d` (GameKit), never off the
+/// Gradus number, so the game gets a little harder with every plate rather than in jumps.
+///   tier 0  first sound, easy picture foods, no words        (from d 1)
+///   tier 1  first sound, every letter, foods named            (fades in from d 2)
+///   tier 2  blends & digraphs at the start (ch, sh, br, st…)  (from d 3.2)
+///   tier 3  ending sounds and long vowels                     (from d 4.3)
+///   tier 4  rhymes, words only, spelling traps                (from d 5.4)
+///   tier 5  prefixes & suffixes by meaning                    (from d 6.6)
+/// Older tiers stay in the mix as review. Plates grow 2 → 4; pictures fade from the sound decks
+/// from d 4.5; a patience bar appears at d 4.5 and tightens from 16 s toward 7 s by d 10.
+private struct PPlan {
+    var tier = 0
+    var n = 2
+    var dropPictures = false
 }
+private let pTierStarts: [Double] = [1, 2, 3.2, 4.3, 5.4, 6.6]
 
-private func pRound(level: Int, avoid: String) -> PRound {
-    let n = pChoices(level)
+private func pRound(_ plan: PPlan, avoid: String) -> PRound {
     for _ in 0..<40 {
-        let r = pRoundTry(level: level, n: n)
-        if r.key != avoid && r.foods.count == n { return r }
+        let r = pRoundTry(plan)
+        if r.key != avoid && r.foods.count == pPlates(plan) { return r }
     }
-    return pRoundTry(level: level, n: n)
+    return pRoundTry(plan)
 }
+private func pPlates(_ plan: PPlan) -> Int { plan.tier == 0 ? min(plan.n, 3) : plan.n }
 
-private func pRoundTry(level: Int, n: Int) -> PRound {
-    if level <= 2 { return pLetterRound(level: level, n: n) }
+private func pRoundTry(_ plan: PPlan) -> PRound {
+    if plan.tier <= 1 { return pLetterRound(easy: plan.tier == 0, n: pPlates(plan)) }
     let sets: [PSet]
-    switch level {
-    case 3: sets = pStarts
-    case 4: sets = pEnds
-    case 5: sets = pRhymes
-    case 6: sets = pAffixes
-    case 7: sets = pRhymes + pAffixes
-    default: sets = pStarts + pEnds + pRhymes + pAffixes
+    switch plan.tier {
+    case 2: sets = pStarts
+    case 3: sets = pEnds
+    case 4: sets = pRhymes
+    default: sets = pAffixes
     }
     let s = sets.randomElement()!
     let right = s.yes.filter { $0.word != s.cue.word }.randomElement()!
-    var foods = [right] + Array(s.no.filter { $0.word != s.cue.word }.shuffled().prefix(n - 1))
+    var foods = [right] + Array(s.no.filter { $0.word != s.cue.word }.shuffled().prefix(plan.n - 1))
     foods.shuffle()
-    let pictured = level <= 4 && s.kind != .rhyme && s.kind != .affix
+    let pictured = s.kind != .rhyme && s.kind != .affix && !plan.dropPictures
     return PRound(kind: s.kind, bib: s.bib, cue: s.cue, foods: foods,
                   correct: foods.firstIndex(of: right) ?? 0,
                   pictures: pictured, labels: true, key: s.bib)
 }
 
 /// Levels I–II: the first sound. Wrong plates start with another letter AND another sound.
-private func pLetterRound(level: Int, n: Int) -> PRound {
-    let pool = level <= 1 ? pLetters.filter { !$0.easy.isEmpty } : pLetters
+private func pLetterRound(easy: Bool, n: Int) -> PRound {
+    let pool = easy ? pLetters.filter { !$0.easy.isEmpty } : pLetters
     let target = pool.randomElement()!
-    let right = (level <= 1 ? target.easy : target.all).randomElement()!
+    let right = (easy ? target.easy : target.all).randomElement()!
     var others = pool.filter { $0.letter != target.letter && $0.sound != target.sound }
-    if level <= 1 { others = others.filter { !pConfusable($0.sound, target.sound) } }
+    if easy { others = others.filter { !pConfusable($0.sound, target.sound) } }
     var foods = [right]
     for o in others.shuffled() where foods.count < n {
-        if let food = (level <= 1 ? o.easy : o.all).randomElement() { foods.append(food) }
+        if let food = (easy ? o.easy : o.all).randomElement() { foods.append(food) }
     }
     foods.shuffle()
     return PRound(kind: .letter, bib: target.letter, cue: target.cue, foods: foods,
                   correct: foods.firstIndex(of: right) ?? 0,
-                  pictures: true, labels: level >= 2, key: target.letter)
+                  pictures: true, labels: !easy, key: target.letter)
 }
 
 #if DEBUG
@@ -363,10 +364,12 @@ private func pSelfCheck() {
         }
     }
     // Every generated round: n distinct plates, exactly the one marked right is from the right list.
-    for level in 1...10 {
-        for _ in 0..<500 {
-            let r = pRound(level: level, avoid: "")
-            if r.foods.count != pChoices(level) { problems.append("L\(level) \(r.bib) has \(r.foods.count) plates") }
+    for tier in 0..<pTierStarts.count { for n in 2...4 {
+        let level = tier * 10 + n
+        for _ in 0..<300 {
+            let plan = PPlan(tier: tier, n: n, dropPictures: Bool.random())
+            let r = pRound(plan, avoid: "")
+            if r.foods.count != pPlates(plan) { problems.append("T\(tier) \(r.bib) has \(r.foods.count) plates") }
             if Set(r.foods.map(\.word)).count != r.foods.count || Set(r.foods.map(\.emoji)).count != r.foods.count && r.pictures {
                 problems.append("L\(level) duplicate plate \(r.foods.map(\.word))")
             }
@@ -381,7 +384,7 @@ private func pSelfCheck() {
             }
             if rights != 1 { problems.append("L\(level) \(r.bib) has \(rights) right plates: \(r.foods.map(\.word))") }
         }
-    }
+    } }
     print("POLY SELFCHECK: \(problems.isEmpty ? "OK" : problems.joined(separator: " | "))")
 }
 #endif
@@ -409,17 +412,28 @@ private final class PolyModel: ArcadeModel {
         #endif
     }
 
-    var patience: Double { pPatience(level) }
+    /// Seconds of patience for the next round (0 = none): none until d 4.5, then 16 s → 7 s by d 10.
+    var patience: Double { d < 4.5 ? 0 : ramp(16, 7, from: 4.5, to: 10) }
+    /// Until d 3 a tap feeds a plate too (small hands needn't drag); dragging works always.
+    var tapFeeds: Bool { d < 3 }
+    @Published var roundPatience: Double = 0
+
+    private func plan() -> PPlan {
+        PPlan(tier: tier(pTierStarts), n: rampInt(2, 4, from: 1.2, to: 6.5),
+              dropPictures: chance(0.75, from: 4.5, to: 8.5))
+    }
 
     override func onBegin() { next() }
 
     private func next() {
         gen += 1
         timeout?.cancel(); timeout = nil
-        round = pRound(level: level, avoid: round.key)
+        round = pRound(plan(), avoid: round.key)
         roundID += 1
         fed = nil; tooSlow = false
         stage = .waiting
+        let patience = self.patience
+        roundPatience = patience
         if patience > 0 {
             deadline = Date().addingTimeInterval(patience)
             let g = gen
@@ -495,7 +509,8 @@ struct PolyphemusView: View {
     var body: some View {
         ArcadeShell(model: model,
                     spec: GameID.polyphemus.spec ?? GameSpec(title: "Polyphemus Is Hungry", mechanic: "", premise: "", game: .polyphemus),
-                    accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() }) {
+                    accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() },
+                    backdrop: { PolyCave() }) {
             PolyPlay(model: model)
         }
         .onDisappear { LibraryVoice.stop() }
@@ -533,9 +548,10 @@ private struct PolyPlay: View {
             cyclops
                 .frame(maxHeight: .infinity)
             plates
-                .padding(.bottom, 8)
+                .padding(.horizontal, 10).padding(.top, 14).padding(.bottom, 10)
+                .background(PolyTable())
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 10)
         .coordinateSpace(name: "poly")
         .onPreferenceChange(PolyFrames.self) { frames = $0 }
         .onChange(of: model.stage) { s in
@@ -559,13 +575,13 @@ private struct PolyPlay: View {
     // MARK: Patience
 
     @ViewBuilder private var patienceBar: some View {
-        let per = model.patience
+        let per = model.roundPatience
         TimelineView(.animation(minimumInterval: 0.1, paused: model.phase != .playing || model.deadline == nil)) { tl in
             let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
             let frac = per > 0 ? CGFloat(left / per) : 0
             GeometryReader { g in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color(hex: Lu.panel))
+                    Capsule().fill(Color(hex: 0x1a120d).opacity(0.7))
                     Capsule().fill(Color(hex: frac < 0.3 ? Lu.coral : Lu.mint))
                         .frame(width: max(0, g.size.width * frac))
                 }
@@ -595,18 +611,18 @@ private struct PolyPlay: View {
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.gold)))
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(model.level <= 1 ? "LIKE" : r.heading)
-                        .font(luFont(11, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
+                    Text(r.kind == .letter && !r.labels ? "LIKE" : r.heading)
+                        .font(luFont(11, .heavy)).tracking(1.2).foregroundStyle(Color(hex: 0x7a5a32))
                     HStack(spacing: 8) {
                         if !r.cue.emoji.isEmpty { Text(r.cue.emoji).font(.system(size: 50)) }
-                        if model.level >= 2 || r.cue.emoji.isEmpty {
+                        if r.labels || r.cue.emoji.isEmpty {
                             Text(r.cue.word)
-                                .font(luFont(r.kind == .affix ? 26 : 24)).foregroundStyle(Color(hex: Lu.ink))
+                                .font(luFont(r.kind == .affix ? 26 : 24)).foregroundStyle(Color(hex: 0x2a1d10))
                                 .lineLimit(2).minimumScaleFactor(0.6)
                         }
                     }
                     if r.kind == .affix {
-                        Text(r.bib).font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.gold))
+                        Text(r.bib).font(luFont(15, .bold)).foregroundStyle(Color(hex: 0xa0581c))
                     }
                 }
                 Spacer(minLength: 0)
@@ -617,14 +633,14 @@ private struct PolyPlay: View {
 
             if showWhy {
                 Text(model.tooSlow ? "Too slow! " + r.why : r.why)
-                    .font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.mint))
+                    .font(luFont(20, .heavy)).foregroundStyle(Color(hex: 0x2f7a2f))
                     .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(2)
                     .padding(.horizontal, 12)
                     .transition(.scale(scale: 0.8).combined(with: .opacity))
             }
         }
         .frame(maxWidth: .infinity, minHeight: 92)
-        .background(luPanelShape(20))
+        .background(Parchment(radius: 20))
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showWhy)
     }
 
@@ -723,7 +739,7 @@ private struct PolyPlay: View {
             .onTapGesture {
                 LibraryVoice.say(food.word)
                 // Gradus I–II: a tap feeds the plate too (small hands needn't drag).
-                if model.level <= 2 && model.stage == .waiting && model.phase == .playing {
+                if model.tapFeeds && model.stage == .waiting && model.phase == .playing {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { model.feed(i) }
                 }
             }
@@ -806,28 +822,113 @@ private struct PlateView: View {
     let glow: Bool, wrong: Bool
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 0) {
             if pictures && !food.emoji.isEmpty {
-                Text(food.emoji).font(.system(size: labels ? height * 0.46 : height * 0.56))
+                Text(food.emoji).font(.system(size: labels ? height * 0.42 : height * 0.52))
             }
             if labels {
                 Text(food.word)
-                    .font(luFont(pictures ? 17 : 22, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                    .font(luFont(pictures ? 16 : 22, .heavy)).foregroundStyle(Color(hex: 0x2a1d10))
                     .lineLimit(1).minimumScaleFactor(0.5)
+                    .padding(.horizontal, 4)
             }
         }
         .padding(.horizontal, 6)
         .frame(maxWidth: .infinity, minHeight: height, maxHeight: height)
         .background(
+            // A clay plate with a painted rim (Greek-style), seen a little from above.
             ZStack {
-                RoundedRectangle(cornerRadius: 22).fill(LinearGradient(colors: [Color(hex: Lu.panel2), Color(hex: Lu.panel)],
-                                                                        startPoint: .top, endPoint: .bottom))
-                Ellipse().stroke(Color(hex: Lu.ink).opacity(0.12), lineWidth: 3).padding(10)   // the plate rim
+                Ellipse().fill(Color.black.opacity(0.28)).offset(y: 6)
+                Ellipse().fill(LinearGradient(colors: [Color(hex: 0xd9824a), Color(hex: 0xa9542a)], startPoint: .top, endPoint: .bottom))
+                Ellipse().fill(LinearGradient(colors: [Color(hex: 0xfbf1dc), Color(hex: 0xe9d6b2)], startPoint: .top, endPoint: .bottom))
+                    .padding(7)
+                Ellipse().stroke(Color(hex: 0x2b1a10).opacity(0.55), style: StrokeStyle(lineWidth: 2, dash: [5, 4])).padding(3.5)
             }
         )
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color(hex: glow ? Lu.mint : (wrong ? Lu.coral : Lu.line)), lineWidth: glow ? 5 : 2))
-        .shadow(color: glow ? Color(hex: Lu.mint).opacity(0.7) : .clear, radius: 12)
+        .overlay(Ellipse().stroke(Color(hex: glow ? 0x7dff8a : (wrong ? Lu.coral : 0x00000000)), lineWidth: glow ? 5 : 4))
+        .shadow(color: glow ? Color(hex: 0x7dff8a).opacity(0.8) : .clear, radius: 12)
         .contentShape(Rectangle())
+    }
+}
+
+/// The wooden table the plates sit on.
+private struct PolyTable: View {
+    var body: some View {
+        ZStack(alignment: .top) {
+            RoundedRectangle(cornerRadius: 14).fill(LinearGradient(colors: [Color(hex: 0x8a5a33), Color(hex: 0x5e3a1e)], startPoint: .top, endPoint: .bottom))
+            VStack(spacing: 18) { ForEach(0..<6, id: \.self) { _ in Rectangle().fill(Color.black.opacity(0.12)).frame(height: 2) } }
+                .padding(.top, 16)
+            RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0xb07a48)).frame(height: 8)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .shadow(color: .black.opacity(0.5), radius: 10, y: 6)
+    }
+}
+
+/// Polyphemus's cave on the Sicilian shore: rough rock walls, the bright cave mouth showing the
+/// sea, stalactites, a fire's glow, his sheep dozing by the wall.
+private struct PolyCave: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            let mouth = CGRect(x: w * 0.04, y: h * 0.06, width: w * 0.92, height: h * 0.42)
+            ZStack {
+                LinearGradient(colors: [Color(hex: 0x2a201b), Color(hex: 0x3d2e25), Color(hex: 0x4d3a2c)], startPoint: .top, endPoint: .bottom)
+                // rock texture
+                Canvas { ctx, size in
+                    for i in 0..<46 {
+                        let x = libHash(i, 31) * size.width, y = libHash(i, 32) * size.height
+                        let r = 10 + libHash(i, 33) * 34
+                        ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r * 0.6, width: r * 2, height: r * 1.2)),
+                                 with: .color(Color.black.opacity(0.08 + Double(libHash(i, 34)) * 0.1)))
+                    }
+                }
+                // the cave mouth: sky, the sun, the sea, a far island, a ship
+                ZStack {
+                    LinearGradient(colors: [Color(hex: 0x8fcdee), Color(hex: 0xf9e3b4)], startPoint: .top, endPoint: .bottom)
+                    Circle().fill(Color(hex: 0xfff3c0)).frame(width: 46).shadow(color: .yellow.opacity(0.5), radius: 16)
+                        .position(x: w * 0.24, y: mouth.minY + mouth.height * 0.32)
+                    Ellipse().fill(Color(hex: 0x7f9f70)).frame(width: w * 0.34, height: 44)
+                        .position(x: w * 0.7, y: mouth.maxY - mouth.height * 0.24)
+                    Rectangle().fill(LinearGradient(colors: [Color(hex: 0x3a9ccb), Color(hex: 0x1f6f9a)], startPoint: .top, endPoint: .bottom))
+                        .frame(width: w, height: mouth.height * 0.24)
+                        .position(x: w / 2, y: mouth.maxY - mouth.height * 0.12)
+                    Text("⛵️").font(.system(size: 22)).position(x: w * 0.36, y: mouth.maxY - mouth.height * 0.22)
+                }
+                .mask(CaveMouth().frame(width: mouth.width, height: mouth.height).position(x: mouth.midX, y: mouth.midY))
+                // stalactites over the top
+                Canvas { ctx, size in
+                    for i in 0..<10 {
+                        let x = CGFloat(i) / 9 * size.width + (libHash(i, 35) - 0.5) * 30
+                        let len = 26 + libHash(i, 36) * 56
+                        var p = Path()
+                        p.move(to: CGPoint(x: x - 15, y: 0)); p.addLine(to: CGPoint(x: x + 15, y: 0)); p.addLine(to: CGPoint(x: x + 2, y: len))
+                        p.closeSubpath()
+                        ctx.fill(p, with: .color(Color(hex: 0x33261e)))
+                    }
+                }
+                // fire glow (left) and sheep (right) on the cave floor
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xffa040).opacity(0.5), .clear], center: .center, startRadius: 4, endRadius: 150))
+                    .frame(width: 300).position(x: 16, y: h * 0.6)
+                Text("🔥").font(.system(size: 40)).position(x: 26, y: h * 0.6)
+                Text("🐑").font(.system(size: 34)).position(x: w - 30, y: h * 0.6)
+                Text("🐑").font(.system(size: 26)).scaleEffect(x: -1).position(x: w - 60, y: h * 0.64)
+                LinearGradient(colors: [.clear, Color(hex: 0x1d1511).opacity(0.85)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: h * 0.35).frame(maxHeight: .infinity, alignment: .bottom)
+            }
+        }
+    }
+}
+
+/// The ragged outline of the cave's opening.
+private struct CaveMouth: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX + r.width * 0.06, y: r.maxY))
+        p.addCurve(to: CGPoint(x: r.midX - 10, y: r.minY + 8), control1: CGPoint(x: r.minX - 10, y: r.midY), control2: CGPoint(x: r.minX + r.width * 0.2, y: r.minY))
+        p.addCurve(to: CGPoint(x: r.maxX - r.width * 0.05, y: r.maxY), control1: CGPoint(x: r.maxX - r.width * 0.2, y: r.minY + 20), control2: CGPoint(x: r.maxX + 10, y: r.midY))
+        p.closeSubpath()
+        return p
     }
 }
 

@@ -6,16 +6,15 @@ import SwiftUI
 // word. The word's slots fill as you catch. A wrong letter is a miss (from III, so is letting the
 // right one drop): the right letter glows and its slot shows it faintly, then it falls again.
 //
-// Ladder (3 words a level):
-//   I    3-letter CVC with a picture, all slots show the word faintly; next letter + 1 unlike decoy;
-//        slow (6.5 s fall), wide basket
-//   II   CVC, the faint word still shown; 2 unlike decoys; 6 s
-//   III  blends (frog, stop, milk), no faint word; 2 decoys incl. a look-alike (b/d, m/n…); 5.5 s
-//   IV   digraphs & -ck (ship, chick, duck), 2 decoys, 5 s
-//   V    silent-e & vowel teams (cake, boat, rain), 3 decoys, 4.7 s
-//   VI   two-syllable words; the word shows for 3 s then hides (picture stays); 4.4 s
-//   VII+ tricky spellings (separate, rhythm…), heard 🔊 + shown 2.5 s; a decoy is the classic wrong
-//        letter (sep-e-rate); 4.1 s easing to 3.2 s
+// Continuous difficulty (GameKit `d`; 3 words a Gradus). Word kinds fade in via `tier` and the
+// easier kinds stay as review:
+//   CVC with a picture (d 1) → blends (2.5) → digraphs & -ck (3.8) → silent-e & vowel teams (5)
+//   → two-syllable words (6.2) → tricky spellings, heard not seen (7.5)
+//   faint whole word in the slots: always below d 2, gone by d 3.2
+//   decoys 1 → 3 by d 5.5; look-alike decoys (b/d, m/n) phase in from d 2.5; the classic wrong
+//   letter (sep-E-rate) from d 7; a picture-word flashes then hides from d 5.5 (tricky words
+//   always flash first); fall time 6.5 s → 3.2 s by d 10; the scroll box narrows 30% → 20%.
+// Letting the right letter fall costs a heart from d 2.5 (before that it just falls again).
 // After 2 misses in a row the fall slows and the right letter glows (any level).
 
 private struct SCWord: Hashable {
@@ -86,40 +85,33 @@ private let scAlike: [Character: [Character]] = [
     "t": ["f", "l"], "u": ["n", "o"], "v": ["w", "f"], "w": ["v", "m"], "x": ["z"], "y": ["i"], "z": ["s"],
 ]
 
-private func scDeck(_ level: Int) -> [SCWord] {
-    switch level {
-    case ...2: return scCVC
-    case 3: return scBlends
-    case 4: return scDigraphs
-    case 5: return scVowelTeams
-    case 6: return scTwoSyllable
-    default: return scTricky
-    }
+private let scDecks: [[SCWord]] = [scCVC, scBlends, scDigraphs, scVowelTeams, scTwoSyllable, scTricky]
+private let scTierStarts: [Double] = [1, 2.5, 3.8, 5, 6.2, 7.5]
+
+/// How the current word plays — fixed when the word starts (the fall speed stays live).
+private struct SCConfig {
+    var decoys = 1
+    var alike = false        // look-alike decoys (b/d…), and letters from the word itself
+    var traps = false        // the classic wrong letter
+    var ghost = true         // the whole word shows faintly in the slots
+    var flash: Double = 0    // seconds the written word shows before hiding (0 = no flash)
 }
-private func scDecoyCount(_ level: Int) -> Int { level <= 1 ? 1 : level <= 4 ? 2 : 3 }
-/// Seconds for a letter to fall from the shelf to the basket.
-private func scFall(_ level: Int) -> Double {
-    let t: [Double] = [6.5, 6.0, 5.5, 5.0, 4.7, 4.4, 4.1]
-    return level <= 7 ? t[level - 1] : max(3.2, 4.1 - Double(level - 7) * 0.15)
-}
-private func scBasketFrac(_ level: Int) -> CGFloat { [0.30, 0.28, 0.26, 0.24, 0.22][min(level, 5) - 1] - (level >= 6 ? 0.02 : 0) }
-private func scTile(_ level: Int) -> CGFloat { level <= 2 ? 64 : level <= 4 ? 58 : 54 }
 
 /// The decoys falling beside `needed` (never `needed` itself).
-private func scDecoys(word: SCWord, index: Int, level: Int) -> [Character] {
+private func scDecoys(word: SCWord, index: Int, cfg: SCConfig) -> [Character] {
     let needed = word.letters[index]
     let inWord = Set(word.letters)
     let alike = scAlike[needed] ?? []
     var out: [Character] = []
-    if level >= 7, let t = word.traps[index], t != needed { out.append(t) }
-    if level >= 3, let a = alike.shuffled().first(where: { $0 != needed && !out.contains($0) && (level >= 3 || !inWord.contains($0)) }) {
+    if cfg.traps, let t = word.traps[index], t != needed { out.append(t) }
+    if cfg.alike, let a = alike.shuffled().first(where: { $0 != needed && !out.contains($0) }) {
         out.append(a)
     }
     let pool = Array("abcdefghijklmnopqrstuvwxyz").shuffled().filter { c in
-        c != needed && !out.contains(c) && (level >= 3 || !inWord.contains(c)) && (level >= 3 || !alike.contains(c))
+        c != needed && !out.contains(c) && (cfg.alike || (!inWord.contains(c) && !alike.contains(c)))
     }
-    for c in pool where out.count < scDecoyCount(level) { out.append(c) }
-    return Array(out.prefix(scDecoyCount(level)))
+    for c in pool where out.count < cfg.decoys { out.append(c) }
+    return Array(out.prefix(cfg.decoys))
 }
 
 #if DEBUG
@@ -127,18 +119,21 @@ private func scDecoys(word: SCWord, index: Int, level: Int) -> [Character] {
 /// the right letter, and no wave ever offers the right letter twice.
 private func scSelfCheck() {
     var problems: [String] = []
-    for lv in 1...9 {
-        for wd in scDeck(lv) {
+    for (t, deck) in scDecks.enumerated() {
+        for wd in deck {
             if wd.text.contains(where: { !("a"..."z").contains($0) }) { problems.append("\(wd.text) chars") }
-            if lv < 7 && wd.emoji.isEmpty { problems.append("\(wd.text) no picture") }
-            for (i, t) in wd.traps where i >= wd.letters.count || wd.letters[i] == t { problems.append("\(wd.text) trap \(i)") }
-            for i in wd.letters.indices {
-                let d = scDecoys(word: wd, index: i, level: lv)
-                if d.contains(wd.letters[i]) { problems.append("\(wd.text)[\(i)] decoy = answer") }
-                if d.count != scDecoyCount(lv) || Set(d).count != d.count { problems.append("\(wd.text)[\(i)] decoys \(d)") }
-                if lv <= 2 && d.contains(where: { wd.letters.contains($0) }) { problems.append("\(wd.text) L\(lv) decoy in word") }
-                if lv <= 2 && d.contains(where: { (scAlike[wd.letters[i]] ?? []).contains($0) }) { problems.append("\(wd.text) L\(lv) look-alike decoy") }
-            }
+            if t < 5 && wd.emoji.isEmpty { problems.append("\(wd.text) no picture") }
+            for (i, tr) in wd.traps where i >= wd.letters.count || wd.letters[i] == tr { problems.append("\(wd.text) trap \(i)") }
+            for n in 1...3 { for easy in [true, false] {
+                let cfg = SCConfig(decoys: n, alike: !easy, traps: !easy, ghost: easy)
+                for i in wd.letters.indices {
+                    let d = scDecoys(word: wd, index: i, cfg: cfg)
+                    if d.contains(wd.letters[i]) { problems.append("\(wd.text)[\(i)] decoy = answer") }
+                    if d.count != n || Set(d).count != d.count { problems.append("\(wd.text)[\(i)] decoys \(d)") }
+                    if easy && d.contains(where: { wd.letters.contains($0) }) { problems.append("\(wd.text) easy decoy in word") }
+                    if easy && d.contains(where: { (scAlike[wd.letters[i]] ?? []).contains($0) }) { problems.append("\(wd.text) easy look-alike") }
+                }
+            } }
         }
     }
     for wd in scCVC where wd.text.count != 3 { problems.append("\(wd.text) not CVC") }
@@ -195,9 +190,10 @@ private final class ScrollModel: ArcadeModel {
     var shelfY: CGFloat { 196 }
     var spawnY: CGFloat { shelfY + 26 }
     var basketY: CGFloat { size.height - 64 }
-    var basketW: CGFloat { max(80, size.width * scBasketFrac(level)) }
-    var tile: CGFloat { scTile(level) }
-    var ghostAll: Bool { level <= 2 }
+    var basketW: CGFloat { max(80, size.width * CGFloat(ramp(0.30, 0.20, to: 7))) }
+    var tile: CGFloat { CGFloat(ramp(64, 54, from: 2, to: 6)) }
+    @Published var ghostAll = true
+    private var cfg = SCConfig()
 
     override func onBegin() {
         letters.removeAll(); sparks.removeAll()
@@ -207,12 +203,19 @@ private final class ScrollModel: ArcadeModel {
     }
 
     private func newWord() {
-        let deck = scDeck(level).filter { !recent.contains($0.text) }
-        word = (deck.isEmpty ? scDeck(level) : deck).randomElement()!
+        let all = scDecks[tier(scTierStarts)]
+        let deck = all.filter { !recent.contains($0.text) }
+        word = (deck.isEmpty ? all : deck).randomElement()!
+        var flash: Double = 0
+        if word.emoji.isEmpty { flash = ramp(3.2, 2.2, from: 7.5, to: 10) }
+        else if chance(1, from: 5.5, to: 7) { flash = ramp(3.2, 2.4, from: 5.5, to: 9) }
+        cfg = SCConfig(decoys: rampInt(1, 3, from: 1, to: 5.5), alike: chance(1, from: 2.5, to: 4),
+                       traps: chance(1, from: 7, to: 8.5), ghost: !chance(1, from: 2, to: 3.2), flash: flash)
+        ghostAll = cfg.ghost
         recent = Array((recent + [word.text]).suffix(6))
         filled = 0; ghostNext = false; done = false
         wordID += 1; wordGen += 1
-        let flash = level >= 7 ? 2.5 : (level == 6 ? 3.0 : 0)
+
         letters.removeAll(); waveIn = flash > 0 ? flash - 0.6 : 0.5   // read it before letters fall
         showWord = flash > 0
         if flash > 0 {
@@ -254,7 +257,7 @@ private final class ScrollModel: ArcadeModel {
             if waveIn <= 0 { spawnWave() }
         }
 
-        var fall = scFall(level)
+        var fall = ramp(6.5, 3.2, to: 10)
         if missRun >= 2 { fall *= 1.25 }
         let speed = (basketY - spawnY) / CGFloat(fall)
         let reach = basketW / 2 + 4
@@ -282,7 +285,7 @@ private final class ScrollModel: ArcadeModel {
     private func spawnWave() {
         guard filled < word.letters.count else { return }
         let needed = word.letters[filled]
-        let chars = ([needed] + scDecoys(word: word, index: filled, level: level)).shuffled()
+        let chars = ([needed] + scDecoys(word: word, index: filled, cfg: cfg)).shuffled()
         let n = chars.count
         let spacing = min(0.56, 0.76 / CGFloat(max(1, n - 1)))
         letters = chars.enumerated().map { k, c in
@@ -338,7 +341,7 @@ private final class ScrollModel: ArcadeModel {
         letters.removeAll()
         missRun += 1
         waveIn = 0.7
-        let costs = level >= 3
+        let costs = d >= 2.5
         DispatchQueue.main.async { [self] in
             withAnimation(.easeOut(duration: 0.2)) { ghostNext = true }
             if costs, miss(reason: "Out of hearts!", delay: 1.2) { running = false }
@@ -389,19 +392,32 @@ private final class ScrollModel: ArcadeModel {
         ctx.opacity = 1
     }
 
+    /// The armarium: a row of pigeonholes stuffed with scrolls, on a heavy wooden shelf.
     private func drawShelf(_ ctx: inout GraphicsContext, _ size: CGSize) {
-        let hexes: [UInt] = [Lu.coral, Lu.sky, Lu.mint, Lu.grape, Lu.tangerine, Lu.gold]
-        var x: CGFloat = 4, k = 0
-        while x < size.width - 4 {
-            let w = CGFloat(12 + (k * 7) % 9), h = CGFloat(22 + (k * 5) % 12)
-            let r = CGRect(x: x, y: shelfY - h, width: w, height: h)
-            ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(Color(hex: hexes[k % hexes.count]).opacity(0.75)))
-            x += w + 2; k += 1
-            if k % 7 == 3 { x += 16 }
+        let holeH: CGFloat = 40, top = shelfY - holeH
+        ctx.fill(Path(CGRect(x: 0, y: top - 6, width: size.width, height: holeH + 6)), with: .color(Color(hex: 0x4a2e18)))
+        let n = max(4, Int(size.width / 66)), hw = size.width / CGFloat(n)
+        for k in 0..<n {
+            let r = CGRect(x: CGFloat(k) * hw + 4, y: top, width: hw - 8, height: holeH - 2)
+            ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(Color(hex: 0x24160b)))
+            // scroll ends, stacked
+            let ends = 2 + (k * 5) % 3
+            for e in 0..<ends {
+                let d: CGFloat = 15
+                let cx = r.minX + 10 + CGFloat(e) * (d + 2), cy = r.maxY - d / 2 - 2 - CGFloat(e % 2) * 12
+                guard cx + d / 2 < r.maxX - 2 else { continue }
+                let c = CGRect(x: cx - d / 2, y: cy - d / 2, width: d, height: d)
+                ctx.fill(Path(ellipseIn: c), with: .color(Color(hex: [0xf1e0b8, 0xe8cf9a, 0xf6ead0][(k + e) % 3])))
+                ctx.fill(Path(ellipseIn: c.insetBy(dx: 5, dy: 5)), with: .color(Color(hex: 0x8a5a2b)))
+            }
+            // a little red title tag on some
+            if k % 3 == 1 {
+                ctx.fill(Path(CGRect(x: r.maxX - 12, y: r.minY + 4, width: 6, height: 12)), with: .color(Color(hex: Lu.coral)))
+            }
         }
-        ctx.fill(Path(roundedRect: CGRect(x: 0, y: shelfY, width: size.width, height: 9), cornerRadius: 3),
-                 with: .linearGradient(Gradient(colors: [Color(hex: 0x9a6a3c), Color(hex: 0x5e3a1c)]),
-                                       startPoint: CGPoint(x: 0, y: shelfY), endPoint: CGPoint(x: 0, y: shelfY + 9)))
+        ctx.fill(Path(roundedRect: CGRect(x: 0, y: shelfY, width: size.width, height: 11), cornerRadius: 3),
+                 with: .linearGradient(Gradient(colors: [Color(hex: 0xa8743f), Color(hex: 0x5e3a1c)]),
+                                       startPoint: CGPoint(x: 0, y: shelfY), endPoint: CGPoint(x: 0, y: shelfY + 11)))
     }
 
     private func drawLetter(_ ctx: inout GraphicsContext, _ l: SCFalling) {
@@ -424,31 +440,76 @@ private final class ScrollModel: ArcadeModel {
         ctx.opacity = 1
     }
 
+    /// The capsa: a round leather scroll box, open at the top, with two brass-studded straps.
     private func drawBasket(_ ctx: inout GraphicsContext) {
-        let w = basketW, h: CGFloat = 46
+        let w = basketW, h: CGFloat = 50
         let cx = basketX + sin(basketShake * 30) * 10 * basketShake
         let top = basketY - 8
-        var body = Path()
-        body.move(to: CGPoint(x: cx - w / 2, y: top))
-        body.addLine(to: CGPoint(x: cx + w / 2, y: top))
-        body.addLine(to: CGPoint(x: cx + w / 2 - 12, y: top + h))
-        body.addLine(to: CGPoint(x: cx - w / 2 + 12, y: top + h))
-        body.closeSubpath()
-        ctx.fill(body, with: .linearGradient(Gradient(colors: [Color(hex: 0xd8a35c), Color(hex: 0x8f5a2a)]),
-                                             startPoint: CGPoint(x: cx, y: top), endPoint: CGPoint(x: cx, y: top + h)))
-        // Weave
-        var weave = Path()
-        for k in 1..<4 {
-            let y = top + h * CGFloat(k) / 4
-            let inset = 12 * CGFloat(k) / 4
-            weave.move(to: CGPoint(x: cx - w / 2 + inset, y: y)); weave.addLine(to: CGPoint(x: cx + w / 2 - inset, y: y))
+        let body = Path(roundedRect: CGRect(x: cx - w / 2, y: top, width: w, height: h), cornerRadius: 10)
+        ctx.fill(body, with: .linearGradient(Gradient(colors: [Color(hex: 0x6e3b1d), Color(hex: 0xb06a35), Color(hex: 0x6e3b1d)]),
+                                             startPoint: CGPoint(x: cx - w / 2, y: top), endPoint: CGPoint(x: cx + w / 2, y: top)))
+        for f in [0.3, 0.72] as [CGFloat] {
+            let y = top + h * f
+            ctx.fill(Path(CGRect(x: cx - w / 2, y: y - 4, width: w, height: 8)), with: .color(Color(hex: 0x3f2210)))
+            for k in 0..<5 {
+                let x = cx - w / 2 + w * (CGFloat(k) + 0.5) / 5
+                ctx.fill(Path(ellipseIn: CGRect(x: x - 2.5, y: y - 2.5, width: 5, height: 5)), with: .color(Color(hex: Lu.gold)))
+            }
         }
-        var x = cx - w / 2 + 14
-        while x < cx + w / 2 - 10 { weave.move(to: CGPoint(x: x, y: top)); weave.addLine(to: CGPoint(x: x + (x - cx) * -0.1, y: top + h)); x += 16 }
-        ctx.stroke(weave, with: .color(Color(hex: 0x5e3a1c).opacity(0.55)), lineWidth: 2)
-        // Rim
-        ctx.fill(Path(roundedRect: CGRect(x: cx - w / 2 - 5, y: top - 6, width: w + 10, height: 11), cornerRadius: 5.5),
-                 with: .color(Color(hex: basketShake > 0 ? Lu.coral : Lu.gold)))
+        // the open mouth, with scrolls already caught peeking out
+        let mouth = CGRect(x: cx - w / 2, y: top - 9, width: w, height: 18)
+        ctx.fill(Path(ellipseIn: mouth), with: .color(Color(hex: basketShake > 0 ? Lu.coral : 0x8f5228)))
+        ctx.fill(Path(ellipseIn: mouth.insetBy(dx: 6, dy: 4)), with: .color(Color(hex: 0x2a160a)))
+        for k in 0..<min(filled, 6) {
+            let x = cx - w / 2 + 16 + CGFloat(k) * (w - 32) / 5
+            ctx.fill(Path(roundedRect: CGRect(x: x - 5, y: top - 18, width: 10, height: 16), cornerRadius: 4), with: .color(Color(hex: 0xf1e0b8)))
+        }
+    }
+}
+
+/// The library: warm plastered walls, two columns, an oil lamp's glow, a mosaic floor.
+private struct LibraryHall: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack {
+                LinearGradient(colors: [Color(hex: 0x5a3a22), Color(hex: 0x7a5232), Color(hex: 0x5c3d24)], startPoint: .top, endPoint: .bottom)
+                // painted wall panels
+                ForEach(0..<3, id: \.self) { k in
+                    RoundedRectangle(cornerRadius: 4).stroke(Color(hex: 0xc9925a).opacity(0.25), lineWidth: 3)
+                        .frame(width: w * 0.26, height: h * 0.36)
+                        .position(x: w * (0.2 + CGFloat(k) * 0.3), y: h * 0.52)
+                }
+                // columns
+                ForEach([0.0, 1.0], id: \.self) { side in
+                    LinearGradient(colors: [Color(hex: 0xd9c9a8), Color(hex: 0xf4ead4), Color(hex: 0xb9a888)], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: 26).frame(maxHeight: .infinity)
+                        .overlay(HStack(spacing: 5) { ForEach(0..<3, id: \.self) { _ in Rectangle().fill(Color.black.opacity(0.08)).frame(width: 2) } })
+                        .position(x: side == 0 ? 13 : w - 13, y: h / 2)
+                }
+                // lamp glow
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xffc46b).opacity(0.35), .clear], center: .center, startRadius: 4, endRadius: 180))
+                    .frame(width: 360).position(x: w * 0.5, y: h * 0.45)
+                // mosaic floor
+                Canvas { ctx, size in
+                    let floorY = size.height * 0.86
+                    ctx.fill(Path(CGRect(x: 0, y: floorY, width: size.width, height: size.height - floorY)), with: .color(Color(hex: 0xd8c39a)))
+                    let t: CGFloat = 16
+                    var y = floorY
+                    var row = 0
+                    while y < size.height {
+                        var x: CGFloat = 0, col = 0
+                        while x < size.width {
+                            if (row + col) % 2 == 0 {
+                                ctx.fill(Path(CGRect(x: x + 1, y: y + 1, width: t - 2, height: t - 2)), with: .color(Color(hex: row % 4 < 2 ? 0x9a4a2a : 0x2f3a4a).opacity(0.55)))
+                            }
+                            x += t; col += 1
+                        }
+                        y += t; row += 1
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -461,7 +522,8 @@ struct ScrollCatcherView: View {
     var body: some View {
         ArcadeShell(model: model,
                     spec: GameID.scrollCatcher.spec ?? GameSpec(title: "Scroll Catcher", mechanic: "", premise: "", game: .scrollCatcher),
-                    accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() }) {
+                    accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() },
+                    backdrop: { LibraryHall() }) {
             ZStack(alignment: .top) {
                 TimelineView(.animation(paused: model.phase != .playing)) { tl in
                     Canvas { ctx, size in
@@ -508,7 +570,16 @@ private struct ScrollWordPanel: View {
                 .frame(maxWidth: .infinity)
             }
             .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(luPanelShape(20))
+            .background(Parchment(radius: 10))
+            .background(
+                // the scroll's wooden rollers
+                HStack {
+                    Capsule().fill(LinearGradient(colors: [Color(hex: 0x5e3a1c), Color(hex: 0xa8743f), Color(hex: 0x5e3a1c)], startPoint: .leading, endPoint: .trailing)).frame(width: 14)
+                    Spacer()
+                    Capsule().fill(LinearGradient(colors: [Color(hex: 0x5e3a1c), Color(hex: 0xa8743f), Color(hex: 0x5e3a1c)], startPoint: .leading, endPoint: .trailing)).frame(width: 14)
+                }
+                .padding(.vertical, -10).padding(.horizontal, -7)
+            )
             .overlay(alignment: .bottom) {
                 if model.showWord {
                     Text(model.word.text)
@@ -532,15 +603,15 @@ private struct ScrollWordPanel: View {
         let ghost = !isFilled && (model.ghostAll || (isNext && model.ghostNext))
         ZStack {
             RoundedRectangle(cornerRadius: 8)
-                .fill(Color(hex: isFilled ? (model.done ? Lu.mint : Lu.gold) : Lu.ground))
+                .fill(Color(hex: isFilled ? (model.done ? Lu.mint : Lu.gold) : 0xe2cc9c))
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(hex: isNext ? Lu.gold : Lu.line), lineWidth: isNext ? 3 : 2)
+                .stroke(Color(hex: isNext ? 0xd2691e : 0xa88a5a), lineWidth: isNext ? 3 : 2)
                 .opacity(isNext ? (pulse ? 1 : 0.35) : 1)
             if isFilled {
                 Text(String(c)).font(luFont(w * 0.72)).foregroundStyle(Color(hex: Lu.inkDark))
                     .transition(.scale(scale: 0.2).combined(with: .opacity))
             } else if ghost {
-                Text(String(c)).font(luFont(w * 0.72)).foregroundStyle(Color(hex: Lu.ink).opacity(0.35))
+                Text(String(c)).font(luFont(w * 0.72)).foregroundStyle(Color(hex: 0x5a3a1a).opacity(0.35))
             }
         }
         .frame(width: w, height: w * 1.2)
