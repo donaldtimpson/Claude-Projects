@@ -9,7 +9,7 @@ import SwiftUI
 
 enum GameID: String, Identifiable, Hashable {
     // Temple · Math
-    case bubbleEvens, timesTableNinja, stackAttack, lupaChomp, omnibus
+    case ballista, omnibus, timesTableNinja, fountain, libra
     // Lighthouse · Geography
     case flagFrenzy, nameCountry, pharosBeam, zooFerry
     // Library · Language Arts
@@ -31,11 +31,11 @@ enum GameID: String, Identifiable, Hashable {
 @ViewBuilder
 func ludusGame(_ id: GameID, onClose: @escaping () -> Void) -> some View {
     switch id {
-    case .bubbleEvens:     BubbleEvensView(onClose: onClose)
-    case .timesTableNinja: TimesTableNinjaView(onClose: onClose)
-    case .stackAttack:     StackAttackView(onClose: onClose)
-    case .lupaChomp:       LupaChompView(onClose: onClose)
+    case .ballista:        TempleBallistaView(onClose: onClose)
     case .omnibus:         OmnibusView(onClose: onClose)
+    case .timesTableNinja: TimesTableNinjaView(onClose: onClose)
+    case .fountain:        TempleFountainView(onClose: onClose)
+    case .libra:           TempleLibraView(onClose: onClose)
     case .flagFrenzy:      FlagFrenzyView(onClose: onClose)
     case .nameCountry:     NameCountryView(onClose: onClose)
     case .pharosBeam:      PharosBeamView(onClose: onClose)
@@ -111,16 +111,16 @@ private func how(_ pairs: (String, String)...) -> [HowTo] { pairs.map { HowTo(ic
 
 let ludusWorlds: [LudusWorld] = [
     LudusWorld(name: "Number Crunchers", subject: "Math", emoji: "🔢", colorHex: Lu.coral, games: [
-        .init(title: "Lupa Chomp", mechanic: "compare", premise: "The she-wolf always eats the bigger pile.", game: .lupaChomp,
-              icon: "🐺", howTo: how(("👀", "Look at the two piles"), ("👆", "Tap the BIGGER one"), ("🐺", "Feed the wolf!"))),
+        .init(title: "Ballista", mechanic: "aim", premise: "Aim the legion's ballista at the number on the long number line.", game: .ballista,
+              icon: "🎯", howTo: how(("📣", "Hear the number"), ("👉", "Drag to aim along the line"), ("🏺", "Let go — smash the pot!"))),
         .init(title: "Omnibus Driver", mechanic: "story-sum", premise: "Passengers hop on and off — how many are riding?", game: .omnibus,
-              icon: "🚌", howTo: how(("🫏", "Watch the bus stop"), ("👀", "Who gets on? Who gets off?"), ("🔢", "Tap how many are riding"))),
-        .init(title: "Bubble Evens", mechanic: "pop", premise: "Pop the bubbles that match the rule before they escape.", game: .bubbleEvens,
-              icon: "🫧", howTo: how(("👀", "Look at the rule on top"), ("👆", "Pop the bubbles that match"), ("🫧", "Let the others float away"))),
+              icon: "🚌", howTo: how(("👀", "Watch who gets on and off"), ("🧠", "Keep count in your head"), ("👆", "Tap how many are riding"))),
         .init(title: "Times Table Ninja", mechanic: "slash", premise: "Slice the fruit from the right times table, dodge the bombs.", game: .timesTableNinja,
-              icon: "🥷", howTo: how(("👀", "Look at the table on top"), ("👉", "Swipe fruit from that table"), ("💣", "Never slice a bomb"))),
-        .init(title: "Stack Attack", mechanic: "stacker", premise: "Answer to stack blocks — how high can you go?", game: .stackAttack,
-              icon: "🧱", howTo: how(("🍎", "Count it or solve it"), ("👆", "Tap the right answer"), ("🧱", "Each one stacks a block"))),
+              icon: "🥷", howTo: how(("👀", "Look at the table on the banner"), ("👉", "Swipe fruit from that table"), ("💣", "Never slice a bomb"))),
+        .init(title: "Leo's Fountain", mechanic: "pour", premise: "Fill each jug to just the right level — ½, ¾, 0.7, 40%.", game: .fountain,
+              icon: "🦁", howTo: how(("🏺", "Look at how full"), ("✋", "HOLD to pour"), ("💧", "Let go at just the right level"))),
+        .init(title: "Libra", mechanic: "balance", premise: "Fill the sack until the great scales balance.", game: .libra,
+              icon: "⚖️", howTo: how(("🍎", "Look at the other pan"), ("👆", "Tap weights into the sack"), ("⚖️", "Weigh it — make it level!"))),
     ]),
     LudusWorld(name: "Globe Trotters", subject: "Geography", emoji: "🌍", colorHex: Lu.sky, games: [
         .init(title: "Pharos Beam", mechanic: "spinner", premise: "Swing the lighthouse beam to the ship that calls.", game: .pharosBeam,
