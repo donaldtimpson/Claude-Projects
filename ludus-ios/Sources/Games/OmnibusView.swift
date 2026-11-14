@@ -7,15 +7,16 @@ import SwiftUI
 // and the child taps one of 2–3 big numbers. A miss lights the right number and spells out the
 // sum (and, on the see-through bus, numbers every rider).
 //
-// Level ladder (one route = one answer; 4 routes a level):
-//   I    see-through bus, 0–2 riding, 1–2 get on, one stop; totals ≤ 4; 2 choices; slow; replay
-//   II   see-through, 1–3 riding, some get on and some get off; totals ≤ 6; 3 choices; replay
-//   III  the windows fog up (track it in your head): 2 stops, on and off, ≤ 12; replay
-//   IV   families ("a family of 4 gets on"), 2–3 stops, ≤ 20
-//   V    crowds (+9), 3–4 stops, ≤ 40; or "how many got OFF in all?"
-//   VI   groups as multiplication ("3 families of 4"), working backwards ("how many at the START?")
-//   VII  "half / a third / a quarter get off", fares ("each new rider paid 3 🪙"), ≤ 80
-//   VIII+ percentages ("25% get off"), all the above, ≤ 100; the pace quickens a little each level
+// Difficulty is continuous (GameKit `d`, 4 routes a Gradus): every knob ramps a little with each
+// right answer —
+//   • numbers: start riders 0–2 → up to 40, group sizes 1–2 → 3–15, the total cap 4 → 100;
+//   • stops 1 → 4, events per stop 1 → 2, the walk pace 1.1 s → 0.35 s a rider;
+//   • kinds fade in: getting OFF (~I½), on-and-off every route (~II½), misted windows — keep count
+//     in your head (~II–III), families (~IV), crowds (~IV½), "3 families of 4" (~VI), "half get
+//     off" (~VII), "25% get off" (~VIII);
+//   • questions fade in via `tier`: how many now → how many got OFF in all (~V) → how many at the
+//     START (~VI) → fares (~VII), with "how many now" always kept as review;
+//   • 2 choices within ±2 at the very start, then 3; "watch again" until ~III½.
 
 // MARK: - Routes
 
@@ -58,6 +59,38 @@ private struct OBTier {
     var family = false
     var multi = false        // "3 families of 4"
     var fraction = false     // half / a third / a quarter get off
+}
+
+/// Everything about the next route, read off the continuous difficulty `d` (re-rolled per try, so
+/// kinds that are fading in show up a little more often each answer).
+private struct OBKnobs {
+    var tier: OBTier
+    var start: ClosedRange<Int>
+    var ask: OBAsk
+    var fog: Bool            // the windows mist over: keep count in your head
+    var offs: Bool           // riders may get off
+    var both: Bool           // must have riders getting on AND off
+    var percent: Bool        // "25% get off" opens the route
+    var choices: Int
+    var tight: Bool          // distractors within ±2 (the very start)
+}
+
+@MainActor
+private func obKnobs(_ m: ArcadeModel) -> OBKnobs {
+    let maxStops = m.rampInt(1, 4, from: 2.2, to: 8)
+    let minStops = min(maxStops, m.rampInt(1, 3, from: 3, to: 7.5))
+    let lo = m.rampInt(1, 3, from: 5, to: 9), hi = max(lo, m.rampInt(2, 15, to: 9))
+    let t = OBTier(stops: minStops...maxStops, perStop: 1...m.rampInt(1, 2, from: 2, to: 3.5), each: lo...hi,
+                   cap: m.rampInt(4, 100, to: 9),
+                   crowd: m.chance(1, from: 4.3, to: 5.3), family: m.chance(1, from: 3.4, to: 4.4),
+                   multi: m.chance(1, from: 5.4, to: 6.6), fraction: m.chance(1, from: 6.4, to: 7.6))
+    let kinds: [OBAsk] = [.now, .offTotal, .start, .fare(Int.random(in: 2...m.rampInt(5, 9, from: 6.6, to: 9)))]
+    let ask = kinds[m.tier([1, 4.6, 5.5, 6.6])]
+    let sLo = m.rampInt(0, 5, from: 2, to: 7)
+    let sHi = max(sLo + 2, m.rampInt(2, 40, to: 9))
+    return OBKnobs(tier: t, start: sLo...sHi, ask: ask, fog: m.chance(0.9, from: 2.2, to: 3.4),
+                   offs: m.chance(1, from: 1.4, to: 2.2), both: m.chance(1, from: 2.2, to: 3),
+                   percent: m.chance(0.5, from: 7.5, to: 9.5), choices: m.d < 1.8 ? 2 : 3, tight: m.d < 1.8)
 }
 
 private struct OBGen {
@@ -114,72 +147,37 @@ private struct OBGen {
     }
 }
 
-private func obTier(_ level: Int) -> OBTier {
-    switch level {
-    case 3: return OBTier(stops: 2...2, each: 1...3, cap: 12)
-    case 4: return OBTier(stops: 2...3, each: 1...4, cap: 20, family: true)
-    case 5: return OBTier(stops: 3...4, each: 2...9, cap: 40, crowd: true, family: true)
-    case 6: return OBTier(stops: 3...3, each: 2...9, cap: 60, crowd: true, family: true, multi: true)
-    case 7: return OBTier(stops: 3...3, each: 2...12, cap: 80, crowd: true, family: true, multi: true, fraction: true)
-    default: return OBTier(stops: 3...4, each: 3...15, cap: 100, crowd: true, family: true, multi: true, fraction: true)
-    }
-}
-
-private func obAsk(_ level: Int) -> OBAsk {
-    let x = Double.random(in: 0..<1)
-    switch level {
-    case ...4: return .now
-    case 5: return x < 0.7 ? .now : .offTotal
-    case 6: return x < 0.5 ? .now : .start
-    case 7: return x < 0.35 ? .now : (x < 0.65 ? .start : .fare(.random(in: 2...5)))
-    default: return x < 0.4 ? .now : (x < 0.6 ? .start : (x < 0.8 ? .fare(.random(in: 2...9)) : .offTotal))
-    }
-}
-
-private func obRoute(_ level: Int) -> OBRoute {
+@MainActor
+private func obRoute(_ m: ArcadeModel) -> OBRoute {
+    var tries = 0
     while true {
-        let ask = obAsk(level)
-        var g: OBGen
-        switch level {
-        case 1:
-            g = OBGen(.random(in: 0...2)); g.on(.random(in: 1...2)); g.endStop()
-        case 2:
-            g = OBGen(.random(in: 1...3))
-            let n = Int.random(in: 1...3)
-            if Double.random(in: 0..<1) < 0.75 {
-                let m = Int.random(in: 1...2)
-                if Bool.random() && m <= g.r { g.off(m); g.on(n) } else { g.on(n); g.off(min(m, g.r)) }
-            } else { g.on(n) }
+        tries += 1
+        let k = obKnobs(m)
+        let ask: OBAsk = tries > 150 ? .now : k.ask
+        let pct = k.percent && ask != .start
+        var g = OBGen(pct ? ([20, 40, 60, 80].filter { $0 <= max(20, k.tier.cap - 10) }.randomElement() ?? 20) : Int.random(in: k.start))
+        for s in 0..<Int.random(in: k.tier.stops) {
+            if s == 0 && pct {
+                let p = [10, 20, 25, 50, 75].filter { g.r * $0 % 100 == 0 }.randomElement()!
+                let n = g.r * p / 100
+                g.off(n, label: "\(p)% get off", groups: [n], badge: "\(p)%", term: "− \(n) (\(p)% of \(g.r))")
+            }
+            for _ in 0..<Int.random(in: k.tier.perStop) {
+                if k.offs { g.random(k.tier, fractions: ask != .start) }
+                else { g.on(max(1, min(Int.random(in: k.tier.each), k.tier.cap - g.r))) }
+            }
             g.endStop()
-        default:
-            let t = obTier(level)
-            let fractions = ask != .start
-            let start: Int
-            switch level {
-            case 3: start = .random(in: 1...4)
-            case 4: start = .random(in: 2...6)
-            case 5: start = .random(in: 5...15)
-            case 6: start = .random(in: 4...12)
-            case 7: start = .random(in: 6...20)
-            default: start = ask == .start ? .random(in: 10...40) : [20, 40, 60, 80].randomElement()!
-            }
-            g = OBGen(start)
-            for s in 0..<Int.random(in: t.stops) {
-                if s == 0 && level >= 8 && ask != .start {
-                    let p = [10, 20, 25, 50, 75].filter { g.r * $0 % 100 == 0 }.randomElement()!
-                    let k = g.r * p / 100
-                    g.off(k, label: "\(p)% get off", groups: [k], badge: "\(p)%", term: "− \(k) (\(p)% of \(g.r))")
-                }
-                for _ in 0..<Int.random(in: t.perStop) { g.random(t, fractions: fractions) }
-                g.endStop()
-            }
         }
         // Constraints that make each question worth asking.
         let events = g.stops.flatMap { $0 }
-        if level >= 3 && (g.onTotal == 0 || g.offEvents == 0) { continue }
-        if case .offTotal = ask, g.offEvents < 2 { continue }
-        if case .fare = ask, g.onTotal < 2 || g.onTotal > 30 { continue }
-        if events.contains(where: { $0.count == 0 }) { continue }
+        if tries <= 300 {
+            if k.both && (g.onTotal == 0 || g.offEvents == 0) { continue }
+            if g.onTotal == 0 && g.offEvents == 0 { continue }
+            if case .offTotal = ask, g.offEvents < 2 { continue }
+            if case .fare = ask, g.onTotal < 2 || g.onTotal > 30 { continue }
+            if events.contains(where: { $0.count == 0 }) { continue }
+            if g.r > k.tier.cap + 5 { continue }
+        }
 
         let answer: Int, sum: String
         let terms = events.map(\.term).joined(separator: " ")
@@ -201,30 +199,17 @@ private func obRoute(_ level: Int) -> OBRoute {
         case .offTotal: cands = [g.onTotal, answer - last, answer + 1, answer - 1, answer + 2]
         case .fare(let f): cands = [answer + f, answer - f, g.onTotal + f, answer + 1, answer - 1]
         }
-        let n = level == 1 ? 2 : 3
+        let n = k.choices
         var opts = [answer]
-        let picked = level == 1 ? cands.filter { abs($0 - answer) <= 2 } : cands
+        let picked = k.tight ? cands.filter { abs($0 - answer) <= 2 } : cands
         for c in picked.shuffled() where c >= 0 && !opts.contains(c) && opts.count < n { opts.append(c) }
         for c in [answer + 1, answer + 2, answer + 3] where opts.count < n && !opts.contains(c) { opts.append(c) }
-        return OBRoute(start: g.start, stops: g.stops, ask: ask, fog: level >= 3, final: g.r,
+        return OBRoute(start: g.start, stops: g.stops, ask: ask, fog: k.fog, final: g.r,
                        answer: answer, options: opts.sorted(), sum: sum)
     }
 }
 
-/// Seconds per rider's walk.
-private func obPace(_ level: Int) -> Double {
-    switch level {
-    case 1: return 1.1
-    case 2: return 0.95
-    case 3: return 0.8
-    case 4: return 0.7
-    case 5: return 0.6
-    case 6: return 0.55
-    case 7: return 0.5
-    default: return max(0.35, 0.5 - Double(level - 8) * 0.03)
-    }
-}
-
+private let obWalkers = ["🚶", "🚶‍♀️", "🧍", "🧍‍♀️", "🚶‍♂️", "🧍‍♂️"]
 private let obPeople = ["👩", "👨", "👧", "👦", "👵", "👴", "🧔", "👱‍♀️", "🧕", "👮", "🧑‍🌾", "👷", "👩‍🦰", "🧒"]
 
 // MARK: - Model
@@ -241,7 +226,7 @@ private struct OBToken: Identifiable {
 @MainActor
 private final class OmnibusModel: ArcadeModel {
     enum Stage { case watching, asking, revealed }
-    @Published var route = obRoute(1)
+    @Published var route = OBRoute(start: 0, stops: [], ask: .now, fog: false, final: 0, answer: 0, options: [0], sum: "")
     @Published var stage: Stage = .watching
     @Published var tokens: [OBToken] = []
     @Published var busX: CGFloat = -1.4         // in scene widths: 0 = at the stop
@@ -258,12 +243,12 @@ private final class OmnibusModel: ArcadeModel {
     override func perLevel(_ level: Int) -> Int { 4 }
     override func onBegin() { newRoute() }
 
-    var canReplay: Bool { level <= 3 && stage == .asking }
+    var canReplay: Bool { d < 3.6 && stage == .asking }
 
     func stop() { task?.cancel() }
 
     private func newRoute() {
-        route = obRoute(level); routeNo += 1
+        route = obRoute(self); routeNo += 1
         #if DEBUG
         assert(route.options.filter { $0 == route.answer }.count == 1 && Set(route.options).count == route.options.count)
         #endif
@@ -315,7 +300,7 @@ private final class OmnibusModel: ArcadeModel {
 
     /// Plays the route: the bus arrives, stop by stop riders get on and off, then the question.
     private func play() async {
-        let rt = route, d = obPace(level)
+        let rt = route, d = ramp(1.1, 0.35, to: 9.5)    // seconds per rider's walk
         var first = true
         for (si, stop) in rt.stops.enumerated() {
             if si > 0 {
@@ -412,23 +397,23 @@ struct OmnibusView: View {
     @StateObject private var model = OmnibusModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.omnibus.spec!, accent: Lu.gold, onClose: onClose) {
+        ArcadeShell(model: model, spec: GameID.omnibus.spec!, accent: Lu.gold, onClose: onClose,
+                    backdrop: { OBStreetBackdrop() }) {
             VStack(spacing: 10) {
                 Color.clear.frame(height: 56)
                 Text(model.caption)
-                    .font(luFont(model.stage == .watching ? 26 : 21))
-                    .foregroundStyle(Color(hex: model.stage == .watching ? Lu.gold : Lu.ink))
+                    .font(luFont(model.stage == .watching ? 26 : 22))
+                    .foregroundStyle(Color(hex: 0x2b1708))
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
                     .frame(maxWidth: .infinity, minHeight: 64)
                     .padding(.horizontal, 12)
-                    .background(luPanelShape(18))
+                    .background(OBSign())
                     .id(model.caption)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
 
                 GeometryReader { geo in OBScene(model: model, size: geo.size) }
                     .frame(height: 330)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: Lu.line), lineWidth: 2))
+                    .padding(.horizontal, -14)
 
                 answerArea
                 Spacer(minLength: 0)
@@ -440,8 +425,14 @@ struct OmnibusView: View {
 
     @ViewBuilder private var answerArea: some View {
         if model.stage == .watching {
-            Text("👀 Watch the bus!").font(luFont(20, .heavy)).foregroundStyle(Color(hex: Lu.inkDim))
-                .frame(height: 96)
+            HStack(spacing: 8) {
+                Image(systemName: "eye.fill")
+                Text("Watch the bus!")
+            }
+            .font(luFont(20, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
+            .padding(.horizontal, 20).padding(.vertical, 10)
+            .background(Capsule().fill(Color(hex: 0xf3e6c8).opacity(0.9)))
+            .frame(height: 96)
         } else {
             VStack(spacing: 10) {
                 HStack(spacing: 12) {
@@ -452,19 +443,20 @@ struct OmnibusView: View {
                 }
                 if model.stage == .revealed {
                     Text(model.route.sum)
-                        .font(luFont(19, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                        .font(luFont(19, .heavy)).foregroundStyle(Color(hex: 0x2b1708))
                         .multilineTextAlignment(.center).lineLimit(3).minimumScaleFactor(0.5)
                         .padding(.vertical, 10).padding(.horizontal, 12)
                         .frame(maxWidth: .infinity)
-                        .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: Lu.ground))
+                        .background(RoundedRectangle(cornerRadius: 16).fill(Color(hex: 0xf6ecd4))
                             .overlay(RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color(hex: model.chosen.map { model.route.options[$0] == model.route.answer } == true ? Lu.mint : Lu.coral), lineWidth: 2)))
+                                .stroke(Color(hex: model.chosen.map { model.route.options[$0] == model.route.answer } == true ? Lu.mint : Lu.coral), lineWidth: 3)))
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                 } else if model.canReplay {
                     Button { model.replay() } label: {
-                        Text("👀 Watch again").font(luFont(18, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                        HStack(spacing: 8) { Image(systemName: "arrow.counterclockwise"); Text("Watch again") }
+                            .font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
                             .padding(.horizontal, 22).frame(height: 50)
-                            .background(Capsule().fill(Color(hex: Lu.panel2)).overlay(Capsule().stroke(Color(hex: Lu.line), lineWidth: 2)))
+                            .background(Capsule().fill(Color(hex: 0xf3e6c8)).overlay(Capsule().stroke(Color(hex: 0x8a5a2b), lineWidth: 2)))
                     }
                     .buttonStyle(.plain)
                 }
@@ -473,19 +465,73 @@ struct OmnibusView: View {
     }
 }
 
+/// A wooden street sign for the caption.
+private struct OBSign: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(LinearGradient(colors: [Color(hex: 0xf3dfb0), Color(hex: 0xd9b97c)], startPoint: .top, endPoint: .bottom))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x8a5a2b), lineWidth: 3))
+            .shadow(color: .black.opacity(0.3), radius: 0, x: 0, y: 4)
+    }
+}
+
+/// Morning over the city: a warm sky, a sun, clouds; flagstones below the street.
+private struct OBStreetBackdrop: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            ZStack(alignment: .topLeading) {
+                LinearGradient(colors: [Color(hex: 0x6fb2e0), Color(hex: 0xcfe6f0), Color(hex: 0xf7e2b8)], startPoint: .top, endPoint: .bottom)
+                Circle().fill(Color(hex: 0xfff2c0)).frame(width: 70).position(x: w * 0.18, y: h * 0.2)
+                ForEach(0..<3) { i in
+                    OBCloud().frame(width: 110, height: 40)
+                        .position(x: w * [0.62, 0.86, 0.36][i], y: h * [0.12, 0.24, 0.3][i])
+                }
+                Canvas { ctx, sz in
+                    let top = sz.height * 0.55
+                    ctx.fill(Path(CGRect(x: 0, y: top, width: sz.width, height: sz.height - top)), with: .color(Color(hex: 0xb8a27a)))
+                    var y = top, row = 0
+                    while y < sz.height {
+                        var x: CGFloat = row % 2 == 0 ? 0 : -35
+                        while x < sz.width {
+                            ctx.fill(Path(roundedRect: CGRect(x: x + 2, y: y + 2, width: 66, height: 36), cornerRadius: 6),
+                                     with: .color(Color(hex: (row + Int(x / 70)) % 3 == 0 ? 0xcdb88f : 0xc6b086)))
+                            x += 70
+                        }
+                        y += 40; row += 1
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct OBCloud: View {
+    var body: some View {
+        ZStack {
+            Capsule().fill(Color.white.opacity(0.9)).frame(height: 26).offset(y: 8)
+            Circle().fill(Color.white.opacity(0.9)).frame(width: 40).offset(x: -18)
+            Circle().fill(Color.white.opacity(0.9)).frame(width: 34).offset(x: 14, y: 2)
+        }
+    }
+}
+
+/// An answer: a bronze-edged token with the number.
 private struct OBChoice: View {
     let value: Int
     let isAnswer: Bool, chosen: Bool, revealed: Bool
     let action: () -> Void
-    private var fill: UInt { revealed ? (isAnswer ? Lu.mint : (chosen ? Lu.coral : Lu.panel)) : Lu.panel }
+    private var fill: UInt { revealed ? (isAnswer ? 0x8fd27f : (chosen ? 0xf08a70 : 0xf6ecd4)) : 0xf6ecd4 }
     var body: some View {
         Button(action: action) {
             Text("\(value)").font(luFont(46)).monospacedDigit()
-                .foregroundStyle(Color(hex: revealed && (isAnswer || chosen) ? Lu.inkDark : Lu.ink))
+                .foregroundStyle(Color(hex: 0x2b1708))
                 .lineLimit(1).minimumScaleFactor(0.5)
                 .frame(maxWidth: .infinity, minHeight: 96)
                 .background(RoundedRectangle(cornerRadius: 20).fill(Color(hex: fill))
-                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: Lu.line), lineWidth: 2)))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(hex: 0x9a6634), lineWidth: 4))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x9a6634).opacity(0.35), style: StrokeStyle(lineWidth: 2, dash: [5, 4])).padding(7)))
+                .shadow(color: .black.opacity(0.3), radius: 0, x: 0, y: 4)
                 .scaleEffect(revealed && isAnswer ? 1.06 : 1)
                 .opacity(revealed && !isAnswer && !chosen ? 0.45 : 1)
                 .animation(.spring(response: 0.3, dampingFraction: 0.5), value: revealed)
@@ -536,17 +582,27 @@ private struct OBScene: View {
         let seated = model.tokens.filter { if case .seat = $0.loc { return true }; return false }
             .sorted { a, b in if case .seat(let i) = a.loc, case .seat(let j) = b.loc { return i < j }; return false }
         ZStack(alignment: .topLeading) {
-            // sky, road, kerb, the stop
-            LinearGradient(colors: [Color(hex: 0x3a2a6a), Color(hex: 0x6a4a8a)], startPoint: .top, endPoint: .bottom)
-            Text("🏛️").font(.system(size: 54)).opacity(0.35).position(x: size.width - 60, y: 52)
-            Rectangle().fill(Color(hex: 0x5b5048)).frame(height: g.curbTop - g.roadTop).offset(y: g.roadTop)
-            Rectangle().fill(Color(hex: 0x8f7a5c)).frame(height: size.height - g.curbTop).offset(y: g.curbTop)
-            Rectangle().fill(Color(hex: 0xb79f78)).frame(height: 4).offset(y: g.curbTop)
-            // the stop: a post with a gold disc
-            Capsule().fill(Color(hex: 0x6b4423)).frame(width: 6, height: 54).position(x: size.width - 26, y: g.curbTop + 42)
-            Circle().fill(Color(hex: Lu.gold)).overlay(Circle().stroke(Color(hex: Lu.inkDark).opacity(0.5), lineWidth: 2))
-                .overlay(Text("🚌").font(.system(size: 18)))
-                .frame(width: 36, height: 36).position(x: size.width - 26, y: g.curbTop + 14)
+            // the city behind the street
+            OBFacades(w: size.width, base: g.roadTop)
+            // road (cobbles), kerb, pavement
+            Rectangle().fill(Color(hex: 0x6e655c)).frame(height: g.curbTop - g.roadTop).offset(y: g.roadTop)
+            HStack(spacing: 4) {
+                ForEach(0..<Int(size.width / 22) + 1, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 4).fill(Color(hex: 0x857a6e)).frame(width: 18, height: 10)
+                }
+            }
+            .frame(width: size.width, alignment: .leading).offset(y: g.roadTop + 10)
+            Rectangle().fill(Color(hex: 0xb8a27a)).frame(height: size.height - g.curbTop).offset(y: g.curbTop)
+            Rectangle().fill(Color(hex: 0xe2d3b0)).frame(height: 6).offset(y: g.curbTop)
+            // the stop: a post with a sign
+            Capsule().fill(Color(hex: 0x6b4423)).frame(width: 6, height: 60).position(x: size.width - 30, y: g.curbTop + 40)
+            VStack(spacing: 0) {
+                Text("STATIO").font(luSerif(10, .black)).foregroundStyle(Color(hex: 0x2b1708))
+                Image(systemName: "bus.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(Color(hex: 0x8a2a1c))
+            }
+            .frame(width: 52, height: 36)
+            .background(RoundedRectangle(cornerRadius: 6).fill(Color(hex: Lu.gold)).overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0x6b4423), lineWidth: 2)))
+            .position(x: size.width - 30, y: g.curbTop + 8)
 
             OBBus(g: g, fog: fog, badge: model.busBadge)
 
@@ -568,7 +624,11 @@ private struct OBTokenView: View {
     let count: Int?
     var body: some View {
         HStack(spacing: token.faces.count > 3 ? -14 : -10) {
-            ForEach(Array(token.faces.enumerated()), id: \.offset) { _, f in Text(f).font(.system(size: 34)) }
+            ForEach(Array(token.faces.enumerated()), id: \.offset) { k, f in
+                // In a window you see a face; on the street, the whole person walking.
+                if case .seat = token.loc { Text(f).font(.system(size: 34)) }
+                else { Text(obWalkers[(token.id + k) % obWalkers.count]).font(.system(size: 50)) }
+            }
         }
         .overlay(alignment: .topTrailing) {
             if let b = token.badge {
@@ -653,5 +713,57 @@ private struct OBWheel: View {
             }
         }
         .frame(width: r * 2, height: r * 2)
+    }
+}
+
+/// A row of Roman town houses (insulae) behind the street: ochre and terracotta walls, shuttered
+/// windows, tiled roof edges, an arched shop front.
+private struct OBFacades: View {
+    let w: CGFloat
+    let base: CGFloat
+    var body: some View {
+        let cols: [UInt] = [0xd99a5a, 0xe6c288, 0xc9714a, 0xe0b070]
+        let widths: [CGFloat] = [0.3, 0.26, 0.24, 0.3]
+        let heights: [CGFloat] = [0.78, 0.62, 0.86, 0.7]
+        ZStack(alignment: .topLeading) {
+            ForEach(0..<4) { i in
+                let x0 = w * widths.prefix(i).reduce(0, +)
+                let bw = w * widths[i], bh = base * heights[i]
+                ZStack(alignment: .top) {
+                    Rectangle().fill(Color(hex: cols[i]))
+                    Rectangle().fill(Color(hex: 0x9a4426)).frame(height: 10)
+                    VStack(spacing: 14) {
+                        ForEach(0..<max(1, Int(bh / 60)), id: \.self) { _ in
+                            HStack(spacing: 14) {
+                                ForEach(0..<2, id: \.self) { _ in
+                                    RoundedRectangle(cornerRadius: 3).fill(Color(hex: 0x4a2c1a).opacity(0.8)).frame(width: 18, height: 24)
+                                        .overlay(Rectangle().fill(Color(hex: 0x7a8a4a)).frame(width: 22, height: 4).offset(y: 14))
+                                }
+                            }
+                        }
+                    }
+                    .padding(.top, 24)
+                    if i == 2 {
+                        ArchShape().fill(Color(hex: 0x3a2014).opacity(0.85)).frame(width: 46, height: 54)
+                            .frame(maxHeight: .infinity, alignment: .bottom)
+                    }
+                }
+                .frame(width: bw + 1, height: bh)
+                .offset(x: x0, y: base - bh)
+            }
+        }
+        .frame(width: w, height: base, alignment: .topLeading)
+    }
+}
+
+private struct ArchShape: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.minY + r.width / 2))
+        p.addArc(center: CGPoint(x: r.midX, y: r.minY + r.width / 2), radius: r.width / 2, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
+        p.closeSubpath()
+        return p
     }
 }
