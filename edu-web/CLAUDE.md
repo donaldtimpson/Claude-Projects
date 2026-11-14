@@ -371,6 +371,15 @@ falls back to rendering solutions as one appended block rather than mis-attachin
 *orphaned solution* (no matching problem) forces that fallback so authored work is never dropped.
 `components/ProblemSetView.tsx` renders per-problem reveal toggles plus a master "reveal all".
 
+**Admin editor** (`app/admin/problem-sets/ProblemSetEditor.tsx`) opens on **Review**: each problem
+beside its solution, one row each, built from `reviewProblemSet()`, which, unlike
+`pairProblemSet`, never degrades. It keeps every part and flags orphaned or duplicate numbers. A row
+edits in place: `splitAuthored` records each part's source line range, and `replaceChunk` /
+`insertChunk` splice the edit back into the full Markdown. "Checked" marks are per device
+(localStorage, hashed on the row's text so an edit clears them). Keys: C checks and advances, [ ]
+page between sets, ⌘S saves. **Source** (`?mode=source`, old `?mode=edit`) is the raw Markdown;
+**Student view** renders `ProblemSetView` with unsaved edits.
+
 **Lecture links.** `ProblemSetVideo` is many-to-many on purpose — a set follows a textbook chapter,
 so it usually spans several lectures, and a lecture can be covered by more than one set. Tag them
 from the set's admin editor. Lecture pages then show a **Practice** section; set pages show

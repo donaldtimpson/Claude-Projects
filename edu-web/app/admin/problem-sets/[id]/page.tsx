@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import ProblemSetEditor from "../ProblemSetEditor";
+import ProblemSetEditor, { type EditorMode } from "../ProblemSetEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,11 @@ export default async function EditProblemSetPage({
   searchParams: Promise<{ mode?: string }>;
 }) {
   const { id } = await params;
-  const initialMode = (await searchParams).mode === "edit" ? "edit" : "preview";
+  // Review (problems beside their solutions) is the default. "edit" is the old
+  // name for Source, still used by links and the create redirect.
+  const modeParam = (await searchParams).mode;
+  const initialMode: EditorMode =
+    modeParam === "source" || modeParam === "edit" ? "source" : modeParam === "student" ? "student" : "review";
   const ps = await db.problemSet.findUnique({
     where: { id },
     include: {
@@ -45,31 +49,8 @@ export default async function EditProblemSetPage({
     }),
   ]);
 
-  // Keep edit/preview mode as you page through.
-  const modeSuffix = initialMode === "edit" ? "?mode=edit" : "";
-  const navBtn =
-    "text-sm text-gold-400 hover:text-gold-300 border border-crimson-700 hover:border-gold-500 rounded-lg px-3 py-1.5 transition-colors max-w-[45%] truncate";
-  const nav = (
-    <nav className="flex items-center justify-between gap-3">
-      {prev ? (
-        <Link href={`/admin/problem-sets/${prev.id}${modeSuffix}`} className={navBtn}>
-          ← {prev.title}
-        </Link>
-      ) : (
-        <span className="text-sm text-parchment-dim/50 px-3 py-1.5">← Start</span>
-      )}
-      {next ? (
-        <Link href={`/admin/problem-sets/${next.id}${modeSuffix}`} className={navBtn}>
-          {next.title} →
-        </Link>
-      ) : (
-        <span className="text-sm text-parchment-dim/50 px-3 py-1.5">End →</span>
-      )}
-    </nav>
-  );
-
   return (
-    <main className="max-w-4xl mx-auto px-6 py-10 space-y-6">
+    <main className="max-w-7xl mx-auto px-6 pt-10 space-y-6">
       <div>
         <Link
           href={`/admin/courses/${ps.course.id}/problem-sets`}
@@ -79,9 +60,9 @@ export default async function EditProblemSetPage({
         </Link>
       </div>
 
-      {nav}
-
+      {/* Keyed so paging to another set starts from fresh editor state. */}
       <ProblemSetEditor
+        key={ps.id}
         ps={{
           id: ps.id,
           title: ps.title,
@@ -97,9 +78,9 @@ export default async function EditProblemSetPage({
         courseId={ps.course.id}
         lectures={lectures}
         initialMode={initialMode}
+        prev={prev}
+        next={next}
       />
-
-      {nav}
     </main>
   );
 }

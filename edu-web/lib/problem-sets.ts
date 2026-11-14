@@ -35,9 +35,14 @@ function headingKey(line: string): string {
     .replace(/\s+/g, " ");
 }
 
+/**
+ * One authored part. `start`/`end` are its source line range (end exclusive,
+ * including any trailing blank lines), so an editor can splice a single part
+ * back into the full document.
+ */
 export type Chunk =
-  | { kind: "item"; key: string; n: number; content: string }
-  | { kind: "section"; key: string; content: string };
+  | { kind: "item"; key: string; n: number; content: string; start: number; end: number }
+  | { kind: "section"; key: string; content: string; start: number; end: number };
 
 /** A chunk's identity, before its Markdown body has been collected. */
 type ChunkMeta =
@@ -60,32 +65,42 @@ export type SplitMarkdown = {
 export function splitAuthored(md: string): SplitMarkdown {
   const preambleLines: string[] = [];
   const chunks: Chunk[] = [];
-  let current: { chunk: ChunkMeta; lines: string[] } | null = null;
+  let current: { chunk: ChunkMeta; lines: string[]; start: number } | null = null;
 
-  const flush = () => {
+  const allLines = md.split("\n");
+  const flush = (end: number) => {
     if (!current) return;
-    chunks.push({ ...current.chunk, content: current.lines.join("\n").trim() });
+    chunks.push({
+      ...current.chunk,
+      content: current.lines.join("\n").trim(),
+      start: current.start,
+      end,
+    });
     current = null;
   };
 
-  for (const line of md.split("\n")) {
+  for (const [i, line] of allLines.entries()) {
     const item = ITEM_RE.exec(line);
     if (item) {
-      flush();
+      flush(i);
       const n = Number(item[1]);
-      current = { chunk: { kind: "item", key: `item:${n}`, n }, lines: [line] };
+      current = { chunk: { kind: "item", key: `item:${n}`, n }, lines: [line], start: i };
       continue;
     }
     // Headings before the first item are part of the preamble, not a section.
     if (HEADING_RE.test(line) && (current || chunks.length > 0)) {
-      flush();
-      current = { chunk: { kind: "section", key: `section:${headingKey(line)}` }, lines: [line] };
+      flush(i);
+      current = {
+        chunk: { kind: "section", key: `section:${headingKey(line)}` },
+        lines: [line],
+        start: i,
+      };
       continue;
     }
     if (current) current.lines.push(line);
     else preambleLines.push(line);
   }
-  flush();
+  flush(allLines.length);
 
   return { preamble: preambleLines.join("\n").trim(), chunks };
 }
@@ -185,6 +200,111 @@ export function pairProblemSet(
     solutionPreamble: solutions.preamble,
     parts: toParts(bySolution),
   };
+}
+
+export type ReviewRow = {
+  /** Unique per row, even when the authored keys collide. */
+  id: string;
+  label: string;
+  problem: Chunk | null;
+  solution: Chunk | null;
+  /** A problem or solution number that appears more than once on its side. */
+  duplicate: boolean;
+};
+
+export type ProblemSetReview = {
+  problemsPreamble: string;
+  solutionPreamble: string;
+  /** Problems in authored order, then any solutions that matched no problem. */
+  rows: ReviewRow[];
+  /** What students get: false means the public page falls back to blocks. */
+  pairsPublicly: boolean;
+};
+
+/**
+ * The admin's view of how a set's problems and solutions line up. Unlike
+ * `pairProblemSet`, which degrades to blocks when anything is off, this keeps
+ * every part and flags what doesn't match, so the author can see and fix it.
+ */
+export function reviewProblemSet(body: string, solution: string): ProblemSetReview {
+  const problems = splitAuthored(body);
+  const solutions = splitAuthored(solution);
+
+  const count = (cs: Chunk[]) => {
+    const m = new Map<string, number>();
+    for (const c of cs) m.set(c.key, (m.get(c.key) ?? 0) + 1);
+    return m;
+  };
+  const problemCounts = count(problems.chunks);
+  const solutionCounts = count(solutions.chunks);
+
+  // A key's first solution pairs with its first problem, and so on.
+  const unused = [...solutions.chunks];
+  const takeSolution = (key: string) => {
+    const i = unused.findIndex((c) => c.key === key);
+    return i < 0 ? null : unused.splice(i, 1)[0];
+  };
+
+  const rows: ReviewRow[] = problems.chunks.map((p, i) => ({
+    id: `p${i}`,
+    label: labelFor(p),
+    problem: p,
+    solution: takeSolution(p.key),
+    duplicate: (problemCounts.get(p.key) ?? 0) > 1 || (solutionCounts.get(p.key) ?? 0) > 1,
+  }));
+  for (const [i, s] of unused.entries()) {
+    rows.push({
+      id: `s${i}`,
+      label: labelFor(s),
+      problem: null,
+      solution: s,
+      duplicate: (solutionCounts.get(s.key) ?? 0) > 1,
+    });
+  }
+
+  return {
+    problemsPreamble: problems.preamble,
+    solutionPreamble: solutions.preamble,
+    rows,
+    pairsPublicly: pairProblemSet(body, solution, true).mode === "paired",
+  };
+}
+
+/**
+ * Replace one part's source lines with new text, keeping the blank-line
+ * spacing that separated it from the next part.
+ */
+export function replaceChunk(md: string, chunk: Chunk, text: string): string {
+  const lines = md.split("\n");
+  let trailing = 0;
+  while (
+    chunk.end - trailing - 1 > chunk.start &&
+    lines[chunk.end - trailing - 1].trim() === ""
+  ) {
+    trailing++;
+  }
+  const replacement = text.trim() ? text.replace(/\s+$/, "").split("\n") : [];
+  if (replacement.length > 0 && chunk.end < lines.length) trailing = Math.max(trailing, 1);
+  lines.splice(
+    chunk.start,
+    chunk.end - chunk.start,
+    ...replacement,
+    ...Array(replacement.length ? trailing : 0).fill(""),
+  );
+  return lines.join("\n");
+}
+
+/** Insert a new part before `before`, or at the end when `before` is null. */
+export function insertChunk(md: string, before: Chunk | null, text: string): string {
+  const block = text.replace(/\s+$/, "");
+  if (!block) return md;
+  if (!before) {
+    const head = md.replace(/\s+$/, "");
+    return head ? `${head}\n\n${block}\n` : `${block}\n`;
+  }
+  const lines = md.split("\n");
+  lines.splice(before.start, 0, ...block.split("\n"), "");
+  return lines.join("\n");
 }
 
 /**

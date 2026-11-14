@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitAuthored, pairProblemSet, canSeeSolutions, estimateWorkLines } from "@/lib/problem-sets";
+import { splitAuthored, pairProblemSet, canSeeSolutions, estimateWorkLines, reviewProblemSet, replaceChunk, insertChunk } from "@/lib/problem-sets";
 
 describe("splitAuthored", () => {
   it("keeps everything before the first numbered item as preamble", () => {
@@ -135,5 +135,51 @@ describe("estimateWorkLines", () => {
       "**1.** Row reduce: $$\\begin{bmatrix}1&2\\\\3&4\\end{bmatrix} \\to \\begin{bmatrix}1&0\\\\0&1\\end{bmatrix}$$ " +
       "so the pivots are in both columns and the system has a unique solution after back-substitution.";
     expect(estimateWorkLines(long)).toBeGreaterThan(estimateWorkLines(short));
+  });
+});
+
+describe("reviewProblemSet", () => {
+  const body = "_Intro_\n\n**1.** One?\n\n**2.** Two?\n\n**3.** Three?\n";
+  it("pairs rows in problem order and flags gaps", () => {
+    const r = reviewProblemSet(body, "**1.** A1\n\n**3.** A3\n");
+    expect(r.rows.map((x) => [x.label, !!x.problem, x.solution?.content ?? null])).toEqual([
+      ["1", true, "**1.** A1"],
+      ["2", true, null],
+      ["3", true, "**3.** A3"],
+    ]);
+    expect(r.pairsPublicly).toBe(true);
+  });
+  it("keeps orphaned and duplicate solutions visible instead of degrading", () => {
+    const r = reviewProblemSet(body, "**1.** A1\n\n**1.** again\n\n**9.** stray\n");
+    expect(r.pairsPublicly).toBe(false);
+    expect(r.rows[0].duplicate).toBe(true);
+    const tail = r.rows.slice(3);
+    expect(tail.map((x) => [x.problem, x.solution?.content])).toEqual([
+      [null, "**1.** again"],
+      [null, "**9.** stray"],
+    ]);
+  });
+});
+
+describe("replaceChunk / insertChunk", () => {
+  const md = "Intro\n\n**1.** One\nmore\n\n**2.** Two\n";
+  const chunks = () => splitAuthored(md).chunks;
+  it("replaces one part and keeps the spacing", () => {
+    expect(replaceChunk(md, chunks()[0], "**1.** Uno")).toBe("Intro\n\n**1.** Uno\n\n**2.** Two\n");
+    expect(replaceChunk(md, chunks()[1], "**2.** Dos\nline")).toBe("Intro\n\n**1.** One\nmore\n\n**2.** Dos\nline\n");
+  });
+  it("removes a part replaced with nothing", () => {
+    expect(replaceChunk(md, chunks()[0], "  ")).toBe("Intro\n\n**2.** Two\n");
+  });
+  it("inserts before a part or appends", () => {
+    expect(insertChunk(md, chunks()[1], "**1b.** x")).toBe("Intro\n\n**1.** One\nmore\n\n**1b.** x\n\n**2.** Two\n");
+    expect(insertChunk(md, null, "**3.** Three")).toBe("Intro\n\n**1.** One\nmore\n\n**2.** Two\n\n**3.** Three\n");
+    expect(insertChunk("", null, "**1.** x")).toBe("**1.** x\n");
+  });
+  it("round-trips: replacing a part with its own content changes nothing material", () => {
+    const c = chunks()[0];
+    expect(splitAuthored(replaceChunk(md, c, c.content)).chunks.map((x) => x.content)).toEqual(
+      chunks().map((x) => x.content),
+    );
   });
 });
