@@ -18,6 +18,10 @@ enum AppConfig {
         #endif
     }()
 
+    /// The production site's origin. Web content (the YouTube embed, KaTeX) loads
+    /// against it even in development, because YouTube checks the embedding origin.
+    static let siteOrigin = "https://timpson-lyceum.vercel.app"
+
     /// URL for a static asset served from the site root, e.g. "/categories/history.png".
     static func assetURL(_ path: String) -> URL? {
         URL(string: baseURL + path)

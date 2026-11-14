@@ -117,6 +117,9 @@ struct VideoListItem: Codable, Identifiable, Hashable {
     let position: Int
     let durationSeconds: Int
     let thumbnailUrl: String
+    /// "Lecture 3" / "Lesson 9": the number students see on the video (server-derived).
+    var label: String? = nil
+    var commentCount: Int? = nil
 }
 
 struct ProblemSetItem: Codable, Identifiable, Hashable {
@@ -129,10 +132,10 @@ struct ProblemSetItem: Codable, Identifiable, Hashable {
     /// Lecture positions this set covers, ascending — renders as "Lectures 4–5".
     var lecturePositions: [Int]?
 
-    var lectureSpan: String? {
-        guard let p = lecturePositions, let first = p.first, let last = p.last else { return nil }
-        return first == last ? "Lecture \(first)" : "Lectures \(first)–\(last)"
-    }
+    /// "Lectures 4–5", labelled like the lectures themselves (server-derived).
+    var lectureSpan: String? = nil
+    var isTest: Bool? = nil
+
 }
 
 /// One problem paired with the worked solution that answers it. The server does
@@ -167,6 +170,18 @@ struct ProblemSetLecture: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let position: Int
+    var label: String? = nil
+}
+
+/// One of the viewer's homework assignments for a problem set.
+struct ProblemSetHomework: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let points: Int
+    let dueAt: String?
+    let sectionId: String
+    let sectionName: String
+    var submission: SubmissionItem?
 }
 
 struct ProblemSetDetail: Codable, Identifiable, Hashable {
@@ -178,6 +193,8 @@ struct ProblemSetDetail: Codable, Identifiable, Hashable {
     let solutionsAvailable: Bool
     var lectures: [ProblemSetLecture]?
     let content: ProblemSetContent
+    var isTest: Bool? = nil
+    var homework: [ProblemSetHomework]? = nil
 }
 
 struct ProblemSetDetailResponse: Codable {
@@ -215,6 +232,33 @@ struct CourseDetail: Codable, Identifiable, Hashable {
     /// Published course-level questions (the course test). 0 ⇒ this course has no
     /// test yet, so nothing is offered. Optional for older servers.
     var testQuestionCount: Int? = nil
+    var reviewQuestionCount: Int? = nil
+    var connections: CourseConnections? = nil
+    var registrationOpen: Bool? = nil
+    var viewer: CourseViewer? = nil
+}
+
+struct CourseRef: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+}
+
+struct CourseConnections: Codable, Hashable {
+    let buildsOn: [CourseRef]
+    let leadsTo: [CourseRef]
+    let related: [CourseRef]
+    var isEmpty: Bool { buildsOn.isEmpty && leadsTo.isEmpty && related.isEmpty }
+}
+
+struct CourseEnrollment: Codable, Hashable {
+    let sectionId: String
+    let sectionName: String
+}
+
+/// The signed-in viewer's state in a course.
+struct CourseViewer: Codable, Hashable {
+    let watchedVideoIds: [String]
+    let enrollment: CourseEnrollment?
 }
 
 struct CourseDetailResponse: Codable {
@@ -248,6 +292,13 @@ struct VideoMeta: Codable, Identifiable, Hashable {
     let position: Int
     let durationSeconds: Int
     let updatedAt: String
+    var label: String? = nil
+}
+
+struct LectureNeighbour: Codable, Hashable {
+    let id: String
+    let title: String
+    let label: String
 }
 
 struct QuizAce: Codable, Identifiable, Hashable {
@@ -268,6 +319,11 @@ struct VideoDetailResponse: Codable {
     // dropped rather than rendering a row that can't open. Optional for the same
     // resilience reason as the fields above.
     var lessonSlugs: [String]?
+    var prev: LectureNeighbour? = nil
+    var next: LectureNeighbour? = nil
+    var courseTestQuestionCount: Int? = nil
+    /// nil when signed out.
+    var watched: Bool? = nil
 }
 
 // MARK: - Course map (the web /map)
@@ -416,8 +472,16 @@ struct CourseProgressItem: Codable, Identifiable, Hashable {
     let title: String
     let watchedCount: Int
     let totalCount: Int
+    var nextLecture: NextLecture? = nil
+    var lastWatchedAt: String? = nil
 
     var fraction: Double { totalCount > 0 ? Double(watchedCount) / Double(totalCount) : 0 }
+}
+
+struct NextLecture: Codable, Hashable {
+    let id: String
+    let title: String
+    let thumbnailUrl: String?
 }
 
 struct ProgressResponse: Codable {
@@ -490,6 +554,77 @@ struct ClassAssignmentsResponse: Codable {
 }
 
 /// POST /assignments/{assignmentId}/submit — echoes back the stored submission.
+/// One class, as the class screen shows it (GET me/classes/{sectionId}).
+struct ClassHub: Codable, Hashable {
+    let sectionId: String
+    let sectionName: String
+    let courseId: String
+    let courseTitle: String
+    let currentGrade: Double?
+    let breakdown: [GradeCategoryRow]
+    let customCategories: [CustomCategory]
+    /// Open work first, then graded problem sets.
+    let assignments: [AssignmentItem]
+    let quizzes: [QuizBest]
+    let courseTest: CourseTestBest?
+}
+
+struct CustomCategory: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let items: [CustomItem]
+}
+
+struct CustomItem: Codable, Identifiable, Hashable {
+    let id: String
+    let name: String
+    let maxPoints: Double
+    let score: Double?
+}
+
+struct QuizBest: Codable, Identifiable, Hashable {
+    let videoId: String
+    let title: String
+    let bestPct: Double?
+    var id: String { videoId }
+}
+
+struct CourseTestBest: Codable, Hashable {
+    let bestPct: Double?
+}
+
+struct RegisterResponse: Codable {
+    let sectionId: String
+    let sectionName: String
+    let courseId: String
+}
+
+struct ReviewQuestion: Codable, Identifiable, Hashable {
+    let id: String
+    let prompt: String
+    let options: [String]
+    let correctIndex: Int
+    let explanation: String
+    let source: String
+}
+
+struct ReviewPoolResponse: Codable {
+    let questions: [ReviewQuestion]
+}
+
+struct Announcement: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let body: String
+    let pinned: Bool
+    let createdAt: String
+    var courseId: String? = nil
+}
+
+struct AnnouncementsResponse: Codable {
+    let announcements: [Announcement]
+}
+
 struct SubmitResponse: Codable {
     let submission: SubmissionItem
 }

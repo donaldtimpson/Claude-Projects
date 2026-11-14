@@ -11,23 +11,29 @@ struct LyceumApp: App {
     @StateObject private var queue = WriteQueueManager.shared
     private let monitor = NWPathMonitor()
 
+    @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
+
     init() {
-        // Theme the system bars to match the web (crimson-900 with gold Cinzel titles).
-        let cinzel = { (size: CGFloat) in UIFont(name: "Cinzel", size: size) ?? .systemFont(ofSize: size, weight: .semibold) }
+        // System bars follow the theme: card-colored bars, serif titles in ink.
+        let serif = { (size: CGFloat, weight: UIFont.Weight) -> UIFont in
+            let base = UIFont(name: "Source Serif 4", size: size) ?? .systemFont(ofSize: size)
+            let desc = base.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
+            return UIFont(descriptor: desc, size: size)
+        }
         let nav = UINavigationBarAppearance()
         nav.configureWithOpaqueBackground()
-        nav.backgroundColor = UIColor(Theme.crimson900)
-        nav.shadowColor = UIColor(Theme.crimson700)
-        nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.gold300), .font: cinzel(17)]
-        nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.gold300), .font: cinzel(30)]
+        nav.backgroundColor = UIColor(Theme.card)
+        nav.shadowColor = UIColor(Theme.line)
+        nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(18, .semibold)]
+        nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(32, .bold)]
         UINavigationBar.appearance().standardAppearance = nav
         UINavigationBar.appearance().scrollEdgeAppearance = nav
         UINavigationBar.appearance().compactAppearance = nav
 
         let tab = UITabBarAppearance()
         tab.configureWithOpaqueBackground()
-        tab.backgroundColor = UIColor(Theme.crimson900)
-        tab.shadowColor = UIColor(Theme.crimson700)
+        tab.backgroundColor = UIColor(Theme.card)
+        tab.shadowColor = UIColor(Theme.line)
         UITabBar.appearance().standardAppearance = tab
         UITabBar.appearance().scrollEdgeAppearance = tab
     }
@@ -37,8 +43,8 @@ struct LyceumApp: App {
             RootView()
                 .environmentObject(auth)
                 .environmentObject(queue)
-                .tint(Theme.gold300)
-                .preferredColorScheme(.dark)
+                .tint(Theme.link)
+                .preferredColorScheme(appearance.colorScheme)
                 .task { await auth.bootstrap() }
                 .onAppear {
                     startNetworkFlush()

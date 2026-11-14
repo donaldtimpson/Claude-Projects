@@ -8,6 +8,8 @@ import WebKit
 // player with an opaque on-screen error). Requires a network connection.
 struct YouTubePlayer: UIViewRepresentable {
     let videoId: String
+    /// Start here (seconds), e.g. a transcript search hit's moment.
+    var start: Int? = nil
     /// Called with YouTube's numeric IFrame error code (2, 5, 100, 101, 150) if
     /// the player reports one, so the app can surface the real cause.
     var onError: ((Int) -> Void)? = nil
@@ -27,11 +29,15 @@ struct YouTubePlayer: UIViewRepresentable {
     }
 
     func updateUIView(_ web: WKWebView, context: Context) {
+        // Load once per video; SwiftUI calls this on every parent update.
+        let key = "\(videoId)@\(start ?? 0)"
+        guard context.coordinator.loadedKey != key else { return }
+        context.coordinator.loadedKey = key
         // The IFrame API validates the embedder's origin. It must be a real,
         // external https web origin that matches the baseURL below — NOT
         // youtube.com itself (self-referential origins are rejected → error 152).
         // Use the site that already embeds these videos successfully on the web.
-        let origin = "https://timpson-lyceum.vercel.app"
+        let origin = AppConfig.siteOrigin
         let html = """
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -44,7 +50,7 @@ struct YouTubePlayer: UIViewRepresentable {
         function onYouTubeIframeAPIReady(){
           new YT.Player('player',{
             width:'100%',height:'100%',videoId:'\(videoId)',
-            playerVars:{playsinline:1,rel:0,modestbranding:1,origin:'\(origin)'},
+            playerVars:{playsinline:1,rel:0,modestbranding:1,start:\(start ?? 0),origin:'\(origin)'},
             events:{
               onReady:function(){post({t:'ready'})},
               onError:function(e){post({t:'error',code:e.data})}
@@ -62,6 +68,7 @@ struct YouTubePlayer: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKScriptMessageHandler {
         let onError: ((Int) -> Void)?
+        var loadedKey: String?
         init(onError: ((Int) -> Void)?) { self.onError = onError }
 
         func userContentController(
@@ -105,6 +112,33 @@ enum NoteWeb {
     // the content height to the named WKScriptMessageHandler once fonts have settled. `pre`
     // runs before parsing (e.g. the PDF sets its title). `throwOnError:false` keeps a bad
     // equation from blanking the whole note.
+    /// Content styling shared by notes, the syllabus, quiz prompts and problem sets:
+    /// the app's fonts (Source Serif 4 to read, Inter for subheads) and its light
+    /// and dark colors, switching with the app's appearance.
+    static let css = """
+    :root{--ink:#f5ecd8;--soft:#c9b596;--rule:#4a1a1a;--tint:#2d1212;--accent:#ddb954;--link:#cfa135;--ornament:#cfa135}
+    @media (prefers-color-scheme: light){:root{--ink:#1d1814;--soft:#5a4f46;--rule:#ddd2c3;--tint:#f0eae1;--accent:#8a1f1f;--link:#8f2222;--ornament:#b8860b}}
+    html,body{margin:0;background:transparent;color:var(--ink);-webkit-text-size-adjust:100%}
+    body{font:17px/1.6 'Source Serif 4',Georgia,serif;padding:2px}
+    p,li{margin:.55em 0}
+    h1{font-size:20px;font-weight:700;margin:1em 0 .4em}
+    h2{font:600 13px/1.4 'Inter',-apple-system,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:1.6em 0 .5em}
+    h3{font-size:17px;font-weight:600;margin:1.2em 0 .3em}
+    h1:first-child,h2:first-child,h3:first-child{margin-top:0}
+    strong{font-weight:650}
+    a{color:var(--link)}
+    code{background:var(--tint);padding:1px 4px;border-radius:4px;font-size:.9em}
+    pre{background:var(--tint);padding:10px;border-radius:8px;overflow-x:auto}
+    blockquote{margin:.8em 0;padding-left:12px;border-left:3px solid var(--ornament);color:var(--soft)}
+    hr{border:0;border-top:1px solid var(--rule);margin:1.2em 0}
+    table{border-collapse:collapse;width:100%;margin:14px 0;font-size:15px;display:block;overflow-x:auto}
+    th,td{border-bottom:1px solid var(--rule);padding:7px 10px;text-align:left;vertical-align:top}
+    th{font:600 13px 'Inter',-apple-system,sans-serif}
+    td{color:var(--soft)}
+    .katex{font-size:1.06em;color:var(--ink)}
+    .katex-display{overflow-x:auto;overflow-y:hidden}
+    """
+
     static func script(payload: String, handler: String, delayMs: Int, pre: String = "") -> String {
         """
         <script>
@@ -136,7 +170,10 @@ struct MathWebView: UIViewRepresentable {
     }
 
     func updateUIView(_ web: WKWebView, context: Context) {
-        web.loadHTMLString(Self.html(markdown), baseURL: URL(string: "https://timpson-lyceum.vercel.app"))
+        // Reload only when the content changes (colors follow the appearance via CSS).
+        guard context.coordinator.loaded != markdown else { return }
+        context.coordinator.loaded = markdown
+        web.loadHTMLString(Self.html(markdown), baseURL: URL(string: AppConfig.siteOrigin))
     }
 
     private static func html(_ md: String) -> String {
@@ -145,19 +182,7 @@ struct MathWebView: UIViewRepresentable {
         <!doctype html><html><head>
         <meta name='viewport' content='width=device-width, initial-scale=1'>
         \(NoteWeb.head)
-        <style>html,body{margin:0;background:transparent;color:#f5ecd8;
-        font:16px/1.6 Georgia,'EB Garamond',serif;padding:2px}
-        h1,h2,h3{color:#cfa135;font-family:Georgia,serif}
-        h2{font-size:20px} h3{font-size:17px}
-        a{color:#ddb954}
-        code{background:#2d1212;color:#e8cb7e;padding:1px 4px;border-radius:4px}
-        pre{background:#2d1212;padding:10px;border-radius:8px;overflow-x:auto}
-        table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;display:block;overflow-x:auto}
-        th,td{border-bottom:1px solid #4a1a1a;padding:7px 10px;text-align:left;vertical-align:top}
-        th{color:#f5ecd8;border-bottom-color:rgba(207,161,53,.4);font-weight:600}
-        td{color:#c4af8e}
-        .katex{color:#f5ecd8}
-        .katex-display{overflow-x:auto;overflow-y:hidden}</style></head>
+        <style>\(NoteWeb.css)</style></head>
         <body><div id='c'></div>
         \(NoteWeb.script(payload: payload, handler: "h", delayMs: 250))
         </body></html>
@@ -166,6 +191,7 @@ struct MathWebView: UIViewRepresentable {
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         let parent: MathWebView
+        var loaded: String?
         init(_ parent: MathWebView) { self.parent = parent }
 
         func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {

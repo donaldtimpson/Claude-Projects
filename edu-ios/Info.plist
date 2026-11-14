@@ -13,12 +13,27 @@
 	<!-- The app's only cryptography is HTTPS (URLSession) and Keychain storage,
 	     both exempt from US export regulations. Declaring it here answers the
 	     export-compliance question once instead of on every upload. -->
+	<!-- lyceum://courses/{id}/{videoId} and friends open the matching screen; the
+	     paths mirror the website's (see Router.open). -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.timpsonlyceum.Lyceum</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>lyceum</string>
+			</array>
+		</dict>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Cinzel.ttf</string>
-		<string>EBGaramond.ttf</string>
+		<string>SourceSerif4.ttf</string>
+		<string>SourceSerif4-Italic.ttf</string>
+		<string>Inter.ttf</string>
 	</array>
 </dict>
 </plist>

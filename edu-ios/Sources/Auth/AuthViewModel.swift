@@ -19,6 +19,12 @@ final class AuthViewModel: ObservableObject {
             loading = false
             return
         }
+        // Simulator screenshots of signed-in screens: seed a minted access token.
+        #if targetEnvironment(simulator)
+        if let token = ProcessInfo.processInfo.environment["DEBUG_ACCESS_TOKEN"], !token.isEmpty {
+            TokenStore.save(access: token, refresh: "")
+        }
+        #endif
         #endif
         guard TokenStore.accessToken != nil else {
             user = nil
