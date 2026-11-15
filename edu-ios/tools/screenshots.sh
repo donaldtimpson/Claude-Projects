@@ -82,6 +82,9 @@ for entry in "${DEVICES[@]}"; do
   mkdir -p "$dir"
 
   echo "==> $device -> $dir"
+  # The store set shows the brand's default look (dark). APPEARANCE=light to override.
+  xcrun simctl boot "$udid" 2>/dev/null || true
+  xcrun simctl ui "$udid" appearance "${APPEARANCE:-dark}"
   # SCREENSHOT_DIR reaches the test process through TEST_RUNNER_-prefixed vars.
   env TEST_RUNNER_SCREENSHOT_DIR="$dir" \
       TEST_RUNNER_REVIEW_EMAIL="$REVIEW_EMAIL" \
@@ -92,6 +95,7 @@ for entry in "${DEVICES[@]}"; do
       -scheme LyceumScreenshots \
       -sdk iphonesimulator \
       -destination "platform=iOS Simulator,id=$udid" \
+      -only-testing:LyceumScreenshots/ScreenshotTests \
       -resultBundlePath "$dir/result.xcresult" \
       2>&1 | tail -5
 

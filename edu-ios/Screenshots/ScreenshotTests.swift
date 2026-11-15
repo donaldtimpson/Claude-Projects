@@ -52,7 +52,10 @@ final class ScreenshotTests: XCTestCase {
 
             // 3. A lecture. The simulator can't play YouTube, so capture the Notes
             //    tab rather than the player — the more distinctive screen anyway.
+            // The course page opens with its header and class card; the lectures
+            // are further down.
             let lecture = app.descendants(matching: .any)["lectureRow"].firstMatch
+            for _ in 0..<4 where !(lecture.exists && lecture.isHittable) { app.swipeUp() }
             if tapWhenReady(lecture) {
                 waitForSettle()
                 tapIfPresent(app.buttons["Notes"])
@@ -96,7 +99,7 @@ final class ScreenshotTests: XCTestCase {
             shoot("profile")
 
             // 7. The full badge wall.
-            if tapWhenReady(app.buttons["View all"]) {
+            if tapWhenReady(app.buttons["See all"]) {
                 waitForSettle()
                 shoot("achievements")
             }
@@ -108,8 +111,12 @@ final class ScreenshotTests: XCTestCase {
     // MARK: - sign in
 
     private func signInIfNeeded() throws {
+        // The app opens on the catalog signed in or not; the sign-in form is the
+        // Progress tab's body when signed out.
+        XCTAssertTrue(tab("Progress").waitForExistence(timeout: 30), "tab bar never appeared")
+        tab("Progress").tap()
         let email = app.textFields["Email"]
-        guard email.waitForExistence(timeout: 30) else { return } // already signed in
+        guard email.waitForExistence(timeout: 10) else { return } // already signed in
         let creds = ProcessInfo.processInfo.environment
         let user = creds["REVIEW_EMAIL"] ?? ""
         let pass = creds["REVIEW_PASSWORD"] ?? ""
@@ -123,8 +130,7 @@ final class ScreenshotTests: XCTestCase {
         password.typeText(pass)
         app.buttons["Sign in"].tap()
 
-        // The tab bar only exists once RootView has a user.
-        XCTAssertTrue(tab("Courses").waitForExistence(timeout: 45), "Sign-in did not complete")
+        XCTAssertTrue(app.navigationBars["My Progress"].waitForExistence(timeout: 45), "Sign-in did not complete")
 
         // iOS offers to save the password into Keychain right after a SecureField
         // submit. The sheet belongs to SpringBoard, not the app, so it sits on top
