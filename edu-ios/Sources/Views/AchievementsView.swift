@@ -26,7 +26,7 @@ struct AchievementsView: View {
             }
             .padding()
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle("Achievements")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $detail) { detailSheet($0) }
@@ -35,7 +35,7 @@ struct AchievementsView: View {
     private var header: some View {
         HStack {
             Text("\(earnedCount) / \(rest.count) earned")
-                .font(.serif(16)).foregroundStyle(Theme.ink)
+                .font(.ui(16, .semibold)).monospacedDigit().foregroundStyle(Theme.ink)
             Spacer()
             Picker("", selection: $showAll) {
                 Text("All").tag(true)
@@ -53,13 +53,9 @@ struct AchievementsView: View {
         let visible = showAll ? list : list.filter { $0.unlocked }
         if !visible.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Image(systemName: BadgeMeta.categorySymbol(category)).foregroundStyle(Theme.gold400)
-                    Text(BadgeMeta.categoryLabel(category))
-                        .font(.display(16)).foregroundStyle(Theme.ink)
-                    Spacer(minLength: 8)
+                SectionTitle(BadgeMeta.categoryLabel(category)) {
                     Text("\(list.filter { $0.unlocked }.count) / \(list.count)")
-                        .font(.caption).foregroundStyle(Theme.inkSoft)
+                        .font(.ui(13, .medium)).monospacedDigit().foregroundStyle(Theme.inkSoft)
                 }
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
                     ForEach(visible) { badge in
@@ -75,11 +71,11 @@ struct AchievementsView: View {
             VStack(spacing: 6) {
                 BadgeMedallion(badge: badge, size: 66)
                 Text(badge.name)
-                    .font(.caption2).fontWeight(.semibold)
+                    .font(.ui(12, .semibold))
                     .foregroundStyle(badge.unlocked ? Theme.ink : Theme.inkSoft)
                     .multilineTextAlignment(.center).lineLimit(2)
                 Text(BadgeMeta.tierLabel(badge.tier))
-                    .font(.system(size: 9, weight: .semibold)).kerning(0.5)
+                    .font(.ui(9, .semibold)).kerning(0.5)
                     .foregroundStyle(Theme.inkSoft)
             }
             .frame(maxWidth: .infinity)
@@ -90,14 +86,14 @@ struct AchievementsView: View {
     private func omniscientCard(_ badge: Badge) -> some View {
         HStack(spacing: 14) {
             BadgeMedallion(badge: badge, size: 64)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("OMNISCIENT").font(.display(12)).kerning(2).foregroundStyle(Theme.gold300)
-                Text(badge.name).font(.display(18)).foregroundStyle(Theme.ink)
-                Text(badge.blurb).font(.serif(14)).foregroundStyle(Theme.inkSoft).lineLimit(3)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(badge.name).font(.serif(20, .bold)).foregroundStyle(Theme.ink)
+                Pill(badge.unlocked ? "Attained · 10,000 pts" : "Unclaimed · 10,000 pts",
+                     tone: badge.unlocked ? .accent : .quiet)
+                Text(badge.blurb).font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-            Text(badge.unlocked ? "Attained" : "Unclaimed")
-                .font(.caption).foregroundStyle(badge.unlocked ? Theme.gold300 : Theme.inkSoft)
         }
         .padding(16)
         .background(
@@ -113,19 +109,19 @@ struct AchievementsView: View {
         VStack(spacing: 16) {
             BadgeMedallion(badge: badge, size: 120)
                 .padding(.top, 28)
-            Text(badge.name).font(.display(22)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+            Text(badge.name).font(.serif(24, .bold)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
             Text(BadgeMeta.tierLabel(badge.tier).uppercased())
-                .font(.caption).kerning(1.5).foregroundStyle(Theme.gold400)
+                .font(.ui(13)).kerning(1.5).foregroundStyle(Theme.gold400)
             Text(badge.blurb)
                 .font(.serif(17)).foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center).padding(.horizontal, 24)
             Text(badge.unlocked ? "✓ Earned" : "Locked")
-                .font(.subheadline).fontWeight(.semibold)
+                .font(.ui(15, .semibold))
                 .foregroundStyle(badge.unlocked ? Theme.gold300 : Theme.inkSoft)
             Spacer()
         }
         .frame(maxWidth: .infinity)
-        .background(Theme.parchment)
+        .background(Theme.page)
         .presentationDetents([.medium])
     }
 }

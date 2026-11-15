@@ -136,7 +136,7 @@ enum NoteWeb {
     th{font:600 13px 'Inter',-apple-system,sans-serif}
     td{color:var(--soft)}
     .katex{font-size:1.06em;color:var(--ink)}
-    .katex-display{overflow-x:auto;overflow-y:hidden}
+    .katex-display{overflow-x:auto;overflow-y:hidden;max-width:100%;padding-bottom:4px}
     """
 
     static func script(payload: String, handler: String, delayMs: Int, pre: String = "") -> String {

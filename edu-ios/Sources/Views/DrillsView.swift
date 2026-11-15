@@ -24,7 +24,7 @@ struct DrillsView: View {
         .init(title: "Mental Math", icon: "🧮", slugs: ["arithmetic", "percentages", "order-of-operations",
               "powers-of-two", "squares", "gcd", "primes", "sequences", "logarithms"]),
         .init(title: "Trigonometry", icon: "📐", slugs: ["unit-circle", "vectors"]),
-        .init(title: "Calculus", icon: "∫", slugs: ["derivative", "integral"]),
+        .init(title: "Calculus", icon: "📈", slugs: ["derivative", "integral"]),
         .init(title: "Linear Algebra", icon: "▦", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"]),
         .init(title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state",
               "capital-country", "capital-state"]),
@@ -35,7 +35,7 @@ struct DrillsView: View {
         ScrollView {
             if query.isEmpty { browse } else { searchResults }
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle("Practice Drills")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $query, prompt: "Search drills")
@@ -121,24 +121,24 @@ struct DrillsView: View {
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title).font(.display(15)).kerning(1).foregroundStyle(Theme.gold400)
+        SectionTitle(title)
     }
 
     private func categoryRow(_ cat: DrillCategoryRoute, query: String = "") -> some View {
         HStack(spacing: 12) {
-            Text(cat.icon).font(.system(size: 32))
+            Text(cat.icon).font(.system(size: 30)).foregroundStyle(Theme.ink).frame(width: 40, height: 40)
             VStack(alignment: .leading, spacing: 2) {
-                Text(highlighted(cat.title, query)).font(.headline).foregroundStyle(Theme.ink)
+                Text(highlighted(cat.title, query)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
                 if cat.slugs == DrillCatalog.lessonSlugs {
                     let aced = LessonProgress.shared.acedCount(userId: userId, slugs: cat.slugs)
                     Text(aced > 0 ? "✦ \(aced)/\(cat.slugs.count) aced" : "\(cat.slugs.count) lessons")
-                        .font(.subheadline).foregroundStyle(aced > 0 ? Theme.gold400 : Theme.inkSoft)
+                        .font(.ui(14)).foregroundStyle(aced > 0 ? Theme.accentText : Theme.inkSoft)
                 } else {
-                    Text("\(cat.slugs.count) drills").font(.subheadline).foregroundStyle(Theme.inkSoft)
+                    Text("\(cat.slugs.count) drills").font(.ui(14)).foregroundStyle(Theme.inkSoft)
                 }
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.subheadline).foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
         }
         .lyceumCard()
     }
@@ -147,12 +147,12 @@ struct DrillsView: View {
     private func recentTile(_ d: DrillDef) -> some View {
         VStack(spacing: 6) {
             Text(d.icon).font(.system(size: 40))
-            Text(d.title).font(.subheadline.weight(.medium)).foregroundStyle(Theme.ink)
+            Text(d.title).font(.serif(15, .semibold)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.75)
             if LessonProgress.shared.isAced(userId: userId, slug: d.slug) {
-                Text("✦ Aced").font(.caption.weight(.semibold)).foregroundStyle(Theme.gold300)
+                Text("✦ Aced").font(.ui(13, .semibold)).foregroundStyle(Theme.gold300)
             } else if let sub = masterySubtitle(d, userId: userId) {
-                Text(sub).font(.caption).foregroundStyle(Theme.gold400)
+                Text(sub).font(.ui(13)).foregroundStyle(Theme.gold400)
             }
         }
         .padding(8)
@@ -191,7 +191,7 @@ struct CategoryDrillsView: View {
             }
             .padding()
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle(route.title)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -210,12 +210,12 @@ struct DrillRow: View {
             HStack(spacing: 12) {
                 Text(drill.icon).font(.system(size: 34))
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(highlighted(drill.title, query)).font(.headline).foregroundStyle(Theme.ink)
-                    Text(highlighted(drill.blurb, query)).font(.subheadline).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                    Text(highlighted(drill.title, query)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
+                    Text(highlighted(drill.blurb, query)).font(.ui(15)).foregroundStyle(Theme.inkSoft).lineLimit(2)
                     if LessonProgress.shared.isAced(userId: userId, slug: drill.slug) {
-                        Text("✦ Aced").font(.caption2.weight(.semibold)).foregroundStyle(Theme.gold300)
+                        Text("✦ Aced").font(.ui(12, .semibold)).foregroundStyle(Theme.gold300)
                     } else if let sub = masterySubtitle(drill, userId: userId) {
-                        Text(sub).font(.caption2).foregroundStyle(Theme.gold400)
+                        Text(sub).font(.ui(12)).foregroundStyle(Theme.gold400)
                     }
                 }
                 Spacer(minLength: 0)

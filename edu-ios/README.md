@@ -37,8 +37,16 @@ Use the LAN IP, not `localhost` (a device/simulator's localhost is itself).
 - `Sources/` — SwiftUI app.
   - `Networking/` — `APIClient` (async/await + token refresh), `TokenStore` (Keychain).
   - `Auth/`, `Models/`, `Offline/` (SwiftData write queue), `Drills/` (native generators).
-  - `Views/` — tabs (Learn/Review/Drills/Profile) + course/lecture/quiz/login screens;
+  - `Views/` — tabs (Courses/Review/Drills/Progress) and every screen. `Navigation.swift`
+    registers every route once per tab (`.lyceumDestinations()`) and opens
+    `lyceum://` links, whose paths mirror the website's (`lyceum://courses/{id}/{videoId}`).
     `WebViews` hosts the YouTube player and the KaTeX/Markdown renderer.
+  - `Theme.swift` — the design system, mirroring edu-web's `globals.css`: role colors
+    with light and dark values, Source Serif 4 / Inter / Cinzel (section titles only),
+    and the Appearance setting (System / Light / Dark).
+- `Screenshots/` — UI tests: the App Store set, signed-out access, account deletion, the
+  course map, and `ParityStatesTests` (interactive states against a local server; needs
+  `PARITY_TOKEN`).
 - `Tests/` — XCTest unit tests (`xcodebuild test`, or ⌘U in Xcode).
 
 ## Offline
@@ -49,5 +57,7 @@ persist to a SwiftData queue when offline and replay on reconnect; each carries 
 
 ## Not yet built
 
-Push notifications; App Store submission (EAS-style — here via Xcode Archive /
-TestFlight). Android is deliberately deferred (all-Apple student base).
+Push notifications; universal links (the `lyceum://` scheme works, but https site
+links don't open the app yet: that needs an associated domain plus an
+apple-app-site-association file on the site). Shipping steps and history are in
+`APP_STORE.md`.

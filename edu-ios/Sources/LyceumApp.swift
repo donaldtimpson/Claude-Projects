@@ -36,6 +36,14 @@ struct LyceumApp: App {
         tab.shadowColor = UIColor(Theme.line)
         UITabBar.appearance().standardAppearance = tab
         UITabBar.appearance().scrollEdgeAppearance = tab
+
+        // Segmented controls: a raised card tone for the selection, ink labels.
+        let seg = UISegmentedControl.appearance()
+        seg.selectedSegmentTintColor = UIColor(Color(light: 0xffffff, dark: 0x4a1a1a))
+        seg.backgroundColor = UIColor(Theme.tint)
+        let segFont = UIFont(name: "Inter", size: 14) ?? .systemFont(ofSize: 14)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor(Theme.inkSoft), .font: segFont], for: .normal)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor(Theme.ink), .font: segFont], for: .selected)
     }
 
     var body: some Scene {

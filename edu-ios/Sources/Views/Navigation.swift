@@ -38,7 +38,7 @@ final class Router: ObservableObject {
     /// Opens a link to the site or the app's own scheme, mirroring the web's paths:
     ///   /courses/{id}, /courses/{id}/{videoId}, /courses/{id}/problems/{psId},
     ///   /courses/{id}/test, /courses/{id}/review, /dashboard, /dashboard/class/{id},
-    ///   /review, /drills, /leaderboard, /leaderboard/{handle}
+    ///   /review, /drills, /leaderboard, /leaderboard/{handle}, /map
     /// Accepts lyceum://courses/… (host = first segment) and https://…/courses/….
     func open(_ url: URL) {
         var parts = url.pathComponents.filter { $0 != "/" }
@@ -77,6 +77,11 @@ final class Router: ObservableObject {
             var path = NavigationPath()
             path.append(LeaderboardRoute())
             if parts.count >= 2 { path.append(ScholarRoute(handle: parts[1])) }
+            tab = .courses
+            courses = path
+        case "map":
+            var path = NavigationPath()
+            path.append(CourseMapRoute())
             tab = .courses
             courses = path
         case "settings":

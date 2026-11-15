@@ -55,7 +55,7 @@ enum Theme {
     static let success = Color(light: 0x1b7a43, dark: 0x86c595)
     static let successLine = Color(light: 0x2f8f55, dark: 0x5fa872)
     static let successFill = Color(light: 0xe3f4e8, dark: 0x16301e)
-    static let warning = Color(light: 0x8a4b00, dark: 0xe3bf5c) // mid-tier grades, drafts
+    static let warning = Color(light: 0x8a4b00, dark: 0xeda25a) // mid-tier grades; orange-amber, clear of the gold accent
     static let warningFill = Color(light: 0xfdf3e1, dark: 0x3a2a0c)
     static let danger = Color(light: 0xb42318, dark: 0xe58a8a)
     static let dangerLine = Color(light: 0xc8341f, dark: 0xd06464)

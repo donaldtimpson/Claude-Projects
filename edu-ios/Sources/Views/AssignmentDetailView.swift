@@ -44,6 +44,7 @@ struct AssignmentDetailView: View {
             .padding()
         }
         .background(Theme.page)
+        .titleRevealsOnScroll(assignment.title)
         .navigationTitle(assignment.title)
         .navigationBarTitleDisplayMode(.inline)
         // Same presentation the drills hub and lecture screen use, so a lesson-drill

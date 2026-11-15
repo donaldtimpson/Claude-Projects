@@ -29,7 +29,7 @@ struct DeleteAccountSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     Text("This cannot be undone.")
-                        .font(.display(22))
+                        .font(.serif(24, .bold, relativeTo: .title))
                         .foregroundStyle(Theme.danger)
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -47,15 +47,15 @@ struct DeleteAccountSheet: View {
 
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Type \(Self.phrase) to confirm")
-                            .font(.caption).foregroundStyle(Theme.inkSoft)
+                            .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                         field(Self.phrase, text: $confirmation)
                     }
 
                     if let error {
-                        Text(error).font(.callout).foregroundStyle(Theme.danger)
+                        Text(error).font(.ui(15)).foregroundStyle(Theme.danger)
                     }
 
-                    PrimaryButton(title: "Delete my account", enabled: canSubmit, loading: busy) {
+                    PrimaryButton(title: "Delete my account", enabled: canSubmit, loading: busy, role: .destructive) {
                         Task { await submit() }
                     }
                 }

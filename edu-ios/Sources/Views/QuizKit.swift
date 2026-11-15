@@ -32,7 +32,8 @@ struct QuizProgressBar: View {
                 Capsule().fill(Theme.tint)
                 Capsule()
                     .fill(Theme.accent)
-                    .frame(width: max(0, min(1, fraction)) * geo.size.width)
+                    // A sliver even at zero, so the bar reads as a progress bar.
+                    .frame(width: max(6, min(1, fraction) * geo.size.width))
             }
         }
         .frame(height: 6)
@@ -120,7 +121,8 @@ struct OptionButtons: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .disabled(revealed)
+        // Not .disabled: that fades the revealed right and wrong answers.
+        .allowsHitTesting(!revealed)
     }
 
     private func row(_ i: Int) -> some View {
@@ -128,14 +130,16 @@ struct OptionButtons: View {
         return Button { tap(i) } label: {
             HStack(spacing: 8) {
                 if let flag { Text(flag).font(.system(size: 20)) }
-                Text(rest)
+                Text(keepMathTogether(rest))
                     .font(.serif(17, revealed && i == correctIndex ? .semibold : .regular))
                     .foregroundStyle(foreground(i))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if revealed && i == correctIndex {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.successLine)
+                        .accessibilityLabel("Correct answer")
                 } else if revealed && i == selected {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.danger)
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.dangerLine)
+                        .accessibilityLabel("Your answer")
                 }
             }
             .padding()
@@ -144,7 +148,9 @@ struct OptionButtons: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
-        .disabled(revealed)
+        // Not .disabled: that fades the revealed right and wrong answers.
+        .allowsHitTesting(!revealed)
+        .accessibilityIdentifier("answerOption")
     }
 
     private func tap(_ i: Int) {
@@ -167,7 +173,8 @@ struct OptionButtons: View {
     }
     private func foreground(_ i: Int) -> Color {
         guard revealed else { return Theme.ink }
-        return i == correctIndex || i == selected ? Theme.ink : Theme.inkSoft
+        if i == correctIndex || i == selected { return Theme.ink }
+        return Theme.inkSoft.opacity(0.8)
     }
 }
 
@@ -185,7 +192,8 @@ struct NumericKeypad: View {
         VStack(spacing: 12) {
             HStack(spacing: 6) {
                 Spacer(minLength: 0)
-                Text(entry.isEmpty ? "0" : entry)
+                // An empty well shows a quiet "?" rather than a "0" that reads as typed.
+                Text(entry.isEmpty ? "?" : entry)
                     .font(.ui(40, .semibold))
                     .monospacedDigit()
                     .foregroundStyle(entry.isEmpty ? Theme.inkSoft : Theme.ink)

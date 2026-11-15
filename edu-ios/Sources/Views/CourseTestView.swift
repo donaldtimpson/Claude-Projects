@@ -52,12 +52,12 @@ struct CourseTestView: View {
     @ViewBuilder private var summary: some View {
         VStack(spacing: 16) {
             Text(courseTitle)
-                .font(.display(20)).foregroundStyle(Theme.crimson)
+                .font(.serif(24, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
 
             if let score {
                 Text("\(score.score) / \(score.total)")
-                    .font(.system(size: 40, weight: .bold)).foregroundStyle(Theme.crimson)
+                    .font(.ui(40, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
                 let pct = score.total > 0 ? Int((Double(score.score) / Double(score.total) * 100).rounded()) : 0
                 // 70% is the pass mark the standing engine uses to count a course as passed.
                 Text(pct >= 70 ? "\(pct)% — passed" : "\(pct)%")

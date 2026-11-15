@@ -80,6 +80,7 @@ struct ProblemSetWebView: UIViewRepresentable {
         <style>
         \(NoteWeb.css)
         :root{--card:#1a0909;--sol:#cfa135}
+        body{padding:1px 0}
         @media (prefers-color-scheme: light){:root{--card:#ffffff}}
         .preamble{margin-bottom:14px;color:var(--soft)}
         /* Each problem is a card, as on the web; solutions sit on a gold rule. */

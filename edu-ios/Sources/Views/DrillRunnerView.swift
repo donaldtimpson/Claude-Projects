@@ -10,10 +10,10 @@ struct DrillResultCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             Text(ok ? "Correct ✓" : "Not quite ✗")
-                .font(.subheadline.weight(.bold))
+                .font(.ui(15, .bold))
                 .foregroundStyle(ok ? Theme.success : Theme.danger)
             if let detail {
-                Text(detail).font(.caption).foregroundStyle(Theme.ink)
+                Text(detail).font(.ui(13)).foregroundStyle(Theme.ink)
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
@@ -144,7 +144,7 @@ struct DrillRunnerView: View {
         ScrollView {
             VStack(spacing: 18) {
                 Text(def.icon).font(.system(size: 64))
-                Text(def.blurb).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+                Text(def.blurb).font(.serif(17)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
 
                 if def.homeworkLength == nil {
                     Picker("Mode", selection: $mode) {
@@ -182,14 +182,13 @@ struct DrillRunnerView: View {
                 }
 
                 Text(modeBlurb)
-                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                    .font(.serif(16)).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
 
                 // Drills with a meaningful Easy/Medium/Hard axis (math, geography, the Grammar
                 // Gauntlet's concept tiers) get three buttons; single-concept drills, where a
                 // 3-way split would be arbitrary, get one Start and always run the full pool.
                 if def.difficultyTiers {
-                    Text("Choose a difficulty")
-                        .font(.display(13)).kerning(1).foregroundStyle(Theme.gold400)
+                    Eyebrow("Choose a difficulty")
                     ForEach([(1, "Easy"), (2, "Medium"), (3, "Hard")], id: \.0) { value, label in
                         VStack(spacing: 4) {
                             SecondaryButton(title: label) { start(def: def, level: value) }
@@ -214,14 +213,14 @@ struct DrillRunnerView: View {
         case .rapidFire:
             let best = UserDefaults.standard.integer(forKey: rapidBestKey(value, rapidSeconds))
             Text(best > 0 ? "\(rapidSeconds)s best · \(best)" : "No \(rapidSeconds)s score yet")
-                .font(.caption2)
-                .foregroundStyle(best > 0 ? Theme.gold400 : Theme.inkSoft)
+                .font(.ui(12))
+                .foregroundStyle(best > 0 ? Theme.ink : Theme.inkSoft)
         case .learn:
             let items = def.poolItems?(value) ?? []
             let m = DrillMastery.shared.masteredCount(userId: userId, slug: slug, items: items)
             Text("\(m) / \(items.count) mastered")
-                .font(.caption2)
-                .foregroundStyle(m > 0 ? Theme.gold400 : Theme.inkSoft)
+                .font(.ui(12))
+                .foregroundStyle(m > 0 ? Theme.ink : Theme.inkSoft)
         case .practice:
             EmptyView()
         }
@@ -253,7 +252,7 @@ struct DrillRunnerView: View {
                     }
                     .contentShape(Circle())
                     QuizProgressBar(fraction: Double(answered) / Double(count))
-                    Text("\(min(answered + 1, count)) / \(count)").font(.caption).foregroundStyle(Theme.inkSoft)
+                    Text("\(min(answered + 1, count)) / \(count)").font(.ui(13)).foregroundStyle(Theme.inkSoft)
                     StreakPill(streak: streak)
                 }
             }
@@ -286,7 +285,7 @@ struct DrillRunnerView: View {
             QuizProgressBar(fraction: Double(answered) / Double(count))
             HStack {
                 Text("\(min(answered + 1, count)) / \(count)")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    .font(.ui(14)).foregroundStyle(Theme.inkSoft)
                 Spacer()
                 StreakPill(streak: streak)
             }
@@ -299,7 +298,7 @@ struct DrillRunnerView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 0)
             Text(problem.prompt)
-                .font(.system(size: 46, weight: .bold, design: .rounded))
+                .font(.ui(46, .bold))
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity)
             if revealed {
@@ -323,7 +322,7 @@ struct DrillRunnerView: View {
             VStack(alignment: .leading, spacing: 22) {
                 if !problem.prompt.isEmpty {
                     Text(problem.prompt)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.ui(28, .bold))
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 8)
@@ -360,7 +359,7 @@ struct DrillRunnerView: View {
     @ViewBuilder private func mapTapBody(kind: GeoMapKind, problem: DrillProblem) -> some View {
         VStack(spacing: 8) {
             Text("Find \(problem.prompt)")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.ui(24, .bold))
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity, alignment: .center)
             MapTapCard(kind: kind, targetId: problem.dedupeKey ?? "", revealed: revealed,
@@ -383,17 +382,17 @@ struct DrillRunnerView: View {
 
     private var tapHint: some View {
         Text(answered >= count ? "Tap to finish" : "Tap to continue")
-            .font(.footnote).foregroundStyle(Theme.inkSoft)
+            .font(.ui(14)).foregroundStyle(Theme.inkSoft)
             .frame(maxWidth: .infinity, alignment: .center)
     }
 
     @ViewBuilder private func feedback(_ problem: DrillProblem) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(wasCorrect ? "Correct ✓" : "Not quite ✗")
-                .font(.headline)
+                .font(.serif(17, .semibold))
                 .foregroundStyle(wasCorrect ? Theme.success : Theme.danger)
             if let explanation = problem.explanation {
-                Text(explanation).font(.callout).foregroundStyle(Theme.ink)
+                Text(explanation).font(.ui(15)).foregroundStyle(Theme.ink)
             }
         }
         .padding()
@@ -408,14 +407,14 @@ struct DrillRunnerView: View {
         let pct = count > 0 ? Int((Double(correctCount) / Double(count) * 100).rounded()) : 0
         VStack(spacing: 18) {
             Text(pct == 100 ? "✦" : "✓").font(.system(size: 52)).foregroundStyle(Theme.gold400)
-            Text(pct == 100 ? "Flawless" : "Nice work").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
+            Text(pct == 100 ? "Flawless" : "Nice work").font(.serif(26, .bold)).foregroundStyle(Theme.crimson)
             Text("\(correctCount) / \(count) correct · \(pct)%").foregroundStyle(Theme.ink)
             if def?.homeworkLength != nil, pct < 100 {
                 Text("Homework needs a flawless run — try again for the ✦.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
+                    .font(.ui(14)).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
             }
             HStack(spacing: 6) {
-                Text("Best streak").font(.footnote).foregroundStyle(Theme.inkSoft)
+                Text("Best streak").font(.ui(14)).foregroundStyle(Theme.inkSoft)
                 StreakPill(streak: bestStreak)
             }
             if !auth.isSignedIn {

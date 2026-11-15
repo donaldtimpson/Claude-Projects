@@ -75,9 +75,10 @@ final class SignedOutAccessTests: XCTestCase {
                       "a course's lecture list should be visible without an account")
         lecture.tap()
 
-        // The lecture screen titles itself "Lecture N".
+        // The lecture screen titles itself by the lecture's own number: "Lecture N",
+        // or "Lesson N" in a course that numbers lessons (Grammar).
         let lectureBar = app.navigationBars.matching(
-            NSPredicate(format: "identifier BEGINSWITH %@", "Lecture")).firstMatch
+            NSPredicate(format: "identifier BEGINSWITH %@ OR identifier BEGINSWITH %@", "Lecture", "Lesson")).firstMatch
         XCTAssertTrue(lectureBar.waitForExistence(timeout: 30),
                       "a lecture must open without an account")
 

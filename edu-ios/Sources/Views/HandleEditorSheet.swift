@@ -34,7 +34,7 @@ struct HandleEditorSheet: View {
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Handle").font(.caption).foregroundStyle(Theme.inkSoft)
+                        Text("Handle").font(.ui(13)).foregroundStyle(Theme.inkSoft)
                         TextField("Scholar", text: $handle)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
@@ -47,11 +47,11 @@ struct HandleEditorSheet: View {
                                 error = nil
                             }
                         Text("3–\(Self.maxLength) characters. Letters, numbers, hyphens, and underscores.")
-                            .font(.caption).foregroundStyle(Theme.inkSoft)
+                            .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                     }
 
                     if let error {
-                        Text(error).font(.callout).foregroundStyle(Theme.danger)
+                        Text(error).font(.ui(15)).foregroundStyle(Theme.danger)
                     }
 
                     PrimaryButton(title: "Save handle", enabled: canSubmit, loading: busy) {

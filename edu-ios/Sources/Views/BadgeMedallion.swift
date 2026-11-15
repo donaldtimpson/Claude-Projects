@@ -81,10 +81,10 @@ struct BadgeMedallion: View {
         let unlocked = badge.unlocked
         let face = unlocked
             ? BadgeMeta.tierMetal(badge.tier)
-            : [Color(hex: 0x3a2c2c), Color(hex: 0x201414)]
+            : [Theme.tint, Theme.card]
         let rim = unlocked
             ? [Color(hex: 0xf8ecb8), Color(hex: 0xb8860b), Color(hex: 0xf8ecb8), Color(hex: 0x9a7209), Color(hex: 0xf8ecb8)]
-            : [Theme.line, Theme.crimson800, Theme.line]
+            : [Theme.strongLine, Theme.inkSoft.opacity(0.6), Theme.strongLine]
 
         ZStack {
             Circle()
@@ -100,6 +100,7 @@ struct BadgeMedallion: View {
         .frame(width: size, height: size)
         .shadow(color: BadgeMeta.tierGlow(badge.tier).opacity(unlocked ? 0.5 : 0),
                 radius: unlocked ? size * 0.13 : 0)
-        .opacity(unlocked ? 1 : 0.5)
+        // Locked: a quiet outlined disc that still reads on both pages.
+        .opacity(unlocked ? 1 : 0.8)
     }
 }

@@ -41,75 +41,94 @@ struct ReviewView: View {
 
     @ViewBuilder private var idleView: some View {
         ScrollView {
-            VStack(spacing: 16) {
-                if loading {
-                    ProgressView()
-                } else if let error {
-                    ContentUnavailableView("Couldn't load", systemImage: "wifi.slash", description: Text(error))
+            VStack(alignment: .leading, spacing: 14) {
+                if loading && deck == nil {
+                    ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
+                } else if error != nil && deck == nil {
+                    LoadFailedView(title: "Couldn't load your review") { await load() }
                 } else {
-                    VStack(spacing: 12) {
-                        let due = deck?.dueCount ?? 0
-                        Text(due > 0 ? "\(due) card\(due == 1 ? "" : "s") due today across your courses."
-                             : "You're all caught up — no cards due right now.")
-                            .foregroundStyle(Theme.ink)
-                        PrimaryButton(title: "Start review", enabled: !cards.isEmpty) {
-                            index = 0; correct = 0; phase = .running
+                    let due = deck?.dueCount ?? 0
+                    VStack(alignment: .leading, spacing: 12) {
+                        if due > 0 {
+                            Text("\(due) card\(due == 1 ? "" : "s") due today").font(.serif(22, .bold)).foregroundStyle(Theme.ink)
+                            Text("Questions you've missed come back just before you'd forget them. Get one right and it waits longer; miss it and it starts over.")
+                                .font(.serif(17)).foregroundStyle(Theme.inkSoft)
+                            PrimaryButton(title: "Start review") {
+                                index = 0; correct = 0; phase = .running
+                            }
+                        } else if (deck?.cards.isEmpty ?? true) && due == 0 {
+                            Text("All caught up ✓").font(.serif(22, .bold)).foregroundStyle(Theme.ink)
+                            Text("No cards are due right now. Take a lecture quiz and anything you miss will join your deck.")
+                                .font(.serif(17)).foregroundStyle(Theme.inkSoft)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .lyceumCard()
                 }
             }
             .padding()
         }
-        .background(Theme.parchment)
-        .task { if deck == nil { await load() } }
+        .background(Theme.page)
+        .refreshable { await load() }
+        .task { await load() }
     }
 
     @ViewBuilder private var runningView: some View {
         ScrollView {
             if index < cards.count {
                 let card = cards[index]
-                MCQCard(
-                    prompt: card.prompt, options: card.options, correctIndex: card.correctIndex,
-                    explanation: card.explanation,
-                    progress: "Card \(index + 1) of \(cards.count) · \(card.source)"
-                ) { _, wasCorrect in
-                    if wasCorrect { correct += 1 }
-                    let card = card
-                    Task {
-                        _ = await queue.submit(
-                            path: "/review/grade",
-                            body: ReviewGradeBody(questionId: card.id, correct: wasCorrect, clientId: makeClientId()),
-                            clientId: makeClientId()
-                        )
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(card.source).font(.ui(13)).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                    MCQCard(
+                        prompt: card.prompt, options: card.options, correctIndex: card.correctIndex,
+                        explanation: card.explanation,
+                        progress: "\(index + 1) of \(cards.count)",
+                        progressFraction: Double(index) / Double(max(1, cards.count))
+                    ) { _, wasCorrect in
+                        if wasCorrect { correct += 1 }
+                        let id = makeClientId()
+                        Task {
+                            _ = await queue.submit(
+                                path: "/review/grade",
+                                body: ReviewGradeBody(questionId: card.id, correct: wasCorrect, clientId: id),
+                                clientId: id
+                            )
+                        }
+                        if index + 1 < cards.count { index += 1 } else { finish() }
                     }
-                    if index + 1 < cards.count { index += 1 } else { finish() }
+                    .id(card.id)
                 }
-                .id(card.id)
                 .padding()
             }
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
     }
 
     @ViewBuilder private var doneView: some View {
-        VStack(spacing: 16) {
-            Text("Session complete").font(.title.weight(.bold)).foregroundStyle(Theme.crimson)
-            Text("\(correct) of \(cards.count) correct").foregroundStyle(Theme.ink)
+        let missed = cards.count - correct
+        VStack(spacing: 14) {
+            Text("Review complete").font(.serif(26, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
+            Text("\(correct) / \(cards.count) correct").font(.ui(28, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
+            Text(missed == 0
+                 ? "Spotless. Every card cleared; they'll come back on a longer schedule."
+                 : "\(missed) card\(missed == 1 ? "" : "s") reset to the start. You'll see \(missed == 1 ? "it" : "them") again soon.")
+                .font(.serif(17)).foregroundStyle(Theme.inkSoft)
+                .multilineTextAlignment(.center)
             PrimaryButton(title: "Done") {
                 phase = .idle
                 Task { await load() }
             }
         }
-        .padding(32)
+        .padding(28)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
+        .background(Theme.page)
     }
 
     private func finish() {
         Task {
-            struct BadgesResult: Codable { let badges: [Badge] }
-            let _: BadgesResult? = try? await APIClient.shared.post("/review/finish", body: [String: String]())
+            if let res: BadgesResponse = try? await APIClient.shared.post("/review/finish", body: [String: String]()) {
+                Celebrations.shared.celebrate(res.badges)
+            }
         }
         phase = .done
     }

@@ -83,6 +83,40 @@ struct SectionTitle: View {
     }
 }
 
+/// Non-breaking spaces around = and the like, so "Ax = 0" never splits across lines.
+func keepMathTogether(_ s: String) -> String {
+    var out = s
+    for op in ["=", "≠", "≤", "≥", "<", ">", "+", "−", "×", "→"] {
+        out = out.replacingOccurrences(of: " \(op) ", with: "\u{00A0}\(op)\u{00A0}")
+    }
+    return out
+}
+
+/// For screens that open with their own big title: the nav bar stays empty until
+/// that title scrolls under it, so the name isn't shown twice. Apply to the
+/// ScrollView; the screen's navigationTitle still names the back button.
+struct TitleRevealsOnScroll: ViewModifier {
+    let title: String
+    @State private var shown = false
+    func body(content: Content) -> some View {
+        content
+            .onScrollGeometryChange(for: Bool.self, of: { $0.contentOffset.y + $0.contentInsets.top > 48 }) { _, past in
+                withAnimation(.easeOut(duration: 0.15)) { shown = past }
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
+                        .lineLimit(1).opacity(shown ? 1 : 0)
+                        .accessibilityHidden(!shown)
+                }
+            }
+    }
+}
+
+extension View {
+    func titleRevealsOnScroll(_ title: String) -> some View { modifier(TitleRevealsOnScroll(title: title)) }
+}
+
 /// Small uppercase label (the web's `.eyebrow`).
 struct Eyebrow: View {
     let text: String
@@ -264,7 +298,7 @@ struct MCQCard: View {
             if prompt.contains("$") {
                 MathWebView(markdown: prompt, height: $promptHeight).frame(height: promptHeight)
             } else {
-                Text(prompt).font(.serif(20, .medium)).foregroundStyle(Theme.ink)
+                Text(keepMathTogether(prompt)).font(.serif(20, .medium)).foregroundStyle(Theme.ink)
             }
 
             // Tap an option to answer — it grades and reveals immediately (no Check).

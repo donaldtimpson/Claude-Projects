@@ -231,7 +231,6 @@ struct LectureView: View {
                     NavigationLink(value: ProblemSetRoute(courseId: route.courseId, problemSetId: ps.id, title: ps.title)) {
                         ProblemSetRow(ps: ProblemSetItem(
                             id: ps.id, title: ps.title, points: ps.points, hasSolutions: ps.hasSolutions,
-                            lectureSpan: (ps.hasSolutions ?? false) ? "Problems with worked solutions" : "Problems",
                             isTest: ps.isTest))
                     }
                     .buttonStyle(.lyceumPress)

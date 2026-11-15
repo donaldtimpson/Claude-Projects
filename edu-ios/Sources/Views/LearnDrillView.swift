@@ -58,7 +58,7 @@ struct LearnDrillView: View {
                             }
                             .contentShape(Circle())
                             QuizProgressBar(fraction: progressNow)
-                            Text("Mastered \(masteredNow) / \(total)").font(.caption).foregroundStyle(Theme.inkSoft)
+                            Text("Mastered \(masteredNow) / \(total)").font(.ui(13)).foregroundStyle(Theme.inkSoft)
                         }
                     }
                 } else {
@@ -107,7 +107,7 @@ struct LearnDrillView: View {
         VStack(spacing: 8) {
             QuizProgressBar(fraction: progressNow)
             Text("Mastered \(masteredNow) / \(total)")
-                .font(.footnote).foregroundStyle(Theme.inkSoft)
+                .font(.ui(14)).foregroundStyle(Theme.inkSoft)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding()

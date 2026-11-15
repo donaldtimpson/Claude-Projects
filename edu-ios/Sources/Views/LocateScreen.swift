@@ -48,7 +48,7 @@ struct LocateScreen<TopBar: View>: View {
                 topBar
                 HStack(spacing: 8) {
                     Text("Find \(prompt)")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.ui(22, .bold))
                         .foregroundStyle(Theme.ink)
                     LocateFlag(kind: kind, id: targetId)
                 }

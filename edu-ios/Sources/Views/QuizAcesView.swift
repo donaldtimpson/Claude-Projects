@@ -59,11 +59,11 @@ struct QuizAcesView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text("✦ HALL OF ACES")
-                    .font(.display(13)).kerning(2).foregroundStyle(Theme.gold400)
+                    .font(.ui(12, .semibold)).kerning(0.8).foregroundStyle(Theme.inkSoft)
                 Spacer(minLength: 8)
                 if !aces.isEmpty {
                     Text("\(aces.count) perfect \(aces.count == 1 ? "score" : "scores")")
-                        .font(.caption).foregroundStyle(Theme.inkSoft)
+                        .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                 }
             }
 
@@ -77,7 +77,7 @@ struct QuizAcesView: View {
                     }
                     if more > 0 {
                         Text("+\(more) more")
-                            .font(.caption).foregroundStyle(Theme.inkSoft)
+                            .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                             .padding(.vertical, 4)
                     }
                 }
@@ -89,7 +89,7 @@ struct QuizAcesView: View {
     @ViewBuilder private func chip(_ ace: QuizAce) -> some View {
         let isMe = ace.userId == myUserId
         Text(isMe ? "\(ace.handle) (you)" : ace.handle)
-            .font(.caption)
+            .font(.ui(13))
             .foregroundStyle(isMe ? Theme.gold300 : Theme.inkSoft)
             .padding(.horizontal, 8).padding(.vertical, 4)
             .background(isMe ? Theme.parchmentDeep : Color.clear, in: RoundedRectangle(cornerRadius: 6))

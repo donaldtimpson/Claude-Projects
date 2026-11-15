@@ -187,16 +187,17 @@ page, and they need to keep matching.
 | Contact Info → Name | Optional display name |
 | Identifiers → User ID | The account row |
 | Usage Data → Product Interaction | Watch progress, quiz and drill attempts, reviews, streak |
+| User Content → Other User Content | Lecture comments, and the homework links a registered student turns in |
 
 Then, for the tracking question: **"No, we do not use data for tracking."**
 There is no analytics SDK and no advertising identifier in the app.
 
-**Age rating.** Answer the questionnaire honestly. The one that used to matter
-was user-generated content — but as of 1.0 the app has **none**: lecture comments
-are switched off (§10) and there is no homework submission on iOS. Answer the UGC
-question as none, which should land the rating at 4+ rather than 13+. `User
-Content → Other User Content` is likewise gone from the table above and from
-`PrivacyInfo.xcprivacy`. All three answers go back together when comments return.
+**Age rating.** Answer the questionnaire honestly. As of build 5 the app has
+user-generated content again: lecture comments, with **report** and **block** on
+every comment and an admin moderation queue (Guideline 1.2), plus homework links.
+Answer the UGC question yes; expect the rating to move off 4+. `User Content →
+Other User Content` is back in the table above and in `PrivacyInfo.xcprivacy`.
+These three answers must stay in step.
 
 **Export compliance** is already answered in code:
 `ITSAppUsesNonExemptEncryption = false` in `Info.plist`, because the only
@@ -291,7 +292,8 @@ Builds so far:
 | 1.0.0 (1) | 2026-08-23 | Rejected 2026-08-25, Guideline 2.1 — Information Needed (§10) |
 | 1.0.0 (2) | 2026-08-25 | Comments switched off; superseded before submission |
 | 1.0.0 (3) | 2026-08-29 | Rejected 2026-09-01, Guideline 5.1.1(v) — password on the delete screen (§12) |
-| 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion — **not yet uploaded** |
+| 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion. Never uploaded; superseded by (5) |
+| 1.0.0 (5) | prepared 2026-11-14 | Web-parity redesign, light mode, comments with moderation, homework (§13) |
 
 `xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
 Organizer does not look at. Copy it to
@@ -1041,3 +1043,52 @@ Please let me know if anything else would help.
 ```
 
 ---
+
+---
+
+## 13. Build 1.0.0 (5), prepared 2026-11-14
+
+1.0 has never been approved, so this stays **1.0.0** with build **5**. App Store
+Connect's unreleased version is still 1.0.0, and a version bump would only
+matter after a release. Build 5 replaces the never-uploaded build 4 and answers
+the open 5.1.1(v) rejection (§12): account deletion still asks for no password.
+
+### What changed since the last build App Review saw (3)
+
+- **Account deletion** needs no password (the §12 fix, carried forward).
+- **Comments are back, with moderation.** Every comment has Report (with a
+  reason) and Block, reports land in an admin queue, and a blocked author's
+  comments disappear for the blocker. This is exactly what App Review asked to
+  see in the 2.1 request (§10). The privacy manifest, the App Privacy answers and
+  the age rating change with it (§4).
+- **Homework.** A student in a live class can register with a class code, see
+  their grade and how it's calculated, and turn in a homework link.
+- **Design.** The app matches the website's redesign: new type, light and dark
+  themes with an Appearance setting, and rebuilt screens throughout.
+- **Lecture numbers** come from each lecture's own title, so a newest-first
+  playlist no longer counts backwards.
+- **Watching** is now an explicit "Mark as watched" button, as on the website.
+  The app used to mark a lecture watched just by opening it, which inflated
+  attendance.
+
+### Before uploading
+
+1. `xcodegen generate`, then run the UI tests that pin past rejections:
+   `SignedOutAccessTests`, `AccountDeletionTests` (scheme LyceumScreenshots).
+2. Regenerate the store screenshots (§3). The design changed, so the old set is
+   out of date.
+3. Update App Privacy and the age rating (§4) before submitting, or the listing
+   will contradict the binary.
+
+### Notes for App Review (add to the Notes field)
+
+```
+Build 1.0 (5) addresses the 5.1.1(v) finding: account deletion (My Progress >
+Settings > Delete account) asks only that you type DELETE; there is no
+password step.
+
+This build also restores lecture comments. Each comment has Report (with a
+reason) and Block in its "..." menu; reports go to a moderation queue that we
+review, and blocking hides that person's comments immediately.
+```
+

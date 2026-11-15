@@ -89,15 +89,31 @@ final class AccountDeletionTests: XCTestCase {
 
         app.buttons["Create account"].tap()
 
-        // Signed in, the Profile tab becomes My Progress.
-        XCTAssertTrue(app.buttons["Delete Account"].waitForExistence(timeout: 30),
+        // Signed in, the Progress tab becomes My Progress.
+        XCTAssertTrue(app.navigationBars["My Progress"].waitForExistence(timeout: 30),
                       "registration did not complete")
+        // iOS offers to save the new password in a system prompt that covers the
+        // app and swallows taps until it's dismissed.
+        dismissSavePasswordPrompt()
+    }
+
+    private func dismissSavePasswordPrompt() {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let notNow = springboard.buttons["Not Now"]
+        if notNow.waitForExistence(timeout: 5) { notNow.tap() }
+        let appNotNow = app.buttons["Not Now"]
+        if appNotNow.waitForExistence(timeout: 2) { appNotNow.tap() }
     }
 
     private func openDeleteSheet() {
-        let entry = app.buttons["Delete Account"]
-        XCTAssertTrue(entry.waitForExistence(timeout: 10))
-        // The control sits at the very bottom of My Progress, under the coursework.
+        // Account controls live in Settings, behind the gear on My Progress.
+        let gear = app.buttons["settingsButton"].firstMatch
+        XCTAssertTrue(gear.waitForExistence(timeout: 10), "no Settings button on My Progress")
+        gear.tap()
+        // A Form row; match it by label whatever element type the list gives it.
+        let entry = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label == %@", "Delete account")).firstMatch
+        XCTAssertTrue(entry.waitForExistence(timeout: 10), "no Delete account in Settings")
         if !entry.isHittable { app.swipeUp() }
         entry.tap()
     }

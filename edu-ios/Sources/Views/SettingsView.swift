@@ -4,6 +4,7 @@ import SwiftUI
 // in or out (Privacy and Support must be findable without an account).
 struct SettingsView: View {
     @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var router: Router
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @State private var showDelete = false
 
@@ -34,9 +35,10 @@ struct SettingsView: View {
                         LabeledContent("Signed in as", value: email)
                     }
                     Button("Sign out") { Task { await auth.logout() } }
-                        .foregroundStyle(Theme.link)
+                        .foregroundStyle(Theme.ink)
                     // Account deletion must be reachable in the app (Guideline 5.1.1(v)).
                     Button("Delete account", role: .destructive) { showDelete = true }
+                        .foregroundStyle(Theme.danger)
                 }
                 .listRowBackground(Theme.card)
             }
@@ -53,6 +55,11 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
+        // Signing out or deleting the account here returns to the Progress tab's
+        // root, which is the sign-in form when signed out.
+        .onChange(of: auth.isSignedIn) { _, signedIn in
+            if !signedIn { router.progress = NavigationPath() }
+        }
     }
 
     private func row(_ title: String, _ icon: String) -> some View {

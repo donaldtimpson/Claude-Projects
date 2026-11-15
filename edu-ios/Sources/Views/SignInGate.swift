@@ -19,21 +19,21 @@ struct SignInGate: View {
         VStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 44))
-                .foregroundStyle(Theme.gold400)
+                .foregroundStyle(Theme.ornament)
             Text(title)
-                .font(.display(20)).foregroundStyle(Theme.crimson)
+                .font(.serif(24, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
             Text(message)
-                .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                .font(.serif(17)).foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center)
             PrimaryButton(title: "Sign in or create an account") { showAuth = true }
                 .padding(.top, 2)
             Text("Everything else in the app works without one.")
-                .font(.caption).foregroundStyle(Theme.inkSoft)
+                .font(.ui(13)).foregroundStyle(Theme.inkSoft)
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
+        .background(Theme.page)
         .sheet(isPresented: $showAuth) {
             AuthSheet(reason: reason)
         }
@@ -53,7 +53,7 @@ struct AuthSheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Not now") { dismiss() }.tint(Theme.gold300)
+                        Button("Not now") { dismiss() }.tint(Theme.link)
                     }
                 }
         }
@@ -74,11 +74,11 @@ struct SignInPrompt: View {
     var body: some View {
         VStack(spacing: 8) {
             Text(message)
-                .font(.footnote).foregroundStyle(Theme.inkSoft)
+                .font(.ui(14)).foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center)
             Button(actionTitle) { showAuth = true }
-                .font(.callout.weight(.medium))
-                .tint(Theme.gold400)
+                .font(.ui(15, .semibold))
+                .tint(Theme.link)
         }
         .sheet(isPresented: $showAuth) { AuthSheet(reason: reason) }
     }

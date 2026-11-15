@@ -47,7 +47,7 @@ struct DrillDiagram: View {
 
     private func numCell(_ v: Int) -> some View {
         Text("\(v)".replacingOccurrences(of: "-", with: "−"))
-            .font(.system(size: 24, weight: .semibold, design: .rounded))
+            .font(.ui(24, .semibold))
             .monospacedDigit()
             .foregroundStyle(Theme.ink)
             .frame(minWidth: 28)
@@ -70,7 +70,7 @@ struct DrillDiagram: View {
                     GridRow {
                         ForEach(rows[i].indices, id: \.self) { j in
                             Text("\(rows[i][j])".replacingOccurrences(of: "-", with: "−"))
-                                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                                .font(.ui(28, .semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(Theme.ink)
                                 .frame(minWidth: 34)

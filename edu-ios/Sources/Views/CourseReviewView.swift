@@ -49,13 +49,18 @@ struct CourseReviewView: View {
         .background(Theme.page)
         .navigationTitle("Course Review")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if phase == .playing {
+                ToolbarItem(placement: .topBarTrailing) { Button("End") { finishEarly() } }
+            }
+        }
         .task { if pool.isEmpty { await load() } }
     }
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(route.title).font(.serif(24, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
-            Text("All \(pool.count) questions from this course, every lecture quiz plus the test, in a shuffled deck. Miss one and it comes back a few questions later until you get it right. Clear the deck when you've mastered them all.")
+            Text("All \(pool.count) questions from this course (every lecture quiz\(pool.contains { $0.source == "Course Test" } ? " plus the course test" : "")) in a shuffled deck. Miss one and it comes back a few questions later until you get it right. Clear the deck when you've mastered them all.")
                 .font(.serif(17)).foregroundStyle(Theme.inkSoft)
             PrimaryButton(title: "Start review") { start(endless: false) }
             SecondaryButton(title: "Endless mode", systemImage: "infinity") { start(endless: true) }
@@ -71,9 +76,8 @@ struct CourseReviewView: View {
                     Text(endless ? "∞ Endless · streak \(streak)" : "\(mastered.count) / \(pool.count) mastered · \(pool.count - mastered.count) to review")
                         .font(.ui(14, .medium)).monospacedDigit().foregroundStyle(Theme.inkSoft)
                     Spacer()
-                    Button("End") { finishEarly() }.font(.ui(14, .semibold)).foregroundStyle(Theme.link)
                 }
-                Eyebrow(q.source)
+                Text(q.source).font(.ui(13)).foregroundStyle(Theme.inkSoft).lineLimit(2)
                 MCQCard(
                     prompt: q.prompt, options: q.options, correctIndex: q.correctIndex,
                     explanation: q.explanation, progress: "",

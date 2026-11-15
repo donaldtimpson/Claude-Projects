@@ -34,13 +34,13 @@ struct DiscussionSection: View {
             if isSignedIn {
                 SecondaryButton(title: "Add a comment", action: onAdd)
             } else {
-                Text("Sign in to join the discussion.")
-                    .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                SignInPrompt(message: "Sign in to join the discussion.",
+                             reason: "Join the discussion on this lecture.", actionTitle: "Sign in")
             }
 
             if comments.isEmpty {
-                Text("No comments yet.")
-                    .font(.serif(15)).foregroundStyle(Theme.inkSoft)
+                Text("No comments yet. Be the first!")
+                    .font(.serif(16)).foregroundStyle(Theme.inkSoft)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 8)
             } else {
@@ -130,10 +130,10 @@ private struct CommentBody: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 8) {
                 Text(comment.deleted ? "deleted" : comment.user.name)
-                    .font(.display(13)).kerning(0.3)
-                    .foregroundStyle(comment.deleted ? Theme.inkSoft : Theme.gold300)
+                    .font(.ui(14, .semibold))
+                    .foregroundStyle(comment.deleted ? Theme.inkSoft : Theme.ink)
                 Text(relativeTime(comment.createdAt))
-                    .font(.caption).foregroundStyle(Theme.inkSoft)
+                    .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                 Spacer(minLength: 0)
             }
             Text(comment.body)
@@ -145,11 +145,11 @@ private struct CommentBody: View {
                 HStack(spacing: 18) {
                     if canReply {
                         Button("Reply", action: onReply)
-                            .font(.caption).foregroundStyle(Theme.gold400)
+                            .font(.ui(14, .semibold)).foregroundStyle(Theme.link)
                     }
                     if isOwn {
                         Button("Delete", role: .destructive, action: onDelete)
-                            .font(.caption)
+                            .font(.ui(14, .semibold))
                     }
                     if canModerate {
                         // A small overflow menu keeps Report/Block discoverable
@@ -159,7 +159,7 @@ private struct CommentBody: View {
                             Button("Block \(comment.user.name)", systemImage: "hand.raised", role: .destructive, action: onBlock)
                         } label: {
                             Image(systemName: "ellipsis")
-                                .font(.caption).foregroundStyle(Theme.inkSoft)
+                                .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                                 .accessibilityLabel("More actions")
                         }
                     }
@@ -201,12 +201,12 @@ struct CommentComposeSheet: View {
                     .padding(8)
                     .background(Theme.parchmentDeep, in: RoundedRectangle(cornerRadius: 10))
                 if let errorText {
-                    Text(errorText).font(.footnote).foregroundStyle(.red)
+                    Text(errorText).font(.ui(14)).foregroundStyle(Theme.danger)
                 }
                 Spacer(minLength: 0)
             }
             .padding()
-            .background(Theme.parchment)
+            .background(Theme.page)
             .navigationTitle(replyingTo == nil ? "New comment" : "Reply")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

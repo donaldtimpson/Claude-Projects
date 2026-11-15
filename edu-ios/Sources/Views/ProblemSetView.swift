@@ -72,6 +72,7 @@ struct ProblemSetView: View {
             }
             .background(Theme.page)
             .refreshable { await load() }
+            .titleRevealsOnScroll(detail.title)
         } else if failed {
             LoadFailedView(title: "Couldn't load this problem set") { await load() }.background(Theme.page)
         } else {

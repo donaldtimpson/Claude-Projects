@@ -5,6 +5,7 @@ import SwiftUI
 // courses instantly and searches lecture transcripts on the server.
 struct LearnView: View {
     @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var router: Router
     @State private var courses: [CourseListItem] = []
     @State private var categories: [CategoryItem] = []
     @State private var announcements: [Announcement] = []
@@ -25,13 +26,15 @@ struct LearnView: View {
             // here they hang off the home tab, reachable signed out.
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(value: CourseMapRoute()) {
+                    // Buttons onto the stack path: value links in a toolbar don't
+                    // reliably resolve against the stack's destinations.
+                    Button { router.courses.append(CourseMapRoute()) } label: {
                         Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
                     }
                     .accessibilityLabel("Course Map")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink(value: LeaderboardRoute()) {
+                    Button { router.courses.append(LeaderboardRoute()) } label: {
                         Image(systemName: "trophy")
                     }
                     .accessibilityLabel("Hall of Scholars")

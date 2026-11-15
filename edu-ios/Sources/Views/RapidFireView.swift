@@ -90,7 +90,7 @@ struct RapidFireView: View {
                     ScrollView {
                         VStack(spacing: 20) {
                             Text(problem.prompt)
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.ui(28, .bold))
                                 .foregroundStyle(Theme.ink)
                                 .frame(maxWidth: .infinity).padding(.top, 12)
                             if let diagram = problem.diagram {
@@ -110,7 +110,7 @@ struct RapidFireView: View {
                     VStack(spacing: 16) {
                         Spacer(minLength: 0)
                         Text(problem.prompt)
-                            .font(.system(size: 46, weight: .bold, design: .rounded))
+                            .font(.ui(46, .bold))
                             .foregroundStyle(Theme.ink).frame(maxWidth: .infinity)
                         Spacer(minLength: 0)
                         NumericKeypad(entry: $numericEntry, unit: unit, disabled: locked)
@@ -132,9 +132,9 @@ struct RapidFireView: View {
             timerRing
             Spacer()
             VStack(spacing: 0) {
-                Text("\(score)").font(.system(size: 30, weight: .bold, design: .rounded))
+                Text("\(score)").font(.ui(30, .bold))
                     .foregroundStyle(Theme.crimson).contentTransition(.numericText())
-                Text("score").font(.caption2).foregroundStyle(Theme.inkSoft)
+                Text("score").font(.ui(12)).foregroundStyle(Theme.inkSoft)
             }
             Spacer()
             comboPill
@@ -149,7 +149,7 @@ struct RapidFireView: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.1), value: timeLeft)
             Text("\(Int(ceil(timeLeft)))")
-                .font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
+                .font(.ui(20, .bold)).foregroundStyle(Theme.ink)
         }
         .frame(width: 56, height: 56)
     }
@@ -161,9 +161,9 @@ struct RapidFireView: View {
     private var comboPill: some View {
         VStack(spacing: 0) {
             Text(combo > 1 ? "×\(combo)" : "—")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.ui(22, .bold))
                 .foregroundStyle(combo > 1 ? Theme.gold300 : Theme.inkSoft)
-            Text("combo").font(.caption2).foregroundStyle(Theme.inkSoft)
+            Text("combo").font(.ui(12)).foregroundStyle(Theme.inkSoft)
         }
         .frame(minWidth: 52)
         .scaleEffect(combo > 1 ? 1.0 : 0.9)
@@ -174,17 +174,17 @@ struct RapidFireView: View {
     @ViewBuilder private var results: some View {
         let acc = answered > 0 ? Int((Double(correctCount) / Double(answered) * 100).rounded()) : 0
         VStack(spacing: 16) {
-            Text("Time!").font(.system(size: 40, weight: .heavy, design: .rounded)).foregroundStyle(Theme.crimson)
+            Text("Time!").font(.ui(40, .heavy)).foregroundStyle(Theme.crimson)
             if score > previousBest && score > 0 {
-                Text("★ New personal best").font(.headline).foregroundStyle(Theme.gold300)
+                Text("★ New personal best").font(.serif(17, .semibold)).foregroundStyle(Theme.gold300)
             }
-            Text("\(score)").font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
+            Text("\(score)").font(.ui(64, .bold)).foregroundStyle(Theme.ink)
             HStack(spacing: 22) {
                 stat("\(correctCount)/\(answered)", "correct")
                 stat("\(acc)%", "accuracy")
                 stat("×\(bestCombo)", "best combo")
             }
-            Text("Best: \(best)").font(.footnote).foregroundStyle(Theme.inkSoft)
+            Text("Best: \(best)").font(.ui(14)).foregroundStyle(Theme.inkSoft)
             if !auth.isSignedIn {
                 SignInPrompt(
                     message: "This score isn't saved. An account keeps your high scores across devices.",
@@ -198,8 +198,8 @@ struct RapidFireView: View {
 
     private func stat(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
-            Text(value).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
-            Text(label).font(.caption2).foregroundStyle(Theme.inkSoft)
+            Text(value).font(.ui(22, .bold)).foregroundStyle(Theme.ink)
+            Text(label).font(.ui(12)).foregroundStyle(Theme.inkSoft)
         }
     }
 

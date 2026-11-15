@@ -54,7 +54,7 @@ struct AuthView: View {
                     field("Password", text: $password, secure: true)
 
                     if let error {
-                        Text(error).foregroundStyle(Theme.danger).font(.callout)
+                        Text(error).foregroundStyle(Theme.danger).font(.ui(15))
                     }
 
                     PrimaryButton(title: mode == .signIn ? "Sign in" : "Create account",
@@ -65,13 +65,13 @@ struct AuthView: View {
                         withAnimation { mode = mode == .signIn ? .register : .signIn }
                         error = nil
                     }
-                    .font(.callout)
+                    .font(.ui(15))
                     .tint(Theme.crimson)
 
                     if appleSignInAvailable {
                         HStack {
                             Rectangle().fill(Theme.line).frame(height: 1)
-                            Text("or").font(.footnote).foregroundStyle(Theme.inkSoft)
+                            Text("or").font(.ui(14)).foregroundStyle(Theme.inkSoft)
                             Rectangle().fill(Theme.line).frame(height: 1)
                         }
                         .padding(.vertical, 4)
@@ -89,7 +89,7 @@ struct AuthView: View {
                 }
 
                 Text("Uses the same account as the website.")
-                    .font(.footnote).foregroundStyle(Theme.inkSoft)
+                    .font(.ui(14)).foregroundStyle(Theme.inkSoft)
             }
             .padding()
             .frame(maxWidth: 520)
@@ -113,8 +113,8 @@ struct AuthView: View {
                                         email: email.trimmingCharacters(in: .whitespaces),
                                         password: password)
             }
-            // Success: auth.user is set. As the Profile tab's body the view simply
-            // swaps to the profile; as a sheet it has to close itself.
+            // Success: auth.user is set. As the Progress tab's body the view simply
+            // swaps to My Progress; as a sheet it has to close itself.
             onDismiss?()
         } catch {
             self.error = error.localizedDescription

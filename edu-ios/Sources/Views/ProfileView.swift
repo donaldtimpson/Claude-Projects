@@ -26,8 +26,11 @@ struct ProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink(value: SettingsRoute()) { Image(systemName: "gearshape") }
+                // A Button onto the stack path: a value NavigationLink in a toolbar
+                // doesn't reliably resolve against the stack's destinations.
+                Button { router.progress.append(SettingsRoute()) } label: { Image(systemName: "gearshape") }
                     .accessibilityLabel("Settings")
+                    .accessibilityIdentifier("settingsButton")
             }
         }
     }
@@ -105,11 +108,13 @@ struct ProfileView: View {
             Text(auth.user?.name ?? "Scholar").font(.serif(26, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
             // The handle is the only name shown in the Hall, so it's editable here.
             Button { showHandleEditor = true } label: {
-                HStack(spacing: 6) {
-                    Text("@\(publicHandle)").font(.ui(15, .medium)).foregroundStyle(Theme.inkSoft)
-                    Image(systemName: "pencil").font(.ui(13, .semibold)).foregroundStyle(Theme.link)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text("@\(publicHandle)").font(.ui(15, .medium)).foregroundStyle(Theme.inkSoft)
+                        Image(systemName: "pencil").font(.ui(13, .semibold)).foregroundStyle(Theme.link)
+                    }
                     if auth.user?.handle == nil && me?.handlePlaceholder != nil {
-                        Text("Assigned. Tap to choose your own.").font(.ui(12)).foregroundStyle(Theme.link)
+                        Text("Assigned for you. Tap to choose your own.").font(.ui(13)).foregroundStyle(Theme.link)
                     }
                 }
             }

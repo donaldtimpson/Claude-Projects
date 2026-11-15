@@ -107,7 +107,7 @@ Everything lives in `app/globals.css`; follow it rather than inventing per-page 
   `gold-*` = the accent (gold in dark, crimson in light: links, primary fills, focus);
   `ornament` = decorative gold in both themes (bars, rules). Never put gold *text* on a light
   surface by hand; use the tokens. Status colors (Tailwind green/amber/red) are remapped to
-  brand-tuned shades in both themes; grade tiers are green ≥90, `text-amber-300` 70–89, red <70.
+  brand-tuned shades in both themes; grade tiers are green ≥90, `text-amber-300` 70–89, red <70 (dark amber is an orange-amber, #eda25a, so it never reads as the gold accent).
   Scores/points are ink (`text-parchment`), not accent.
 - **Scopes:** light is `html[data-theme="light"]` (warm paper page, white cards, crimson accents,
   gold only as ornament, built to project). `data-theme="dark"` keeps an element dark in both

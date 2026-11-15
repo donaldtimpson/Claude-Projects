@@ -39,7 +39,7 @@ struct CourseMapView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.parchment)
+        .background(Theme.page)
         .navigationTitle("Course Map")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -103,45 +103,36 @@ struct CourseMapView: View {
             HStack(alignment: .top, spacing: 8) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(course.nodeLabel)
-                        .font(.display(21)).foregroundStyle(Theme.crimson)
+                        .font(.serif(24, .bold)).foregroundStyle(Theme.ink)
                         .multilineTextAlignment(.leading)
                     // Only when the full title says something the label doesn't —
                     // "…(2024)" adds nothing, but "University Physics II" does when
                     // the label is the short title "Electricity & Magnetism".
                     if !course.title.hasPrefix(course.nodeLabel) {
                         Text(course.title)
-                            .font(.serif(13)).foregroundStyle(Theme.inkSoft)
+                            .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                             .lineLimit(2)
                     }
                 }
                 Spacer(minLength: 0)
                 if course.isCurrent == true {
-                    Text("LIVE").font(.caption2.weight(.bold))
-                        .foregroundStyle(Theme.onAccent)
-                        .padding(.horizontal, 7).padding(.vertical, 3)
-                        .background(Theme.accent, in: Capsule())
+                    Pill("Live", tone: .accent)
                 }
             }
-            // A view-based link, not a value-based one. This screen is pushed from a
-            // toolbar link, and a toolbar's content isn't part of the chain SwiftUI
-            // searches for a matching navigationDestination — so the value-based link
-            // resolved to nothing and the tap silently did nothing at all.
-            NavigationLink {
-                CourseDetailView(courseId: course.id)
-            } label: {
+            // Every route is registered at the stack root (lyceumDestinations), so
+            // a value link resolves wherever this screen was pushed from.
+            NavigationLink(value: CourseRoute(courseId: course.id)) {
                 HStack(spacing: 6) {
-                    Text("Open this course").font(.display(13))
+                    Text("Open this course").font(.ui(15, .semibold))
                     Image(systemName: "arrow.right")
                 }
-                .foregroundStyle(Theme.gold400)
+                .foregroundStyle(Theme.link)
             }
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Theme.parchmentDeep)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.gold500, lineWidth: 1.5))
+        .lyceumCard()
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.ornament, lineWidth: 1.5))
         .id(course.id)   // so the card animates when the focus changes
         .transition(.scale(scale: 0.97).combined(with: .opacity))
     }
@@ -149,11 +140,10 @@ struct CourseMapView: View {
     @ViewBuilder private func group(title: String, empty: String,
                                     courses list: [MapCourse], glyph: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+            SectionTitle(title)
             if list.isEmpty {
                 if !empty.isEmpty {
-                    Text(empty).font(.serif(14)).foregroundStyle(Theme.inkSoft)
+                    Text(empty).font(.serif(16)).foregroundStyle(Theme.inkSoft)
                 }
             } else {
                 ForEach(list) { c in
@@ -162,7 +152,7 @@ struct CourseMapView: View {
                 }
                 if let glyph {
                     Image(systemName: glyph)
-                        .font(.caption).foregroundStyle(Theme.gold500.opacity(0.7))
+                        .font(.ui(13)).foregroundStyle(Theme.ornament.opacity(0.8))
                         .frame(maxWidth: .infinity)
                         .padding(.top, 2)
                 }
@@ -175,21 +165,18 @@ struct CourseMapView: View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(c.nodeLabel)
-                    .font(.display(14)).foregroundStyle(Theme.ink)
+                    .font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.leading)
                 let n = neighbours(of: c.id, .children).count
                 if n > 0 {
-                    Text("opens \(n) more").font(.caption).foregroundStyle(Theme.inkSoft)
+                    Text("opens \(n) more").font(.ui(13)).foregroundStyle(Theme.inkSoft)
                 }
             }
             Spacer(minLength: 0)
             if c.isCurrent == true {
-                Text("LIVE").font(.caption2.weight(.bold))
-                    .foregroundStyle(Theme.onAccent)
-                    .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(Theme.accent, in: Capsule())
+                Pill("Live", tone: .accent)
             }
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.gold400)
+            Image(systemName: "chevron.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft)
         }
         .lyceumCard()
     }
@@ -199,17 +186,17 @@ struct CourseMapView: View {
     private func breadcrumb(_ trail: [MapCourse]) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("THE WAY HERE")
-                .font(.display(11)).kerning(2).foregroundStyle(Theme.gold400)
+                .font(.ui(12, .semibold)).kerning(0.8).foregroundStyle(Theme.inkSoft)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(Array(trail.enumerated()), id: \.element.id) { i, c in
                         if i > 0 {
                             Image(systemName: "chevron.right")
-                                .font(.caption2).foregroundStyle(Theme.inkSoft)
+                                .font(.ui(12)).foregroundStyle(Theme.inkSoft)
                         }
                         Button { focus(c.id) } label: {
                             Text(c.nodeLabel)
-                                .font(.caption)
+                                .font(.ui(13))
                                 .foregroundStyle(c.id == focusId ? Theme.onAccent : Theme.inkSoft)
                                 .padding(.horizontal, 9).padding(.vertical, 5)
                                 .background(c.id == focusId ? Theme.accent : Theme.card, in: Capsule())

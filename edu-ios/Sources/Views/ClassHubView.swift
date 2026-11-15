@@ -60,6 +60,7 @@ struct ClassHubView: View {
             }
             .background(Theme.page)
             .refreshable { await load() }
+            .titleRevealsOnScroll(hub.sectionName)
         } else if failed {
             LoadFailedView(title: "Couldn't load this class") { await load() }.background(Theme.page)
         } else {

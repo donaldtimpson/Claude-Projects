@@ -112,6 +112,7 @@ struct CourseDetailView: View {
             }
             .background(Theme.page)
             .refreshable { await load() }
+            .titleRevealsOnScroll(course.shortTitle ?? course.title)
         } else if failed {
             LoadFailedView(title: "Couldn't load this course") { await load() }.background(Theme.page)
         }
@@ -358,6 +359,7 @@ struct RegisterCard: View {
                 Text(message).font(.ui(14)).foregroundStyle(success ? Theme.success : Theme.danger)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .lyceumCard()
         .sheet(isPresented: $showAuth) { AuthSheet(reason: "Sign in to register for \(courseTitle).") }
     }

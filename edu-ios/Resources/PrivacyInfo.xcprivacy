@@ -63,16 +63,27 @@
 				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
 			</array>
 		</dict>
-		<!-- Other User Content was declared here for lecture comments. Comments
-		     are switched off for 1.0 (commentsEnabled in LectureView.swift), and
-		     the app collects no user content without them — there is no homework
-		     submission on iOS. Restore this entry, the App Privacy answer, and
-		     the age-rating UGC answer together when comments come back. -->
+		<!-- Other User Content: lecture comments (with report and block) and the
+		     homework links a registered student turns in. Must match the App
+		     Privacy answers and the age-rating UGC answer (APP_STORE.md §4). -->
+		<dict>
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
 	</array>
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
-		<!-- UserDefaults holds Rapid Fire high scores ("rapidbest_*"), read and
-		     written only by this app. CA92.1 = access limited to app-owned data. -->
+		<!-- UserDefaults holds app-owned preferences and records only: Rapid Fire
+		     high scores ("rapidbest_*"), the appearance choice, drill recents.
+		     CA92.1 = access limited to app-owned data. -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>

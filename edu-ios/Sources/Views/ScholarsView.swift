@@ -120,7 +120,10 @@ struct ScholarRow: View {
                 Text(entry.scholar.handle).font(.serif(17, isMe ? .bold : .medium)).foregroundStyle(Theme.ink)
                     .lineLimit(1)
                 if isMe { Pill("You", tone: .accent) }
-                if entry.isHouse { Pill("House") }
+                if entry.isHouse {
+                    Image(systemName: "building.columns").font(.ui(12)).foregroundStyle(Theme.inkSoft)
+                        .accessibilityLabel("House scholar")
+                }
             }
             Spacer(minLength: 8)
             Text(entry.scholar.standing.formatted())
@@ -172,6 +175,8 @@ struct StandingCard: View {
     let rank: Int
     let total: Int
     var highlighted: Bool = false
+    /// Off on a profile, whose page title is already the handle.
+    var showHandle: Bool = true
 
     private var segments: [(String, Int, Color)] {
         [
@@ -186,8 +191,11 @@ struct StandingCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(scholar.handle).font(.serif(20, .bold)).foregroundStyle(Theme.ink)
-                    Text("Rank #\(rank) of \(total)").font(.ui(13)).foregroundStyle(Theme.inkSoft)
+                    if showHandle {
+                        Text(scholar.handle).font(.serif(20, .bold)).foregroundStyle(Theme.ink)
+                    }
+                    Text("Rank #\(rank) of \(total)").font(.ui(showHandle ? 13 : 15, showHandle ? .regular : .semibold))
+                        .foregroundStyle(showHandle ? Theme.inkSoft : Theme.ink)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
@@ -272,7 +280,7 @@ struct ScholarProfileView: View {
                         }
                         SectionTitle("Standing")
                         StandingCard(scholar: entry.scholar, rank: entry.rank, total: entry.total,
-                                     highlighted: isMe || isHouse)
+                                     highlighted: isMe || isHouse, showHandle: false)
                         if let badges = entry.badges, !badges.isEmpty {
                             SectionTitle("Achievements")
                             let earned = badges.filter { $0.unlocked && $0.tier != "omniscient" }
@@ -287,6 +295,7 @@ struct ScholarProfileView: View {
                     }
                     .padding()
                 }
+                .titleRevealsOnScroll(entry.scholar.handle)
             } else if failed {
                 LoadFailedView(title: "Couldn't load this scholar") { await load() }
             } else {
