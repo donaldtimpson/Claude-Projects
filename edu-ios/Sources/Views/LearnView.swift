@@ -20,30 +20,25 @@ struct LearnView: View {
 
     var body: some View {
         content
-            .navigationTitle("Courses")
-            .navigationBarTitleDisplayMode(.inline)
+            .tint(Theme.link)
             // The map and the board are public and live in the web's nav drawer;
-            // here they hang off the home tab, reachable signed out.
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    // Buttons onto the stack path: value links in a toolbar don't
-                    // reliably resolve against the stack's destinations.
-                    Button { router.courses.append(CourseMapRoute()) } label: {
-                        Image(systemName: "point.topleft.down.to.point.bottomright.curvepath")
-                    }
-                    .accessibilityLabel("Course Map")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { router.courses.append(LeaderboardRoute()) } label: {
-                        Image(systemName: "trophy")
-                    }
-                    .accessibilityLabel("Hall of Scholars")
-                }
-            }
+            // here they hang off the home tab, reachable signed out. (Buttons onto
+            // the stack path: value links in a toolbar don't reliably resolve.)
+            .mastheadChrome("Courses", actions: [
+                ChromeAction(systemImage: "point.topleft.down.to.point.bottomright.curvepath", label: "Course Map") {
+                    router.courses.append(CourseMapRoute())
+                },
+                ChromeAction(systemImage: "trophy", label: "Hall of Scholars") {
+                    router.courses.append(LeaderboardRoute())
+                },
+            ])
             .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
             .task { if courses.isEmpty { await loadCatalog() } }
             .task(id: auth.user?.id) { await loadContinueWatching() }
+            // The search field sits on leather: cream, not the crimson accent (which
+            // the content above keeps for itself).
+            .tint(Theme.onLeather)
     }
 
     @ViewBuilder private var content: some View {
@@ -64,47 +59,40 @@ struct LearnView: View {
     // MARK: catalog (browse)
     @ViewBuilder private var catalog: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                if !announcements.isEmpty {
-                    SectionTitle("Announcements")
-                    ForEach(announcements) { AnnouncementCard(announcement: $0) }
-                }
+            VStack(alignment: .leading, spacing: 0) {
+                Masthead(overlap: continueWatching.isEmpty ? 0 : 40) { mastheadText }
 
-                if !continueWatching.isEmpty {
-                    SectionTitle("Continue Watching")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(alignment: .top, spacing: 12) {
-                            ForEach(continueWatching) { item in
-                                if let next = item.nextLecture {
-                                    NavigationLink(value: LectureRoute(courseId: item.id, videoId: next.id, title: next.title)) {
-                                        ContinueCard(item: item, next: next)
-                                    }
-                                    .buttonStyle(.lyceumPress)
-                                }
+                VStack(alignment: .leading, spacing: 12) {
+                    if !continueWatching.isEmpty {
+                        continueCarousel.padding(.top, -40)
+                    }
+
+                    if !announcements.isEmpty {
+                        SectionTitle("Announcements")
+                        ForEach(announcements) { AnnouncementCard(announcement: $0) }
+                    }
+
+                    if !currentCourses.isEmpty {
+                        SectionTitle("Currently Teaching")
+                        Codex(dividerInset: 122) { ForEach(currentCourses) { courseLink($0) } }
+                    }
+
+                    if !categories.isEmpty {
+                        SectionTitle("Browse by Category")
+                        Codex(dividerInset: 122) {
+                            ForEach(categories) { category in
+                                NavigationLink(value: category) { CategoryRow(category: category) }
+                                    .buttonStyle(.lyceumRow)
                             }
                         }
-                        .padding(.vertical, 2)
                     }
-                    .scrollClipDisabled()
-                }
 
-                if !currentCourses.isEmpty {
-                    SectionTitle("Currently Teaching")
-                    ForEach(currentCourses) { courseLink($0) }
+                    SectionTitle("All Courses")
+                    Codex(dividerInset: 122) { ForEach(courses) { courseLink($0) } }
                 }
-
-                if !categories.isEmpty {
-                    SectionTitle("Browse by Category")
-                    ForEach(categories) { category in
-                        NavigationLink(value: category) { CategoryRow(category: category) }
-                            .buttonStyle(.lyceumPress)
-                    }
-                }
-
-                SectionTitle("All Courses")
-                ForEach(courses) { courseLink($0) }
+                .padding(.horizontal)
+                .padding(.bottom, 24)
             }
-            .padding()
         }
         .background(Theme.page)
         .refreshable {
@@ -113,8 +101,54 @@ struct LearnView: View {
         }
     }
 
+    private var greeting: String {
+        guard let name = auth.user?.name?.split(separator: " ").first else { return "Welcome to the Lyceum." }
+        let hour = Calendar.current.component(.hour, from: .now)
+        let part = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
+        return "\(part), \(name)."
+    }
+
+    private var mastheadText: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            GiltEyebrow("The Timpson Lyceum")
+            Text(greeting)
+                .font(.serif(30, .bold, relativeTo: .largeTitle))
+                .foregroundStyle(Theme.onLeather)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(auth.user == nil
+                 ? "Lectures, notes, quizzes, and drills from a real classroom, free."
+                 : currentCourses.isEmpty
+                    ? "Pick up where you left off, or start something new."
+                    : "\(currentCourses.count) course\(currentCourses.count == 1 ? "" : "s") in session this term.")
+                .font(.serif(16).italic())
+                .foregroundStyle(Theme.onLeatherSoft)
+        }
+    }
+
+    private var continueCarousel: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(alignment: .top, spacing: 12) {
+                ForEach(continueWatching) { item in
+                    if let next = item.nextLecture {
+                        NavigationLink(value: LectureRoute(courseId: item.id, videoId: next.id, title: next.title)) {
+                            ContinueCard(item: item, next: next)
+                        }
+                        .buttonStyle(.lyceumPress)
+                        .scrollTransition(axis: .horizontal) { view, phase in
+                            view.scaleEffect(phase.isIdentity ? 1 : 0.94).opacity(phase.isIdentity ? 1 : 0.8)
+                        }
+                    }
+                }
+            }
+            .scrollTargetLayout()
+            .padding(.vertical, 2)
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollClipDisabled()
+    }
+
     private func courseLink(_ course: CourseListItem) -> some View {
-        NavigationLink(value: course) { CourseRow(course: course) }.buttonStyle(.lyceumPress)
+        NavigationLink(value: course) { CourseRow(course: course) }.buttonStyle(.lyceumRow)
     }
 
     // MARK: search (hybrid: instant local filter + server-backed lecture search)
@@ -139,17 +173,21 @@ struct LearnView: View {
             VStack(alignment: .leading, spacing: 12) {
                 if !courseHits.isEmpty {
                     SectionTitle("Courses")
-                    ForEach(courseHits) { course in
-                        NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
-                            .buttonStyle(.lyceumPress)
+                    Codex(dividerInset: 122) {
+                        ForEach(courseHits) { course in
+                            NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
+                                .buttonStyle(.lyceumRow)
+                        }
                     }
                 }
 
                 if !categoryHits.isEmpty {
                     SectionTitle("Categories")
-                    ForEach(categoryHits) { category in
-                        NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
-                            .buttonStyle(.lyceumPress)
+                    Codex(dividerInset: 122) {
+                        ForEach(categoryHits) { category in
+                            NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
+                                .buttonStyle(.lyceumRow)
+                        }
                     }
                 }
 
@@ -165,8 +203,10 @@ struct LearnView: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 8)
                     } else {
-                        ForEach(lectureHits) { hit in
-                            NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.lyceumPress)
+                        Codex {
+                            ForEach(lectureHits) { hit in
+                                NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.lyceumRow)
+                            }
                         }
                     }
                 }
@@ -179,7 +219,7 @@ struct LearnView: View {
             }
             .padding()
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
     }
 
     private func lectureResultRow(_ hit: LectureHit) -> some View {
@@ -200,8 +240,7 @@ struct LearnView: View {
                 .padding(.top, 2)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .lyceumCard()
+        .codexRow()
     }
 
     // The server marks matches with [[hl]]…[[/hl]]; show them in ink, semibold.
@@ -293,31 +332,55 @@ struct AnnouncementCard: View {
     }
 }
 
-// Continue Watching: the next unwatched lecture of a course in progress.
+// Continue Watching: the next unwatched lecture of a course in progress, as a
+// poster: the lecture's frame with a play button, then the course and how far along.
 struct ContinueCard: View {
     let item: CourseProgressItem
     let next: NextLecture
+    static let width: CGFloat = 300
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             AsyncImage(url: URL(string: next.thumbnailUrl ?? "")) { image in
                 image.resizable().aspectRatio(contentMode: .fill)
             } placeholder: {
                 Rectangle().fill(Theme.tint)
             }
-            .frame(width: 236, height: 133)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-
-            Text(item.title).font(.serif(16, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-            Text("Up next: \(next.title)").font(.ui(13)).foregroundStyle(Theme.inkSoft).lineLimit(2)
-                .frame(height: 34, alignment: .top)
-            HStack(spacing: 8) {
-                ProgressView(value: item.fraction).tint(Theme.accent)
-                Text("\(item.watchedCount)/\(item.totalCount)").font(.ui(12, .medium)).monospacedDigit()
-                    .foregroundStyle(Theme.inkSoft)
+            .frame(width: Self.width, height: Self.width * 9 / 16)
+            .clipped()
+            .overlay(alignment: .bottomLeading) {
+                HStack(spacing: 6) {
+                    Image(systemName: "play.fill").font(.system(size: 11, weight: .bold))
+                    Text("Up next").font(.ui(12, .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(.ultraThinMaterial.opacity(0.9), in: Capsule())
+                .environment(\.colorScheme, .dark)
+                .padding(10)
             }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(item.title.uppercased())
+                    .font(.ui(11, .semibold, relativeTo: .caption)).kerning(0.9)
+                    .foregroundStyle(Theme.accentText).lineLimit(1)
+                Text(displayTitle(next.title)).font(.serif(16.5, .semibold)).foregroundStyle(Theme.ink)
+                    .lineLimit(2, reservesSpace: true).multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    GiltBar(fraction: item.fraction, height: 6)
+                    Text("\(item.watchedCount) of \(item.totalCount)").font(.ui(12, .medium)).monospacedDigit()
+                        .foregroundStyle(Theme.inkSoft)
+                        .fixedSize()
+                }
+            }
+            .padding(14)
         }
-        .frame(width: 236)
-        .lyceumCard(padding: 12)
+        .frame(width: Self.width)
+        .background(Theme.card)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Theme.line, lineWidth: 0.75))
+        .shadow(color: Color(hex: 0x2a0a0a).opacity(0.18), radius: 14, y: 6)
     }
 }
 

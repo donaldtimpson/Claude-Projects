@@ -45,8 +45,7 @@ struct AssignmentDetailView: View {
         }
         .background(Theme.page)
         .titleRevealsOnScroll(assignment.title)
-        .navigationTitle(assignment.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar(assignment.title)
         // Same presentation the drills hub and lecture screen use, so a lesson-drill
         // homework opened here behaves identically to one opened elsewhere.
         .fullScreenCover(item: $activeDrill) { drill in
@@ -128,13 +127,15 @@ struct AssignmentDetailView: View {
         VStack(alignment: .leading, spacing: 16) {
             // Link through to the problems (and their worked solutions, when public).
             if let courseId = assignment.courseId, let psId = assignment.problemSetId {
-                NavigationLink(value: ProblemSetRoute(
-                    courseId: courseId, problemSetId: psId, title: assignment.title
-                )) {
-                    LinkRow(icon: "doc.text", title: "View the problem set",
-                            subtitle: (assignment.solutionsAvailable ?? false) ? "Problems with worked solutions" : "Problems")
+                Codex {
+                    NavigationLink(value: ProblemSetRoute(
+                        courseId: courseId, problemSetId: psId, title: assignment.title
+                    )) {
+                        LinkRow(icon: "doc.text", title: "View the problem set",
+                                subtitle: (assignment.solutionsAvailable ?? false) ? "Problems with worked solutions" : "Problems")
+                    }
+                    .buttonStyle(.lyceumRow)
                 }
-                .buttonStyle(.lyceumPress)
             }
 
             gradeSection

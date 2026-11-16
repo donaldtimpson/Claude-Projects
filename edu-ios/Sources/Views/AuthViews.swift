@@ -31,71 +31,86 @@ struct AuthView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // One line above the form, not four. This used to be the app's entry
-                // screen, where a full wordmark and a "Sign in to continue" line earned
-                // their space; it's a tab inside the app now, so the reader already
-                // knows where they are and isn't being stopped from doing anything.
-                // The nav bar carries the title, so all that's left to say is what an
-                // account gets you — the reason from wherever this was raised, or the
-                // general case.
-                Text(reason ?? "Keep your progress, quiz scores, streak, and badges across your devices.")
-                    .font(.serif(16))
-                    .foregroundStyle(Theme.inkSoft)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 8)
-                    .padding(.top, 24)
-
-                VStack(spacing: 12) {
-                    if mode == .register {
-                        field("Name", text: $name)
+            VStack(spacing: 0) {
+                // The bookplate: the wordmark on leather, and what an account is for
+                // (the reason from wherever this was raised, or the general case).
+                Masthead(overlap: 40) {
+                    VStack(spacing: 10) {
+                        Image(systemName: "building.columns.fill")
+                            .font(.system(size: 30, weight: .regular))
+                            .foregroundStyle(Theme.gilt)
+                        Text("The Timpson Lyceum")
+                            .font(.display(24)).kerning(1.4)
+                            .foregroundStyle(Theme.onLeather)
+                        Text(reason ?? "Keep your progress, quiz scores, streak, and badges across your devices.")
+                            .font(.serif(16).italic())
+                            .foregroundStyle(Theme.onLeatherSoft)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    field("Email", text: $email, keyboard: .emailAddress)
-                    field("Password", text: $password, secure: true)
-
-                    if let error {
-                        Text(error).foregroundStyle(Theme.danger).font(.ui(15))
-                    }
-
-                    PrimaryButton(title: mode == .signIn ? "Sign in" : "Create account",
-                                  enabled: canSubmit, loading: busy) {
-                        Task { await submit() }
-                    }
-                    Button(mode == .signIn ? "New here? Create an account" : "I already have an account") {
-                        withAnimation { mode = mode == .signIn ? .register : .signIn }
-                        error = nil
-                    }
-                    .font(.ui(15))
-                    .tint(Theme.crimson)
-
-                    if appleSignInAvailable {
-                        HStack {
-                            Rectangle().fill(Theme.line).frame(height: 1)
-                            Text("or").font(.ui(14)).foregroundStyle(Theme.inkSoft)
-                            Rectangle().fill(Theme.line).frame(height: 1)
-                        }
-                        .padding(.vertical, 4)
-
-                        SignInWithAppleButton(.continue) { request in
-                            request.requestedScopes = [.fullName, .email]
-                        } onCompletion: { result in
-                            handleApple(result)
-                        }
-                        .signInWithAppleButtonStyle(.black)
-                        .frame(height: 50)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .disabled(busy)
-                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
                 }
 
-                Text("Uses the same account as the website.")
-                    .font(.ui(14)).foregroundStyle(Theme.inkSoft)
+                VStack(spacing: 14) {
+                    VStack(spacing: 12) {
+                        Text(mode == .signIn ? "Sign in" : "Create your account")
+                            .font(.serif(22, .bold)).foregroundStyle(Theme.ink)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if mode == .register {
+                            field("Name", text: $name)
+                        }
+                        field("Email", text: $email, keyboard: .emailAddress)
+                        field("Password", text: $password, secure: true)
+
+                        if let error {
+                            Text(error).foregroundStyle(Theme.danger).font(.ui(15))
+                        }
+
+                        PrimaryButton(title: mode == .signIn ? "Sign in" : "Create account",
+                                      enabled: canSubmit, loading: busy) {
+                            Task { await submit() }
+                        }
+
+                        if appleSignInAvailable {
+                            HStack {
+                                Rectangle().fill(Theme.line).frame(height: 1)
+                                Text("or").font(.ui(14)).foregroundStyle(Theme.inkSoft)
+                                Rectangle().fill(Theme.line).frame(height: 1)
+                            }
+                            .padding(.vertical, 4)
+
+                            SignInWithAppleButton(.continue) { request in
+                                request.requestedScopes = [.fullName, .email]
+                            } onCompletion: { result in
+                                handleApple(result)
+                            }
+                            .signInWithAppleButtonStyle(.black)
+                            .frame(height: 50)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .disabled(busy)
+                        }
+                    }
+                    .lyceumCard(padding: 18)
+                    .shadow(color: Color(hex: 0x2a0a0a).opacity(0.14), radius: 14, y: 6)
+                    .padding(.top, -40)
+
+                    Button(mode == .signIn ? "New here? Create an account" : "I already have an account") {
+                        withAnimation(.snappy) { mode = mode == .signIn ? .register : .signIn }
+                        error = nil
+                    }
+                    .font(.ui(15, .semibold))
+                    .tint(Theme.link)
+
+                    Text("Uses the same account as the website.")
+                        .font(.ui(14)).foregroundStyle(Theme.inkSoft)
+                }
+                .padding(.horizontal)
+                .frame(maxWidth: 520)
             }
-            .padding()
-            .frame(maxWidth: 520)
             .frame(maxWidth: .infinity)
         }
-        .background(Theme.parchment)
+        .background(Theme.page)
     }
 
     private var canSubmit: Bool {
@@ -168,9 +183,10 @@ struct AuthView: View {
                     .autocorrectionDisabled()
             }
         }
-        .padding()
-        .background(Theme.card)
-        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Theme.line, lineWidth: 1.5))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .font(.ui(17))
+        .padding(.horizontal, 14).padding(.vertical, 13)
+        .background(Theme.page)
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }

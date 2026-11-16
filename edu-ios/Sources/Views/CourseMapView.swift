@@ -40,11 +40,10 @@ struct CourseMapView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.page)
-        .navigationTitle("Course Map")
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar("Course Map")
         .toolbar {
             if !charted.isEmpty {
-                ToolbarItem(placement: .topBarTrailing) {
+                ChromeItem {
                     Menu {
                         ForEach(charted) { c in
                             Button { focus(c.id) } label: {
@@ -52,9 +51,8 @@ struct CourseMapView: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "list.bullet")
+                        ChromeDisc(systemImage: "list.bullet")
                     }
-                    .tint(Theme.gold400)
                     .accessibilityLabel("Jump to a course")
                 }
             }

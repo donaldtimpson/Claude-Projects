@@ -32,9 +32,9 @@ extension Color {
 enum Theme {
     // Surfaces
     static let page = Color(light: 0xf6f2ec, dark: 0x0f0404)
-    static let card = Color(light: 0xffffff, dark: 0x1a0909)
+    static let card = Color(light: 0xfffdf9, dark: 0x1a0909)
     static let tint = Color(light: 0xf0eae1, dark: 0x2d1212) // tracks, table heads, quiet fills
-    static let line = Color(light: 0xddd2c3, dark: 0x4a1a1a) // borders, dividers
+    static let line = Color(light: 0xe2d7c6, dark: 0x4a1a1a) // borders, dividers
     static let strongLine = Color(light: 0xc2b29d, dark: 0x6e2020)
     static let field = Color(light: 0xffffff, dark: 0x2d1212) // text fields, unanswered choices
     static let button = Color(light: 0xffffff, dark: 0x4a1a1a) // secondary button fill
@@ -121,22 +121,21 @@ private struct CardSurface: ViewModifier {
         content
             .padding(padding)
             .background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
-            .shadow(color: scheme == .light ? Color(hex: 0x3c2814).opacity(0.06) : .clear, radius: 6, y: 2)
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.line, lineWidth: 0.75))
+            .shadow(color: scheme == .light ? Color(hex: 0x4a2c14).opacity(0.07) : .clear, radius: 10, y: 3)
     }
 }
 
-// Press feedback for tappable cells/rows: an accent border, a faint wash, and a tiny
-// press-in. Identical to `.plain` at rest, lit only while the finger is down.
+// Press feedback for a tappable card: a faint wash and a small press-in, like a
+// physical card. Identical to `.plain` at rest. (Rows inside a Codex use `.lyceumRow`.)
 struct LyceumPressStyle: ButtonStyle {
-    var cornerRadius: CGFloat = 12
+    var cornerRadius: CGFloat = 14
     func makeBody(configuration: Configuration) -> some View {
         let down = configuration.isPressed
         return configuration.label
-            .overlay(RoundedRectangle(cornerRadius: cornerRadius).fill(Theme.accentText.opacity(down ? 0.06 : 0)))
-            .overlay(RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(Theme.accentText, lineWidth: 1.5).opacity(down ? 1 : 0))
-            .scaleEffect(down ? 0.985 : 1)
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(Theme.ink.opacity(down ? 0.06 : 0)))
+            .scaleEffect(down ? 0.97 : 1)
             // Light instantly on touch-down so it registers before a quick tap navigates.
             .animation(down ? nil : .easeOut(duration: 0.22), value: down)
     }

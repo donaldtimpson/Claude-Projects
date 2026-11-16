@@ -16,24 +16,41 @@ struct SignInGate: View {
     @State private var showAuth = false
 
     var body: some View {
-        VStack(spacing: 14) {
-            Image(systemName: icon)
-                .font(.system(size: 44))
-                .foregroundStyle(Theme.ornament)
-            Text(title)
-                .font(.serif(24, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
-                .multilineTextAlignment(.center)
-            Text(message)
-                .font(.serif(17)).foregroundStyle(Theme.inkSoft)
-                .multilineTextAlignment(.center)
-            PrimaryButton(title: "Sign in or create an account") { showAuth = true }
-                .padding(.top, 2)
-            Text("Everything else in the app works without one.")
-                .font(.ui(13)).foregroundStyle(Theme.inkSoft)
+        ScrollView {
+            VStack(spacing: 0) {
+                Masthead(overlap: 40) {
+                    VStack(spacing: 10) {
+                        Image(systemName: icon)
+                            .font(.system(size: 38))
+                            .foregroundStyle(Theme.gilt)
+                        Text(title)
+                            .font(.serif(28, .bold, relativeTo: .title)).foregroundStyle(Theme.onLeather)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 8)
+                }
+                VStack(spacing: 14) {
+                    Text(message)
+                        .font(.serif(16.5)).foregroundStyle(Theme.inkSoft)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                    PrimaryButton(title: "Sign in or create an account") { showAuth = true }
+                }
+                .lyceumCard(padding: 18)
+                .shadow(color: Color(hex: 0x2a0a0a).opacity(0.14), radius: 14, y: 6)
+                .padding(.top, -40)
+                .padding(.horizontal)
+                .frame(maxWidth: 520)
+
+                Text("Everything else in the app works without one.")
+                    .font(.ui(13)).foregroundStyle(Theme.inkSoft)
+                    .padding(.top, 14)
+            }
+            .frame(maxWidth: .infinity)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.page)
+        .mastheadChrome(title, crest: true)
         .sheet(isPresented: $showAuth) {
             AuthSheet(reason: reason)
         }
@@ -49,11 +66,10 @@ struct AuthSheet: View {
     var body: some View {
         NavigationStack {
             AuthView(reason: reason) { dismiss() }
-                .navigationTitle("Account")
-                .navigationBarTitleDisplayMode(.inline)
+                .mastheadChrome("Account", backButton: false)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Not now") { dismiss() }.tint(Theme.link)
+                        Button("Not now") { dismiss() }
                     }
                 }
         }

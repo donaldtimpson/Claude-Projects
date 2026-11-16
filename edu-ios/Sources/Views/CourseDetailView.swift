@@ -27,9 +27,7 @@ struct CourseDetailView: View {
 
     var body: some View {
         content
-            .navigationTitle(course?.shortTitle ?? course?.title ?? "Course")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, prompt: "Filter lectures")
+            .mastheadChrome(course?.shortTitle ?? course?.title ?? "Course", threshold: 200)
             .task(id: auth.user?.id) { await load() }
     }
 
@@ -41,52 +39,43 @@ struct CourseDetailView: View {
 
     @ViewBuilder private var content: some View {
         if loading && course == nil {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.page)
+            LoadingLeather()
         } else if let course {
-            let videos = filteredVideos(course)
             let watched = Set(course.viewer?.watchedVideoIds ?? [])
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if query.isEmpty {
-                        header(course, watchedCount: watched.count)
+                VStack(alignment: .leading, spacing: 0) {
+                    CoverHero(imageURL: course.videos.isEmpty ? nil : course.thumbnailUrl, overlap: hasLead(course) ? 40 : 0) {
+                        heroText(course, watchedCount: watched.count)
+                    }
+                    VStack(alignment: .leading, spacing: 12) {
+                        if hasLead(course) { lead(course).padding(.top, -40) }
                         classStatus(course)
-                        if !course.resources.isEmpty {
-                            SectionTitle("Resources")
-                            ForEach(course.resources) { ResourceRow(resource: $0) }
-                        }
-                        if let syl = course.syllabus, !syl.isEmpty {
-                            SectionTitle("Syllabus")
-                            NavigationLink(value: SyllabusRoute(title: "Syllabus", markdown: syl)) {
-                                LinkRow(icon: "doc.text", title: "Course syllabus",
-                                        subtitle: "Grading, policies, and the full schedule")
-                            }
-                            .buttonStyle(.lyceumPress)
-                        }
-                    }
 
-                    SectionTitle("Lectures")
-                    if course.videos.isEmpty {
-                        EmptyNote("No lectures yet. Check back soon.")
-                    } else if videos.isEmpty {
-                        Text("No lectures match “\(query)”.")
-                            .font(.serif(16)).foregroundStyle(Theme.inkSoft).padding(.top, 4)
-                    } else {
-                        ForEach(videos) { video in
-                            NavigationLink(value: LectureRoute(courseId: courseId, videoId: video.id, title: video.title)) {
-                                LectureRow(video: video, watched: watched.contains(video.id), highlight: query)
+                        if course.syllabus?.isEmpty == false || !course.resources.isEmpty {
+                            SectionTitle("Materials")
+                            Codex(dividerInset: 62) {
+                                if let syl = course.syllabus, !syl.isEmpty {
+                                    NavigationLink(value: SyllabusRoute(title: "Syllabus", markdown: syl)) {
+                                        LinkRow(icon: "scroll", title: "Course syllabus",
+                                                subtitle: "Grading, policies, and the full schedule")
+                                    }
+                                    .buttonStyle(.lyceumRow)
+                                }
+                                ForEach(course.resources) { ResourceRow(resource: $0) }
                             }
-                            .buttonStyle(.lyceumPress)
                         }
-                    }
 
-                    if query.isEmpty {
+                        lectures(course, watched: watched)
+
                         if !course.problemSets.isEmpty {
                             SectionTitle("Problem Sets")
-                            ForEach(course.problemSets) { ps in
-                                NavigationLink(value: ProblemSetRoute(courseId: courseId, problemSetId: ps.id, title: ps.title)) {
-                                    ProblemSetRow(ps: ps)
+                            Codex {
+                                ForEach(course.problemSets) { ps in
+                                    NavigationLink(value: ProblemSetRoute(courseId: courseId, problemSetId: ps.id, title: ps.title)) {
+                                        ProblemSetRow(ps: ps)
+                                    }
+                                    .buttonStyle(.lyceumRow)
                                 }
-                                .buttonStyle(.lyceumPress)
                             }
                         }
                         if let offerings = course.offerings, !offerings.isEmpty {
@@ -107,59 +96,117 @@ struct CourseDetailView: View {
                             ForEach(announcements) { AnnouncementCard(announcement: $0) }
                         }
                     }
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
                 }
-                .padding()
             }
+            .ignoresSafeArea(.container, edges: .top)
             .background(Theme.page)
             .refreshable { await load() }
-            .titleRevealsOnScroll(course.shortTitle ?? course.title)
         } else if failed {
             LoadFailedView(title: "Couldn't load this course") { await load() }.background(Theme.page)
         }
     }
 
-    @ViewBuilder private func header(_ course: CourseDetail, watchedCount: Int) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(course.title).font(.serif(26, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
-            HStack(spacing: 6) {
-                Text(course.videos.isEmpty ? "Coming soon" : "\(course.videos.count) lecture\(course.videos.count == 1 ? "" : "s")")
-                    .foregroundStyle(Theme.inkSoft)
-                if watchedCount > 0 {
-                    Text("· \(watchedCount) watched").foregroundStyle(Theme.success)
+    private func hasLead(_ course: CourseDetail) -> Bool {
+        !course.description.isEmpty || (course.testQuestionCount ?? 0) > 0 || (course.reviewQuestionCount ?? 0) > 0
+    }
+
+    @ViewBuilder private func heroText(_ course: CourseDetail, watchedCount: Int) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if course.isCurrent {
+                GiltEyebrow("In session")
+            }
+            Text(course.title).font(.serif(28, .bold, relativeTo: .title)).foregroundStyle(Theme.onLeather)
+                .fixedSize(horizontal: false, vertical: true)
+            let n = course.videos.count
+            HStack(spacing: 10) {
+                Text(n == 0 ? "Coming soon" : watchedCount > 0 ? "\(watchedCount) of \(n) lectures watched" : "\(n) lecture\(n == 1 ? "" : "s")")
+                    .font(.ui(14, .medium)).foregroundStyle(Theme.onLeatherSoft)
+                    .fixedSize()
+                if watchedCount > 0 && n > 0 {
+                    GiltBar(fraction: Double(watchedCount) / Double(n), height: 6, onLeather: true)
                 }
             }
-            .font(.ui(14))
-            if !course.description.isEmpty { ExpandableText(text: course.description) }
+        }
+    }
 
+    /// The card that overlaps the hero: what the course is, and its whole-course actions.
+    private func lead(_ course: CourseDetail) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if !course.description.isEmpty { ExpandableText(text: course.description) }
             let test = course.testQuestionCount ?? 0
             let review = course.reviewQuestionCount ?? 0
             if test > 0 || review > 0 {
                 VStack(spacing: 10) {
                     if test > 0 {
                         NavigationLink(value: CourseTestRoute(courseId: course.id, title: course.title)) {
-                            ButtonLabel(title: "Take the course test (\(test) questions)", primary: true)
+                            ButtonLabel(title: "Take the course test · \(test) questions", primary: true)
                         }
+                        .buttonStyle(.lyceumPress(cornerRadius: 12))
                     }
                     if review > 0 {
                         NavigationLink(value: CourseReviewRoute(courseId: course.id, title: course.title)) {
-                            ButtonLabel(title: "Review the course (\(review) questions)", primary: test == 0)
+                            ButtonLabel(title: "Review the course · \(review) questions", primary: test == 0)
                         }
+                        .buttonStyle(.lyceumPress(cornerRadius: 12))
                     }
                 }
-                .padding(.top, 4)
             }
         }
-        .padding(.bottom, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .lyceumCard(padding: 18)
+        .shadow(color: Color(hex: 0x2a0a0a).opacity(0.14), radius: 14, y: 6)
+    }
+
+    @ViewBuilder private func lectures(_ course: CourseDetail, watched: Set<String>) -> some View {
+        let videos = filteredVideos(course)
+        SectionTitle("Lectures")
+        if course.videos.isEmpty {
+            EmptyNote("No lectures yet. Check back soon.")
+        } else {
+            if course.videos.count > 6 {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(Theme.inkSoft)
+                    TextField("Filter lectures", text: $query)
+                        .font(.ui(16))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                    if !query.isEmpty {
+                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
+                            .foregroundStyle(Theme.inkSoft)
+                            .accessibilityLabel("Clear filter")
+                    }
+                }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .background(Capsule().fill(Theme.tint))
+            }
+            if videos.isEmpty {
+                Text("No lectures match “\(query)”.")
+                    .font(.serif(16)).foregroundStyle(Theme.inkSoft).padding(.top, 4)
+            } else {
+                Codex(dividerInset: 122) {
+                    ForEach(videos) { video in
+                        NavigationLink(value: LectureRoute(courseId: courseId, videoId: video.id, title: video.title)) {
+                            LectureRow(video: video, watched: watched.contains(video.id), highlight: query)
+                        }
+                        .buttonStyle(.lyceumRow)
+                    }
+                }
+            }
+        }
     }
 
     @ViewBuilder private func classStatus(_ course: CourseDetail) -> some View {
         if let enr = course.viewer?.enrollment {
-            NavigationLink(value: ClassRoute(sectionId: enr.sectionId, sectionName: enr.sectionName, courseTitle: course.title)) {
-                LinkRow(icon: "checkmark.seal.fill", iconColor: Theme.success,
-                        title: "You're in this class",
-                        subtitle: "\(enr.sectionName): your grade and homework")
+            Codex {
+                NavigationLink(value: ClassRoute(sectionId: enr.sectionId, sectionName: enr.sectionName, courseTitle: course.title)) {
+                    LinkRow(icon: "checkmark.seal.fill", iconColor: Theme.ornament,
+                            title: "You're in this class",
+                            subtitle: "\(enr.sectionName): your grade and homework")
+                }
+                .buttonStyle(.lyceumRow)
             }
-            .buttonStyle(.lyceumPress)
         } else if course.registrationOpen == true {
             RegisterCard(courseTitle: course.title) { await load() }
         }
@@ -197,10 +244,15 @@ struct ButtonLabel: View {
             .font(.ui(16, .semibold))
             .foregroundStyle(primary ? Theme.onAccent : Theme.ink)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 13)
-            .background(primary ? Theme.accent : Theme.button)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(primary ? .clear : Theme.line, lineWidth: 1))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(.vertical, 14)
+            .background {
+                if primary {
+                    AccentFill()
+                } else {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.button)
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.strongLine.opacity(0.7), lineWidth: 1))
+                }
+            }
     }
 }
 
@@ -213,7 +265,9 @@ struct LinkRow: View {
     var external: Bool = false
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).font(.ui(20)).foregroundStyle(iconColor).frame(width: 28)
+            Image(systemName: icon).font(.system(size: 17, weight: .medium)).foregroundStyle(iconColor)
+                .frame(width: 34, height: 34)
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(iconColor.opacity(0.12)))
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
                 if let subtitle {
@@ -222,9 +276,9 @@ struct LinkRow: View {
             }
             Spacer(minLength: 0)
             Image(systemName: external ? "arrow.up.right" : "chevron.right")
-                .font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+                .font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
         }
-        .lyceumCard(padding: 14)
+        .codexRow()
     }
 }
 
@@ -235,7 +289,7 @@ struct ResourceRow: View {
             Link(destination: url) {
                 LinkRow(icon: icon, title: resource.title, subtitle: kindLabel, external: true)
             }
-            .buttonStyle(.lyceumPress)
+            .buttonStyle(.lyceumRow)
         }
     }
     private var kindLabel: String {
@@ -283,9 +337,9 @@ struct ProblemSetRow: View {
                 }
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
         }
-        .lyceumCard(padding: 14)
+        .codexRow()
     }
 }
 
@@ -397,8 +451,7 @@ struct SyllabusView: View {
                 .padding()
         }
         .background(Theme.page)
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar(title)
     }
 }
 

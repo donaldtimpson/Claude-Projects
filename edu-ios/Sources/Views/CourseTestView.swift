@@ -44,8 +44,7 @@ struct CourseTestView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.parchment)
-        .navigationTitle("Course Test")
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar("Course Test")
         .task { await load() }
     }
 

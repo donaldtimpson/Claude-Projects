@@ -187,17 +187,19 @@ page, and they need to keep matching.
 | Contact Info → Name | Optional display name |
 | Identifiers → User ID | The account row |
 | Usage Data → Product Interaction | Watch progress, quiz and drill attempts, reviews, streak |
-| User Content → Other User Content | Lecture comments, and the homework links a registered student turns in |
+| User Content → Other User Content | The homework links a registered student turns in (seen only by their teacher) |
 
 Then, for the tracking question: **"No, we do not use data for tracking."**
 There is no analytics SDK and no advertising identifier in the app.
 
-**Age rating.** Answer the questionnaire honestly. As of build 5 the app has
-user-generated content again: lecture comments, with **report** and **block** on
-every comment and an admin moderation queue (Guideline 1.2), plus homework links.
-Answer the UGC question yes; expect the rating to move off 4+. `User Content →
-Other User Content` is back in the table above and in `PrivacyInfo.xcprivacy`.
-These three answers must stay in step.
+**Age rating.** Answer the questionnaire honestly. Lecture comments stay **off**
+in the app (decided again 2026-11-16: rarely used on the site, and showing them
+means owing App Review the whole of Guideline 1.2, including a content filter
+and agreed terms). The only user content is a registered student's homework
+link, which goes to their teacher and is never shown to anyone else, so the
+answer to "user-generated content" is no and the rating stays 4+. `User Content
+→ Other User Content` stays in the table above and in `PrivacyInfo.xcprivacy`
+because the link is still collected. These answers must stay in step.
 
 **Export compliance** is already answered in code:
 `ITSAppUsesNonExemptEncryption = false` in `Info.plist`, because the only
@@ -293,7 +295,7 @@ Builds so far:
 | 1.0.0 (2) | 2026-08-25 | Comments switched off; superseded before submission |
 | 1.0.0 (3) | 2026-08-29 | Rejected 2026-09-01, Guideline 5.1.1(v) — password on the delete screen (§12) |
 | 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion. Never uploaded; superseded by (5) |
-| 1.0.0 (5) | prepared 2026-11-14 | Web-parity redesign, light mode, comments with moderation, homework (§13) |
+| 1.0.0 (5) | prepared 2026-11-16 | Redesign (leather and gold, light mode), homework; comments still off (§13) |
 
 `xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
 Organizer does not look at. Copy it to
@@ -1046,7 +1048,7 @@ Please let me know if anything else would help.
 
 ---
 
-## 13. Build 1.0.0 (5), prepared 2026-11-14
+## 13. Build 1.0.0 (5), prepared 2026-11-14, redesigned 2026-11-16
 
 1.0 has never been approved, so this stays **1.0.0** with build **5**. App Store
 Connect's unreleased version is still 1.0.0, and a version bump would only
@@ -1056,15 +1058,15 @@ the open 5.1.1(v) rejection (§12): account deletion still asks for no password.
 ### What changed since the last build App Review saw (3)
 
 - **Account deletion** needs no password (the §12 fix, carried forward).
-- **Comments are back, with moderation.** Every comment has Report (with a
-  reason) and Block, reports land in an admin queue, and a blocked author's
-  comments disappear for the blocker. This is exactly what App Review asked to
-  see in the 2.1 request (§10). The privacy manifest, the App Privacy answers and
-  the age rating change with it (§4).
+- **Comments stay off.** Report, Block and the admin moderation queue are built
+  (`commentsEnabled` in `LectureView.swift` brings the Discussion tab back), but
+  Guideline 1.2 also wants a content filter and agreed terms, and comments are
+  rarely used on the site, so the app doesn't show them (§4).
 - **Homework.** A student in a live class can register with a class code, see
   their grade and how it's calculated, and turn in a homework link.
-- **Design.** The app matches the website's redesign: new type, light and dark
-  themes with an Appearance setting, and rebuilt screens throughout.
+- **Design.** The website's type and palette, light and dark themes with an
+  Appearance setting, and the app's own materials: leather mastheads, gold-leaf
+  progress and grade rings, grouped lists, a podium in the Hall.
 - **Lecture numbers** come from each lecture's own title, so a newest-first
   playlist no longer counts backwards.
 - **Watching** is now an explicit "Mark as watched" button, as on the website.
@@ -1087,8 +1089,8 @@ Build 1.0 (5) addresses the 5.1.1(v) finding: account deletion (My Progress >
 Settings > Delete account) asks only that you type DELETE; there is no
 password step.
 
-This build also restores lecture comments. Each comment has Report (with a
-reason) and Block in its "..." menu; reports go to a moderation queue that we
-review, and blocking hides that person's comments immediately.
+The app shows no user-generated content: lecture comments remain off, as in
+the build you reviewed. A student registered in a class can turn in a homework
+link, which only their teacher sees.
 ```
 

@@ -20,10 +20,20 @@ struct PrimaryButton: View {
             }
             .foregroundStyle(enabled ? Theme.onAccent : Theme.inkSoft.opacity(0.8))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(enabled ? (role == .destructive ? Theme.dangerLine : Theme.accent) : Theme.tint)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .padding(.vertical, 15)
+            .background {
+                if !enabled {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.tint)
+                } else if role == .destructive {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Theme.dangerLine)
+                } else {
+                    AccentFill()
+                }
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.lyceumPress(cornerRadius: 12))
+        .sensoryFeedback(.impact(weight: .light), trigger: loading)
         .disabled(!enabled || loading)
     }
 }
@@ -43,15 +53,17 @@ struct SecondaryButton: View {
             .labelStyle(.titleAndIcon)
             .foregroundStyle(Theme.ink)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .padding(.vertical, 15)
             .background(Theme.button)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.strongLine.opacity(0.7), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
+        .buttonStyle(.lyceumPress(cornerRadius: 12))
     }
 }
 
-/// Section heading, as on the web: Cinzel caps beside a short gold bar, over a rule.
+/// Section heading: a gilt diamond, Cinzel caps, and a gold rule that fades out
+/// toward the trailing edge (or into the trailing control).
 struct SectionTitle: View {
     let title: String
     var trailing: AnyView? = nil
@@ -63,24 +75,41 @@ struct SectionTitle: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(Theme.ornament)
-                    .frame(width: 4, height: 17)
-                    .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
-                Text(title.uppercased())
-                    .font(.display(15))
-                    .kerning(1.1)
-                    .foregroundStyle(Theme.ink)
-                    .accessibilityAddTraits(.isHeader)
-                Spacer(minLength: 8)
-                if let trailing { trailing }
-            }
-            Rectangle().fill(Theme.line).frame(height: 1)
+        HStack(alignment: .center, spacing: 9) {
+            GiltDiamond(size: 5.5)
+            Text(title.uppercased())
+                .font(.display(14))
+                .kerning(1.6)
+                .foregroundStyle(Theme.ink)
+                .accessibilityAddTraits(.isHeader)
+                .layoutPriority(1)
+            Rectangle()
+                .fill(LinearGradient(colors: [Theme.ornament.opacity(0.55), Theme.ornament.opacity(0)],
+                                     startPoint: .leading, endPoint: .trailing))
+                .frame(height: 1)
+                .frame(minWidth: 12)
+            if let trailing { trailing }
         }
-        .padding(.top, 8)
+        .padding(.top, 14)
+        .padding(.bottom, 2)
     }
+}
+
+/// A lecture title without the "– Lecture 3 (Linear Algebra)" tail the playlist
+/// adds, which the screen already says in its own label: "Sources of Magnetic Field".
+func displayTitle(_ title: String) -> String {
+    let stripped = title.replacingOccurrences(
+        of: #"\s*[–—-]\s*(Lecture|Lesson)\s+\d+[A-Za-z]?\s*(\([^)]*\))?\s*$"#,
+        with: "", options: .regularExpression)
+    return stripped.isEmpty ? title : stripped
+}
+
+/// The course named in a review card's source, "… (University Physics II)".
+func courseName(fromSource source: String) -> String {
+    if let r = source.range(of: #"\(([^)]*)\)\s*$"#, options: .regularExpression) {
+        return String(source[r]).trimmingCharacters(in: CharacterSet(charactersIn: "() "))
+    }
+    return source
 }
 
 /// Non-breaking spaces around = and the like, so "Ax = 0" never splits across lines.

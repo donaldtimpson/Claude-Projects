@@ -20,26 +20,27 @@ struct DrillsView: View {
     }
 
     private static let categories: [DrillCategoryRoute] = [
-        .init(title: "Grammar Lessons", icon: "🎓", slugs: DrillCatalog.lessonSlugs),
-        .init(title: "Mental Math", icon: "🧮", slugs: ["arithmetic", "percentages", "order-of-operations",
+        .init(title: "Grammar Lessons", icon: "graduationcap.fill", slugs: DrillCatalog.lessonSlugs),
+        .init(title: "Mental Math", icon: "plus.forwardslash.minus", slugs: ["arithmetic", "percentages", "order-of-operations",
               "powers-of-two", "squares", "gcd", "primes", "sequences", "logarithms"]),
-        .init(title: "Trigonometry", icon: "📐", slugs: ["unit-circle", "vectors"]),
-        .init(title: "Calculus", icon: "📈", slugs: ["derivative", "integral"]),
-        .init(title: "Linear Algebra", icon: "▦", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"]),
-        .init(title: "Geography", icon: "🌍", slugs: ["name-country", "name-state", "locate-country", "locate-state",
+        .init(title: "Trigonometry", icon: "angle", slugs: ["unit-circle", "vectors"]),
+        .init(title: "Calculus", icon: "function", slugs: ["derivative", "integral"]),
+        .init(title: "Linear Algebra", icon: "square.grid.3x3", slugs: ["determinant", "solve-system", "matrix-vector", "dot-product"]),
+        .init(title: "Geography", icon: "globe.europe.africa.fill", slugs: ["name-country", "name-state", "locate-country", "locate-state",
               "capital-country", "capital-state"]),
-        .init(title: "Grammar", icon: "✒️", slugs: DrillCatalog.grammarSlugs),
+        .init(title: "Grammar", icon: "text.quote", slugs: DrillCatalog.grammarSlugs),
     ]
 
     var body: some View {
         ScrollView {
             if query.isEmpty { browse } else { searchResults }
         }
+        .tint(Theme.link)
         .background(Theme.page)
-        .navigationTitle("Practice Drills")
-        .navigationBarTitleDisplayMode(.inline)
+        .mastheadChrome("Practice Drills", crest: true)
         .searchable(text: $query, prompt: "Search drills")
         .task(id: userId) { await refreshAced() }
+        .tint(Theme.onLeather) // the search field on leather; content keeps the accent above
         .navigationDestination(for: DrillCategoryRoute.self) { route in
             CategoryDrillsView(route: route, userId: userId, open: open)
         }
@@ -67,57 +68,82 @@ struct DrillsView: View {
         }
     }
 
-    // MARK: browse (search empty) — Continue strip + category rows to drill into
+    // MARK: browse (search empty) — masthead, Continue strip, categories
     @ViewBuilder private var browse: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            if !recents.isEmpty {
-                sectionHeader("Continue")
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .top, spacing: 12) {
-                        ForEach(recents) { d in
-                            Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.lyceumPress)
+        VStack(alignment: .leading, spacing: 0) {
+            Masthead(overlap: recents.isEmpty ? 0 : 40) {
+                VStack(alignment: .leading, spacing: 8) {
+                    GiltEyebrow("The Palaestra")
+                    Text("Practice Drills")
+                        .font(.serif(30, .bold, relativeTo: .largeTitle)).foregroundStyle(Theme.onLeather)
+                    Text("Short, sharp practice. Ace a drill to earn its ✦.")
+                        .font(.serif(16).italic()).foregroundStyle(Theme.onLeatherSoft)
+                }
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                if !recents.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(recents) { d in
+                                Button { open(d.slug) } label: { recentTile(d) }.buttonStyle(.lyceumPress)
+                            }
                         }
+                        .padding(.horizontal, 2).padding(.vertical, 2)
                     }
-                    .padding(.horizontal, 2).padding(.bottom, 4)
+                    .scrollClipDisabled()
+                    .padding(.top, -40)
+                }
+                sectionHeader("Categories")
+                Codex(dividerInset: 72) {
+                    ForEach(Self.categories, id: \.title) { cat in
+                        NavigationLink(value: cat) { categoryRow(cat) }
+                            .buttonStyle(.lyceumRow)
+                            // Handle for the screenshot UI test (tools/screenshots.sh).
+                            .accessibilityIdentifier("drillCategoryRow")
+                    }
                 }
             }
-            sectionHeader("Categories")
-            VStack(spacing: 10) {
-                ForEach(Self.categories, id: \.title) { cat in
-                    NavigationLink(value: cat) { categoryRow(cat) }
-                        .buttonStyle(.lyceumPress)
-                        // Handle for the screenshot UI test (tools/screenshots.sh).
-                        .accessibilityIdentifier("drillCategoryRow")
-                }
-            }
+            .padding(.horizontal)
+            .padding(.bottom, 24)
         }
-        .padding()
+    }
+
+    @ViewBuilder private func categoryCount(_ cat: DrillCategoryRoute) -> some View {
+        if cat.slugs == DrillCatalog.lessonSlugs {
+            let aced = LessonProgress.shared.acedCount(userId: userId, slugs: cat.slugs)
+            Text(aced > 0 ? "✦ \(aced) of \(cat.slugs.count) aced" : "\(cat.slugs.count) lessons")
+                .font(.ui(13, aced > 0 ? .semibold : .regular)).foregroundStyle(aced > 0 ? Theme.accentText : Theme.inkSoft)
+        } else {
+            Text("\(cat.slugs.count) drills").font(.ui(13)).foregroundStyle(Theme.inkSoft)
+        }
     }
 
     // MARK: search results — matching categories first, then drills; matches highlighted
     @ViewBuilder private var searchResults: some View {
         let cats = Self.categories.filter { $0.title.range(of: query, options: .caseInsensitive) != nil }
         let drills = DrillCatalog.all.filter { matches($0, query) }
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 12) {
             if cats.isEmpty && drills.isEmpty {
-                Text("No matches for “\(query)”.").foregroundStyle(Theme.inkSoft).padding(.top, 40)
+                Text("No matches for “\(query)”.").font(.serif(16)).foregroundStyle(Theme.inkSoft)
+                    .frame(maxWidth: .infinity).padding(.top, 40)
             }
             if !cats.isEmpty {
                 sectionHeader("Categories")
-                VStack(spacing: 10) {
+                Codex(dividerInset: 70) {
                     ForEach(cats, id: \.title) { cat in
-                        NavigationLink(value: cat) { categoryRow(cat, query: query) }.buttonStyle(.lyceumPress)
+                        NavigationLink(value: cat) { categoryRow(cat, query: query) }.buttonStyle(.lyceumRow)
                     }
                 }
             }
             if !drills.isEmpty {
                 sectionHeader("Drills")
-                VStack(spacing: 10) {
+                Codex(dividerInset: 70) {
                     ForEach(drills) { d in DrillRow(drill: d, userId: userId, query: query) { open(d.slug) } }
                 }
             }
         }
-        .padding()
+        .padding(.horizontal)
+        .padding(.bottom, 24)
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -126,21 +152,15 @@ struct DrillsView: View {
 
     private func categoryRow(_ cat: DrillCategoryRoute, query: String = "") -> some View {
         HStack(spacing: 12) {
-            Text(cat.icon).font(.system(size: 30)).foregroundStyle(Theme.ink).frame(width: 40, height: 40)
+            Medallion(systemImage: cat.icon)
             VStack(alignment: .leading, spacing: 2) {
                 Text(highlighted(cat.title, query)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
-                if cat.slugs == DrillCatalog.lessonSlugs {
-                    let aced = LessonProgress.shared.acedCount(userId: userId, slugs: cat.slugs)
-                    Text(aced > 0 ? "✦ \(aced)/\(cat.slugs.count) aced" : "\(cat.slugs.count) lessons")
-                        .font(.ui(14)).foregroundStyle(aced > 0 ? Theme.accentText : Theme.inkSoft)
-                } else {
-                    Text("\(cat.slugs.count) drills").font(.ui(14)).foregroundStyle(Theme.inkSoft)
-                }
+                categoryCount(cat)
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
         }
-        .lyceumCard()
+        .codexRow()
     }
 
     // Recent chip — a fixed, uniform card (content centered) so the strip reads evenly.
@@ -150,16 +170,17 @@ struct DrillsView: View {
             Text(d.title).font(.serif(15, .semibold)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.75)
             if LessonProgress.shared.isAced(userId: userId, slug: d.slug) {
-                Text("✦ Aced").font(.ui(13, .semibold)).foregroundStyle(Theme.gold300)
+                Text("✦ Aced").font(.ui(13, .semibold)).foregroundStyle(Theme.accentText)
             } else if let sub = masterySubtitle(d, userId: userId) {
-                Text(sub).font(.ui(13)).foregroundStyle(Theme.gold400)
+                Text(sub).font(.ui(13)).foregroundStyle(Theme.inkSoft)
             }
         }
         .padding(8)
         .frame(width: 128, height: 124)
         .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.line, lineWidth: 0.75))
+        .shadow(color: Color(hex: 0x2a0a0a).opacity(0.14), radius: 12, y: 5)
     }
 
     // MARK: logic
@@ -184,7 +205,7 @@ struct CategoryDrillsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 10) {
+            Codex(dividerInset: 70) {
                 ForEach(route.slugs.compactMap { DrillCatalog.drill(slug: $0) }) { d in
                     DrillRow(drill: d, userId: userId) { open(d.slug) }
                 }
@@ -192,8 +213,7 @@ struct CategoryDrillsView: View {
             .padding()
         }
         .background(Theme.page)
-        .navigationTitle(route.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar(route.title)
     }
 }
 
@@ -208,21 +228,23 @@ struct DrillRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                Text(drill.icon).font(.system(size: 34))
+                DrillIcon(icon: drill.icon)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(highlighted(drill.title, query)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
-                    Text(highlighted(drill.blurb, query)).font(.ui(15)).foregroundStyle(Theme.inkSoft).lineLimit(2)
-                    if LessonProgress.shared.isAced(userId: userId, slug: drill.slug) {
-                        Text("✦ Aced").font(.ui(12, .semibold)).foregroundStyle(Theme.gold300)
-                    } else if let sub = masterySubtitle(drill, userId: userId) {
-                        Text(sub).font(.ui(12)).foregroundStyle(Theme.gold400)
-                    }
+                        .multilineTextAlignment(.leading)
+                    Text(highlighted(drill.blurb, query)).font(.ui(14)).foregroundStyle(Theme.inkSoft).lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
                 Spacer(minLength: 0)
+                if LessonProgress.shared.isAced(userId: userId, slug: drill.slug) {
+                    Text("✦ Aced").font(.ui(12, .semibold)).foregroundStyle(Theme.accentText)
+                } else if let sub = masterySubtitle(drill, userId: userId) {
+                    Text(sub).font(.ui(12)).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.trailing)
+                }
             }
-            .lyceumCard()
+            .codexRow()
         }
-        .buttonStyle(.lyceumPress)
+        .buttonStyle(.lyceumRow)
         .accessibilityIdentifier("drillRow")
     }
 }
@@ -250,7 +272,7 @@ func highlighted(_ text: String, _ query: String) -> AttributedString {
     guard !q.isEmpty else { return attr }
     var start = attr.startIndex
     while let r = attr[start...].range(of: q, options: .caseInsensitive) {
-        attr[r].foregroundColor = Theme.gold300
+        attr[r].foregroundColor = Theme.accentText
         attr[r].inlinePresentationIntent = .stronglyEmphasized
         start = r.upperBound
     }
@@ -258,3 +280,30 @@ func highlighted(_ text: String, _ query: String) -> AttributedString {
 }
 
 struct ActiveDrill: Identifiable { let id: String }
+
+/// A drill's emoji on a small tinted tile with a gold hairline.
+struct DrillIcon: View {
+    let icon: String
+    var body: some View {
+        Text(icon).font(.system(size: 24)).foregroundStyle(Theme.ink)
+            .frame(width: 42, height: 42)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.tint))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.ornament.opacity(0.35), lineWidth: 0.75))
+    }
+}
+
+/// A category's mark: a gold glyph struck on a small leather medallion.
+struct Medallion: View {
+    let systemImage: String
+    var size: CGFloat = 44
+    var body: some View {
+        Image(systemName: systemImage)
+            .font(.system(size: size * 0.4, weight: .semibold))
+            .foregroundStyle(Theme.gilt)
+            .frame(width: size, height: size)
+            .background(Circle().fill(Theme.leather))
+            .overlay(Circle().inset(by: 2.5).strokeBorder(Theme.gilt.opacity(0.55), lineWidth: 0.75))
+            .shadow(color: Color(hex: 0x3a0b0b).opacity(0.25), radius: 2, y: 1)
+            .accessibilityHidden(true)
+    }
+}

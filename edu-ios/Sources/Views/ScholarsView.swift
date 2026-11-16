@@ -19,37 +19,87 @@ struct ScholarsView: View {
     var body: some View {
         Group {
             if loading && entries.isEmpty {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                LoadingLeather()
             } else if failed && entries.isEmpty {
                 LoadFailedView(title: "Couldn't load the Hall") { await load() }
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Every scholar is ranked by their standing, shown only by their chosen handle.")
-                            .font(.serif(16)).foregroundStyle(Theme.inkSoft)
-                        standingSection
-                        SectionTitle("The Hall")
-                        VStack(spacing: 0) {
-                            ForEach(Array(entries.enumerated()), id: \.element.id) { i, entry in
-                                NavigationLink(value: ScholarRoute(handle: entry.scholar.handle)) {
-                                    ScholarRow(entry: entry, rank: i + 1, isMe: i == myIndex)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Masthead(overlap: 0) { podium }
+                        VStack(alignment: .leading, spacing: 12) {
+                            standingSection
+                            if entries.count > 3 {
+                                SectionTitle("The Hall")
+                                Codex(dividerInset: 56) {
+                                    ForEach(Array(entries.enumerated().dropFirst(3)), id: \.element.id) { i, entry in
+                                        NavigationLink(value: ScholarRoute(handle: entry.scholar.handle)) {
+                                            ScholarRow(entry: entry, rank: i + 1, isMe: i == myIndex)
+                                        }
+                                        .buttonStyle(.lyceumRow)
+                                    }
                                 }
-                                .buttonStyle(.plain)
-                                if i < entries.count - 1 { Divider().overlay(Theme.line) }
                             }
+                            if entries.contains(where: \.isHouse) {
+                                (Text(Image(systemName: "building.columns")) + Text("  House scholars are great minds of the past who set the pace. They aren't real students."))
+                                    .font(.ui(12.5)).foregroundStyle(Theme.inkSoft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.horizontal, 4)
+                            }
+                            scoringSection
                         }
-                        .lyceumCard(padding: 0)
-                        scoringSection
+                        .padding(.horizontal)
+                        .padding(.bottom, 24)
                     }
-                    .padding()
                 }
                 .refreshable { await load() }
             }
         }
         .background(Theme.page)
-        .navigationTitle("Hall of Scholars")
-        .navigationBarTitleDisplayMode(.inline)
+        .mastheadChrome("Hall of Scholars", threshold: 140)
         .task { await load() }
+    }
+
+    /// The top three on a podium, first place raised in the middle.
+    private var podium: some View {
+        VStack(spacing: 14) {
+            VStack(spacing: 6) {
+                GiltEyebrow("Hall of Scholars")
+                Text("Ranked by standing, shown only by chosen handle.")
+                    .font(.serif(15).italic()).foregroundStyle(Theme.onLeatherSoft)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            HStack(alignment: .bottom, spacing: 10) {
+                ForEach([1, 0, 2], id: \.self) { i in
+                    if i < entries.count {
+                        NavigationLink(value: ScholarRoute(handle: entries[i].scholar.handle)) {
+                            podiumPlace(entries[i], rank: i + 1)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func podiumPlace(_ entry: ScholarEntry, rank: Int) -> some View {
+        let height: CGFloat = rank == 1 ? 74 : rank == 2 ? 52 : 38
+        return VStack(spacing: 6) {
+            RankMedal(rank: rank, size: rank == 1 ? 50 : 42)
+            Text(entry.scholar.handle).font(.serif(14.5, .semibold)).foregroundStyle(Theme.onLeather)
+                .lineLimit(1).minimumScaleFactor(0.75)
+            Text(entry.scholar.standing.formatted()).font(.ui(13, .semibold)).monospacedDigit()
+                .foregroundStyle(Theme.giltText)
+            // The step itself.
+            UnevenRoundedRectangle(topLeadingRadius: 8, topTrailingRadius: 8)
+                .fill(LinearGradient(colors: [.white.opacity(0.16), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom))
+                .overlay(alignment: .top) { Rectangle().fill(Theme.giltBar).frame(height: 1).opacity(0.7) }
+                .frame(height: height)
+                .overlay(Text("\(rank)").font(.display(20)).foregroundStyle(Theme.onLeather.opacity(0.35)))
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Rank \(rank), \(entry.scholar.handle), \(entry.scholar.standing) standing")
     }
 
     @ViewBuilder private var standingSection: some View {
@@ -68,6 +118,8 @@ struct ScholarsView: View {
                 .lyceumCard()
         }
     }
+
+
 
     @ViewBuilder private var scoringSection: some View {
         SectionTitle("How Standing Is Earned")
@@ -129,11 +181,32 @@ struct ScholarRow: View {
             Text(entry.scholar.standing.formatted())
                 .font(.ui(16, .semibold)).monospacedDigit()
                 .foregroundStyle(entry.scholar.standing > 0 ? Theme.ink : Theme.inkSoft)
-            Image(systemName: "chevron.right").font(.ui(12, .semibold)).foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").font(.ui(12, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
         }
         .padding(.horizontal, 14).padding(.vertical, 11)
         .background(isMe ? Theme.accentText.opacity(0.07) : .clear)
-        .contentShape(Rectangle())
+    }
+}
+
+/// A struck medal for the podium: metal face, darker rim, the rank in Cinzel.
+struct RankMedal: View {
+    let rank: Int
+    var size: CGFloat = 44
+    var body: some View {
+        let (light, dark): (UInt, UInt) = switch rank {
+        case 1: (0xf6e39c, 0xa8801f)
+        case 2: (0xf1f2f4, 0x8e9196)
+        default: (0xf0c08e, 0x8c5528)
+        }
+        ZStack {
+            Circle().fill(LinearGradient(colors: [Color(hex: light), Color(hex: dark)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            Circle().inset(by: size * 0.1)
+                .strokeBorder(LinearGradient(colors: [Color(hex: dark), Color(hex: light)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.2)
+            Text("\(rank)").font(.display(size * 0.38)).foregroundStyle(Color(hex: 0x3a2508).opacity(0.85))
+        }
+        .frame(width: size, height: size)
+        .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+        .accessibilityHidden(true)
     }
 }
 
@@ -180,10 +253,11 @@ struct StandingCard: View {
 
     private var segments: [(String, Int, Color)] {
         [
-            ("Lectures", scholar.lectures, Color(hex: 0xb4443a)),
-            ("Quizzes", scholar.quizPts, Color(hex: 0xc9962a)),
-            ("Completion", scholar.completions, Color(hex: 0x5fa872)),
-            ("Badges", scholar.badgePts, Color(hex: 0x7a6f9b)),
+            // The app's own metals and inks: crimson, gold, bronze, slate.
+            ("Lectures", scholar.lectures, Color(light: 0x9a2828, dark: 0xc4554e)),
+            ("Quizzes", scholar.quizPts, Color(light: 0xc9962a, dark: 0xd9ad45)),
+            ("Completion", scholar.completions, Color(light: 0x8c5528, dark: 0xb97b48)),
+            ("Badges", scholar.badgePts, Color(light: 0x5a4f46, dark: 0xa8977e)),
         ]
     }
 
@@ -262,12 +336,28 @@ struct ScholarProfileView: View {
                 let isMe = entry.scholar.userId != nil && entry.scholar.userId == auth.user?.id
                 let isHouse = entry.house ?? entry.scholar.house ?? false
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 8) {
-                            Text(entry.scholar.handle).font(.serif(26, .bold, relativeTo: .title)).foregroundStyle(Theme.ink)
-                            if isMe { Pill("You", tone: .accent) }
+                    VStack(alignment: .leading, spacing: 0) {
+                    Masthead(overlap: 0) {
+                        HStack(spacing: 14) {
+                            if entry.rank <= 3 {
+                                RankMedal(rank: entry.rank, size: 56)
+                            } else {
+                                Text(String(entry.scholar.handle.prefix(1)))
+                                    .font(.display(26)).foregroundStyle(Theme.onLeather)
+                                    .frame(width: 56, height: 56)
+                                    .background(Circle().fill(.white.opacity(0.1)))
+                                    .overlay(Circle().strokeBorder(Theme.gilt, lineWidth: 1.2))
+                            }
+                            VStack(alignment: .leading, spacing: 4) {
+                                GiltEyebrow(isMe ? "That's you" : "Scholar")
+                                Text(entry.scholar.handle).font(.serif(26, .bold, relativeTo: .title))
+                                    .foregroundStyle(Theme.onLeather).lineLimit(1).minimumScaleFactor(0.7)
+                                Text("Rank #\(entry.rank) of \(entry.total) in the Hall").font(.ui(14))
+                                    .foregroundStyle(Theme.onLeatherSoft)
+                            }
                         }
-                        Text("Rank #\(entry.rank) in the Hall of Scholars").font(.ui(14)).foregroundStyle(Theme.inkSoft)
+                    }
+                    VStack(alignment: .leading, spacing: 12) {
                         if isHouse {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("✦ House Scholar, not a real student").font(.ui(14, .semibold)).foregroundStyle(Theme.accentText)
@@ -284,27 +374,30 @@ struct ScholarProfileView: View {
                         if let badges = entry.badges, !badges.isEmpty {
                             SectionTitle("Achievements")
                             let earned = badges.filter { $0.unlocked && $0.tier != "omniscient" }
-                            NavigationLink {
-                                AchievementsView(badges: badges)
-                            } label: {
-                                LinkRow(icon: "rosette", title: "\(earned.count) of \(badges.filter { $0.tier != "omniscient" }.count) earned",
-                                        subtitle: "See every achievement")
+                            Codex {
+                                NavigationLink {
+                                    AchievementsView(badges: badges)
+                                } label: {
+                                    LinkRow(icon: "rosette", iconColor: Theme.ornament,
+                                            title: "\(earned.count) of \(badges.filter { $0.tier != "omniscient" }.count) earned",
+                                            subtitle: "See every achievement")
+                                }
+                                .buttonStyle(.lyceumRow)
                             }
-                            .buttonStyle(.lyceumPress)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.bottom, 24)
+                    }
                 }
-                .titleRevealsOnScroll(entry.scholar.handle)
             } else if failed {
                 LoadFailedView(title: "Couldn't load this scholar") { await load() }
             } else {
-                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+                LoadingLeather()
             }
         }
         .background(Theme.page)
-        .navigationTitle(handle)
-        .navigationBarTitleDisplayMode(.inline)
+        .mastheadChrome(handle)
         .task { await load() }
     }
 

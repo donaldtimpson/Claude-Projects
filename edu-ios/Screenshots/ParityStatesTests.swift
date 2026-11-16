@@ -97,4 +97,33 @@ final class ParityStatesTests: XCTestCase {
         settle(2)
         shoot("settings-gear")
     }
+
+    /// Each screen in PARITY_SCROLL_URLS (comma-separated) scrolled once, to see the
+    /// bar after its leather masthead has gone under it.
+    func testScrolledChrome() throws {
+        let urls = (env["PARITY_SCROLL_URLS"] ?? "").split(separator: ",").map(String.init)
+        try XCTSkipIf(urls.isEmpty, "PARITY_SCROLL_URLS not set")
+        for (i, url) in urls.enumerated() {
+            let app = launch(url == "-" ? nil : url)
+            settle(6)
+            app.swipeUp(velocity: .slow)
+            settle(1.5)
+            shoot("scrolled-\(i)")
+            app.terminate()
+        }
+    }
+
+    /// The edge swipe still goes back on a screen that draws its own back button.
+    func testSwipeBackFromMastheadScreen() throws {
+        let url = try XCTUnwrap(env["PARITY_COURSE_URL"])
+        let app = launch(url)
+        settle(6)
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.5))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
+        start.press(forDuration: 0.05, thenDragTo: end)
+        settle(2)
+        shoot("swiped-back")
+        XCTAssertTrue(app.staticTexts["CURRENTLY TEACHING"].exists || app.staticTexts["ALL COURSES"].exists,
+                      "edge swipe didn't return to the Courses root")
+    }
 }

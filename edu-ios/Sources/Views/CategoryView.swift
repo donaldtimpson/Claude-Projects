@@ -8,14 +8,13 @@ struct CategoryView: View {
 
     var body: some View {
         content
-            .navigationTitle(category.name)
-            .navigationBarTitleDisplayMode(.inline)
+            .mastheadChrome(category.name, threshold: 200)
             .task { if courses.isEmpty { await load() } }
     }
 
     @ViewBuilder private var content: some View {
         if loading {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.parchment)
+            LoadingLeather()
         } else if let error {
             ContentUnavailableView("Couldn't load", systemImage: "wifi.slash", description: Text(error))
         } else if courses.isEmpty {
@@ -24,15 +23,27 @@ struct CategoryView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.parchment)
         } else {
             ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(courses) { course in
-                        NavigationLink(value: course) { CourseRow(course: course) }
-                            .buttonStyle(.lyceumPress)
+                VStack(alignment: .leading, spacing: 0) {
+                    CoverHero(imageURL: AppConfig.assetURL("/categories/\(category.slug).png")?.absoluteString, overlap: 0) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            GiltEyebrow("Category")
+                            Text(category.name).font(.serif(30, .bold, relativeTo: .largeTitle))
+                                .foregroundStyle(Theme.onLeather)
+                            Text("\(courses.count) course\(courses.count == 1 ? "" : "s")")
+                                .font(.ui(14, .medium)).foregroundStyle(Theme.onLeatherSoft)
+                        }
                     }
+                    Codex(dividerInset: 122) {
+                        ForEach(courses) { course in
+                            NavigationLink(value: course) { CourseRow(course: course) }
+                                .buttonStyle(.lyceumRow)
+                        }
+                    }
+                    .padding()
                 }
-                .padding()
             }
-            .background(Theme.parchment)
+            .ignoresSafeArea(.container, edges: .top)
+            .background(Theme.page)
         }
     }
 

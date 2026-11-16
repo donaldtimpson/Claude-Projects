@@ -25,18 +25,22 @@ struct ProblemSetView: View {
 
     var body: some View {
         content
-            .navigationTitle(detail?.title ?? route.title)
-            .navigationBarTitleDisplayMode(.inline)
+            .leatherBar(detail?.title ?? route.title)
             .task(id: auth.user?.id) { await load() }
             .sheet(item: $shareItem) { ShareSheet(url: $0.url) }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ChromeItem {
                     if let detail {
                         Button {
                             exportPDF(detail)
                         } label: {
-                            if generatingPDF { ProgressView() } else { Image(systemName: "square.and.arrow.up") }
+                            if generatingPDF {
+                                ProgressView().tint(Theme.onLeather).frame(width: 38, height: 38)
+                            } else {
+                                ChromeDisc(systemImage: "square.and.arrow.up")
+                            }
                         }
+                        .buttonStyle(.plain)
                         .disabled(generatingPDF)
                         .accessibilityLabel("Share problem set as PDF")
                     }

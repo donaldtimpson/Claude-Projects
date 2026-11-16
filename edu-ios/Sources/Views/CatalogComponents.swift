@@ -33,7 +33,16 @@ struct Thumb: View {
             Rectangle().fill(Theme.tint)
         }
         .frame(width: 96, height: 60)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(.black.opacity(0.08), lineWidth: 0.5))
+    }
+}
+
+/// Row padding inside a Codex.
+extension View {
+    func codexRow() -> some View {
+        self.padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -76,7 +85,7 @@ struct CategoryRow: View {
                 Rectangle().fill(Theme.tint)
             }
             .frame(width: 96, height: 60)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             VStack(alignment: .leading, spacing: 4) {
                 nameText.font(.serif(18, .semibold)).foregroundStyle(Theme.ink)
@@ -86,9 +95,9 @@ struct CategoryRow: View {
                 }
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+            Image(systemName: "chevron.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
         }
-        .lyceumCard(padding: 12)
+        .codexRow()
     }
 
     private var nameText: Text {
@@ -106,7 +115,7 @@ func formatDuration(_ seconds: Int) -> String {
 }
 
 // Lecture row: thumbnail, title, and a metadata line with the lecture's label
-// ("Lecture 3", read from its title by the server), duration, comments, and a
+// ("Lecture 3", read from its title by the server), duration, and a
 // green ✓ once watched.
 struct LectureRow: View {
     let video: VideoListItem
@@ -115,38 +124,43 @@ struct LectureRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Thumb(url: video.thumbnailUrl)
-            VStack(alignment: .leading, spacing: 5) {
-                titleText.font(.serif(17, .semibold)).foregroundStyle(Theme.ink).lineLimit(2)
-                HStack(spacing: 6) {
-                    Text(meta).font(.ui(13)).foregroundStyle(Theme.inkSoft).lineLimit(1)
-                    Spacer(minLength: 4)
+                .opacity(watched ? 0.72 : 1)
+                .overlay(alignment: .bottomTrailing) {
                     if watched {
-                        Label("Watched", systemImage: "checkmark")
-                            .labelStyle(.iconOnly)
-                            .font(.ui(13, .bold))
-                            .foregroundStyle(Theme.success)
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, Theme.successLine)
+                            .background(Circle().fill(.white).padding(2))
+                            .offset(x: 5, y: 5)
                             .accessibilityLabel("Watched")
                     }
                 }
+            VStack(alignment: .leading, spacing: 5) {
+                if let label = video.label {
+                    Text(label.uppercased())
+                        .font(.ui(11, .semibold, relativeTo: .caption)).kerning(0.9)
+                        .foregroundStyle(Theme.accentText)
+                }
+                titleText.font(.serif(16.5, .semibold)).foregroundStyle(Theme.ink).lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                if video.durationSeconds > 0 {
+                    Text(formatDuration(video.durationSeconds))
+                        .font(.ui(12.5)).monospacedDigit().foregroundStyle(Theme.inkSoft)
+                }
             }
+            Spacer(minLength: 0)
         }
-        .lyceumCard(padding: 12)
+        .codexRow()
         .accessibilityIdentifier("lectureRow")
     }
 
-    private var meta: String {
-        var bits: [String] = []
-        if let label = video.label { bits.append(label) }
-        if video.durationSeconds > 0 { bits.append(formatDuration(video.durationSeconds)) }
-        if let c = video.commentCount, c > 0 { bits.append("\(c) comment\(c == 1 ? "" : "s")") }
-        return bits.joined(separator: " · ")
-    }
-
     private var titleText: Text {
+        let title = displayTitle(video.title)
         if let highlight, !highlight.isEmpty {
-            return Text(searchHighlighted(video.title, highlight))
+            return Text(searchHighlighted(title, highlight))
         }
-        return Text(video.title)
+        return Text(title)
     }
 }
 
@@ -166,11 +180,11 @@ struct CourseRow: View {
                     Text(course.videoCount == 0 ? "Coming soon" : "\(course.videoCount) lectures")
                         .font(.ui(13)).foregroundStyle(Theme.inkSoft)
                     Spacer(minLength: 8)
-                    if course.isCurrent { Pill("Live", tone: .accent) }
+                    if course.isCurrent { LiveBadge() }
                 }
             }
         }
-        .lyceumCard(padding: 12)
+        .codexRow()
         // Stable handle for the screenshot UI test.
         .accessibilityIdentifier("courseRow")
     }
@@ -180,5 +194,23 @@ struct CourseRow: View {
             return Text(searchHighlighted(course.title, highlight))
         }
         return Text(course.title)
+    }
+}
+
+/// "Live": a course being taught now. A soft pulse, like a live broadcast.
+struct LiveBadge: View {
+    @State private var pulse = false
+    var body: some View {
+        HStack(spacing: 5) {
+            Circle().fill(Theme.danger).frame(width: 6, height: 6)
+                .opacity(pulse ? 0.35 : 1)
+                .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulse)
+            Text("LIVE").font(.ui(11, .bold, relativeTo: .caption)).kerning(1)
+                .foregroundStyle(Theme.danger)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 3)
+        .background(Capsule().fill(Theme.dangerFill))
+        .onAppear { pulse = true }
+        .accessibilityLabel("Live")
     }
 }

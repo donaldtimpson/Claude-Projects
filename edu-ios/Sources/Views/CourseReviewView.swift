@@ -47,11 +47,14 @@ struct CourseReviewView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.page)
-        .navigationTitle("Course Review")
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar("Course Review")
         .toolbar {
             if phase == .playing {
-                ToolbarItem(placement: .topBarTrailing) { Button("End") { finishEarly() } }
+                ChromeItem {
+                    Button { finishEarly() } label: { ChromeDisc(systemImage: "flag.checkered") }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("End")
+                }
             }
         }
         .task { if pool.isEmpty { await load() } }

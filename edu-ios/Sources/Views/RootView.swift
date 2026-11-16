@@ -47,16 +47,23 @@ struct RootView: View {
 
 struct SplashView: View {
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 16) {
+            Image(systemName: "building.columns.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(Theme.gilt)
             Text("The Timpson\nLyceum")
                 .font(.display(36))
                 .kerning(1.5)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(Theme.ink)
-            RoundedRectangle(cornerRadius: 1).fill(Theme.ornament).frame(width: 48, height: 3)
-            ProgressView().tint(Theme.link)
+                .foregroundStyle(Theme.onLeather)
+            HStack(spacing: 10) {
+                Rectangle().fill(Theme.giltBar).frame(width: 40, height: 1)
+                GiltDiamond(size: 6)
+                Rectangle().fill(Theme.giltBar).frame(width: 40, height: 1)
+            }
+            ProgressView().tint(Theme.giltText).padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.page)
+        .background { LeatherBackground().ignoresSafeArea() }
     }
 }

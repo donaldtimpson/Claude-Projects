@@ -27,8 +27,7 @@ struct AchievementsView: View {
             .padding()
         }
         .background(Theme.page)
-        .navigationTitle("Achievements")
-        .navigationBarTitleDisplayMode(.inline)
+        .leatherBar("Achievements")
         .sheet(item: $detail) { detailSheet($0) }
     }
 

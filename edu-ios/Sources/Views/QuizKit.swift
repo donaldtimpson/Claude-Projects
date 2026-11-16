@@ -31,7 +31,10 @@ struct QuizProgressBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.tint)
                 Capsule()
-                    .fill(Theme.accent)
+                    .fill(Theme.giltBar)
+                    .overlay(alignment: .top) {
+                        Capsule().fill(.white.opacity(0.45)).frame(height: 1.5).padding(.horizontal, 3).padding(.top, 1)
+                    }
                     // A sliver even at zero, so the bar reads as a progress bar.
                     .frame(width: max(6, min(1, fraction) * geo.size.width))
             }

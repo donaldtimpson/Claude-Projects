@@ -27,12 +27,12 @@ struct LectureView: View {
     @State private var watched = false
     @State private var markingWatched = false
 
-    /// Lecture discussion. Re-enabled once comment moderation shipped: users can
-    /// now REPORT a comment and BLOCK an author (App Store Guideline 1.2 for
-    /// user-generated content — App Review asked to see exactly that), the report
-    /// feeds an admin moderation queue, and the listing filters out blocked
-    /// authors. See APP_STORE.md §10.
-    private let commentsEnabled = true
+    /// Lecture discussion is off in the app. Comments are rarely used on the site,
+    /// and an app that shows user-generated content owes App Review the whole of
+    /// Guideline 1.2 (a content filter, agreed terms, report, block). Report/block
+    /// and the moderation queue are built; flip this to bring the tab back once a
+    /// filter and terms exist. See APP_STORE.md §10 and §13.
+    private let commentsEnabled = false
 
     enum QuizPhase { case idle, running, done }
     struct ScorePair { let score: Int; let total: Int }
@@ -50,8 +50,7 @@ struct LectureView: View {
 
     var body: some View {
         content
-            .navigationTitle(detail?.video.label ?? "Lecture")
-            .navigationBarTitleDisplayMode(.inline)
+            .leatherBar(detail?.video.label ?? "Lecture")
             .task(id: auth.user?.id) { await load() }
             .sheet(isPresented: $showCompose) {
                 CommentComposeSheet(replyingTo: composeReplyTo, onSubmit: postComment)
@@ -98,12 +97,14 @@ struct LectureView: View {
         if let detail {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    // The film runs edge to edge, on black, like a player should.
                     YouTubePlayer(videoId: detail.video.youtubeVideoId, start: route.startSeconds) { code in
                         videoError = code
                     }
                     .aspectRatio(16.0 / 9.0, contentMode: .fit)
                     .frame(maxWidth: .infinity)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .background(Color.black)
+                    .padding(.horizontal, -16)
 
                     if let videoError {
                         Text(youtubeErrorMessage(videoError))
@@ -111,12 +112,12 @@ struct LectureView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(detail.video.title)
-                            .font(.serif(22, .bold, relativeTo: .title2))
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(displayTitle(detail.video.title))
+                            .font(.serif(23, .bold, relativeTo: .title2))
                             .foregroundStyle(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
-                        if auth.isSignedIn { watchedButton(detail) }
+                        if auth.isSignedIn { watchedButton(detail).padding(.top, 4) }
                     }
 
                     lectureNav(detail)
@@ -177,41 +178,45 @@ struct LectureView: View {
         .accessibilityHint(watched ? "" : "Counts toward attendance in your class.")
     }
 
-    /// Previous / next lecture; after the last one, the course test if there is one.
+    /// Previous / next lecture as one bound pair of rows; after the last lecture, the
+    /// course test if there is one.
     @ViewBuilder private func lectureNav(_ detail: VideoDetailResponse) -> some View {
         let testCount = detail.courseTestQuestionCount ?? 0
         if detail.prev != nil || detail.next != nil || testCount > 0 {
-            HStack(spacing: 10) {
+            Codex(dividerInset: 50) {
                 if let prev = detail.prev {
                     NavigationLink(value: LectureRoute(courseId: route.courseId, videoId: prev.id, title: prev.title)) {
-                        navLabel("← \(prev.label)", primary: false)
+                        turnRow(icon: "chevron.left", eyebrow: "Previous · \(prev.label)", title: displayTitle(prev.title))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lyceumRow)
                 }
                 if let next = detail.next {
                     NavigationLink(value: LectureRoute(courseId: route.courseId, videoId: next.id, title: next.title)) {
-                        navLabel("\(next.label) →", primary: false)
+                        turnRow(icon: "chevron.right", eyebrow: "Next · \(next.label)", title: displayTitle(next.title))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lyceumRow)
                 } else if testCount > 0 {
                     NavigationLink(value: CourseTestRoute(courseId: route.courseId, title: "Course Test")) {
-                        navLabel("Take the test →", primary: true)
+                        turnRow(icon: "checkmark.seal", eyebrow: "That's the last lecture", title: "Take the course test")
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.lyceumRow)
                 }
             }
         }
     }
 
-    private func navLabel(_ text: String, primary: Bool) -> some View {
-        Text(text)
-            .font(.ui(15, .semibold))
-            .foregroundStyle(primary ? Theme.onAccent : Theme.ink)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(primary ? Theme.accent : Theme.button)
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(primary ? .clear : Theme.line, lineWidth: 1))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+    private func turnRow(icon: String, eyebrow: String, title: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(Theme.link)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(eyebrow.uppercased()).font(.ui(10.5, .semibold, relativeTo: .caption2)).kerning(0.8)
+                    .foregroundStyle(Theme.inkSoft)
+                Text(title).font(.serif(16, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+            }
+            Spacer(minLength: 0)
+        }
+        .codexRow()
     }
 
     /// Lesson drills tagged as covering this lecture, resolved against the bundled
@@ -227,13 +232,14 @@ struct LectureView: View {
         if !sets.isEmpty || !drills.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 SectionTitle("Practice")
+                Codex {
                 ForEach(sets) { ps in
                     NavigationLink(value: ProblemSetRoute(courseId: route.courseId, problemSetId: ps.id, title: ps.title)) {
                         ProblemSetRow(ps: ProblemSetItem(
                             id: ps.id, title: ps.title, points: ps.points, hasSolutions: ps.hasSolutions,
                             isTest: ps.isTest))
                     }
-                    .buttonStyle(.lyceumPress)
+                    .buttonStyle(.lyceumRow)
                 }
                 // From a student's side "practice this lecture" is one idea, whatever form it takes.
                 ForEach(drills) { d in
@@ -249,11 +255,12 @@ struct LectureView: View {
                             if LessonProgress.shared.isAced(userId: auth.user?.id ?? "guest", slug: d.slug) {
                                 Text("✦ Aced").font(.ui(13, .semibold)).foregroundStyle(Theme.accentText)
                             }
-                            Image(systemName: "chevron.right").font(.ui(14, .semibold)).foregroundStyle(Theme.inkSoft)
+                            Image(systemName: "chevron.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft.opacity(0.6))
                         }
-                        .lyceumCard(padding: 14)
+                        .codexRow()
                     }
-                    .buttonStyle(.lyceumPress)
+                    .buttonStyle(.lyceumRow)
+                }
                 }
             }
         }
@@ -319,9 +326,17 @@ struct LectureView: View {
                     if let quizScore {
                         let pct = quizScore.total > 0 ? Double(quizScore.score) / Double(quizScore.total) * 100 : 0
                         VStack(spacing: 12) {
-                            Text("\(quizScore.score) / \(quizScore.total)")
-                                .font(.ui(40, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
-                            Text("\(Int(pct.rounded()))%").font(.ui(17, .semibold)).foregroundStyle(Theme.grade(pct))
+                            HStack(spacing: 4) {
+                                if pct >= 100 { Image(systemName: "laurel.leading") }
+                                VStack(spacing: 0) {
+                                    Text("\(quizScore.score) / \(quizScore.total)")
+                                        .font(.ui(40, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
+                                    Text("\(Int(pct.rounded()))%").font(.ui(17, .semibold)).foregroundStyle(Theme.grade(pct))
+                                }
+                                if pct >= 100 { Image(systemName: "laurel.trailing") }
+                            }
+                            .font(.system(size: 50, weight: .light))
+                            .foregroundStyle(Theme.gilt)
                             Text(pct >= 100 ? "✦ Perfect. You aced this lecture."
                                  : pct >= 70 ? "Good work. Retake it any time to raise your best."
                                  : "Keep studying: the notes above cover every question.")

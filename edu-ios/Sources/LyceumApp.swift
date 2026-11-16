@@ -14,28 +14,30 @@ struct LyceumApp: App {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
 
     init() {
-        // System bars follow the theme: card-colored bars, serif titles in ink.
+        // Navigation bars: clear at the top of a screen (over a leather masthead or
+        // the page), a blurred page-tone bar once content scrolls under it. Serif
+        // titles in ink. The tab bar is left to the system (Liquid Glass on iOS 26).
         let serif = { (size: CGFloat, weight: UIFont.Weight) -> UIFont in
             let base = UIFont(name: "Source Serif 4", size: size) ?? .systemFont(ofSize: size)
             let desc = base.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]])
             return UIFont(descriptor: desc, size: size)
         }
-        let nav = UINavigationBarAppearance()
-        nav.configureWithOpaqueBackground()
-        nav.backgroundColor = UIColor(Theme.card)
-        nav.shadowColor = UIColor(Theme.line)
-        nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(18, .semibold)]
-        nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(32, .bold)]
-        UINavigationBar.appearance().standardAppearance = nav
-        UINavigationBar.appearance().scrollEdgeAppearance = nav
-        UINavigationBar.appearance().compactAppearance = nav
-
-        let tab = UITabBarAppearance()
-        tab.configureWithOpaqueBackground()
-        tab.backgroundColor = UIColor(Theme.card)
-        tab.shadowColor = UIColor(Theme.line)
-        UITabBar.appearance().standardAppearance = tab
-        UITabBar.appearance().scrollEdgeAppearance = tab
+        let titles: (UINavigationBarAppearance) -> Void = { nav in
+            nav.titleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(17, .semibold)]
+            nav.largeTitleTextAttributes = [.foregroundColor: UIColor(Theme.ink), .font: serif(32, .bold)]
+        }
+        let scrolled = UINavigationBarAppearance()
+        scrolled.configureWithDefaultBackground()
+        scrolled.backgroundEffect = UIBlurEffect(style: .systemThinMaterial)
+        scrolled.backgroundColor = UIColor(Theme.page).withAlphaComponent(0.72)
+        scrolled.shadowColor = UIColor(Theme.line)
+        titles(scrolled)
+        let edge = UINavigationBarAppearance()
+        edge.configureWithTransparentBackground()
+        titles(edge)
+        UINavigationBar.appearance().standardAppearance = scrolled
+        UINavigationBar.appearance().compactAppearance = scrolled
+        UINavigationBar.appearance().scrollEdgeAppearance = edge
 
         // Segmented controls: a raised card tone for the selection, ink labels.
         let seg = UISegmentedControl.appearance()
