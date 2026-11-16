@@ -11,7 +11,9 @@ enum AppConfig {
         // Key off the environment, not the build config: the Simulator can reach the
         // Mac's dev server at localhost, but a physical device cannot — it needs the
         // deployed production API (works over any network, no LAN IP needed).
-        #if targetEnvironment(simulator)
+        // A simulator build made with -DLIVE_API talks to production too, for a
+        // hands-on build that doesn't need the dev server running.
+        #if targetEnvironment(simulator) && !LIVE_API
         return "http://localhost:3000" // Simulator -> Mac's `npm run dev`
         #else
         return "https://timpson-lyceum.vercel.app" // Physical device (+ Release) -> production
