@@ -81,14 +81,6 @@ struct LectureView: View {
             .fullScreenCover(item: $activeDrill) { drill in
                 NavigationStack {
                     DrillRunnerView(slug: drill.id)
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button { activeDrill = nil } label: {
-                                    Image(systemName: "xmark").font(.body.weight(.semibold))
-                                }
-                                .tint(Theme.link)
-                            }
-                        }
                 }
             }
     }

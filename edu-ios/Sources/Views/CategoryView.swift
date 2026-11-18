@@ -8,7 +8,7 @@ struct CategoryView: View {
 
     var body: some View {
         content
-            .mastheadChrome(category.name, threshold: 200)
+            .mastheadChrome(category.name)
             .task { if courses.isEmpty { await load() } }
     }
 

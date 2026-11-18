@@ -68,8 +68,11 @@ struct LearnDrillView: View {
                 ProgressView().tint(Theme.gold300)
             }
         }
-        .navigationTitle("Learn").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { onExit() }.tint(Theme.gold300) } }
+        .toolbar {
+            ChromeItem {
+                Button("Done") { onExit() }.font(.ui(16, .semibold)).foregroundStyle(Theme.onLeather)
+            }
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear(perform: setup)
         .onDisappear(perform: recordSession)

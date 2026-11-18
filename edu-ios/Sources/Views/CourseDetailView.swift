@@ -27,7 +27,7 @@ struct CourseDetailView: View {
 
     var body: some View {
         content
-            .mastheadChrome(course?.shortTitle ?? course?.title ?? "Course", threshold: 200)
+            .mastheadChrome(course?.shortTitle ?? course?.title ?? "Course")
             .task(id: auth.user?.id) { await load() }
     }
 
@@ -201,7 +201,7 @@ struct CourseDetailView: View {
         if let enr = course.viewer?.enrollment {
             Codex {
                 NavigationLink(value: ClassRoute(sectionId: enr.sectionId, sectionName: enr.sectionName, courseTitle: course.title)) {
-                    LinkRow(icon: "checkmark.seal.fill", iconColor: Theme.ornament,
+                    LinkRow(icon: "checkmark.seal.fill",
                             title: "You're in this class",
                             subtitle: "\(enr.sectionName): your grade and homework")
                 }
@@ -257,17 +257,16 @@ struct ButtonLabel: View {
 }
 
 /// A tappable card row: icon, title, subtitle, chevron.
+/// A row that opens something, marked with the app's leather medallion like every
+/// other row icon.
 struct LinkRow: View {
     let icon: String
-    var iconColor: Color = Theme.link
     let title: String
     var subtitle: String? = nil
     var external: Bool = false
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 17, weight: .medium)).foregroundStyle(iconColor)
-                .frame(width: 34, height: 34)
-                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(iconColor.opacity(0.12)))
+            Medallion(systemImage: icon, size: 34)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.leading)
                 if let subtitle {
@@ -397,14 +396,19 @@ struct RegisterCard: View {
                     Button {
                         Task { await register() }
                     } label: {
+                        let ready = !code.trimmingCharacters(in: .whitespaces).isEmpty
                         Group {
                             if busy { ProgressView().tint(Theme.onAccent) } else { Text("Register") }
                         }
                         .font(.ui(16, .semibold))
-                        .foregroundStyle(Theme.onAccent)
+                        // Disabled reads like PrimaryButton's: a quiet tint, not a dimmer accent.
+                        .foregroundStyle(ready ? Theme.onAccent : Theme.inkSoft.opacity(0.8))
                         .padding(.horizontal, 16).padding(.vertical, 11)
-                        .background(code.trimmingCharacters(in: .whitespaces).isEmpty ? Theme.strongLine : Theme.accent)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .background {
+                            if ready { AccentFill(cornerRadius: 10) } else {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.tint)
+                            }
+                        }
                     }
                     .disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
                 }

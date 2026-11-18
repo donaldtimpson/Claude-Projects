@@ -66,12 +66,7 @@ struct AuthSheet: View {
     var body: some View {
         NavigationStack {
             AuthView(reason: reason) { dismiss() }
-                .mastheadChrome("Account", backButton: false)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Not now") { dismiss() }
-                    }
-                }
+                .mastheadChrome("Account", leading: ChromeAction(systemImage: "xmark", label: "Not now") { dismiss() })
         }
     }
 }

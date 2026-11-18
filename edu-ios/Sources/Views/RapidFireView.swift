@@ -69,8 +69,6 @@ struct RapidFireView: View {
                 }
             }
         }
-        .navigationTitle("Rapid Fire")
-        .navigationBarTitleDisplayMode(.inline)
         .onReceive(tick) { _ in step() }
         .onAppear { startedAt = Date(); DrillCatalog.resetBag(slug: def.slug, level: level); nextProblem() }
     }

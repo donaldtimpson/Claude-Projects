@@ -17,6 +17,9 @@ struct LearnView: View {
     @State private var results: SearchResults?
     @State private var searching = false
     @State private var searchTask: Task<Void, Never>?
+    @FocusState private var searchFocused: Bool
+    /// The field is in use: the masthead keeps just the field.
+    private var searchMode: Bool { searchFocused || !query.isEmpty }
 
     var body: some View {
         content
@@ -32,25 +35,33 @@ struct LearnView: View {
                     router.courses.append(LeaderboardRoute())
                 },
             ])
-            .searchable(text: $query, prompt: "Search courses & lectures")
             .onChange(of: query) { _, newValue in scheduleSearch(newValue) }
             .task { if courses.isEmpty { await loadCatalog() } }
             .task(id: auth.user?.id) { await loadContinueWatching() }
-            // The search field sits on leather: cream, not the crimson accent (which
-            // the content above keeps for itself).
-            .tint(Theme.onLeather)
     }
 
-    @ViewBuilder private var content: some View {
-        if !query.isEmpty {
-            searchResults
-        } else if loading {
-            ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity).background(Theme.page)
-        } else if failed {
-            LoadFailedView(title: "Couldn't load courses") { await loadCatalog() }
-                .background(Theme.page)
-        } else {
-            catalog
+    // One scroll view throughout, so the masthead (and its search field) stays put
+    // while the body below it switches between the catalog and results.
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Masthead(overlap: !searchMode && !loading && !continueWatching.isEmpty ? 40 : 0) { mastheadText }
+                if !query.isEmpty {
+                    searchResults
+                } else if loading {
+                    ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
+                } else if failed {
+                    LoadFailedView(title: "Couldn't load courses") { await loadCatalog() }.padding(.top, 24)
+                } else {
+                    catalog
+                }
+            }
+        }
+        .scrollDismissesKeyboard(.immediately)
+        .background(Theme.page)
+        .refreshable {
+            await loadCatalog()
+            await loadContinueWatching()
         }
     }
 
@@ -58,47 +69,36 @@ struct LearnView: View {
 
     // MARK: catalog (browse)
     @ViewBuilder private var catalog: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                Masthead(overlap: continueWatching.isEmpty ? 0 : 40) { mastheadText }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    if !continueWatching.isEmpty {
-                        continueCarousel.padding(.top, -40)
-                    }
-
-                    if !announcements.isEmpty {
-                        SectionTitle("Announcements")
-                        ForEach(announcements) { AnnouncementCard(announcement: $0) }
-                    }
-
-                    if !currentCourses.isEmpty {
-                        SectionTitle("Currently Teaching")
-                        Codex(dividerInset: 122) { ForEach(currentCourses) { courseLink($0) } }
-                    }
-
-                    if !categories.isEmpty {
-                        SectionTitle("Browse by Category")
-                        Codex(dividerInset: 122) {
-                            ForEach(categories) { category in
-                                NavigationLink(value: category) { CategoryRow(category: category) }
-                                    .buttonStyle(.lyceumRow)
-                            }
-                        }
-                    }
-
-                    SectionTitle("All Courses")
-                    Codex(dividerInset: 122) { ForEach(courses) { courseLink($0) } }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 24)
+        VStack(alignment: .leading, spacing: 12) {
+            if !continueWatching.isEmpty {
+                continueCarousel.padding(.top, searchMode ? 12 : -40)
             }
+
+            if !announcements.isEmpty {
+                SectionTitle("Announcements")
+                ForEach(announcements) { AnnouncementCard(announcement: $0) }
+            }
+
+            if !currentCourses.isEmpty {
+                SectionTitle("Currently Teaching")
+                Codex(dividerInset: 122) { ForEach(currentCourses) { courseLink($0) } }
+            }
+
+            if !categories.isEmpty {
+                SectionTitle("Browse by Category")
+                Codex(dividerInset: 122) {
+                    ForEach(categories) { category in
+                        NavigationLink(value: category) { CategoryRow(category: category) }
+                            .buttonStyle(.lyceumRow)
+                    }
+                }
+            }
+
+            SectionTitle("All Courses")
+            Codex(dividerInset: 122) { ForEach(courses) { courseLink($0) } }
         }
-        .background(Theme.page)
-        .refreshable {
-            await loadCatalog()
-            await loadContinueWatching()
-        }
+        .padding(.horizontal)
+        .padding(.bottom, 24)
     }
 
     private var greeting: String {
@@ -110,19 +110,26 @@ struct LearnView: View {
 
     private var mastheadText: some View {
         VStack(alignment: .leading, spacing: 8) {
-            GiltEyebrow("The Timpson Lyceum")
-            Text(greeting)
-                .font(.serif(30, .bold, relativeTo: .largeTitle))
-                .foregroundStyle(Theme.onLeather)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(auth.user == nil
-                 ? "Lectures, notes, quizzes, and drills from a real classroom, free."
-                 : currentCourses.isEmpty
-                    ? "Pick up where you left off, or start something new."
-                    : "\(currentCourses.count) course\(currentCourses.count == 1 ? "" : "s") in session this term.")
-                .font(.serif(16).italic())
-                .foregroundStyle(Theme.onLeatherSoft)
+            if !searchMode { mastheadTitle }
+            LeatherSearchField(prompt: "Search courses & lectures", text: $query, focus: $searchFocused)
         }
+        .animation(.snappy(duration: 0.3), value: searchMode)
+    }
+
+    @ViewBuilder private var mastheadTitle: some View {
+        GiltEyebrow("The Timpson Lyceum")
+        Text(greeting)
+            .font(.serif(30, .bold, relativeTo: .largeTitle))
+            .foregroundStyle(Theme.onLeather)
+            .fixedSize(horizontal: false, vertical: true)
+        Text(auth.user == nil
+             ? "Lectures, notes, quizzes, and drills from a real classroom, free."
+             : currentCourses.isEmpty
+                ? "Pick up where you left off, or start something new."
+                : "\(currentCourses.count) course\(currentCourses.count == 1 ? "" : "s") in session this term.")
+            .font(.serif(16).italic())
+            .foregroundStyle(Theme.onLeatherSoft)
+            .padding(.bottom, 8)
     }
 
     private var continueCarousel: some View {
@@ -169,62 +176,59 @@ struct LearnView: View {
         let categoryHits = filteredCategories
         let lectureHits = results?.lectures ?? []
 
-        ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                if !courseHits.isEmpty {
-                    SectionTitle("Courses")
-                    Codex(dividerInset: 122) {
-                        ForEach(courseHits) { course in
-                            NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
-                                .buttonStyle(.lyceumRow)
-                        }
+        VStack(alignment: .leading, spacing: 12) {
+            if !courseHits.isEmpty {
+                SectionTitle("Courses")
+                Codex(dividerInset: 122) {
+                    ForEach(courseHits) { course in
+                        NavigationLink(value: course) { CourseRow(course: course, highlight: query) }
+                            .buttonStyle(.lyceumRow)
                     }
-                }
-
-                if !categoryHits.isEmpty {
-                    SectionTitle("Categories")
-                    Codex(dividerInset: 122) {
-                        ForEach(categoryHits) { category in
-                            NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
-                                .buttonStyle(.lyceumRow)
-                        }
-                    }
-                }
-
-                // Deep search across lecture notes/transcripts — needs the server,
-                // so it fills in after the instant local results above.
-                if searching || !lectureHits.isEmpty {
-                    SectionTitle("In Lectures")
-                    if searching {
-                        HStack(spacing: 8) {
-                            ProgressView()
-                            Text("Searching lectures…").font(.ui(14)).foregroundStyle(Theme.inkSoft)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 8)
-                    } else {
-                        Codex {
-                            ForEach(lectureHits) { hit in
-                                NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.lyceumRow)
-                            }
-                        }
-                    }
-                }
-
-                if courseHits.isEmpty && categoryHits.isEmpty && lectureHits.isEmpty && !searching {
-                    Text("No results for “\(query)”.")
-                        .font(.serif(16)).foregroundStyle(Theme.inkSoft)
-                        .frame(maxWidth: .infinity, alignment: .center).padding(.top, 32)
                 }
             }
-            .padding()
+
+            if !categoryHits.isEmpty {
+                SectionTitle("Categories")
+                Codex(dividerInset: 122) {
+                    ForEach(categoryHits) { category in
+                        NavigationLink(value: category) { CategoryRow(category: category, highlight: query) }
+                            .buttonStyle(.lyceumRow)
+                    }
+                }
+            }
+
+            // Deep search across lecture notes/transcripts — needs the server,
+            // so it fills in after the instant local results above.
+            if searching || !lectureHits.isEmpty {
+                SectionTitle("In Lectures")
+                if searching {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("Searching lectures…").font(.ui(14)).foregroundStyle(Theme.inkSoft)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+                } else {
+                    Codex {
+                        ForEach(lectureHits) { hit in
+                            NavigationLink(value: hit) { lectureResultRow(hit) }.buttonStyle(.lyceumRow)
+                        }
+                    }
+                }
+            }
+
+            if courseHits.isEmpty && categoryHits.isEmpty && lectureHits.isEmpty && !searching {
+                Text("No results for “\(query)”.")
+                    .font(.serif(16)).foregroundStyle(Theme.inkSoft)
+                    .frame(maxWidth: .infinity, alignment: .center).padding(.top, 32)
+            }
         }
-        .background(Theme.page)
+        .padding()
     }
 
     private func lectureResultRow(_ hit: LectureHit) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(hit.title).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).lineLimit(2)
+            Text(displayTitle(hit.title)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink).lineLimit(2)
             HStack(spacing: 6) {
                 Text(hit.courseTitle).lineLimit(1)
                 if let t = hit.startSeconds {

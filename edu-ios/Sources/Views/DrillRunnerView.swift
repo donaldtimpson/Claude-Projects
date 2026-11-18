@@ -91,8 +91,9 @@ struct DrillRunnerView: View {
             DrillFlash(correct: flash)   // behind the content, like Rapid Fire
             content.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .navigationTitle(def?.title ?? "Drill")
-        .navigationBarTitleDisplayMode(.inline)
+        // Every drill opens full screen; it closes itself, from the same leather bar
+        // as everything else.
+        .leatherBar(def?.title ?? "Drill", leading: ChromeAction(systemImage: "xmark", label: "Close") { dismiss() })
         .task { await syncBests() }
     }
 
@@ -143,7 +144,7 @@ struct DrillRunnerView: View {
     @ViewBuilder private func setup(_ def: DrillDef) -> some View {
         ScrollView {
             VStack(spacing: 18) {
-                Text(def.icon).font(.system(size: 64))
+                DrillIcon(drill: def, size: 76)
                 Text(def.blurb).font(.serif(17)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
 
                 if def.homeworkLength == nil {

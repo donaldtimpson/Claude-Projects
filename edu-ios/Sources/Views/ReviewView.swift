@@ -181,7 +181,12 @@ struct ReviewView: View {
             }
         }
         .background(Theme.page)
-        .leatherBar("Daily Review", backButton: false)
+        // A session: its own way out, and the tabs out of the way.
+        .leatherBar("Daily Review", leading: ChromeAction(systemImage: "xmark", label: "End review") {
+            phase = .idle
+            Task { await load() }
+        })
+        .toolbar(.hidden, for: .tabBar)
     }
 
     @ViewBuilder private var doneView: some View {

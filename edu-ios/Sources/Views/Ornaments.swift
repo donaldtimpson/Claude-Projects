@@ -33,49 +33,33 @@ extension Theme {
 
 // MARK: - Leather masthead
 
-/// Tooled leather: the gradient, a soft sheen, a faint blind-stamped lattice, and a
-/// gilt rule along the bottom edge.
+/// The leather: a crimson field lit softly from the top left, falling away to wine at
+/// the bottom right, edged with one fine gilt line. In dark mode the same on oxblood.
 struct LeatherBackground: View {
     var body: some View {
-        ZStack {
-            Theme.leather
-            RadialGradient(colors: [.white.opacity(0.13), .clear], center: .init(x: 0.15, y: 0.55),
-                           startRadius: 0, endRadius: 380)
-            Lattice().opacity(0.07)
-        }
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 2) {
-                Rectangle().fill(Theme.giltBar).frame(height: 1).opacity(0.85)
-                Rectangle().fill(Theme.giltBar).frame(height: 0.5).opacity(0.45)
-            }
-        }
+        mesh.overlay(alignment: .bottom) { hairline }
     }
 
-    /// A blind-tooled diamond lattice, the kind stamped into old bindings.
-    private struct Lattice: View {
-        var body: some View {
-            Canvas { ctx, size in
-                let step: CGFloat = 26
-                var path = Path()
-                var y: CGFloat = 0
-                var row = 0
-                while y < size.height + step {
-                    var x: CGFloat = row.isMultiple(of: 2) ? 0 : step / 2
-                    while x < size.width + step {
-                        let r: CGFloat = 3.2
-                        path.move(to: CGPoint(x: x, y: y - r))
-                        path.addLine(to: CGPoint(x: x + r, y: y))
-                        path.addLine(to: CGPoint(x: x, y: y + r))
-                        path.addLine(to: CGPoint(x: x - r, y: y))
-                        path.closeSubpath()
-                        x += step
-                    }
-                    y += step / 2
-                    row += 1
-                }
-                ctx.stroke(path, with: .color(Theme.giltText), lineWidth: 0.8)
-            }
-        }
+    private static func c(_ l: UInt, _ d: UInt) -> Color { Color(light: l, dark: d) }
+
+    private var mesh: some View {
+        MeshGradient(width: 3, height: 3, points: [
+            [0, 0], [0.5, 0], [1, 0],
+            [0, 0.5], [0.62, 0.42], [1, 0.5],
+            [0, 1], [0.45, 1], [1, 1],
+        ], colors: [
+            Self.c(0xa63a2c, 0x5a1c16), Self.c(0x942828, 0x4a1616), Self.c(0x7c1e26, 0x3a1018),
+            Self.c(0x8c2426, 0x441414), Self.c(0x7a1c22, 0x361012), Self.c(0x641628, 0x2a0c16),
+            Self.c(0x6c1a1e, 0x2c0c0e), Self.c(0x5a1220, 0x220810), Self.c(0x4a0f24, 0x1a0712),
+        ])
+    }
+
+    /// One fine gilt line that fades out at both ends.
+    private var hairline: some View {
+        Rectangle()
+            .fill(LinearGradient(colors: [Theme.giltText.opacity(0), Theme.giltText.opacity(0.7), Theme.giltText.opacity(0)],
+                                 startPoint: .leading, endPoint: .trailing))
+            .frame(height: 0.75)
     }
 }
 
@@ -83,18 +67,77 @@ struct LeatherBackground: View {
 /// bar and into the pull-down overscroll, so the top of the screen is always leather.
 /// Leaves room at the bottom for the first card to overlap the edge.
 struct Masthead<Content: View>: View {
+    static var topColor: Color { Color(light: 0xa13628, dark: 0x561b16) }
+    @Environment(\.chromeBarLine) private var barLine
     var overlap: CGFloat = 36
     @ViewBuilder var content: Content
     var body: some View {
         content
+            .clipsUnderBar()
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 20)
             .padding(.top, 6)
             .padding(.bottom, 22 + overlap)
-            .background(alignment: .bottom) {
-                LeatherBackground().padding(.top, -900)
+            .background {
+                // From the top of the screen (under the bar) down, so the light falls
+                // across the whole band; above that, pull-down overscroll in its top color.
+                LeatherBackground().padding(.top, -(barLine ?? 0))
+                    .background(alignment: .top) {
+                        Self.topColor.frame(height: 900).offset(y: -900 - (barLine ?? 0))
+                    }
             }
     }
+}
+
+// MARK: - Chrome geometry
+//
+// A masthead screen's bar is clear while the masthead is under it (the masthead *is*
+// the bar), so two things key off the bar's bottom edge: the masthead's text
+// disappears there, as under any opaque bar, and once the last of it has gone the
+// bar's own leather and title fade in. Both are measured, not set per screen.
+
+private struct ChromeBarLineKey: EnvironmentKey { static let defaultValue: CGFloat? = nil }
+
+extension EnvironmentValues {
+    /// The bar's bottom edge in screen (global) coordinates; nil outside MastheadChrome.
+    var chromeBarLine: CGFloat? {
+        get { self[ChromeBarLineKey.self] }
+        set { self[ChromeBarLineKey.self] = newValue }
+    }
+}
+
+/// The bottom edge of a masthead's text, in screen (global) coordinates.
+struct MastheadTextBottomKey: PreferenceKey {
+    static let defaultValue: CGFloat? = nil
+    static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) { value = nextValue() ?? value }
+}
+
+private struct ClipsUnderBar: ViewModifier {
+    @Environment(\.chromeBarLine) private var barLine
+    @State private var minY: CGFloat = 0
+    @State private var maxY: CGFloat?
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { minY = $0.minY; maxY = $0.maxY }
+            .preference(key: MastheadTextBottomKey.self, value: maxY)
+            .mask(alignment: .top) {
+                GeometryReader { g in
+                    // The bar line in this view's own coordinates, feathered over 14pt.
+                    let line = (barLine ?? -.infinity) - minY
+                    VStack(spacing: 0) {
+                        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom).frame(height: 14)
+                        Rectangle().frame(height: g.size.height + 40)
+                    }
+                    .offset(y: max(-20, line - 10))
+                }
+            }
+    }
+}
+
+extension View {
+    /// Text on a masthead: hidden where it passes under the bar, like content under any
+    /// bar, and reported so the bar knows when it has all gone.
+    func clipsUnderBar() -> some View { modifier(ClipsUnderBar()) }
 }
 
 /// Small Cinzel caps in gold, for the line above a masthead's title.
@@ -109,10 +152,63 @@ struct GiltEyebrow: View {
     }
 }
 
-/// The navigation bar over a masthead: clear and light-on-leather at the top; the
-/// standard bar with the screen's name once the masthead scrolls away.
-/// A button in a masthead screen's bar, drawn by MastheadChrome so it matches the
-/// back button in both states.
+/// A tab's search, set into its masthead: a dark groove in the leather with cream type,
+/// the same idle, focused and filled. (The system search field reads the leather
+/// through its glass: pink at rest, red when focused, grey once results show.) While
+/// it's in use the masthead keeps just the field, so results start right under it.
+struct LeatherSearchField: View {
+    let prompt: String
+    @Binding var text: String
+    var focus: FocusState<Bool>.Binding
+
+    private var active: Bool { focus.wrappedValue || !text.isEmpty }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.onLeatherSoft)
+                TextField("", text: $text, prompt: Text(prompt).foregroundStyle(Theme.onLeatherSoft))
+                    .font(.ui(16))
+                    .foregroundStyle(Theme.onLeather)
+                    .tint(Theme.giltText)
+                    .focused(focus)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .accessibilityLabel(prompt)
+                    .accessibilityIdentifier("searchField")
+                if !text.isEmpty {
+                    Button { text = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.onLeatherSoft)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear search")
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 40)
+            .background(Capsule().fill(Color.black.opacity(0.26)))
+            .overlay(Capsule().strokeBorder(Theme.gilt.opacity(focus.wrappedValue ? 0.75 : 0.35), lineWidth: 0.75))
+            .contentShape(Capsule())
+            .onTapGesture { focus.wrappedValue = true }
+
+            if active {
+                Button("Cancel") {
+                    text = ""
+                    focus.wrappedValue = false
+                }
+                .font(.ui(16, .medium))
+                .foregroundStyle(Theme.onLeather)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.25), value: active)
+    }
+}
+
+/// A button in a chrome bar, drawn by MastheadChrome so every bar button matches.
 struct ChromeAction {
     let systemImage: String
     let label: String
@@ -120,45 +216,67 @@ struct ChromeAction {
     let action: () -> Void
 }
 
-/// The app's navigation bar: a slim band of leather with cream titles and dark,
-/// gilt-ringed buttons. Over a masthead it starts clear (the masthead *is* the bar)
-/// and turns to leather once the masthead has scrolled under it; on a screen without
-/// one it's leather from the start. Titles: over a masthead the bar shows the crest
-/// (or nothing) until the masthead's own title has gone.
+/// The app's one navigation bar: a slim band of tooled leather with a gilt rule, a
+/// cream title and dark, gilt-ringed buttons, in either theme. Over a masthead it
+/// starts clear (the masthead *is* the bar): the masthead's text slips out of sight at
+/// the bar's edge, and once the last of it has gone the bar's own leather fades in. On a
+/// screen without a masthead it's leather from the start.
+///
+/// The leather is drawn here, under the bar, rather than as the bar's background: the
+/// bar is forced dark (for its cream items and the light status bar), which would
+/// resolve the leather to its dark-mode colors in light mode too.
 struct MastheadChrome: ViewModifier {
     let title: String
-    var threshold: CGFloat = 70
     var backButton = true
+    /// A leading button in place of Back: a full-screen session's Close.
+    var leading: ChromeAction? = nil
     var actions: [ChromeAction] = []
     /// false: a screen with no masthead, leather bar throughout.
     var masthead = true
     /// Show the Lyceum crest in the bar while it's over the masthead.
     var crest = false
-    @State private var past = false
+    @State private var barHeight: CGFloat = 0
+    @State private var textBottom: CGFloat?
     @Environment(\.isPresented) private var presented
     @Environment(\.dismiss) private var dismiss
-    private var pushed: Bool { presented && backButton }
-    private var leatherBar: Bool { !masthead || past }
+    private var pushed: Bool { presented && backButton && leading == nil }
+
+    /// 0 while the masthead fills the bar, 1 once it's gone (or there isn't one).
+    private var solid: Double {
+        guard masthead, let textBottom else { return 1 }
+        return min(max((barHeight + 16 - textBottom) / 24, 0), 1)
+    }
 
     func body(content: Content) -> some View {
         content
+            .environment(\.chromeBarLine, barHeight)
+            .onPreferenceChange(MastheadTextBottomKey.self) { textBottom = $0 }
+            // The screen's top down to the bar's bottom edge. Depending on the content, its
+            // frame either starts there or starts at the screen's top with that as its inset.
+            .onGeometryChange(for: CGFloat.self) { max($0.frame(in: .global).minY, $0.safeAreaInsets.top) } action: { barHeight = $0 }
+            .overlay(alignment: .top) {
+                LeatherBackground()
+                    .frame(height: barHeight)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .ignoresSafeArea(edges: .top)
+                    .opacity(solid)
+                    .allowsHitTesting(false)
+            }
+            .modifier(HidesTopEdgeEffect())
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             // The system back button keeps light-mode glass over leather (a pink
             // disc), so these screens draw their own. Swipe-back still works (below).
-            .navigationBarBackButtonHidden(pushed)
+            .navigationBarBackButtonHidden(pushed || leading != nil)
             .toolbar {
                 if pushed { backItem }
+                if let leading { ChromeItem(placement: .topBarLeading) { chromeButton(leading) } }
                 if !actions.isEmpty { actionsItem }
                 ToolbarItem(placement: .principal) { principal }
             }
-            .onScrollGeometryChange(for: Bool.self, of: { $0.contentOffset.y + $0.contentInsets.top > threshold }) { _, now in
-                guard masthead else { return }
-                withAnimation(.easeOut(duration: 0.2)) { past = now }
-            }
             // The scheme only reaches the bar while its background counts as visible,
-            // so over the masthead it's a visible, clear one.
-            .toolbarBackground(leatherBar ? AnyShapeStyle(Theme.leather) : AnyShapeStyle(Color.clear), for: .navigationBar)
+            // so it's a visible, clear one; the leather is the overlay above.
+            .toolbarBackground(Color.clear, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
     }
@@ -167,11 +285,30 @@ struct MastheadChrome: ViewModifier {
         ZStack {
             Text(title).font(.serif(17, .semibold)).foregroundStyle(Theme.onLeather)
                 .lineLimit(1)
-                .opacity(leatherBar ? 1 : 0)
-                .accessibilityHidden(!leatherBar)
+                .opacity(solid)
+                .accessibilityHidden(solid < 0.5)
             if crest {
-                LyceumCrest().opacity(leatherBar ? 0 : 1).accessibilityHidden(true)
+                LyceumCrest().opacity(1 - solid).accessibilityHidden(true)
             }
+        }
+    }
+
+    fileprivate func chromeButton(_ a: ChromeAction) -> some View {
+        Button(action: a.action) { ChromeDisc(systemImage: a.systemImage) }
+            .buttonStyle(.plain)
+            .accessibilityLabel(a.label)
+            .accessibilityIdentifier(a.identifier ?? a.label)
+    }
+}
+
+/// iOS 26 blurs content scrolling under a bar; the leather bar covers it instead, and
+/// over a masthead the blur would smear the masthead's own text.
+private struct HidesTopEdgeEffect: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26, *) {
+            content.scrollEdgeEffectHidden(true, for: .top)
+        } else {
+            content
         }
     }
 }
@@ -215,13 +352,7 @@ extension MastheadChrome {
 
     private var actionsView: some View {
         HStack(spacing: 8) {
-            ForEach(actions.indices, id: \.self) { i in
-                let a = actions[i]
-                Button(action: a.action) { ChromeDisc(systemImage: a.systemImage) }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(a.label)
-                    .accessibilityIdentifier(a.identifier ?? a.label)
-            }
+            ForEach(actions.indices, id: \.self) { i in chromeButton(actions[i]) }
         }
     }
 }
@@ -257,15 +388,15 @@ struct ChromeItem<V: View>: ToolbarContent {
 extension View {
     /// A screen that opens with a masthead. `backButton: false` for a sheet's root,
     /// which has its own way out.
-    func mastheadChrome(_ title: String, threshold: CGFloat = 70, backButton: Bool = true,
+    func mastheadChrome(_ title: String, backButton: Bool = true, leading: ChromeAction? = nil,
                         actions: [ChromeAction] = [], crest: Bool = false) -> some View {
-        modifier(MastheadChrome(title: title, threshold: threshold, backButton: backButton,
-                                actions: actions, crest: crest))
+        modifier(MastheadChrome(title: title, backButton: backButton, leading: leading, actions: actions, crest: crest))
     }
 
     /// A screen without a masthead: the leather bar from the start.
-    func leatherBar(_ title: String, backButton: Bool = true, actions: [ChromeAction] = []) -> some View {
-        modifier(MastheadChrome(title: title, backButton: backButton, actions: actions, masthead: false))
+    func leatherBar(_ title: String, backButton: Bool = true, leading: ChromeAction? = nil,
+                    actions: [ChromeAction] = []) -> some View {
+        modifier(MastheadChrome(title: title, backButton: backButton, leading: leading, actions: actions, masthead: false))
     }
 }
 
@@ -468,6 +599,7 @@ struct CoverHero<Content: View>: View {
             .aspectRatio(16.0 / 10.0, contentMode: .fit)
 
             content
+                .clipsUnderBar()
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.top, 2)

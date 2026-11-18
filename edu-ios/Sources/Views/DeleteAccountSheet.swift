@@ -62,13 +62,7 @@ struct DeleteAccountSheet: View {
                 .padding()
             }
             .background(Theme.parchment)
-            .navigationTitle("Delete Account")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.tint(Theme.gold300)
-                }
-            }
+            .leatherBar("Delete Account", leading: ChromeAction(systemImage: "xmark", label: "Cancel") { dismiss() })
         }
     }
 

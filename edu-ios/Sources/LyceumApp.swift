@@ -39,13 +39,18 @@ struct LyceumApp: App {
         UINavigationBar.appearance().compactAppearance = scrolled
         UINavigationBar.appearance().scrollEdgeAppearance = edge
 
-        // Segmented controls: a raised card tone for the selection, ink labels.
+        // Segmented controls: the selection is a leather thumb (crimson by day, oxblood
+        // by night) lettered in cream or gold, on the page's quiet track.
         let seg = UISegmentedControl.appearance()
-        seg.selectedSegmentTintColor = UIColor(Color(light: 0xffffff, dark: 0x4a1a1a))
+        seg.selectedSegmentTintColor = UIColor(Color(light: 0x8e2424, dark: 0x4a1a1a))
         seg.backgroundColor = UIColor(Theme.tint)
-        let segFont = UIFont(name: "Inter", size: 14) ?? .systemFont(ofSize: 14)
-        seg.setTitleTextAttributes([.foregroundColor: UIColor(Theme.inkSoft), .font: segFont], for: .normal)
-        seg.setTitleTextAttributes([.foregroundColor: UIColor(Theme.ink), .font: segFont], for: .selected)
+        let inter = { (weight: UIFont.Weight) -> UIFont in
+            let base = UIFont(name: "Inter", size: 14) ?? .systemFont(ofSize: 14)
+            return UIFont(descriptor: base.fontDescriptor.addingAttributes([.traits: [UIFontDescriptor.TraitKey.weight: weight]]), size: 14)
+        }
+        seg.setTitleTextAttributes([.foregroundColor: UIColor(Theme.inkSoft), .font: inter(.medium)], for: .normal)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor(Color(light: 0xf7eedb, dark: 0xddb954)),
+                                    .font: inter(.semibold)], for: .selected)
     }
 
     var body: some Scene {

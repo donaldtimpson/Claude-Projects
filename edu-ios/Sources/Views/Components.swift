@@ -38,6 +38,8 @@ struct PrimaryButton: View {
     }
 }
 
+/// The quieter action beside a primary one: lettered and edged in the accent, so it
+/// reads as a button (not a field) on the light page.
 struct SecondaryButton: View {
     let title: String
     var systemImage: String? = nil
@@ -51,11 +53,11 @@ struct SecondaryButton: View {
                 if let systemImage { Image(systemName: systemImage) }
             }
             .labelStyle(.titleAndIcon)
-            .foregroundStyle(Theme.ink)
+            .foregroundStyle(Theme.accentText)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
             .background(Theme.button)
-            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.strongLine.opacity(0.7), lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Theme.accent.opacity(0.55), lineWidth: 1))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.lyceumPress(cornerRadius: 12))

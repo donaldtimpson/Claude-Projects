@@ -8,9 +8,12 @@ struct SettingsView: View {
     @AppStorage(Appearance.storageKey) private var appearance: Appearance = .system
     @State private var showDelete = false
 
+    // The app's own page, not a system Form: Cinzel section titles and codex cards, like
+    // every other screen.
     var body: some View {
-        Form {
-            Section {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                SectionTitle("Appearance")
                 // Like Display & Brightness: a small page in each look, tap to choose.
                 HStack(spacing: 0) {
                     ForEach(Appearance.allCases) { option in
@@ -34,35 +37,47 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 8)
                 .sensoryFeedback(.selection, trigger: appearance)
-                .listRowBackground(Theme.card)
-            } header: {
-                Text("Appearance")
-            } footer: {
-                Text("Light is easier to read in a bright room or on a projector. System follows your device.")
-            }
+                .lyceumCard(padding: 8)
+                footnote("Light is easier to read in a bright room or on a projector. System follows your device.")
 
-            Section("About") {
-                Link(destination: AppConfig.assetURL("/privacy")!) { row("Privacy Policy", "hand.raised.fill") }
-                Link(destination: AppConfig.assetURL("/support")!) { row("Support", "questionmark") }
-                Link(destination: AppConfig.assetURL("/")!) { row("The Timpson Lyceum website", "building.columns.fill") }
-            }
-            .listRowBackground(Theme.card)
-
-            if auth.isSignedIn {
-                Section("Account") {
-                    if let email = auth.user?.email {
-                        LabeledContent("Signed in as", value: email)
+                SectionTitle("About")
+                Codex(dividerInset: 60) {
+                    Link(destination: AppConfig.assetURL("/privacy")!) {
+                        LinkRow(icon: "hand.raised.fill", title: "Privacy Policy", external: true)
                     }
-                    Button("Sign out") { Task { await auth.logout() } }
-                        .foregroundStyle(Theme.ink)
-                    // Account deletion must be reachable in the app (Guideline 5.1.1(v)).
-                    Button("Delete account", role: .destructive) { showDelete = true }
-                        .foregroundStyle(Theme.danger)
+                    .buttonStyle(.lyceumRow)
+                    Link(destination: AppConfig.assetURL("/support")!) {
+                        LinkRow(icon: "questionmark", title: "Support", external: true)
+                    }
+                    .buttonStyle(.lyceumRow)
+                    Link(destination: AppConfig.assetURL("/")!) {
+                        LinkRow(icon: "building.columns.fill", title: "The Timpson Lyceum website", external: true)
+                    }
+                    .buttonStyle(.lyceumRow)
                 }
-                .listRowBackground(Theme.card)
-            }
 
-            Section {
+                if auth.isSignedIn {
+                    SectionTitle("Account")
+                    Codex {
+                        if let email = auth.user?.email {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Signed in as").font(.ui(13)).foregroundStyle(Theme.inkSoft)
+                                Text(email).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
+                            }
+                            .codexRow()
+                        }
+                        Button { Task { await auth.logout() } } label: {
+                            Text("Sign out").font(.ui(16, .medium)).foregroundStyle(Theme.ink).codexRow()
+                        }
+                        .buttonStyle(.lyceumRow)
+                        // Account deletion must be reachable in the app (Guideline 5.1.1(v)).
+                        Button(role: .destructive) { showDelete = true } label: {
+                            Text("Delete account").font(.ui(16, .medium)).foregroundStyle(Theme.danger).codexRow()
+                        }
+                        .buttonStyle(.lyceumRow)
+                    }
+                }
+
                 // The colophon.
                 VStack(spacing: 8) {
                     GiltDiamond(size: 6)
@@ -70,11 +85,11 @@ struct SettingsView: View {
                     Text(versionString).font(.ui(12)).foregroundStyle(Theme.inkSoft.opacity(0.8))
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .listRowBackground(Color.clear)
+                .padding(.top, 28)
             }
+            .padding(.horizontal)
+            .padding(.bottom, 32)
         }
-        .font(.ui(16))
-        .scrollContentBackground(.hidden)
         .background(Theme.page)
         .leatherBar("Settings")
         .sheet(isPresented: $showDelete) { DeleteAccountSheet() }
@@ -85,16 +100,8 @@ struct SettingsView: View {
         }
     }
 
-    private func row(_ title: String, _ icon: String) -> some View {
-        HStack(spacing: 12) {
-            // Settings-style icon tiles, in leather and gold.
-            Image(systemName: icon).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.gilt)
-                .frame(width: 29, height: 29)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(Theme.leather))
-            Text(title).foregroundStyle(Theme.ink)
-            Spacer()
-            Image(systemName: "arrow.up.right").font(.ui(13, .semibold)).foregroundStyle(Theme.inkSoft)
-        }
+    private func footnote(_ text: String) -> some View {
+        Text(text).font(.ui(13)).foregroundStyle(Theme.inkSoft).padding(.horizontal, 4)
     }
 
     private var versionString: String {

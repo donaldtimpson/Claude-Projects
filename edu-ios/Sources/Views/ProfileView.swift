@@ -83,7 +83,7 @@ struct ProfileView: View {
                         SectionTitle("Hall of Scholars")
                         Codex {
                             NavigationLink(value: LeaderboardRoute()) {
-                                LinkRow(icon: "trophy.fill", iconColor: Theme.ornament, title: "See where you stand",
+                                LinkRow(icon: "trophy.fill", title: "See where you stand",
                                         subtitle: "You appear as @\(publicHandle)")
                             }
                             .buttonStyle(.lyceumRow)

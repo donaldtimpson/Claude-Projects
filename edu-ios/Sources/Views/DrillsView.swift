@@ -31,28 +31,27 @@ struct DrillsView: View {
         .init(title: "Grammar", icon: "text.quote", slugs: DrillCatalog.grammarSlugs),
     ]
 
+    @FocusState private var searchFocused: Bool
+    private var searching: Bool { searchFocused || !query.isEmpty }
+
     var body: some View {
         ScrollView {
-            if query.isEmpty { browse } else { searchResults }
+            VStack(alignment: .leading, spacing: 0) {
+                Masthead(overlap: !searching && !recents.isEmpty ? 40 : 0) { mastheadText }
+                if query.isEmpty { browse } else { searchResults }
+            }
         }
+        .scrollDismissesKeyboard(.immediately)
         .tint(Theme.link)
         .background(Theme.page)
         .mastheadChrome("Practice Drills", crest: true)
-        .searchable(text: $query, prompt: "Search drills")
         .task(id: userId) { await refreshAced() }
-        .tint(Theme.onLeather) // the search field on leather; content keeps the accent above
         .navigationDestination(for: DrillCategoryRoute.self) { route in
             CategoryDrillsView(route: route, userId: userId, open: open)
         }
         .fullScreenCover(item: $active) { drill in
             NavigationStack {
                 DrillRunnerView(slug: drill.id)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button { active = nil } label: { Image(systemName: "xmark").font(.body.weight(.semibold)) }
-                                .tint(Theme.gold300)
-                        }
-                    }
             }
         }
     }
@@ -68,18 +67,25 @@ struct DrillsView: View {
         }
     }
 
-    // MARK: browse (search empty) — masthead, Continue strip, categories
+    // While searching the masthead keeps just the field.
+    private var mastheadText: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !searching {
+                GiltEyebrow("The Palaestra")
+                Text("Practice Drills")
+                    .font(.serif(30, .bold, relativeTo: .largeTitle)).foregroundStyle(Theme.onLeather)
+                Text("Short, sharp practice. Ace a drill to earn its ✦.")
+                    .font(.serif(16).italic()).foregroundStyle(Theme.onLeatherSoft)
+                    .padding(.bottom, 8)
+            }
+            LeatherSearchField(prompt: "Search drills", text: $query, focus: $searchFocused)
+        }
+        .animation(.snappy(duration: 0.3), value: searching)
+    }
+
+    // MARK: browse (search empty) — Continue strip, categories
     @ViewBuilder private var browse: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Masthead(overlap: recents.isEmpty ? 0 : 40) {
-                VStack(alignment: .leading, spacing: 8) {
-                    GiltEyebrow("The Palaestra")
-                    Text("Practice Drills")
-                        .font(.serif(30, .bold, relativeTo: .largeTitle)).foregroundStyle(Theme.onLeather)
-                    Text("Short, sharp practice. Ace a drill to earn its ✦.")
-                        .font(.serif(16).italic()).foregroundStyle(Theme.onLeatherSoft)
-                }
-            }
             VStack(alignment: .leading, spacing: 12) {
                 if !recents.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -91,7 +97,7 @@ struct DrillsView: View {
                         .padding(.horizontal, 2).padding(.vertical, 2)
                     }
                     .scrollClipDisabled()
-                    .padding(.top, -40)
+                    .padding(.top, searching ? 12 : -40)
                 }
                 sectionHeader("Categories")
                 Codex(dividerInset: 72) {
@@ -166,7 +172,7 @@ struct DrillsView: View {
     // Recent chip — a fixed, uniform card (content centered) so the strip reads evenly.
     private func recentTile(_ d: DrillDef) -> some View {
         VStack(spacing: 6) {
-            Text(d.icon).font(.system(size: 40))
+            DrillIcon(drill: d, size: 48)
             Text(d.title).font(.serif(15, .semibold)).foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.75)
             if LessonProgress.shared.isAced(userId: userId, slug: d.slug) {
@@ -228,7 +234,7 @@ struct DrillRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                DrillIcon(icon: drill.icon)
+                DrillIcon(drill: drill)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(highlighted(drill.title, query)).font(.serif(17, .semibold)).foregroundStyle(Theme.ink)
                         .multilineTextAlignment(.leading)
@@ -282,28 +288,52 @@ func highlighted(_ text: String, _ query: String) -> AttributedString {
 struct ActiveDrill: Identifiable { let id: String }
 
 /// A drill's emoji on a small tinted tile with a gold hairline.
+/// A drill's mark: the same leather medallion as its category, struck with the drill's
+/// glyph, or for a grammar lesson its number. (The catalog's emoji stay on the web.)
 struct DrillIcon: View {
-    let icon: String
+    let drill: DrillDef
+    var size: CGFloat = 42
     var body: some View {
-        Text(icon).font(.system(size: 24)).foregroundStyle(Theme.ink)
-            .frame(width: 42, height: 42)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.tint))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.ornament.opacity(0.35), lineWidth: 0.75))
+        if let n = Self.lessonNumber(drill.slug) {
+            Medallion(numeral: n, size: size)
+        } else {
+            Medallion(systemImage: DrillSymbols.bySlug[drill.slug] ?? "sparkles", size: size)
+        }
+    }
+
+    /// "lesson-07" → 7.
+    static func lessonNumber(_ slug: String) -> Int? {
+        guard slug.hasPrefix("lesson-") else { return nil }
+        return Int(slug.dropFirst("lesson-".count))
     }
 }
 
-/// A category's mark: a gold glyph struck on a small leather medallion.
+/// A category's or drill's mark: a gold glyph (or numeral) struck on a small leather medallion.
 struct Medallion: View {
-    let systemImage: String
+    private let systemImage: String?
+    private let numeral: Int?
     var size: CGFloat = 44
+
+    init(systemImage: String, size: CGFloat = 44) {
+        self.systemImage = systemImage; self.numeral = nil; self.size = size
+    }
+    init(numeral: Int, size: CGFloat = 44) {
+        self.systemImage = nil; self.numeral = numeral; self.size = size
+    }
+
     var body: some View {
-        Image(systemName: systemImage)
-            .font(.system(size: size * 0.4, weight: .semibold))
-            .foregroundStyle(Theme.gilt)
-            .frame(width: size, height: size)
-            .background(Circle().fill(Theme.leather))
-            .overlay(Circle().inset(by: 2.5).strokeBorder(Theme.gilt.opacity(0.55), lineWidth: 0.75))
-            .shadow(color: Color(hex: 0x3a0b0b).opacity(0.25), radius: 2, y: 1)
-            .accessibilityHidden(true)
+        Group {
+            if let numeral {
+                Text("\(numeral)").font(.serif(size * 0.44, .bold)).monospacedDigit()
+            } else if let systemImage {
+                Image(systemName: systemImage).font(.system(size: size * 0.4, weight: .semibold))
+            }
+        }
+        .foregroundStyle(Theme.gilt)
+        .frame(width: size, height: size)
+        .background(Circle().fill(Theme.leather))
+        .overlay(Circle().inset(by: 2.5).strokeBorder(Theme.gilt.opacity(0.55), lineWidth: 0.75))
+        .shadow(color: Color(hex: 0x3a0b0b).opacity(0.25), radius: 2, y: 1)
+        .accessibilityHidden(true)
     }
 }

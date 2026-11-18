@@ -55,7 +55,7 @@ struct ScholarsView: View {
             }
         }
         .background(Theme.page)
-        .mastheadChrome("Hall of Scholars", threshold: 140)
+        .mastheadChrome("Hall of Scholars")
         .task { await load() }
     }
 
@@ -378,7 +378,7 @@ struct ScholarProfileView: View {
                                 NavigationLink {
                                     AchievementsView(badges: badges)
                                 } label: {
-                                    LinkRow(icon: "rosette", iconColor: Theme.ornament,
+                                    LinkRow(icon: "rosette",
                                             title: "\(earned.count) of \(badges.filter { $0.tier != "omniscient" }.count) earned",
                                             subtitle: "See every achievement")
                                 }

@@ -61,13 +61,7 @@ struct HandleEditorSheet: View {
                 .padding()
             }
             .background(Theme.parchment)
-            .navigationTitle("Your Handle")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }.tint(Theme.gold300)
-                }
-            }
+            .leatherBar("Your Handle", leading: ChromeAction(systemImage: "xmark", label: "Cancel") { dismiss() })
         }
         .onAppear { handle = current ?? "" }
     }
