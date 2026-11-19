@@ -121,6 +121,10 @@ ol.q.tight li { font-size: 22px; line-height: 1.2; margin-bottom: 5px; }
 .anote { font-size:19px; line-height:1.4; }
 .arows.multi .anote { font-size:16px; line-height:1.35; }
 .anote .asent { color:var(--accent); font-weight:700; margin-bottom:5px; }
+/* a diagram too wide to share the row: the note goes beneath it */
+.arows.wide { grid-template-columns:1fr; gap:14px; }
+.arows.wide .adiag svg { max-width:100%; max-height:270px; height:auto; }
+.arows.wide .anote { font-size:15.5px; line-height:1.35; }
 """
 
 
@@ -178,6 +182,8 @@ def _appo(a):
 
 
 _CH, _PAD = 9.8, 15
+_WIDE = 520   # an analysis diagram wider than this stacks above its note
+_LONG_NOTE, _STACK_H = 600, 230   # ...as does a long note under a diagram this short
 
 
 def _w(t):
@@ -192,7 +198,41 @@ _PH_DX, _PH_DY, _MOD_DX, _MOD_GAP, _MOD_LEAD = 26, 38, 15, 10, 7
 
 
 def _is_phrase(m):
-    return isinstance(m, dict)
+    # Any dict but a word-with-modifier (compound modifiers are tested for first).
+    return isinstance(m, dict) and "word" not in m
+
+
+# A word modifier that has its own modifier ({"word": "much", "mod": "so"}): the
+# word on its slant, underlined, with the adverb hung beneath it on a slant.
+_WM_DY = 43
+
+
+def _is_wmod(m):
+    return isinstance(m, dict) and "word" in m
+
+
+def _wmod_geom(a, m):
+    """(center of the word, right edge) for a word-with-modifier anchored at a."""
+    wd = _w(m["word"])
+    c = a + max(_MOD_DX, wd / 2)
+    return c, max(c + wd / 2, _mods_right(c, _mlist(m.get("mod"))))
+
+
+# A clause hung on a phrase's object ({"prep", "obj", "clause": {...}}): the
+# clause on its own baseline below, a dashed line from its relative up to the object.
+_PCL_DROP, _PCL_INSET = 80, 10
+
+
+def _rel_cx(cl):
+    *_, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                                cl.get("smod"), cl.get("pmod"), cl.get("omod"))
+    rl, rw = cslots[cl.get("rel", "s")]
+    return rl + rw / 2
+
+
+def _clause_w(cl):
+    return _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                       cl.get("smod"), cl.get("pmod"), cl.get("omod"))[3]
 
 
 def _mods_right(cx, words):
@@ -214,12 +254,17 @@ def _mod_plan(items):
         plan.append((m, a))
         if _is_comp(m):
             end = _cmod_geom(a, m)[1]
+        elif _is_wmod(m):
+            end = _wmod_geom(a, m)[1]
         elif _is_phrase(m):
             hx, wobj = a + _PH_DX, _w(m["obj"])
             end = hx + wobj + (_w(m["o"]) if m.get("o") else 0)
             end = max(end, _mods_right(hx + wobj / 2, _mlist(m.get("mod"))))
             if m.get("o"):
                 end = max(end, _mods_right(hx + wobj + _w(m["o"]) / 2, _mlist(m.get("omod"))))
+            if m.get("clause"):
+                cl = m["clause"]
+                end = max(end, hx + _PCL_INSET - _rel_cx(cl) + _clause_w(cl))
         else:
             wd = _w(m)
             end = a + max(_MOD_DX, wd / 2) + wd / 2
@@ -366,17 +411,25 @@ def _stem_w(ms):
     return _mods_right(_STEM_CX, ms) + _MOD_GAP
 
 
-def _wslot(word, mods):
+def _wslot(word, mods, plan=False):
     ms = _mlist(mods)
     w = _ww(word)
     if _is_comp(word) and ms and all(isinstance(m, str) for m in ms):
         return w + _stem_w(ms)   # a stem before the fork to hang its modifiers
-    if any(isinstance(m, dict) for m in ms):
+    if plan or any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
 
-def _slot_mods_svg(left, width, base, mods, word=None):
+def _plan_pmods(o, pmod, omod=None):
+    """A predicate with an object lays out two or more word modifiers left to
+    right, so they don't step under the object's own."""
+    ms = _mlist(pmod)
+    return bool(o) and bool(ms) and all(isinstance(m, str) for m in ms) and (
+        len(ms) > 1 or any(isinstance(m, dict) for m in _mlist(omod)))
+
+
+def _slot_mods_svg(left, width, base, mods, word=None, plan=False):
     """A slot's modifiers: centered under the word when all are single words,
     laid out left to right when a phrase is among them.
     Returns (fragments, rightmost x, lowest y)."""
@@ -386,7 +439,7 @@ def _slot_mods_svg(left, width, base, mods, word=None):
     if _is_comp(word) and all(isinstance(m, str) for m in ms):
         frag, r = _mods_svg(left + _STEM_CX, base, ms, _CH, _PAD)   # on the stem
         return frag, r, base + 34
-    if not any(isinstance(m, dict) for m in ms):
+    if not plan and not any(isinstance(m, dict) for m in ms):
         frag, r = _mods_svg(left + width / 2, base, ms, _CH, _PAD)
         return frag, r, base + 34   # keeps word-only diagrams at their old height
     out, right, low = [], left, base
@@ -396,6 +449,16 @@ def _slot_mods_svg(left, width, base, mods, word=None):
             frag, r = _cmod_svg(a, base, m)
             out += frag
             right, low = max(right, r), max(low, base + 37)
+            continue
+        if _is_wmod(m):
+            wd = _w(m["word"])
+            c, r = _wmod_geom(a, m)
+            ub = base + _WM_DY
+            frag, _ = _mods_svg(c, ub, _mlist(m.get("mod")), _CH, _PAD)
+            out += [f'<line x1="{a:.0f}" y1="{base}" x2="{c:.0f}" y2="{base + 20}"/>',
+                    f'<text x="{c:.0f}" y="{base + 37}" text-anchor="middle">{esc(m["word"])}</text>',
+                    f'<line x1="{c - wd/2 + 6:.0f}" y1="{ub}" x2="{c + wd/2 - 6:.0f}" y2="{ub}"/>', *frag]
+            right, low = max(right, r), max(low, ub + 37)
             continue
         if not _is_phrase(m):
             wd = _w(m)
@@ -422,6 +485,15 @@ def _slot_mods_svg(left, width, base, mods, word=None):
             frag, r = _mods_svg(hx + wobj / 2, hy, _mlist(m["mod"]), _CH, _PAD)
             out += frag
             right, low = max(right, r), max(low, hy + 37)
+        if m.get("clause"):
+            cl = m["clause"]
+            anchor, cbase = hx + _PCL_INSET, hy + _PCL_DROP
+            l2, t2, m2, r2, _, hm2 = _diag_parts(
+                anchor - _rel_cx(cl), cbase, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                cl.get("smod"), cl.get("pmod"), cl.get("omod"))
+            out += l2 + m2 + t2 + [f'<line x1="{anchor:.0f}" y1="{hy}" x2="{anchor:.0f}" '
+                                   f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
+            right, low = max(right, r2), max(low, cbase + (hm2 + 6 if hm2 else 16))
         if m.get("prep"):
             # The preposition written along its slant, just above-right of the line.
             ang = math.atan2(_PH_DY, _PH_DX)
@@ -461,9 +533,9 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
     low = base
     slots = {"s": (x0, ws)}
 
-    def add_mods(left, width, words, word=None):
+    def add_mods(left, width, words, word=None, plan=False):
         nonlocal right, low
-        frag, rmost, lo = _slot_mods_svg(left, width, base, words, word)
+        frag, rmost, lo = _slot_mods_svg(left, width, base, words, word, plan)
         mods.extend(frag)
         right, low = max(right, rmost), max(low, lo)
 
@@ -490,7 +562,8 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         add_mods(x2, wp, pmod, p)
         slots.update(c=(x1, wc), p=(x2, wp))
     else:
-        wp = _wslot(p, pmod)
+        pplan = _plan_pmods(o, pmod, omod)
+        wp = _wslot(p, pmod, pplan)
         wo = _wslot(o, omod) if o else 0
         total = sreg + wp + wo
         x1, x2 = x0 + sreg, x0 + sreg + wp
@@ -500,7 +573,7 @@ def _diag_parts(x0, base, s, p, o=None, c=None, smod=None, pmod=None, omod=None,
         l, tx = _slot_word_svg(x1, wp, base, p)
         lines += l
         texts += tx
-        add_mods(x1, wp, pmod, p)
+        add_mods(x1, wp, pmod, p, pplan)
         slots["p"] = (x1, wp)
         if o:
             lines.append(f'<line x1="{x2:.0f}" y1="{topln}" x2="{x2:.0f}" y2="{base}"/>')
@@ -534,11 +607,7 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
         drop += 36                # clear the main line's phrases
     clauses = {"s": sclause, "p": pclause, "o": oclause}
 
-    def rel_cx(cl):
-        *_, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
-                                    cl.get("smod"), cl.get("pmod"), cl.get("omod"))
-        rl, rw = cslots[cl.get("rel", "s")]
-        return rl + rw / 2
+    rel_cx = _rel_cx
 
     # Shift the main line right so each clause's relative sits straight beneath
     # its antecedent's left end (the clause may reach left of the main line).
@@ -564,10 +633,14 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
                        f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
         texts += t2
         if cl.get("link"):
-            # A connective (e.g. the *when* of an adverbial clause) written on the connector.
-            texts.append(f'<text x="{anchor + 6:.0f}" y="{base + (drop - 22) / 2 + 8:.0f}" '
-                         f'text-anchor="start">{esc(cl["link"])}</text>')
-            r2 = max(r2, anchor + 6 + _w(cl["link"]))
+            # A connective (e.g. the *if* of an adverbial clause) written on the connector,
+            # on its left when the slot's own modifiers hang to the right.
+            ly = base + (drop - 22) / 2 + 8
+            if _mlist({"s": smod, "p": pmod, "o": omod}[key]):
+                texts.append(f'<text x="{anchor - 6:.0f}" y="{ly:.0f}" text-anchor="end">{esc(cl["link"])}</text>')
+            else:
+                texts.append(f'<text x="{anchor + 6:.0f}" y="{ly:.0f}" text-anchor="start">{esc(cl["link"])}</text>')
+                r2 = max(r2, anchor + 6 + _w(cl["link"]))
         mods += m2
         right = max(right, r2)
         bottom = max(bottom, cbase + (max(40, hm2 + 6) if hm2 else 16))
@@ -683,14 +756,19 @@ def render(slide, source, show_answers=False):
         return f'<section class="slide">{tag}{head}{body}{foot}</section>'
     if t == "analysis":
         intro = f'<p class="instr">{fmt(slide["intro"])}</p>' if slide.get("intro") else ""
-        rows = ""
+        rows, wide = "", False
         for r in slide["rows"]:
             svg = members_svg(r) if r.get("members") else _row_svg(r)
+            sw, sh = (float(v) for v in re.search(r'width="([\d.]+)" height="([\d.]+)"', svg).groups())
+            # Too wide to share the row, or a long note beside a short diagram: stack them.
+            wide = len(slide["rows"]) == 1 and (sw > _WIDE or (len(r["note"]) > _LONG_NOTE
+                                                              and sh <= _STACK_H))
             sent = f'<div class="asent">{fmt(r["sentence"])}</div>' if r.get("sentence") else ""
             rows += (f'<div class="arow"><div class="adiag">{svg}</div>'
                      f'<div class="anote">{sent}<div>{fmt(r["note"])}</div></div></div>')
         return (f'<section class="slide"><h2 class="h">{esc(slide["heading"])}</h2><hr class="dbl">'
-                f'{intro}<div class="arows{" multi" if len(slide["rows"]) > 1 else ""}">{rows}</div>{foot}</section>')
+                f'{intro}<div class="arows{" multi" if len(slide["rows"]) > 1 else ""}{" wide" if wide else ""}">'
+                f'{rows}</div>{foot}</section>')
     if t == "questions":
         answers = slide.get("answers") or []
         tag = '<div class="anskey">Answer Key</div>' if show_answers else ''

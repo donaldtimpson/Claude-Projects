@@ -210,7 +210,64 @@ MOD_DX, MOD_GAP, MOD_LEAD = int(Inches(0.24)), int(Inches(0.14)), int(Inches(0.1
 
 
 def _is_phrase(m):
-    return isinstance(m, dict)
+    # Any dict but a word-with-modifier (compound modifiers are tested for first).
+    return isinstance(m, dict) and "word" not in m
+
+
+# A word modifier that has its own modifier ({"word": "much", "mod": "so"}): the
+# word on its slant, underlined, with the adverb hung beneath it on a slant.
+WM_DY = int(Inches(0.70))
+
+
+def _is_wmod(m):
+    return isinstance(m, dict) and "word" in m
+
+
+def _wmod_geom(a, m):
+    """(center of the word, right edge) for a word-with-modifier anchored at a."""
+    w = _slot_w(m["word"])
+    c = a + max(MOD_DX, w / 2)
+    return c, max(c + w / 2, _mods_right(c, _mlist(m.get("mod"))))
+
+
+# A clause hung on a phrase's object ({"prep", "obj", "clause": {...}}): the
+# clause on its own baseline below, a dashed line from its relative up to the object.
+PCL_DROP = int(Inches(0.70))
+
+
+def _clause_w(cl):
+    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                         smod=cl.get("smod"), pmod=cl.get("pmod"), omod=cl.get("omod"))
+    return max(l + w for l, w in slots.values())
+
+
+def _plan_pmods(o, pmod, omod=None):
+    """A predicate with an object lays out two or more word modifiers left to
+    right, so they don't step under the object's own."""
+    ms = _mlist(pmod)
+    return bool(o) and bool(ms) and all(isinstance(m, str) for m in ms) and (
+        len(ms) > 1 or any(isinstance(m, dict) for m in _mlist(omod)))
+
+
+def _mods_depth(mods):
+    """How far a slot's modifiers reach below its baseline (EMU)."""
+    d = 0
+    for m in _mlist(mods):
+        if _is_wmod(m):
+            d = max(d, WM_DY + Inches(0.64))
+        elif _is_phrase(m):
+            pd = PH_DY + (Inches(0.64) if (m.get("mod") or m.get("omod")) else Inches(0.1))
+            if m.get("clause"):
+                pd = PH_DY + PCL_DROP + _clause_depth(m["clause"])
+            d = max(d, pd)
+        else:
+            d = max(d, Inches(0.64))
+    return int(d)
+
+
+def _clause_depth(cl):
+    """Height of a clause diagram from its top: baseline plus modifiers."""
+    return int(Inches(0.30) + max(Inches(0.15), *(_mods_depth(cl.get(k)) for k in ("smod", "pmod", "omod"))))
 
 
 def _mods_right(cx, words):
@@ -234,6 +291,8 @@ def _mod_plan(items):
         plan.append((m, a))
         if _is_comp(m):
             end = _cmod_geom(a, m)[1]
+        elif _is_wmod(m):
+            end = _wmod_geom(a, m)[1]
         elif _is_phrase(m):
             hx = a + PH_DX
             wobj = _slot_w(m["obj"])
@@ -241,6 +300,9 @@ def _mod_plan(items):
             end = max(end, _mods_right(hx + wobj / 2, _mlist(m.get("mod"))))
             if m.get("o"):
                 end = max(end, _mods_right(hx + wobj + _slot_w(m["o"]) / 2, _mlist(m.get("omod"))))
+            if m.get("clause"):
+                cl = m["clause"]
+                end = max(end, hx + CLAUSE_INSET - _clause_rel(cl) + _clause_w(cl))
         else:
             w = _slot_w(m)
             end = a + max(MOD_DX, w / 2) + w / 2
@@ -257,19 +319,19 @@ def _stem_w(ms):
     return int(_mods_right(STEM_CX, ms) + MOD_GAP)
 
 
-def _wslot(word, mods):
+def _wslot(word, mods, plan=False):
     """A slot's baseline width: the word's, or wider to seat its phrases — or,
     for a compound with word modifiers, a stem to hang them on before the fork."""
     ms = _mlist(mods)
     w = _ww(word)
     if _is_comp(word) and ms and all(isinstance(m, str) for m in ms):
         return w + _stem_w(ms)
-    if any(isinstance(m, dict) for m in ms):
+    if plan or any(isinstance(m, dict) for m in ms):
         w = max(w, _mod_plan(ms)[1])
     return w
 
 
-def _draw_slot_mods(slide, left, width, base_y, mods, word=None):
+def _draw_slot_mods(slide, left, width, base_y, mods, word=None, plan=False):
     """Hang a slot's modifiers: centered under the word as before when they are
     all single words; laid out left to right when a phrase is among them; on
     the stem before the fork when the word is compound."""
@@ -279,13 +341,22 @@ def _draw_slot_mods(slide, left, width, base_y, mods, word=None):
     if _is_comp(word) and all(isinstance(m, str) for m in ms):
         _draw_mods(slide, left + STEM_CX, base_y, ms)
         return
-    if not any(isinstance(m, dict) for m in ms):
+    if not plan and not any(isinstance(m, dict) for m in ms):
         _draw_mods(slide, left + width / 2, base_y, ms)
         return
     for m, off in _mod_plan(ms)[0]:
         a = left + off
         if _is_comp(m):
             _draw_cmod(slide, a, base_y, m)
+            continue
+        if _is_wmod(m):
+            w = _slot_w(m["word"])
+            c, _ = _wmod_geom(a, m)
+            ub = base_y + WM_DY
+            _line(slide, int(a), base_y, int(c), base_y + Inches(0.34))
+            _diag_word(slide, int(c - w / 2), base_y + Inches(0.64), w, m["word"])
+            _line(slide, int(c - w / 2 + Inches(0.08)), ub, int(c + w / 2 - Inches(0.08)), ub)
+            _draw_mods(slide, c, ub, _mlist(m.get("mod")))
             continue
         if not _is_phrase(m):
             w = _slot_w(m)
@@ -306,6 +377,13 @@ def _draw_slot_mods(slide, left, width, base_y, mods, word=None):
                 _draw_mods(slide, hx + wobj + wo / 2, hy, _mlist(m["omod"]))
         if m.get("mod"):
             _draw_mods(slide, hx + wobj / 2, hy, _mlist(m["mod"]))
+        if m.get("clause"):
+            cl = m["clause"]
+            anchor, ctop = hx + CLAUSE_INSET, hy + PCL_DROP
+            _draw_diagram(slide, int(anchor - _clause_rel(cl)), int(ctop), cl["s"], cl.get("p", ""),
+                          cl.get("o"), cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
+                          omod=cl.get("omod"))
+            _line(slide, int(anchor), int(hy), int(anchor), int(ctop + Inches(0.02)), dashed=True)
         if m.get("prep"):
             # The preposition written along its slant, just above-right of the line.
             ang = math.atan2(PH_DY, PH_DX)
@@ -502,7 +580,7 @@ def _slot_layout(s, p, o=None, c=None, sappo=None, smod=None, pmod=None, omod=No
     if c:
         wc, wp = _slot_w(c), _wslot(p, pmod)
         return {"s": (0, ws), "c": (sreg, wc), "p": (sreg + wc, wp)}
-    wp = _wslot(p, pmod)
+    wp = _wslot(p, pmod, _plan_pmods(o, pmod, omod))
     out = {"s": (0, ws), "p": (sreg, wp)}
     if o:
         out["o"] = (sreg + wp, _wslot(o, omod))
@@ -527,7 +605,7 @@ def _clause_shift(s, p, o, c, sappo, clauses, mods=(None, None, None)):
     return int(max([0] + need))
 
 
-def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP):
+def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP, ante_mods=False):
     """Hang a relative clause beneath its antecedent (modern Reed-Kellogg): the
     clause on its own baseline — its own subject | predicate — with a dashed line
     dropping straight from the antecedent's left end to the relative pronoun.
@@ -544,10 +622,14 @@ def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP):
     _line(slide, int(anchor), base, int(anchor), ctop + Inches(0.02), dashed=True)
     if cl.get("link"):
         # A connective (e.g. the *when* of an adverbial clause) written on the connector.
+        # On the connector's left when the antecedent's own modifiers hang to the right.
         lw = _slot_w(cl["link"])
-        lx = int(anchor + Inches(0.06))
-        _diag_word(slide, lx, base + Inches(0.58), lw, cl["link"])
-        right = max(right, lx + lw)
+        if ante_mods:
+            _diag_word(slide, int(anchor - Inches(0.06) - lw), base + Inches(0.58), lw, cl["link"])
+        else:
+            lx = int(anchor + Inches(0.06))
+            _diag_word(slide, lx, base + Inches(0.58), lw, cl["link"])
+            right = max(right, lx + lw)
     return right
 
 
@@ -598,7 +680,8 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
         _draw_slot_mods(slide, x2, wp, base, pm, p)
         return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
                              sclause, pclause, oclause, (sm, pm, om))
-    wp = _wslot(p, pm)
+    pplan = _plan_pmods(o, pm, om)
+    wp = _wslot(p, pm, pplan)
     wo = _wslot(o, om) if o else 0
     x1 = left + sreg
     x2 = x1 + wp
@@ -611,7 +694,7 @@ def _draw_diagram(slide, left, top, s, p, o=None, c=None,
     _draw_slot_word(slide, x1, wp, base, p)
     if o:
         _draw_slot_word(slide, x2, wo, base, o)
-    _draw_slot_mods(slide, x1, wp, base, pm, p)
+    _draw_slot_mods(slide, x1, wp, base, pm, p, pplan)
     if o:
         _draw_slot_mods(slide, x2, wo, base, om, o)
     return _hang_clauses(slide, left, base, xend, s, p, o, c, sappo,
@@ -622,9 +705,9 @@ def _hang_clauses(slide, left, base, xend, s, p, o, c, sappo, sclause, pclause, 
                   mods=(None, None, None)):
     slots = _slot_layout(s, p, o, c, sappo, *mods)
     drop = CLAUSE_DROP + (PHRASE_CLEAR if _has_phrase(*mods) else 0)
-    for key, cl in (("s", sclause), ("p", pclause), ("o", oclause)):
+    for (key, cl), ms in zip((("s", sclause), ("p", pclause), ("o", oclause)), mods):
         if cl and key in slots:
-            xend = max(xend, _draw_clause(slide, left, base, slots[key], cl, drop))
+            xend = max(xend, _draw_clause(slide, left, base, slots[key], cl, drop, bool(_mlist(ms))))
     return xend
 
 
@@ -873,9 +956,31 @@ def render_analysis(slide, s, source):
         slots = _slot_layout(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"), *mods)
         shift = _clause_shift(r["s"], r.get("p", ""), r.get("o"), r.get("c"), r.get("sappo"),
                               {k: r.get(k + "clause") for k in "spo"}, mods)
-        return _interj_w(r) + shift + max(l + w for l, w in slots.values())
+        right = max(l + w for l, w in slots.values())
+        # Word modifiers stepping right from under a slot can run past its end.
+        for k, (l, w) in slots.items():
+            ms = _mlist({"s": r.get("smod"), "p": r.get("pmod"), "o": r.get("omod")}.get(k))
+            if ms and all(isinstance(m, str) for m in ms) and not (k == "p" and _plan_pmods(r.get("o"), ms, r.get("omod"))):
+                right = max(right, l + w / 2 + _mods_right(0, ms))
+        return _interj_w(r) + shift + right
     note_x = max(MARGIN + Inches(5.3), MARGIN + Inches(0.55) + max(diag_w(r) for r in rows))
     note_w = SLIDE_W - MARGIN - note_x
+    r0 = rows[0]
+    if len(rows) == 1 and note_w < Inches(5.0):
+        # Too wide to share the row:  the note goes beneath the diagram, across the slide.
+        if r0.get("members"):
+            _draw_members(slide, MARGIN + Inches(0.2), y + Inches(0.1), r0)
+        else:
+            _draw_row(slide, MARGIN + Inches(0.2), y + Inches(0.1), r0)
+        ny = y + heights[0] - Inches(0.2)   # row heights carry a margin below the diagram
+        _, tfn = _box(slide, MARGIN, ny, SLIDE_W - 2 * MARGIN, Inches(6.95) - ny)
+        ps = tfn.paragraphs[0]
+        ps.space_after = Pt(4)
+        _richrun(ps, r0["sentence"], size=17 if r0.get("note") else 15, color=ACCENT, bold=True)
+        if r0.get("note"):
+            _richrun(tfn.add_paragraph(), r0["note"], size=14 if len(r0["note"]) > 500 else 16, color=INK)
+        _footer(slide, source)
+        return
     top = y
     big = len(rows) == 1      # a lone model gets the room to read at a distance
     for r, row_h in zip(rows, heights):
@@ -883,13 +988,20 @@ def render_analysis(slide, s, source):
             _draw_members(slide, MARGIN + Inches(0.2), top + Inches(0.1), r)
         else:
             _draw_row(slide, MARGIN + Inches(0.2), top + Inches(0.1), r)
-        _, tfn = _box(slide, note_x, top - Inches(0.1), note_w, row_h)
-        tfn.vertical_anchor = MSO_ANCHOR.MIDDLE
+        if big:
+            # A lone model's note runs down from the top, its size set by its length.
+            _, tfn = _box(slide, note_x, top - Inches(0.1), note_w, Inches(6.85) - top)
+            n = len(r["note"])
+            nsize, ssize = (18, 20) if n <= 450 else (16, 18) if n <= 650 else (14, 17)
+        else:
+            _, tfn = _box(slide, note_x, top - Inches(0.1), note_w, row_h)
+            tfn.vertical_anchor = MSO_ANCHOR.MIDDLE
+            nsize, ssize = 15, 17
         if r.get("sentence"):
             ps = tfn.paragraphs[0]
             ps.space_after = Pt(5)
-            _richrun(ps, r["sentence"], size=20 if big else 17, color=ACCENT, bold=True)
-            _richrun(tfn.add_paragraph(), r["note"], size=18 if big else 15, color=INK)
+            _richrun(ps, r["sentence"], size=ssize, color=ACCENT, bold=True)
+            _richrun(tfn.add_paragraph(), r["note"], size=nsize, color=INK)
         else:
             _richrun(tfn.paragraphs[0], r["note"], size=16, color=INK)
         top += row_h
@@ -904,6 +1016,13 @@ def _row_h(r):
     h = (Inches(2.2) + (PHRASE_CLEAR if phrase else 0) if clause
          else Inches(2.0) if phrase
          else Inches(1.5))
+    # Deep modifiers (a word's own modifier, a clause hung on a phrase) need more.
+    deep = max(_mods_depth(r.get(k)) for k in ("smod", "pmod", "omod"))
+    if clause:
+        drop = CLAUSE_DROP + (PHRASE_CLEAR if phrase else 0)
+        deep = max(deep, *(drop + _clause_depth(r[k]) for k in ("sclause", "pclause", "oclause")
+                           if r.get(k)))
+    h = max(h, int(Inches(0.30) + deep + Inches(0.3)))
     if r.get("interj"):
         h += INTERJ_RISE
     return h + max(2 * _reach(r.get(k)) + (_up(r.get(k)) if _is_ncl(r.get(k)) else 0)

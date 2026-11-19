@@ -72,34 +72,25 @@
       "bullets": [
         "Rem. — The sentences of which a compound sentence is composed are called *Members*.",
         "“Exercise strengthens the constitution, and temperance strengthens the constitution.” — *exercise* and *temperance* are the parts not common to the two members.",
-        "Unite the parts not common, and use the common parts but once:  “Exercise and temperance strengthen the constitution” — a simple sentence."
+        "Rule. — A compound sentence containing common parts may be changed to a simple one by uniting the parts not common to all its members, and using the common parts but once:  “Exercise and temperance strengthen the constitution.”"
       ]
     },
     {
       "type": "practice",
-      "heading": "Practice — Change to Simple (Set 1)",
+      "heading": "Practice — Change to Simple",
       "instruction": "Change each compound sentence to a simple one.",
       "items": [
         "Behold my mother, and behold my brethren.",
         "I saw a man in a boat, and I saw a boy in the water.",
-        "Washington was a warrior, and Washington was a statesman."
-      ],
-      "answers": [
-        "Behold my mother and my brethren.",
-        "I saw a man in a boat and a boy in the water.",
-        "Washington was a warrior and a statesman."
-      ]
-    },
-    {
-      "type": "practice",
-      "heading": "Practice — Change to Simple (Set 2)",
-      "instruction": "Change each compound sentence to a simple one.",
-      "items": [
+        "Washington was a warrior, and Washington was a statesman.",
         "The man you saw was sick, or he was in trouble.",
         "The river was swift, and it was very deep."
       ],
       "answers": [
-        "The man you saw was sick or in trouble.  (*you saw* is still an adjective clause)",
+        "Behold my mother and my brethren.",
+        "I saw a man in a boat and a boy in the water.",
+        "Washington was a warrior and a statesman.",
+        "The man you saw was sick or in trouble.  (one member now;  the clause *[whom] you saw* makes it complex)",
         "The river was swift and very deep."
       ]
     },
@@ -132,7 +123,7 @@
               "omod": "his"
             }
           ],
-          "note": "Declarative; compound. *The heavens declare the glory of God* is the first member;  *the firmament showeth his handiwork*, the second;  *and*, the connective.  *heavens* is the subject of the first member;  *declare*, the predicate, modified by *glory*, an objective element, which *the* and the phrase *of God* modify.  *firmament* is the subject of the second;  *showeth* (= shows), the predicate, modified by *handiwork*, an objective element, which *his* modifies."
+          "note": "Declarative; compound.  *The heavens declare the glory of God* is the first member;  *the firmament showeth his handiwork*, the second;  *and*, the connective.  *heavens* is the subject of the first member;  *declare*, the predicate.  *heavens* is modified by *The*, an adjective element;  *declare*, by *glory*, an objective element, which is modified by *the* and the phrase *of God*, adjective elements.  *firmament* is the subject of the second member;  *showeth* (= shows), the predicate.  *firmament* is modified by *the*, an adjective element;  *showeth*, by *handiwork*, an objective element, which is modified by *his*, an adjective element."
         }
       ]
     },
@@ -169,6 +160,228 @@
       ]
     },
     {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (1–2)",
+      "rows": [
+        {
+          "sentence": "Talent is something, but tact is every thing.",
+          "conj": "but",
+          "members": [
+            {
+              "s": "Talent",
+              "c": "is",
+              "p": "something"
+            },
+            {
+              "s": "tact",
+              "c": "is",
+              "p": "thing",
+              "pmod": "every"
+            }
+          ],
+          "note": "Declarative; compound.  *Talent* is the subject of the first member;  *something*, the predicate;  *is*, the copula.  *tact* is the subject of the second;  *thing*, the predicate, modified by *every*, an adjective element;  *is*, the copula.  *but* is the connective."
+        },
+        {
+          "sentence": "Art is long, and time is fleeting.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "Art",
+              "c": "is",
+              "p": "long"
+            },
+            {
+              "s": "time",
+              "c": "is",
+              "p": "fleeting"
+            }
+          ],
+          "note": "Declarative; compound.  *Art* is the subject of the first member;  *long*, the predicate;  *is*, the copula.  *time* is the subject of the second;  *fleeting*, the predicate;  *is*, the copula.  *and* is the connective.  (*fleeting* = passing swiftly)"
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (3)",
+      "rows": [
+        {
+          "sentence": "Lead us not into temptation, but deliver us from evil.",
+          "conj": "but",
+          "members": [
+            {
+              "s": "(thou)",
+              "p": "Lead",
+              "o": "us",
+              "pmod": [
+                "not",
+                {
+                  "prep": "into",
+                  "obj": "temptation"
+                }
+              ]
+            },
+            {
+              "s": "(thou)",
+              "p": "deliver",
+              "o": "us",
+              "pmod": [
+                {
+                  "prep": "from",
+                  "obj": "evil"
+                }
+              ]
+            }
+          ],
+          "note": "Imperative; compound.  The subject of each member, *thou*, is understood.  *Lead* is the predicate of the first, modified by *us*, an objective element, and by *not* and the phrase *into temptation*, adverbial elements.  *deliver* is the predicate of the second, modified by *us*, an objective element, and by the phrase *from evil*, an adverbial element.  *but* is the connective."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (4)",
+      "rows": [
+        {
+          "sentence": "The gathering clouds threatened an approaching storm, and the deep darkness of the night soon enveloped them.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "clouds",
+              "smod": [
+                "The",
+                "gathering"
+              ],
+              "p": "threatened",
+              "o": "storm",
+              "omod": [
+                "an",
+                "approaching"
+              ]
+            },
+            {
+              "s": "darkness",
+              "smod": [
+                "the",
+                "deep",
+                {
+                  "prep": "of",
+                  "obj": "night",
+                  "mod": "the"
+                }
+              ],
+              "p": "enveloped",
+              "pmod": "soon",
+              "o": "them"
+            }
+          ],
+          "note": "Declarative; compound.  *clouds* is the subject of the first member;  *threatened*, the predicate.  *clouds* is modified by *The* and *gathering*, adjective elements;  *threatened*, by *storm*, an objective element, which *an* and *approaching* modify.  *darkness* is the subject of the second;  *enveloped*, the predicate.  *darkness* is modified by *the*, *deep*, and the phrase *of the night*, adjective elements;  *enveloped*, by *soon*, an adverbial element, and by *them*, an objective element.  *and* is the connective."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (5)",
+      "rows": [
+        {
+          "sentence": "The stores were closed, and the hum of business was hushed.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "stores",
+              "smod": "The",
+              "p": "were closed"
+            },
+            {
+              "s": "hum",
+              "smod": [
+                "the",
+                {
+                  "prep": "of",
+                  "obj": "business"
+                }
+              ],
+              "p": "was hushed"
+            }
+          ],
+          "note": "Declarative; compound.  *stores* is the subject of the first member;  *were closed*, the predicate;  *stores* is modified by *The*, an adjective element.  *hum* is the subject of the second;  *was hushed*, the predicate;  *hum* is modified by *the* and the phrase *of business*, adjective elements.  *and* is the connective."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (6)",
+      "rows": [
+        {
+          "sentence": "Every eye was filled with tears, and, for a moment, all were silent.",
+          "conj": "and",
+          "members": [
+            {
+              "s": "eye",
+              "smod": "Every",
+              "p": "was filled",
+              "pmod": [
+                {
+                  "prep": "with",
+                  "obj": "tears"
+                }
+              ]
+            },
+            {
+              "s": "all",
+              "c": "were",
+              "p": "silent",
+              "pmod": [
+                {
+                  "prep": "for",
+                  "obj": "moment",
+                  "mod": "a"
+                }
+              ]
+            }
+          ],
+          "note": "Declarative; compound.  *eye* is the subject of the first member;  *was filled*, the predicate.  *eye* is modified by *Every*, an adjective element;  *was filled*, by the phrase *with tears*, an adverbial element.  *all* is the subject of the second;  *silent*, the predicate;  *were*, the copula;  *silent* is modified by the phrase *for a moment*, an adverbial element.  *and* is the connective."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Compound Sentences (7)",
+      "rows": [
+        {
+          "sentence": "You may stay here with me, or we will go to the lecture with Susan.",
+          "conj": "or",
+          "members": [
+            {
+              "s": "You",
+              "p": "may stay",
+              "pmod": [
+                "here",
+                {
+                  "prep": "with",
+                  "obj": "me"
+                }
+              ]
+            },
+            {
+              "s": "we",
+              "p": "will go",
+              "pmod": [
+                {
+                  "prep": "to",
+                  "obj": "lecture",
+                  "mod": "the"
+                },
+                {
+                  "prep": "with",
+                  "obj": "Susan"
+                }
+              ]
+            }
+          ],
+          "note": "Declarative; compound.  *You* is the subject of the first member;  *may stay*, the predicate, modified by *here* and the phrase *with me*, adverbial elements.  *we* is the subject of the second;  *will go*, the predicate, modified by the phrases *to the lecture* and *with Susan*, adverbial elements.  *or* is the connective."
+        }
+      ]
+    },
+    {
       "type": "concept",
       "heading": "Members & Truth",
       "bullets": [
@@ -193,7 +406,7 @@
       "type": "concept",
       "heading": "Principal & Subordinate Clauses",
       "bullets": [
-        "A clause must contain a subject and a predicate.",
+        "A sentence, any element of which is a clause, is a Complex Sentence.  A clause must contain a subject and a predicate.",
         "“I know where gold is found.” — *I know* makes complete sense standing alone:  the *Principal Clause*.  *where gold is found* does not:  a *Subordinate Clause*.",
         "A Principal Clause is one which makes complete sense when separated from the rest of the sentence.",
         "A Subordinate Clause is one which does not make complete sense when separated from the rest of the sentence."
@@ -206,27 +419,27 @@
         {
           "label": "Subject",
           "text": "A clause used as the subject.",
-          "examples": "“Haste makes waste,” is a true saying."
+          "examples": "“**Haste makes waste**,” is a true saying."
         },
         {
           "label": "Predicate",
           "text": "A clause used as the predicate.",
-          "examples": "My hope is, that he will recover."
+          "examples": "My hope is, **that he will recover**."
         },
         {
           "label": "Objective",
           "text": "A clause used as an objective element.",
-          "examples": "I believe that the earth is round."
+          "examples": "I believe **that the earth is round**."
         },
         {
           "label": "Adjective",
           "text": "A clause used as an adjective element.",
-          "examples": "The report that he is insane, is unfounded."
+          "examples": "The report **that he is insane**, is unfounded."
         },
         {
           "label": "Adverbial",
           "text": "A clause used as an adverbial element.",
-          "examples": "Our teacher is delighted when we are studious."
+          "examples": "Our teacher is delighted **when we are studious**."
         }
       ]
     },
@@ -234,7 +447,7 @@
       "type": "concept",
       "heading": "Remarks on Analysis",
       "bullets": [
-        "Rem. 1. — A complex sentence whose subject or predicate only is a clause need not be separated into principal and subordinate clauses.",
+        "Rem. 1. — A complex sentence whose subject or predicate only is a clause need not be separated into principal and subordinate clauses in analysis.",
         "Rem. 2. — Some complex sentences are composed of many clauses.  Each clause should be analyzed in the order indicated by its position."
       ]
     },
@@ -258,7 +471,49 @@
               "mod": "his"
             }
           ],
-          "note": "Declarative; complex.  *He dissembleth with his lips* is the principal clause;  *that hateth*, the subordinate clause, an adjective element modifying *He*.  Of the clause, *that* is the subject;  *hateth*, the predicate.  *dissembleth* is modified by the phrase *with his lips*, an adverbial element;  *lips*, by *his*.  (*hateth* = hates;  *dissembleth* = disguises the truth)"
+          "note": "Declarative; complex;  composed of a principal clause and a subordinate clause.  *He dissembleth with his lips* is the principal clause;  *that hateth*, the subordinate clause.  *He* is the subject of the principal clause;  *dissembleth*, the predicate.  *He* is modified by the clause *that hateth*, an adjective element, of which *that* is the subject, and *hateth*, the predicate.  *dissembleth* is modified by the phrase *with his lips*, an adverbial element;  *lips*, by *his*, an adjective element.  (*hateth* = hates;  *dissembleth* = hides his true feelings)"
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — A Subject Clause",
+      "rows": [
+        {
+          "sentence": "That he is very sick, is evident.",
+          "s": {
+            "clause": {
+              "s": "he",
+              "c": "is",
+              "p": "sick",
+              "pmod": "very"
+            },
+            "link": "That"
+          },
+          "c": "is",
+          "p": "evident",
+          "note": "Declarative; complex;  its subject is a clause, so it is not separated into principal and subordinate clauses (Rem. 1).  *That he is very sick* is the subject;  *evident*, the predicate;  *is*, the copula.  *he* is the subject of the subject clause;  *sick*, the predicate;  *is*, the copula.  *sick* is modified by *very*, an adverbial element.  *That* is a conjunction used to introduce the subject clause."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — An Objective Clause",
+      "rows": [
+        {
+          "sentence": "He never denied that the letter was lost.",
+          "s": "He",
+          "p": "denied",
+          "pmod": "never",
+          "o": {
+            "clause": {
+              "s": "letter",
+              "smod": "the",
+              "p": "was lost"
+            },
+            "link": "that"
+          },
+          "note": "Declarative; complex.  *He never denied* is the principal clause;  *the letter was lost*, the subordinate clause;  *that*, the connective.  *He* is the subject of the principal clause;  *denied*, the predicate, which is modified by *never*, an adverbial element, and by the clause *that the letter was lost*, an objective element.  *letter* is the subject of the subordinate clause;  *was lost*, the predicate;  *letter* is modified by *the*, an adjective element.  *that* joins the clause *the letter was lost* to *denied*."
         }
       ]
     },
@@ -282,52 +537,10 @@
             "s": "torrents",
             "smod": "the",
             "p": "fall",
-            "rel": "p",
-            "link": "where"
+            "pmod": "where",
+            "rel": "p"
           },
-          "note": "Declarative; complex.  *He builds a palace of ice* is the principal clause;  *the torrents fall*, the subordinate clause;  *where*, the connective.  *builds* is modified by *palace*, an objective element, which *a* and the phrase *of ice* modify, and by the clause *where the torrents fall*, an adverbial element.  *torrents* is modified by *the*;  *fall*, by *where*."
-        }
-      ]
-    },
-    {
-      "type": "analysis",
-      "heading": "Analyze — A Subject Clause",
-      "rows": [
-        {
-          "sentence": "That he is very sick, is evident.",
-          "s": {
-            "clause": {
-              "s": "he",
-              "c": "is",
-              "p": "sick",
-              "pmod": "very"
-            },
-            "link": "That"
-          },
-          "c": "is",
-          "p": "evident",
-          "note": "Declarative; complex;  its subject is a clause.  *That he is very sick* is the subject;  *evident*, the predicate;  *is*, the copula.  In the subject clause, *he* is the subject;  *sick*, the predicate, modified by *very*;  *is*, the copula.  *That* is a conjunction introducing the clause."
-        }
-      ]
-    },
-    {
-      "type": "analysis",
-      "heading": "Analyze — An Objective Clause",
-      "rows": [
-        {
-          "sentence": "He never denied that the letter was lost.",
-          "s": "He",
-          "p": "denied",
-          "pmod": "never",
-          "o": {
-            "clause": {
-              "s": "letter",
-              "smod": "the",
-              "p": "was lost"
-            },
-            "link": "that"
-          },
-          "note": "Declarative; complex.  *He never denied* is the principal clause;  *the letter was lost*, the subordinate clause;  *that*, the connective.  *denied* is modified by *never*, an adverbial element, and by the clause *that the letter was lost*, an objective element."
+          "note": "Declarative; complex.  *He builds a palace of ice* is the principal clause;  *the torrents fall*, the subordinate clause;  *where*, the connective.  *He* is the subject of the principal clause;  *builds*, the predicate, which is modified by *palace*, an objective element, and by the clause *where the torrents fall*, an adverbial element.  *palace* is modified by *a* and the phrase *of ice*, adjective elements.  *torrents* is the subject of the subordinate clause;  *fall*, the predicate.  *torrents* is modified by *the*, an adjective element;  *fall*, by *where*, an adverbial element."
         }
       ]
     },
@@ -360,7 +573,7 @@
     {
       "type": "practice",
       "heading": "Practice — Subordinate Clauses (Set 2)",
-      "instruction": "Name the subordinate clause and tell its class.  If the subject only is a clause, say so (Rem. 1).",
+      "instruction": "Name the subordinate clause and tell its class.",
       "items": [
         "I would pay you if I had the money.",
         "That he will succeed, is uncertain.",
@@ -369,7 +582,7 @@
       ],
       "answers": [
         "if I had the money — adverbial",
-        "That he will succeed — subject clause  (Rem. 1:  need not be separated)",
+        "That he will succeed — subject  (Rem. 1)",
         "that the brave general was dead — objective",
         "though [he is] very eccentric — adverbial"
       ]
@@ -385,6 +598,273 @@
       "answers": [
         "that loved her — adjective",
         "that shut against them — adjective (modifies *hearts*);  That shall be heard in heaven — adjective (modifies *sound*)"
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (1)",
+      "rows": [
+        {
+          "sentence": "He that flattereth, deceiveth his neighbor.",
+          "s": "He",
+          "sclause": {
+            "s": "that",
+            "p": "flattereth",
+            "rel": "s"
+          },
+          "p": "deceiveth",
+          "o": "neighbor",
+          "omod": "his",
+          "note": "Declarative; complex.  *He deceiveth his neighbor* is the principal clause;  *that flattereth*, the subordinate clause.  *He* is the subject;  *deceiveth*, the predicate.  *He* is modified by the clause *that flattereth*, an adjective element, of which *that* is the subject, and *flattereth*, the predicate.  *deceiveth* is modified by *neighbor*, an objective element, which *his* modifies.  (*flattereth* = flatters;  *deceiveth* = deceives)"
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (2)",
+      "rows": [
+        {
+          "sentence": "The boy that you saw, is my younger brother.",
+          "s": "boy",
+          "smod": "The",
+          "sclause": {
+            "s": "you",
+            "p": "saw",
+            "o": "that",
+            "rel": "o"
+          },
+          "c": "is",
+          "p": "brother",
+          "pmod": [
+            "my",
+            "younger"
+          ],
+          "note": "Declarative; complex.  *The boy is my younger brother* is the principal clause;  *that you saw*, the subordinate clause.  *boy* is the subject;  *brother*, the predicate;  *is*, the copula.  *boy* is modified by *The* and by the clause *that you saw*, adjective elements;  *brother*, by *my* and *younger*, adjective elements.  In the clause, *you* is the subject;  *saw*, the predicate, modified by *that*, an objective element."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (3)",
+      "rows": [
+        {
+          "sentence": "He was frightened when he first saw a lion.",
+          "s": "He",
+          "p": "was frightened",
+          "pclause": {
+            "s": "he",
+            "p": "saw",
+            "pmod": [
+              "when",
+              "first"
+            ],
+            "o": "lion",
+            "omod": "a",
+            "rel": "p"
+          },
+          "note": "Declarative; complex.  *He was frightened* is the principal clause;  *he first saw a lion*, the subordinate clause;  *when*, the connective.  *He* is the subject;  *was frightened*, the predicate, modified by the clause *when he first saw a lion*, an adverbial element.  In the clause, *he* is the subject;  *saw*, the predicate, modified by *when* and *first*, adverbial elements, and by *lion*, an objective element, which *a* modifies."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (4)",
+      "rows": [
+        {
+          "sentence": "I can not study where pupils make so much noise.",
+          "s": "I",
+          "p": "can study",
+          "pmod": "not",
+          "pclause": {
+            "s": "pupils",
+            "p": "make",
+            "pmod": "where",
+            "o": "noise",
+            "omod": [
+              {
+                "word": "much",
+                "mod": "so"
+              }
+            ],
+            "rel": "p"
+          },
+          "note": "Declarative; complex.  *I can not study* is the principal clause;  *pupils make so much noise*, the subordinate clause;  *where*, the connective.  *I* is the subject;  *can study*, the predicate, modified by *not* and by the clause *where pupils make so much noise*, adverbial elements.  In the clause, *pupils* is the subject;  *make*, the predicate, modified by *where*, an adverbial element, and by *noise*, an objective element.  *noise* is modified by *much*, an adjective element;  *much*, by *so*, an adverbial element."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (5)",
+      "rows": [
+        {
+          "sentence": "I would pay you if I had the money.",
+          "s": "I",
+          "p": "would pay",
+          "o": "you",
+          "pclause": {
+            "s": "I",
+            "p": "had",
+            "o": "money",
+            "omod": "the",
+            "rel": "p",
+            "link": "if"
+          },
+          "note": "Declarative; complex.  *I would pay you* is the principal clause;  *I had the money*, the subordinate clause;  *if*, the connective.  *I* is the subject;  *would pay*, the predicate, modified by *you*, an objective element, and by the clause *if I had the money*, an adverbial element.  In the clause, *I* is the subject;  *had*, the predicate, modified by *money*, an objective element, which *the* modifies."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (6)",
+      "rows": [
+        {
+          "sentence": "That he will succeed, is uncertain.",
+          "s": {
+            "clause": {
+              "s": "he",
+              "p": "will succeed"
+            },
+            "link": "That"
+          },
+          "c": "is",
+          "p": "uncertain",
+          "note": "Declarative; complex;  its subject is a clause, so it is not separated into principal and subordinate clauses (Rem. 1).  *That he will succeed* is the subject;  *uncertain*, the predicate;  *is*, the copula.  In the subject clause, *he* is the subject;  *will succeed*, the predicate.  *That* is a conjunction introducing the clause."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (7)",
+      "rows": [
+        {
+          "sentence": "The messenger reported that the brave general was dead.",
+          "s": "messenger",
+          "smod": "The",
+          "p": "reported",
+          "o": {
+            "clause": {
+              "s": "general",
+              "smod": [
+                "the",
+                "brave"
+              ],
+              "c": "was",
+              "p": "dead"
+            },
+            "link": "that"
+          },
+          "note": "Declarative; complex.  *The messenger reported* is the principal clause;  *the brave general was dead*, the subordinate clause;  *that*, the connective.  *messenger* is the subject;  *reported*, the predicate.  *messenger* is modified by *The*, an adjective element;  *reported*, by the clause *that the brave general was dead*, an objective element.  In the clause, *general* is the subject;  *dead*, the predicate;  *was*, the copula;  *general* is modified by *the* and *brave*, adjective elements."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (8)",
+      "rows": [
+        {
+          "sentence": "He is a good man, though very eccentric.",
+          "s": "He",
+          "c": "is",
+          "p": "man",
+          "pmod": [
+            "a",
+            "good"
+          ],
+          "pclause": {
+            "s": "(he)",
+            "c": "(is)",
+            "p": "eccentric",
+            "pmod": "very",
+            "rel": "p",
+            "link": "though"
+          },
+          "note": "Declarative; complex.  *He is a good man* is the principal clause;  *[he is] very eccentric*, the subordinate clause, its subject and copula understood;  *though*, the connective.  *He* is the subject;  *man*, the predicate;  *is*, the copula.  *man* is modified by *a* and *good*, adjective elements.  The clause *though very eccentric* is an adverbial element.  In it, *eccentric* is the predicate, modified by *very*, an adverbial element."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (9)",
+      "rows": [
+        {
+          "sentence": "Nature never did betray the heart that loved her.",
+          "s": "Nature",
+          "p": "did betray",
+          "pmod": "never",
+          "o": "heart",
+          "omod": "the",
+          "oclause": {
+            "s": "that",
+            "p": "loved",
+            "o": "her",
+            "rel": "s"
+          },
+          "note": "Declarative; complex.  *Nature never did betray the heart* is the principal clause;  *that loved her*, the subordinate clause.  *Nature* is the subject;  *did betray*, the predicate, modified by *never*, an adverbial element, and by *heart*, an objective element.  *heart* is modified by *the* and by the clause *that loved her*, adjective elements.  In the clause, *that* is the subject;  *loved*, the predicate, modified by *her*, an objective element."
+        }
+      ]
+    },
+    {
+      "type": "analysis",
+      "heading": "Analyze — Complex Sentences (10)",
+      "rows": [
+        {
+          "sentence": "The poor too often turn away, unheard, / From hearts that shut against them, with a sound / That shall be heard in heaven.  — Longfellow",
+          "s": "poor",
+          "smod": [
+            "The",
+            "unheard"
+          ],
+          "p": "turn",
+          "pmod": [
+            {
+              "word": "often",
+              "mod": "too"
+            },
+            "away",
+            {
+              "prep": "From",
+              "obj": "hearts",
+              "clause": {
+                "s": "that",
+                "p": "shut",
+                "rel": "s",
+                "pmod": [
+                  {
+                    "prep": "against",
+                    "obj": "them"
+                  },
+                  {
+                    "prep": "with",
+                    "obj": "sound",
+                    "mod": "a",
+                    "clause": {
+                      "s": "That",
+                      "p": "shall be heard",
+                      "rel": "s",
+                      "pmod": [
+                        {
+                          "prep": "in",
+                          "obj": "heaven"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "note": ""
+        }
+      ]
+    },
+    {
+      "type": "concept",
+      "heading": "Complex Sentences (10) — Three Clauses",
+      "bullets": [
+        "Declarative;  complex, of three clauses (Rem. 2).",
+        "Principal:  *The poor too often turn away, unheard, from hearts.*  *poor* (an adjective used as a noun) is the subject, modified by *The* and *unheard*;  *turn*, the predicate, modified by *often* (which *too* modifies), *away*, and *from hearts*.",
+        "Subordinate:  *that shut against them, with a sound* — an adjective element modifying *hearts*;  *that*, its subject;  *shut*, its predicate, modified by the phrases *against them* and *with a sound*.",
+        "Subordinate:  *That shall be heard in heaven* — an adjective element modifying *sound*;  *That*, its subject;  *shall be heard*, its predicate, modified by the phrase *in heaven*."
       ]
     },
     {
@@ -421,7 +901,7 @@
       "items": [
         "Franklin, who was a philosopher, was an American.",
         "One soldier was not present when the roll was called.",
-        "They weighed anchor when the tide turned.",
+        "They weighed anchor when the tide turned.  (*weighed anchor* = raised anchor to sail)",
         "My brother has gone to the city that he may find employment."
       ],
       "answers": [
@@ -456,7 +936,7 @@
         "Time **wasted** is existence;  **used**, is life.",
         "They came here **to see the country**.",
         "The wild beasts **kept for the games**, had broken from their dens.",
-        "Haste **to cheer my father’s heart**."
+        "Haste **to cheer my father’s heart**.  (*Haste* = hurry)"
       ],
       "answers": [
         "Time that is wasted is existence;  time that is used is life.",
@@ -496,8 +976,8 @@
       "heading": "Oral Lesson — the Interjection",
       "bullets": [
         "“Hurra! we have found him.” — *we* is the subject;  *have found*, the predicate, modified by *him*, an objective element.",
-        "What does *hurra* denote?  That the speaker is highly pleased.  Does it affirm or deny any thing?  It does not:  it simply implies a feeling of pleasure.",
-        "Other words denote sorrow, grief, surprise, disgust, pity, hatred.  All such words are called *Interjections*."
+        "What does *hurra* denote?  That the speaker or writer is highly pleased.  Does it affirm or deny any thing?  It does not:  it simply implies a feeling or emotion of pleasure.",
+        "Other words denote sorrow, grief, surprise, disgust, pity, hatred, etc.  All such words are called *Interjections*."
       ]
     },
     {
@@ -530,14 +1010,14 @@
           "s": "we",
           "p": "have found",
           "o": "him",
-          "note": "Declarative.  *we* is the subject;  *have found*, the predicate, modified by *him*, an objective element.  *Hurra* is an interjection;  it denotes pleasure."
+          "note": "Declarative; simple.  *we* is the subject;  *have found*, the predicate, modified by *him*, an objective element.  *Hurra* is an interjection;  it denotes that the speaker is highly pleased."
         },
         {
           "sentence": "Hush! they are coming.",
           "interj": "Hush",
           "s": "they",
           "p": "are coming",
-          "note": "Declarative.  *they* is the subject;  *are coming*, the predicate.  *Hush* is an interjection;  it denotes some sudden emotion."
+          "note": "Declarative; simple.  *they* is the subject;  *are coming*, the predicate.  *Hush* is an interjection;  it denotes some sudden emotion."
         }
       ]
     },
@@ -599,7 +1079,7 @@
         "Ha — interjection;  it — pronoun;  freezes — verb;  me — pronoun",
         "Aha — interjection;  you — pronoun;  are — verb;  a — adjective (article);  truant — noun",
         "Alas — interjection;  they — pronoun;  had been — verb;  friends — noun;  in — preposition;  youth — noun",
-        "Alas — interjection;  we — pronoun;  shall see — verb;  him — pronoun;  no, more — adverbs"
+        "Alas — interjection;  we — pronoun;  shall see — verb;  him — pronoun;  more — adverb (modifies *shall see*);  no — adverb (modifies *more*)"
       ]
     },
     {
@@ -614,9 +1094,26 @@
       ],
       "answers": [
         "Ahem — interjection;  I — pronoun;  will think — verb;  about — preposition;  it — pronoun",
-        "Hark, hark — interjections;  the — adjective (article);  lark — noun;  at — preposition;  heaven’s — noun;  gate — noun;  sings — verb",
+        "Hark, hark — interjections;  the — adjective (article);  lark — noun;  at — preposition;  heaven’s — noun (possessive);  gate — noun;  sings — verb",
         "Tush, tush — interjections;  man — noun;  I — pronoun;  made — verb;  no — adjective;  reference — noun;  to — preposition;  you — pronoun",
         "Alas — interjection;  for — preposition;  the — adjective (article);  rarity — noun;  of — preposition;  Christian — adjective;  charity — noun"
+      ]
+    },
+    {
+      "type": "practice",
+      "heading": "Practice — Parts of Speech (Set 3)",
+      "instruction": "Point out all the parts of speech in each sentence.",
+      "items": [
+        "Hark! the clock strikes one.",
+        "Pshaw! I knew that yesterday.",
+        "Ay, he is every inch a king.",
+        "Oh, what a noble mind is here o’erthrown!"
+      ],
+      "answers": [
+        "Hark — interjection;  the — adjective (article);  clock — noun;  strikes — verb;  one — noun (the hour)",
+        "Pshaw — interjection;  I — pronoun;  knew — verb;  that — pronoun;  yesterday — adverb",
+        "Ay — interjection;  he — pronoun;  is — verb;  every — adjective;  inch — noun;  a — adjective (article);  king — noun",
+        "Oh — interjection;  what — adjective;  a — adjective (article);  noble — adjective;  mind — noun;  is o’erthrown — verb;  here — adverb"
       ]
     },
     {
