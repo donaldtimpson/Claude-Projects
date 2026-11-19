@@ -328,6 +328,14 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        LudusStage { stage }
+        .statusBarHidden(true)
+        .onChange(of: scenePhase) { p in
+            if p != .active { model.pause() }
+        }
+    }
+
+    private var stage: some View {
         ZStack {
             backdrop.ignoresSafeArea()
             // Off the tree under the intro card, so a game's own animated scene isn't running
@@ -359,10 +367,6 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
                                onClose: onClose)
                     .transition(.opacity)
             }
-        }
-        .statusBarHidden(true)
-        .onChange(of: scenePhase) { p in
-            if p != .active { model.pause() }
         }
         .onChange(of: model.levelUps) { _ in
             withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { banner = true }
@@ -407,6 +411,54 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
         }
         .padding(.horizontal, 12).padding(.top, 4)
         .opacity(model.phase == .playing ? 1 : 0)
+    }
+}
+
+/// Every game is laid out for a phone. On a tablet the game is laid out on a phone-height stage
+/// (`designHeight` points tall, as wide as the screen's shape allows, so wider than a phone) and
+/// scaled up to fill the screen: an iPad shows the same game a third to a half bigger, with the
+/// phone's proportions, instead of phone-sized pieces floating in empty space. The screen's real
+/// safe-area insets are handed to the stage in its own (scaled) points. Games that need
+/// screen-relative geometry use the `LudusStage.space` coordinate space, never `.global`.
+struct LudusStage<Content: View>: View {
+    static var space: String { "ludusStage" }
+    /// The phone height games are designed against (iPhone Pro ≈ 874, Pro Max ≈ 956).
+    static var designHeight: CGFloat { 900 }
+    /// 1 on phones; height ÷ `designHeight` on wider screens.
+    static func scale(width: CGFloat, height: CGFloat) -> CGFloat {
+        width < 600 ? 1 : max(1, height / designHeight)
+    }
+    /// The whole screen in stage points (for code that must size against the physical screen).
+    static var screen: CGSize {
+        let b = UIScreen.main.bounds.size
+        let k = scale(width: b.width, height: b.height)
+        return CGSize(width: b.width / k, height: b.height / k)
+    }
+
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        GeometryReader { g in
+            let ins = g.safeAreaInsets
+            let w = g.size.width + ins.leading + ins.trailing
+            let h = g.size.height + ins.top + ins.bottom
+            let k = Self.scale(width: w, height: h)
+            if k == 1 {
+                content().coordinateSpace(name: Self.space)
+            } else {
+                // The stage ignores the real insets (so nothing inside sees them in screen points)
+                // and carries its own, converted to stage points.
+                content()
+                    .safeAreaInset(edge: .top, spacing: 0) { Color.clear.frame(height: ins.top / k) }
+                    .safeAreaInset(edge: .bottom, spacing: 0) { Color.clear.frame(height: ins.bottom / k) }
+                    .frame(width: w / k, height: h / k)
+                    .ignoresSafeArea()
+                    .coordinateSpace(name: Self.space)
+                    .scaleEffect(k)
+                    .frame(width: w, height: h)
+                    .position(x: w / 2 - ins.leading, y: h / 2 - ins.top)
+            }
+        }
     }
 }
 

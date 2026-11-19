@@ -79,7 +79,7 @@ struct WorldView: View {
     // The landmark's corner of the map, fading into the page; stretches on pull-down.
     private func hero(width: CGFloat, topInset: CGFloat) -> some View {
         GeometryReader { g in
-            let pull = max(0, g.frame(in: .global).minY)
+            let pull = max(0, g.frame(in: .named(LudusStage<EmptyView>.space)).minY)
             Image("Vista" + place.key).resizable().aspectRatio(contentMode: .fill)
                 .frame(width: width, height: Page.heroH + topInset + pull)
                 .scaleEffect(shown ? 1 : 1.12, anchor: .center)

@@ -364,7 +364,7 @@ private struct SeesawPlay: View {
     /// Where the garden's right-hand column ends (the backdrop is laid out full-screen, the play
     /// area inside the safe area).
     private func columnTop(_ g: GeometryProxy) -> CGFloat {
-        let top = g.frame(in: .global).minY
+        let top = g.frame(in: .named(LudusStage<EmptyView>.space)).minY
         let fullH = g.size.height + top + g.safeAreaInsets.bottom
         return fullH * 0.42 - fullH * 0.25 - top
     }

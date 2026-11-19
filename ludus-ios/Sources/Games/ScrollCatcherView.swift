@@ -550,7 +550,7 @@ private struct ScrollWordPanel: View {
     var body: some View {
         let letters = model.word.letters
         let n = letters.count
-        let slotW = min(52, (UIScreen.main.bounds.width - 150) / CGFloat(max(n, 1)) - 4)
+        let slotW = min(52, (LudusStage<EmptyView>.screen.width - 150) / CGFloat(max(n, 1)) - 4)
         VStack(spacing: 4) {
             HStack(spacing: 10) {
                 Button { model.sayWord() } label: {

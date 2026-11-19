@@ -210,11 +210,11 @@ struct HomeView: View {
             GeometryReader { geo in
                 // The map bleeds edge-to-edge over the FULL physical screen (under the status bar and
                 // behind the bar). The safe-area GeometryReader can't report that height, so use the
-                // screen's own height directly — and its width whenever the reader reports none yet
+                // screen's own height directly (in stage points: `LudusStage` scales the app up on iPad) — and its width whenever the reader reports none yet
                 // (on iPhone SE its first sizes arrive 0 wide, so setup would never run).
-                let w = geo.size.width > 0 ? geo.size.width : UIScreen.main.bounds.width
+                let w = geo.size.width > 0 ? geo.size.width : LudusStage<EmptyView>.screen.width
                 let h = w * mapAspect
-                let vh = UIScreen.main.bounds.height
+                let vh = LudusStage<EmptyView>.screen.height
                 let minIdle = min(0, vh - h - bottomPad)     // free-scroll bottom bound
                 let minTravel = min(0, vh - h - travelPad)   // travel/card over-scroll
                 let off = (isTraveling || cardLM != nil)
@@ -259,8 +259,8 @@ struct HomeView: View {
             .navigationBarHidden(true)
         }
         .tint(Prov.red)
-        .fullScreenCover(isPresented: $showVilla) { VillaView(onClose: { showVilla = false }) }
-        .fullScreenCover(isPresented: $showRecords) { TabulariumView(onClose: { showRecords = false }) }
+        .fullScreenCover(isPresented: $showVilla) { LudusStage { VillaView(onClose: { showVilla = false }) } }
+        .fullScreenCover(isPresented: $showRecords) { LudusStage { TabulariumView(onClose: { showRecords = false }) } }
     }
 
     // The scrolling world: painted map, the eight seals on their buildings, and the traveler.

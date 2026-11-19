@@ -57,6 +57,13 @@ the intro card (how to play, laurel goals, start level), the level-up banner and
   right/wrong/level-up/laurel play automatically. Music games use `ToneSynth`; speech uses
   `LibraryVoice`.
 - **Every miss shows the right answer.** Every game implements `botAct(correct:)`.
+- **iPad = the phone layout, scaled.** `LudusStage` (GameKit.swift) lays every screen out at
+  phone height (900 pt), as wide as the screen's shape allows, and scales it to fill a tablet
+  (≈1.3× on iPad, 1.5× on a 13" Pro). Games are staged by `ArcadeShell`; the map, world pages,
+  Villa and Tabularium are wrapped at their presentation. Screen-relative geometry uses the
+  `LudusStage.space` coordinate space or `LudusStage.screen`, never `.global` / `UIScreen`.
+- **Pausing is free.** ✕ mid-run or leaving the app sets `phase = .paused`; resume re-deals via
+  `onBegin()`. Keep every timer and callback behind `phase == .playing`.
 
 ### Debug hooks (DEBUG builds, via env / `SIMCTL_CHILD_…`)
 

@@ -44,18 +44,18 @@ struct LudusApp: App {
             }
         }()
         if env["LUDUS_SCREEN"] == "villa" {
-            VillaView(onClose: {})
+            LudusStage { VillaView(onClose: {}) }
         } else if env["LUDUS_SCREEN"] == "records" {
-            TabulariumView(onClose: {})
+            LudusStage { TabulariumView(onClose: {}) }
         } else if let g = env["LUDUS_GAME"], let id = GameID(rawValue: g) {
-            ludusGame(id, onClose: {})
+            ludusGame(id, onClose: {})                    // games stage themselves (ArcadeShell)
         } else if let sub = env["LUDUS_WORLD"], let w = ludusWorlds.first(where: { $0.subject == sub }) {
-            NavigationStack { WorldView(world: w) }
+            LudusStage { NavigationStack { WorldView(world: w) } }
         } else {
-            HomeView()
+            LudusStage { HomeView() }
         }
         #else
-        HomeView()
+        LudusStage { HomeView() }
         #endif
     }
 }
