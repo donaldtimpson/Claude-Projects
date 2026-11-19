@@ -306,7 +306,7 @@ Builds so far:
 | 1.0.0 (3) | 2026-08-29 | Rejected 2026-09-01, Guideline 5.1.1(v) — password on the delete screen (§12) |
 | 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion. Never uploaded; superseded by (5) |
 | 1.0.0 (5) | prepared 2026-11-16 | Redesign and homework; never submitted, since 1.0 was already live. Superseded by 1.1.0 (6) |
-| 1.1.0 (6) | 2026-11-19 | First update to the live 1.0: redesign, homework, header gradient (§13) |
+| 1.1.0 (6) | 2026-11-19 | Submitted 2026-11-19, waiting for review. First update to the live 1.0 (§13) |
 
 `xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
 Organizer does not look at. Copy it to
@@ -1097,10 +1097,8 @@ no password, as the build that passed review did.
 
 1. Wait for build 6 to finish processing (10–30 minutes).
 2. **+ Version** → 1.1.0; paste What's New (§2); replace the screenshots.
-3. App Privacy (§4): add **User Content → Other User Content** (the homework
-   link). The §4 table and `PrivacyInfo.xcprivacy` already list it, but 1.0
-   went out without it (§10), so the live listing will contradict the binary
-   until it's added. The age rating stays 4+.
+3. App Privacy (§4): nothing new. Other User Content was already published
+   with 1.0. (Name was listed as not linked to the user; it is linked.)
 4. Attach build 6 and Submit for Review.
 
 ### Notes for App Review (add to the Notes field)
