@@ -262,7 +262,7 @@ The $(-1)^{2+1}$ comes from the position $(2,1)$ of the $-5$ **in the $3\times3$
 
 ## §3.2 — Properties of Determinants
 
-The secret of determinants lies in how they change when row operations are performed. Theorem 3 generalizes the results of Exercises 19–24 in §3.1. Its proof is at the end of this section.
+Cofactor expansion is far too slow for real matrices. The way out is to see how determinants change under **row operations**. That gives a fast method (row reduce, then multiply the diagonal), the invertibility test $\det A\ne0$, and the product rule $\det AB = (\det A)(\det B)$.
 
 ### Row Operations
 
@@ -271,7 +271,30 @@ The secret of determinants lies in how they change when row operations are perfo
 > - **b.** If two rows of $A$ are interchanged to produce $B$, then $\det B = -\det A$.
 > - **c.** If one row of $A$ is multiplied by $k$ to produce $B$, then $\det B = k\cdot\det A$.
 
-The strategy: **reduce $A$ to echelon form, keeping track of the operations, then multiply the diagonal entries** (Theorem 2, §3.1).
+> **🔎 Proof.** Let $\alpha = 1$, $-1$, or $k$ for parts (a), (b), (c). We show $\det B = \alpha\det A$ by induction on the size $n$.
+>
+> *Base case $n = 2$.* Let $A = \begin{bmatrix} a & b\\ c & d\end{bmatrix}$, so $\det A = ad - bc$.
+> - (a) Adding $m$ times row 1 to row 2: $a(d + mb) - b(c + ma) = ad - bc$. Adding $m$ times row 2 to row 1: $(a + mc)d - (b + md)c = ad - bc$.
+> - (b) $\det\begin{bmatrix} c & d\\ a & b\end{bmatrix} = cb - da = -(ad - bc)$.
+> - (c) $\det\begin{bmatrix} ka & kb\\ c & d\end{bmatrix} = k(ad - bc)$, and likewise for row 2.
+>
+> *Inductive step.* Suppose the theorem holds for $k\times k$ matrices with $k\ge2$, and let $A$ be $n\times n$ with $n = k+1\ge3$. A row operation involves at most two rows, so some row, say row $i$, is untouched: row $i$ of $B$ equals row $i$ of $A$. Let $A_{ij}$ and $B_{ij}$ delete row $i$ and column $j$ from $A$ and $B$. The rows of $B_{ij}$ come from the rows of $A_{ij}$ by the same type of row operation (with the same $k$ in part (c)). These submatrices are $k\times k$, so the induction hypothesis gives $\det B_{ij} = \alpha\det A_{ij}$. Expand $\det B$ across row $i$ (Theorem 1), using $b_{ij} = a_{ij}$:
+> $$
+> \begin{aligned}
+> \det B &= a_{i1}(-1)^{i+1}\det B_{i1} + \cdots + a_{in}(-1)^{i+n}\det B_{in}\\
+> &= \alpha a_{i1}(-1)^{i+1}\det A_{i1} + \cdots + \alpha a_{in}(-1)^{i+n}\det A_{in} = \alpha\cdot\det A.
+> \end{aligned}
+> $$
+> By induction the theorem holds for all $n\ge2$. For $n=1$, only (c) applies, and $\det[ka] = k\det[a]$. $\blacksquare$
+
+**The same theorem with elementary matrices** (needed for Theorem 6). If $E$ is an elementary matrix (§2.2), then $EA$ is $A$ after the row operation that made $E$ from $I$. So for any $n\times n$ matrix $A$,
+$$
+\det EA = (\det E)(\det A),\qquad
+\det E = \begin{cases} 1 & \text{if } E \text{ is a row replacement}\\ -1 & \text{if } E \text{ is an interchange}\\ r & \text{if } E \text{ is a scale by } r.\end{cases}
+$$
+*Why:* Theorem 3 with $A = I$ (where $\det I = 1$) gives the three values of $\det E$. Then Theorem 3 with general $A$ says $\det EA = \alpha\det A = (\det E)(\det A)$.
+
+**The method.** Reduce $A$ to echelon form, keeping track of the operations: replacements cost nothing, each interchange flips the sign, and each scaling must be paid for. Then multiply the diagonal entries (Theorem 2).
 
 #### Example 1 — determinant by row reduction (worked)
 
@@ -290,7 +313,7 @@ $$
 \det A = -\begin{vmatrix} 1 & -4 & 2\\ 0 & 3 & 2\\ 0 & 0 & -5\end{vmatrix} = -(1)(3)(-5) = \boxed{15}.
 $$
 
-**Factoring out a common multiple of one row.** The common use of Theorem 3(c) in hand calculation runs backward: pull a common factor out of a row.
+**Factoring out a common multiple of one row.** In hand calculation, Theorem 3(c) is mostly used backward, to pull a common factor out of a row:
 $$
 \begin{vmatrix} * & * & *\\ 5k & -2k & 3k\\ * & * & *\end{vmatrix}
 = k\begin{vmatrix} * & * & *\\ 5 & -2 & 3\\ * & * & *\end{vmatrix},
@@ -315,22 +338,15 @@ $$
 = 2\cdot(1)(3)(-6)(1) = \boxed{-36}.
 $$
 
-> **⚠ Watch for:** scaling a row to make a pivot equal to 1 **changes the determinant**. In row reduction for solving systems that was harmless; here every scaling must be paid for with a factor in front. The safest habit is to use only replacements and interchanges, and to scale only by *factoring out*.
+> **⚠ Watch for:** scaling a row to make a pivot equal to 1 **changes the determinant**. When solving systems that was harmless; here every scaling must be paid for with a factor in front. The safest habit is to use only replacements and interchanges, and to scale only by *factoring out*.
 
-### The Determinant and Invertibility
+### Determinants and Invertibility
 
-Suppose a square matrix $A$ has been reduced to an echelon form $U$ by row replacements and row interchanges only. (This is always possible: the row reduction algorithm of §1.2 never needs scaling to reach an echelon form.) If there are $r$ interchanges, Theorem 3 gives
-$$\det A = (-1)^r\det U.$$
-Since $U$ is a square echelon form, it is upper triangular, so $\det U = u_{11}u_{22}\cdots u_{nn}$.
+> **📐 THEOREM 4.** A square matrix $A$ is invertible if and only if $\det A \ne 0$.
 
-- If $A$ is invertible, $A$ has $n$ pivot positions (Invertible Matrix Theorem). A square echelon form with $n$ pivots has them on the diagonal, so $u_{11},\dots,u_{nn}$ are all pivots and all nonzero. (They need not be 1's, since $U$ was not scaled.)
-- If $A$ is not invertible, $U$ has fewer than $n$ pivots, so it has a row of zeros. That row is at the bottom, so $u_{nn} = 0$ and the product is zero.
-
-Thus
-
-$$
-\det A = \begin{cases} (-1)^r\cdot\big(\text{product of pivots in } U\big) & \text{when } A \text{ is invertible}\\[4pt] 0 & \text{when } A \text{ is not invertible}\end{cases} \tag{1}
-$$
+> **🔎 Proof.** Reduce $A$ to an echelon form $U$ using only row replacements and row interchanges. (This is always possible: the row reduction algorithm of §1.2 never needs scaling to reach an echelon form.) If there are $r$ interchanges, Theorem 3 gives $\det A = (-1)^r\det U$. A square echelon form is upper triangular, so $\det U = u_{11}u_{22}\cdots u_{nn}$ (Theorem 2).
+> - If $A$ is invertible, it has $n$ pivot positions (IMT). A square echelon form with $n$ pivots has them on the diagonal, so $u_{11},\dots,u_{nn}$ are all pivots, all nonzero, and $\det A\ne0$.
+> - If $A$ is not invertible, $U$ has fewer than $n$ pivots, so it has a row of zeros. That row is at the bottom, so $u_{nn} = 0$ and $\det A = 0$. $\blacksquare$
 
 $$
 U = \begin{bmatrix} \blacksquare & * & * & *\\ 0 & \blacksquare & * & *\\ 0 & 0 & \blacksquare & *\\ 0 & 0 & 0 & \blacksquare\end{bmatrix}\ (\det U\ne0)
@@ -338,13 +354,13 @@ U = \begin{bmatrix} \blacksquare & * & * & *\\ 0 & \blacksquare & * & *\\ 0 & 0 
 U = \begin{bmatrix} \blacksquare & * & * & *\\ 0 & \blacksquare & * & *\\ 0 & 0 & 0 & \blacksquare\\ 0 & 0 & 0 & 0\end{bmatrix}\ (\det U = 0)
 $$
 
-> **💡** The echelon form $U$ is not unique (it is not fully reduced), and neither are its pivots. But by (1) the **product** of the pivots is unique, up to sign.
+The proof also gives a formula for the determinant:
 
-Formula (1) is a concrete interpretation of $\det A$, and it proves the main theorem of the section.
+$$
+\det A = \begin{cases} (-1)^r\cdot\big(\text{product of pivots in } U\big) & \text{when } A \text{ is invertible}\\[4pt] 0 & \text{when } A \text{ is not invertible}\end{cases} \tag{1}
+$$
 
-> **📐 THEOREM 4.** A square matrix $A$ is invertible if and only if $\det A \ne 0$.
-
-> **🔎 Proof.** By (1), $\det A$ is $\pm$ a product of $n$ nonzero pivots when $A$ is invertible, so $\det A\ne0$; and $\det A = 0$ when $A$ is not invertible. $\blacksquare$
+The pivots need not be 1's, since $U$ was not scaled. The echelon form $U$ is not unique (it is not fully reduced), and neither are its pivots. But by (1) the **product** of the pivots is unique, up to sign.
 
 Theorem 4 adds the statement **"$\det A \ne 0$"** to the Invertible Matrix Theorem. Two useful corollaries:
 
@@ -389,25 +405,25 @@ $$
 $$
 (Interchanging rows 2 and 3 of the $3\times3$ would instead give a triangular determinant: $-2\cdot(-1)\cdot(1)(-3)(5) = -30$.)
 
-### Column Operations
-
-Column operations act on determinants exactly as row operations do. The proof uses induction.
-
-> **Principle of Mathematical Induction.** Let $P(n)$ be a statement that is either true or false for each natural number $n$. Then $P(n)$ is true for all $n\ge1$ provided that $P(1)$ is true and, for each natural number $k$, if $P(k)$ is true then $P(k+1)$ is true.
+### The Transpose and Column Operations
 
 > **📐 THEOREM 5.** If $A$ is an $n\times n$ matrix, then $\det A^T = \det A$.
 
-> **🔎 Proof.** For $n = 1$ the theorem is obvious. Suppose it is true for $k\times k$ determinants, and let $n = k+1$. Deleting row $j$ and column 1 of $A^T$ gives $(A_{1j})^T$, so the cofactor of $a_{1j}$ in $A$ equals the cofactor of $a_{j1}$ in $A^T$: both are $(-1)^{1+j}$ times a $k\times k$ determinant, and $\det (A_{1j})^T = \det A_{1j}$ by the induction hypothesis. Hence the cofactor expansion of $\det A$ across the first **row** equals the cofactor expansion of $\det A^T$ down the first **column**, term by term. By Step 1 of the proof of Theorem 1 (first-column expansion), which does not use this theorem, both expansions compute their determinants, so $\det A = \det A^T$. The theorem is true for $n=1$, and its truth for one value of $n$ implies its truth for the next, so by induction it holds for all $n\ge1$. $\blacksquare$
+> **🔎 Proof.** Induction on $n$; for $n = 1$ it is obvious. Suppose it holds for $k\times k$ matrices, and let $n = k+1$. Deleting row $j$ and column 1 of $A^T$ gives $(A_{1j})^T$, and $\det(A_{1j})^T = \det A_{1j}$ by the induction hypothesis. So the cofactor of $a_{1j}$ in $A$ equals the cofactor of $a_{j1}$ in $A^T$, and the expansion of $\det A$ across the first **row** equals, term by term, the expansion of $\det A^T$ down the first **column**. The first-column expansion computes $\det A^T$ (Step 1 of the proof of Theorem 1, which does not use this theorem), so $\det A = \det A^T$. By induction the theorem holds for all $n\ge1$. $\blacksquare$
 
-> **💡** This is Step 2 of the proof of Theorem 1 in §3.1, now stated on its own.
-
-**Consequence.** Every statement in Theorem 3 remains true when the word *row* is replaced everywhere by *column*. A column operation on $A$ is a row operation on $A^T$, and $\det A^T = \det A$, so apply Theorem 3 to $A^T$. Column operations are useful in theory and by hand, but numerical work here sticks to row operations.
+**Column operations.** Every statement in Theorem 3 remains true when *row* is replaced everywhere by *column*: a column operation on $A$ is a row operation on $A^T$, and $\det A^T = \det A$. Column operations are useful in theory and by hand, but our numerical work sticks to row operations.
 
 ### Determinants and Matrix Products
 
 > **📐 THEOREM 6 (Multiplicative Property).** If $A$ and $B$ are $n\times n$ matrices, then $\det AB = (\det A)(\det B)$.
 
-The proof is at the end of the section.
+> **🔎 Proof.** Write $|A|$ for $\det A$.
+>
+> *If $A$ is not invertible,* then neither is $AB$. (If $AB$ had an inverse $W$, then $A(BW) = I$, and a square matrix with a right inverse is invertible by the IMT.) So both sides are $0$, by Theorem 4.
+>
+> *If $A$ is invertible,* then $A$ is row equivalent to $I_n$ (IMT), so $A = E_pE_{p-1}\cdots E_1$ for some elementary matrices $E_1,\dots,E_p$. Peel them off one at a time with $\det EA = (\det E)(\det A)$:
+> $$|AB| = |E_p\cdots E_1B| = |E_p|\,|E_{p-1}\cdots E_1B| = \cdots = |E_p|\cdots|E_1|\,|B|.$$
+> The same peeling with $B = I$ gives $|A| = |E_p\cdots E_1| = |E_p|\cdots|E_1|$. So $|AB| = |A|\,|B|$. $\blacksquare$
 
 #### Example 5 — verifying Theorem 6 (worked)
 
@@ -427,9 +443,7 @@ Since $\det A = 9$ and $\det B = 5$, $(\det A)(\det B) = 9\cdot5 = \boxed{45} = 
 
 ### A Linearity Property of the Determinant Function
 
-For an $n\times n$ matrix $A$, regard $\det A$ as a function of the $n$ columns of $A$. If all columns but one are held fixed, $\det A$ is a **linear function** of the remaining (vector) variable. Let the $j$th column vary:
-$$A = [\,\mathbf a_1\ \cdots\ \mathbf a_{j-1}\ \ \mathbf x\ \ \mathbf a_{j+1}\ \cdots\ \mathbf a_n\,],$$
-and define $T:\mathbb R^n\to\mathbb R$ by
+For an $n\times n$ matrix $A$, regard $\det A$ as a function of the $n$ columns of $A$. If all columns but one are held fixed, $\det A$ is a **linear function** of the remaining (vector) variable. Let the $j$th column vary, and define $T:\mathbb R^n\to\mathbb R$ by
 $$T(\mathbf x) = \det[\,\mathbf a_1\ \cdots\ \mathbf a_{j-1}\ \ \mathbf x\ \ \mathbf a_{j+1}\ \cdots\ \mathbf a_n\,].$$
 Then
 $$T(c\mathbf x) = cT(\mathbf x)\quad\text{for all scalars } c \text{ and all } \mathbf x \text{ in } \mathbb R^n \tag{2}$$
@@ -437,51 +451,9 @@ $$T(\mathbf u + \mathbf v) = T(\mathbf u) + T(\mathbf v)\quad\text{for all } \ma
 
 > **🔎 Proof.** Expand down column $j$ (Theorem 1). The submatrices $A_{ij}$ delete column $j$, so they do not involve $\mathbf x$:
 > $$T(\mathbf x) = \sum_{i=1}^n (-1)^{i+j}x_i\det A_{ij} = C_{1j}x_1 + C_{2j}x_2 + \cdots + C_{nj}x_n,$$
-> where the cofactors $C_{ij}$ are fixed numbers. A function of the form $\mathbf x\mapsto c_1x_1+\cdots+c_nx_n$ satisfies (2) and (3). (Property (2) is also Theorem 3(c) for columns.) $\blacksquare$
+> where the cofactors $C_{ij}$ are fixed numbers. A function of the form $\mathbf x\mapsto c_1x_1+\cdots+c_nx_n$ satisfies (2) and (3). $\blacksquare$
 
 This **multilinearity** of the determinant has many consequences studied in more advanced courses.
-
-### Proofs of Theorems 3 and 6
-
-In the language of elementary matrices (§2.2), $E$ is a **row replacement** if it is obtained from $I$ by adding a multiple of one row to another row, an **interchange** if obtained by interchanging two rows of $I$, and a **scale by $r$** if obtained by multiplying a row of $I$ by a nonzero scalar $r$. Since $EA$ performs on $A$ the row operation that produced $E$ from $I$, Theorem 3 can be reformulated:
-
-> If $A$ is an $n\times n$ matrix and $E$ is an $n\times n$ elementary matrix, then $\det EA = (\det E)(\det A)$, where
-> $$\det E = \begin{cases} 1 & \text{if } E \text{ is a row replacement}\\ -1 & \text{if } E \text{ is an interchange}\\ r & \text{if } E \text{ is a scale by } r\end{cases}$$
-
-> **🔎 Proof of Theorem 3.** Write $B$ for the matrix produced from $A$ by the row operation, and let $\alpha = 1$, $-1$, or $k$ for parts (a), (b), (c). We show $\det B = \alpha\det A$ by induction on the size $n$.
->
-> *Base case $n = 2$.* Let $A = \begin{bmatrix} a & b\\ c & d\end{bmatrix}$, so $\det A = ad - bc$.
-> - (a) Adding $m$ times row 1 to row 2: $a(d + mb) - b(c + ma) = ad - bc$. Adding $m$ times row 2 to row 1: $(a + mc)d - (b + md)c = ad - bc$.
-> - (b) $\det\begin{bmatrix} c & d\\ a & b\end{bmatrix} = cb - da = -(ad - bc)$.
-> - (c) $\det\begin{bmatrix} ka & kb\\ c & d\end{bmatrix} = k(ad - bc)$, and likewise for row 2.
->
-> *Inductive step.* Suppose the theorem holds for $k\times k$ matrices with $k\ge2$, and let $A$ be $n\times n$ with $n = k+1\ge3$. A row operation involves at most two rows, so some row, say row $i$, is untouched: row $i$ of $B$ equals row $i$ of $A$. Let $A_{ij}$ and $B_{ij}$ delete row $i$ and column $j$ from $A$ and $B$. The rows of $B_{ij}$ come from the rows of $A_{ij}$ by the same type of row operation (with the same $k$ in part (c)). These submatrices are $k\times k$, so the induction hypothesis gives
-> $$\det B_{ij} = \alpha\cdot\det A_{ij}.$$
-> Expand $\det B$ across row $i$ (Theorem 1), using $b_{ij} = a_{ij}$:
-> $$
-> \begin{aligned}
-> \det B &= a_{i1}(-1)^{i+1}\det B_{i1} + \cdots + a_{in}(-1)^{i+n}\det B_{in}\\
-> &= \alpha a_{i1}(-1)^{i+1}\det A_{i1} + \cdots + \alpha a_{in}(-1)^{i+n}\det A_{in} = \alpha\cdot\det A.
-> \end{aligned}
-> $$
-> By induction the theorem holds for all $n\ge2$. For $n=1$, only (c) applies, and $\det[ka] = k\det[a]$. $\blacksquare$
->
-> *The reformulation.* Taking $A = I_n$ (with $\det I_n = 1$, Theorem 2) shows $\det E = 1$, $-1$, or $r$ according to the type of $E$. Then Theorem 3 says $\det EA = \alpha\det A = (\det E)(\det A)$.
-
-> **🔎 Proof of Theorem 6.** For brevity write $|A|$ for $\det A$.
->
-> *If $A$ is not invertible,* then neither is $AB$. (If $AB$ had an inverse $W$, then $A(BW) = I$, and a square matrix with a right inverse is invertible by the IMT.) So $\det AB = 0$ and $(\det A)(\det B) = 0\cdot\det B = 0$, by Theorem 4.
->
-> *If $A$ is invertible,* then $A$ is row equivalent to $I_n$ (IMT), so there are elementary matrices $E_1,\dots,E_p$ with
-> $$A = E_pE_{p-1}\cdots E_1\cdot I_n = E_pE_{p-1}\cdots E_1.$$
-> Repeated use of the reformulated Theorem 3 gives
-> $$
-> \begin{aligned}
-> |AB| &= |E_p\cdots E_1B| = |E_p|\,|E_{p-1}\cdots E_1B| = \cdots = |E_p|\cdots|E_1|\,|B|\\
-> &= \cdots = |E_p\cdots E_1|\,|B| = |A|\,|B|,
-> \end{aligned}
-> $$
-> where the second line runs the same argument backward with $B$ replaced by $I_n$: $|E_p\cdots E_1| = |E_p|\cdots|E_1|$. $\blacksquare$
 
 ### Practice Problems (worked)
 
@@ -577,25 +549,26 @@ $$
 
 ### A Formula for $A^{-1}$
 
-Cramer's rule leads easily to a general formula for $A^{-1}$. The $j$th column of $A^{-1}$ is the vector $\mathbf x$ with
-$$A\mathbf x = \mathbf e_j,$$
-and the $i$th entry of $\mathbf x$ is the $(i,j)$-entry of $A^{-1}$. By Cramer's rule,
-$$\{(i,j)\text{-entry of } A^{-1}\} = x_i = \frac{\det A_i(\mathbf e_j)}{\det A}. \tag{2}$$
-Column $i$ of $A_i(\mathbf e_j)$ is $\mathbf e_j$, whose only nonzero entry is a 1 in row $j$. A cofactor expansion down column $i$ therefore leaves one term, and deleting row $j$ and column $i$ of $A_i(\mathbf e_j)$ gives $A_{ji}$ (the other columns are those of $A$):
-$$\det A_i(\mathbf e_j) = (-1)^{i+j}\det A_{ji} = C_{ji}, \tag{3}$$
-where $C_{ji}$ is a cofactor of $A$. So the $(i,j)$-entry of $A^{-1}$ is $C_{ji}/\det A$. **Note the subscripts are reversed.** Thus
-$$
-A^{-1} = \frac{1}{\det A}\begin{bmatrix} C_{11} & C_{21} & \cdots & C_{n1}\\ C_{12} & C_{22} & \cdots & C_{n2}\\ \vdots & \vdots & & \vdots\\ C_{1n} & C_{2n} & \cdots & C_{nn}\end{bmatrix}. \tag{4}
-$$
+Cramer's rule leads easily to a general formula for $A^{-1}$, built from cofactors.
 
-> **📗 DEFINITION.** The matrix of cofactors on the right of (4) is the **adjugate** (or **classical adjoint**) of $A$, denoted $\operatorname{adj}A$. It is the **transpose** of the matrix of cofactors $[C_{ij}]$.
+> **📗 DEFINITION.** The **adjugate** (or **classical adjoint**) of an $n\times n$ matrix $A$, denoted $\operatorname{adj}A$, is the **transpose** of the matrix of cofactors $[C_{ij}]$: its $(i,j)$-entry is $C_{ji}$.
 
 (The term *adjoint* has another meaning in advanced texts on linear transformations.)
 
 > **📐 THEOREM 8 (An Inverse Formula).** Let $A$ be an invertible $n\times n$ matrix. Then
 > $$A^{-1} = \frac{1}{\det A}\operatorname{adj}A.$$
 
-> **🔎 Proof.** This restates (4), which was derived from (2) and (3) above. $\blacksquare$
+> **🔎 Proof.** The $j$th column of $A^{-1}$ is the vector $\mathbf x$ with
+> $$A\mathbf x = \mathbf e_j,$$
+> and the $i$th entry of $\mathbf x$ is the $(i,j)$-entry of $A^{-1}$. By Cramer's rule,
+> $$\{(i,j)\text{-entry of } A^{-1}\} = x_i = \frac{\det A_i(\mathbf e_j)}{\det A}. \tag{2}$$
+> Column $i$ of $A_i(\mathbf e_j)$ is $\mathbf e_j$, whose only nonzero entry is a 1 in row $j$. A cofactor expansion down column $i$ therefore leaves one term, and deleting row $j$ and column $i$ of $A_i(\mathbf e_j)$ gives $A_{ji}$ (the other columns are those of $A$):
+> $$\det A_i(\mathbf e_j) = (-1)^{i+j}\det A_{ji} = C_{ji}, \tag{3}$$
+> where $C_{ji}$ is a cofactor of $A$. So the $(i,j)$-entry of $A^{-1}$ is $C_{ji}/\det A$. **Note the subscripts are reversed.** Thus
+> $$
+> A^{-1} = \frac{1}{\det A}\begin{bmatrix} C_{11} & C_{21} & \cdots & C_{n1}\\ C_{12} & C_{22} & \cdots & C_{n2}\\ \vdots & \vdots & & \vdots\\ C_{1n} & C_{2n} & \cdots & C_{nn}\end{bmatrix}. \tag{4}
+> $$
+> The matrix on the right is $\operatorname{adj}A$. $\blacksquare$
 
 > **💡** For $A = \begin{bmatrix} a & b\\ c & d\end{bmatrix}$: $C_{11} = d$, $C_{12} = -c$, $C_{21} = -b$, $C_{22} = a$, so $\operatorname{adj}A = \begin{bmatrix} d & -b\\ -c & a\end{bmatrix}$ and Theorem 8 recovers the $2\times2$ formula of §2.2 (Theorem 4 there).
 
@@ -637,16 +610,11 @@ This verifies the geometric interpretation promised in the chapter introduction.
 
 > **📐 THEOREM 9.** If $A$ is a $2\times2$ matrix, the area of the parallelogram determined by the columns of $A$ is $|\det A|$. If $A$ is a $3\times3$ matrix, the volume of the parallelepiped determined by the columns of $A$ is $|\det A|$.
 
-The proof rests on one geometric fact.
-
-> **Lemma.** Let $\mathbf a_1$ and $\mathbf a_2$ be nonzero vectors. Then for any scalar $c$, the area of the parallelogram determined by $\mathbf a_1$ and $\mathbf a_2$ equals the area of the parallelogram determined by $\mathbf a_1$ and $\mathbf a_2 + c\mathbf a_1$.
-
-> **🔎 Proof of the Lemma.** If $\mathbf a_2$ is a multiple of $\mathbf a_1$, so is $\mathbf a_2 + c\mathbf a_1$, and both parallelograms are degenerate with area zero. Otherwise, let $L$ be the line through $\mathbf 0$ and $\mathbf a_1$. Then $\mathbf a_2 + L$ is the line through $\mathbf a_2$ parallel to $L$, and $\mathbf a_2 + c\mathbf a_1$ lies on it. So $\mathbf a_2$ and $\mathbf a_2 + c\mathbf a_1$ are the same perpendicular distance from $L$. The two parallelograms share the base from $\mathbf 0$ to $\mathbf a_1$ and have the same height, hence the same area. $\blacksquare$
-
 > **🔎 Proof of Theorem 9 ($\mathbb R^2$).**
+> - *Key fact: a column replacement does not change the area.* Let $\mathbf a_1, \mathbf a_2$ be nonzero. For any scalar $c$, the parallelogram on $\mathbf a_1, \mathbf a_2$ and the parallelogram on $\mathbf a_1, \mathbf a_2 + c\mathbf a_1$ have the same area. If $\mathbf a_2$ is a multiple of $\mathbf a_1$, so is $\mathbf a_2 + c\mathbf a_1$, and both areas are zero. Otherwise, let $L$ be the line through $\mathbf 0$ and $\mathbf a_1$. The point $\mathbf a_2 + c\mathbf a_1$ lies on the line $\mathbf a_2 + L$ through $\mathbf a_2$ parallel to $L$, so it is the same perpendicular distance from $L$ as $\mathbf a_2$. Same base (from $\mathbf 0$ to $\mathbf a_1$), same height, same area.
 > - *Diagonal matrices.* $\left|\det\begin{bmatrix} a & 0\\ 0 & d\end{bmatrix}\right| = |ad|$, the area of the rectangle with sides $|a|$ and $|d|$.
 > - *Singular $A$.* The columns are dependent, so the parallelogram lies on a line and has area $0 = |\det A|$ (Theorem 4).
-> - *Invertible $A$.* Transform $A$ into a diagonal matrix using only **column interchanges** and **column replacements**. (Do it as row operations on $A^T$: reduce $A^T$ to echelon form without scaling; its two pivots are nonzero and on the diagonal; then one more replacement clears the entry above the second pivot.) By §3.2, neither operation changes $|\det A|$: replacements keep $\det$, interchanges flip only its sign. Neither operation changes the area: an interchange leaves the parallelogram itself unchanged, and a replacement leaves the area unchanged by the Lemma (with the roles of $\mathbf a_1$ and $\mathbf a_2$ swapped if needed, since the parallelogram on $\mathbf a_1,\mathbf a_2$ is the one on $\mathbf a_2,\mathbf a_1$; the columns stay nonzero because each operation keeps the matrix invertible). So $|\det A|$ = area holds for $A$ because it holds for the diagonal matrix at the end. $\blacksquare$
+> - *Invertible $A$.* Transform $A$ into a diagonal matrix using only **column interchanges** and **column replacements**. (Do it as row operations on $A^T$: reduce $A^T$ to echelon form without scaling; its two pivots are nonzero and on the diagonal; then one more replacement clears the entry above the second pivot.) By §3.2, neither operation changes $|\det A|$: replacements keep $\det$, interchanges flip only its sign. Neither operation changes the area: an interchange leaves the parallelogram itself unchanged, and a replacement leaves the area unchanged by the key fact (with the roles of $\mathbf a_1$ and $\mathbf a_2$ swapped if needed, since the parallelogram on $\mathbf a_1,\mathbf a_2$ is the one on $\mathbf a_2,\mathbf a_1$; the columns stay nonzero because each operation keeps the matrix invertible). So $|\det A|$ = area holds for $A$ because it holds for the diagonal matrix at the end. $\blacksquare$
 
 > **🔎 Proof of Theorem 9 ($\mathbb R^3$).** The argument is the same. For a diagonal matrix with diagonal $a, b, c$, $|\det A| = |abc|$, the volume of a box. A singular $A$ has coplanar columns, so the parallelepiped is flat with volume $0$. An invertible $3\times3$ matrix becomes diagonal by column interchanges and replacements (row operations on $A^T$). Interchanges do not change the solid. For a replacement, relabel so that it is $[\,\mathbf a_1\ \mathbf a_2\ \mathbf a_3\,]\to[\,\mathbf a_1\ \ \mathbf a_2 + c\mathbf a_1\ \ \mathbf a_3\,]$. The volume of the parallelepiped is the area of its base, the parallelogram on $\mathbf a_1, \mathbf a_3$ (independent, since $A$ is invertible) in the plane $\operatorname{Span}\{\mathbf a_1, \mathbf a_3\}$, times the altitude of $\mathbf a_2$ above that plane. The vector $\mathbf a_2 + c\mathbf a_1$ lies in the plane $\mathbf a_2 + \operatorname{Span}\{\mathbf a_1, \mathbf a_3\}$, which is parallel to $\operatorname{Span}\{\mathbf a_1,\mathbf a_3\}$, so it has the same altitude. The base is unchanged, so the volume is unchanged. $\blacksquare$
 
