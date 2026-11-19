@@ -20,6 +20,10 @@ Build **1.0.0 (1)** uploaded successfully on 2026-08-23; the app's Apple ID is
 distribution certificate lives with Xcode and will not appear in
 `security find-identity` — its absence there is not a problem.
 
+**1.0 was approved and released on 2026-09-03** and is live on the store. Every
+build from here on is an update, so each needs a `MARKETING_VERSION` above the
+live one (§13).
+
 The original instructions, kept for the record:
 
 1. Go to <https://developer.apple.com/programs/enroll/> and sign in with your
@@ -116,11 +120,17 @@ Students in my classes, students taking these subjects somewhere else, and anyon
 No ads, no purchases, no subscription. An account keeps your progress, your review schedule, and your streak; you can delete it, and everything attached to it, from inside the app at any time.
 ```
 
-**What's New in This Version** (for 1.0)
+**What's New in This Version** (for 1.1)
 
 ```
-First release.
+A new look: leather, gold and parchment, in light and dark (choose in Settings).
+
+Homework: if you're in one of my live classes, join with your class code to see your grade, how it's calculated, and turn in homework.
+
+"Mark as watched" now works as it does on the website, and lecture numbers follow each course's own order.
 ```
+
+(1.0 shipped with "First release.")
 
 **URLs**
 
@@ -295,7 +305,8 @@ Builds so far:
 | 1.0.0 (2) | 2026-08-25 | Comments switched off; superseded before submission |
 | 1.0.0 (3) | 2026-08-29 | Rejected 2026-09-01, Guideline 5.1.1(v) — password on the delete screen (§12) |
 | 1.0.0 (4) | archived 2026-09-01 | Password removed from account deletion. Never uploaded; superseded by (5) |
-| 1.0.0 (5) | prepared 2026-11-16 | Redesign (leather and gold, light mode), homework; comments still off (§13) |
+| 1.0.0 (5) | prepared 2026-11-16 | Redesign and homework; never submitted, since 1.0 was already live. Superseded by 1.1.0 (6) |
+| 1.1.0 (6) | 2026-11-19 | First update to the live 1.0: redesign, homework, header gradient (§13) |
 
 `xcodebuild` writes the archive to `edu-ios/build/Lyceum.xcarchive`, which the
 Organizer does not look at. Copy it to
@@ -1048,49 +1059,60 @@ Please let me know if anything else would help.
 
 ---
 
-## 13. Build 1.0.0 (5), prepared 2026-11-14, redesigned 2026-11-16
+## 13. Version 1.1.0 (6), the first update, uploaded 2026-11-19
 
-1.0 has never been approved, so this stays **1.0.0** with build **5**. App Store
-Connect's unreleased version is still 1.0.0, and a version bump would only
-matter after a release. Build 5 replaces the never-uploaded build 4 and answers
-the open 5.1.1(v) rejection (§12): account deletion still asks for no password.
+1.0 has been live since 2026-09-03, so this is an update: **1.1.0**, build **6**.
+(Build 5 was prepared on 2026-11-16 as "1.0.0", which App Store Connect cannot
+accept once 1.0 is out. It was never submitted.) Account deletion still asks for
+no password, as the build that passed review did.
 
-### What changed since the last build App Review saw (3)
+### What changed since 1.0
 
-- **Account deletion** needs no password (the §12 fix, carried forward).
-- **Comments stay off.** Report, Block and the admin moderation queue are built
-  (`commentsEnabled` in `LectureView.swift` brings the Discussion tab back), but
-  Guideline 1.2 also wants a content filter and agreed terms, and comments are
-  rarely used on the site, so the app doesn't show them (§4).
+- **Design.** The website's type and palette, light and dark themes with an
+  Appearance setting, and the app's own materials: gradient leather mastheads
+  with a gilt rule, gold-leaf progress and grade rings, grouped lists, a podium
+  in the Hall. One navigation bar treatment across every screen.
 - **Homework.** A student in a live class can register with a class code, see
   their grade and how it's calculated, and turn in a homework link.
-- **Design.** The website's type and palette, light and dark themes with an
-  Appearance setting, and the app's own materials: leather mastheads, gold-leaf
-  progress and grade rings, grouped lists, a podium in the Hall.
+- **Watching** is an explicit "Mark as watched" button, as on the website. 1.0
+  marked a lecture watched just by opening it, which inflated attendance.
 - **Lecture numbers** come from each lecture's own title, so a newest-first
   playlist no longer counts backwards.
-- **Watching** is now an explicit "Mark as watched" button, as on the website.
-  The app used to mark a lecture watched just by opening it, which inflated
-  attendance.
+- **Comments stay off.** Report, Block and the admin moderation queue are built
+  (`commentsEnabled` in `LectureView.swift` brings the Discussion tab back), but
+  Guideline 1.2 also wants a content filter and agreed terms (§4).
 
-### Before uploading
+### Done
 
-1. `xcodegen generate`, then run the UI tests that pin past rejections:
-   `SignedOutAccessTests`, `AccountDeletionTests` (scheme LyceumScreenshots).
-2. Regenerate the store screenshots (§3). The design changed, so the old set is
-   out of date.
-3. Update App Privacy and the age rating (§4) before submitting, or the listing
-   will contradict the binary.
+1. `xcodegen generate`; `SignedOutAccessTests` and `AccountDeletionTests`
+   (scheme LyceumScreenshots) pass against a local `next dev`. Both default to
+   `localhost:3000`, so start the dev server first or every test that loads the
+   catalog fails.
+2. Store screenshots regenerated (§3) in `build/screenshots/`.
+3. Archived and uploaded from the command line: `-exportArchive` with
+   `ExportOptions.plist` plus `destination` = `upload` and
+   `-allowProvisioningUpdates` sends it straight to App Store Connect.
+
+### Still to do in App Store Connect
+
+1. Wait for build 6 to finish processing (10–30 minutes).
+2. **+ Version** → 1.1.0; paste What's New (§2); replace the screenshots.
+3. App Privacy (§4): add **User Content → Other User Content** (the homework
+   link). The §4 table and `PrivacyInfo.xcprivacy` already list it, but 1.0
+   went out without it (§10), so the live listing will contradict the binary
+   until it's added. The age rating stays 4+.
+4. Attach build 6 and Submit for Review.
 
 ### Notes for App Review (add to the Notes field)
 
 ```
-Build 1.0 (5) addresses the 5.1.1(v) finding: account deletion (My Progress >
-Settings > Delete account) asks only that you type DELETE; there is no
-password step.
+1.1 is a redesign plus homework for students enrolled in the developer's live
+classes. A registered student can turn in a homework link, which only their
+teacher sees; there is no public user-generated content (lecture comments
+remain off). Account deletion is unchanged: My Progress > Settings > Delete
+account asks only that you type DELETE.
 
-The app shows no user-generated content: lecture comments remain off, as in
-the build you reviewed. A student registered in a class can turn in a homework
-link, which only their teacher sees.
+Review account:
+  email:    appreview@timpsonlyceum.com
+  password: LyceumReview2026!
 ```
-

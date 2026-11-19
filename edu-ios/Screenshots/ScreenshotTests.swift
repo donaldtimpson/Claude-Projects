@@ -98,8 +98,10 @@ final class ScreenshotTests: XCTestCase {
             waitForSettle()
             shoot("profile")
 
-            // 7. The full badge wall.
-            if tapWhenReady(app.buttons["See all"]) {
+            // 7. The full badge wall. On iPhone its "See all" sits below the fold.
+            let seeAll = app.buttons["See all"]
+            for _ in 0..<4 where !(seeAll.exists && seeAll.isHittable) { app.swipeUp() }
+            if tapWhenReady(seeAll) {
                 waitForSettle()
                 shoot("achievements")
             }
