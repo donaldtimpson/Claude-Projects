@@ -520,7 +520,6 @@ private struct MMShell: View {
 private struct MMGarden: View {
     var body: some View {
         GeometryReader { g in
-            let w = g.size.width, h = g.size.height
             ZStack {
                 LinearGradient(colors: [Color(hex: 0x0e1238), Color(hex: 0x2a2060), Color(hex: 0x3a2a50)], startPoint: .top, endPoint: .bottom)
                 Canvas { c, s in

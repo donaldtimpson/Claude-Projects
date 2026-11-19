@@ -44,7 +44,7 @@ private let digEras: [DigEra] = [
     DigEra(icon: "🦅", name: "Ancient Rome", dates: "753 BC – AD 476", tint: 0x8d5a3c),
     DigEra(icon: "👑", name: "Middle Ages", dates: "AD 500 – 1450", tint: 0x6e5a44),
     DigEra(icon: "🧭", name: "Explorers", dates: "AD 1450 – 1700", tint: 0x7c6446),
-    DigEra(icon: "🏭", name: "Steam Age", dates: "AD 1800 – 1900", tint: 0x6a5848),
+    DigEra(icon: "🏭", name: "Steam Age", dates: "AD 1700 – 1900", tint: 0x6a5848),
     DigEra(icon: "📻", name: "1900s", dates: "AD 1900 – 2000", tint: 0x7a6a56),
     DigEra(icon: "🌐", name: "Today", dates: "AD 2000 – now", tint: 0x8a7a62),
 ]

@@ -556,7 +556,6 @@ struct ZooFerryView: View {
     @State private var dragging = false
     @State private var cards: [Int: CGRect] = [:]
     @State private var bob = false
-    private let clock = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ArcadeShell(model: m, spec: GameID.zooFerry.spec ?? GameSpec(title: "Lost Zoo Ferry", mechanic: "", premise: "", game: .zooFerry),
@@ -576,7 +575,13 @@ struct ZooFerryView: View {
             .coordinateSpace(name: "zf")
             .onPreferenceChange(ZFCardFrame.self) { cards = $0 }
         }
-        .onReceive(clock) { _ in m.tick(0.1) }
+        // A task, not a Timer stored on this struct (that was rebuilt on every redraw).
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                m.tick(0.1)
+            }
+        }
         .onChange(of: m.phase) { p in
             if p == .playing { withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { bob = true } }
             else { withAnimation(.linear(duration: 0.1)) { bob = false } }

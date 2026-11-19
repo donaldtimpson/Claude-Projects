@@ -439,7 +439,6 @@ struct PharosBeamView: View {
     let onClose: () -> Void
     @StateObject private var m = PharosModel()
     @State private var bob = false
-    private let clock = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ArcadeShell(model: m, spec: GameID.pharosBeam.spec ?? GameSpec(title: "Pharos Beam", mechanic: "", premise: "", game: .pharosBeam),
@@ -455,7 +454,13 @@ struct PharosBeamView: View {
             }
             .padding(.horizontal, 14).padding(.bottom, 8)
         }
-        .onReceive(clock) { _ in m.tick(0.1) }
+        // A task, not a Timer stored on this struct (that was rebuilt on every redraw).
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                m.tick(0.1)
+            }
+        }
         .onChange(of: m.phase) { p in
             if p == .playing { withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { bob = true } }
             else { withAnimation(.linear(duration: 0.1)) { bob = false } }

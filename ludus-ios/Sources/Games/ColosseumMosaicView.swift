@@ -360,8 +360,6 @@ private struct MBackdrop: View {
         Canvas { ctx, size in
             ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(hex: 0x6a4630)))
             let t: CGFloat = 13
-            var rng = SystemRandomNumberGenerator()
-            _ = rng
             let tones: [UInt] = [0xb07850, 0xa36d47, 0xbd865a, 0x9a6440, 0xc49166]
             var y: CGFloat = 0, row = 0
             while y < size.height {

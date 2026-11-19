@@ -67,7 +67,7 @@ private let chCritters: [CCritter] = [
     c("🐢", "sea turtle", "reptile", hue: 40, "it lives in the sea, but has scales and breathes air"),
     c("🦎", "chameleon", "reptile", hue: 90, "it changes colour, but it has dry, scaly skin"),
     // Amphibians
-    c("🐸", "frog", "amphibian"), c("🐸", "toad", "amphibian", hue: -60),
+    c("🐸", "frog", "amphibian"), c("🐸", "toad", "amphibian", hue: -60, "its skin is dry and bumpy, but it starts life as a tadpole in water"),
     c("", "newt", "amphibian"),
     c("", "axolotl", "amphibian", "it never leaves the water, but it's an amphibian, like a frog"),
     c("", "salamander", "amphibian", "it looks like a lizard, but has damp skin with no scales"),

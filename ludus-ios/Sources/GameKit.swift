@@ -11,12 +11,18 @@ import SwiftUI
 //     ring segment gilds); `silver` and `gold` levels earn the higher laurels;
 //   • once a laurel level is reached, later runs may START there (so a 12-year-old isn't stuck
 //     re-counting dots every time).
-// Hearts: 3, and every level-up gives one back (kind to young players). Level I is practice — a
+// Hearts: 3, and every level-up that finds one missing gives it back (kind to young players). Level I is practice — a
 // miss there costs no heart. A miss shows the right answer — games must never just say "wrong".
 //
 // A game = an `ArcadeModel` subclass (calls `hit()` / `miss()` / `finish(_:)`, reads `level`)
 // + its play view wrapped in `ArcadeShell`, which owns the HUD, the intro card (how to play,
-// goals, start level), the level-up banner and the game-over card.
+// goals, start level), the level-up banner, the pause card and the game-over card.
+//
+// Pausing (✕ mid-run, or the app leaving the foreground) sets `phase = .paused`, so every
+// `phase == .playing` guard in a game stops it: timelines freeze, loops exit, pending timeouts
+// drop. Resuming deals a fresh board through `onBegin()` at the same level, keeping score,
+// hearts and progress, so no game needs its own pause code. Leaving from the pause card ends
+// the run through `finish`, so the denarii and laurels it earned are kept.
 
 /// The laurel goals of a game, in levels.
 struct GameGoal: Hashable {
@@ -86,7 +92,7 @@ struct HowTo: Hashable {
 /// wrong one; read `level` (1…) to pick the difficulty of the NEXT question.
 @MainActor
 class ArcadeModel: ObservableObject {
-    enum Phase { case intro, playing, over }
+    enum Phase { case intro, playing, paused, over }
     @Published var phase: Phase = .intro
     @Published var score = 0
     @Published var den = 0
@@ -96,6 +102,7 @@ class ArcadeModel: ObservableObject {
     @Published var startLevel = 1
     @Published var progress = 0            // correct answers into the current level
     @Published var levelUps = 0            // bumps on every level-up (drives the banner)
+    @Published var heartBack = false       // the last level-up restored a heart
     @Published var result: ArcadeResult?
     @Published var lastMiss = 0            // bumps on every miss (games may flash/shake)
 
@@ -213,6 +220,7 @@ class ArcadeModel: ObservableObject {
         if progress >= perLevel(level) {
             progress = 0; level += 1; levelUps += 1
             den += 5                         // …and 5 for every level climbed
+            heartBack = hearts < maxHearts
             hearts = min(maxHearts, hearts + 1)
             LudusProgress.record(level: level, for: key)
             Haptics.success()
@@ -248,8 +256,23 @@ class ArcadeModel: ObservableObject {
 
     var dying: Bool { hearts <= 0 }
 
+    /// Stops the run where it stands (the pause card shows). Not once the last heart is gone:
+    /// that run is already ending.
+    func pause() {
+        guard phase == .playing, !dying else { return }
+        phase = .paused
+    }
+
+    /// Back into the run on a fresh board at the same level; score, hearts and progress stay.
+    func resume() {
+        guard phase == .paused else { return }
+        combo = 0
+        phase = .playing
+        onBegin()
+    }
+
     func finish(_ reason: String) {
-        guard phase == .playing else { return }
+        guard phase == .playing || phase == .paused else { return }
         let before = medalAtStart
         // `record` already ran on each level-up; this covers runs that started at a level. The
         // level the run REACHED counts — a run that ends partway through level 3 has reached 3.
@@ -302,24 +325,32 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
     }
 
     @State private var banner = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         ZStack {
             backdrop.ignoresSafeArea()
-            content
+            // Off the tree under the intro card, so a game's own animated scene isn't running
+            // (or drawn a second time) behind it.
+            if model.phase != .intro { content }
             hud
             if banner {
-                LevelBanner(level: model.level, accent: accent)
+                LevelBanner(level: model.level, heartBack: model.heartBack, accent: accent)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
                     .allowsHitTesting(false)
             }
             if model.phase == .intro {
                 ZStack {
-                    backdrop.ignoresSafeArea()
                     Color.black.opacity(0.35).ignoresSafeArea()
                     ArcadeIntroView(spec: spec, model: model, accent: accent, onClose: onClose)
                 }
                 .transition(.opacity)
+            }
+            if model.phase == .paused {
+                ArcadePauseView(model: model, accent: accent,
+                                onResume: { withAnimation(.easeOut(duration: 0.2)) { model.resume() } },
+                                onLeave: { withAnimation(.easeOut(duration: 0.2)) { model.finish("You left the arena") } })
+                    .transition(.opacity)
             }
             if model.phase == .over, let r = model.result {
                 ArcadeOverView(spec: spec, result: r, goal: model.goal, accent: accent,
@@ -330,6 +361,9 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
             }
         }
         .statusBarHidden(true)
+        .onChange(of: scenePhase) { p in
+            if p != .active { model.pause() }
+        }
         .onChange(of: model.levelUps) { _ in
             withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { banner = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
@@ -360,7 +394,8 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
     private var hud: some View {
         VStack {
             HStack(alignment: .top, spacing: 8) {
-                LudusCloseButton(action: onClose)
+                // Mid-run, ✕ pauses first: leaving from the pause card keeps what the run earned.
+                LudusCloseButton { withAnimation(.easeOut(duration: 0.2)) { model.pause() } }
                 StatPill(label: "SCORE", value: "\(model.score)", valueHex: Lu.gold)
                 Spacer(minLength: 4)
                 if showHearts { HeartsRow(hearts: model.hearts, maxHearts: model.maxHearts) }
@@ -410,6 +445,7 @@ struct LevelPill: View {
 
 private struct LevelBanner: View {
     let level: Int
+    let heartBack: Bool
     let accent: UInt
     var body: some View {
         VStack(spacing: 2) {
@@ -418,7 +454,9 @@ private struct LevelBanner: View {
                 Text("Gradus \(romanNumeral(level))").font(luSerif(38, .black))
                     .foregroundStyle(LinearGradient(colors: [.white, Color(hex: Lu.gold)], startPoint: .top, endPoint: .bottom))
             }
-            Text("+1 ♥").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.coral)).opacity(0.9)
+            if heartBack {
+                Text("+1 ♥").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.coral)).opacity(0.9)
+            }
         }
         .padding(.horizontal, 22).padding(.vertical, 14)
         .background(RoundedRectangle(cornerRadius: 22).fill(Color(hex: Lu.ground).opacity(0.88))
@@ -599,7 +637,7 @@ private struct ArcadeOverView: View {
                 }
                 LudusButton(title: "Play Again", action: onAgain).padding(.top, 10)
                 HStack(spacing: 28) {
-                    Button("Levels", action: onMenu)
+                    Button("Change level", action: onMenu)
                     Button("Done", action: onClose)
                 }
                 .font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim)).padding(.top, 4)
@@ -613,7 +651,39 @@ private struct ArcadeOverView: View {
     }
 }
 
-/// A result figure on the game-over card (flexible width, unlike the fixed-min `ResultCard`).
+/// Mid-run pause: carry on, or leave keeping what the run has earned so far.
+private struct ArcadePauseView: View {
+    @ObservedObject var model: ArcadeModel
+    let accent: UInt
+    let onResume: () -> Void
+    let onLeave: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.8).ignoresSafeArea()
+            VStack(spacing: 14) {
+                Text("PAUSED").font(luFont(12, .heavy)).tracking(3).foregroundStyle(Color(hex: Lu.grape))
+                Text("Gradus \(romanNumeral(model.level))").font(luSerif(38, .black))
+                    .foregroundStyle(LinearGradient(colors: [.white, Color(hex: Lu.gold)], startPoint: .top, endPoint: .bottom))
+                HStack(spacing: 8) {
+                    OverStat(label: "SCORE", value: "\(model.score)", hex: Lu.gold)
+                    OverStat(label: "DENARII", value: "+\(model.den)", hex: Lu.silver, coin: "CoinSilver")
+                }
+                LudusButton(title: "Keep playing", fullWidth: true, action: onResume).padding(.top, 8)
+                Button(action: onLeave) {
+                    Text(model.den > 0 ? "Leave and keep +\(model.den) denarii" : "Leave the arena")
+                        .font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
+            }
+            .padding(20)
+            .frame(maxWidth: 440)
+        }
+    }
+}
+
+/// A result figure on the game-over and pause cards (flexible width).
 private struct OverStat: View {
     let label: String, value: String
     var hex: UInt = Lu.ink

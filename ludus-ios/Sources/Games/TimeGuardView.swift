@@ -265,7 +265,6 @@ private final class TimeGuardModel: ArcadeModel {
 struct TimeGuardView: View {
     let onClose: () -> Void
     @StateObject private var model = TimeGuardModel()
-    private let tick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         let era = model.phase == .intro ? TGEra.rome : model.round.scene.era
@@ -288,7 +287,13 @@ struct TimeGuardView: View {
             .padding(.horizontal, 12).padding(.bottom, 6)
             .animation(.spring(response: 0.45, dampingFraction: 0.85), value: model.roundNo)
         }
-        .onReceive(tick) { _ in model.tick(0.1) }
+        // A task, not a Timer stored on this struct (that was rebuilt on every redraw).
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                model.tick(0.1)
+            }
+        }
     }
 
     /// A carved sign: where and when we are, and the hourglass once there's a rush.

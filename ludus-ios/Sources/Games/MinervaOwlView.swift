@@ -33,7 +33,7 @@ private let oParts: [Character: OPart] = [
     "a": OPart(tag: "a", name: "ADJECTIVE", kid: "describing word", hint: "tells what kind or how many", icon: "🌈"),
     "r": OPart(tag: "r", name: "ADVERB", kid: "how-word", hint: "tells how, when or where", icon: "⏱️"),
     "p": OPart(tag: "p", name: "PRONOUN", kid: "stand-in word", hint: "takes a noun's place: he, she, it, we", icon: "👉"),
-    "e": OPart(tag: "e", name: "PREPOSITION", kid: "where-word", hint: "shows where or when: in, on, under", icon: "📦"),
+    "e": OPart(tag: "e", name: "PREPOSITION", kid: "where-word", hint: "links a noun to the rest: in, on, for, about", icon: "📦"),
     "c": OPart(tag: "c", name: "CONJUNCTION", kid: "joining word", hint: "joins words or ideas: and, but, or", icon: "🔗"),
     "i": OPart(tag: "i", name: "INTERJECTION", kid: "feeling word", hint: "a burst of feeling: Wow! Ouch!", icon: "❗"),
     "s": OPart(tag: "s", name: "SUBJECT", kid: "who-or-what word", hint: "who or what the sentence is about", icon: "🎯"),

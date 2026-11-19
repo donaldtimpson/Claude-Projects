@@ -422,7 +422,6 @@ struct PigeonPostView: View {
     @State private var camFrom = LH.world
     @State private var camTo = LH.world
     @State private var camStart = Date.distantPast
-    private let clock = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ArcadeShell(model: m, spec: GameID.pigeonPost.spec ?? GameSpec(title: "Pigeon Post", mechanic: "", premise: "", game: .pigeonPost),
@@ -441,7 +440,13 @@ struct PigeonPostView: View {
             }
             .padding(.horizontal, 12)
         }
-        .onReceive(clock) { _ in m.tick(0.1) }
+        // A task, not a Timer stored on this struct (that was rebuilt on every redraw).
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                m.tick(0.1)
+            }
+        }
         .onChange(of: m.taskID) { _ in
             camFrom = currentCam(Date()); camTo = m.task.camera; camStart = Date()
         }

@@ -137,7 +137,8 @@ private func crMake(kind: Int) -> CRQuestion {
 }
 
 /// Answers too close to share a race (a torch and a lamp both became lights).
-private let crClashes: [Set<String>] = [["light bulb", "flashlight"], ["car", "truck"], ["book", "email"]]
+private let crClashes: [Set<String>] = [["light bulb", "flashlight"], ["car", "truck"], ["book", "email"],
+                                              ["tap", "bottle"], ["tap", "shower"]]
 
 /// The racing teams of the Circus (lane colours).
 private let crTeams: [(name: String, hex: UInt)] = [("Reds", 0xd8443a), ("Blues", 0x3f7fd0), ("Greens", 0x3f9a4a), ("Whites", 0xf1ece0)]

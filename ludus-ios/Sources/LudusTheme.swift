@@ -90,18 +90,6 @@ struct LaurelFrame<Content: View>: View {
     }
 }
 
-/// A thin gold Greek-key-flavoured rule with a center pip — an imperial divider.
-struct MeanderRule: View {
-    var color: UInt = Lu.goldLine
-    var body: some View {
-        HStack(spacing: 6) {
-            Rectangle().fill(Color(hex: color).opacity(0.6)).frame(height: 2)
-            Image(systemName: "diamond.fill").font(.system(size: 7)).foregroundStyle(Color(hex: color))
-            Rectangle().fill(Color(hex: color).opacity(0.6)).frame(height: 2)
-        }
-    }
-}
-
 /// Lighten/darken a packed-hex colour by an amount per channel.
 func luShade(_ hex: UInt, _ amt: Int) -> Color {
     func ch(_ shift: UInt) -> Double { Double(max(0, min(255, Int((hex >> shift) & 0xff) + amt))) / 255 }
@@ -271,22 +259,6 @@ struct HeartsRow: View {
         }
         .padding(.horizontal, 12).padding(.vertical, 9)
         .background(luGlass(14))
-    }
-}
-
-/// A stat block used on the game-over screen.
-struct ResultCard: View {
-    let label: String
-    let value: String
-    var hex: UInt = Lu.ink
-    var body: some View {
-        VStack(spacing: 2) {
-            Text(label).font(luFont(10, .heavy)).tracking(1.2).foregroundStyle(Color(hex: Lu.inkDim))
-            Text(value).font(luFont(30)).monospacedDigit().foregroundStyle(Color(hex: hex))
-        }
-        .frame(minWidth: 92)
-        .padding(.horizontal, 14).padding(.vertical, 12)
-        .background(luPanelShape(16))
     }
 }
 

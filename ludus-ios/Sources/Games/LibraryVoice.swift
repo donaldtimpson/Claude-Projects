@@ -5,7 +5,7 @@ import SwiftUI
 //
 // On-device synthesized speech so pre-readers can play the word games: a 🔊 button repeats the
 // cue, and each new item is said once automatically. Never required — every level also works
-// silently. `LUDUS_MUTE=1` (DEBUG) silences it for long bot runs.
+// silently. Off with the sound switch; `LUDUS_MUTE=1` (DEBUG) silences it for long bot runs.
 
 @MainActor
 enum LibraryVoice {
@@ -14,10 +14,8 @@ enum LibraryVoice {
     private static var sessionReady = false
 
     static func say(_ text: String, rate: Float = 0.42) {
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_MUTE"] != nil { return }
-        #endif
-        guard !text.isEmpty else { return }
+        // The Tabularium's sound switch silences speech too (and `LUDUS_MUTE`, via `Sfx.muted`).
+        guard !Sfx.muted, !text.isEmpty else { return }
         // Speak through the silent switch (pre-readers depend on it); mixes with other audio.
         if !sessionReady {
             try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.mixWithOthers])

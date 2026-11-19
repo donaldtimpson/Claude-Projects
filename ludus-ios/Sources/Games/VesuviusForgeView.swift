@@ -48,7 +48,7 @@ private struct FMat {
 
 private let fWater = FMat(key: "water", name: "water", solid: "ice", liquid: "water", gas: "steam",
                           melt: 0, boil: 100, lo: -30, hi: 130, solidHex: 0xc9ecff, liquidHex: 0x3f9be0, glows: false,
-                          fact: "Water melts at 0°C and boils at 100°C")
+                          fact: "Ice melts at 0°C and water boils at 100°C")
 private let fMats: [String: FMat] = [
     "water": fWater,
     "chocolate": FMat(key: "chocolate", name: "chocolate", solid: "chocolate bar", liquid: "melted chocolate", gas: "",
