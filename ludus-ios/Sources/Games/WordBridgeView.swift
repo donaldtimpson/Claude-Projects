@@ -350,6 +350,7 @@ private struct RiverBand: View {
 
 private struct BridgePlay: View {
     @ObservedObject var model: BridgeModel
+    @Environment(\.ludusColumnBleed) private var bleed
     @State private var shakes: CGFloat = 0
     @State private var hop = false
 
@@ -360,7 +361,9 @@ private struct BridgePlay: View {
             let start = CGPoint(x: 34, y: (slots.first?.y ?? size.height * 0.35))
             let homeP = CGPoint(x: size.width - 58, y: riverTop(size) - 30)
             ZStack {
-                RiverBand(size: size, top: riverTop(size), bottom: riverBottom(size))
+                // The river runs on past the column's edges when sideways.
+                RiverBand(size: CGSize(width: size.width + bleed * 2, height: size.height), top: riverTop(size), bottom: riverBottom(size))
+                    .frame(width: size.width, height: size.height)
                 // home lily pad on the far bank
                 LilyPad(size: 70).position(homeP)
                 LilyPad(size: 56).position(start)

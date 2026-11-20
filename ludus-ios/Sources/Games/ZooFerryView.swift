@@ -563,7 +563,8 @@ struct ZooFerryView: View {
             GeometryReader { root in
                 VStack(spacing: 6) {
                     HUDSpace(56)
-                    map
+                    // Sideways on a tablet the harbour is wide: the chart grows to suit.
+                    map(maxHeight: root.size.width > 900 ? 300 : 210)
                     Spacer(minLength: 0)
                     ferries
                     Spacer(minLength: 0)
@@ -596,7 +597,7 @@ struct ZooFerryView: View {
     }
 
     /// The sea chart pinned up in the harbour master's window.
-    private var map: some View {
+    private func map(maxHeight: CGFloat) -> some View {
         GeometryReader { geo in
             let k = min(geo.size.width / zfMapRect.width, geo.size.height / zfMapRect.height)
             let ox = (geo.size.width - zfMapRect.width * k) / 2, oy = (geo.size.height - zfMapRect.height * k) / 2
@@ -621,7 +622,7 @@ struct ZooFerryView: View {
             }
         }
         .aspectRatio(zfMapRect.width / zfMapRect.height, contentMode: .fit)
-        .frame(maxHeight: 210)
+        .frame(maxHeight: maxHeight)
         .padding(6)
         .background(LHParchment(radius: 12))
     }

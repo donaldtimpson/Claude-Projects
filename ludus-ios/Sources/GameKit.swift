@@ -352,6 +352,7 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
                 if layout.column {
                     content
                         .environment(\.ludusHUDOnTop, false)
+                        .environment(\.ludusColumnBleed, layout.bleed)
                         .frame(width: ArcadeLayout.columnWidth)
                         .frame(maxWidth: .infinity)
                 } else {
@@ -464,12 +465,17 @@ struct ArcadeLayout: Equatable {
 
     let landscape: Bool
     let column: Bool
+    /// How far the screen runs on past each side of the column (0 when there's no column).
+    let bleed: CGFloat
     init(size: CGSize, wide: Bool) {
         landscape = size.width > size.height && size.width >= 900
         column = landscape && !wide
+        bleed = column ? max(0, (size.width - Self.columnWidth) / 2) : 0
     }
     /// Pause / game-over card width.
     var cardWidth: CGFloat { landscape ? 540 : 440 }
+    // A change of shape (not a resize within it) is what pauses a run.
+    static func == (a: Self, b: Self) -> Bool { a.landscape == b.landscape && a.column == b.column }
 }
 
 private struct HUDOnTopKey: EnvironmentKey { static let defaultValue = true }
@@ -480,6 +486,28 @@ extension EnvironmentValues {
         get { self[HUDOnTopKey.self] }
         set { self[HUDOnTopKey.self] = newValue }
     }
+}
+
+private struct ColumnBleedKey: EnvironmentKey { static let defaultValue: CGFloat = 0 }
+extension EnvironmentValues {
+    /// In the landscape column: how far the screen runs on past each side of the play area. Scenery
+    /// a game draws in its play area (a street, a river, a sandy floor) widens by this on both
+    /// sides (`ludusBleed`), so the column melts into the scene instead of ending in hard edges.
+    var ludusColumnBleed: CGFloat {
+        get { self[ColumnBleedKey.self] }
+        set { self[ColumnBleedKey.self] = newValue }
+    }
+}
+
+extension View {
+    /// Widens a piece of play-area scenery past the column's edges (see `ludusColumnBleed`).
+    /// The view is laid out that much wider, centred where it was.
+    func ludusBleed() -> some View { modifier(LudusBleed()) }
+}
+
+private struct LudusBleed: ViewModifier {
+    @Environment(\.ludusColumnBleed) private var bleed
+    func body(content: Content) -> some View { content.padding(.horizontal, -bleed) }
 }
 
 /// The gap a game leaves at the top of its play area for the shell's HUD row. Shrinks

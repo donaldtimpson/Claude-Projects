@@ -198,6 +198,7 @@ private final class ScrollModel: ArcadeModel {
     override func onBegin() {
         letters.removeAll(); sparks.removeAll()
         lastTick = nil; missRun = 0; recent = []; botTarget = nil
+        basketX = -1                      // re-centred on the next frame (the play area may have changed shape)
         running = true
         newWord()
     }
@@ -240,6 +241,7 @@ private final class ScrollModel: ArcadeModel {
     func step(_ date: Date, size: CGSize) {
         self.size = size
         if basketX < 0 { basketX = size.width / 2 }
+        else { basketX = min(max(basketX, basketW / 2), max(basketW / 2, size.width - basketW / 2)) }
         guard let prev = lastTick else { lastTick = date; return }
         lastTick = date
         let dt = min(max(date.timeIntervalSince(prev), 0), 0.05)
@@ -382,7 +384,6 @@ private final class ScrollModel: ArcadeModel {
     // MARK: Drawing
 
     func render(_ ctx: inout GraphicsContext, size: CGSize) {
-        drawShelf(&ctx, size)
         for l in letters where l.delay <= 0 || l.bad > 0 { drawLetter(&ctx, l) }
         drawBasket(&ctx)
         for s in sparks {
@@ -392,8 +393,9 @@ private final class ScrollModel: ArcadeModel {
         ctx.opacity = 1
     }
 
-    /// The armarium: a row of pigeonholes stuffed with scrolls, on a heavy wooden shelf.
-    private func drawShelf(_ ctx: inout GraphicsContext, _ size: CGSize) {
+    /// The armarium: a row of pigeonholes stuffed with scrolls, on a heavy wooden shelf. Drawn once,
+    /// behind the falling letters, and wider than the play area when it sits in the landscape column.
+    func drawShelf(_ ctx: inout GraphicsContext, _ size: CGSize) {
         let holeH: CGFloat = 40, top = shelfY - holeH
         ctx.fill(Path(CGRect(x: 0, y: top - 6, width: size.width, height: holeH + 6)), with: .color(Color(hex: 0x4a2e18)))
         let n = max(4, Int(size.width / 66)), hw = size.width / CGFloat(n)
@@ -524,18 +526,23 @@ struct ScrollCatcherView: View {
                     spec: GameID.scrollCatcher.spec ?? GameSpec(title: "Scroll Catcher", mechanic: "", premise: "", game: .scrollCatcher),
                     accent: Lu.mint, onClose: { LibraryVoice.stop(); onClose() },
                     backdrop: { LibraryHall() }) {
-            ZStack(alignment: .top) {
-                TimelineView(.animation(paused: model.phase != .playing)) { tl in
-                    Canvas { ctx, size in
-                        model.step(tl.date, size: size)
-                        model.render(&ctx, size: size)
+            GeometryReader { g in
+                ZStack(alignment: .top) {
+                    Canvas { ctx, size in model.drawShelf(&ctx, size) }
+                        .ludusBleed()
+                        .allowsHitTesting(false)
+                    TimelineView(.animation(paused: model.phase != .playing)) { tl in
+                        Canvas { ctx, size in
+                            model.step(tl.date, size: size)
+                            model.render(&ctx, size: size)
+                        }
                     }
-                }
-                .contentShape(Rectangle())
-                .gesture(DragGesture(minimumDistance: 0).onChanged { model.moveBasket(to: $0.location.x) })
+                    .contentShape(Rectangle())
+                    .gesture(DragGesture(minimumDistance: 0).onChanged { model.moveBasket(to: $0.location.x) })
 
-                ScrollWordPanel(model: model)
-                    .padding(.top, 60).padding(.horizontal, 14)
+                    ScrollWordPanel(model: model, width: g.size.width - 28)
+                        .padding(.top, 60).padding(.horizontal, 14)
+                }
             }
         }
         .onDisappear { LibraryVoice.stop() }
@@ -545,12 +552,13 @@ struct ScrollCatcherView: View {
 /// The picture, its word slots (filling as letters are caught) and a 🔊 button.
 private struct ScrollWordPanel: View {
     @ObservedObject var model: ScrollModel
+    let width: CGFloat
     @State private var pulse = false
 
     var body: some View {
         let letters = model.word.letters
         let n = letters.count
-        let slotW = min(52, (LudusStage<EmptyView>.screen.width - 150) / CGFloat(max(n, 1)) - 4)
+        let slotW = min(52, (width + 28 - 150) / CGFloat(max(n, 1)) - 4)
         VStack(spacing: 4) {
             HStack(spacing: 10) {
                 Button { model.sayWord() } label: {

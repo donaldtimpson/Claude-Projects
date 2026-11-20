@@ -411,9 +411,11 @@ struct OmnibusView: View {
                     .id(model.caption)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
 
+                // The street runs edge to edge (past the column too, when sideways).
                 GeometryReader { geo in OBScene(model: model, size: geo.size) }
                     .frame(height: 330)
                     .padding(.horizontal, -14)
+                    .ludusBleed()
 
                 answerArea
                 Spacer(minLength: 0)
