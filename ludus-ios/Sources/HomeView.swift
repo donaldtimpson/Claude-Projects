@@ -238,7 +238,7 @@ struct HomeView: View {
                             .scaleEffect(1 + zoom * 1.6, anchor: zoomAnchor)
                             .clipped()
                             .contentShape(Rectangle())
-                            .gesture(panGesture(minIdle: minIdle))
+                            .gesture(panGesture(minIdle: minIdle, h: h, vh: vh))
                         topTint.opacity(1 - zoom)
                         bottomBar(w: w)
                             .frame(width: w, height: vh, alignment: .bottom)
@@ -404,19 +404,33 @@ struct HomeView: View {
     /// Free vertical exploration when not traveling. Drives manualCamY DIRECTLY (not via @GestureState)
     /// so lifting a finger can't snap the map back a frame before the fling. Hard-clamped to the map's
     /// edges (no rubber-band) so nothing behind the painting is ever revealed.
-    private func panGesture(minIdle: CGFloat) -> some Gesture {
+    /// An open arrival card doesn't block scrolling: it stays up while its landmark is in view and
+    /// rolls itself away once the landmark scrolls off (or behind the card), so it never points at
+    /// something the child can't see.
+    private func panGesture(minIdle: CGFloat, h: CGFloat, vh: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 8)
             .onChanged { v in
-                guard !isTraveling, cardLM == nil else { return }
+                guard !isTraveling else { return }
                 if !dragging { dragging = true; dragStartCam = manualCamY }
                 manualCamY = clampCG(dragStartCam + v.translation.height, minIdle, 0)
+                dropCardIfOffscreen(h: h, vh: vh)
             }
             .onEnded { v in
-                guard !isTraveling, cardLM == nil else { return }
+                guard !isTraveling else { return }
                 dragging = false
                 let end = clampCG(dragStartCam + v.predictedEndTranslation.height, minIdle, 0)
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) { manualCamY = end }
+                dropCardIfOffscreen(h: h, vh: vh, camY: end)   // judge where the fling lands
             }
+    }
+
+    private func dropCardIfOffscreen(h: CGFloat, vh: CGFloat, camY: CGFloat? = nil) {
+        guard let lm = selected, cardLM != nil else { return }
+        let y = lm.y * h + (camY ?? manualCamY)            // the seal's screen position
+        if y < 40 || y > vh - cardBand + 60 {
+            hideCard()
+            selected = nil
+        }
     }
 
     /// Track the viewport size and, once it's valid, run one-time setup: stand the traveler where

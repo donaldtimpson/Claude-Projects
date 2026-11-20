@@ -37,6 +37,8 @@ ap.add_argument('--assets', default=os.path.join(HERE, '..', '..', 'Resources', 
 ap.add_argument('--preview', help='also write a composite preview PNG here')
 A = ap.parse_args()
 MAP_PATH = os.path.join(A.assets, 'ProvinceMap.imageset', 'ProvinceMap.png')
+if not os.path.exists(MAP_PATH):   # tools/upscale_map.py ships it as a wider JPEG
+    MAP_PATH = MAP_PATH[:-3] + 'jpg'
 
 PX = 3                     # output px per pt for chrome (@3x)
 SEAL_PX = 4                # seals/standard/coins baked denser: shown at 1× on the map, 1.25× on the card
@@ -283,7 +285,9 @@ _parch = None
 def parchment(wpx, hpx):
     global _parch
     if _parch is None:
-        _parch = Image.open(MAP_PATH).convert('RGBA').crop((60, 25, 664, 205))   # the map's own border paper
+        _m = Image.open(MAP_PATH).convert('RGBA')
+        _m = _m.resize((724, round(_m.height * 724 / _m.width)), Image.LANCZOS)   # crop box is in 724px-wide map px
+        _parch = _m.crop((60, 25, 664, 205))   # the map's own border paper
     p = _parch.resize((int(wpx), int(hpx)), Image.LANCZOS)
     return Image.blend(p, Image.new('RGBA', p.size, (243, 226, 189, 255)), .35)
 

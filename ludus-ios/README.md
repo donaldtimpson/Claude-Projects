@@ -159,4 +159,8 @@ the intro card (how to play, laurel goals, start level), the level-up banner and
   painted province): `swift tools/icon_build.swift tools/art/province_original.png Resources/Fonts/Cinzel-Black.ttf Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png 0.62`
 - `tools/chrome/`, `tools/ambient_build.py`, `tools/map_trace.py` — the home map's baked
   chrome, living-painting ambience and road tracing.
+- `tools/upscale_map.py` — run after `ambient_build.py`: AI-upscales the map plate (Upscayl
+  UltraSharp, `brew install --cask upscayl`) to 1640px wide so it stays crisp on iPad.
+- `UITests/` — screenshot probes, e.g. `OrientationTests` rotates the app (there's no Simulator
+  window to rotate by hand). Pass `TEST_RUNNER_SCREENSHOT_DIR` and any `TEST_RUNNER_LUDUS_*` env.
 - Everything inside the games is drawn in code (SwiftUI shapes, Canvas, SF Symbols, emoji).

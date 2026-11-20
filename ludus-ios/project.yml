@@ -34,9 +34,22 @@ targets:
         # The prototype game is designed portrait; lock it so the play field stays put.
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+        # iPadOS only honors the portrait lock for full-screen apps; without this it rotates the
+        # app sideways and stretches every game across a landscape screen.
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+
+  # Screenshot probes (not unit tests): rotate the app and save what each orientation
+  # looks like. Run with `xcodebuild test -scheme Ludus` on a simulator.
+  LudusUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: Ludus
 
 schemes:
   Ludus:
@@ -45,3 +58,6 @@ schemes:
         Ludus: all
     run:
       config: Debug
+    test:
+      targets:
+        - LudusUITests
