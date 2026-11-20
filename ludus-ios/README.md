@@ -19,7 +19,9 @@ speaks (Library, Market…) can take a few seconds in the simulator while speech
 
 - **Home** (`HomeView.swift`, `Map*.swift`) — the painted province. Tap a landmark: the
   traveler walks the road, a scroll unfurls, PLAY zooms into that world's landing page
-  (`WorldView.swift`). The seals' gilt ring segments = games won in that world.
+  (`WorldView.swift`). The seals' gilt ring segments = games won in that world. Sideways
+  iPads use "Atlas and Ledger": the map is a left column and a lacquer side panel holds the
+  plaque, the arrival card (it slides in from the edge) and the rank + coins.
 - **Coins on the home bar → the Villa** (`VillaView.swift`): where the arcade's money goes.
 - **Rank on the home bar → the Tabularium** (`TabulariumView.swift`): rank ladder, every
   game's laurels, the sound switch.
@@ -158,7 +160,9 @@ the intro card (how to play, laurel goals, start level), the level-up banner and
 - `tools/icon_build.swift` — renders the app icon (wax seal + Cinzel L + laurel over the
   painted province): `swift tools/icon_build.swift tools/art/province_original.png Resources/Fonts/Cinzel-Black.ttf Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png 0.62`
 - `tools/chrome/`, `tools/ambient_build.py`, `tools/map_trace.py` — the home map's baked
-  chrome, living-painting ambience and road tracing.
+  chrome, living-painting ambience and road tracing. `chrome_build.py --only BottomBarWide,SidePanel`
+  rebakes just the named pieces (the iPad-wide bar, the landscape side panel) and leaves the
+  rest byte-identical.
 - `tools/upscale_map.py` — run after `ambient_build.py`: AI-upscales the map plate (Upscayl
   UltraSharp, `brew install --cask upscayl`) to 1640px wide so it stays crisp on iPad.
 - `UITests/` — screenshot probes, e.g. `OrientationTests` rotates the app (there's no Simulator

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Bake the home screen's chrome (mockup H) into asset-catalog images.
 
-Usage:  chrome_build.py [--assets ludus-ios/Resources/Assets.xcassets] [--preview DIR]
-        Needs numpy scipy pillow (same venv as ambient_build.py).
+Usage:  chrome_build.py [--assets ludus-ios/Resources/Assets.xcassets] [--preview DIR] [--only A,B…]
+        Needs numpy scipy pillow (same venv as ambient_build.py). --only rebakes just those assets
+        (e.g. --only BottomBarWide,SidePanel), leaving the rest byte-identical.
 
 Every piece is a static, pre-lit image, so the render server only composites textures (no runtime
 blurs, gradients-with-shadows or offscreen passes). Text that changes (names, counts, coin totals)
@@ -11,6 +12,10 @@ is drawn by the app in the bundled Cinzel / EB Garamond; everything else is bake
   TopPlaque          the LVDVS tabula ansata (E): lacquer, gilt moulding, gilt letters, laurel sprigs
   BottomBar          the slim bar with a raised centre tab. Same lacquer + the SAME gilt moulding and
                      engraved fillet as the plaque, run along its smooth top edge — one frame, two edges
+  BottomBarWide      the same bar baked 1000 pt wide, for stages wider than a phone (iPad portrait):
+                     the app centre-crops it, so the coins always sit on lacquer
+  SidePanel          the sideways-iPad panel ("Atlas and Ledger"): a full-height lacquer slab with the
+                     same gilt moulding + fillet down its map-facing (left) edge, casting onto the map
   Rank0…Rank3        the rank on the tab: gilt Cinzel + plaque sprigs + honour pips (= the standard's discs)
   CoinSilver/Gold    denarius / aureus (D)
   Seal<key>          wax seal bodies with gold-leaf emblems (D), no ring
@@ -35,6 +40,7 @@ import dcomp as D         # PIL raster parts (seals, standard, coins, scroll)
 ap = argparse.ArgumentParser()
 ap.add_argument('--assets', default=os.path.join(HERE, '..', '..', 'Resources', 'Assets.xcassets'))
 ap.add_argument('--preview', help='also write a composite preview PNG here')
+ap.add_argument('--only', help='comma-separated asset names to rebake (default: all)')
 A = ap.parse_args()
 MAP_PATH = os.path.join(A.assets, 'ProvinceMap.imageset', 'ProvinceMap.png')
 if not os.path.exists(MAP_PATH):   # tools/upscale_map.py ships it as a wider JPEG
@@ -46,6 +52,9 @@ K = E.K                    # E's working px/pt (6 = 3x supersampled 2x)
 
 # ---- shared geometry (pt) — mirrored in HomeView.swift
 BAR_W = 440                # baked wider than any phone; the app centre-crops it
+BAR_W_WIDE = 1000          # …and wider than any portrait iPad stage (≤ ~900 pt), for BottomBarWide
+PANEL_W, PANEL_H = 420, 820    # side panel (landscape stages are ≤ 800 pt tall); the app shows its
+PANEL_SHADOW = 12              # top-left part, PANEL_SHADOW pt of left shadow margin included
 BAR_SIDE, BAR_TAB, BAR_TAB_W, BAR_SHOULDER = 52, 76, 170, 26
 BAR_SHADOW = 8             # room above the tab for the bar's upward shadow
 FRAME_W = 4.2              # gilt moulding width — identical to the plaque's
@@ -87,12 +96,12 @@ def tab_profile(x):
     t = np.clip(dx / BAR_SHOULDER, 0, 1)
     return BAR_TAB + (BAR_SIDE - BAR_TAB) * (0.5 - 0.5 * np.cos(np.pi * t))
 
-def bottom_bar():
+def bottom_bar(bar_w=BAR_W):
     from eparts import lacquer, gilt_frame
     pad = 12                                   # mask runs past the left/right/bottom edges → no frame there
-    Wp, Hp = int((BAR_W + 2 * pad) * K), int((BAR_TAB + BAR_SHADOW + pad) * K)
+    Wp, Hp = int((bar_w + 2 * pad) * K), int((BAR_TAB + BAR_SHADOW + pad) * K)
     x, y = E.grid(Wp, Hp)
-    xpt = x / K - pad - BAR_W / 2
+    xpt = x / K - pad - bar_w / 2
     ytop = (BAR_TAB + BAR_SHADOW) - tab_profile(xpt)          # edge y in canvas pt
     # 4x-supersampled coverage along y for a clean edge
     m = np.clip((y / K - ytop) * K + 0.5, 0, 1)
@@ -106,6 +115,34 @@ def bottom_bar():
     out = E.over(out, frame)
     out = E.shadow(out, 3 * K, 0, -2.2 * K, op=0.5)           # cast upward onto the map
     out = out[:Hp - pad * K, pad * K:Wp - pad * K]             # crop the off-screen margins
+    return E.to_pil(E.down(out, 2))
+
+
+def side_panel():
+    """The landscape side panel: the bar's lacquer, gilt moulding, lip recess and engraved fillet
+    turned to run down a straight vertical edge, with the shadow cast left onto the map."""
+    from eparts import gilt_frame
+    pad = 12                                   # mask runs past the top/right/bottom edges → no frame there
+    Wp, Hp = int((PANEL_W + PANEL_SHADOW + pad) * K), int((PANEL_H + 2 * pad) * K)
+    x, y = E.grid(Wp, Hp)
+    m = np.clip((x / K - PANEL_SHADOW) * K + 0.5, 0, 1)
+    del x, y
+    frame, inner, dist = gilt_frame(m, FRAME_W * K)
+    out = E.blank(Wp, Hp)
+    # the bar's lacquer (eparts.lacquer), with a broader, softer clear-coat sheen: on a slab this
+    # tall the bar's tight highlight band reads as a stripe
+    t = np.linspace(0, 1, Hp)[:, None]
+    col = E.ramp(np.broadcast_to(t, (Hp, Wp)), [(0, '#a52823'), (1, '#5e1512')])
+    col = col * (0.94 + 0.12 * E.fbm(Wp, Hp, [(3, 0.3), (20, 0.7)], seed=6))[..., None]
+    col = col + (np.exp(-((t - 0.1) / 0.22) ** 2) * 0.08)[..., None] * np.array([1, 0.85, 0.75])
+    out = E.over(out, E.rgba(np.clip(col, 0, 1), E.blur(inner, 0.8))); del col
+    ish = np.clip(1 - (dist - FRAME_W * K) / (3 * K), 0, 1) * inner * 0.5          # recess under the lip
+    out = E.over(out, np.dstack([np.zeros((Hp, Wp, 3)) + [0.2, 0.02, 0.01], ish]))
+    fil = np.exp(-((dist - FILLET_AT * K) / (0.45 * K)) ** 2) * inner              # engraved fillet
+    out = E.over(out, E.rgba(E.metal(np.zeros((Hp, Wp)), base=0.62), fil * 0.8))
+    out = E.over(out, frame)
+    out = E.shadow(out, 3.5 * K, -2.5 * K, 0, op=0.55)        # cast left onto the map
+    out = out[pad * K:Hp - pad * K, :Wp - pad * K]             # crop the off-screen margins
     return E.to_pil(E.down(out, 2))
 
 
@@ -352,8 +389,26 @@ def main():
     print('chrome →', os.path.relpath(A.assets))
     U = PX * D.SS
     out = {}
+    only = set(A.only.split(',')) if A.only else None
+    if only is not None:                      # just the named pieces
+        bakes = {'TopPlaque': top_plaque, 'BottomBar': bottom_bar,
+                 'BottomBarWide': lambda: bottom_bar(BAR_W_WIDE), 'SidePanel': side_panel,
+                 'PlayPlaque': play_plaque, 'CardShadow': card_shadow}
+        for n in only:
+            out[n] = save(n, bakes[n]())
+    else:
+        bake_all(out, U)
+    if A.preview:
+        os.makedirs(A.preview, exist_ok=True)
+        for k, im in out.items():
+            im.save(os.path.join(A.preview, k + '.png'))
+
+
+def bake_all(out, U):
     out['TopPlaque'] = save('TopPlaque', top_plaque())
     out['BottomBar'] = save('BottomBar', bottom_bar())
+    out['BottomBarWide'] = save('BottomBarWide', bottom_bar(BAR_W_WIDE))
+    out['SidePanel'] = save('SidePanel', side_panel())
     for i, r in enumerate(('Tiro', 'Legionary', 'Centurion', 'Consul')):
         out[f'Rank{i}'] = save(f'Rank{i}', rank_tab(i, r))
     out['PlayPlaque'] = save('PlayPlaque', play_plaque())
@@ -373,10 +428,6 @@ def main():
     out['PlateParchment'] = save('PlateParchment', D.down(aged_sheet(PLATE_W, PLATE_H, U, seed=4), D.SS))
     out['PlateRod'] = save('PlateRod', D.down(rod(PLATE_W, PLATE_ROD, U), D.SS))
     save('CardShadow', card_shadow())
-    if A.preview:
-        os.makedirs(A.preview, exist_ok=True)
-        for k, im in out.items():
-            im.save(os.path.join(A.preview, k + '.png'))
 
 if __name__ == '__main__':
     main()

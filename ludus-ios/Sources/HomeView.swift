@@ -32,6 +32,8 @@ enum Prov {
 /// The baked chrome's geometry (pt). Mirrors tools/chrome/chrome_build.py — change both together.
 enum Chrome {
     static let barW: CGFloat = 440, barSide: CGFloat = 52, barTab: CGFloat = 76, barShadow: CGFloat = 8
+    static let barWideW: CGFloat = 1000               // BottomBarWide: stages wider than a phone
+    static let panel = CGSize(width: 420, height: 820), panelShadow: CGFloat = 12   // SidePanel (+ its shadow margin)
     static let plaque = CGSize(width: 262, height: 72)
     static let rank = CGSize(width: 220, height: 76)   // spans the whole tab; rank block centred in it
     static let coin: CGFloat = 25
@@ -154,6 +156,72 @@ private let ludusRoad = RoadPath(roadPoints, aspect: mapAspect)
 
 private func clampCG(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat) -> CGFloat { max(lo, min(hi, v)) }
 
+// Where the painting itself begins under the map's top parchment (fraction of the image height):
+// the first cloud tops, measured on the 724-px art. And where it ends above the bottom parchment.
+private let paintTop: CGFloat = 268.0 / 2272.0
+private let paintBottom: CGFloat = 2132.0 / 2272.0
+
+/// The map's viewport and the chrome floating over it — everything the camera and travel math
+/// need, measured per layout (so the map works the same in a phone, an upright iPad or a column).
+private struct MapFrame: Equatable {
+    var w: CGFloat = 0, vh: CGFloat = 0   // viewport (map width × visible height)
+    var topInset: CGFloat = 150           // floating chrome the camera keeps the traveler clear of
+    var cardBand: CGFloat = 280           // reserved bottom band (card + bar) used for framing
+    var travelPad: CGFloat = Chrome.barSide   // over-scroll for the bottom node — never past the bar
+                                              // beside the tab, or the void shows
+    var bottomPad: CGFloat = Chrome.barSide   // max scroll stops with the map's bottom edge at the
+                                              // bar's top (beside the tab)
+    var paintY: CGFloat = 163             // the painting's top edge may rise to here on screen: on a
+                                          // phone (≤ 440 wide) the top clamp (offset 0) holds first,
+                                          // on a wider stage this trims the scaled-up top parchment
+    var paintKeep: CGFloat = (1 - paintBottom) * 440 * mapAspect   // …and at most this much parchment
+                                          // shows below the painting (a 440-wide phone's whole margin)
+    var h: CGFloat { w * mapAspect }
+    private var bottomTrim: CGFloat { max(0, (1 - paintBottom) * h - paintKeep) }
+    // The camera never scrolls past the map's top edge (offset ≤ 0) — the art's own parchment border
+    // is the margin, so nothing but the painting is ever on screen.
+    var camMax: CGFloat { min(0, paintY - paintTop * h) }
+    var minIdle: CGFloat { min(camMax, vh - h - bottomPad + bottomTrim) }     // free-scroll bottom bound
+    var minTravel: CGFloat { min(camMax, vh - h - travelPad + bottomTrim) }   // travel/card over-scroll
+    /// The camera offset that frames road position `t` between the chrome bands.
+    func cam(at t: CGFloat, travel: Bool) -> CGFloat {
+        let desiredY = topInset + (vh - topInset - cardBand) / 2
+        return clampCG(desiredY - ludusRoad.point(at: t).y * h, travel ? minTravel : minIdle, camMax)
+    }
+}
+
+/// The home's two shapes. Portrait (phones, upright iPads): the map fills the stage under the
+/// plaque and the bar. Sideways iPads ("Atlas and Ledger"): the map is a left column and the
+/// chrome lives in a lacquer side panel on the right.
+private struct HomeLayout: Equatable {
+    var stage: CGSize = .zero              // the whole physical stage (under status bar + home indicator)
+    var insets = EdgeInsets()
+    var atlas: Bool { stage.width > stage.height && stage.width >= 900 }
+    var panelW: CGFloat { atlas ? clampCG((stage.width * 0.35).rounded(), 380, Chrome.panel.width) : 0 }
+    var map: MapFrame {
+        var m = MapFrame(w: stage.width - panelW, vh: stage.height)
+        if m.w > Chrome.barW { m.paintY = 150 }   // wide portrait: the painting starts where an iPhone's does
+        if atlas {   // nothing floats over the column but the status bar's tint
+            m.topInset = insets.top + 40; m.cardBand = insets.bottom + 40
+            m.travelPad = 0; m.bottomPad = 0
+            m.paintY = insets.top + 30; m.paintKeep = insets.bottom + 16
+        }
+        return m
+    }
+
+    init() {}
+    init(_ g: GeometryProxy) {
+        let ins = g.safeAreaInsets
+        insets = ins
+        // The map bleeds edge-to-edge over the FULL physical stage (under the status bar and behind
+        // the bar), so measure the safe area plus its insets. On iPhone SE the first sizes arrive
+        // 0 wide (setup would never run), so fall back to the screen itself until a real size lands.
+        stage = g.size.width > 0
+            ? CGSize(width: g.size.width + ins.leading + ins.trailing, height: g.size.height + ins.top + ins.bottom)
+            : LudusStage<EmptyView>.screen
+    }
+}
+
 
 /// A world's progress as its seal shows it: `n` ring segments (one per game in that world, ≤ 6
 /// baked), `done` of them gilded (games the child has won — GameKit's bronze laurel). All won = the
@@ -180,10 +248,11 @@ struct HomeView: View {
     @State private var isTraveling = false
     @State private var travelSeq = 0
     @State private var didInit = false
-    @State private var canvas: CGSize = .zero        // latest viewport size (for travel math)
+    @State private var layout = HomeLayout()         // latest stage shape (for travel math)
     // The arrival card: a scroll that rises furled onto the bar's tab, then its top rod rolls up.
+    // (Sideways it slides into the side panel from its outer edge instead.)
     @State private var cardLM: Landmark?             // non-nil while the card is on screen
-    @State private var cardRise: CGFloat = 1         // 1 = lowered + transparent, 0 = docked on the tab
+    @State private var cardRise: CGFloat = 1         // 1 = lowered/out + transparent, 0 = docked
     @State private var cardOpen: CGFloat = 0         // 0 = furled, 1 = unrolled
     @State private var cardSeq = 0
     @State private var plateOpen: CGFloat = 0        // the selected seal's hanging name scroll
@@ -195,55 +264,47 @@ struct HomeView: View {
     @State private var showRecords = false           // the Tabularium (rank, laurels, sound) — opened from the rank
     @State private var showVilla = false             // the Villa (where coins are spent) — opened from the bar's coins
 
-    // Floating chrome the camera must keep the traveler clear of.
-    private let topInset: CGFloat = 150
-    private let cardBand: CGFloat = 280   // reserved bottom band (card + bar) used for framing
-    private let travelPad: CGFloat = Chrome.barSide   // over-scroll for the bottom node — never past
-                                                      // the bar beside the tab, or the void shows
-    private let bottomPad: CGFloat = Chrome.barSide   // max scroll stops with the map's bottom edge
-                                                      // at the bar's top (beside the tab)
-    // The camera never scrolls past the map's top edge (offset ≤ 0) — the art's own parchment border
-    // is the margin, so nothing but the painting is ever on screen.
-
     var body: some View {
         NavigationStack {
             GeometryReader { geo in
-                // The map bleeds edge-to-edge over the FULL physical screen (under the status bar and
-                // behind the bar). The safe-area GeometryReader can't report that height, so use the
-                // screen's own height directly (in stage points: `LudusStage` scales the app up on iPad) — and its width whenever the reader reports none yet
-                // (on iPhone SE its first sizes arrive 0 wide, so setup would never run).
-                let w = geo.size.width > 0 ? geo.size.width : LudusStage<EmptyView>.screen.width
-                let h = w * mapAspect
-                let vh = LudusStage<EmptyView>.screen.height
-                let minIdle = min(0, vh - h - bottomPad)     // free-scroll bottom bound
-                let minTravel = min(0, vh - h - travelPad)   // travel/card over-scroll
+                let lay = HomeLayout(geo)
+                let mf = lay.map
                 let off = (isTraveling || cardLM != nil)
-                    ? clampCG(manualCamY, minTravel, 0)
+                    ? clampCG(manualCamY, mf.minTravel, mf.camMax)
                     : manualCamY
                 ZStack(alignment: .top) {
-                    Image("TopPlaque").resizable()
-                        .frame(width: Chrome.plaque.width, height: Chrome.plaque.height)
-                        .padding(.top, -4)
-                        .accessibilityLabel("Ludus")
-                    cardLayer(w: w)
+                    if !lay.atlas {
+                        plaque.padding(.top, -4)
+                        cardLayer(w: mf.w)
+                    }
                 }
                 .opacity(1 - zoom)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background(alignment: .top) {
-                    // Physical-screen layer: the map, then the static chrome painted over it.
-                    ZStack(alignment: .top) {
-                        mapLayer(w: w, h: h)
+                .background(alignment: .topLeading) {
+                    // Physical-screen layer: the map, then the static chrome painted over it. The map
+                    // stays the first child in every layout, so rotating never rebuilds it.
+                    ZStack(alignment: .topLeading) {
+                        mapLayer(w: mf.w, h: mf.h)
                             .offset(y: off)
-                            .frame(width: w, height: vh, alignment: .top)
+                            .frame(width: mf.w, height: mf.vh, alignment: .top)
                             .scaleEffect(1 + zoom * 1.6, anchor: zoomAnchor)
                             .clipped()
                             .contentShape(Rectangle())
-                            .gesture(panGesture(minIdle: minIdle, h: h, vh: vh))
-                        topTint.opacity(1 - zoom)
-                        bottomBar(w: w)
-                            .frame(width: w, height: vh, alignment: .bottom)
+                            .gesture(panGesture(mf))
+                        topTint(height: lay.atlas ? 64 : 158)
+                            .frame(width: mf.w)
                             .opacity(1 - zoom)
+                        if lay.atlas {
+                            sidePanel(lay)
+                                .offset(x: mf.w - Chrome.panelShadow)
+                                .opacity(1 - zoom)
+                        } else {
+                            bottomBar(w: mf.w)
+                                .frame(width: mf.w, height: mf.vh, alignment: .bottom)
+                                .opacity(1 - zoom)
+                        }
                     }
+                    .frame(width: lay.stage.width, height: lay.stage.height, alignment: .topLeading)
                     .opacity(mapHidden ? 0 : 1)          // fully covered: let the render server skip it
                     .ignoresSafeArea()
                 }
@@ -253,8 +314,8 @@ struct HomeView: View {
                             .transition(.opacity)
                     }
                 }
-                .onAppear { setup(CGSize(width: w, height: vh)) }
-                .onChange(of: geo.size) { _ in setup(CGSize(width: w, height: vh)) }
+                .onAppear { setup(lay) }
+                .onChange(of: lay) { setup($0) }
             }
             .navigationBarHidden(true)
         }
@@ -324,10 +385,7 @@ struct HomeView: View {
     /// SAME timeline, then raise its arrival card.
     @discardableResult
     private func travel(to lm: Landmark) -> Double {
-        guard let world = lm.world, canvas.width > 0 else { return 0 }
-        let w = canvas.width, h = w * mapAspect, vh = canvas.height
-        let desiredY = topInset + (vh - topInset - cardBand) / 2
-        let minCam = min(0, vh - h - travelPad)
+        guard let world = lm.world, layout.map.w > 0 else { return 0 }
 
         Haptics.tap()
         if cardLM != nil { hideCard() }
@@ -341,7 +399,7 @@ struct HomeView: View {
         let target = lm.arriveAt
         let dist = abs(target - travelerT)
         let dur = Double(0.5 + 2.0 * dist)
-        let camTarget = clampCG(desiredY - ludusRoad.point(at: target).y * h, minCam, 0)
+        let camTarget = layout.map.cam(at: target, travel: true)
 
         travelSeq += 1
         let seq = travelSeq
@@ -395,7 +453,7 @@ struct HomeView: View {
         hideCard()
         selected = nil
         // If we were parked in the travel-only pad zone (last node), settle back into free-scroll bounds.
-        let minIdle = min(0, canvas.height - canvas.width * mapAspect - bottomPad)
+        let minIdle = layout.map.minIdle
         if manualCamY < minIdle {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { manualCamY = minIdle }
         }
@@ -406,28 +464,29 @@ struct HomeView: View {
     /// edges (no rubber-band) so nothing behind the painting is ever revealed.
     /// An open arrival card doesn't block scrolling: it stays up while its landmark is in view and
     /// rolls itself away once the landmark scrolls off (or behind the card), so it never points at
-    /// something the child can't see.
-    private func panGesture(minIdle: CGFloat, h: CGFloat, vh: CGFloat) -> some Gesture {
+    /// something the child can't see. Sideways the card lives in the side panel, covering nothing,
+    /// so it stays while its landmark is selected.
+    private func panGesture(_ mf: MapFrame) -> some Gesture {
         DragGesture(minimumDistance: 8)
             .onChanged { v in
                 guard !isTraveling else { return }
                 if !dragging { dragging = true; dragStartCam = manualCamY }
-                manualCamY = clampCG(dragStartCam + v.translation.height, minIdle, 0)
-                dropCardIfOffscreen(h: h, vh: vh)
+                manualCamY = clampCG(dragStartCam + v.translation.height, mf.minIdle, mf.camMax)
+                dropCardIfOffscreen(mf)
             }
             .onEnded { v in
                 guard !isTraveling else { return }
                 dragging = false
-                let end = clampCG(dragStartCam + v.predictedEndTranslation.height, minIdle, 0)
+                let end = clampCG(dragStartCam + v.predictedEndTranslation.height, mf.minIdle, mf.camMax)
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.82)) { manualCamY = end }
-                dropCardIfOffscreen(h: h, vh: vh, camY: end)   // judge where the fling lands
+                dropCardIfOffscreen(mf, camY: end)   // judge where the fling lands
             }
     }
 
-    private func dropCardIfOffscreen(h: CGFloat, vh: CGFloat, camY: CGFloat? = nil) {
-        guard let lm = selected, cardLM != nil else { return }
-        let y = lm.y * h + (camY ?? manualCamY)            // the seal's screen position
-        if y < 40 || y > vh - cardBand + 60 {
+    private func dropCardIfOffscreen(_ mf: MapFrame, camY: CGFloat? = nil) {
+        guard !layout.atlas, let lm = selected, cardLM != nil else { return }
+        let y = lm.y * mf.h + (camY ?? manualCamY)          // the seal's screen position
+        if y < 40 || y > mf.vh - mf.cardBand + 60 {
             hideCard()
             selected = nil
         }
@@ -438,11 +497,10 @@ struct HomeView: View {
     /// this must also run from onChange when the real size arrives.)
     /// PLAY: zoom the camera into the landmark's building, then fade its landing page up over it.
     private func enter(_ world: LudusWorld, at lm: Landmark) {
-        guard entered == nil, canvas.width > 0 else { return }
-        let h = canvas.width * mapAspect
-        let minTravel = min(0, canvas.height - h - travelPad)
-        let sy = lm.y * h + clampCG(manualCamY, minTravel, 0) - 40     // aim at the building, above its seal
-        zoomAnchor = UnitPoint(x: lm.x, y: clampCG(sy / canvas.height, 0.05, 0.95))
+        let mf = layout.map
+        guard entered == nil, mf.w > 0 else { return }
+        let sy = lm.y * mf.h + clampCG(manualCamY, mf.minTravel, mf.camMax) - 40   // aim at the building, above its seal
+        zoomAnchor = UnitPoint(x: lm.x, y: clampCG(sy / mf.vh, 0.05, 0.95))
         withAnimation(.easeIn(duration: 0.42)) { zoom = 1 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             withAnimation(.easeOut(duration: 0.3)) { entered = world }
@@ -457,20 +515,30 @@ struct HomeView: View {
         withAnimation(.easeOut(duration: 0.5).delay(0.12)) { zoom = 0 }
     }
 
-    private func setup(_ size: CGSize) {
-        canvas = size
-        guard !didInit, size.width > 0 else { return }
-        didInit = true
-        let w = size.width, h = w * mapAspect, vh = size.height
-        let desiredY = topInset + (vh - topInset - cardBand) / 2
-        let minIdle = min(0, vh - h - bottomPad)
-        // Stand where the child last was; on a first-ever launch, start at the first landmark.
-        let lm = landmarks.first(where: { $0.subject == lastSubject }) ?? landmarks.first!
-        travelerT = lm.arriveAt
-        manualCamY = clampCG(desiredY - ludusRoad.point(at: lm.arriveAt).y * h, minIdle, 0)
-        #if DEBUG
-        startDebugTour()
-        #endif
+    private func setup(_ lay: HomeLayout) {
+        let was = layout
+        layout = lay
+        guard lay.map.w > 0 else { return }
+        guard didInit else {
+            didInit = true
+            // Stand where the child last was; on a first-ever launch, start at the first landmark.
+            let lm = landmarks.first(where: { $0.subject == lastSubject }) ?? landmarks.first!
+            travelerT = lm.arriveAt
+            manualCamY = lay.map.cam(at: lm.arriveAt, travel: false)
+            #if DEBUG
+            startDebugTour()
+            #endif
+            return
+        }
+        // Rotated (or resized) mid-session: the map rescales to its new width, so re-frame the
+        // camera on the traveler (on its destination if walking — `travelerT` already holds it).
+        // The selection and card carry over; the card just moves between the bar and the panel.
+        guard was.map != lay.map else { return }
+        dragging = false
+        var still = Transaction(); still.disablesAnimations = true
+        withTransaction(still) {
+            manualCamY = lay.map.cam(at: travelerT, travel: isTraveling || cardLM != nil)
+        }
     }
 
     #if DEBUG
@@ -504,22 +572,30 @@ struct HomeView: View {
 
     // MARK: Chrome — every piece is a baked image (tools/chrome/chrome_build.py); only text is live.
 
+    private var plaque: some View {
+        Image("TopPlaque").resizable()
+            .frame(width: Chrome.plaque.width, height: Chrome.plaque.height)
+            .accessibilityLabel("Ludus")
+    }
+
     // The red wash the plaque hovers over (also darkens the status-bar area).
-    private var topTint: some View {
+    private func topTint(height: CGFloat) -> some View {
         LinearGradient(stops: [.init(color: Prov.tint.opacity(0.92), location: 0),
                                .init(color: Prov.tint.opacity(0.61), location: 0.25),
                                .init(color: Prov.tint.opacity(0.35), location: 0.5),
                                .init(color: Prov.tint.opacity(0.13), location: 0.75),
                                .init(color: Prov.tint.opacity(0), location: 1)],
                        startPoint: .top, endPoint: .bottom)
-            .frame(height: 158)
+            .frame(height: height)
             .allowsHitTesting(false)
     }
 
     // The slim lacquer bar: a raised centre tab carrying the rank, coin totals in the corners, and
-    // the same gilt moulding as the plaque along its top edge. Baked 440 pt wide and centre-cropped.
+    // the same gilt moulding as the plaque along its top edge. Baked 440 pt wide and centre-cropped;
+    // wider stages (iPad) take the 1000-pt bake, so the corners' coins always sit on lacquer.
     private func bottomBar(w: CGFloat) -> some View {
-        VStack(spacing: 0) {
+        let wide = w > Chrome.barW
+        return VStack(spacing: 0) {
             // a short whisper of the top's tint, just above the bar
             LinearGradient(stops: [.init(color: Prov.tint.opacity(0), location: 0),
                                    .init(color: Prov.tint.opacity(0.1), location: 0.5),
@@ -529,46 +605,60 @@ struct HomeView: View {
                 .padding(.bottom, -(Chrome.barTab + Chrome.barShadow - Chrome.barSide))
                 .allowsHitTesting(false)
             ZStack(alignment: .top) {
-                Image("BottomBar").resizable()
+                Image(wide ? "BottomBarWide" : "BottomBar").resizable()
                     .allowsHitTesting(false)
-                    .frame(width: Chrome.barW, height: Chrome.barTab + Chrome.barShadow)
-                Button { openRecords() } label: {
-                    Image("Rank\(rankIndex)").resizable()
-                        .frame(width: Chrome.rank.width, height: Chrome.rank.height)
-                }
-                .buttonStyle(PlaqueButtonStyle())
-                .padding(.top, Chrome.barShadow)
-                .accessibilityLabel("Rank: \(ludusRank()). Open the hall of records")
+                    .frame(width: wide ? Chrome.barWideW : Chrome.barW, height: Chrome.barTab + Chrome.barShadow)
+                rankButton.padding(.top, Chrome.barShadow)
             }
             .frame(width: w, height: Chrome.barTab + Chrome.barShadow)
             .clipped()
             .overlay(alignment: .bottom) {
                 // The coin corners open the Villa — the place the arcade's coins are spent.
                 HStack(spacing: 5.5) {
-                    Button { openVilla() } label: {
-                        HStack(spacing: 5.5) {
-                            Image("CoinSilver").resizable().frame(width: Chrome.coin, height: Chrome.coin)
-                            coinText("\(denarii)")
-                        }
-                        .padding(.vertical, 10).padding(.trailing, 14).contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("\(denarii) denarii. Open your villa")
+                    silverButton(pad: .trailing)
                     Spacer(minLength: 0)
-                    Button { openVilla() } label: {
-                        HStack(spacing: 5.5) {
-                            coinText("\(LudusEconomy.aurei)")
-                            Image("CoinGold").resizable().frame(width: Chrome.coin, height: Chrome.coin)
-                        }
-                        .padding(.vertical, 10).padding(.leading, 14).contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("\(LudusEconomy.aurei) aurei. Open your villa")
+                    goldButton(pad: .leading)
                 }
-                .buttonStyle(PlaqueButtonStyle())
                 .padding(.horizontal, 25.5)
                 .frame(height: Chrome.coin)
                 .padding(.bottom, 14)       // coin row centred in the side's lacquer, under its fillet
             }
         }
+    }
+
+    private var rankButton: some View {
+        Button { openRecords() } label: {
+            Image("Rank\(rankIndex)").resizable()
+                .frame(width: Chrome.rank.width, height: Chrome.rank.height)
+        }
+        .buttonStyle(PlaqueButtonStyle())
+        .accessibilityLabel("Rank: \(ludusRank()). Open the hall of records")
+    }
+
+    // The coins open the Villa — the place the arcade's coins are spent. `pad` = the side whose
+    // 14-pt margin is part of the tap target.
+    private func silverButton(pad: Edge.Set) -> some View {
+        Button { openVilla() } label: {
+            HStack(spacing: 5.5) {
+                Image("CoinSilver").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+                coinText("\(denarii)")
+            }
+            .padding(.vertical, 10).padding(pad, 14).contentShape(Rectangle())
+        }
+        .buttonStyle(PlaqueButtonStyle())
+        .accessibilityLabel("\(denarii) denarii. Open your villa")
+    }
+
+    private func goldButton(pad: Edge.Set) -> some View {
+        Button { openVilla() } label: {
+            HStack(spacing: 5.5) {
+                coinText("\(LudusEconomy.aurei)")
+                Image("CoinGold").resizable().frame(width: Chrome.coin, height: Chrome.coin)
+            }
+            .padding(.vertical, 10).padding(pad, 14).contentShape(Rectangle())
+        }
+        .buttonStyle(PlaqueButtonStyle())
+        .accessibilityLabel("\(LudusEconomy.aurei) aurei. Open your villa")
     }
 
     private func openRecords() {
@@ -595,11 +685,8 @@ struct HomeView: View {
     @ViewBuilder private func cardLayer(w: CGFloat) -> some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
-            if let lm = cardLM, let world = lm.world {
-                DestinationCard(landmark: lm, world: world, progress: progress(world, index: landmarks.firstIndex { $0.id == lm.id } ?? 0),
-                                width: min(Chrome.cardW, w - 58), open: cardOpen,
-                                onPlay: { enter(world, at: lm) },
-                                onClose: { dismissCard() })
+            if let lm = cardLM {
+                destinationCard(lm, width: min(Chrome.cardW, w - 58))
                     .opacity(1 - cardRise)
                     .offset(y: cardRise * 36)
                     // bottom rod centre = the tab's top edge (+0.5): container bottom sits a rod-half lower
@@ -608,6 +695,122 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(edges: .bottom)
+    }
+
+    @ViewBuilder private func destinationCard(_ lm: Landmark, width: CGFloat) -> some View {
+        if let world = lm.world {
+            DestinationCard(landmark: lm, world: world, progress: progress(world, index: landmarks.firstIndex { $0.id == lm.id } ?? 0),
+                            width: width, open: cardOpen,
+                            onPlay: { enter(world, at: lm) },
+                            onClose: { dismissCard() })
+        }
+    }
+
+    // MARK: Side panel — sideways iPads ("Atlas and Ledger")
+    //
+    // The map is a left column; this lacquer slab (SidePanel: the bar's lacquer and gilt moulding
+    // turned down its map-facing edge) carries the chrome: the plaque at the top, the arrival card in
+    // the middle — it slides in from the panel's outer edge, then unrolls — and the ledger (rank →
+    // Tabularium, coins → Villa) at the bottom. Nothing covers the map, so the camera frames the
+    // whole column and an open card stays while its landmark is selected.
+
+    private func sidePanel(_ lay: HomeLayout) -> some View {
+        let pw = lay.panelW
+        let slotH = Chrome.cardH + Chrome.cardRod + DestinationCard.rodH   // the card fully unrolled
+        return ZStack(alignment: .topLeading) {
+            Image("SidePanel").resizable()
+                .frame(width: Chrome.panel.width + Chrome.panelShadow, height: Chrome.panel.height)
+                .allowsHitTesting(false)
+            VStack(spacing: 0) {
+                plaque.padding(.top, lay.insets.top + 18)
+                Spacer(minLength: 12)
+                ZStack(alignment: .top) {
+                    panelPrompt
+                        .frame(height: slotH)
+                        .opacity(cardLM == nil ? 1 : 0)
+                        .animation(.easeOut(duration: 0.25), value: cardLM == nil)
+                    if let lm = cardLM {
+                        destinationCard(lm, width: min(Chrome.cardW, pw - 64))
+                            .opacity(1 - cardRise)
+                            .offset(x: cardRise * pw * 0.6)
+                    }
+                }
+                .frame(height: slotH, alignment: .top)
+                .padding(.vertical, 30)
+                .frame(width: pw - 22)
+                .background(cartouche)
+                Spacer(minLength: 12)
+                gildedRule(width: pw - 96)
+                rankButton.padding(.top, 10)
+                HStack(spacing: 0) {
+                    silverButton(pad: .trailing)
+                    Rectangle().fill(Color(hex: 0xc99a3a).opacity(0.7)).frame(width: 5, height: 5)
+                        .rotationEffect(.degrees(45))
+                    goldButton(pad: .leading)
+                }
+                .padding(.top, -12)
+                .padding(.bottom, max(lay.insets.bottom, 12) + 6)
+            }
+            .frame(width: pw, height: lay.stage.height)
+            .offset(x: Chrome.panelShadow)
+        }
+        .frame(width: pw + Chrome.panelShadow, height: lay.stage.height, alignment: .topLeading)
+        .clipped()
+    }
+
+    /// The panel's middle while no card is up: where to go next, or where the traveler is headed.
+    private var panelPrompt: some View {
+        let headed = isTraveling ? selected : nil
+        return VStack(spacing: 12) {
+            Text(headed == nil ? "CHOOSE A PLACE" : "ON THE ROAD TO")
+                .font(luCinzel(12, bold: true)).tracking(2.2)
+                .foregroundStyle(Color(hex: 0xe6c15f))
+            Group {
+                if let lm = headed {
+                    Text(lm.name.uppercased()).font(luCinzel(26)).tracking(0.8)
+                } else {
+                    Text("Tap a seal on the map\nto travel there").font(luGaramond(20))
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .foregroundStyle(Prov.coinInk)
+            .shadow(color: Color(.sRGB, red: 40 / 255, green: 6 / 255, blue: 4 / 255).opacity(0.6), radius: 0, y: 1)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The recessed field the card docks in: a darker sunk panel with a double engraved gilt line
+    /// (the plaque's moulding + fillet, in hairline) and a lozenge riveted top and bottom.
+    private var cartouche: some View {
+        let gilt = Color(hex: 0xc99a3a)
+        return ZStack {
+            RoundedRectangle(cornerRadius: 10).fill(Color(hex: 0x3c0806).opacity(0.22))
+            RoundedRectangle(cornerRadius: 10).strokeBorder(gilt.opacity(0.85), lineWidth: 1.2)
+            RoundedRectangle(cornerRadius: 7).strokeBorder(gilt.opacity(0.45), lineWidth: 0.6).padding(4)
+            VStack {
+                lozenge.offset(y: -4)
+                Spacer()
+                lozenge.offset(y: 4)
+            }
+        }
+        .shadow(color: .black.opacity(0.25), radius: 0, y: 1)   // the engraving's lower lip
+        .allowsHitTesting(false)
+    }
+
+    private var lozenge: some View {
+        Rectangle().fill(Color(hex: 0xe6c15f)).frame(width: 7, height: 7).rotationEffect(.degrees(45))
+            .shadow(color: .black.opacity(0.35), radius: 0, y: 1)
+    }
+
+    /// A hairline gilt rule with a lozenge at its centre (the card's inked rule, in gold).
+    private func gildedRule(width: CGFloat) -> some View {
+        HStack(spacing: 14) {
+            Rectangle().frame(height: 0.8)
+            Rectangle().frame(height: 0.8)
+        }
+        .foregroundStyle(Color(hex: 0xc99a3a).opacity(0.75))
+        .overlay(Rectangle().fill(Color(hex: 0xe6c15f)).frame(width: 5, height: 5).rotationEffect(.degrees(45)))
+        .frame(width: width)
     }
 }
 
