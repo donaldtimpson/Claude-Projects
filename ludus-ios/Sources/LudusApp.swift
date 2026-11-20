@@ -52,6 +52,8 @@ struct LudusApp: App {
             LudusStage { VillaView(onClose: {}) }
         } else if env["LUDUS_SCREEN"] == "records" {
             LudusStage { TabulariumView(onClose: {}) }
+        } else if env["LUDUS_SCREEN"] == "duel" {
+            LudusStage { DuelView(onClose: {}) }
         } else if let g = env["LUDUS_GAME"], let id = GameID(rawValue: g) {
             ludusGame(id, onClose: {})                    // games stage themselves (ArcadeShell)
         } else if let sub = env["LUDUS_WORLD"], let w = ludusWorlds.first(where: { $0.subject == sub }) {
