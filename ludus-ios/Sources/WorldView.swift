@@ -40,6 +40,7 @@ struct WorldView: View {
     let world: LudusWorld
     var onBack: (() -> Void)? = nil               // nil = pushed in a NavigationStack (pop instead)
     @State private var active: GameID?
+    @State private var duel = false                // the two-player arena (the Temple's extra)
     @State private var shown = false
     @State private var refresh = 0                 // bumps when a game closes, to re-read laurels
     @Environment(\.dismiss) private var dismiss
@@ -90,6 +91,7 @@ struct WorldView: View {
         .fullScreenCover(item: $active, onDismiss: { refresh += 1 }) { id in
             ludusGame(id, onClose: { active = nil })
         }
+        .fullScreenCover(isPresented: $duel) { LudusStage { DuelView(onClose: { duel = false }) } }
     }
 
     private func tablets(wide: Bool) -> some View {
@@ -99,6 +101,11 @@ struct WorldView: View {
                     .opacity(shown ? 1 : 0)
                     .offset(y: shown ? 0 : 24)
                     .animation(.spring(response: 0.5, dampingFraction: 0.8).delay(0.12 + Double(i) * 0.06), value: shown)
+            }
+            if world.subject == "Math" {
+                DuelInvite(wide: wide) { duel = true }
+                    .opacity(shown ? 1 : 0)
+                    .animation(.easeOut(duration: 0.4).delay(0.5), value: shown)
             }
         }
     }
@@ -295,5 +302,35 @@ private struct GameTablet: View {
         }
         .buttonStyle(PlaqueButtonStyle())
         .accessibilityLabel("\(spec.title). \(spec.premise)")
+    }
+}
+
+/// Under the Temple's games: the two-player duel (two kids at opposite ends of one iPad).
+private struct DuelInvite: View {
+    let wide: Bool
+    let action: () -> Void
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Text("⚔️").font(.system(size: wide ? 34 : 28))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("DUEL FOR TWO").font(luCinzel(wide ? 18 : 16, bold: true)).tracking(1.2)
+                        .foregroundStyle(Color(hex: 0xfff3d6))
+                    Text("Race a friend at sums and tables — one iPad, two ends")
+                        .font(luGaramond(wide ? 16 : 14, semibold: true))
+                        .foregroundStyle(Color(hex: 0xfff3d6).opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Page.gilt)
+            }
+            .padding(.horizontal, 18).padding(.vertical, wide ? 16 : 12)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0x7a1f1a))
+                .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Page.gilt, lineWidth: 1.5)))
+            .shadow(color: .black.opacity(0.2), radius: 3, y: 2)
+        }
+        .buttonStyle(PlaqueButtonStyle())
+        .accessibilityLabel("Duel for two")
     }
 }
