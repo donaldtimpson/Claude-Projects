@@ -836,7 +836,7 @@ struct PortaCustosView: View {
                     accent: Lu.grape, onClose: onClose,
                     backdrop: { PCBackdrop() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 plaque
                 PCArena(model: model).frame(minHeight: 200)
                 strip.frame(height: 74)

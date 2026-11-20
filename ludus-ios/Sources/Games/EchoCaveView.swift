@@ -183,7 +183,7 @@ struct EchoCaveView: View {
                     backdrop: { ECCave() }) {
             GeometryReader { g in
                 VStack(spacing: 0) {
-                    Color.clear.frame(height: 64)
+                    HUDSpace(64)
                     ECStatus(model: model).frame(height: 44)
                     ZStack(alignment: .bottom) {
                         ECCrystals(model: model)

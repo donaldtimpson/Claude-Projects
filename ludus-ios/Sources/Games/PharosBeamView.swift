@@ -444,7 +444,7 @@ struct PharosBeamView: View {
         ArcadeShell(model: m, spec: GameID.pharosBeam.spec ?? GameSpec(title: "Pharos Beam", mechanic: "", premise: "", game: .pharosBeam),
                     accent: Lu.sky, onClose: onClose, backdrop: { PBNight() }) {
             VStack(spacing: 12) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 banner
                 GeometryReader { geo in
                     let R = min(geo.size.width, geo.size.height) / 2 - 14

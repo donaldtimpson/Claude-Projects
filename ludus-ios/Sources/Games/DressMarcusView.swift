@@ -433,7 +433,7 @@ struct DressMarcusView: View {
                     accent: Lu.tangerine, onClose: onClose,
                     backdrop: { MarcusRoom() }) {
             VStack(spacing: 8) {
-                Color.clear.frame(height: 54)
+                HUDSpace(54)
                 WeatherWindow(w: model.round.weather, live: model.phase == .playing)
                     .frame(height: 138)
                 if let ask = model.round.ask {

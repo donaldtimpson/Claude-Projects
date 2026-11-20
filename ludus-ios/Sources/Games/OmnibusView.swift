@@ -400,7 +400,7 @@ struct OmnibusView: View {
         ArcadeShell(model: model, spec: GameID.omnibus.spec!, accent: Lu.gold, onClose: onClose,
                     backdrop: { OBStreetBackdrop() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 Text(model.caption)
                     .font(luFont(model.stage == .watching ? 26 : 22))
                     .foregroundStyle(Color(hex: 0x2b1708))

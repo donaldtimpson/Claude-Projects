@@ -399,7 +399,7 @@ private struct BKPlay: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Color.clear.frame(height: 54)
+            HUDSpace(54)
             HStack(alignment: .top, spacing: 4) {
                 UrsaBear(mood: model.mood)
                     .overlay(MarketSparks(trigger: model.bakes.count, glyphs: ["✨", "⭐️", model.bakes.last ?? "🥧"]))

@@ -307,7 +307,7 @@ struct CaesarWheelView: View {
         ArcadeShell(model: model, spec: GameID.caesarWheel.spec!, accent: Lu.coral, onClose: onClose,
                     backdrop: { CWTent() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 CWHeader(model: model)
                 CWTiles(model: model)
                 GeometryReader { g in

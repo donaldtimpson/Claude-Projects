@@ -27,7 +27,7 @@ enum LudusEconomy {
         }
         return n
     }
-    static var aureiSpent: Int { UserDefaults.standard.integer(forKey: spentAureiKey) }
+    static var aureiSpent: Int { LudusStore.defaults.integer(forKey: spentAureiKey) }
     static var aurei: Int { max(0, aureiEarned - aureiSpent) }
 
     // MARK: Rank
@@ -44,7 +44,7 @@ enum LudusEconomy {
     // MARK: Villa purchases
 
     static var owned: Set<String> {
-        Set(UserDefaults.standard.stringArray(forKey: ownedKey) ?? [])
+        Set(LudusStore.defaults.stringArray(forKey: ownedKey) ?? [])
     }
     static func owns(_ id: String) -> Bool { owned.contains(id) }
 
@@ -55,13 +55,13 @@ enum LudusEconomy {
         switch item.price {
         case .denarii(let n):
             guard LudusStore.denarii >= n else { return false }
-            UserDefaults.standard.set(LudusStore.denarii - n, forKey: LudusStore.denariiKey)
+            LudusStore.defaults.set(LudusStore.denarii - n, forKey: LudusStore.denariiKey)
         case .aurei(let n):
             guard aurei >= n else { return false }
-            UserDefaults.standard.set(aureiSpent + n, forKey: spentAureiKey)
+            LudusStore.defaults.set(aureiSpent + n, forKey: spentAureiKey)
         }
         var o = owned; o.insert(item.id)
-        UserDefaults.standard.set(Array(o), forKey: ownedKey)
+        LudusStore.defaults.set(Array(o), forKey: ownedKey)
         return true
     }
 

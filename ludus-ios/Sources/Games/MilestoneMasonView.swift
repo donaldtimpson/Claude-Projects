@@ -243,7 +243,7 @@ private struct MMPlay: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Color.clear.frame(height: 58)
+            HUDSpace(58)
             MMOrderBubble(model: model)
             GeometryReader { g in
                 MMYard(model: model, size: g.size)

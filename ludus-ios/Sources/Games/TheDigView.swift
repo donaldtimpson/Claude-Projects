@@ -220,7 +220,7 @@ private struct DigPlay: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Color.clear.frame(height: 56)
+            HUDSpace(56)
             surface
                 .zIndex(2)
             layers

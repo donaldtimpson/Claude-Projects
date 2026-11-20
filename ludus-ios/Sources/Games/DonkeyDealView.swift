@@ -401,7 +401,7 @@ private struct DDPlay: View {
         GeometryReader { g in
             let w = g.size.width
             VStack(spacing: 8) {
-                Color.clear.frame(height: 54)
+                HUDSpace(54)
                 signpost
                 patienceBar
                 HStack(alignment: .top, spacing: 10) {

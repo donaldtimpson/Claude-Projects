@@ -394,7 +394,7 @@ struct MosaicMenderView: View {
                     accent: Lu.tangerine, onClose: onClose,
                     backdrop: { MBackdrop() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 emperor
                 GeometryReader { geo in mosaic(geo.size) }
                 basket

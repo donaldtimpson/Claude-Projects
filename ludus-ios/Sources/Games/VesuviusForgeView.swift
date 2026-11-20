@@ -362,7 +362,7 @@ private struct ForgePlay: View {
         GeometryReader { g in
             let W = g.size.width, H = g.size.height
             VStack(spacing: 10) {
-                Color.clear.frame(height: 50)
+                HUDSpace(50)
                 orderCard
                 HStack(alignment: .center, spacing: 6) {
                     ForgeThermometer(model: model)

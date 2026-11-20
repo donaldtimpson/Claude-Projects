@@ -241,7 +241,7 @@ private struct CRPlay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Color.clear.frame(height: 56)
+            HUDSpace(56)
             CRHerald(model: model)
                 .padding(.horizontal, 12)
             CRBoards(model: model)

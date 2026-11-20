@@ -55,11 +55,11 @@ enum Medal: Int, Comparable {
 /// Persistent per-game advancement (UserDefaults; one key per game, next to `ludus_best_<game>`).
 enum LudusProgress {
     static func levelKey(_ game: String) -> String { "ludus_lvl_\(game)" }
-    static func maxLevel(_ game: String) -> Int { UserDefaults.standard.integer(forKey: levelKey(game)) }
+    static func maxLevel(_ game: String) -> Int { LudusStore.defaults.integer(forKey: levelKey(game)) }
     @discardableResult
     static func record(level: Int, for game: String) -> Bool {
         guard level > maxLevel(game) else { return false }
-        UserDefaults.standard.set(level, forKey: levelKey(game)); return true
+        LudusStore.defaults.set(level, forKey: levelKey(game)); return true
     }
     static func medal(level: Int, goal: GameGoal) -> Medal {
         if level >= goal.gold { return .gold }
@@ -336,12 +336,29 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
     }
 
     private var stage: some View {
+        GeometryReader { g in
+            let layout = ArcadeLayout(size: g.size, wide: spec.game.map { ArcadeLayout.wideGames.contains($0) } ?? false)
+            stage(layout)
+                .onChange(of: layout) { _ in model.pause() }   // rotated mid-run: let the child re-settle
+        }
+    }
+
+    private func stage(_ layout: ArcadeLayout) -> some View {
         ZStack {
             backdrop.ignoresSafeArea()
             // Off the tree under the intro card, so a game's own animated scene isn't running
             // (or drawn a second time) behind it.
-            if model.phase != .intro { content }
-            hud
+            if model.phase != .intro {
+                if layout.column {
+                    content
+                        .environment(\.ludusHUDOnTop, false)
+                        .frame(width: ArcadeLayout.columnWidth)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    content
+                }
+            }
+            if layout.column { rails } else { hud }
             if banner {
                 LevelBanner(level: model.level, heartBack: model.heartBack, accent: accent)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
@@ -350,18 +367,18 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
             if model.phase == .intro {
                 ZStack {
                     Color.black.opacity(0.35).ignoresSafeArea()
-                    ArcadeIntroView(spec: spec, model: model, accent: accent, onClose: onClose)
+                    ArcadeIntroView(spec: spec, model: model, accent: accent, landscape: layout.landscape, onClose: onClose)
                 }
                 .transition(.opacity)
             }
             if model.phase == .paused {
-                ArcadePauseView(model: model, accent: accent,
+                ArcadePauseView(model: model, accent: accent, maxWidth: layout.cardWidth,
                                 onResume: { withAnimation(.easeOut(duration: 0.2)) { model.resume() } },
                                 onLeave: { withAnimation(.easeOut(duration: 0.2)) { model.finish("You left the arena") } })
                     .transition(.opacity)
             }
             if model.phase == .over, let r = model.result {
-                ArcadeOverView(spec: spec, result: r, goal: model.goal, accent: accent,
+                ArcadeOverView(spec: spec, result: r, goal: model.goal, accent: accent, maxWidth: layout.cardWidth,
                                onAgain: { withAnimation(.easeOut(duration: 0.2)) { model.begin(level: r.startLevel) } },
                                onMenu: { withAnimation(.easeOut(duration: 0.2)) { model.phase = .intro } },
                                onClose: onClose)
@@ -412,6 +429,66 @@ struct ArcadeShell<Model: ArcadeModel, Content: View, Backdrop: View>: View {
         .padding(.horizontal, 12).padding(.top, 4)
         .opacity(model.phase == .playing ? 1 : 0)
     }
+
+    /// Landscape tablet: the HUD moves off the play column into the side rails, a size up.
+    private var rails: some View {
+        HStack(alignment: .top, spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                LudusCloseButton { withAnimation(.easeOut(duration: 0.2)) { model.pause() } }
+                StatPill(label: "SCORE", value: "\(model.score)", valueHex: Lu.gold)
+            }
+            .scaleEffect(1.3, anchor: .topLeading)
+            .padding(.leading, 20).padding(.top, 16)
+            Spacer(minLength: ArcadeLayout.columnWidth)
+            VStack(alignment: .trailing, spacing: 14) {
+                LevelPill(level: model.level, progress: model.progress,
+                          per: model.perLevel(model.level), accent: accent)
+                if showHearts { HeartsRow(hearts: model.hearts, maxHearts: model.maxHearts) }
+            }
+            .scaleEffect(1.3, anchor: .topTrailing)
+            .padding(.trailing, 20).padding(.top, 16)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .opacity(model.phase == .playing ? 1 : 0)
+    }
+}
+
+/// How a game sits on the screen. On a phone, or a tablet held upright, it fills the stage. On a
+/// tablet held sideways, the stage is wider than tall: most games play in an upright column
+/// (`columnWidth`, about what they were designed for) with the scene running on behind the side
+/// rails, which carry the HUD. Naturally wide games (`wideGames`) keep the full width.
+struct ArcadeLayout: Equatable {
+    static let columnWidth: CGFloat = 600
+    /// Games whose play field is horizontal (number lines, maps, races): full width sideways.
+    static let wideGames: Set<GameID> = [.ballista, .zooFerry, .agrippaMap, .pigeonPost, .chariot, .pharosBeam]
+
+    let landscape: Bool
+    let column: Bool
+    init(size: CGSize, wide: Bool) {
+        landscape = size.width > size.height && size.width >= 900
+        column = landscape && !wide
+    }
+    /// Pause / game-over card width.
+    var cardWidth: CGFloat { landscape ? 540 : 440 }
+}
+
+private struct HUDOnTopKey: EnvironmentKey { static let defaultValue = true }
+extension EnvironmentValues {
+    /// False when the shell shows the HUD in side rails (landscape tablet), so games don't reserve
+    /// room for it at the top of the play area (use `HUDSpace`).
+    var ludusHUDOnTop: Bool {
+        get { self[HUDOnTopKey.self] }
+        set { self[HUDOnTopKey.self] = newValue }
+    }
+}
+
+/// The gap a game leaves at the top of its play area for the shell's HUD row. Shrinks
+/// to a small margin when the HUD lives in the side rails instead.
+struct HUDSpace: View {
+    var height: CGFloat = 56
+    @Environment(\.ludusHUDOnTop) private var onTop
+    init(_ height: CGFloat = 56) { self.height = height }
+    var body: some View { Color.clear.frame(height: onTop ? height : 12) }
 }
 
 /// Every game is laid out for a phone. On a tablet the game is laid out on a phone-height stage
@@ -424,9 +501,13 @@ struct LudusStage<Content: View>: View {
     static var space: String { "ludusStage" }
     /// The phone height games are designed against (iPhone Pro ≈ 874, Pro Max ≈ 956).
     static var designHeight: CGFloat { 900 }
-    /// 1 on phones; height ÷ `designHeight` on wider screens.
+    /// Sideways tablets lay out on a shorter stage, so they still scale up (11" ≈ 1.03×, 13" ≈ 1.28×)
+    /// rather than dropping to phone point sizes on a big screen.
+    static var landscapeDesignHeight: CGFloat { 800 }
+    /// 1 on phones (and narrow windows); height ÷ the design height on wider screens.
     static func scale(width: CGFloat, height: CGFloat) -> CGFloat {
-        width < 600 ? 1 : max(1, height / designHeight)
+        if width < 600 { return 1 }
+        return max(1, height / (height >= width ? designHeight : landscapeDesignHeight))
     }
     /// The whole screen in stage points (for code that must size against the physical screen).
     static var screen: CGSize {
@@ -539,81 +620,129 @@ private struct ArcadeIntroView: View {
     let spec: GameSpec
     @ObservedObject var model: ArcadeModel
     let accent: UInt
+    var landscape = false
     let onClose: () -> Void
 
     var body: some View {
-        let reached = LudusProgress.maxLevel(model.key)
-        let medal = LudusProgress.medal(model.key, goal: model.goal)
-        ZStack {
-            VStack(spacing: 14) {
-                HStack { LudusCloseButton(action: onClose); Spacer() }
-                Spacer(minLength: 0)
-                Text(spec.icon).font(.system(size: 64))
-                Text(spec.title).font(luSerif(32, .black)).foregroundStyle(Color(hex: Lu.ink))
-                    .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(2)
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(spec.howTo, id: \.self) { h in
-                        HStack(spacing: 12) {
-                            Text(h.icon).font(.system(size: 28)).frame(width: 40)
-                            Text(h.text).font(luFont(18, .bold)).foregroundStyle(Color(hex: Lu.ink))
-                                .fixedSize(horizontal: false, vertical: true)
+        Group {
+            if landscape {
+                // Sideways tablet: the game's face on the left, how to play and PLAY on the right.
+                VStack(spacing: 0) {
+                    HStack { LudusCloseButton(action: onClose); Spacer() }
+                    HStack(alignment: .center, spacing: 36) {
+                        VStack(spacing: 16) {
+                            title(iconSize: 96, titleSize: 42)
+                            goals
+                            reachedNote
                         }
-                    }
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(luGlass(18))
-
-                // Goals: the three laurels and the level each needs.
-                HStack(spacing: 0) {
-                    ForEach([Medal.bronze, .silver, .gold], id: \.self) { m in
-                        let lv = model.goal.levels[m.rawValue - 1]
-                        VStack(spacing: 4) {
-                            LaurelMedal(medal: m, earned: medal >= m)
-                            Text("Gradus \(romanNumeral(lv))").font(luFont(12, .heavy))
-                                .foregroundStyle(Color(hex: medal >= m ? m.hex : Lu.inkDim))
+                        .frame(maxWidth: .infinity)
+                        VStack(spacing: 16) {
+                            howTo
+                            startPicker
+                            playButton
                         }
                         .frame(maxWidth: .infinity)
                     }
+                    .frame(maxWidth: 1000)
+                    .frame(maxHeight: .infinity)
                 }
-                .padding(.vertical, 10)
-                .background(luGlass(18))
-                if medal == .none {
-                    Text(reached > 1 ? "Best so far: Gradus \(romanNumeral(reached)) — reach \(romanNumeral(model.goal.won)) to win!"
-                                     : "Reach Gradus \(romanNumeral(model.goal.won)) to win!")
-                        .font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
-                        .multilineTextAlignment(.center)
+                .padding(.horizontal, 28).padding(.top, 8).padding(.bottom, 16)
+            } else {
+                VStack(spacing: 14) {
+                    HStack { LudusCloseButton(action: onClose); Spacer() }
+                    Spacer(minLength: 0)
+                    title(iconSize: 64, titleSize: 32)
+                    howTo
+                    goals
+                    reachedNote
+                    startPicker
+                    Spacer(minLength: 0)
+                    playButton.padding(.bottom, 8)
                 }
-
-                let choices = model.startChoices
-                if choices.count > 1 {
-                    VStack(spacing: 6) {
-                        Text("START AT").font(luFont(11, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
-                        HStack(spacing: 10) {
-                            ForEach(choices, id: \.self) { lv in
-                                Button { model.startLevel = lv } label: {
-                                    Text(romanNumeral(lv)).font(luSerif(20, .black))
-                                        .foregroundStyle(Color(hex: model.startLevel == lv ? Lu.inkDark : Lu.ink))
-                                        .frame(width: 58, height: 44)
-                                        .background(RoundedRectangle(cornerRadius: 12)
-                                            .fill(model.startLevel == lv ? Color(hex: accent) : Color.black.opacity(0.35))
-                                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.22), lineWidth: 1)))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-                Spacer(minLength: 0)
-                LudusButton(title: "Play", fullWidth: true) {
-                    withAnimation(.easeOut(duration: 0.2)) { model.begin() }
-                }
-                .padding(.bottom, 8)
+                .padding(.horizontal, 20).padding(.top, 4)
             }
-            .padding(.horizontal, 20).padding(.top, 4)
         }
         .onAppear {
             if !model.startChoices.contains(model.startLevel) { model.startLevel = 1 }
+        }
+    }
+
+    private func title(iconSize: CGFloat, titleSize: CGFloat) -> some View {
+        VStack(spacing: 14) {
+            Text(spec.icon).font(.system(size: iconSize))
+            Text(spec.title).font(luSerif(titleSize, .black)).foregroundStyle(Color(hex: Lu.ink))
+                .multilineTextAlignment(.center).minimumScaleFactor(0.6).lineLimit(2)
+        }
+    }
+
+    private var howTo: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(spec.howTo, id: \.self) { h in
+                HStack(spacing: 12) {
+                    Text(h.icon).font(.system(size: 28)).frame(width: 40)
+                    Text(h.text).font(luFont(18, .bold)).foregroundStyle(Color(hex: Lu.ink))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(luGlass(18))
+    }
+
+    /// The three laurels and the level each needs.
+    private var goals: some View {
+        let medal = LudusProgress.medal(model.key, goal: model.goal)
+        return HStack(spacing: 0) {
+            ForEach([Medal.bronze, .silver, .gold], id: \.self) { m in
+                let lv = model.goal.levels[m.rawValue - 1]
+                VStack(spacing: 4) {
+                    LaurelMedal(medal: m, earned: medal >= m)
+                    Text("Gradus \(romanNumeral(lv))").font(luFont(12, .heavy))
+                        .foregroundStyle(Color(hex: medal >= m ? m.hex : Lu.inkDim))
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.vertical, 10)
+        .background(luGlass(18))
+    }
+
+    @ViewBuilder private var reachedNote: some View {
+        let reached = LudusProgress.maxLevel(model.key)
+        if LudusProgress.medal(model.key, goal: model.goal) == .none {
+            Text(reached > 1 ? "Best so far: Gradus \(romanNumeral(reached)) — reach \(romanNumeral(model.goal.won)) to win!"
+                             : "Reach Gradus \(romanNumeral(model.goal.won)) to win!")
+                .font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.inkDim))
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    @ViewBuilder private var startPicker: some View {
+        let choices = model.startChoices
+        if choices.count > 1 {
+            VStack(spacing: 6) {
+                Text("START AT").font(luFont(11, .heavy)).tracking(2).foregroundStyle(Color(hex: Lu.inkDim))
+                HStack(spacing: 10) {
+                    ForEach(choices, id: \.self) { lv in
+                        Button { model.startLevel = lv } label: {
+                            Text(romanNumeral(lv)).font(luSerif(20, .black))
+                                .foregroundStyle(Color(hex: model.startLevel == lv ? Lu.inkDark : Lu.ink))
+                                .frame(width: 58, height: 44)
+                                .background(RoundedRectangle(cornerRadius: 12)
+                                    .fill(model.startLevel == lv ? Color(hex: accent) : Color.black.opacity(0.35))
+                                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.22), lineWidth: 1)))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private var playButton: some View {
+        LudusButton(title: "Play", fullWidth: true) {
+            withAnimation(.easeOut(duration: 0.2)) { model.begin() }
         }
     }
 }
@@ -624,6 +753,7 @@ private struct ArcadeOverView: View {
     let result: ArcadeResult
     let goal: GameGoal
     let accent: UInt
+    let maxWidth: CGFloat
     let onAgain: () -> Void
     let onMenu: () -> Void
     let onClose: () -> Void
@@ -695,7 +825,7 @@ private struct ArcadeOverView: View {
                 .font(luFont(15, .bold)).foregroundStyle(Color(hex: Lu.inkDim)).padding(.top, 4)
             }
             .padding(20)
-            .frame(maxWidth: 440)
+            .frame(maxWidth: maxWidth)
         }
         .onAppear {
             withAnimation(.spring(response: 0.5, dampingFraction: 0.55).delay(0.15)) { pop = true }
@@ -707,6 +837,7 @@ private struct ArcadeOverView: View {
 private struct ArcadePauseView: View {
     @ObservedObject var model: ArcadeModel
     let accent: UInt
+    let maxWidth: CGFloat
     let onResume: () -> Void
     let onLeave: () -> Void
 
@@ -730,7 +861,7 @@ private struct ArcadePauseView: View {
                 .padding(.top, 2)
             }
             .padding(20)
-            .frame(maxWidth: 440)
+            .frame(maxWidth: maxWidth)
         }
     }
 }

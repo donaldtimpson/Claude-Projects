@@ -246,7 +246,7 @@ struct GalleyDrumView: View {
         ArcadeShell(model: model, spec: GameID.galleyDrum.spec!, accent: Lu.tangerine, onClose: onClose,
                     backdrop: { GDSea() }) {
             VStack(spacing: 6) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 GDShip(model: model).frame(height: 230)
                 GDCards(model: model).frame(height: 92)
                 ZStack {

@@ -290,7 +290,7 @@ struct AgrippaMapView: View {
                     accent: Lu.gold, onClose: onClose, backdrop: { APDesk() }) {
             GeometryReader { root in
                 VStack(spacing: 8) {
-                    Color.clear.frame(height: 58)
+                    HUDSpace(58)
                     ribbon
                     GeometryReader { outer in
                         // The sheet takes the board's own shape (no acres of empty sea).

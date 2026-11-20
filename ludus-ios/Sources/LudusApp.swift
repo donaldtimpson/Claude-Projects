@@ -22,10 +22,15 @@ extension Color {
 @main
 struct LudusApp: App {
     init() { luRegisterFonts() }
+    @StateObject private var profiles = LudusProfiles.shared
 
     var body: some Scene {
         WindowGroup {
-            root.preferredColorScheme(.dark)
+            root
+                // A new player = a fresh tree, so every screen re-reads that player's save.
+                .id(profiles.currentID)
+                .fullScreenCover(isPresented: $profiles.showPicker) { LudusStage { ProfilePickerView() } }
+                .preferredColorScheme(.dark)
         }
     }
 
@@ -37,9 +42,9 @@ struct LudusApp: App {
         // LUDUS_GRANT=n sets the denarii bank; LUDUS_OWN=id,id… marks villa items owned;
         // LUDUS_SCREEN=villa|records opens those pages.
         let _ = {
-            if let n = Int(env["LUDUS_GRANT"] ?? "") { UserDefaults.standard.set(n, forKey: LudusStore.denariiKey) }
+            if let n = Int(env["LUDUS_GRANT"] ?? "") { LudusStore.defaults.set(n, forKey: LudusStore.denariiKey) }
             if let o = env["LUDUS_OWN"] {
-                UserDefaults.standard.set(o == "all" ? villaCatalog.map(\.id) : o.split(separator: ",").map(String.init),
+                LudusStore.defaults.set(o == "all" ? villaCatalog.map(\.id) : o.split(separator: ",").map(String.init),
                                           forKey: LudusEconomy.ownedKey)
             }
         }()

@@ -31,12 +31,11 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Ludus
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-        # The prototype game is designed portrait; lock it so the play field stays put.
+        # Phones stay portrait. iPads turn every way: each screen has a sideways layout (games play
+        # in an upright column with the HUD in side rails; see ArcadeLayout and LudusStage), and
+        # any window size works, so Split View / Stage Manager are fine too.
         INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
-        # iPadOS only honors the portrait lock for full-screen apps; without this it rotates the
-        # app sideways and stretches every game across a landscape screen.
-        INFOPLIST_KEY_UIRequiresFullScreen: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
       configs:
         Debug:
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG

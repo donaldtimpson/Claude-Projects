@@ -538,7 +538,7 @@ private struct PolyPlay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Color.clear.frame(height: 56)
+            HUDSpace(56)
             patienceBar
             bubble
             cyclops

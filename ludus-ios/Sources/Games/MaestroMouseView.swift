@@ -332,7 +332,7 @@ struct MaestroMouseView: View {
         ArcadeShell(model: model, spec: GameID.maestroMouse.spec!, accent: Lu.coral, onClose: onClose,
                     backdrop: { MMGarden() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 MMSignBoard(model: model).frame(height: 132)
                 ZStack {
                     if let l = model.lesson {

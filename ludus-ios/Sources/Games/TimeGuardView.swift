@@ -276,7 +276,7 @@ struct TimeGuardView: View {
                             .animation(.easeInOut(duration: 0.5), value: era)
                     }) {
             VStack(spacing: 6) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 header
                 TGSceneView(model: model)
                     .id(model.roundNo)

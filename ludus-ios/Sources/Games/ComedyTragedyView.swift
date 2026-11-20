@@ -197,7 +197,7 @@ struct ComedyTragedyView: View {
         ArcadeShell(model: model, spec: GameID.comedyTragedy.spec!, accent: Lu.gold, onClose: onClose,
                     backdrop: { CTTheatre(lit: model.performer.map { Color(hex: $0.hex) }) }) {
             VStack(spacing: 8) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 caption.frame(height: 50)
                 CTMasks(model: model)
                 ZStack {

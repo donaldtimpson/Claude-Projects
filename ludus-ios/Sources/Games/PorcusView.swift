@@ -459,7 +459,7 @@ private struct PorcusPlay: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Color.clear.frame(height: 54)
+            HUDSpace(54)
             shelf
             bubble.padding(.top, 26)
             Spacer(minLength: 0)

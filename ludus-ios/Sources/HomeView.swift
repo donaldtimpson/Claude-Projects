@@ -169,8 +169,8 @@ struct SealProgress {
 }
 
 struct HomeView: View {
-    @AppStorage(LudusStore.denariiKey) private var denarii = 0
-    @AppStorage("ludus_last_world") private var lastSubject = ""
+    @AppStorage(LudusStore.denariiKey, store: LudusStore.defaults) private var denarii = 0
+    @AppStorage("ludus_last_world", store: LudusStore.defaults) private var lastSubject = ""
 
     @State private var travelerT: CGFloat = 0        // arc-length position on the road
     @State private var manualCamY: CGFloat = 0       // vertical camera offset (≤ 0); updated live while dragging

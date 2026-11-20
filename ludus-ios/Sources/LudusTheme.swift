@@ -106,19 +106,22 @@ func ludusRank(forDenarii _: Int = 0) -> String { LudusEconomy.rank.name }
 enum LudusStore {
     static let denariiKey = "ludus_denarii"   // global soft-currency bank
     static func bestKey(_ game: String) -> String { "ludus_best_\(game)" }
+    /// The current player's save (see Profiles.swift). Swapped when the player changes.
+    nonisolated(unsafe) static var defaults: UserDefaults = LudusProfiles.defaults(
+        for: UserDefaults.standard.string(forKey: "ludus_current_profile") ?? LudusProfiles.firstID)
 
-    static var denarii: Int { UserDefaults.standard.integer(forKey: denariiKey) }
+    static var denarii: Int { LudusStore.defaults.integer(forKey: denariiKey) }
     static func award(_ n: Int) {
-        UserDefaults.standard.set(denarii + n, forKey: denariiKey)
+        LudusStore.defaults.set(denarii + n, forKey: denariiKey)
     }
     static func recordBest(_ game: String, _ score: Int) -> Bool {
         let key = bestKey(game)
-        if score > UserDefaults.standard.integer(forKey: key) {
-            UserDefaults.standard.set(score, forKey: key); return true
+        if score > LudusStore.defaults.integer(forKey: key) {
+            LudusStore.defaults.set(score, forKey: key); return true
         }
         return false
     }
-    static func best(_ game: String) -> Int { UserDefaults.standard.integer(forKey: LudusStore.bestKey(game)) }
+    static func best(_ game: String) -> Int { LudusStore.defaults.integer(forKey: LudusStore.bestKey(game)) }
 }
 
 // MARK: Haptics

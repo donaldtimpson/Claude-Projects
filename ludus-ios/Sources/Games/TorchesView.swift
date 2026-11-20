@@ -484,7 +484,7 @@ struct TorchesView: View {
                     accent: Lu.tangerine, onClose: onClose,
                     backdrop: { TBackdrop(glow: litShare).animation(.easeOut(duration: 0.4), value: litShare) }) {
             VStack(spacing: 12) {
-                Color.clear.frame(height: 56)
+                HUDSpace(56)
                 tapsPanel
                 GeometryReader { geo in board(in: geo.size) }
                 message.frame(height: 56)

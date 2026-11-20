@@ -427,7 +427,7 @@ struct PigeonPostView: View {
         ArcadeShell(model: m, spec: GameID.pigeonPost.spec ?? GameSpec(title: "Pigeon Post", mechanic: "", premise: "", game: .pigeonPost),
                     accent: Lu.sky, onClose: onClose, backdrop: { PPSky() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 letterCard
                 GeometryReader { geo in
                     let h = max(200, min(geo.size.height - 74, geo.size.width * 1.0))

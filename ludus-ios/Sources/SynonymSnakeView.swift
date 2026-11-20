@@ -444,7 +444,7 @@ private struct SSPlayArea: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Color.clear.frame(height: 52)
+            HUDSpace(52)
             SSBanner(model: model)
             GeometryReader { geo in
                 let cell = min(geo.size.width / CGFloat(model.cols), geo.size.height / CGFloat(model.rows))

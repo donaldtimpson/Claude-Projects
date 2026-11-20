@@ -301,7 +301,7 @@ private struct CTPlay: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            Color.clear.frame(height: 54)
+            HUDSpace(54)
             request
             patienceBar
             tower.frame(maxHeight: .infinity).padding(.top, 54)

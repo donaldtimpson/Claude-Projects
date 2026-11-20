@@ -235,7 +235,7 @@ struct PianoMouseView: View {
         ArcadeShell(model: model, spec: GameID.pianoMouse.spec!, accent: Lu.gold, onClose: onClose,
                     backdrop: { PianoInterior() }) {
             VStack(spacing: 8) {
-                Color.clear.frame(height: 58)
+                HUDSpace(58)
                 PMMusicDesk(model: model)
                 ZStack {
                     if let t = model.revealText {

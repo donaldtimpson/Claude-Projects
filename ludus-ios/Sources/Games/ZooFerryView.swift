@@ -562,7 +562,7 @@ struct ZooFerryView: View {
                     accent: Lu.sky, onClose: onClose, backdrop: { ZFHarbour() }) {
             GeometryReader { root in
                 VStack(spacing: 6) {
-                    Color.clear.frame(height: 56)
+                    HUDSpace(56)
                     map
                     Spacer(minLength: 0)
                     ferries

@@ -384,7 +384,7 @@ struct ZookeeperView: View {
                     accent: Lu.mint, onClose: onClose,
                     backdrop: { Menagerie() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 54)
+                HUDSpace(54)
                 Text(header).font(luSerif(17, .black)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(Color(hex: 0x3a2410))
                     .padding(.horizontal, 16).padding(.vertical, 5)

@@ -552,7 +552,7 @@ struct ChariotCodeView: View {
                     accent: Lu.coral, onClose: onClose,
                     backdrop: { CCBackdrop() }) {
             VStack(spacing: 10) {
-                Color.clear.frame(height: 60)
+                HUDSpace(60)
                 GeometryReader { geo in arena(geo.size) }
                 scroll
                 pad
