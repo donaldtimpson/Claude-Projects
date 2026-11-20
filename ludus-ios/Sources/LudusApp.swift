@@ -21,7 +21,10 @@ extension Color {
 
 @main
 struct LudusApp: App {
-    init() { luRegisterFonts() }
+    init() {
+        luRegisterFonts()
+        _ = LudusProfiles.shared            // picks the player's save before any screen reads it
+    }
     @StateObject private var profiles = LudusProfiles.shared
 
     var body: some Scene {
@@ -40,7 +43,7 @@ struct LudusApp: App {
         // LUDUS_WORLD=<subject> opens straight onto that world's landing page.
         let env = ProcessInfo.processInfo.environment
         // LUDUS_GRANT=n sets the denarii bank; LUDUS_OWN=id,id… marks villa items owned;
-        // LUDUS_SCREEN=villa|records opens those pages.
+        // LUDUS_SCREEN=villa|records opens those pages (=players: the picker; see Profiles.swift).
         let _ = {
             if let n = Int(env["LUDUS_GRANT"] ?? "") { LudusStore.defaults.set(n, forKey: LudusStore.denariiKey) }
             if let o = env["LUDUS_OWN"] {
@@ -48,7 +51,9 @@ struct LudusApp: App {
                                           forKey: LudusEconomy.ownedKey)
             }
         }()
-        if env["LUDUS_SCREEN"] == "villa" {
+        if env["LUDUS_PROFILE_SELFTEST"] != nil {
+            ProfileSelfTestView()                         // see Profiles.swift `selfTest`
+        } else if env["LUDUS_SCREEN"] == "villa" {
             LudusStage { VillaView(onClose: {}) }
         } else if env["LUDUS_SCREEN"] == "records" {
             LudusStage { TabulariumView(onClose: {}) }
