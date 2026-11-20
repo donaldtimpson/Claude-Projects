@@ -329,7 +329,7 @@ private final class FlagFrenzyModel: ArcadeModel {
     }
 
     override func botAct(correct: Bool) {
-        let tappable = bubbles.filter { $0.pop == 0 && $0.burst == 0 && $0.y > 260 && $0.y < size.height - 30 }
+        let tappable = bubbles.filter { $0.pop == 0 && $0.burst == 0 && $0.y > size.height * 0.3 && $0.y < size.height - 30 }
         let choice = tappable.filter { target.isRight($0.country) == correct }.randomElement()
         if let b = choice { tap(CGPoint(x: b.x, y: b.y)) }
     }
@@ -452,9 +452,12 @@ struct FlagFrenzyView: View {
                 .gesture(SpatialTapGesture().onEnded { model.tap($0.location) })
                 .ignoresSafeArea(edges: .bottom)
 
-                FFBanner(target: model.target, note: model.note, combo: model.combo)
-                    .padding(.top, 58).padding(.horizontal, 14)
-                    .allowsHitTesting(false)
+                VStack(spacing: 0) {
+                    HUDSpace(58)
+                    FFBanner(target: model.target, note: model.note, combo: model.combo)
+                }
+                .padding(.horizontal, 14)
+                .allowsHitTesting(false)
             }
         }
         .onAppear {

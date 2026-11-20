@@ -590,9 +590,11 @@ private struct SeesawGarden: View {
                 }
                 .stroke(Color(hex: 0xc9b896), lineWidth: 1.5)
                 VesMosaicBand().frame(height: 14).position(x: W / 2, y: H * 0.66)
-                // colonnade at the sides
-                ForEach([0.05, 0.95], id: \.self) { fx in
-                    VesColumn().frame(width: 34, height: H * 0.5).position(x: W * fx, y: H * 0.42)
+                // colonnade at the sides (sideways on a tablet, flanking the play column instead of
+                // standing under the HUD rails at the screen's edges)
+                let off = W > H ? min(W * 0.45, ArcadeLayout.columnWidth / 2 + 40) : W * 0.45
+                ForEach([-1.0, 1.0], id: \.self) { s in
+                    VesColumn().frame(width: 34, height: H * 0.5).position(x: W / 2 + s * off, y: H * 0.42)
                 }
             }
         }

@@ -567,7 +567,8 @@ struct ChariotCodeView: View {
     private func arena(_ size: CGSize) -> some View {
         let pz = model.puzzle
         let gap: CGFloat = 4
-        let cs = min(104, (size.width - gap * CGFloat(pz.cols - 1)) / CGFloat(pz.cols),
+        // A tablet's play area is wider than a phone's: let the small boards' squares grow a little.
+        let cs = min(size.width > 500 ? 128 : 104, (size.width - gap * CGFloat(pz.cols - 1)) / CGFloat(pz.cols),
                      (size.height - gap * CGFloat(pz.rows - 1)) / CGFloat(pz.rows))
         let gw = cs * CGFloat(pz.cols) + gap * CGFloat(pz.cols - 1)
         let gh = cs * CGFloat(pz.rows) + gap * CGFloat(pz.rows - 1)

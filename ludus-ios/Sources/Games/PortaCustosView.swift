@@ -968,6 +968,7 @@ private struct PCBigButton: View {
 /// The arena wall, the gate and the marching gladiator.
 private struct PCArena: View {
     @ObservedObject var model: PortaModel
+    @Environment(\.ludusColumnBleed) private var bleed
 
     var body: some View {
         GeometryReader { geo in
@@ -979,10 +980,11 @@ private struct PCArena: View {
             let start = -fig * 0.35, stop = gateX - gateW / 2 - fig * 0.36
             ZStack {
                 // The sand: from the gladiator's feet down past the buttons to the screen's edge
-                // (the strip and buttons draw on top of it), across the full width.
+                // (the strip and buttons draw on top of it), across the full width — the screen's,
+                // past the column, when sideways.
                 Rectangle().fill(LinearGradient(colors: [Color(hex: 0xe6c98f), Color(hex: 0xc99e62)], startPoint: .top, endPoint: .bottom))
                     .overlay(alignment: .top) { Rectangle().fill(Color(hex: 0x9c7444)).frame(height: 4) }
-                    .frame(width: w + 60, height: h * 0.28 + 420)
+                    .frame(width: w + 60 + bleed * 2, height: h * 0.28 + 420)
                     .position(x: w / 2, y: h * 0.72 + (h * 0.28 + 420) / 2)
                 // The gladiator
                 if let g = model.walker {

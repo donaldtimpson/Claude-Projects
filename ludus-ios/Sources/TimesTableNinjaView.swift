@@ -493,10 +493,12 @@ struct TimesTableNinjaView: View {
                 }
                 .ignoresSafeArea()
 
-                TTNBanner(target: game.target, division: game.division, hint: game.hint, maxMul: game.maxMul, combo: game.combo)
-                    .padding(.top, 62)
-                    .opacity(game.phase == .playing ? 1 : 0)
-                    .allowsHitTesting(false)
+                VStack(spacing: 0) {
+                    HUDSpace(62)
+                    TTNBanner(target: game.target, division: game.division, hint: game.hint, maxMul: game.maxMul, combo: game.combo)
+                }
+                .opacity(game.phase == .playing ? 1 : 0)
+                .allowsHitTesting(false)
             }
         }
     }
