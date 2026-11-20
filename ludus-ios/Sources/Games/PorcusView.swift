@@ -282,7 +282,9 @@ private struct PorcusRoom: View {
                     RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
                 }
                 .frame(width: 104, height: 108)
-                .position(x: w - 66, y: h * 0.205)
+                // Sideways on a tablet: just right of the play column and below the HUD rails.
+                .position(x: w > h ? min(w - 66, w / 2 + ArcadeLayout.columnWidth / 2 + 90) : w - 66,
+                          y: h * (w > h ? 0.32 : 0.205))
                 // Desk
                 VStack(spacing: 0) {
                     Rectangle().fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x8d5a2e)], startPoint: .top, endPoint: .bottom))
