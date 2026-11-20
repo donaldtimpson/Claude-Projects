@@ -307,7 +307,9 @@ struct AgrippaMapView: View {
                             Spacer(minLength: 0)
                         }
                     }
-                    tray.frame(height: 118)
+                    // Sideways on a tablet the tray runs the full width: bigger pieces, so they
+                    // don't huddle in the middle of it.
+                    tray(big: root.size.width > 900).frame(height: root.size.width > 900 ? 150 : 118)
                 }
                 .padding(.horizontal, 12).padding(.bottom, 6)
                 .overlay { draggedPiece(root.size) }
@@ -422,30 +424,30 @@ struct AgrippaMapView: View {
     }
 
     // MARK: Tray
-    private var tray: some View {
+    private func tray(big: Bool) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14)
                 .fill(LinearGradient(colors: [Color(hex: 0x5a3a1c), Color(hex: 0x3f2712)], startPoint: .top, endPoint: .bottom))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0x2a190b), lineWidth: 2))
                 .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
             HStack(spacing: 6) {
-                ForEach(m.board.pieces) { p in slot(p) }
+                ForEach(m.board.pieces) { p in slot(p, big: big) }
             }
             .padding(.horizontal, 8)
             .id(m.boardID)
         }
     }
 
-    private func slot(_ p: APPiece) -> some View {
+    private func slot(_ p: APPiece, big: Bool) -> some View {
         let gone = m.placed.contains(p.id) || dragging == p.id || m.flyer?.piece == p.id
         return VStack(spacing: 2) {
             APPieceShape(piece: p, hex: apPieceHex(p, m.board))
-                .frame(height: 66)
-            Text("\(p.badge) \(p.name)").font(luFont(11, .heavy)).foregroundStyle(Color(hex: 0xf6ecd4))
+                .frame(height: big ? 92 : 66)
+            Text("\(p.badge) \(p.name)").font(luFont(big ? 13 : 11, .heavy)).foregroundStyle(Color(hex: 0xf6ecd4))
                 .lineLimit(2).minimumScaleFactor(0.55).multilineTextAlignment(.center)
                 .frame(height: 30)
         }
-        .frame(maxWidth: 76)
+        .frame(maxWidth: big ? 112 : 76)
         .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.18)))
         .opacity(gone ? 0.15 : 1)

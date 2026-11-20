@@ -710,6 +710,7 @@ struct ZooFerryView: View {
                     })
             }
         }
+        .frame(maxWidth: 820)                 // sideways on a tablet: berths, not a wall of signboards
         .id(m.qid)
         .transition(.move(edge: .leading).combined(with: .opacity))
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: m.qid)
