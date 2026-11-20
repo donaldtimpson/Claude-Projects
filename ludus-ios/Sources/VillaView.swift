@@ -6,7 +6,8 @@ import SwiftUI
 // inside a red-and-gold fresco frame — deliberately a different register from the painted map, the
 // way a fresco differs from a landscape). It starts bare: a plain house on a lawn. Denarii buy the
 // garden, water, statues and pets; aurei (from laurels) buy the grand works. Everything bought
-// appears in the scene at its own place, and the pets wander the lawn.
+// appears in the scene at its own place, and the pets wander the lawn. Owned things can be dragged
+// to new spots (VillaPlacement), saved per player.
 //
 // Opened from the home bar's coin corners.
 
@@ -94,6 +95,12 @@ private enum Fr {
 }
 
 // MARK: - The screen
+//
+// Three layouts, picked from the measured size (in stage points, see LudusStage):
+//   • phone — the scene on top, the shop a sideways strip of cards below;
+//   • upright iPad — the scene on top, the shop a grid below (two rows, every category fits);
+//   • sideways iPad — the scene fills the left, the shop is a drawer of cards on the right.
+// The scene itself is a fixed-aspect canvas scaled to fit; spare room becomes more sky, hills and lawn.
 
 struct VillaView: View {
     let onClose: () -> Void
@@ -109,24 +116,55 @@ struct VillaView: View {
     private var denarii: Int { _ = refresh; return LudusStore.denarii }
     private var aurei: Int { _ = refresh; return LudusEconomy.aurei }
 
+    private enum Layout { case phone, tall, wide }
+
+    init(onClose: @escaping () -> Void) {
+        self.onClose = onClose
+        #if DEBUG
+        // LUDUS_VILLA_OWN=id+id+… marks villa items owned, once per launch (the capture probe's
+        // env list is comma-separated, so LUDUS_OWN can only carry one id through it).
+        if !Self.didDebugOwn, let o = ProcessInfo.processInfo.environment["LUDUS_VILLA_OWN"] {
+            Self.didDebugOwn = true
+            LudusStore.defaults.set(o.split(separator: "+").map(String.init), forKey: LudusEconomy.ownedKey)
+        }
+        #endif
+    }
+    #if DEBUG
+    nonisolated(unsafe) private static var didDebugOwn = false
+    #endif
+
     var body: some View {
         GeometryReader { geo in
-            let w = geo.size.width
-            let sceneH = min(geo.size.height * 0.56, w * 1.12)
+            let w = geo.size.width, h = geo.size.height
+            let layout: Layout = w < 600 ? .phone : (w > h ? .wide : .tall)
             ZStack(alignment: .top) {
                 Fr.frameDeep.ignoresSafeArea()
                 VStack(spacing: 0) {
                     header
-                    FrescoFrame {
-                        VillaScene(owned: owned, justBought: justBought, poke: poke)
+                    switch layout {
+                    case .phone:
+                        scene.frame(height: min(h * 0.56, w * 1.12)).padding(.horizontal, 10)
+                        stripShop
+                    case .tall:
+                        scene.padding(.horizontal, 14)
+                        gridShop(width: w)
+                    case .wide:
+                        HStack(spacing: 14) {
+                            scene
+                            drawer.frame(width: min(370, max(320, w * 0.31)))
+                        }
+                        .padding(.horizontal, 14).padding(.bottom, 12)
                     }
-                    .frame(height: sceneH)
-                    .padding(.horizontal, 10)
-                    shop
                 }
             }
         }
         .statusBarHidden(true)
+    }
+
+    private var scene: some View {
+        FrescoFrame {
+            VillaScene(owned: owned, justBought: justBought, poke: poke, onTap: pokeOwned)
+        }
     }
 
     // MARK: Header
@@ -162,63 +200,145 @@ struct VillaView: View {
         .background(Capsule().fill(Fr.frame).overlay(Capsule().stroke(Fr.gold.opacity(0.7), lineWidth: 1)))
     }
 
-    // MARK: Shop drawer
+    // MARK: Shop — strip (phone), grid (upright iPad), drawer (sideways iPad)
 
-    private var shop: some View {
+    private var stripShop: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 6) {
-                ForEach(VillaCategory.allCases) { c in
-                    Button {
-                        Sfx.play(.tick); withAnimation(.easeOut(duration: 0.18)) { tab = c }
-                    } label: {
-                        VStack(spacing: 3) {
-                            Image(systemName: c.icon).font(.system(size: 16, weight: .bold))
-                            Text(c.rawValue.uppercased()).font(luCinzel(9.5, bold: true)).tracking(0.5)
-                                .lineLimit(1).minimumScaleFactor(0.7)
-                        }
-                        .foregroundStyle(tab == c ? Fr.parchment : Fr.ink.opacity(0.7))
-                        .frame(maxWidth: .infinity).padding(.vertical, 7)
-                        .background(RoundedRectangle(cornerRadius: 10)
-                            .fill(tab == c ? Fr.frame : Fr.parchment.opacity(0.0)))
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(4)
-            .background(RoundedRectangle(cornerRadius: 13).fill(Color(hex: 0xe6d3a8)))
-
+            tabs
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    ForEach(villaCatalog.filter { $0.category == tab }) { item in
-                        card(item)
-                    }
+                    ForEach(items) { item in card(item, width: 108) }
                 }
                 .padding(.horizontal, 2).padding(.vertical, 4)
             }
-
-            Text(note ?? hint)
-                .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
-                .multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                .animation(.easeOut(duration: 0.2), value: note)
+            noteLine
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 12).padding(.top, 12)
-        .background(
-            UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22)
-                .fill(LinearGradient(colors: [Fr.parchment, Color(hex: 0xe9d6ad)], startPoint: .top, endPoint: .bottom))
-                .overlay(UnevenRoundedRectangle(topLeadingRadius: 22, topTrailingRadius: 22)
-                    .stroke(Fr.gold, lineWidth: 1.5))
-                .ignoresSafeArea(edges: .bottom)
-        )
+        .background(parchmentPanel(top: true))
         .padding(.top, 12)
     }
 
-    private var hint: String {
-        tab == .grand ? "Grand works cost gold aurei. Win laurels in the games to earn them!"
-                      : "Every right answer in a game earns a silver denarius."
+    /// Two rows always fit: four columns of compact cards and at most eight items in a category.
+    private func gridShop(width: CGFloat) -> some View {
+        let cols = 4, gap: CGFloat = 10
+        let tw = floor((width - 24 - gap * CGFloat(cols - 1)) / CGFloat(cols))
+        return VStack(spacing: 10) {
+            tabs(roomy: true)
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
+                ForEach(items) { item in rowCard(item, width: tw) }
+            }
+            .frame(height: rowCardHeight * 2 + gap, alignment: .top)
+            .id(tab)
+            noteLine.frame(minHeight: 36)
+        }
+        .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 4)
+        .background(parchmentPanel(top: true))
+        .padding(.top, 12)
     }
 
-    private func card(_ item: VillaItem) -> some View {
+    private var drawer: some View {
+        GeometryReader { g in
+            let cols = 3, gap: CGFloat = 10
+            let tw = floor((g.size.width - 24 - gap * CGFloat(cols - 1)) / CGFloat(cols))
+            VStack(spacing: 12) {
+                tabs
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
+                        ForEach(items) { item in card(item, width: tw) }
+                    }
+                    .padding(.vertical, 4)
+                    .id(tab)
+                }
+                Spacer(minLength: 0)
+                VStack(spacing: 12) {
+                    collection
+                    noteLine.frame(minHeight: 40)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 12).frame(maxWidth: .infinity)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.35))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Fr.gold.opacity(0.5), lineWidth: 1)))
+            }
+            .padding(12)
+        }
+        .background(parchmentPanel(top: false))
+    }
+
+    private var items: [VillaItem] { villaCatalog.filter { $0.category == tab } }
+
+    private var tabs: some View { tabs(roomy: false) }
+
+    /// Category tabs; `roomy` (the upright iPad's full-width bar) sets icon and label side by side, larger.
+    private func tabs(roomy: Bool) -> some View {
+        HStack(spacing: 6) {
+            ForEach(VillaCategory.allCases) { c in
+                Button {
+                    Sfx.play(.tick); withAnimation(.easeOut(duration: 0.18)) { tab = c }
+                } label: {
+                    let stack = roomy ? AnyLayout(HStackLayout(spacing: 7)) : AnyLayout(VStackLayout(spacing: 3))
+                    stack {
+                        Image(systemName: c.icon).font(.system(size: roomy ? 18 : 16, weight: .bold))
+                        Text(c.rawValue.uppercased()).font(luCinzel(roomy ? 13 : 9.5, bold: true)).tracking(0.5)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                    .foregroundStyle(tab == c ? Fr.parchment : Fr.ink.opacity(0.7))
+                    .frame(maxWidth: .infinity).padding(.vertical, roomy ? 11 : 7)
+                    .background(RoundedRectangle(cornerRadius: 10)
+                        .fill(tab == c ? Fr.frame : Fr.parchment.opacity(0.0)))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .background(RoundedRectangle(cornerRadius: 13).fill(Color(hex: 0xe6d3a8)))
+    }
+
+    private var noteLine: some View {
+        Text(note ?? hint)
+            .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
+            .multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            .animation(.easeOut(duration: 0.2), value: note)
+    }
+
+    private func parchmentPanel(top: Bool) -> some View {
+        let r: CGFloat = 22
+        let shape = UnevenRoundedRectangle(topLeadingRadius: r, bottomLeadingRadius: top ? 0 : r,
+                                           bottomTrailingRadius: top ? 0 : r, topTrailingRadius: r)
+        return shape
+            .fill(LinearGradient(colors: [Fr.parchment, Color(hex: 0xe9d6ad)], startPoint: .top, endPoint: .bottom))
+            .overlay(shape.stroke(Fr.gold, lineWidth: 1.5))
+            .ignoresSafeArea(edges: top ? .bottom : [])
+    }
+
+    private var hint: String {
+        if tab == .grand { return "Grand works cost gold aurei. Win laurels in the games to earn them!" }
+        if owned.contains(where: { villaMovable.contains($0) }) { return "Drag your things to move them around the villa." }
+        return "Every right answer in a game earns a silver denarius."
+    }
+
+    /// How much of the catalog this villa holds: a count and a gold bar.
+    private var collection: some View {
+        let n = villaCatalog.filter { owned.contains($0.id) }.count, all = villaCatalog.count
+        return VStack(spacing: 6) {
+            HStack {
+                Text("YOUR VILLA").font(luCinzel(11, bold: true)).tracking(1).foregroundStyle(Fr.ink.opacity(0.6))
+                Spacer()
+                Text("\(n) of \(all)").font(luCinzel(13, bold: true)).monospacedDigit().foregroundStyle(Fr.frame)
+            }
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color(hex: 0xd6c39b))
+                    Capsule().fill(LinearGradient(colors: [Fr.gold, Fr.ochre], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(n > 0 ? 8 : 0, g.size.width * CGFloat(n) / CGFloat(all)))
+                }
+            }
+            .frame(height: 8)
+        }
+    }
+    private func thumbHeight(_ width: CGFloat) -> CGFloat { (width - 12) * 0.875 }
+
+    private func card(_ item: VillaItem, width: CGFloat) -> some View {
         let has = owned.contains(item.id)
         let afford = LudusEconomy.canAfford(item)
         return Button { tap(item) } label: {
@@ -228,10 +348,10 @@ struct VillaView: View {
                         .fill(LinearGradient(colors: [Fr.skyLow, Fr.lawn.opacity(0.55)], startPoint: .top, endPoint: .bottom))
                     VillaThumb(id: item.id).padding(6)
                 }
-                .frame(width: 96, height: 84)
+                .frame(width: width - 12, height: thumbHeight(width))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Fr.gold.opacity(0.8), lineWidth: 1))
                 Text(item.name).font(luCinzel(12, bold: true)).foregroundStyle(Fr.ink)
-                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .lineLimit(1).minimumScaleFactor(0.7).frame(height: 16)
                 if has {
                     Label("Yours", systemImage: "checkmark.seal.fill")
                         .font(luCinzel(11, bold: true)).foregroundStyle(Fr.leafDark)
@@ -244,26 +364,73 @@ struct VillaView: View {
                     .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
                     .frame(maxWidth: .infinity).frame(height: 26)
                     .background(Capsule().fill(afford ? Fr.frame : Color(hex: 0xd6c39b)))
+                    .padding(.horizontal, 4)
                 }
             }
-            .frame(width: 108)
+            .frame(width: width)
             .padding(.vertical, 8)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.35))
+            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(has ? 0.5 : 0.35))
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Fr.gold.opacity(0.5), lineWidth: 1)))
             .offset(x: shake == item.id ? -6 : 0)
         }
         .buttonStyle(.plain)
     }
 
-    private func tap(_ item: VillaItem) {
-        if owned.contains(item.id) {
-            Sfx.play(.tick)
-            poke = item.id
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { if poke == item.id { poke = nil } }
-            note = item.blurb
-            return
+    private let rowCardHeight: CGFloat = 80
+
+    /// The compact card of the upright iPad grid: picture on the left, name and price beside it.
+    private func rowCard(_ item: VillaItem, width: CGFloat) -> some View {
+        let has = owned.contains(item.id)
+        let afford = LudusEconomy.canAfford(item)
+        return Button { tap(item) } label: {
+            HStack(spacing: 8) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(LinearGradient(colors: [Fr.skyLow, Fr.lawn.opacity(0.55)], startPoint: .top, endPoint: .bottom))
+                    VillaThumb(id: item.id).padding(4)
+                }
+                .frame(width: 64, height: 64)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Fr.gold.opacity(0.8), lineWidth: 1))
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(item.name).font(luCinzel(12.5, bold: true)).foregroundStyle(Fr.ink)
+                        .lineLimit(2).minimumScaleFactor(0.8).fixedSize(horizontal: false, vertical: true)
+                    if has {
+                        Label("Yours", systemImage: "checkmark.seal.fill")
+                            .font(luCinzel(11, bold: true)).foregroundStyle(Fr.leafDark)
+                            .frame(height: 24)
+                    } else {
+                        HStack(spacing: 4) {
+                            Image(item.price.gold ? "CoinGold" : "CoinSilver").resizable().frame(width: 16, height: 16)
+                            Text("\(item.price.amount)").font(luCinzel(13.5)).monospacedDigit()
+                        }
+                        .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
+                        .padding(.horizontal, 10).frame(height: 24)
+                        .background(Capsule().fill(afford ? Fr.frame : Color(hex: 0xd6c39b)))
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(8)
+            .frame(width: width, height: rowCardHeight)
+            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(has ? 0.5 : 0.35))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Fr.gold.opacity(0.5), lineWidth: 1)))
+            .offset(x: shake == item.id ? -6 : 0)
         }
+        .buttonStyle(.plain)
+    }
+
+    private func pokeOwned(_ id: String) {
+        guard let item = villaCatalog.first(where: { $0.id == id }) else { return }
+        Sfx.play(.tick)
+        poke = item.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { if poke == item.id { poke = nil } }
+        note = item.blurb
+    }
+
+    private func tap(_ item: VillaItem) {
+        if owned.contains(item.id) { pokeOwned(item.id); return }
         if LudusEconomy.buy(item) {
+            VillaPlacement.reset(item: item.id)          // a new purchase lands at its home spot
             Sfx.play(.coin); Haptics.success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { Sfx.play(.sparkle) }
             withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) {
@@ -283,6 +450,9 @@ struct VillaView: View {
     }
 }
 
+/// Catalog items the child can drag around the scene (the rest belong to the house).
+private let villaMovable: Set<String> = Set(villaCatalog.map(\.id)).subtracting(["roses", "banners", "goldroof", "eagle"])
+
 // MARK: - The fresco frame
 
 private struct FrescoFrame<Content: View>: View {
@@ -300,39 +470,61 @@ private struct FrescoFrame<Content: View>: View {
 }
 
 // MARK: - The scene
+//
+// The villa itself is drawn on the fixed design canvas (VillaPlacement.canvas), scaled uniformly to
+// fit and set a little below center; the sky, sea, hills, lawn and path are drawn across the whole
+// frame, lined up with the canvas, so a wide or tall frame shows more countryside, never a stretched
+// house. Owned things can be picked up and moved (see VillaPlacement for the zones).
 
 private struct VillaScene: View {
     let owned: Set<String>
     let justBought: String?
     let poke: String?
+    var onTap: (String) -> Void = { _ in }
+
+    @State private var places: [String: CGPoint] = VillaPlacement.loadAll(VillaScene.allIDs)
+    @State private var drag: Held?
+    @State private var settle: [String: Settle] = [:]       // a dropped thing glides to its spot
+    @State private var petShift: [String: Double] = [:]     // re-phases a pet's stroll so it sets off from where it was dropped
+
+    /// A thing being held: its feet (canvas fractions) and where the finger grabbed it, relative to them.
+    struct Held: Equatable { let id: String; var at: CGPoint; let grab: CGSize; var moved: Bool }
+    struct Settle { let from: CGPoint; let at: Double }
+
+    private static let space = "villaCanvas"
+    private static let allIDs = placed.map(\.id) + petList.map(\.id) + ["owl"]
 
     var body: some View {
         GeometryReader { g in
-            let w = g.size.width, h = g.size.height
+            let fw = g.size.width, fh = g.size.height
+            let c = VillaPlacement.canvas
+            let k = min(fw / c.width, fh / c.height)
+            let w = c.width * k, h = c.height * k
+            let ox = (fw - w) / 2, oy = (fh - h) * 0.65
             TimelineView(.animation(minimumInterval: 1 / 30)) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate
                 ZStack(alignment: .topLeading) {
-                    backdrop(w: w, h: h, t: t)
-                    house(w: w, h: h)
-                    lawn(w: w, h: h)
-                    ForEach(placed, id: \.id) { p in
-                        if owned.contains(p.id) {
-                            prop(p.id, w: w, t: t)
-                                .frame(width: p.size * w, height: p.size * w)
-                                .scaleEffect(scale(for: p.id), anchor: .bottom)
-                                .position(x: p.x * w, y: p.y * h - p.size * w / 2)
-                                .zIndex(p.y)
+                    Countryside(fw: fw, fh: fh, ox: ox, oy: oy, w: w, h: h, t: t)
+                    ZStack(alignment: .topLeading) {
+                        house(w: w, h: h)
+                        if let d = drag, VillaScene.statues.contains(d.id) { plinthMarks(w: w, h: h, near: d.at) }
+                        things(w: w, h: h, t: t)
+                        if let j = justBought, let p = sparkleSpot(j, t: t) {
+                            SparkleBurst(t: t).frame(width: 120, height: 120)
+                                .position(x: p.x * w, y: p.y * h).allowsHitTesting(false)
+                                .zIndex(2000)
                         }
                     }
-                    pets(w: w, h: h, t: t)
-                    if let j = justBought, let p = placed.first(where: { $0.id == j }) ?? petSpot(j, w: w, h: h, t: t) {
-                        SparkleBurst(t: t).frame(width: 120, height: 120)
-                            .position(x: p.x * w, y: p.y * h - p.size * w / 2).allowsHitTesting(false)
-                            .zIndex(100)
-                    }
+                    .frame(width: w, height: h)
+                    .coordinateSpace(name: VillaScene.space)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityIdentifier("villa-canvas")
+                    .position(x: ox + w / 2, y: oy + h / 2)
                 }
+                .frame(width: fw, height: fh, alignment: .topLeading)
             }
         }
+        .onChange(of: owned) { _ in places = VillaPlacement.loadAll(VillaScene.allIDs) }
     }
 
     private func scale(for id: String) -> CGFloat {
@@ -340,49 +532,186 @@ private struct VillaScene: View {
         return 1
     }
 
-    /// Where each non-pet item stands: center x, FOOT y (fractions of the scene), and its box size (fraction of width).
-    struct Spot { let id: String; let x: CGFloat; let y: CGFloat; let size: CGFloat }
-    private var placed: [Spot] { [
-        .init(id: "cypress", x: 0.06, y: 0.60, size: 0.30),
-        .init(id: "cypress2", x: 0.94, y: 0.60, size: 0.30),
-        .init(id: "olive", x: 0.14, y: 0.72, size: 0.30),
-        .init(id: "lemon", x: 0.87, y: 0.72, size: 0.26),
-        .init(id: "bust", x: 0.33, y: 0.67, size: 0.12),
-        .init(id: "minerva", x: 0.67, y: 0.67, size: 0.20),
-        .init(id: "fountain", x: 0.50, y: 0.76, size: 0.26),
-        .init(id: "birdbath", x: 0.31, y: 0.86, size: 0.12),
-        .init(id: "sundial", x: 0.70, y: 0.87, size: 0.13),
-        .init(id: "pond", x: 0.19, y: 0.97, size: 0.30),
-        .init(id: "chariot", x: 0.13, y: 0.86, size: 0.22),
-        .init(id: "elephant", x: 0.86, y: 0.95, size: 0.30),
-        .init(id: "arbor", x: 0.50, y: 1.03, size: 0.36),
-    ].map { $0.id == "cypress2" ? Spot(id: "cypress", x: $0.x, y: $0.y, size: $0.size) : $0 } }
+    /// Where each non-pet item stands by default: center x, FOOT y (canvas fractions), box size
+    /// (fraction of canvas width), its zone, and how much of the box (from the bottom) is solid to a finger.
+    struct Spot { let id: String; let item: String; let x: CGFloat; let y: CGFloat; let size: CGFloat; let zone: VillaZone; var hit: CGFloat = 1 }
+    static let placed: [Spot] = [
+        .init(id: "cypress", item: "cypress", x: 0.06, y: 0.60, size: 0.30, zone: .lawn),
+        .init(id: "cypress2", item: "cypress", x: 0.94, y: 0.60, size: 0.30, zone: .lawn),
+        .init(id: "olive", item: "olive", x: 0.14, y: 0.72, size: 0.30, zone: .lawn),
+        .init(id: "lemon", item: "lemon", x: 0.87, y: 0.72, size: 0.26, zone: .lawn),
+        .init(id: "bust", item: "bust", x: 0.33, y: 0.67, size: 0.12, zone: .plinth),
+        .init(id: "minerva", item: "minerva", x: 0.67, y: 0.67, size: 0.20, zone: .plinth),
+        .init(id: "fountain", item: "fountain", x: 0.50, y: 0.76, size: 0.26, zone: .lawn, hit: 0.75),
+        .init(id: "birdbath", item: "birdbath", x: 0.31, y: 0.86, size: 0.12, zone: .lawn),
+        .init(id: "sundial", item: "sundial", x: 0.70, y: 0.87, size: 0.13, zone: .plinth),
+        .init(id: "pond", item: "pond", x: 0.19, y: 0.97, size: 0.30, zone: .lawn, hit: 0.45),
+        .init(id: "chariot", item: "chariot", x: 0.13, y: 0.86, size: 0.22, zone: .lawn, hit: 0.7),
+        .init(id: "elephant", item: "elephant", x: 0.86, y: 0.95, size: 0.30, zone: .lawn, hit: 0.8),
+        .init(id: "arbor", item: "arbor", x: 0.50, y: 1.03, size: 0.36, zone: .lawn, hit: 0.8),
+    ]
+    static let statues: Set<String> = ["bust", "minerva", "sundial"]
 
-    // MARK: Backdrop: sky, sun, hills, sea
+    // MARK: Things on the lawn — props, pets and the owl, one depth-sorted layer
 
-    private func backdrop(w: CGFloat, h: CGFloat, t: Double) -> some View {
+    private func things(w: CGFloat, h: CGFloat, t: Double) -> some View {
         ZStack(alignment: .topLeading) {
-            LinearGradient(colors: [Fr.skyTop, Fr.skyLow], startPoint: .top, endPoint: .init(x: 0.5, y: 0.45))
-            Circle().fill(RadialGradient(colors: [Color(hex: 0xfff4cf), Color(hex: 0xf6d27a).opacity(0.0)],
-                                         center: .center, startRadius: w * 0.04, endRadius: w * 0.14))
-                .frame(width: w * 0.28, height: w * 0.28).position(x: w * 0.84, y: h * 0.11)
-            Circle().fill(Color(hex: 0xfff1c4)).frame(width: w * 0.08).position(x: w * 0.84, y: h * 0.11)
-            // two soft clouds drifting
-            ForEach(0..<2, id: \.self) { i in
-                let x = (CGFloat((t * (0.008 + Double(i) * 0.004) + Double(i) * 0.5).truncatingRemainder(dividingBy: 1.3)) - 0.15) * w
-                CloudPuff().fill(.white.opacity(0.75))
-                    .frame(width: w * (0.22 - CGFloat(i) * 0.05), height: w * 0.07)
-                    .position(x: x, y: h * (0.08 + CGFloat(i) * 0.07))
+            ForEach(VillaScene.placed, id: \.id) { s in
+                if owned.contains(s.item) {
+                    let p = foot(s.id, home: CGPoint(x: s.x, y: s.y), t: t)
+                    let box = s.size * w
+                    let hitH = max(box * s.hit, 64), hitW = max(box, 64)
+                    held(s.id, box: box) { prop(s.item, w: w, t: t).frame(width: box, height: box) }
+                        .scaleEffect(scale(for: s.item), anchor: .bottom)
+                        .frame(width: hitW, height: max(box, hitH), alignment: .bottom)
+                        .contentShape(BottomRect(height: hitH))
+                        .gesture(grab(s.id, zone: s.zone, size: s.size, w: w, h: h))
+                        .accessibilityElement().accessibilityIdentifier("villa-item-\(s.id)")
+                        .position(x: p.x * w, y: p.y * h - max(box, hitH) / 2)
+                        .zIndex(drag?.id == s.id ? 1000 : p.y)
+                }
             }
-            // sea strip and hills
-            Rectangle().fill(LinearGradient(colors: [Color(hex: 0x7fb3c4), Color(hex: 0x6aa0b5)], startPoint: .top, endPoint: .bottom))
-                .frame(width: w, height: h * 0.06).position(x: w / 2, y: h * 0.33)
-            Hill(peaks: [0.0, 0.32, 0.18, 0.40, 0.25, 0.36, 0.1]).fill(Fr.hillBack)
-                .frame(width: w, height: h * 0.16).position(x: w / 2, y: h * 0.34)
-            Hill(peaks: [0.3, 0.1, 0.35, 0.2, 0.4, 0.05]).fill(Fr.hillFront)
-                .frame(width: w, height: h * 0.14).position(x: w / 2, y: h * 0.40)
+            ForEach(VillaScene.petList, id: \.id) { pet in
+                if owned.contains(pet.id) { petView(pet, w: w, h: h, t: t) }
+            }
+            if owned.contains("owl") {
+                let p = foot("owl", home: CGPoint(x: 0.22, y: VillaPlacement.roofY), t: t)
+                let blink = (t.truncatingRemainder(dividingBy: 4)) < 0.15
+                held("owl", box: w * 0.07) {
+                    Text("🦉").font(.system(size: w * 0.07))
+                        .scaleEffect(y: blink ? 0.9 : 1, anchor: .bottom)
+                }
+                .scaleEffect(scale(for: "owl"), anchor: .bottom)
+                .frame(width: 60, height: 60, alignment: .bottom)
+                .contentShape(Rectangle())
+                .gesture(grab("owl", zone: .roof, size: 0.07, w: w, h: h))
+                .accessibilityElement().accessibilityIdentifier("villa-item-owl")
+                .position(x: p.x * w, y: p.y * h - 30)
+                .zIndex(drag?.id == "owl" ? 1000 : 0)
+            }
         }
-        .frame(width: w, height: h)
+    }
+
+    /// The lift while a thing is held: up a little, a touch bigger, with a soft shadow left on the grass.
+    private func held<V: View>(_ id: String, box: CGFloat, @ViewBuilder _ v: () -> V) -> some View {
+        let up = drag?.id == id
+        return v()
+            .scaleEffect(up ? 1.08 : 1, anchor: .bottom)
+            .offset(y: up ? -10 : 0)
+            .shadow(color: .black.opacity(up ? 0.25 : 0), radius: 6, y: 6)
+            .background(alignment: .bottom) {
+                Ellipse().fill(.black.opacity(up ? 0.22 : 0))
+                    .frame(width: max(box * 0.7, 24), height: max(box * 0.14, 6)).offset(y: 3)
+            }
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: up)
+    }
+
+    /// Where a thing's feet are now: under the finger while held, gliding home after a drop, else its spot.
+    private func foot(_ id: String, home: CGPoint, t: Double) -> CGPoint {
+        if let d = drag, d.id == id { return d.at }
+        return glide(id, to: places[id] ?? home, t: t)
+    }
+
+    private func glide(_ id: String, to target: CGPoint, t: Double) -> CGPoint {
+        guard let s = settle[id] else { return target }
+        let u = min(1, max(0, (t - s.at) / 0.35)), e = 1 - pow(1 - u, 3)
+        return CGPoint(x: s.from.x + (target.x - s.from.x) * e, y: s.from.y + (target.y - s.from.y) * e)
+    }
+
+    /// One gesture does both: a tap pokes the thing (bounce + its blurb), a drag carries it.
+    private func grab(_ id: String, zone: VillaZone, size: CGFloat, w: CGFloat, h: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named(VillaScene.space))
+            .onChanged { v in
+                let loc = CGPoint(x: v.location.x / w, y: v.location.y / h)
+                if drag?.id != id {
+                    guard drag == nil else { return }               // one thing at a time
+                    let now = Date().timeIntervalSinceReferenceDate
+                    let cur = currentFoot(id, t: now)
+                    drag = Held(id: id, at: cur, grab: CGSize(width: loc.x - cur.x, height: loc.y - cur.y), moved: false)
+                }
+                guard var d = drag else { return }
+                if !d.moved, hypot(v.translation.width, v.translation.height) > 8 {
+                    d.moved = true; Haptics.light()
+                }
+                if d.moved { d.at = CGPoint(x: loc.x - d.grab.width, y: loc.y - d.grab.height) }
+                drag = d
+            }
+            .onEnded { _ in
+                guard let d = drag, d.id == id else { return }
+                drop(d, zone: zone, size: size)
+            }
+    }
+
+    /// Where a thing's feet are at time `t`, held or not (pets are strolling).
+    private func currentFoot(_ id: String, t: Double) -> CGPoint {
+        if let pet = VillaScene.petList.first(where: { $0.id == id }) { return petFoot(pet, t: t).p }
+        if id == "owl" { return foot(id, home: CGPoint(x: 0.22, y: VillaPlacement.roofY), t: t) }
+        let s = VillaScene.placed.first { $0.id == id }
+        return foot(id, home: CGPoint(x: s?.x ?? 0.5, y: s?.y ?? 0.8), t: t)
+    }
+
+    private func drop(_ d: Held, zone: VillaZone, size: CGFloat) {
+        let now = Date().timeIntervalSinceReferenceDate
+        drag = nil
+        guard d.moved else {
+            settle[d.id] = Settle(from: d.at, at: now)
+            onTap(VillaScene.placed.first { $0.id == d.id }?.item ?? d.id)
+            return
+        }
+        let pet = VillaScene.petList.first { $0.id == d.id }
+        let spot = VillaPlacement.clamp(d.at, zone: zone, size: size, pet: pet != nil)
+        if zone == .plinth {
+            // a statue already on that plinth trades places with the one just dropped
+            let was = currentFoot(d.id, t: now)
+            for other in VillaScene.statues where other != d.id && owned.contains(other) {
+                let op = currentFoot(other, t: now)
+                if VillaPlacement.dist(op, spot) < 0.01 {
+                    settle[other] = Settle(from: op, at: now)
+                    places[other] = was; VillaPlacement.save(other, was)
+                }
+            }
+        }
+        if let pet {
+            // re-phase the stroll so it starts exactly at the new home, walking on from there
+            let base = now * pet.speed + VillaScene.phase(pet.id) + (petShift[pet.id] ?? 0)
+            petShift[pet.id] = (petShift[pet.id] ?? 0) - base.truncatingRemainder(dividingBy: 2 * .pi)
+        }
+        settle[d.id] = Settle(from: d.at, at: now)
+        places[d.id] = spot
+        VillaPlacement.save(d.id, spot)
+        Sfx.play(.thud); Haptics.tap(0.5)
+    }
+
+    private func plinthMarks(w: CGFloat, h: CGFloat, near: CGPoint) -> some View {
+        let n = VillaPlacement.nearestPlinth(near)
+        return ForEach(VillaPlacement.plinths.indices, id: \.self) { i in
+            let p = VillaPlacement.plinths[i]
+            Ellipse().fill(Fr.marble.opacity(i == n ? 0.9 : 0.45))
+                .overlay(Ellipse().stroke(i == n ? Fr.gold : Fr.marbleShade, lineWidth: i == n ? 2.5 : 1.5))
+                .frame(width: w * 0.12, height: w * 0.04)
+                .position(x: p.x * w, y: p.y * h)
+                .zIndex(0.01)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private func sparkleSpot(_ id: String, t: Double) -> CGPoint? {
+        if let s = VillaScene.placed.first(where: { $0.item == id }) {
+            let p = foot(s.id, home: CGPoint(x: s.x, y: s.y), t: t)
+            return CGPoint(x: p.x, y: p.y - s.size * VillaPlacement.canvas.width / VillaPlacement.canvas.height / 2)
+        }
+        if let pet = VillaScene.petList.first(where: { $0.id == id }) {
+            let p = petFoot(pet, t: t).p
+            return CGPoint(x: p.x, y: p.y - 0.04)
+        }
+        switch id {
+        case "owl": let p = foot("owl", home: CGPoint(x: 0.22, y: VillaPlacement.roofY), t: t); return CGPoint(x: p.x, y: p.y - 0.03)
+        case "eagle": return CGPoint(x: 0.5, y: 0.16)
+        case "goldroof": return CGPoint(x: 0.5, y: 0.23)
+        case "banners": return CGPoint(x: 0.5, y: 0.38)
+        case "roses": return CGPoint(x: 0.5, y: 0.53)
+        default: return nil
+        }
     }
 
     // MARK: The house
@@ -410,7 +739,8 @@ private struct VillaScene: View {
             // roof: tiled slope with a pediment in the middle
             Trapezoid(inset: 0.06).fill(gold ? AnyShapeStyle(LinearGradient(colors: [Color(hex: 0xf7d36b), Color(hex: 0xc4922c)], startPoint: .top, endPoint: .bottom))
                                              : AnyShapeStyle(LinearGradient(colors: [Fr.tile, Fr.tileDeep], startPoint: .top, endPoint: .bottom)))
-                .overlay(TileLines().stroke(gold ? Color(hex: 0xa87a1f).opacity(0.6) : Fr.tileDeep.opacity(0.55), lineWidth: 1))
+                .overlay(TileLines().stroke(gold ? Color(hex: 0xa87a1f).opacity(0.6) : Fr.tileDeep.opacity(0.55), lineWidth: 1)
+                    .clipShape(Trapezoid(inset: 0.06)))
                 .frame(width: right - left + w * 0.06, height: eave - roofTop + h * 0.01)
                 .position(x: w / 2, y: (roofTop + eave) / 2)
             Triangle().fill(Fr.marble).overlay(Triangle().stroke(Fr.marbleShade, lineWidth: 1.5))
@@ -432,6 +762,7 @@ private struct VillaScene: View {
                         Banner().fill(LinearGradient(colors: [Color(hex: 0xb8322a), Color(hex: 0x8a1f19)], startPoint: .top, endPoint: .bottom))
                             .overlay(Banner().stroke(Fr.gold, lineWidth: 1))
                             .frame(width: w * 0.05, height: h * 0.12).position(x: x, y: eave + h * 0.085)
+                            .scaleEffect(scale(for: "banners"), anchor: .top)
                     }
                 }
             }
@@ -439,32 +770,24 @@ private struct VillaScene: View {
                 Text("🦅").font(.system(size: w * 0.08))
                     .colorMultiply(Color(hex: 0xf4c95a))
                     .position(x: w / 2, y: roofTop - h * 0.005)
-                    .scaleEffect(justBought == "eagle" || poke == "eagle" ? 1.2 : 1)
+                    .scaleEffect(scale(for: "eagle"))
             }
             if owned.contains("roses") {
                 ForEach([0.27, 0.73], id: \.self) { fx in
                     RoseBed().frame(width: w * 0.22, height: h * 0.05).position(x: w * fx, y: base + h * 0.012)
+                        .scaleEffect(scale(for: "roses"), anchor: .bottom)
                 }
             }
         }
-    }
-
-    // MARK: Lawn + path
-
-    private func lawn(w: CGFloat, h: CGFloat) -> some View {
-        ZStack(alignment: .topLeading) {
-            Rectangle().fill(LinearGradient(colors: [Fr.lawn, Fr.lawnDeep], startPoint: .top, endPoint: .bottom))
-                .frame(width: w, height: h * 0.48).position(x: w / 2, y: h * 0.53 + h * 0.24)
-            PathShape().fill(LinearGradient(colors: [Fr.path, Color(hex: 0xc4a978)], startPoint: .top, endPoint: .bottom))
-                .frame(width: w, height: h * 0.47).position(x: w / 2, y: h * 0.53 + h * 0.235)
-            // tufts of grass
-            ForEach(0..<14, id: \.self) { i in
-                let fx = CGFloat((i * 37) % 100) / 100, fy = 0.6 + CGFloat((i * 53) % 40) / 100
-                if abs(fx - 0.5) > 0.12 {
-                    Text("‿").font(.system(size: w * 0.04, weight: .bold)).foregroundStyle(Fr.leafDark.opacity(0.35))
-                        .position(x: fx * w, y: fy * h)
-                }
-            }
+        .frame(width: w, height: h, alignment: .topLeading)
+        .contentShape(Rectangle())
+        .onTapGesture { loc in
+            // the house's own pieces answer a tap too
+            let u = CGPoint(x: loc.x / w, y: loc.y / h)
+            if owned.contains("eagle"), abs(u.x - 0.5) < 0.08, u.y < 0.22 { onTap("eagle") }
+            else if owned.contains("roses"), u.y > 0.5, u.y < 0.58, abs(abs(u.x - 0.5) - 0.23) < 0.11 { onTap("roses") }
+            else if owned.contains("banners"), u.y > 0.3, u.y < 0.44, u.x > 0.16, u.x < 0.84 { onTap("banners") }
+            else if owned.contains("goldroof"), u.y > 0.16, u.y < 0.3, u.x > 0.13, u.x < 0.87 { onTap("goldroof") }
         }
     }
 
@@ -489,10 +812,10 @@ private struct VillaScene: View {
         }
     }
 
-    // MARK: Pets — wander the lawn in their own lanes; the owl perches on the roof
+    // MARK: Pets — each strolls to and fro around its own home on the lawn; the owl perches on the roof
 
-    private struct Pet { let id: String; let emoji: String; let lane: CGFloat; let speed: Double; let size: CGFloat; let hop: Bool }
-    private let petList: [Pet] = [
+    struct Pet { let id: String; let emoji: String; let lane: CGFloat; let speed: Double; let size: CGFloat; let hop: Bool }
+    static let petList: [Pet] = [
         .init(id: "dog", emoji: "🐕", lane: 0.92, speed: 0.22, size: 0.085, hop: false),
         .init(id: "cat", emoji: "🐈", lane: 0.80, speed: 0.15, size: 0.07, hop: false),
         .init(id: "goat", emoji: "🐐", lane: 0.70, speed: 0.10, size: 0.08, hop: false),
@@ -502,44 +825,140 @@ private struct VillaScene: View {
         .init(id: "peacock", emoji: "🦚", lane: 0.75, speed: 0.07, size: 0.10, hop: false),
     ]
 
-    private func petX(_ p: Pet, _ t: Double) -> (x: CGFloat, right: Bool) {
-        let phase = Double(p.id.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 100) / 16
-        let s = sin(t * p.speed + phase)
-        return (0.5 + 0.40 * CGFloat(s), cos(t * p.speed + phase) > 0)
+    static func phase(_ id: String) -> Double { Double(id.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 100) / 16 }
+
+    /// A pet's feet at time t and whether it faces right. It strolls ±0.40 of the width around its home,
+    /// less when the home is near an edge (home 0.5 = the full stroll it always had).
+    private func petFoot(_ p: Pet, t: Double) -> (p: CGPoint, right: Bool) {
+        if let d = drag, d.id == p.id { return (d.at, false) }
+        let home = places[p.id] ?? CGPoint(x: 0.5, y: p.lane)
+        let amp = max(0, min(0.40, home.x - 0.08, 0.92 - home.x))
+        let a = t * p.speed + VillaScene.phase(p.id) + (petShift[p.id] ?? 0)
+        let target = CGPoint(x: home.x + amp * CGFloat(sin(a)), y: home.y)
+        return (glide(p.id, to: target, t: t), cos(a) > 0)
     }
 
-    private func petSpot(_ id: String, w: CGFloat, h: CGFloat, t: Double) -> Spot? {
-        if id == "owl" { return Spot(id: id, x: 0.22, y: 0.20, size: 0.07) }
-        guard let p = petList.first(where: { $0.id == id }) else { return nil }
-        return Spot(id: id, x: petX(p, t).x, y: p.lane, size: p.size)
-    }
-
-    private func pets(w: CGFloat, h: CGFloat, t: Double) -> some View {
-        ZStack(alignment: .topLeading) {
-            ForEach(petList, id: \.id) { p in
-                if owned.contains(p.id) {
-                    let (x, right) = petX(p, t)
-                    let step = abs(sin(t * (p.hop ? 6 : 9) + Double(p.lane) * 10))
-                    Text(p.emoji).font(.system(size: p.size * w))
-                        .scaleEffect(x: right ? -1 : 1, y: 1)         // emoji face left; flip when walking right
-                        .scaleEffect(scale(for: p.id), anchor: .bottom)
-                        .offset(y: -CGFloat(step) * (p.hop ? w * 0.025 : w * 0.006))
-                        .background(alignment: .bottom) {
-                            Ellipse().fill(.black.opacity(0.18)).frame(width: p.size * w * 0.8, height: p.size * w * 0.18)
-                                .offset(y: p.size * w * 0.05)
-                        }
-                        .position(x: x * w, y: p.lane * h - p.size * w / 2)
-                        .zIndex(p.lane)
+    private func petView(_ p: Pet, w: CGFloat, h: CGFloat, t: Double) -> some View {
+        let (pos, right) = petFoot(p, t: t)
+        let up = drag?.id == p.id
+        let step = up ? 0 : abs(sin(t * (p.hop ? 6 : 9) + Double(p.lane) * 10))
+        let s = p.size * w
+        return held(p.id, box: s) {
+            Text(p.emoji).font(.system(size: s))
+                .scaleEffect(x: right ? -1 : 1, y: 1)         // emoji face left; flip when walking right
+                .offset(y: -CGFloat(step) * (p.hop ? w * 0.025 : w * 0.006))
+                .background(alignment: .bottom) {
+                    Ellipse().fill(.black.opacity(up ? 0 : 0.18)).frame(width: s * 0.8, height: s * 0.18)
+                        .offset(y: s * 0.05)
                 }
-            }
-            if owned.contains("owl") {
-                let blink = (t.truncatingRemainder(dividingBy: 4)) < 0.15
-                Text("🦉").font(.system(size: w * 0.07))
-                    .scaleEffect(y: blink ? 0.9 : 1, anchor: .bottom)
-                    .scaleEffect(scale(for: "owl"), anchor: .bottom)
-                    .position(x: w * 0.22, y: h * 0.20 - w * 0.035)
-            }
         }
+        .scaleEffect(scale(for: p.id), anchor: .bottom)
+        .frame(width: max(s * 1.3, 64), height: max(s * 1.3, 64), alignment: .bottom)
+        .contentShape(Rectangle())
+        .gesture(grab(p.id, zone: .lawn, size: p.size, w: w, h: h))
+        .accessibilityElement().accessibilityIdentifier("villa-item-\(p.id)")
+        .position(x: pos.x * w, y: pos.y * h - max(s * 1.3, 64) / 2)
+        .zIndex(up ? 1000 : pos.y)
+    }
+}
+
+/// A hit shape: the bottom `height` points of the box.
+private struct BottomRect: Shape {
+    let height: CGFloat
+    func path(in r: CGRect) -> Path { Path(CGRect(x: r.minX, y: r.maxY - min(height, r.height), width: r.width, height: min(height, r.height))) }
+}
+
+// MARK: - The countryside — sky, sun, sea, hills, lawn and path, across the whole frame
+
+private struct Countryside: View {
+    let fw: CGFloat, fh: CGFloat          // the frame
+    let ox: CGFloat, oy: CGFloat          // the canvas origin in it
+    let w: CGFloat, h: CGFloat            // the canvas size
+    let t: Double
+
+    private func X(_ u: CGFloat) -> CGFloat { ox + u * w }
+    private func Y(_ v: CGFloat) -> CGFloat { oy + v * h }
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            LinearGradient(colors: [Fr.skyTop, Fr.skyLow], startPoint: .top,
+                           endPoint: .init(x: 0.5, y: max(0.05, Y(0.45) / fh)))
+            Circle().fill(RadialGradient(colors: [Color(hex: 0xfff4cf), Color(hex: 0xf6d27a).opacity(0.0)],
+                                         center: .center, startRadius: w * 0.04, endRadius: w * 0.14))
+                .frame(width: w * 0.28, height: w * 0.28).position(x: X(0.84), y: Y(0.11))
+            Circle().fill(Color(hex: 0xfff1c4)).frame(width: w * 0.08).position(x: X(0.84), y: Y(0.11))
+            // soft clouds drifting across the whole sky
+            let clouds = max(2, Int((fw / w * 2).rounded()))
+            ForEach(0..<clouds, id: \.self) { i in
+                let x = (CGFloat((t * (0.008 + Double(i % 2) * 0.004) * Double(w / fw) + Double(i) / Double(clouds)).truncatingRemainder(dividingBy: 1.3)) - 0.15) * fw
+                CloudPuff().fill(.white.opacity(0.75))
+                    .frame(width: w * (0.22 - CGFloat(i % 2) * 0.05), height: w * 0.07)
+                    .position(x: x, y: Y(0.08 + CGFloat(i % 3) * 0.05))
+            }
+            // sea strip and two ridges of hills
+            Rectangle().fill(LinearGradient(colors: [Color(hex: 0x7fb3c4), Color(hex: 0x6aa0b5)], startPoint: .top, endPoint: .bottom))
+                .frame(width: fw, height: h * 0.06).position(x: fw / 2, y: Y(0.33))
+            Ridge(ox: ox, w: w, top: Y(0.26), depth: h * 0.07, bottom: Y(0.54), seed: 0.4).fill(Fr.hillBack)
+            Ridge(ox: ox, w: w, top: Y(0.335), depth: h * 0.06, bottom: Y(0.54), seed: 2.1).fill(Fr.hillFront)
+            // lawn, path, tufts
+            Rectangle().fill(LinearGradient(colors: [Fr.lawn, Fr.lawnDeep], startPoint: .top, endPoint: .bottom))
+                .frame(width: fw, height: max(0, fh - Y(0.53))).position(x: fw / 2, y: (Y(0.53) + fh) / 2)
+            Walk(top: Y(0.53), bottom: Y(1.0), cx: X(0.5), topHalf: w * 0.06, bottomHalf: w * 0.22)
+                .fill(LinearGradient(colors: [Fr.path, Color(hex: 0xc4a978)], startPoint: .top, endPoint: .bottom))
+            tufts
+        }
+        .frame(width: fw, height: fh)
+    }
+
+    /// Grass tufts scattered over the lawn (the canvas's own fourteen, plus more on any extra lawn).
+    private var tufts: some View {
+        let u0 = -ox / w, u1 = 1 + ox / w, v1 = (fh - oy) / h
+        let spots: [CGPoint] = (0..<60).compactMap { i in
+            let fx = CGFloat((i * 37) % 100) / 100, fy = CGFloat((i * 53) % 40) / 100
+            let u: CGFloat = i < 14 ? fx : u0 + (u1 - u0) * fx
+            let v: CGFloat = i < 14 ? 0.6 + fy : 0.6 + (v1 - 0.6) * fy / 0.4
+            let inside = u >= 0 && u <= 1 && v <= 1
+            if i >= 14 && inside { return nil }          // the canvas keeps its own fourteen
+            let half = 0.06 + 0.16 * (v - 0.53) / 0.47   // keep off the path
+            return abs(u - 0.5) > half + 0.04 ? CGPoint(x: u, y: v) : nil
+        }
+        return ForEach(spots.indices, id: \.self) { i in
+            Text("‿").font(.system(size: w * 0.04, weight: .bold)).foregroundStyle(Fr.leafDark.opacity(0.35))
+                .position(x: X(spots[i].x), y: Y(spots[i].y))
+        }
+    }
+}
+
+/// A rolling hill line defined in canvas units, so it runs on seamlessly past the canvas edges.
+private struct Ridge: Shape {
+    let ox: CGFloat, w: CGFloat, top: CGFloat, depth: CGFloat, bottom: CGFloat, seed: Double
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: bottom))
+        var x = r.minX
+        while x <= r.maxX + 4 {
+            let u = Double((x - ox) / w)
+            let k = 0.5 + 0.3 * sin(u * 9.1 + seed) + 0.2 * sin(u * 17.3 + seed * 2.7)
+            p.addLine(to: CGPoint(x: x, y: top + depth * CGFloat(k)))
+            x += 4
+        }
+        p.addLine(to: CGPoint(x: r.maxX + 4, y: bottom))
+        p.closeSubpath()
+        return p
+    }
+}
+
+/// The garden walk: from the door it widens toward the viewer, carrying on past the canvas bottom.
+private struct Walk: Shape {
+    let top: CGFloat, bottom: CGFloat, cx: CGFloat, topHalf: CGFloat, bottomHalf: CGFloat
+    func path(in r: CGRect) -> Path {
+        let slope = (bottomHalf - topHalf) / max(1, bottom - top)
+        let end = max(r.maxY, bottom), half = topHalf + slope * (end - top)
+        var p = Path()
+        p.move(to: CGPoint(x: cx - topHalf, y: top)); p.addLine(to: CGPoint(x: cx + topHalf, y: top))
+        p.addLine(to: CGPoint(x: cx + half, y: end)); p.addLine(to: CGPoint(x: cx - half, y: end))
+        p.closeSubpath()
+        return p
     }
 }
 
@@ -579,26 +998,6 @@ private struct VillaThumb: View {
 }
 
 // MARK: - Drawn pieces
-
-private struct Hill: Shape {
-    let peaks: [CGFloat]   // heights (0 = top of rect) at evenly spaced points
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: r.minX, y: r.maxY))
-        let n = peaks.count
-        var pts: [CGPoint] = []
-        for (i, k) in peaks.enumerated() { pts.append(CGPoint(x: r.minX + r.width * CGFloat(i) / CGFloat(n - 1), y: r.minY + r.height * k)) }
-        p.addLine(to: pts[0])
-        for i in 1..<pts.count {
-            let mid = CGPoint(x: (pts[i - 1].x + pts[i].x) / 2, y: (pts[i - 1].y + pts[i].y) / 2)
-            p.addQuadCurve(to: mid, control: pts[i - 1])
-        }
-        p.addLine(to: pts.last!)
-        p.addLine(to: CGPoint(x: r.maxX, y: r.maxY))
-        p.closeSubpath()
-        return p
-    }
-}
 
 private struct CloudPuff: Shape {
     func path(in r: CGRect) -> Path {
@@ -662,18 +1061,6 @@ private struct Banner: Shape {
         p.move(to: CGPoint(x: r.minX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
         p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.addLine(to: CGPoint(x: r.midX, y: r.maxY - r.height * 0.18))
         p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.closeSubpath()
-        return p
-    }
-}
-
-private struct PathShape: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: r.midX - r.width * 0.06, y: r.minY))
-        p.addLine(to: CGPoint(x: r.midX + r.width * 0.06, y: r.minY))
-        p.addLine(to: CGPoint(x: r.midX + r.width * 0.22, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.midX - r.width * 0.22, y: r.maxY))
-        p.closeSubpath()
         return p
     }
 }
