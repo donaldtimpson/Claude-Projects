@@ -82,7 +82,7 @@ struct HomeView: View {
                         DeckTile(step: "🎵", tint: 0x7A5EA8, name: "Rhyme Time",
                                  blurb: "Hear a word, find its rhyme") { RhymeView() }
                         DeckTile(step: "🃏", tint: 0x3E8FA8, name: "Match Up",
-                                 blurb: "Match each word to its picture") { MatchView() }
+                                 blurb: settings.quizReads ? "Match each word to its picture" : "Turn two cards, find the pair") { MatchView() }
                     }
 
                     NavigationLink { ProfilePicker() } label: {

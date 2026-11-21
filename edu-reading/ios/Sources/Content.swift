@@ -65,6 +65,13 @@ struct ReadingContent: Codable {
         return decoded
     }()
 
+    /// A letter's phoneme clip id: its usual sound ("c" -> "k", "x" -> "ks"), and
+    /// "kw" for q, which is only ever taught as qu.
+    func phoneme(of l: Letter) -> String {
+        let g = l.lower.lowercased()
+        return g == "q" ? "kw" : (phonemeDefaults?[g] ?? g)
+    }
+
     var sightSet: Set<String> { Set(sightWords.map { $0.lowercased() }) }
 
     /// A word's sounds in order: (the letters as written, the phoneme clip id).

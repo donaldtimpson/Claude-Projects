@@ -11,6 +11,10 @@ struct SayCard: View {
     var sentence: Bool = false
     var accent: Color = Theme.go
     var caption: String? = nil
+    /// When set, the word is drawn grapheme by grapheme with `active` underlined —
+    /// the sounding-out highlight.
+    var sounds: [(grapheme: String, phoneme: String)]? = nil
+    var active: Int? = nil
     var onSaid: (() -> Void)? = nil
 
     private let sight = ReadingContent.shared.sightSet
@@ -31,7 +35,10 @@ struct SayCard: View {
                 } else {
                     // A word is always one line — a longer word (grape, jumping)
                     // shrinks to fit rather than breaking across two lines.
-                    phonics(text, size: size)
+                    Group {
+                        if let sounds { phonicsParts(sounds, active: active, size: size) }
+                        else { phonics(text, size: size) }
+                    }
                         .lineLimit(1)
                         .minimumScaleFactor(0.5)
                 }

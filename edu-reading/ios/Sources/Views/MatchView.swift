@@ -1,6 +1,8 @@
 import SwiftUI
 
-// A memory game that also teaches: every pair is a PICTURE and its WORD, so matching
+// A memory game. For a pre-reader every pair is two of the same PICTURE — memory and
+// naming, which a three-year-old can actually do. Once Find It is set to reading
+// (the grown-ups' "Read" switch), pairs become a picture and its WORD, so matching
 // them is reading practice wearing a game's clothes. Turn two cards; a pair stays up
 // and the word is spoken, a mismatch turns back. Clear the board to win. No timer, no
 // score — just the quiet satisfaction of the board emptying.
@@ -118,7 +120,8 @@ struct MatchView: View {
         var seen = Set<String>()
         let words = Pictures.showable.filter { !$0.images.isEmpty }
             .map(\.word).shuffled().filter { seen.insert($0).inserted }.prefix(settings.matchPairs)
-        cards = words.flatMap { [Card(word: $0, picture: true), Card(word: $0, picture: false)] }
+        let reads = settings.quizReads
+        cards = words.flatMap { [Card(word: $0, picture: true), Card(word: $0, picture: !reads)] }
             .shuffled()
     }
 }

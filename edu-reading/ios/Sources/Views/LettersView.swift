@@ -64,7 +64,8 @@ struct LettersView: View {
             }
         } onTap: { i in
             guard i < pool.count else { return }
-            if Voice.shared.hasRecording(pool[i].sound) { Voice.shared.say(pool[i].sound) }
+            // The SOUND, from a recorded clip — never the letter name, never "kuh".
+            Voice.shared.phoneme(c.phoneme(of: pool[i]))
             progress.metLetter( pool[i].lower)
         }
         .onChange(of: ordered) { index = 0; pool = makePool() }

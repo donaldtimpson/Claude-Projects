@@ -22,6 +22,8 @@ struct BlendingView: View {
     // Ordered: consonant by consonant, vowels a-e-i-o-u — a lesson. Shuffled: practice.
     @State private var ordered = true
     @State private var cards: [(consonant: String, vowel: String)] = []
+    /// Which sound-dot is lit while the syllable plays: 0, 1, or 2 for "both".
+    @State private var active: Int?
 
     private func makePool() {
         let pairs = c.syllableConsonants.flatMap { con in
@@ -31,18 +33,37 @@ struct BlendingView: View {
     }
 
     var body: some View {
-        // speaks: false — no audio. Text-to-speech reads a syllable as a whole word
-        // ("do" → "doo"), the opposite of the d-/o/ blend we want the child to make,
-        // so the deck stays silent and the child (or grown-up) sounds it out.
+        // Text-to-speech reads a syllable as a whole word ("do" → "doo"), the
+        // opposite of the d-/o/ blend we want, so this deck plays recorded phoneme
+        // clips: the consonant, the vowel, then the two pushed together. With no
+        // clips bundled it stays silent and a tap simply turns the card.
         DeckScreen(title: "Blending", count: cards.count, index: $index, accent: accent,
-                   ordered: $ordered, speaks: false) { i in
+                   ordered: $ordered, speaks: Voice.shared.hasAnyLetterAudio) { i in
             let card = cards[min(i, cards.count - 1)]
             VStack {
                 Spacer()
-                SyllableCard(consonant: card.consonant, vowel: card.vowel)
+                SyllableCard(consonant: card.consonant, vowel: card.vowel, active: active)
                 Spacer()
             }
-        } onTap: { _ in }
+        } onTap: { i in
+            guard i < cards.count else { return }
+            let con = cards[i].consonant == "qu" ? "kw" : (c.phonemeDefaults?[cards[i].consonant] ?? cards[i].consonant)
+            let vow = cards[i].vowel
+            let v = Voice.shared
+            func lit(_ n: Int?) { withAnimation(.easeOut(duration: 0.12)) { active = n } }
+            lit(0)
+            v.phoneme(con) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    lit(1)
+                    v.phoneme(vow) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                            lit(2)
+                            v.phoneme(con) { v.phoneme(vow) { lit(nil) } }
+                        }
+                    }
+                }
+            }
+        } onAdvance: { active = nil }
         .onAppear { if cards.isEmpty { makePool() } }
         .onChange(of: ordered) { index = 0; makePool() }
     }
@@ -55,6 +76,8 @@ struct BlendingView: View {
 struct SyllableCard: View {
     let consonant: String
     let vowel: String
+    /// Lit sound-dot while it plays: 0 consonant, 1 vowel, 2 both.
+    var active: Int? = nil
     var size: CGFloat = 132
 
     var body: some View {
@@ -62,8 +85,8 @@ struct SyllableCard: View {
             // Equal-height Text columns share a baseline, so the dots line up under
             // their letters without any manual measuring.
             HStack(alignment: .center, spacing: size * 0.04) {
-                column(consonant, Skin.live.cardInk)
-                column(vowel, Skin.live.vowel)
+                column(consonant, Skin.live.cardInk, lit: active == 0 || active == 2)
+                column(vowel, Skin.live.vowel, lit: active == 1 || active == 2)
             }
             BlendArrow()
                 .stroke(Skin.live.cardInkSoft,
@@ -72,11 +95,12 @@ struct SyllableCard: View {
         }
     }
 
-    private func column(_ s: String, _ colour: Color) -> some View {
+    private func column(_ s: String, _ colour: Color, lit: Bool = false) -> some View {
         VStack(spacing: size * 0.06) {
             Text(s).font(.andika(size, bold: true)).foregroundStyle(colour)
-            Circle().fill(Skin.live.cardInkSoft)
+            Circle().fill(lit ? Theme.go : Skin.live.cardInkSoft)
                 .frame(width: size * 0.11, height: size * 0.11)
+                .scaleEffect(lit ? 1.5 : 1)
         }
     }
 }

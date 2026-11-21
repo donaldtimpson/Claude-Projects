@@ -16,6 +16,8 @@ struct WordsView: View {
     // Bumped to move the deck on by itself after a read word's picture has shown.
     @State private var advanceReq = 0
     @State private var pictureHold: DispatchWorkItem?
+    /// The grapheme being sounded out right now, for the underline.
+    @State private var active: Int?
 
     // Levels keep their order — a child who has done "cat" is not ready for
     // "strength" — but the words inside a level are shuffled on every open.
@@ -49,7 +51,8 @@ struct WordsView: View {
                     }
                     .transition(.scale.combined(with: .opacity))
                 } else {
-                    SayCard(text: w.word, size: 118, accent: accent) {
+                    SayCard(text: w.word, size: 118, accent: accent,
+                            sounds: c.sounds(of: w), active: active) {
                         progress.readWord( w.word)
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
                         // Show the picture of what they read — the word/image link is
@@ -69,10 +72,21 @@ struct WordsView: View {
             // First tap reveals and speaks; CardStack turns the card on the second.
             guard i < pool.count else { return }
             let w = pool[i]
-            Voice.shared.say(w.word)
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
+            let reveal = { withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true } }
+            if Voice.shared.hasAnyLetterAudio {
+                // Sound it out — each grapheme lit as it's heard — THEN the word,
+                // then the picture. The child blends along instead of being told.
+                Voice.shared.soundOut(c.sounds(of: w), word: w.word,
+                                      onStep: { i in withAnimation(.easeOut(duration: 0.12)) { active = i } },
+                                      then: reveal)
+            } else {
+                Voice.shared.say(w.word)
+                reveal()
+            }
         } onAdvance: {
             pictureHold?.cancel()
+            Voice.shared.cancelSoundOut()
+            active = nil
             flipped = false
         } onHold: { i in
             guard i < pool.count else { return }

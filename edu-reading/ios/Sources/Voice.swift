@@ -151,20 +151,79 @@ final class Voice: NSObject {
         }
     }
 
-    /// Whether any phoneme recordings are bundled at all. Until they are, the
-    /// letters deck has nothing to play and should not ask for two taps.
-    var hasAnyLetterAudio: Bool {
-        ReadingContent.shared.letters.contains { hasRecording($0.sound) }
+    // MARK: phonemes
+
+    /// Whether the phoneme clips are bundled. Until they are, the letters deck has
+    /// nothing to play and should not ask for two taps.
+    var hasAnyLetterAudio: Bool { hasPhoneme("s") }
+
+    /// A phoneme clip is `ph_<id>.m4a`. Synthesis can't make an isolated stop
+    /// consonant — it gives silence or "kuh" — so every letter SOUND comes from a
+    /// clip, and with no clip the app stays silent rather than teach it wrong.
+    func hasPhoneme(_ id: String) -> Bool {
+        id.split(separator: "+").allSatisfy {
+            Bundle.main.url(forResource: "ph_\($0)", withExtension: "m4a") != nil
+        }
     }
 
-    /// True when real recorded audio backs this word. The letter-sounds deck uses
-    /// it to stay honest: synthesis is bad at isolated phonemes, so it stays silent
-    /// rather than teaching the wrong sound.
-    func hasRecording(_ text: String) -> Bool {
-        Bundle.main.url(forResource: text.lowercased(), withExtension: "m4a") != nil
+    /// Play one phoneme. "ng+k" plays two clips back to back; "_" (a silent letter)
+    /// plays nothing and finishes straight away.
+    func phoneme(_ id: String, then done: (() -> Void)? = nil) {
+        let clips = id.split(separator: "+").map(String.init).filter { $0 != "_" }
+        playClips(clips, gap: 0, then: done)
     }
+
+    private func playClips(_ clips: [String], gap: Double, then done: (() -> Void)?) {
+        guard let first = clips.first else {
+            DispatchQueue.main.async { done?() }
+            return
+        }
+        guard let url = Bundle.main.url(forResource: "ph_\(first)", withExtension: "m4a") else {
+            playClips(Array(clips.dropFirst()), gap: gap, then: done)
+            return
+        }
+        synth.stopSpeaking(at: .immediate)
+        onDone = { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + gap) {
+                self?.playClips(Array(clips.dropFirst()), gap: gap, then: done)
+            }
+        }
+        player = try? AVAudioPlayer(contentsOf: url)
+        player?.delegate = self
+        if player?.play() != true { finish() }
+    }
+
+    private var soundOutRun = 0
+
+    /// Sound a word out: each grapheme's phoneme in turn (onStep lights it up),
+    /// a breath, then the whole word. Silent letters light up with their partner
+    /// but make no sound. A new call cancels one in progress.
+    func soundOut(_ sounds: [(grapheme: String, phoneme: String)], word: String,
+                  onStep: @escaping (Int?) -> Void, then done: (() -> Void)? = nil) {
+        soundOutRun += 1
+        let run = soundOutRun
+        func step(_ i: Int) {
+            guard run == soundOutRun else { return }
+            guard i < sounds.count else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                    guard let self, run == self.soundOutRun else { return }
+                    onStep(nil)
+                    self.say(word, then: done)
+                }
+                return
+            }
+            if sounds[i].phoneme == "_" { step(i + 1); return }
+            onStep(i)
+            phoneme(sounds[i].phoneme) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { step(i + 1) }
+            }
+        }
+        step(0)
+    }
+
+    /// Stop any sounding-out in progress (leaving a card, starting another).
+    func cancelSoundOut() { soundOutRun += 1 }
 }
-
 
 extension Voice: AVSpeechSynthesizerDelegate, AVAudioPlayerDelegate {
     func speechSynthesizer(_ s: AVSpeechSynthesizer, didFinish u: AVSpeechUtterance) { finish() }

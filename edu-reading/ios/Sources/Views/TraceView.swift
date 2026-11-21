@@ -298,9 +298,8 @@ struct TraceView: View {
         }
 
         if speak, ch.isLetter,
-           let l = c.letters.first(where: { $0.lower == glyph.lowercased() }),
-           Voice.shared.hasRecording(l.sound) {
-            Voice.shared.say(l.sound)
+           let l = c.letters.first(where: { $0.lower == glyph.lowercased() }) {
+            Voice.shared.phoneme(c.phoneme(of: l))
         }
     }
 }

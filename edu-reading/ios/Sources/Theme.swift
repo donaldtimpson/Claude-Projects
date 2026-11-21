@@ -111,6 +111,25 @@ func phonics(_ s: String, size: CGFloat, bold: Bool = true) -> Text {
     .font(.andika(size, bold: bold))
 }
 
+/// A word drawn grapheme by grapheme, for sounding out: vowels red, a silent letter
+/// faded, and the grapheme being sounded right now underlined in the go colour —
+/// so "sh" lights up as ONE sound, which is the point of teaching it as one.
+func phonicsParts(_ sounds: [(grapheme: String, phoneme: String)], active: Int?,
+                  size: CGFloat) -> Text {
+    let ink = Skin.live.cardInk, vowel = Skin.live.vowel
+    return sounds.enumerated().reduce(Text("")) { acc, pair in
+        let (i, s) = pair
+        let silent = s.phoneme == "_"
+        var piece = s.grapheme.reduce(Text("")) { a, ch in
+            a + Text(String(ch)).foregroundColor(
+                (VOWELS.contains(ch) ? vowel : ink).opacity(silent ? 0.45 : 1))
+        }
+        if i == active { piece = piece.underline(true, color: Theme.go) }
+        return acc + piece
+    }
+    .font(.andika(size, bold: true))
+}
+
 /// Builds a sentence: vowels red, and any sight word underlined in amber so the
 /// child can see at a glance which words are learned rather than sounded out.
 func phonicsSentence(_ s: String, size: CGFloat, sight: Set<String>) -> Text {
