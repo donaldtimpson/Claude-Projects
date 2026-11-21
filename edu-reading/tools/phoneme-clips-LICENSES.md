@@ -43,3 +43,13 @@ A shorter version, if space is tight:
 | WCED ePortal (Western Cape) Jolly Phonics letter-sound clips | Varies by entry; some are CC BY-NC-ND | Non-commercial / no-derivatives. Not suitable. |
 | GCompris voices | GPLv3+ (stated by maintainers in 2016) | Copyleft. No isolated phonics set found. Not suitable. |
 | Wikimedia Commons IPA files | CC BY-SA, mixed speakers | Ruled out before this work started. |
+
+## v2 additions (clips_v2/)
+
+| Component | Role | License | Link |
+|---|---|---|---|
+| WORLD vocoder (via `pyworld` 0.3.5) | Holding, stretching and re-synthesising the Kokoro sounds after synthesis | WORLD: modified BSD. pyworld: MIT | https://github.com/mmorise/World · https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder |
+| `pyloudnorm` | Loudness matching (-20 LUFS, 100 ms blocks) | MIT | https://github.com/csteinmetz1/pyloudnorm |
+| `praat-parselmouth` | Installed but **not used** for any clip | GPL-3.0 | — |
+
+Neither WORLD nor pyworld puts any condition on the audio they produce, so the credit line above is unchanged. If you want to, add: "Sustained sounds re-synthesised with the WORLD vocoder (M. Morise)."
