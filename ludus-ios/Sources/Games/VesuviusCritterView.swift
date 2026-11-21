@@ -12,8 +12,10 @@ import SwiftUI
 //   • houses open one at a time: mammal + bird at the start, fish from d≈2, reptile d≈3, amphibian
 //     d≈4 (a house never closes again within a run), and the newest house gets extra visitors;
 //   • the tricky ones (bat, whale, penguin, shark, sea turtle, axolotl…) fade in from d≈4.5;
-//   • names under the pictures fade in from d≈1.6; from d≈6 some animals come as a NAME only;
-//   • a patience bar appears at d≈3 (14 s) and shortens to 5 s by d≈9.
+//   • names under the pictures fade in from d≈1.6; from d≈6.5 some animals come as a NAME only;
+//   • a patience bar appears at d≈5 (15 s — after the last house and the first tricky ones, so
+//     no two new things land together) and shortens to 6 s by d≈9.5. It sits FULL until the
+//     animal has rolled in (and any "New house!" news has been read), then starts to drain.
 
 private struct CHouse: Identifiable, Equatable {
     let id: String, title: String, icon: String, tint: UInt, why: String
@@ -52,6 +54,7 @@ private let chCritters: [CCritter] = [
     c("🐬", "dolphin", "mammal", "it swims, but breathes air and feeds its babies milk"),
     c("🦭", "seal", "mammal", "it swims, but has fur and feeds its babies milk"),
     c("🦦", "otter", "mammal", "it swims, but has thick fur and feeds its babies milk"),
+    c("", "platypus", "mammal", "it lays eggs, but it has fur and feeds its babies milk"),
     // Birds
     c("🐓", "rooster", "bird"), c("🦆", "duck", "bird"), c("🦉", "owl", "bird"), c("🦜", "parrot", "bird"),
     c("🦅", "eagle", "bird"), c("🦢", "swan", "bird"), c("🦩", "flamingo", "bird"), c("🦚", "peacock", "bird"),
@@ -105,9 +108,10 @@ private final class CritterModel: ArcadeModel {
     }
 
     /// Opens every house whose time has come (never closes one).
-    private func openHouses(announce: Bool) {
+    @discardableResult
+    private func openHouses(announce: Bool) -> Bool {
         let n = max(houses.count, chOpens.filter { $0 <= d }.count)
-        guard n > houses.count else { return }
+        guard n > houses.count else { return false }
         let added = chHouses[houses.count]
         withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { houses = Array(chHouses.prefix(n)) }
         if announce {
@@ -115,10 +119,11 @@ private final class CritterModel: ArcadeModel {
             Sfx.play(.sparkle)
             clock.after(2.4) { self.news = nil }
         }
+        return announce
     }
 
     private func serve() {
-        openHouses(announce: roundID > 0)
+        let announced = openHouses(announce: roundID > 0)
         roundID += 1
         let open = houses.map(\.id)
         let pool = chCritters.filter { open.contains($0.cls) && !recent.contains($0.name) }
@@ -137,21 +142,24 @@ private final class CritterModel: ArcadeModel {
         }
         critter = pick
         recent = Array((recent + [pick.name]).suffix(6))
-        showPicture = !pick.emoji.isEmpty && !chance(0.35, from: 6, to: 9)
+        showPicture = !pick.emoji.isEmpty && !chance(0.35, from: 6.5, to: 9.5)
         stage = .waiting
         lesson = nil
         // Patience (none for the youngest).
         timeout?.cancel()
-        if d >= 3 {
-            patience = ramp(14, 5, from: 3, to: 9)
-            deadline = Date().addingTimeInterval(patience)
+        if d >= 5 {
+            patience = ramp(15, 6, from: 5, to: 9.5)
+            // The clock starts once the animal has rolled in (and a new house's news is read);
+            // until then the bar shows full.
+            let lead = announced ? 2.4 : 0.6
+            deadline = Date().addingTimeInterval(lead + patience)
             let id = roundID
             let item = DispatchWorkItem { [weak self] in
                 guard let self, self.roundID == id, self.stage == .waiting, self.phase == .playing else { return }
                 self.wrong(nil)
             }
             timeout = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience, execute: item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + lead + patience, execute: item)
         } else {
             deadline = nil
         }
@@ -183,7 +191,7 @@ private final class CritterModel: ArcadeModel {
         let h = chHouses.first { $0.id == critter.cls }!
         let art = "aeiou".contains(critter.name.first!) ? "An" : "A"
         let a2 = h.id == "amphibian" ? "an" : "a"
-        lesson = "\(art) \(critter.name) is \(a2) \(h.title): " + (critter.tricky ?? h.why)
+        lesson = "\(art) \(critter.name) is \(a2) \(h.title): " + (critter.tricky ?? "it " + h.why)
         clock.after(0.9) {
             Sfx.play(.whoosh)
             withAnimation(.easeInOut(duration: 0.9)) { self.stage = .walking }
@@ -263,7 +271,7 @@ private struct CritterPlay: View {
                 // patience
                 if let dl = model.deadline {
                     TimelineView(.animation(minimumInterval: 0.1)) { tl in
-                        let left = max(0, dl.timeIntervalSince(tl.date)) / max(0.1, model.patience)
+                        let left = min(1, max(0, dl.timeIntervalSince(tl.date)) / max(0.1, model.patience))
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.black.opacity(0.25))
                             Capsule().fill(Color(hex: left < 0.3 ? Lu.coral : Lu.mint)).frame(width: 150 * left)
@@ -290,7 +298,7 @@ private struct CritterPlay: View {
 
     private func houseSpots(W: CGFloat, H: CGFloat, center: CGPoint) -> [CGPoint] {
         let n = model.houses.count
-        let rx = W / 2 - (n >= 4 ? 52 : 64), ry = H * 0.44
+        let rx = W / 2 - (n >= 4 ? 48 : 60) - 12, ry = H * 0.44   // half a house + a margin from the edge
         return (0..<n).map { i in
             let a = n <= 1 ? Double.pi / 2 : Double.pi - Double(i) * Double.pi / Double(n - 1)
             let lift: CGFloat = n == 2 ? H * 0.16 : 0    // two houses sit a little higher than the cart
