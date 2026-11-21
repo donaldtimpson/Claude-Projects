@@ -493,7 +493,7 @@ struct MosaicMenderView: View {
     }
 
     private var basket: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: model.basket.count > 4 ? 8 : 12) {   // five tiles at 12 overran a 402-pt phone
             ForEach(Array(model.basket.enumerated()), id: \.offset) { _, t in
                 let isDragging = drag?.0 == t
                 MTileView(tile: t, s: model.basket.count > 4 ? 60 : 70)

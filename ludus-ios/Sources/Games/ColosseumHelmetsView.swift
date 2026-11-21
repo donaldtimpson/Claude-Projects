@@ -388,7 +388,7 @@ struct WhereLeoView: View {
         let n = max(1, model.count)
         let w = size.width - 16
         let slotW = w / CGFloat(n)
-        let hs = min(118, slotW * 0.92)
+        let hs = min(136, slotW * 0.92)   // two or three helmets fill the stage better
         let floorY = size.height * 0.66
         return ZStack {
             caption.position(x: size.width / 2, y: size.height * 0.24)
@@ -415,7 +415,7 @@ struct WhereLeoView: View {
                             .transition(.scale.combined(with: .opacity))
                     }
                     HLHelmetView(s: hs, glow: model.stage == .reveal && isLeo && !model.right && up)
-                        .offset(y: up ? -hs * 1.2 : 0)
+                        .offset(y: up ? -hs * 1.05 : 0)
                         .rotationEffect(.degrees(up ? -8 : 0))
                 }
                 .frame(width: hs, height: hs)
