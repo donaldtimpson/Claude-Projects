@@ -799,7 +799,7 @@ private struct ArcadeOverView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.8).ignoresSafeArea()
+            ArcadeScrim()
             VStack(spacing: 10) {
                 Text(result.reason.uppercased()).font(luFont(12, .heavy)).tracking(3)
                     .foregroundStyle(Color(hex: Lu.grape))
@@ -871,7 +871,7 @@ private struct ArcadePauseView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.8).ignoresSafeArea()
+            ArcadeScrim()
             VStack(spacing: 14) {
                 Text("PAUSED").font(luFont(12, .heavy)).tracking(3).foregroundStyle(Color(hex: Lu.grape))
                 Text("Gradus \(romanNumeral(model.level))").font(luSerif(38, .black))
@@ -891,6 +891,19 @@ private struct ArcadePauseView: View {
             .padding(20)
             .frame(maxWidth: maxWidth)
         }
+    }
+}
+
+/// What the game-over and pause cards sit on: the scene frosted and dimmed, so its sprites and
+/// prompt text can't show through the card's own words (a plain dim let apples and "? = 9"
+/// read straight through the laurel and the reward line).
+private struct ArcadeScrim: View {
+    var body: some View {
+        ZStack {
+            Rectangle().fill(.ultraThinMaterial).environment(\.colorScheme, .dark)
+            Color.black.opacity(0.62)
+        }
+        .ignoresSafeArea()
     }
 }
 
