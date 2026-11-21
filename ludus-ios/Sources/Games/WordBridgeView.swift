@@ -5,11 +5,12 @@ import SwiftUI
 // Rana the frog wants to cross the river. Hear a sentence; tap its word-stones on the bank IN
 // ORDER and each one splashes into the river as the next stepping stone — Rana hops on. Finish
 // the sentence (with the right end mark) and she leaps home to her lily pad. A wrong stone sinks
-// with a "blub", Rana shakes her head, and the right stone glows and drops into place itself.
+// with a "blub" (a word of the sentence tapped too early just wobbles and stays on the bank),
+// Rana shakes her head, and the right stone glows and drops into place itself.
 // Tapping a stone says its word, so a non-reader can play by ear.
 //
 // Continuous difficulty (GameKit `d`), content kinds fade in via `tier` and stay as review:
-//   tier 0  3-word picture sentences; first stone capitalised, full stop already there (d 1)
+//   tier 0  3-word picture sentences; first stone capitalised, period already there (d 1)
 //   tier 1  4–6 words, choose the end mark . or ?                                         (2.4)
 //   tier 2  lower-case stones (capitals are YOUR job), . ? !, homophone traps there/their   (3.8)
 //   tier 3  commas: lists, "First,", "Mom,", "When…, "                                       (5.2)
@@ -46,12 +47,12 @@ private let wbTiers: [[WBSentence]] = [
      wb("I can hear the sea .", traps: ["here", "see"]), wb("the wind blew the leaves away .", traps: ["blue"], alt: ["the wind blew away the leaves ."]),
      wb("the knight rode a white horse .", traps: ["night", "road"]), wb("did you see the shooting star ?", traps: ["sea"]),
      wb("the bear ate the berries .", traps: ["bare"]), wb("she swam faster than her brother .", traps: ["then"]),
-     wb("we ran to the shop .", traps: ["runned", "two"]), wb("where are your shoes ?", traps: ["were", "wear"]),
+     wb("we ran to the shop .", traps: ["two", "too"]), wb("where are your shoes ?", traps: ["were", "wear"]),
      wb("watch out for the bee !", traps: ["be"])],
     [wb("we need eggs, milk and bread .", traps: ["eggs"], alt: ["we need eggs, bread and milk ."]), wb("yes, I would like some tea .", traps: ["yes"]),
      wb("after lunch, we went swimming .", traps: ["lunch"]), wb("Mom, can we go to the park ?", traps: ["Mom"]),
      wb("wow, that cake is huge !", traps: ["wow"]), wb("first, wash your hands .", traps: ["first"]),
-     wb("Rome, Athens and Paris are cities .", traps: ["Rome"], alt: ["Rome, Paris and Athens are cities ."]), wb("when the bell rang, we ran outside .", traps: ["rung"]),
+     wb("Rome, Athens and Paris are cities .", traps: ["Rome"], alt: ["Rome, Paris and Athens are cities ."]), wb("when the bell rang, we ran outside .", traps: ["rang"]),
      wb("oh no, the milk spilled !", traps: ["no"])],
     [wb("it's raining again .", traps: ["its"]), wb("the cat licked its paw .", traps: ["it's"]),
      wb("you're my best friend .", traps: ["your"]), wb("is that your coat ?", traps: ["you're"]),
@@ -96,6 +97,7 @@ private final class BridgeModel: ArcadeModel {
     @Published var ghost = false
     @Published var nod = 0                   // bumps on a wrong stone (Rana shakes her head)
     @Published var markGiven = false         // the end mark is laid already (tier 0)
+    @Published var wobble: Int?              // a sentence word tapped too early: it shakes, stays
 
     private var gen = 0
     private var recent: [String] = []
@@ -137,7 +139,7 @@ private final class BridgeModel: ArcadeModel {
         var id = 0
         pile = stones.shuffled().map { s in id += 1; return WBStone(id: id, text: s) }
         placed = []
-        sinking = nil; glow = nil; frogAt = -1; home = false; lesson = nil; busy = false
+        sinking = nil; wobble = nil; glow = nil; frogAt = -1; home = false; lesson = nil; busy = false
         roundID += 1
         say()
     }
@@ -187,14 +189,20 @@ private final class BridgeModel: ArcadeModel {
             lay(s, scoring: true)
         } else {
             busy = true
-            pile.removeAll { $0 == s }
-            sinking = s
+            // A trap (or a spare end mark) sinks for good. A real word of the sentence tapped too
+            // early only wobbles and stays on the bank: it's needed later.
+            if stillNeeded(s.text) {
+                wobble = s.id
+            } else {
+                pile.removeAll { $0 == s }
+                sinking = s
+            }
             nod += 1
             Sfx.play(.thud, volume: 0.7)
             lesson = whyNot(s)
             miss(delay: 2.6)
             later(0.9) { m in
-                m.sinking = nil
+                m.sinking = nil; m.wobble = nil
                 guard let r = m.rightNext else { return }
                 m.glow = r.id
                 m.later(0.9) { m in
@@ -205,6 +213,14 @@ private final class BridgeModel: ArcadeModel {
                 }
             }
         }
+    }
+
+    /// True if `text` is still to come in the sentence (so a stone with it must stay on the bank).
+    private func stillNeeded(_ text: String) -> Bool {
+        let done = placed.map(\.text)
+        guard let o = orders.first(where: { $0.count > done.count && Array($0.prefix(done.count)) == done }) else { return false }
+        let wanted = o.dropFirst(done.count).filter { $0 == text }.count
+        return pile.filter { $0.text == text }.count <= wanted
     }
 
     private func whyNot(_ s: WBStone) -> String {
@@ -460,10 +476,12 @@ private struct BridgePlay: View {
             Spacer()
             FlowRows(spacing: 10, items: model.pile) { s in
                 Button {
-                    LibraryVoice.say(s.text == "?" ? "question mark" : (s.text == "!" ? "exclamation mark" : (s.text == "." ? "full stop" : s.text.replacingOccurrences(of: ",", with: ""))))
+                    LibraryVoice.say(s.text == "?" ? "question mark" : (s.text == "!" ? "exclamation mark" : (s.text == "." ? "period" : s.text.replacingOccurrences(of: ",", with: ""))))
                     model.tap(s)
                 } label: {
-                    StoneView(text: model.display(s), small: small, glow: model.glow == s.id)
+                    StoneView(text: model.display(s), small: small, glow: model.glow == s.id, wrong: model.wobble == s.id)
+                        .modifier(LibraryShake(amount: 8, shakes: model.wobble == s.id ? 1 : 0))
+                        .animation(.linear(duration: 0.45), value: model.wobble)
                         .frame(minHeight: 48)
                 }
                 .buttonStyle(.plain)
@@ -490,9 +508,11 @@ private struct BridgePlay: View {
                         .lineLimit(2).minimumScaleFactor(0.6)
                 }
                 .opacity(model.lesson == nil ? 1 : 0)
+                .transaction { $0.animation = nil }     // steps aside at once for the lesson
                 if let l = model.lesson {
                     libMarked(l, base: 0x2a1d10, mark: 0xb0371c).font(luFont(17, .heavy))
                         .lineLimit(2).minimumScaleFactor(0.6)
+                        .transition(.asymmetric(insertion: .opacity, removal: .identity))
                 }
             }
             Spacer(minLength: 0)
@@ -517,6 +537,7 @@ private struct StoneView: View {
     let text: String
     var small = false
     var glow = false
+    var wrong = false
     var sunk = false
 
     var body: some View {
@@ -535,7 +556,7 @@ private struct StoneView: View {
                 }
             )
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color(hex: glow ? 0xffd23f : 0x6f6a60), lineWidth: glow ? 4 : 1.5))
+                .stroke(Color(hex: glow ? 0xffd23f : (wrong ? Lu.coral : 0x6f6a60)), lineWidth: glow || wrong ? 4 : 1.5))
             .shadow(color: glow ? Color(hex: 0xffd23f).opacity(0.9) : .black.opacity(0.25), radius: glow ? 12 : 3, y: 2)
             .scaleEffect(glow ? 1.1 : 1)
             .opacity(sunk ? 0.55 : 1)
