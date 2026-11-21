@@ -29,6 +29,13 @@ struct ReadingContent: Codable {
     /// game needs no reading at all.
     struct RhymeSet: Codable, Hashable { let words: [Pic] }
     struct Pic: Codable, Hashable { let word: String; let image: String }
+    /// A little decodable book: a few pages at one level, then one picture question.
+    struct Book: Codable, Hashable {
+        struct Page: Codable, Hashable { let text: String; let picture: String }
+        struct Question: Codable, Hashable { let prompt: String; let answer: String; let choices: [String] }
+        let title: String; let level: Int; let cover: String
+        let pages: [Page]; let question: Question
+    }
     struct Spell: Codable, Hashable { let text: String; let target: String; let effect: String }
     struct Biome: Codable, Hashable { let id: String; let icon: String; let unlockAt: Int }
     struct World: Codable { let spells: [Spell]; let biomes: [Biome] }
@@ -52,6 +59,7 @@ struct ReadingContent: Codable {
     /// Each grapheme's usual phoneme (the audio clip id), exported by phonics.py.
     let phonemeDefaults: [String: String]?
     let rhymeSets: [RhymeSet]?
+    let books: [Book]?
 
     struct Swatch: Codable, Hashable { let word: String; let hex: String }
     struct Shape2: Codable, Hashable { let word: String }

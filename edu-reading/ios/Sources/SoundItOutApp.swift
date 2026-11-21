@@ -70,6 +70,8 @@ private struct RootView: View {
                 case "match":      MatchView()
                 case "words":      WordsView()
                 case "sentences":  SentencesView()
+                case "books":      BooksView()
+                case "book":       BookReader(book: ReadingContent.shared.books![0])
                 case "heart":      HeartWordsView()
                 case "pictures":   PictureWordsView()
                 case "hub":        PictureDecksHub()

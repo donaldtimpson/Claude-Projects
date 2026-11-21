@@ -173,6 +173,9 @@ def lint(d):
     for h in d["heartWords"]:
         check_text(h["sentence"], h.get("level", 1),
                    f"heart '{h['word']}' example '{h['sentence']}'", extra=(h["word"].lower(),))
+    for b in d.get("books", []):
+        for pg in b["pages"]:
+            check_text(pg["text"], b["level"], f"book '{b['title']}' (L{b['level']}): '{pg['text']}'")
     words = [w["word"] for w in d["words"]]
     for dup in {x for x in words if words.count(x) > 1}:
         errs.append(f"word '{dup}' appears twice")

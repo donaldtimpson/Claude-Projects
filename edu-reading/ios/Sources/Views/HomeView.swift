@@ -55,10 +55,12 @@ struct HomeView: View {
                                  blurb: "Build a family: at → cat, hat") { WordBlendingView() }
                         DeckTile(step: "4", tint: 0x3B7EA1, name: "Words",
                                  blurb: "\(c.words.count) words, getting harder") { WordsView() }
-                        DeckTile(step: "5", tint: 0x7A5EA8, name: "Sentences",
+                        DeckTile(step: "5", tint: 0xC8433A, name: "By Heart",
+                                 blurb: "The words that break the rules") { HeartWordsView() }
+                        DeckTile(step: "6", tint: 0x7A5EA8, name: "Sentences",
                                  blurb: "\(c.sentences.count) sentences you can sound out") { SentencesView() }
-                        DeckTile(step: "6", tint: 0xC8433A, name: "By Heart",
-                                 blurb: "The rule-breakers") { HeartWordsView() }
+                        DeckTile(step: "7", tint: 0x2E9E4F, name: "Little Books",
+                                 blurb: "\(c.books?.count ?? 0) short stories to read") { BooksView() }
                     }
 
                     VStack(alignment: .leading, spacing: 9) {

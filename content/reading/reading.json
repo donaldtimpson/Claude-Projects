@@ -6218,5 +6218,327 @@
         }
       ]
     }
+  ],
+  "books": [
+    {
+      "title": "Sam and the Cat",
+      "level": 1,
+      "cover": "🐱",
+      "pages": [
+        {
+          "text": "Sam has a cat.",
+          "picture": "👦🐱"
+        },
+        {
+          "text": "The cat is big.",
+          "picture": "🐱"
+        },
+        {
+          "text": "The cat can nap.",
+          "picture": "🐱💤"
+        },
+        {
+          "text": "A rat ran in.",
+          "picture": "🐀"
+        },
+        {
+          "text": "The cat ran at the rat!",
+          "picture": "🐱🐀"
+        },
+        {
+          "text": "The rat hid in a box.",
+          "picture": "🐀📦"
+        }
+      ],
+      "question": {
+        "prompt": "Where did the rat hide?",
+        "answer": "📦",
+        "choices": [
+          "📦",
+          "🛏️",
+          "🧢"
+        ]
+      }
+    },
+    {
+      "title": "The Fish Shop",
+      "level": 2,
+      "cover": "🐟",
+      "pages": [
+        {
+          "text": "Tom is at the fish shop.",
+          "picture": "🏪"
+        },
+        {
+          "text": "The fish shop is big.",
+          "picture": "🐟🐠🐡"
+        },
+        {
+          "text": "Tom can pick a fish.",
+          "picture": "👦🐟"
+        },
+        {
+          "text": "The fish is in a dish.",
+          "picture": "🐟🍽️"
+        },
+        {
+          "text": "Tom has the fish in a bag.",
+          "picture": "👦🛍️"
+        },
+        {
+          "text": "Yum! Fish and chips!",
+          "picture": "🐟🍟"
+        }
+      ],
+      "question": {
+        "prompt": "What did Tom get?",
+        "answer": "🐟",
+        "choices": [
+          "🐟",
+          "🍎",
+          "🧸"
+        ]
+      }
+    },
+    {
+      "title": "The Frog in the Pond",
+      "level": 3,
+      "cover": "🐸",
+      "pages": [
+        {
+          "text": "A frog sat on a log.",
+          "picture": "🐸🪵"
+        },
+        {
+          "text": "The frog can jump and swim.",
+          "picture": "🐸💦"
+        },
+        {
+          "text": "A crab is in the sand.",
+          "picture": "🦀"
+        },
+        {
+          "text": "The frog can spot a bug.",
+          "picture": "🐸🐛"
+        },
+        {
+          "text": "Snap! The frog got the bug.",
+          "picture": "🐸"
+        },
+        {
+          "text": "The frog is glad.",
+          "picture": "🐸😀"
+        }
+      ],
+      "question": {
+        "prompt": "What did the frog get?",
+        "answer": "🐛",
+        "choices": [
+          "🐛",
+          "🍰",
+          "🚗"
+        ]
+      }
+    },
+    {
+      "title": "A Kite Ride",
+      "level": 4,
+      "cover": "🪁",
+      "pages": [
+        {
+          "text": "Kate has a kite.",
+          "picture": "👧🪁"
+        },
+        {
+          "text": "The kite is red and white.",
+          "picture": "🪁"
+        },
+        {
+          "text": "Kate and Mike ride to the lake.",
+          "picture": "🚲🏞️"
+        },
+        {
+          "text": "The wind can lift the kite.",
+          "picture": "🌬️🪁"
+        },
+        {
+          "text": "Up, up, up it went!",
+          "picture": "🪁"
+        },
+        {
+          "text": "Kate gave the kite to Mike.",
+          "picture": "👦🪁"
+        }
+      ],
+      "question": {
+        "prompt": "Where did they ride to?",
+        "answer": "🏞️",
+        "choices": [
+          "🏞️",
+          "🏫",
+          "🏥"
+        ]
+      }
+    },
+    {
+      "title": "The Green Tree",
+      "level": 5,
+      "cover": "🌳",
+      "pages": [
+        {
+          "text": "A goat sat by a green tree.",
+          "picture": "🐐🌳"
+        },
+        {
+          "text": "The goat ate a leaf.",
+          "picture": "🐐🍃"
+        },
+        {
+          "text": "Then it began to rain.",
+          "picture": "🌧️"
+        },
+        {
+          "text": "The goat ran to the boat.",
+          "picture": "🐐⛵"
+        },
+        {
+          "text": "The boat had hay to eat.",
+          "picture": "🌾"
+        },
+        {
+          "text": "The goat had a long sleep.",
+          "picture": "🐐💤"
+        }
+      ],
+      "question": {
+        "prompt": "What did the goat eat first?",
+        "answer": "🍃",
+        "choices": [
+          "🍃",
+          "🍕",
+          "🍦"
+        ]
+      }
+    },
+    {
+      "title": "The Dark Park",
+      "level": 6,
+      "cover": "🌙",
+      "pages": [
+        {
+          "text": "It is dark in the park.",
+          "picture": "🌙🌳"
+        },
+        {
+          "text": "A girl and her dog sit on a bench.",
+          "picture": "👧🐕"
+        },
+        {
+          "text": "A star is far up.",
+          "picture": "⭐"
+        },
+        {
+          "text": "The dog barks at a bird.",
+          "picture": "🐕🐦"
+        },
+        {
+          "text": "The bird sat on a fern.",
+          "picture": "🐦🌿"
+        },
+        {
+          "text": "The girl and the dog start for home.",
+          "picture": "🏠"
+        }
+      ],
+      "question": {
+        "prompt": "What did the dog bark at?",
+        "answer": "🐦",
+        "choices": [
+          "🐦",
+          "🐟",
+          "🚗"
+        ]
+      }
+    },
+    {
+      "title": "The Brown Cow",
+      "level": 7,
+      "cover": "🐄",
+      "pages": [
+        {
+          "text": "Now the cow is out.",
+          "picture": "🐄"
+        },
+        {
+          "text": "The brown cow went to town.",
+          "picture": "🐄🏘️"
+        },
+        {
+          "text": "A clown saw the cow.",
+          "picture": "🤡🐄"
+        },
+        {
+          "text": "The clown had a toy.",
+          "picture": "🤡🧸"
+        },
+        {
+          "text": "The cow and the clown sat down.",
+          "picture": "🐄🤡"
+        },
+        {
+          "text": "What a loud town!",
+          "picture": "🎉"
+        }
+      ],
+      "question": {
+        "prompt": "Who saw the cow?",
+        "answer": "🤡",
+        "choices": [
+          "🤡",
+          "👮",
+          "🧑‍🍳"
+        ]
+      }
+    },
+    {
+      "title": "Fun at the Sea",
+      "level": 8,
+      "cover": "🌊",
+      "pages": [
+        {
+          "text": "We are going to the sea.",
+          "picture": "🌊"
+        },
+        {
+          "text": "Dad is fishing.",
+          "picture": "👨🎣"
+        },
+        {
+          "text": "Mom is reading a book.",
+          "picture": "👩📖"
+        },
+        {
+          "text": "The kids are jumping in the waves.",
+          "picture": "👧👦🌊"
+        },
+        {
+          "text": "A crab is resting on a rock.",
+          "picture": "🦀🪨"
+        },
+        {
+          "text": "We are singing and playing.",
+          "picture": "🎶"
+        }
+      ],
+      "question": {
+        "prompt": "What was Dad doing?",
+        "answer": "🎣",
+        "choices": [
+          "🎣",
+          "🚲",
+          "🎨"
+        ]
+      }
+    }
   ]
 }
