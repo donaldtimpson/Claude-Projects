@@ -13,7 +13,8 @@ import SwiftUI
 //   • content kinds fade in via `tier`: 0–10 (snaps to whole numbers, every milestone labelled,
 //     dots under the call, read aloud) → 0–20 → 0–100 → −10…10 → 0–1000 → decimals → mixed
 //     challenges (sums/products to place, "halfway between", 0–10 000);
-//   • within each kind the milestone labels thin out (every one → a few → only the ends);
+//   • within each kind the milestone labels thin out (every one → a few → only the ends); on 0–10
+//     the dots go first (~I¾), the labels thin only after 0–20 has arrived — one new thing at a time;
 //   • the hit window shrinks from ~5 % of the line to ~1.8 %.
 
 // MARK: Content
@@ -160,10 +161,10 @@ private final class BallistaModel: ArcadeModel {
         }
         switch k {
         case 0:   // 0–10, whole numbers, snapping
-            let labels = thin(1, all: stride(0, 10, 1), mid: [0, 5, 10], ends: [0, 10])
+            let labels = thin(1.9, all: stride(0, 10, 1), mid: [0, 5, 10], ends: [0, 10])
             let t = labels.count > 3 ? Double(r(1...9)) : pick(stride(1, 9, 1), avoid: labels)
             return BQ(lo: 0, hi: 10, minor: 1, labels: labels, target: t, call: bFmt(t), say: bSay(t),
-                      snap: 1, tol: 0.4, dots: d < 1.9 ? Int(t) : 0)
+                      snap: 1, tol: 0.4, dots: d < 1.75 ? Int(t) : 0)
         case 1:   // 0–20
             let labels = thin(2.2, all: stride(0, 20, 2), mid: [0, 10, 20], ends: [0, 20])
             let t = pick(stride(1, 19, 1), avoid: labels)
@@ -220,9 +221,10 @@ private final class BallistaModel: ArcadeModel {
                           call: "\(bFmt(Double(a))) \(bs)", sub: "work it out, then aim",
                           say: "\(bSay(Double(a))) \(b < 0 ? "minus" : "plus") \(abs(b))", snap: 1, tol: 0.4)
             case 3:   // halfway between two marked numbers
-                let a = r(2...40) * 10, gap = r(2...25) * 20
+                // Kept apart (and off the end stones) so the four milestone labels never overlap.
+                let a = r(10...40) * 10, gap = r(6...25) * 20
                 let b = a + gap
-                if b > 980 { fallthrough }
+                if b > 880 { fallthrough }
                 let t = Double(a + b) / 2
                 return BQ(lo: 0, hi: 1000, minor: 100, labels: [0, Double(a), Double(b), 1000], target: t,
                           call: "Halfway", sub: "between \(a) and \(b)", say: "halfway between \(a) and \(b)",
@@ -365,9 +367,13 @@ private struct BallistaPlay: View {
                     .position(x: w - 58, y: h - 70)
                     .allowsHitTesting(false)
 
-                callSign
-                    .frame(width: w - 28)
-                    .position(x: w / 2, y: 122)
+                // The call sign sits just under the HUD row (not under the pills).
+                VStack(spacing: 0) {
+                    HUDSpace(58)
+                    callSign.frame(width: w - 28)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: w, height: h)
             }
         }
         .padding(.top, 4)
@@ -461,7 +467,7 @@ private struct BallistaPlay: View {
             ZStack(alignment: .topLeading) {
                 if model.wasHit {
                     Shards().position(x: tx, y: lineY - 26)
-                    Text(model.bullseye ? "BULLSEYE!" : ["SMASH!", "CRACK!", "BULL'S-EYE!"][model.roundID % 2])
+                    Text(model.bullseye ? "BULLSEYE!" : (model.roundID % 2 == 0 ? "SMASH!" : "CRACK!"))
                         .font(luFont(30)).foregroundStyle(Color(hex: Lu.gold))
                         .shadow(color: .black.opacity(0.5), radius: 0, x: 2, y: 2)
                         .position(x: min(max(tx, 90), xOf(q.hi) - 60), y: lineY - 92)
