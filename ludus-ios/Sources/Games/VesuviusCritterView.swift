@@ -301,7 +301,7 @@ private struct CritterPlay: View {
                     .overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
                 .frame(maxWidth: W - 24)
                 .position(x: W / 2, y: 84)
-                .opacity(model.stage == .waiting ? 1 : 0.5)
+                .opacity(model.stage == .waiting ? 1 : 0.8)
                 // patience (full while the question is being asked)
                 if model.patience > 0, model.deadline != nil || model.stage == .waiting {
                     TimelineView(.animation(minimumInterval: 0.1)) { tl in
