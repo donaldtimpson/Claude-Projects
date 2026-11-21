@@ -26,7 +26,10 @@ import SwiftUI
 //   • the target band on the thermometer fades out from d≈4 to d≈7 (watch the pot, know the facts);
 //   • fuel for the fire: none below d≈3 (after the boil / freeze / condense orders and the snow
 //     bucket have settled in, so the clock never lands with them), then 45 s easing to 13 s. The
-//     log counter waits until the order card has landed and been read (or the first press).
+//     log counter waits until the order has been SAID (or the first press), sitting full.
+//
+// Each order is read aloud for pre-readers (🔊 on the card repeats it); the words on the card
+// are the words spoken.
 
 // MARK: Materials
 
@@ -209,11 +212,14 @@ private final class ForgeModel: ArcadeModel {
     private var lastState: FState?
     private var dwell: Double = 1
     private var lag: Double = 0.15
-    private var fuelWait: Double = 0          // reading time before the fuel starts to burn
+    private var fuelLit = false               // the fuel burns only once the order has been said
 
     init() { super.init(key: GameID.forge.rawValue) }
 
     var physics: FHeat { FHeat(mat: order.mat) }
+
+    /// 🔊: say the order again (the fuel keeps waiting if it hasn't started).
+    func sayAgain() { LibraryVoice.say(order.say) }
     var reading: (t: Double, melted: Double, boiled: Double) { physics.read(heat) }
     /// How visible the target band on the thermometer is (1 → 0 between d 4 and 7).
     var bandAlpha: Double { ramp(1, 0, from: 4, to: 7) }
@@ -248,7 +254,12 @@ private final class ForgeModel: ArcadeModel {
         dwell = ramp(0.8, 2.6, to: 9)
         lag = ramp(0.15, 0.9, to: 9)
         fuel = d < 3 ? nil : ramp(45, 13, from: 3, to: 9.5)
-        fuelWait = 1.6
+        fuelLit = false
+        let id = roundID
+        LibraryVoice.say(o.say) { [weak self] in
+            guard let self, self.roundID == id else { return }
+            self.fuelLit = true
+        }
         botGoal = nil
     }
 
@@ -277,8 +288,7 @@ private final class ForgeModel: ArcadeModel {
         var dh = span * 0.2 * flame - span * 0.28 * cooling
         dh -= (t - room) / span * span * 0.1          // heat leaks toward room temperature
         heat = max(physics.hMin, min(physics.hMax, heat + dh * dt))
-        if fuelWait > 0 { fuelWait -= dt }
-        else if let f = fuel {
+        if fuelLit, let f = fuel {
             fuel = max(0, f - dt)
             if fuel == 0 { fail("The fire went out!"); return }
         }
@@ -334,7 +344,7 @@ private final class ForgeModel: ArcadeModel {
 
     func press(_ which: String, _ down: Bool) {
         guard phase == .playing, stage == .working else { bellows = false; snow = false; return }
-        if down { fuelWait = 0 }
+        if down { fuelLit = true }
         if which == "fire" {
             if down && !bellows { Sfx.play(.whoosh, volume: 0.5) }
             bellows = down
@@ -417,6 +427,7 @@ private struct ForgePlay: View {
                     .lineLimit(2).minimumScaleFactor(0.7)
             }
             Spacer(minLength: 0)
+            LibrarySpeakerButton(size: 38) { model.sayAgain() }
             if let f = model.fuel {
                 VStack(spacing: 0) {
                     Text("🪵").font(.system(size: 22))
