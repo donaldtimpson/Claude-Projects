@@ -8,7 +8,7 @@ import SwiftUI
 // key, the key lights green with its name and sounds, and the sheet explains how to find it.
 //
 // Continuous ladder (all off `d`; new kinds fade in, old ones stay as review):
-//   1    the WHITE key that shines (a black one now and then from ~1.6)
+//   1    the WHITE key that shines (a black one now and then from ~1.6); spoken prompts for pre-readers
 //   1.8  a BLACK / WHITE key, the HIGHEST / LOWEST key (pictures + voice)
 //   2.6  C D E F by the black-key groups (with the hint)
 //   3.5  any letter C–B; the hint fades out by ~5
@@ -87,7 +87,7 @@ private final class PianoMouseModel: ArcadeModel {
             return one(.end(high: high), [high ? keys.upperBound : keys.lowerBound])
         case 2, 3:
             let s = tierIsEasyName ? Spelled([0, 0, 1, 2, 3].randomElement()!) : Spelled(Int.random(in: 0..<7))
-            let hint = tierIsEasyName || Double.random(in: 0..<1) < ramp(1, 0, from: 3.5, to: 5)
+            let hint = Double.random(in: 0..<1) < ramp(1, 0, from: 3.5, to: 5)    // review at the top goes bare
             return one(.name(s, hint: hint), Set(all.filter { pitchClass($0) == s.pc }))
         case 4:
             let (sh, fl) = blackKeyNames([1, 3, 6, 8, 10].randomElement()!)
@@ -116,7 +116,7 @@ private final class PianoMouseModel: ArcadeModel {
     private var tierIsEasyName = false
     private var tierIsDown = false
 
-    private func pick(avoid: PMTask?) -> PMQuestion {
+    fileprivate func pick(avoid: PMTask?) -> PMQuestion {
         // Draw a tier, then fix the per-tier flags, then build (two passes keep `make` simple).
         var nq: PMQuestion
         var tries = 0
@@ -141,6 +141,7 @@ private final class PianoMouseModel: ArcadeModel {
         // Pre-readers hear the job (voice), until the sheet is all notation.
         if d < 6 {
             switch q.task {
+            case .glow: if d < 1.6 { LibraryVoice.say("Tap the shiny key") }
             case .color(let b): LibraryVoice.say(b ? "Tap a black key" : "Tap a white key")
             case .end(let h): LibraryVoice.say(h ? "Tap the highest key" : "Tap the lowest key")
             case .name(let s, _): LibraryVoice.say("Find \(pmSpoken(s))")
@@ -208,9 +209,12 @@ private final class PianoMouseModel: ArcadeModel {
                 let (sh, fl) = blackKeyNames(s.pc)
                 return "\(s.acc > 0 ? "♯ = the key just to the right" : "♭ = the key just to the left") · \(sh.name) = \(fl.name)"
             }
+            // The sheet already shows the hint: don't just repeat it, point at the key.
+            if case .name(_, true) = q.task { return "Here is \(s.name) — spot the \(s.letter < 3 ? 2 : 3) black keys first" }
             return pmNameHint[s.letter]
         case .staff(let step, let n):
-            let where_ = step == 0 ? "on its own little line below" : ((step - 2) % 2 == 0 ? "on a line" : "in a space")
+            let where_ = step == 0 ? "on its own little line below" : step == 1 ? "just under the bottom line"
+                : (step % 2 == 0 ? "on a line" : "in a space")
             return "That note is \(n.name) — \(where_)"
         case .interval(let from, let n, let down):
             return "\(whiteKeyName(from).name) is 1 — count \(n) white keys \(down ? "down" : "up")"
@@ -542,6 +546,26 @@ private struct PMGlowRing: View {
         fails.append("staff \(s),\(a)")
     }
     if blackKeyNames(pitchClass(66)).flat.name != "G♭" { fails.append("66 = G♭") }
-    NSLog("PianoMouse self-check (theory): %@", fails.isEmpty ? "PASS" : "FAIL \(fails.prefix(10))")
+    // Sweep the generator up the ladder (`d` follows the level while the intro card is up).
+    for i in 0..<3300 {
+        let lv = 1 + i % 11
+        m.level = lv; m.startLevel = lv
+        let q = m.pick(avoid: nil)
+        if q.answers.isEmpty || !q.answers.isSubset(of: Set(q.keys)) { fails.append("answers L\(lv) \(q.task)"); continue }
+        switch q.task {
+        case .glow(let k): if q.answers != [k] { fails.append("glow") }
+        case .color(let b): if q.answers != Set(q.keys.filter { isBlackKey($0) == b }) { fails.append("color") }
+        case .end(let h): if q.answers != [h ? q.keys.upperBound : q.keys.lowerBound] || isBlackKey(q.keys.upperBound) { fails.append("end") }
+        case .name(let s, _): if q.answers != Set(q.keys.filter { pitchClass($0) == s.pc }) { fails.append("name \(s.name)") }
+        case .staff(let step, let n):
+            if q.answers != [pmStaffMidi(step, n.acc)] || n.letter != step % 7 { fails.append("staff \(step)") }
+        case .interval(let from, let steps, let down):
+            let to = q.answers.first!
+            let whites = q.keys.filter { !isBlackKey($0) && $0 >= min(from, to) && $0 <= max(from, to) }
+            if isBlackKey(from) || isBlackKey(to) || whites.count != steps || (down ? to >= from : to <= from) { fails.append("interval") }
+        }
+    }
+    m.level = 1; m.startLevel = 1
+    NSLog("PianoMouse self-check: %@", fails.isEmpty ? "PASS" : "FAIL \(fails.prefix(10))")
 }
 #endif
