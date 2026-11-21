@@ -240,6 +240,21 @@ private final class FlagFrenzyModel: ArcadeModel {
             if bubbles[i].x > size.width - r { bubbles[i].x = size.width - r; bubbles[i].vx = -abs(bubbles[i].vx) }
             if bubbles[i].y < -r { bubbles.remove(at: i) }      // escaped: no penalty
         }
+        // Balloons that drift into each other ease apart, so every flag stays readable and tappable.
+        let liveIdx = bubbles.indices.filter { bubbles[$0].pop == 0 && bubbles[$0].burst == 0 }
+        for (n, i) in liveIdx.enumerated() {
+            for j in liveIdx[(n + 1)...] {
+                let dx = bubbles[j].x - bubbles[i].x, dy = bubbles[j].y - bubbles[i].y
+                let gap = bubbles[i].r + bubbles[j].r + 6
+                let dist = max(0.5, hypot(dx * 1.1, dy * 0.9))
+                guard dist < gap else { continue }
+                let k = (gap - dist) * CGFloat(min(1, dt * 4)) / dist
+                let ux = dx == 0 ? 1 : dx
+                bubbles[i].x -= ux * k * 0.5; bubbles[j].x += ux * k * 0.5
+                bubbles[i].y -= dy * k * 0.3; bubbles[j].y += dy * k * 0.3
+            }
+        }
+        for i in bubbles.indices { let r = bubbles[i].r; bubbles[i].x = min(max(bubbles[i].x, r), size.width - r) }
         for i in sparks.indices.reversed() {
             sparks[i].life -= CGFloat(dt) * 1.6
             if sparks[i].life <= 0 { sparks.remove(at: i); continue }
@@ -305,6 +320,7 @@ private final class FlagFrenzyModel: ArcadeModel {
             hit()
             Sfx.play(.pop)
             target = nextTarget(avoid: b.country.name)
+            retireAmbiguous()
         } else {
             bubbles[i].burst = 0.001
             floaters.append(FFFloater(x: b.x, y: b.y - b.r - 10, text: "\(b.country.flag) \(b.country.name)", life: 1.6, hex: Lu.coral))
@@ -320,6 +336,20 @@ private final class FlagFrenzyModel: ArcadeModel {
             }
             say(why)
             miss(delay: 1.6)
+        }
+    }
+
+    /// Balloons from the last call keep floating, but not ones the NEW call can't judge fairly: the
+    /// twin of a right flag (Chad while the call is Romania), or a two-continent country in a
+    /// continent round (Indonesia while the call is Asia; Chad or Romania unless the call dealt it). They drift off with a soft poof.
+    private func retireAmbiguous() {
+        let rights = target.kinds.filter(target.isRight)
+        for i in bubbles.indices where bubbles[i].pop == 0 && bubbles[i].burst == 0 {
+            let c = bubbles[i].country
+            let twinNotInCall = ffTwins.contains { $0.contains(c.name) } && !target.kinds.contains(c)
+            if (target.mode == .continent && (c.cont == nil || twinNotInCall)) || rights.contains(where: { ffClashes($0, c) }) {
+                bubbles[i].pop = 0.001
+            }
         }
     }
 
