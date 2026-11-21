@@ -232,6 +232,15 @@ private final class MaestroModel: ArcadeModel {
 
     var card: MMCard { q.cards[min(idx, q.cards.count - 1)] }
 
+    /// A listening question, asked straight out once the band has finished.
+    var listenQuestion: String {
+        switch card.upMusic {
+        case .dyn: return "Was it LOUD or soft?"
+        case .tempo: return "Was it FAST or slow?"
+        case .swell: return "Getting LOUDER or softer?"
+        }
+    }
+
     private var recent: [Bool] = []
 
     private func next() {
@@ -342,7 +351,7 @@ struct MaestroMouseView: View {
                             .background(Capsule().fill(Color.black.opacity(0.5)))
                             .transition(.scale.combined(with: .opacity))
                     } else if model.q.listen {
-                        Text(model.busy ? "👂 Listen to the band…" : "Now wave your baton!")
+                        Text(model.busy ? "👂 Listen to the band…" : model.listenQuestion)
                             .font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.ink))
                             .padding(.horizontal, 14).padding(.vertical, 5)
                             .background(Capsule().fill(Color.black.opacity(0.35)))
@@ -628,8 +637,9 @@ private struct MMPads: View {
     var fails: [String] = []
     let loudWords: Set<String> = ["forte", "fortissimo", "f", "ff", "🦁"], softWords: Set<String> = ["piano", "pianissimo", "p", "pp", "🐭💤"]
     let fastWords: Set<String> = ["allegro", "presto", "🐆"], slowWords: Set<String> = ["adagio", "largo", "🐌"]
-    for level in 1...1 {
-        for _ in 0..<3000 {
+    for level in 1...11 {
+        model.level = level; model.startLevel = level     // `d` follows the level while the intro is up
+        for _ in 0..<400 {
             let q = mmMake(model)
             if q.cards.isEmpty || (q.listen && q.cards.count != 1) { fails.append("shape L\(level)") }
             for c in q.cards {
@@ -658,6 +668,7 @@ private struct MMPads: View {
             }
         }
     }
+    model.level = 1; model.startLevel = 1
     NSLog("MaestroMouse self-check: %@", fails.isEmpty ? "PASS" : "FAIL \(Array(Set(fails)).prefix(10))")
 }
 #endif
