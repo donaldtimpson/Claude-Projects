@@ -13,7 +13,9 @@ import SwiftUI
 //   • intruders — tier([1, 2.6, 3.8, 5]): modern gadgets (📱 🚗) → 1800s–1900s inventions (💡 🚲)
 //     → food from the Americas at Old-World tables (🍅 🥔 before 1492) → subtle (👓 in Rome, 🛞 in
 //     the cave). Below d≈1.8 only the unmistakable gadgets and classic Roman things appear;
-//   • from d≈4.5 an hourglass drains, 22 s easing to 9 s.
+//   • from d≈6 (once the subtle intruders are in) an hourglass drains, 24 s easing to 9 s. It sits
+//     full until the new scene has landed (and, on a run's first scene, until the job is said).
+// The Time Guard reads the "why" aloud after every zap or miss, and the next scene waits for him.
 // The Wild West deliberately shows corn, potatoes and trains as RIGHT-time things, so a child
 // who has learned "potatoes = wrong" has to think about where and when.
 
@@ -213,8 +215,12 @@ private final class TimeGuardModel: ArcadeModel {
         #endif
     }
 
+    /// The hourglass may drain (the scene has landed / the job has been said).
+    private var clockArmed = false
+    private var firstOfRun = false
+
     override func perLevel(_ level: Int) -> Int { 5 }
-    override func onBegin() { next() }
+    override func onBegin() { firstOfRun = true; next() }
 
     func next() {
         let n = rampInt(3, 8, to: 8.5)
@@ -229,8 +235,33 @@ private final class TimeGuardModel: ArcadeModel {
         round = made ?? TGGen.round(era: .rome, tier: 0, n: n, classic: false, avoid: nil)!
         stage = .asking
         roundNo += 1
-        perQ = d >= 4.5 ? ramp(22, 9, from: 4.5, to: 10) : 0
+        perQ = d >= 6 ? ramp(24, 9, from: 6, to: 10.5) : 0
         tLeft = perQ
+        clockArmed = false
+        let thisRound = roundNo
+        let arm: () -> Void = { [weak self] in
+            guard let self, self.roundNo == thisRound else { return }
+            self.clockArmed = true
+        }
+        if firstOfRun {
+            firstOfRun = false
+            LibraryVoice.say("Tap the thing from the wrong time!", then: arm)
+        } else {
+            forumAfter(self, 0.7, round: { $0.roundNo }) { _ in arm() }   // the scene springs in first
+        }
+    }
+
+    /// After a zap or a miss: say why, then move on once he's done (never sooner than `minimum`).
+    private func explainThenNext(minimum: Double) {
+        let n = roundNo
+        let shown = Date()
+        LibraryVoice.say(round.intruder.why) { [weak self] in
+            let wait = max(0.4, minimum - Date().timeIntervalSince(shown))
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+                guard let self, self.phase == .playing, self.roundNo == n else { return }
+                self.next()
+            }
+        }
     }
 
     func tap(_ i: Int) {
@@ -239,16 +270,16 @@ private final class TimeGuardModel: ArcadeModel {
             stage = .zapped
             hit()
             Sfx.play(.sparkle)
-            forumAfter(self, 1.5, round: { $0.roundNo }) { $0.next() }
+            explainThenNext(minimum: 1.6)
         } else {
             stage = .missed(tapped: i)
-            let last = miss(reason: i < 0 ? "The hourglass ran out!" : "Out of hearts!", delay: 2.3)
-            if !last { forumAfter(self, 2.4, round: { $0.roundNo }) { $0.next() } }
+            let last = miss(reason: i < 0 ? "The hourglass ran out!" : "Out of hearts!", delay: 2.6)
+            if !last { explainThenNext(minimum: 2.4) } else { LibraryVoice.say(round.intruder.why) }
         }
     }
 
     func tick(_ dt: Double) {
-        guard phase == .playing, stage == .asking, perQ > 0 else { return }
+        guard phase == .playing, stage == .asking, perQ > 0, clockArmed else { return }
         tLeft -= dt
         if tLeft <= 0 { tLeft = 0; tap(-1) }
     }
@@ -268,7 +299,8 @@ struct TimeGuardView: View {
 
     var body: some View {
         let era = model.phase == .intro ? TGEra.rome : model.round.scene.era
-        ArcadeShell(model: model, spec: GameID.timeGuard.spec!, accent: Lu.gold, onClose: onClose,
+        ArcadeShell(model: model, spec: GameID.timeGuard.spec!, accent: Lu.gold,
+                    onClose: { LibraryVoice.stop(); onClose() },
                     backdrop: {
                         TGBackdrop(era: era)
                             .id(era)
@@ -294,6 +326,7 @@ struct TimeGuardView: View {
                 model.tick(0.1)
             }
         }
+        .onDisappear { LibraryVoice.stop() }
     }
 
     /// A carved sign: where and when we are, and the hourglass once there's a rush.
@@ -311,6 +344,8 @@ struct TimeGuardView: View {
         .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: 0xf3e3c0).opacity(0.94))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: Lu.goldLine), lineWidth: 2)))
         .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
+        // A new scene swaps the sign's words outright (a cross-fade smeared two titles together).
+        .transaction { $0.animation = nil }
     }
 
     /// The Time Guard himself, saying the job — or why, after a zap or a miss.
@@ -343,7 +378,9 @@ struct TimeGuardView: View {
             .frame(minHeight: 64)
             .padding(.bottom, 26)
         }
-        .animation(.easeOut(duration: 0.2), value: model.stage)
+        // No cross-fade of the words (two lines of text overprinted mid-fade); the Time Guard's
+        // face still animates on its own.
+        .transaction { $0.animation = nil }
     }
 }
 
@@ -377,6 +414,7 @@ private struct TGSceneView: View {
             ZStack(alignment: .topLeading) {
                 ForEach(model.round.items) { item in
                     TGThingView(item: item, glyph: glyph, stage: model.stage,
+                                lamp: model.round.scene.era == .cave,
                                 live: model.phase == .playing) { model.tap(item.id) }
                         .position(x: item.pos.x * size.width, y: item.pos.y * size.height)
                 }
@@ -445,6 +483,8 @@ private struct TGThingView: View {
     let item: TGItem
     let glyph: CGFloat
     let stage: TimeGuardModel.Stage
+    /// Dark scene: a pool of firelight under each thing so brown animals don't vanish into the rock.
+    var lamp = false
     let live: Bool
     let action: () -> Void
     @State private var bob = false
@@ -457,6 +497,11 @@ private struct TGThingView: View {
     var body: some View {
         Button(action: action) {
             ZStack {
+                if lamp {
+                    Circle().fill(RadialGradient(colors: [Color(hex: 0xffd9a0).opacity(0.5), Color(hex: 0xffb060).opacity(0.18), .clear],
+                                                 center: .center, startRadius: 0, endRadius: glyph * 0.78))
+                        .frame(width: glyph * 1.56, height: glyph * 1.56)
+                }
                 Ellipse().fill(Color.black.opacity(0.22)).frame(width: glyph * 0.9, height: glyph * 0.22)
                     .offset(y: glyph * 0.52)
                 if zapped {

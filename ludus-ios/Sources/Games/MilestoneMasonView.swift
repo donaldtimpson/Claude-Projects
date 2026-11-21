@@ -14,7 +14,8 @@ import SwiftUI
 //   • what to carve — tier([1, 2, 3.4, 5, 6.8]): 1–3 (only I) → 4–9 (V, then IV/IX) → 10–39 (X)
 //     → 40–100 (L, C) → years AD on a dedication stone (D, M: AD 79 Vesuvius … this year);
 //   • help fades: pebbles to count (gone by ~3.5), the live "= 7" read-out (gone by ~6);
-//   • from d≈4 the traveller is walking up the road — finish before he arrives (30 s → 12 s).
+//   • from d≈4.5 the traveller is walking up the road — finish before he arrives (35 s → 12 s).
+//     He sets off only once the order has been spoken (the clock never runs during directions).
 
 // MARK: Numerals
 
@@ -113,18 +114,26 @@ private final class MasonModel: ArcadeModel {
         let rank = d < 2 ? 1 : d < 3.4 ? 2 : d < 5 ? 3 : d < 6.8 ? 5 : 7
         let need = order.answer.compactMap { c in mmSymbols.firstIndex { $0.0 == c } }.max() ?? 0
         symbolsShown = max(rank, need + 1)
-        deadline = order.limit > 0 ? Date().addingTimeInterval(order.limit) : nil
-        if order.limit > 0 {
-            forumAfter(self, order.limit, round: { $0.roundNo }) { m in
-                if m.stage == .carving || m.stage == .hint { m.timeUp() }
-            }
+        deadline = nil
+        // The traveller waits at the far end of the road until the order has been said.
+        let round = roundNo
+        sayOrder { [weak self] in
+            guard let self, self.roundNo == round, self.phase == .playing else { return }
+            self.startClock()
         }
-        sayOrder()
     }
 
-    func sayOrder() {
-        if let y = order.year { LibraryVoice.say("Carve the year \(order.n). \(y.1).") }
-        else { LibraryVoice.say(order.n == 1 ? "Carve one mile!" : "Carve \(order.n) miles!") }
+    private func startClock() {
+        guard order.limit > 0, stage == .carving || stage == .hint, deadline == nil else { return }
+        deadline = Date().addingTimeInterval(order.limit)
+        forumAfter(self, order.limit, round: { $0.roundNo }) { m in
+            if m.stage == .carving || m.stage == .hint { m.timeUp() }
+        }
+    }
+
+    func sayOrder(then done: (() -> Void)? = nil) {
+        if let y = order.year { LibraryVoice.say("Carve the year \(order.n). \(y.1).", then: done) }
+        else { LibraryVoice.say(order.n == 1 ? "Carve one mile!" : "Carve \(order.n) miles!", then: done) }
     }
 
     private func makeOrder() -> MMOrder {
@@ -154,7 +163,7 @@ private final class MasonModel: ArcadeModel {
         if n == order.n && k < 4 { n = n == 1 ? 2 : n - 1 }      // never the same number twice running
         let dots = n <= 10 && !chance(1, from: 2, to: 3.5)
         let live = !chance(1, from: 3.6, to: 6)
-        let limit = d >= 4 ? ramp(30, 12, from: 4, to: 10) + Double(romanStandard(n).count) * 0.8 : 0
+        let limit = d >= 4.5 ? ramp(35, 12, from: 4.5, to: 10) + Double(romanStandard(n).count) * 0.8 : 0
         return MMOrder(n: n, year: year, dots: dots, live: live, limit: limit)
     }
 
@@ -266,7 +275,7 @@ private struct MMOrderBubble: View {
                     Text(y.0).font(.system(size: 40))
                     VStack(alignment: .leading, spacing: 1) {
                         Text("CARVE THE YEAR").font(luFont(11, .heavy)).tracking(1.4).foregroundStyle(Color(hex: 0x8a6a3a))
-                        Text("AD \(o.n)").font(luSerif(30, .black)).foregroundStyle(Color(hex: Lu.inkDark))
+                        Text(verbatim: "AD \(o.n)").font(luSerif(30, .black)).foregroundStyle(Color(hex: Lu.inkDark))
                         Text(y.1).font(luFont(14, .bold)).foregroundStyle(Color(hex: 0x5a4a3a))
                             .lineLimit(2).minimumScaleFactor(0.7)
                     }
@@ -274,7 +283,7 @@ private struct MMOrderBubble: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("HOW FAR TO ROME?").font(luFont(11, .heavy)).tracking(1.4).foregroundStyle(Color(hex: 0x8a6a3a))
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text("\(o.n)").font(luSerif(40, .black)).foregroundStyle(Color(hex: Lu.inkDark))
+                            Text(verbatim: "\(o.n)").font(luSerif(40, .black)).foregroundStyle(Color(hex: Lu.inkDark))
                             Text(o.n == 1 ? "mile" : "miles").font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x5a4a3a))
                         }
                     }
@@ -359,7 +368,11 @@ private struct MMYard: View {
         let near = CGPoint(x: size.width * 0.5 + min(size.height * 0.94, 330) * 0.3 + 40, y: size.height - 72)
         return TimelineView(.animation(minimumInterval: 1 / 20, paused: model.deadline == nil || model.phase != .playing)) { tl in
             let t: CGFloat = {
-                guard let dl = model.deadline, model.order.limit > 0 else { return 1 }
+                guard model.order.limit > 0 else { return 1 }
+                guard let dl = model.deadline else {
+                    // Rush round, order still being spoken: he waits far up the road.
+                    return model.stage == .carving || model.stage == .hint ? 0 : 1
+                }
                 return CGFloat(1 - max(0, dl.timeIntervalSince(tl.date)) / model.order.limit)
             }()
             let far = CGPoint(x: size.width * 0.86, y: size.height * 0.08)
@@ -419,12 +432,17 @@ private struct MMStone: View {
                     }
                     MMCarving(text: text, painted: painted, fontSize: fontSize)
                         .frame(width: width * 0.94)
+                        .id(model.roundNo)          // fresh letters each stone (no red paint fading over)
+                        .transition(.identity)      // …and the old stone's letters don't ghost over the new
                 }
                 .frame(height: height * 0.3)
                 Rectangle().fill(Color(hex: 0x8a8170)).frame(width: width * 0.7, height: 2)
                 Text(o.year == nil ? "M · P" : "DOMINI").font(luSerif(width * 0.13, .black)).tracking(2)
                     .foregroundStyle(Color(hex: 0x6a6153))
-                readout.frame(height: height * 0.13)
+                readout
+                    .frame(maxWidth: width * 0.92)          // stay on the column (scale down, never spill)
+                    .frame(height: height * 0.13)
+                    .transaction { $0.animation = nil }     // no cross-fade of old and new lines
             }
             .offset(y: -height * 0.03)
         }
@@ -437,20 +455,28 @@ private struct MMStone: View {
         let o = model.order
         switch model.stage {
         case .wrong:
+            // How it adds up: the parts on one line, their values under them (a year's sum is too
+            // long for one line on the stone).
             let parts = romanParts(o.n)
-            Text(parts.count > 1 ? parts.map(\.0).joined(separator: "+") + " = " + parts.map { "\($0.1)" }.joined(separator: "+")
-                                 : "\(parts.first?.0 ?? "") = \(o.n)")
-                .font(luFont(width * 0.1, .heavy)).foregroundStyle(Color(hex: 0x8a2a1a))
-                .lineLimit(1).minimumScaleFactor(0.4).padding(.horizontal, 6)
+            VStack(spacing: 0) {
+                if parts.count > 1 {
+                    Text(verbatim: parts.map(\.0).joined(separator: " + "))
+                    Text(verbatim: parts.map { "\($0.1)" }.joined(separator: "+") + " = \(o.n)")
+                } else {
+                    Text(verbatim: "\(parts.first?.0 ?? "") = \(o.n)")
+                }
+            }
+            .font(luFont(width * 0.085, .heavy)).foregroundStyle(Color(hex: 0x8a2a1a))
+            .lineLimit(1).minimumScaleFactor(0.4).padding(.horizontal, 6)
         case .hint:
-            Text("Shorter! Romans wrote \(o.answer)").font(luFont(width * 0.085, .heavy))
+            Text(model.carved.count > o.answer.count ? "Shorter! Romans wrote \(o.answer)" : "Romans wrote it \(o.answer)").font(luFont(width * 0.085, .heavy))
                 .foregroundStyle(Color(hex: 0x8a2a1a)).multilineTextAlignment(.center)
                 .lineLimit(2).minimumScaleFactor(0.5).padding(.horizontal, 8)
         case .right:
-            Text("✓ \(o.n)").font(luFont(width * 0.14, .heavy)).foregroundStyle(Color(hex: 0x3f7a3a))
+            Text(verbatim: "✓ \(o.n)").font(luFont(width * 0.14, .heavy)).foregroundStyle(Color(hex: 0x3f7a3a))
         case .carving:
             if o.live && !model.carved.isEmpty {
-                Text("= \(model.value)").font(luFont(width * 0.14, .heavy))
+                Text(verbatim: "= \(model.value)").font(luFont(width * 0.14, .heavy))
                     .foregroundStyle(Color(hex: model.value == o.n ? 0x3f7a3a : 0x5a5246))
             }
         }
@@ -524,7 +550,7 @@ private struct MMBench: View {
                             Text(String(s.0)).font(luSerif(syms.count > 5 ? 28 : 34, .black))
                                 .foregroundStyle(Color(hex: 0x3a342a))
                             if model.order.live || model.d < 5 {
-                                Text("\(s.1)").font(luFont(11, .heavy)).foregroundStyle(Color(hex: 0x6a6153))
+                                Text(verbatim: "\(s.1)").font(luFont(11, .heavy)).foregroundStyle(Color(hex: 0x6a6153))
                             }
                         }
                         .frame(maxWidth: syms.count <= 2 ? 96 : .infinity, minHeight: 64)

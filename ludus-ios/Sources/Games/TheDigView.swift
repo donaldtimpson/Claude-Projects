@@ -13,9 +13,11 @@ import SwiftUI
 //     (ages apart at first; Greece next to Rome later);
 //   • finds — tier([1, 3, 5]): instantly-known pictures → subtler things → named events
 //     (Magna Carta, the first Olympic Games);
-//   • labels: a picture + name per layer → from d≈6 only DATES (BC/AD), so the child has to know
-//     WHEN — and that 500 BC is older than AD 100;
-//   • from d≈5 the sun is setting on the dig (20 s → 8 s a find).
+//   • labels: a picture + name per layer → from d≈6.5 only DATES (BC/AD), so the child has to know
+//     WHEN — and that 500 BC is older than AD 100. Egypt, Greece and Rome overlap in time, so a
+//     dates-only dig never shows two of them together (776 BC would fit either label);
+//   • from d≈5.5 the sun is setting on the dig (25 s → 8 s a find) — it starts sinking only once
+//     the find has been named aloud.
 
 // MARK: Data
 
@@ -109,34 +111,55 @@ private final class DigModel: ArcadeModel {
         let t = tier([1, 3, 5])
         let pool = digFinds.filter { $0.emoji != find.emoji }
         find = (pool.filter { $0.tier == t }.randomElement()) ?? pool.randomElement()!
-        eras = pickEras(n, gap: gap, including: find.era)
-        datesOnly = chance(1, from: 6, to: 9)
+        datesOnly = chance(1, from: 6.5, to: 9)
+        eras = pickEras(n, gap: gap, including: find.era, datesOnly: datesOnly)
         showName = d >= 1.8 || find.tier > 0
         stage = .waiting
         roundNo += 1
-        limit = d >= 5 ? ramp(20, 8, from: 5, to: 10) : 0
-        deadline = limit > 0 ? Date().addingTimeInterval(limit) : nil
-        if limit > 0 {
-            forumAfter(self, limit, round: { $0.roundNo }) { m in
-                if m.stage == .waiting { m.fail(reason: "The sun set on the dig!") }
-            }
+        limit = d >= 5.5 ? ramp(25, 8, from: 5.5, to: 10) : 0
+        deadline = nil
+        // The sun starts to sink only after the find has been named (or a moment to look at it).
+        let round = roundNo
+        let start: () -> Void = { [weak self] in
+            guard let self, self.roundNo == round, self.phase == .playing else { return }
+            self.startClock()
         }
-        if showName { LibraryVoice.say(find.name.replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: "")) }
+        if showName { LibraryVoice.say(find.name.replacingOccurrences(of: "(", with: "").replacingOccurrences(of: ")", with: ""), then: start) }
+        else { forumAfter(self, 0.8, round: { $0.roundNo }) { _ in start() } }
     }
 
-    /// n eras from oldest to newest, at least `gap` apart in the list, one of them `must`.
-    private func pickEras(_ n: Int, gap: Int, including must: Int) -> [Int] {
+    private func startClock() {
+        guard limit > 0, stage == .waiting, deadline == nil else { return }
+        deadline = Date().addingTimeInterval(limit)
+        forumAfter(self, limit, round: { $0.roundNo }) { m in
+            if m.stage == .waiting { m.fail(reason: "The sun set on the dig!") }
+        }
+    }
+
+    /// Egypt, Greece and Rome overlap in time: by dates alone a find could fit two of them.
+    private static let overlapping: Set<Int> = [2, 3, 4]
+
+    /// n eras from oldest to newest, at least `gap` apart in the list, one of them `must`. With
+    /// dates-only labels, at most one of the overlapping ancient eras.
+    private func pickEras(_ n: Int, gap: Int, including must: Int, datesOnly: Bool) -> [Int] {
+        let candidates = Array(0..<digEras.count).filter { e in
+            e != must && !(datesOnly && Self.overlapping.contains(e) && Self.overlapping.contains(must))
+        }
         var g = gap
         while g > 1 && (n - 1) * g > digEras.count - 1 { g -= 1 }
         while g >= 1 {
             for _ in 0..<300 {
-                let others = Array(0..<digEras.count).filter { $0 != must }.shuffled().prefix(n - 1)
+                var pool = candidates.shuffled()
+                if datesOnly, !Self.overlapping.contains(must), let keep = pool.first(where: { Self.overlapping.contains($0) }) {
+                    pool.removeAll { Self.overlapping.contains($0) && $0 != keep }
+                }
+                let others = pool.prefix(n - 1)
                 let picks = (Array(others) + [must]).sorted()
                 if zip(picks, picks.dropFirst()).allSatisfy({ $1 - $0 >= g }) { return picks }
             }
             g -= 1
         }
-        return Array(Set([must] + Array(0..<digEras.count).shuffled().prefix(n - 1))).sorted()
+        return ([must] + candidates.shuffled().prefix(n - 1)).sorted()
     }
 
     /// The find is dropped on layer `i` (index into `eras`; drags, taps and the bot all land here).
@@ -297,7 +320,7 @@ private struct DigPlay: View {
                 LibrarySpeakerButton(size: 36) { LibraryVoice.say(model.showName ? f.name : "Drag it to its layer") }
             }
         }
-        .animation(.easeOut(duration: 0.2), value: model.stage)
+        .transaction { $0.animation = nil }     // swap the words outright (a cross-fade overprints them)
     }
 
     /// The find in a wooden sieve: drag it down into the ground.

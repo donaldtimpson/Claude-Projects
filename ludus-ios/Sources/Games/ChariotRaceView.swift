@@ -14,7 +14,9 @@ import SwiftUI
 //   • LATIN IN ENGLISH: AQUA means water → aquarium; DENS means tooth → dentist
 //   • GODS, MONTHS & PLANETS: Named for Janus, god of doorways → January; OCTO means eight → October
 //   • FAMOUS ROME: the volcano that buried Pompeii → Vesuvius; Rome's first emperor → Augustus
-// Lanes: 2 → 3 by d≈2.8. The gates come faster as d climbs (6 s → 3 s, a little longer for words).
+// Lanes: 2 → 3 at d≈3.2 (between the Latin pictures and the Latin roots, so a third gate never
+// lands together with a new kind of question). The gates come faster as d climbs (6 s → 3 s, a
+// little longer for words) — but they wait at the far end until the herald has finished his call.
 
 // MARK: Content
 
@@ -43,8 +45,8 @@ private let crThenNow: [CRPair] = [
     CRPair(then: "🩴", thenName: "sandals", now: "👟", nowName: "sneakers", say: "Romans wore sandals. What do we wear?"),
     CRPair(then: "🏺", thenName: "amphora jar", now: "🍾", nowName: "bottle", say: "Romans kept wine and oil in tall jars. What do we use?"),
     CRPair(then: "🐂", thenName: "ox cart", now: "🚚", nowName: "truck", say: "Romans moved heavy things by ox cart. What do we use?"),
-    CRPair(then: "🏇", thenName: "rider with a letter", now: "📧", nowName: "email", say: "Romans sent letters with riders. How do we send messages?"),
-    CRPair(then: "🛁", thenName: "public baths", now: "🚿", nowName: "shower", say: "Romans washed at the public baths. How do we wash?"),
+    CRPair(then: "🏇", thenName: "rider with a letter", now: "📱", nowName: "phone", say: "Romans sent letters with riders. How do we send messages?"),
+    CRPair(then: "♨️", thenName: "public baths", now: "🚿", nowName: "shower", say: "Romans washed at the public baths. How do we wash?"),
 ]
 
 /// Latin words with pictures (Latin spellings checked: feles / felis both attested; pila = ball).
@@ -113,18 +115,18 @@ private func crMake(kind: Int) -> CRQuestion {
                           why: "\(p.then) \(p.thenName) → \(p.now) \(p.nowName)")
     case 1:
         let w = crLatinPics.randomElement()!
-        return CRQuestion(kind: 1, cueEmoji: nil, cue: w.0, ask: "SPEAK LATIN! WHICH ONE IS…", say: "\(w.0.lowercased())",
+        return CRQuestion(kind: 1, cueEmoji: nil, cue: w.0, ask: "SPEAK LATIN! WHICH ONE IS…", say: "Which one is \(w.0.lowercased())?",
                           answer: CROption(emoji: w.1, text: w.2),
                           pool: crLatinPics.map { CROption(emoji: $0.1, text: $0.2) },
                           why: "\(w.0) means \(w.2) \(w.1)")
     case 2:
         let r = crRoots.randomElement()!
-        return CRQuestion(kind: 2, cueEmoji: nil, cue: "\(r.0) = \(r.1)", ask: "WHICH WORD COMES FROM IT?", say: "\(r.0.lowercased()) means \(r.1)",
+        return CRQuestion(kind: 2, cueEmoji: nil, cue: "\(r.0) = \(r.1)", ask: "WHICH WORD COMES FROM IT?", say: "\(r.0.lowercased()) means \(r.1). Which word comes from it?",
                           answer: CROption(emoji: nil, text: r.2), pool: crRoots.map { CROption(emoji: nil, text: $0.2) },
                           why: "\(r.0) (\(r.1)) → \(r.2)")
     case 3:
         let n = crNames.randomElement()!
-        return CRQuestion(kind: 3, cueEmoji: n.0, cue: n.1, ask: n.3 == "month" ? "WHICH MONTH?" : "WHICH PLANET?", say: n.1,
+        return CRQuestion(kind: 3, cueEmoji: n.0, cue: n.1, ask: n.3 == "month" ? "WHICH MONTH?" : "WHICH PLANET?", say: n.1 + (n.3 == "month" ? ". Which month?" : ". Which planet?"),
                           answer: CROption(emoji: nil, text: n.2),
                           pool: crNames.filter { $0.3 == n.3 }.map { CROption(emoji: nil, text: $0.2) },
                           why: "\(n.2): \(n.1.prefix(1).lowercased() + n.1.dropFirst())")
@@ -137,7 +139,7 @@ private func crMake(kind: Int) -> CRQuestion {
 }
 
 /// Answers too close to share a race (a torch and a lamp both became lights).
-private let crClashes: [Set<String>] = [["light bulb", "flashlight"], ["car", "truck"], ["book", "email"],
+private let crClashes: [Set<String>] = [["light bulb", "flashlight"], ["car", "truck"], ["book", "phone"],
                                               ["tap", "bottle"], ["tap", "shower"]]
 
 /// The racing teams of the Circus (lane colours).
@@ -167,7 +169,7 @@ private final class ChariotModel: ArcadeModel {
     var target: Int { Int(lane.rounded()) }
 
     func next() {
-        lanes = rampInt(2, 3, from: 1.8, to: 2.8)
+        lanes = rampInt(2, 3, from: 2.9, to: 3.5)
         let kind = tier([1, 2.5, 4, 5.5, 7])
         var nq = crMake(kind: kind)
         for _ in 0..<6 where nq.answer == q.answer { nq = crMake(kind: kind) }
@@ -182,9 +184,15 @@ private final class ChariotModel: ArcadeModel {
         stage = .racing
         roundNo += 1
         travel = ramp(6, 3, to: 9) + (q.kind >= 2 ? ramp(2.5, 1.6, from: 4, to: 9) : 0)
-        gateStart = Date().addingTimeInterval(0.4)
-        forumAfter(self, travel + 0.4, round: { $0.roundNo }) { $0.reachGate() }
-        LibraryVoice.say(q.say)
+        // The gates wait at the far end of the track until the herald has finished the call.
+        gateStart = .distantFuture
+        let n = roundNo
+        LibraryVoice.say(q.say) { [weak self] in
+            guard let self, self.roundNo == n, self.phase == .playing, self.stage == .racing,
+                  self.gateStart == .distantFuture else { return }
+            self.gateStart = Date().addingTimeInterval(0.2)
+            forumAfter(self, self.travel + 0.2, round: { $0.roundNo }) { $0.reachGate() }
+        }
     }
 
     func steer(to l: Double) {
@@ -281,7 +289,8 @@ private struct CRHerald: View {
         .background(RoundedRectangle(cornerRadius: 18).fill(Color(hex: 0xfdf6e3))
             .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: Lu.goldLine), lineWidth: 3)))
         .shadow(color: .black.opacity(0.3), radius: 6, y: 3)
-        .animation(.easeOut(duration: 0.2), value: model.stage)
+        // A new call replaces the old one outright (a cross-fade overprinted the two).
+        .transaction { $0.animation = nil }
     }
 }
 
@@ -461,7 +470,12 @@ private struct CRTrack: View {
             if let e = o.emoji {
                 ctx.draw(Text(e).font(.system(size: 30 * s)), at: CGPoint(x: banner.midX, y: banner.midY - 4 * s))
             } else {
-                ctx.draw(Text(o.text).font(luFont(13 * s, .heavy)).foregroundColor(team.hex == 0xf1ece0 ? Color(hex: Lu.inkDark) : .white),
+                // Shrink long words ("Hadrian's Wall") to fit the pennant instead of spilling past it.
+                let ink = team.hex == 0xf1ece0 ? Color(hex: Lu.inkDark) : Color.white
+                let full = ctx.resolve(Text(o.text).font(luFont(13 * s, .heavy)).foregroundColor(ink))
+                let wide = full.measure(in: CGSize(width: 2000, height: 200)).width
+                let fit = wide > banner.width * 0.9 ? 13 * s * banner.width * 0.9 / wide : 13 * s
+                ctx.draw(Text(o.text).font(luFont(fit, .heavy)).foregroundColor(ink),
                          at: CGPoint(x: banner.midX, y: banner.midY - 4 * s))
             }
             if reveal {
