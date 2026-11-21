@@ -17,7 +17,8 @@ import SwiftUI
 //   melody     random jumps early; mostly steps and repeats later (real tunes move by step)
 //   colour     each crystal has its own colour and lights as she sings — from ~6 the lights
 //              start going out (ear alone, ~85% of tunes by 9.5) and the crystals turn to ice
-//   names      letter names under the crystals from ~4 (C D E …), tying the sound to the name
+//   names      letter names under the crystals from ~4 (C D E …), tying the sound to the name;
+//              once shown they stay for the run (a miss easing `d` back doesn't take them away)
 
 private let ecHues: [UInt] = [0xff5a5a, 0xff9a3a, 0xffd23a, 0x6ad86a, 0x3ad0c8, 0x4a9aff, 0x9a6aff, 0xff6ad0]
 
@@ -54,7 +55,7 @@ private final class EchoModel: ArcadeModel {
     private var token = 0
 
     init() { super.init(key: GameID.echoCave.rawValue) }
-    override func onBegin() { next(after: 0.7) }
+    override func onBegin() { showNames = d >= 4; next(after: 0.7) }
 
     func makeTune(n: Int) -> [Int] {
         let len = max(1, min(8, rampInt(1, 6, from: 1, to: 9.5) + (chance(0.5, from: 2, to: 4) && Bool.random() ? 1 : 0)))
@@ -86,7 +87,7 @@ private final class EchoModel: ArcadeModel {
             self.tune = self.makeTune(n: n)
             self.gap = self.ramp(0.7, 0.32, to: 9)
             self.dark = Double.random(in: 0..<1) < self.ramp(0, 0.85, from: 6, to: 9.5)
-            self.showNames = self.d >= 4
+            self.showNames = self.showNames || self.d >= 4     // once learned, the names stay for the run
             self.played = 0; self.wrong = nil; self.sad = false; self.lesson = nil
             self.sing(lights: !self.dark) { [weak self] in self?.stage = .yours; self?.echoAt = nil }
         }
