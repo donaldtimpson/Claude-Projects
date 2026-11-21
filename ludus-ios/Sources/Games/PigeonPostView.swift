@@ -12,7 +12,10 @@ import SwiftUI
 //   mountains & deserts (4.5) → more countries (5.5) → latitude & longitude (7) → smaller
 //   countries (8) — old kinds stay as review;
 //   continent colours and picture badges fade out (d 2 → 4), the clue line fades out (d 5 → 7),
-//   a patience bar appears from d 5 and tightens from 18 s to 9 s, lat/long tolerance 14° → 7°.
+//   a patience bar appears from d 6 (a generous 22 s, after the new "more countries" kind has settled)
+//   and tightens to 10 s by d 10; lat/long tolerance 14° → 7°.
+// The clock never runs while the letter is still being delivered: it waits (bar full) until the
+// card has landed and the map has panned — or, while letters are read aloud, until the voice is done.
 
 private struct PPFeature {
     let name: String, icon: String, kind: String     // kind: "river", "mountains", "desert", "reef", "mountain"
@@ -20,46 +23,47 @@ private struct PPFeature {
     let radius: Double                                // tolerance, degrees
     let hint: String
     let minD: Double
+    var region: String = ""                           // continent the map zooms to (a river is too thin on the world map)
 }
 
 /// Rivers, ranges and deserts. Coordinates follow each feature's real course/extent (decimal degrees).
 private let ppFeatures: [PPFeature] = [
     PPFeature(name: "Sahara Desert", icon: "🐪", kind: "desert", line: [(22, -10), (23, 0), (24, 10), (24, 20), (23, 28)],
-              radius: 7, hint: "The biggest hot desert — north Africa", minD: 4.5),
+              radius: 7, hint: "The biggest hot desert — north Africa", minD: 4.5, region: "Africa"),
     PPFeature(name: "Nile River", icon: "🐊", kind: "river",
               line: [(31.4, 31), (30, 31.2), (27, 31), (24, 32.9), (21, 30.8), (18, 31.5), (15.6, 32.5), (12, 32.6), (9, 30.5), (4.8, 31.6), (1, 32.5), (-1, 33)],
-              radius: 3.5, hint: "The longest river in Africa — it flows north to Egypt", minD: 4.5),
+              radius: 3.5, hint: "The longest river in Africa — it flows north to Egypt", minD: 4.5, region: "Africa"),
     PPFeature(name: "Amazon River", icon: "🐸", kind: "river",
               line: [(-0.5, -50), (-2, -54.5), (-3.1, -60), (-3.4, -64.5), (-4, -69), (-4.3, -73)],
-              radius: 3.5, hint: "A giant river through the rainforest of South America", minD: 4.5),
+              radius: 3.5, hint: "A giant river through the rainforest of South America", minD: 4.5, region: "South America"),
     PPFeature(name: "Himalayas", icon: "🏔️", kind: "mountains",
               line: [(35, 74.5), (32, 78), (29.5, 81.5), (28, 85), (27.8, 88), (27.8, 91), (28.2, 95)],
-              radius: 3.5, hint: "The highest mountains — north of India", minD: 4.5),
+              radius: 3.5, hint: "The highest mountains — north of India", minD: 4.5, region: "Asia"),
     PPFeature(name: "Andes Mountains", icon: "🦙", kind: "mountains",
               line: [(10, -72), (2, -77), (-6, -78), (-14, -73), (-20, -68), (-28, -69), (-35, -70), (-42, -71.5), (-50, -73)],
-              radius: 3, hint: "The long mountains down the west side of South America", minD: 5),
+              radius: 3, hint: "The long mountains down the west side of South America", minD: 5, region: "South America"),
     PPFeature(name: "Rocky Mountains", icon: "🐻", kind: "mountains",
               line: [(60, -127), (54, -120), (49, -114), (45, -111), (41, -106.5), (36, -105.5)],
-              radius: 4, hint: "Big mountains in the west of North America", minD: 5.5),
+              radius: 4, hint: "Big mountains in the west of North America", minD: 5.5, region: "North America"),
     PPFeature(name: "Mississippi River", icon: "🚣", kind: "river",
               line: [(47.2, -95.2), (44.5, -92), (41.5, -90.8), (38.6, -90.2), (35, -90.1), (32.3, -91), (30, -90.7), (29.2, -89.3)],
-              radius: 3, hint: "A great river flowing south through the USA", minD: 6),
+              radius: 3, hint: "A great river flowing south through the USA", minD: 6, region: "North America"),
     PPFeature(name: "Alps", icon: "⛷️", kind: "mountains", line: [(44.2, 7), (45.9, 7.5), (46.5, 10), (47.1, 12.5), (47.5, 15)],
-              radius: 2.5, hint: "Snowy mountains in the middle of Europe", minD: 6),
+              radius: 2.5, hint: "Snowy mountains in the middle of Europe", minD: 6, region: "Europe"),
     PPFeature(name: "Great Barrier Reef", icon: "🐠", kind: "reef",
               line: [(-11, 143.8), (-15, 145.8), (-18.5, 147.5), (-21.5, 151), (-24, 152.5)],
-              radius: 3, hint: "A huge coral reef off north-east Australia", minD: 6.5),
+              radius: 3, hint: "A huge coral reef off north-east Australia", minD: 6.5, region: "Oceania"),
     PPFeature(name: "Gobi Desert", icon: "🐫", kind: "desert", line: [(43, 97), (43, 103), (43.5, 108), (44, 112)],
-              radius: 4.5, hint: "A cold desert in Mongolia and China", minD: 7),
+              radius: 4.5, hint: "A cold desert in Mongolia and China", minD: 7, region: "Asia"),
     PPFeature(name: "Mount Kilimanjaro", icon: "🗻", kind: "mountain", line: [(-3.07, 37.35)],
-              radius: 3.5, hint: "Africa's highest mountain, in Tanzania", minD: 7.5),
+              radius: 3.5, hint: "Africa's highest mountain, in Tanzania", minD: 7.5, region: "Africa"),
     PPFeature(name: "Ural Mountains", icon: "⛰️", kind: "mountains", line: [(67.5, 65), (63, 59.5), (59, 59.5), (55, 59), (51.5, 58.5)],
-              radius: 3, hint: "Mountains between Europe and Asia, in Russia", minD: 8),
+              radius: 3, hint: "Mountains between Europe and Asia, in Russia", minD: 8, region: "Europe"),
     PPFeature(name: "Yangtze River", icon: "🐼", kind: "river",
               line: [(31.4, 121.6), (30.5, 117), (30.6, 114.3), (30.3, 111), (29.6, 106.5), (28.2, 104.5), (27, 101), (32, 96)],
-              radius: 3, hint: "The longest river in Asia, across China", minD: 8),
+              radius: 3, hint: "The longest river in Asia, across China", minD: 8, region: "Asia"),
     PPFeature(name: "Mount Everest", icon: "🧗", kind: "mountain", line: [(27.99, 86.93)],
-              radius: 3, hint: "The highest mountain on Earth, Nepal–China border", minD: 8.5),
+              radius: 3, hint: "The highest mountain on Earth, Nepal–China border", minD: 8.5, region: "Asia"),
 ]
 
 private struct PPOceanInfo { let name: String; let icon: String; let hint: String }
@@ -110,7 +114,16 @@ private struct PPTask {
     let icon: String
     let hint: String
     let camera: CGRect
-    var spoken: String { title }
+    /// What the voice says: a command, with degrees read out ("30 degrees north").
+    var spoken: String {
+        if case .latlon(let a, let b) = target {
+            func deg(_ v: Double, _ pos: String, _ neg: String) -> String {
+                v == 0 ? "0 degrees" : "\(Int(abs(v))) degrees \(v > 0 ? pos : neg)"
+            }
+            return "Deliver to \(deg(a, "north", "south")), \(deg(b, "east", "west"))!"
+        }
+        return "Deliver to \(ppThe(title))!"
+    }
 
     /// Where Pippa delivers the letter (map space).
     var home: CGPoint {
@@ -124,6 +137,15 @@ private struct PPTask {
         case .latlon(let a, let b): return LH.point(lat: a, lon: b)
         }
     }
+}
+
+/// A place name as it sits in a sentence: "the Pacific Ocean", "the United States", "Africa".
+private func ppThe(_ name: String) -> String {
+    let lead = ["United ", "Netherlands", "Philippines", "Central African", "Dominican", "Czech"]
+    let kinds = [" Ocean", " Sea", " River", " Desert", " Mountains", "Gulf of", "Bay of", "Himalayas", "Alps",
+                 "Andes", "Great Barrier", "Ural", "Rocky", "Gambia", "Bahamas", "Democratic Republic"]
+    if lead.contains(where: { name.hasPrefix($0) }) || kinds.contains(where: { name.contains($0) }) { return "the \(name)" }
+    return name
 }
 
 private func ppLat(_ v: Double) -> String { v == 0 ? "0°" : "\(Int(abs(v)))°\(v > 0 ? "N" : "S")" }
@@ -161,6 +183,7 @@ private final class PigeonModel: ArcadeModel {
     @Published var reveal = false           // the right place is glowing
     @Published var tLeft: Double = 0
     @Published var perQ: Double = 0
+    @Published var clockOn = false          // false while the letter is still arriving (bar sits full)
     // Flight (map space) — the view animates Pippa along it.
     @Published var flight: (from: CGPoint?, to: CGPoint, start: Date, dur: Double)?
     private var recent: [String] = []
@@ -188,9 +211,18 @@ private final class PigeonModel: ArcadeModel {
         task = makeTask()
         stage = .waiting; said = nil; tapped = nil; wrongCountry = nil; reveal = false
         flight = nil
-        perQ = d < 5 ? 0 : ramp(18, 9, from: 5, to: 10); tLeft = perQ
+        perQ = d < 6 ? 0 : ramp(22, 10, from: 6, to: 10); tLeft = perQ
+        clockOn = false
         taskID += 1
-        if d < 5 { LibraryVoice.say(task.spoken) }
+        let id = taskID
+        let start = { [weak self] in
+            guard let self, self.taskID == id, self.phase == .playing else { return }
+            self.clockOn = true
+        }
+        // Read aloud to the younger players; the clock (if any) starts once the voice is done.
+        if d < 6 { LibraryVoice.say(task.spoken, then: start) }
+        // Otherwise once the card has landed and the map has panned to the region.
+        else { DispatchQueue.main.asyncAfter(deadline: .now() + 0.9, execute: start) }
     }
 
     private func fresh<T>(_ pool: [T], _ name: (T) -> String) -> T {
@@ -214,7 +246,11 @@ private final class PigeonModel: ArcadeModel {
         case 3:
             let pool = ppFeatures.filter { $0.minD <= d + 0.5 }
             let f = fresh(pool.isEmpty ? Array(ppFeatures.prefix(4)) : pool) { $0.name }
-            return PPTask(target: .feature(f), title: f.name, icon: f.icon, hint: f.hint, camera: LH.world)
+            // Zoom to the feature's part of the world, so a river or a peak is a finger-sized target.
+            let pts = f.line.map { LH.point(lat: $0.0, lon: $0.1) }
+            let box = pts.dropFirst().reduce(CGRect(origin: pts[0], size: .zero)) { $0.union(CGRect(origin: $1, size: .zero)) }
+            let cam = LH.region(f.region).union(box.insetBy(dx: -30, dy: -30))
+            return PPTask(target: .feature(f), title: f.name, icon: f.icon, hint: f.hint, camera: cam)
         case 5:
             let lat = Double([-30, -15, 0, 15, 30, 45, 60].randomElement()!)
             let lon = Double(Int.random(in: -11...11) * 15)
@@ -230,7 +266,7 @@ private final class PigeonModel: ArcadeModel {
     }
 
     func tick(_ dt: Double) {
-        guard phase == .playing, stage == .waiting, perQ > 0 else { return }
+        guard phase == .playing, stage == .waiting, perQ > 0, clockOn else { return }
         tLeft -= dt
         if tLeft <= 0 { timeout() }
     }
@@ -268,7 +304,9 @@ private final class PigeonModel: ArcadeModel {
             if land == nil, LH.countryNear(p, tol: tol)?.name == c.name { return (true, c.name) }
             return (false, placeName())
         case .feature(let f):
-            let ok = ppDistance((LH.lat(p.y), LH.lon(p.x)), to: f.line) <= f.radius
+            // Never tighter than a fingertip (`tol` ≈ 12 pt, in map units → degrees of longitude).
+            let r = max(f.radius, Double(tol) * 0.36 * 1.4)
+            let ok = ppDistance((LH.lat(p.y), LH.lon(p.x)), to: f.line) <= r
             return (ok, placeName())
         case .latlon(let a, let b):
             let la = LH.lat(p.y), lo = LH.lon(p.x)
@@ -290,7 +328,7 @@ private final class PigeonModel: ArcadeModel {
             guard let self, self.phase == .playing else { return }
             if ok {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { self.stage = .delivered; self.reveal = true }
-                self.said = "Delivered to \(self.task.title)!"
+                self.said = "Delivered to \(ppThe(self.task.title))!"
                 Sfx.play(.thud)
                 self.hit()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
@@ -299,7 +337,8 @@ private final class PigeonModel: ArcadeModel {
                 }
             } else {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.6)) { self.stage = .wrong }
-                self.said = "Coo? That's \(name)."
+                let place = ppThe(name)
+                self.said = "Coo? That's \(place)\(place.hasSuffix("!") ? "" : ".")"
                 if case .country = self.task.target, let land = LH.country(at: p) { self.wrongCountry = land.name }
                 self.miss(reason: "The letters got lost!", delay: 2.6)
                 self.showAnswer(from: p)
@@ -430,9 +469,12 @@ struct PigeonPostView: View {
                 HUDSpace(58)
                 letterCard
                 GeometryReader { geo in
-                    let h = max(200, min(geo.size.height - 74, geo.size.width * 1.0))
+                    // As tall as the space allows (up to a little taller than wide), and centred with
+                    // Pippa's rail right under it — no dead band of sky between the letter and the map.
+                    let h = max(200, min(geo.size.height - 74, geo.size.width * 1.2))
+                    let spare = max(0, geo.size.height - 74 - h)
                     VStack(spacing: 0) {
-                        Spacer(minLength: 0)
+                        Spacer(minLength: 0).frame(height: spare * 0.4)
                         mapArea(CGSize(width: geo.size.width, height: h)).frame(height: h)
                         Spacer(minLength: 74)
                     }
@@ -525,7 +567,7 @@ struct PigeonPostView: View {
 
     /// The continent picture badges for pre-readers (fade out as d rises).
     @ViewBuilder private func badges(_ cam: LH.Camera) -> some View {
-        let a = m.badgeAlpha
+        let a = m.badgeAlpha * (m.stage == .waiting ? 1 : 0.35)    // out of Pippa's way once she lands
         if a > 0.01, cam.rect.width > 600 {
             ForEach(LH.continents, id: \.self) { c in
                 Text(LH.icon(c)).font(.system(size: 22))
@@ -572,6 +614,11 @@ struct PigeonPostView: View {
             flying = t < 1
             facingLeft = b.x < a.x
             if t >= 1 { pos = b }
+            // Keep her (and her pin) inside the map frame, even for a tap on its very edge.
+            if f.from != nil || t > 0.5 {
+                pos.x = min(max(pos.x, 26), size.width - 26)
+                pos.y = min(max(pos.y, 44), size.height - 10)
+            }
         }
         let flap = flying ? (sin(now.timeIntervalSinceReferenceDate * 22) + 1) / 2
                           : (m.stage == .waiting ? 0.1 + 0.1 * sin(now.timeIntervalSinceReferenceDate * 3) : 0.25)
@@ -632,7 +679,9 @@ struct PigeonPostView: View {
         var answerContinent: String?
         if case .continent(let a) = task.target { answerContinent = a }
         var tints: [String: Color] = [:]
-        for k in LH.continents { tints[k] = tint > 0.2 ? land.mix(Color(hex: LH.hex(k)), tint * 0.85) : land }
+        // On the reveal the other lands go plain, so the green answer can't be mistaken for a tint
+        // (North America's own colour is a green too).
+        for k in LH.continents { tints[k] = tint > 0.2 && !reveal ? land.mix(Color(hex: LH.hex(k)), tint * 0.85) : land }
         let wrong = m.wrongCountry
         LH.drawLand(c, visible: vis, line: line) { country, cont in
             if reveal, let answerCountry, country.name == answerCountry { return Color(hex: Lu.mint) }
@@ -679,9 +728,10 @@ struct PigeonPostView: View {
                 ctx.draw(ctx.resolve(Text(ppLat(lat)).font(luFont(10, .heavy)).foregroundColor(Color(hex: lhInk))),
                          at: CGPoint(x: 18, y: p.y))
             }
-            for lon in stride(from: -150.0, through: 150, by: 30) {
+            // Longitudes on two staggered rows, so neighbours never run into each other.
+            for (k, lon) in stride(from: -150.0, through: 150, by: 30).enumerated() {
                 let p = cam.view(LH.point(lat: 0, lon: lon))
-                let yy = cam.view(CGPoint(x: 0, y: LH.iceTop - 6)).y
+                let yy = cam.view(CGPoint(x: 0, y: LH.iceTop - 6)).y + (k % 2 == 0 ? 0 : 13)
                 ctx.draw(ctx.resolve(Text(ppLon(lon)).font(luFont(10, .heavy)).foregroundColor(Color(hex: lhInk))),
                          at: CGPoint(x: p.x, y: min(cam.size.height - 8, yy)))
             }
