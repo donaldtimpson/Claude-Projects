@@ -9,9 +9,11 @@ import SwiftUI
 // Continuous difficulty (tuned off `d`, never the level):
 //   kinds fade in by tier — continents (1) → countries (4: panda → China, kiwi → New Zealand) →
 //   habitats (5.5: desert, rainforest, polar ice, grassland, mountains, ocean) → continent +
-//   habitat (7: "snow leopard → Asia · mountains") — old kinds stay as review;
+//   habitat (7: "giant panda → Asia · mountains") — old kinds stay as review;
 //   continent rounds: Africa-vs-Australia starters only below d 2, picture-famous animals below
-//   d 3, then the whole deck; ferries 2 → 4 (by d 3.5); a patience clock from d 4 (20 s → 8 s).
+//   d 3, then the whole deck; ferries 2 → 4 (by d 3.5); a patience clock from d 5 — once the
+//   country ferries (d 4) have settled in, a generous 24 s → 9 s by d 10. The clock waits (bar full)
+//   until the new ferries have docked.
 //
 // Facts are conservative: only animals whose wild home is unambiguous. Where a range spills over
 // (sloths and macaws reach Central America; the fennec fox reaches Sinai) the other home is never
@@ -93,7 +95,9 @@ private struct ZFAnimal {
     var famous = false              // the early pool (the very first: `zfStarters`)
 }
 
-/// The deck. Sources of truth: native wild range (not zoos, not introductions).
+/// The deck. Sources of truth: native wild range (not zoos, not introductions). Only animals whose
+/// emoji really is that animal (no snow leopard: 🐆 is a spotted yellow
+/// leopard; no lemur: 🐒 is a monkey, which a lemur is not).
 private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🦘", name: "Kangaroo", continent: "Australia", country: "Australia", also: ["Papua New Guinea"], famous: true),
     .init(emoji: "🐨", name: "Koala", continent: "Australia", country: "Australia", famous: true),
@@ -101,7 +105,8 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🦓", name: "Zebra", continent: "Africa", biome: .grassland, famous: true),
     .init(emoji: "🦛", name: "Hippo", continent: "Africa", famous: true),
     .init(emoji: "🦍", name: "Gorilla", continent: "Africa", biome: .rainforest),
-    .init(emoji: "🐼", name: "Giant panda", continent: "Asia", country: "China", famous: true),
+    // Wild pandas live only in the bamboo forests of the mountains of central China.
+    .init(emoji: "🐼", name: "Giant panda", continent: "Asia", country: "China", biome: .mountains, famous: true),
     .init(emoji: "🐅", name: "Bengal tiger", continent: "Asia", country: "India",
           also: ["Bangladesh", "Nepal", "Bhutan", "Myanmar", "China", "Russia", "Indonesia"]),
     .init(emoji: "🦧", name: "Orangutan", continent: "Asia", biome: .rainforest),
@@ -123,11 +128,9 @@ private let zfAnimals: [ZFAnimal] = [
     .init(emoji: "🐧", name: "Emperor penguin", continent: "Antarctica", biome: .polar, famous: true),
     .init(emoji: "🐧", name: "Adélie penguin", continent: "Antarctica"),
     .init(emoji: "🐦", name: "Kiwi bird", country: "New Zealand"),
-    .init(emoji: "🐒", name: "Ring-tailed lemur", continent: "Africa", country: "Madagascar"),
     .init(emoji: "🦊", name: "Fennec fox", continent: "Africa", biome: .desert, also: ["Asia"]),
     .init(emoji: "🐪", name: "One-hump camel", biome: .desert),
     .init(emoji: "🐻‍❄️", name: "Polar bear", biome: .polar),
-    .init(emoji: "🐆", name: "Snow leopard", continent: "Asia", biome: .mountains),
     .init(emoji: "🐳", name: "Blue whale", biome: .ocean),
     .init(emoji: "🐙", name: "Octopus", biome: .ocean),
     .init(emoji: "🦈", name: "Great white shark", biome: .ocean),
@@ -151,6 +154,11 @@ private enum ZFDest: Hashable {
         case .biome(let b): return b.rawValue
         case .both(let c, let b): return "\(c) · \(b.rawValue)"
         }
+    }
+    /// The ferry's signboard: land and habitat on their own lines (not "South America · / Desert").
+    var sign: String {
+        if case .both(let c, let b) = self { return "\(c)\n\(b.rawValue)" }
+        return label
     }
     var continent: String? {
         switch self {
@@ -271,6 +279,7 @@ private final class ZooFerryModel: ArcadeModel {
     @Published var qid = 0
     @Published var tLeft: Double = 0
     @Published var perQ: Double = 0
+    @Published var clockOn = false
     static let port = GeoAtlas.point(lat: 31.2, lon: 29.92)    // Alexandria — the Pharos
 
     init() {
@@ -288,12 +297,18 @@ private final class ZooFerryModel: ArcadeModel {
         q = zfQuestion(kind, n: n, starter: d < 2, famousOnly: d < 3, avoiding: q.animal.name)
         stage = .waiting; picked = nil; showRight = false; boatShown = false
         boat = Self.port
-        perQ = d < 4 ? 0 : ramp(20, 8, from: 4, to: 10); tLeft = perQ
+        perQ = d < 5 ? 0 : ramp(24, 9, from: 5, to: 10); tLeft = perQ
+        clockOn = false
         qid += 1
+        let id = qid
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+            guard let self, self.qid == id, self.phase == .playing else { return }
+            self.clockOn = true
+        }
     }
 
     func tick(_ dt: Double) {
-        guard phase == .playing, stage == .waiting, perQ > 0 else { return }
+        guard phase == .playing, stage == .waiting, perQ > 0, clockOn else { return }
         tLeft -= dt
         if tLeft <= 0 { send(nil) }
     }
@@ -427,7 +442,9 @@ private struct ZFSilhouette: View {
             case .continent(let c), .both(let c, _):
                 if c == "Antarctica" {
                     let r = CGRect(x: size.width * 0.12, y: size.height * 0.2, width: size.width * 0.76, height: size.height * 0.6)
-                    ctx.fill(Path(ellipseIn: r), with: .color(Color(hex: hex)))
+                    // Ice on pale card: give it a blue rim so it doesn't vanish.
+                    ctx.fill(Path(ellipseIn: r), with: .color(Color(hex: 0xdcefff)))
+                    ctx.stroke(Path(ellipseIn: r), with: .color(Color(hex: 0x6fa6cc)), lineWidth: 2)
                     return
                 }
                 shapes = GeoAtlas.countries.filter { a in
@@ -648,7 +665,8 @@ struct ZooFerryView: View {
                         .rotationEffect(.degrees(14)).offset(x: 16, y: -8)
                 }
                 .offset(x: 8, y: 0)
-                Text(face).font(.system(size: 24)).offset(x: 6, y: -70)
+                // Mood, floating clear above the animal's head (not on top of it).
+                Text(face).font(.system(size: 22)).offset(x: 10, y: -98)
             }
             .offset(drag)
             .opacity(m.stage == .waiting ? 1 : 0.4)
@@ -739,7 +757,7 @@ struct ZooFerryView: View {
             VStack(spacing: 0) {
                 VStack(spacing: 2) {
                     art.frame(height: big ? 92 : 52)
-                    Text(d.label).font(luFont(big ? 19 : 15, .heavy)).foregroundStyle(Color(hex: lhInk))
+                    Text(d.sign).font(luFont(big ? 19 : 15, .heavy)).foregroundStyle(Color(hex: lhInk))
                         .lineLimit(2).minimumScaleFactor(0.6).multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 8).padding(.vertical, 6)
