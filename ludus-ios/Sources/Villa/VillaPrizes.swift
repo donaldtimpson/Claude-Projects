@@ -304,10 +304,9 @@ private struct Arca: View {
                 RoundedRectangle(cornerRadius: 3).fill(gold).frame(width: w * 0.16, height: h * 0.24).offset(x: w * 0.42, y: h * 0.4)
                 Capsule().fill(Color(hex: 0x3a2412)).frame(width: w * 0.035, height: h * 0.1).offset(x: w * 0.4825, y: h * 0.47)
                 // a glint running over the bands
-                Rectangle().fill(Color.white.opacity(0.35 * glint)).frame(width: w * 0.04, height: h * 0.9)
-                    .rotationEffect(.degrees(18)).offset(x: w * CGFloat(0.1 + 0.8 * glint), y: h * 0.04)
+                Rectangle().fill(Color.white.opacity(0.3 * glint)).frame(width: w * 0.035, height: h * 0.8)
+                    .offset(x: w * CGFloat(0.08 + 0.82 * glint), y: h * 0.12)
                     .blendMode(.screen)
-                    .mask(RoundedRectangle(cornerRadius: w * 0.05).frame(width: w, height: h * 0.97))
             }
             .frame(width: w, height: h, alignment: .topLeading)
         }
