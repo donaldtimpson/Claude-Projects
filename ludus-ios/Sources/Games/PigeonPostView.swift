@@ -12,6 +12,7 @@ import SwiftUI
 //   mountains & deserts (4.5) → more countries (5.5) → latitude & longitude (7) → smaller
 //   countries (8) — old kinds stay as review;
 //   continent colours and picture badges fade out (d 2 → 4), the clue line fades out (d 5 → 7),
+//   small countries zoom to their neighbourhood (off-centre) so they're finger-sized;
 //   a patience bar appears from d 6 (a generous 22 s, after the new "more countries" kind has settled)
 //   and tightens to 10 s by d 10; lat/long tolerance 14° → 7°.
 // The clock never runs while the letter is still being delivered: it waits (bar full) until the
@@ -260,7 +261,16 @@ private final class PigeonModel: ArcadeModel {
             let pool = kind == 2 ? ppCountries[0] : (kind == 4 ? ppCountries[1] : ppCountries[2])
             let c = fresh(pool) { $0.name }
             let cont = c.name == "Russia" ? "Europe" : c.continent
-            let cam = c.name == "Russia" ? LH.world : LH.region(cont).union(LH.mainBox(c).insetBy(dx: -10, dy: -10))
+            var cam = c.name == "Russia" ? LH.world : LH.region(cont).union(LH.mainBox(c).insetBy(dx: -10, dy: -10))
+            // A small country (Panama, Rwanda…) would be a few points wide on a whole-continent map:
+            // zoom to its neighbourhood (still ~40% of the continent, so there's context to find it by).
+            let mb = LH.mainBox(c)
+            if c.name != "Russia", max(mb.width, mb.height) < cam.width * 0.07 {
+                let w = max(cam.width * 0.4, mb.width * 6), h = max(cam.height * 0.4, mb.height * 6)
+                // Off-centre by a random amount, so "the middle of the map" isn't the answer.
+                let jx = CGFloat.random(in: -0.28...0.28) * w, jy = CGFloat.random(in: -0.25...0.25) * h
+                cam = CGRect(x: mb.midX - w / 2 + jx, y: mb.midY - h / 2 + jy, width: w, height: h)
+            }
             return PPTask(target: .country(c), title: c.name, icon: ppFlag(c.name), hint: "In \(LH.continent(of: c, at: LH.pin(c)))", camera: cam)
         }
     }
