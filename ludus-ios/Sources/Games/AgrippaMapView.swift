@@ -94,8 +94,15 @@ private let apRanks: [String: Int] = Dictionary(GeoShapes.all.map { ($0.name, $0
 private func apCountry(_ c: AtlasCountry, _ cont: String) -> APPiece {
     let win = LH.region(cont).insetBy(dx: -20, dy: -20)
     let parts = apParts(c, window: win)
-    return APPiece(id: c.name, name: c.name, badge: apFlag(c.name), parts: parts, box: apBox(parts))
+    return APPiece(id: c.name, name: apShort[c.name] ?? c.name, badge: apFlag(c.name), parts: parts, box: apBox(parts))
 }
+
+/// Tray labels are small: the long official names get their everyday short form.
+private let apShort: [String: String] = [
+    "Democratic Republic of the Congo": "DR Congo", "Central African Republic": "Central African Rep.",
+    "Bosnia and Herzegovina": "Bosnia", "Dominican Republic": "Dominican Rep.", "United Arab Emirates": "UAE",
+    "Trinidad and Tobago": "Trinidad", "Equatorial Guinea": "Eq. Guinea",
+]
 
 private let apISO: [String: String] = {
     struct F: Decodable { let countries: [C]; struct C: Decodable { let name: String; let iso: String? } }
@@ -309,7 +316,7 @@ struct AgrippaMapView: View {
                     }
                     // Sideways on a tablet the tray runs the full width: bigger pieces, so they
                     // don't huddle in the middle of it.
-                    tray(big: root.size.width > 900).frame(height: root.size.width > 900 ? 150 : 118)
+                    tray(big: root.size.width > 900).frame(height: root.size.width > 900 ? 150 : 142)
                 }
                 .padding(.horizontal, 12).padding(.bottom, 6)
                 .overlay { draggedPiece(root.size) }
@@ -442,12 +449,12 @@ struct AgrippaMapView: View {
         let gone = m.placed.contains(p.id) || dragging == p.id || m.flyer?.piece == p.id
         return VStack(spacing: 2) {
             APPieceShape(piece: p, hex: apPieceHex(p, m.board))
-                .frame(height: big ? 92 : 66)
-            Text("\(p.badge) \(p.name)").font(luFont(big ? 13 : 11, .heavy)).foregroundStyle(Color(hex: 0xf6ecd4))
-                .lineLimit(2).minimumScaleFactor(0.55).multilineTextAlignment(.center)
-                .frame(height: 30)
+                .frame(height: big ? 92 : 84)
+            Text("\(p.badge) \(p.name)").font(luFont(big ? 13 : 12, .heavy)).foregroundStyle(Color(hex: 0xf6ecd4))
+                .lineLimit(2).minimumScaleFactor(0.7).multilineTextAlignment(.center)
+                .frame(height: 32)
         }
-        .frame(maxWidth: big ? 112 : 76)
+        .frame(maxWidth: big ? 112 : 80)
         .padding(.vertical, 4)
         .background(RoundedRectangle(cornerRadius: 10).fill(Color.black.opacity(0.18)))
         .opacity(gone ? 0.15 : 1)

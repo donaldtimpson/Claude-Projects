@@ -9,7 +9,8 @@ import SwiftUI
 //
 // Continuous difficulty (tuned off `d`, never the level) — kinds of call fade in by tier, old
 // kinds stay as review:
-//   1    MATCH: the banner shows the flag itself; very different flags
+//   1    MATCH: the banner shows the flag itself; very different flags (no look-alikes of the
+//        target float in kinds 1–3: Australia never beside New Zealand)
 //   2    MATCH among 22 famous flags
 //   3    NAME: the banner shows the country's name (+ its continent chip)
 //   4.5  CONTINENT: "pop a flag from 🦘 Oceania" — balloons coloured by continent
@@ -134,6 +135,12 @@ private func ffTarget(_ kind: Int, n: Int = 4, avoid: String?) -> FFTarget {
     func others(_ pool: [FFCountry], not t: FFCountry, _ n: Int) -> [FFCountry] {
         Array(ffNoTwins([t] + pool.filter { $0.name != t.name }.shuffled()).dropFirst().prefix(n))
     }
+    /// Distractors for the early rounds: never one of the target's look-alikes (Australia never
+    /// floats beside New Zealand, Italy beside Mexico) — that's the job of the look-alike rounds.
+    func unlike(_ pool: [FFCountry], not t: FFCountry, _ n: Int) -> [FFCountry] {
+        let mates = Set(ffLookalikes.filter { $0.contains(t.name) }.flatMap { $0 })
+        return others(pool.filter { !mates.contains($0.name) }, not: t, n)
+    }
     func continent(_ pool: [FFCountry], rings: Bool) -> FFTarget {
         let usable = pool.filter { $0.cont != nil }
         let k = Array(Set(usable.compactMap(\.cont))).randomElement()!
@@ -149,13 +156,13 @@ private func ffTarget(_ kind: Int, n: Int = 4, avoid: String?) -> FFTarget {
     switch kind {
     case 0:
         let t = pick(ffTierA)
-        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(ffTierA, not: t, max(2, n - 1)))
+        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + unlike(ffTierA, not: t, max(2, n - 1)))
     case 1:
         let pool = ffTierA + ffTierB, t = pick(pool)
-        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, n - 1))
+        return FFTarget(mode: .match, country: t, cont: nil, rings: true, kinds: [t] + unlike(pool, not: t, n - 1))
     case 2:
         let pool = ffTierA + ffTierB, t = pick(pool)
-        return FFTarget(mode: .name, country: t, cont: nil, rings: true, kinds: [t] + others(pool, not: t, n - 1))
+        return FFTarget(mode: .name, country: t, cont: nil, rings: true, kinds: [t] + unlike(pool, not: t, n - 1))
     case 3: return continent(ffTierA + ffTierB, rings: true)
     case 4: return continent(ffAll, rings: false)
     case 5: return lookalike()
@@ -240,6 +247,21 @@ private final class FlagFrenzyModel: ArcadeModel {
             if bubbles[i].x > size.width - r { bubbles[i].x = size.width - r; bubbles[i].vx = -abs(bubbles[i].vx) }
             if bubbles[i].y < -r { bubbles.remove(at: i) }      // escaped: no penalty
         }
+        // Balloons that drift into each other ease apart, so every flag stays readable and tappable.
+        let liveIdx = bubbles.indices.filter { bubbles[$0].pop == 0 && bubbles[$0].burst == 0 }
+        for (n, i) in liveIdx.enumerated() {
+            for j in liveIdx[(n + 1)...] {
+                let dx = bubbles[j].x - bubbles[i].x, dy = bubbles[j].y - bubbles[i].y
+                let gap = bubbles[i].r + bubbles[j].r + 6
+                let dist = max(0.5, hypot(dx * 1.1, dy * 0.8))   // balloons are taller than wide (+ string)
+                guard dist < gap else { continue }
+                let k = (gap - dist) * CGFloat(min(1, dt * 4)) / dist
+                let ux = dx == 0 ? 1 : dx
+                bubbles[i].x -= ux * k * 0.5; bubbles[j].x += ux * k * 0.5
+                bubbles[i].y -= dy * k * 0.3; bubbles[j].y += dy * k * 0.3
+            }
+        }
+        for i in bubbles.indices { let r = bubbles[i].r; bubbles[i].x = min(max(bubbles[i].x, r), size.width - r) }
         for i in sparks.indices.reversed() {
             sparks[i].life -= CGFloat(dt) * 1.6
             if sparks[i].life <= 0 { sparks.remove(at: i); continue }
@@ -305,6 +327,7 @@ private final class FlagFrenzyModel: ArcadeModel {
             hit()
             Sfx.play(.pop)
             target = nextTarget(avoid: b.country.name)
+            retireAmbiguous()
         } else {
             bubbles[i].burst = 0.001
             floaters.append(FFFloater(x: b.x, y: b.y - b.r - 10, text: "\(b.country.flag) \(b.country.name)", life: 1.6, hex: Lu.coral))
@@ -320,6 +343,26 @@ private final class FlagFrenzyModel: ArcadeModel {
             }
             say(why)
             miss(delay: 1.6)
+        }
+    }
+
+    /// Balloons from the last call keep floating, but not ones the NEW call can't judge fairly: the
+    /// twin of a right flag (Chad while the call is Romania), or a two-continent country in a
+    /// continent round (Indonesia while the call is Asia; Chad or Romania unless the call dealt it),
+    /// or in an early round a look-alike of the target (New Zealand while the call is Australia). They drift off with a soft poof.
+    private func retireAmbiguous() {
+        let rights = target.kinds.filter(target.isRight)
+        // Early (ringed) flag rounds also clear the target's look-alikes, as their deal does.
+        let mates: Set<String> = target.rings && target.mode != .continent
+            ? Set(ffLookalikes.filter { $0.contains(target.country?.name ?? "") }.flatMap { $0 }).subtracting([target.country?.name ?? ""])
+            : []
+        for i in bubbles.indices where bubbles[i].pop == 0 && bubbles[i].burst == 0 {
+            let c = bubbles[i].country
+            if mates.contains(c.name) { bubbles[i].pop = 0.001; continue }
+            let twinNotInCall = ffTwins.contains { $0.contains(c.name) } && !target.kinds.contains(c)
+            if (target.mode == .continent && (c.cont == nil || twinNotInCall)) || rights.contains(where: { ffClashes($0, c) }) {
+                bubbles[i].pop = 0.001
+            }
         }
     }
 
