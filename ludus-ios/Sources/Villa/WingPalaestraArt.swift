@@ -510,13 +510,112 @@ struct PlHorse: View {
                 Rectangle().fill(Pl.woodDeep).hp(W, H, x: 0.9, y: 0.68, w: 0.05, h: 0.56)
                 Rectangle().fill(LinearGradient(colors: [Pl.wood, Pl.woodDeep], startPoint: .top, endPoint: .bottom))
                     .hp(W, H, x: 0.5, y: 0.5, w: 0.92, h: 0.045)
-                Text("🐎").font(.system(size: W * 0.68)).position(x: W * 0.5, y: H * 0.6)
+                // a palm branch, the winner's prize, tied to the right post behind the horse
+                PlPalm().frame(width: W * 0.16, height: H * 0.32).rotationEffect(.degrees(10 + 3 * sin(t * 1.3)), anchor: .bottom).position(x: W * 0.92, y: H * 0.38)
+                PlStandingHorse(t: t).hp(W, H, x: 0.57, y: 0.6, w: 0.84, h: 0.7)
                 // the victor's laurel wreath, hung on the left post
                 Circle().stroke(Fr.leaf, style: StrokeStyle(lineWidth: max(1, W * 0.035), dash: [W * 0.03, W * 0.012]))
-                    .hp(W, H, x: 0.1, y: 0.42, w: 0.16, h: 0.16)
-                Capsule().fill(Fr.frame).hp(W, H, x: 0.1, y: 0.53, w: 0.035, h: 0.08)
-                // a palm branch, the winner's prize, tied to the right post
-                PlPalm().frame(width: W * 0.16, height: H * 0.32).rotationEffect(.degrees(10 + 3 * sin(t * 1.3)), anchor: .bottom).position(x: W * 0.92, y: H * 0.38)
+                    .hp(W, H, x: 0.09, y: 0.39, w: 0.14, h: 0.14)
+                Capsule().fill(Fr.frame).hp(W, H, x: 0.09, y: 0.485, w: 0.03, h: 0.07)
+                // the reins, tied to the left post
+                HPPath { p, P in p.move(to: P(0.2, 0.46)); p.addQuadCurve(to: P(0.11, 0.51), control: P(0.14, 0.53)) }
+                    .stroke(Fr.gold, style: StrokeStyle(lineWidth: max(0.8, W * 0.01), lineCap: .round))
+            }
+        }
+    }
+}
+
+/// A groomed chestnut racehorse in profile (facing left), dressed in the colours of the Greens: a
+/// green plume on its head, green ribbons in its mane and tail, and a green breastband with gold discs.
+private struct PlStandingHorse: View {
+    var t: Double = 0
+    var body: some View {
+        HPBox { W, H in
+            let coat = LinearGradient(colors: [Color(hex: 0xa85e30), Color(hex: 0x7a3f1d)], startPoint: .top, endPoint: .bottom)
+            let far = Color(hex: 0x5a2e15)
+            let hair = Color(hex: 0x2e1a10)
+            let green = Color(hex: 0x2f8a3c)
+            let swish = CGFloat(sin(t * 1.6)) * 0.02
+            ZStack(alignment: .topLeading) {
+                // far legs (darker, behind)
+                HPPoly(pts: [(0.38, 0.5), (0.44, 0.5), (0.43, 0.92), (0.4, 0.92)]).fill(far)
+                HPPoly(pts: [(0.68, 0.48), (0.76, 0.5), (0.73, 0.7), (0.72, 0.92), (0.69, 0.92), (0.69, 0.7)]).fill(far)
+                Rectangle().fill(hair).hp(W, H, x: 0.415, y: 0.94, w: 0.045, h: 0.04)
+                Rectangle().fill(hair).hp(W, H, x: 0.705, y: 0.94, w: 0.045, h: 0.04)
+                // tail, with a green ribbon bound round its top
+                HPPath { p, P in
+                    p.move(to: P(0.87, 0.36))
+                    p.addQuadCurve(to: P(0.93 + swish, 0.8), control: P(0.97, 0.5))
+                    p.addQuadCurve(to: P(0.86, 0.5), control: P(0.86 + swish, 0.7))
+                    p.closeSubpath()
+                }
+                .fill(hair)
+                Capsule().fill(green).frame(width: W * 0.06, height: H * 0.035).rotationEffect(.degrees(50)).position(x: W * 0.895, y: H * 0.42)
+                // body: shoulder, barrel and quarters
+                Ellipse().fill(coat).hp(W, H, x: 0.56, y: 0.47, w: 0.5, h: 0.28)
+                Ellipse().fill(coat).hp(W, H, x: 0.35, y: 0.46, w: 0.21, h: 0.29)
+                Ellipse().fill(coat).hp(W, H, x: 0.77, y: 0.44, w: 0.23, h: 0.29)
+                Ellipse().fill(Color.white.opacity(0.12)).hp(W, H, x: 0.6, y: 0.39, w: 0.36, h: 0.07)
+                // near legs
+                HPPoly(pts: [(0.29, 0.52), (0.39, 0.52), (0.36, 0.92), (0.31, 0.92)]).fill(Color(hex: 0x8a4a24))
+                HPPoly(pts: [(0.73, 0.48), (0.87, 0.5), (0.82, 0.7), (0.81, 0.92), (0.76, 0.92), (0.76, 0.7)]).fill(Color(hex: 0x8a4a24))
+                // a white sock and the hooves
+                Rectangle().fill(Fr.marble).hp(W, H, x: 0.333, y: 0.895, w: 0.04, h: 0.05)
+                Rectangle().fill(hair).hp(W, H, x: 0.333, y: 0.94, w: 0.05, h: 0.04)
+                Rectangle().fill(hair).hp(W, H, x: 0.783, y: 0.94, w: 0.05, h: 0.04)
+                // neck, arched
+                HPPath { p, P in
+                    p.move(to: P(0.26, 0.5))
+                    p.addQuadCurve(to: P(0.15, 0.15), control: P(0.16, 0.34))
+                    p.addLine(to: P(0.25, 0.08))
+                    p.addQuadCurve(to: P(0.43, 0.4), control: P(0.35, 0.14))
+                    p.closeSubpath()
+                }
+                .fill(coat)
+                // head: broad at the jaw, tapering to a soft muzzle, nose down a little
+                HPPath { p, P in
+                    p.move(to: P(0.15, 0.06))
+                    p.addLine(to: P(0.27, 0.1))
+                    p.addQuadCurve(to: P(0.13, 0.33), control: P(0.24, 0.26))
+                    p.addQuadCurve(to: P(0.03, 0.29), control: P(0.05, 0.37))
+                    p.addQuadCurve(to: P(0.15, 0.06), control: P(0.06, 0.15))
+                    p.closeSubpath()
+                }
+                .fill(Color(hex: 0x9a5329))
+                HPPoly(pts: [(0.18, 0.07), (0.2, -0.02), (0.23, 0.08)]).fill(Color(hex: 0x7a3f1d))     // ear
+                HPPoly(pts: [(0.12, 0.11), (0.155, 0.1), (0.065, 0.27), (0.045, 0.26)]).fill(Fr.marble.opacity(0.85))  // blaze
+                Circle().fill(hair).hp(W, H, x: 0.18, y: 0.14, w: 0.028, h: 0.034)                    // eye
+                Circle().fill(hair.opacity(0.7)).hp(W, H, x: 0.05, y: 0.285, w: 0.02, h: 0.024)       // nostril
+                // mane, with green ribbons plaited in
+                HPPath { p, P in p.move(to: P(0.22, 0.08)); p.addQuadCurve(to: P(0.41, 0.36), control: P(0.35, 0.12)) }
+                    .stroke(hair, style: StrokeStyle(lineWidth: max(1, W * 0.035), lineCap: .round))
+                ForEach(0..<4, id: \.self) { i in
+                    let u = CGFloat(i) / 3
+                    Circle().fill(green)
+                        .hp(W, H, x: 0.25 + 0.14 * u + 0.02 * u * u, y: 0.1 + 0.07 * u + 0.18 * u * u, w: 0.03, h: 0.04)
+                }
+                // bridle in gold
+                HPPath { p, P in
+                    p.move(to: P(0.22, 0.09)); p.addLine(to: P(0.1, 0.29))
+                    p.move(to: P(0.055, 0.23)); p.addLine(to: P(0.15, 0.27))
+                    p.move(to: P(0.15, 0.1)); p.addLine(to: P(0.25, 0.115))
+                }
+                .stroke(Fr.gold, style: StrokeStyle(lineWidth: max(0.8, W * 0.012), lineCap: .round))
+                // the green plume of the faction, standing up from the poll
+                ForEach(0..<3, id: \.self) { i in
+                    Capsule().fill(i == 1 ? Color(hex: 0x3fa64e) : green)
+                        .frame(width: W * 0.03, height: H * 0.13)
+                        .rotationEffect(.degrees(Double(i - 1) * 22 + 6 * sin(t * 2 + Double(i))), anchor: .bottom)
+                        .position(x: W * 0.205, y: H * 0.02)
+                }
+                Circle().fill(Fr.gold).hp(W, H, x: 0.205, y: 0.085, w: 0.03, h: 0.035)
+                // green breastband with gold discs (phalerae)
+                HPPath { p, P in p.move(to: P(0.25, 0.42)); p.addQuadCurve(to: P(0.43, 0.46), control: P(0.32, 0.52)) }
+                    .stroke(green, style: StrokeStyle(lineWidth: max(1, W * 0.03), lineCap: .round))
+                ForEach(0..<3, id: \.self) { i in
+                    Circle().fill(Fr.gold).overlay(Circle().stroke(Color(hex: 0xa87a1f), lineWidth: 0.6))
+                        .hp(W, H, x: 0.28 + CGFloat(i) * 0.055, y: 0.455 + (i == 1 ? 0.015 : 0), w: 0.035, h: 0.045)
+                }
             }
         }
     }
