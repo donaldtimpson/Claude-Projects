@@ -3,18 +3,20 @@ import SwiftUI
 // MARK: - Scroll Catcher  (Word Wizards · catch)
 //
 // Letters tumble off the library shelf; drag the basket to catch the NEXT letter of the pictured
-// word. The word's slots fill as you catch. A wrong letter is a miss (from III, so is letting the
-// right one drop): the right letter glows and its slot shows it faintly, then it falls again.
+// word. The word's slots fill as you catch. A wrong letter is a miss (from mid-III, so is letting
+// the right one drop): the right letter glows and its slot shows it faintly, then it falls again.
+// The word is said aloud first; nothing falls until the voice has finished.
 //
 // Continuous difficulty (GameKit `d`; 3 words a Gradus). Word kinds fade in via `tier` and the
 // easier kinds stay as review:
 //   CVC with a picture (d 1) → blends (2.5) → digraphs & -ck (3.8) → silent-e & vowel teams (5)
 //   → two-syllable words (6.2) → tricky spellings, heard not seen (7.5)
 //   faint whole word in the slots: always below d 2, gone by d 3.2
-//   decoys 1 → 3 by d 5.5; look-alike decoys (b/d, m/n) phase in from d 2.5; the classic wrong
-//   letter (sep-E-rate) from d 7; a picture-word flashes then hides from d 5.5 (tricky words
+//   decoys 1 → 3 by d 5.5; look-alike decoys (b/d, m/n) phase in from d 3 → 4.5; the classic wrong
+//   letter (sep-E-rate) from d 7; a picture-word flashes then hides from d 6 (tricky words
 //   always flash first); fall time 5.2 s → 3 s by d 10; the scroll box narrows 30% → 20%.
-// Letting the right letter fall costs a heart from d 2.5 (before that it just falls again).
+// Letting the right letter fall costs a heart from d 3.5 (before that it just falls again) — after
+// blends (2.5) and the faint word's fading (2 → 3.2) have settled, so they don't all land at once.
 // After 2 misses in a row the fall slows and the right letter glows (any level).
 
 private struct SCWord: Hashable {
@@ -176,6 +178,7 @@ private final class ScrollModel: ArcadeModel {
     private var botTarget: CGFloat?
     private var wave = 0, botWave = -1
     private var wordGen = 0
+    private var cueDone = false          // the word has been said: letters may start to fall
 
     init() {
         super.init(key: GameID.scrollCatcher.rawValue)
@@ -209,13 +212,14 @@ private final class ScrollModel: ArcadeModel {
         word = (deck.isEmpty ? all : deck).randomElement()!
         var flash: Double = 0
         if word.emoji.isEmpty { flash = ramp(3.2, 2.2, from: 7.5, to: 10) }
-        else if chance(1, from: 5.5, to: 7) { flash = ramp(3.2, 2.4, from: 5.5, to: 9) }
-        cfg = SCConfig(decoys: rampInt(1, 3, from: 1, to: 5.5), alike: chance(1, from: 2.5, to: 4),
+        else if chance(1, from: 6, to: 7.5) { flash = ramp(3.2, 2.4, from: 6, to: 9) }
+        cfg = SCConfig(decoys: rampInt(1, 3, from: 1, to: 5.5), alike: chance(1, from: 3, to: 4.5),
                        traps: chance(1, from: 7, to: 8.5), ghost: !chance(1, from: 2, to: 3.2), flash: flash)
         ghostAll = cfg.ghost
         recent = Array((recent + [word.text]).suffix(6))
         filled = 0; ghostNext = false; done = false
         wordID += 1; wordGen += 1
+        let g0 = wordGen
 
         letters.removeAll(); waveIn = flash > 0 ? flash - 0.6 : 0.5   // read it before letters fall
         showWord = flash > 0
@@ -226,7 +230,12 @@ private final class ScrollModel: ArcadeModel {
                 withAnimation(.easeOut(duration: 0.3)) { self.showWord = false }
             }
         }
-        LibraryVoice.say(word.text, rate: 0.38)
+        // Nothing falls until the word has been said — listen first, then catch.
+        cueDone = false
+        LibraryVoice.say(word.text, rate: 0.38) { [weak self] in
+            guard let self, self.wordGen == g0 else { return }
+            self.cueDone = true
+        }
     }
 
     func sayWord() { LibraryVoice.say(word.text, rate: 0.38) }
@@ -254,7 +263,7 @@ private final class ScrollModel: ArcadeModel {
             moveBasket(to: basketX + max(-maxStep, min(maxStep, t - basketX)))
         }
 
-        if !done && !letters.contains(where: { $0.bad == 0 }) {
+        if cueDone && !done && !letters.contains(where: { $0.bad == 0 }) {
             waveIn -= dt
             if waveIn <= 0 { spawnWave() }
         }
@@ -337,13 +346,12 @@ private final class ScrollModel: ArcadeModel {
         }
     }
 
-    /// The right letter fell past. Through level II it just falls again (with its hint); from III
-    /// it costs a heart.
+    /// The right letter fell past. Until d 3.5 it just falls again (with its hint); then it costs a heart.
     private func dropped() {
         letters.removeAll()
         missRun += 1
         waveIn = 0.7
-        let costs = d >= 2.5
+        let costs = d >= 3.5
         DispatchQueue.main.async { [self] in
             withAnimation(.easeOut(duration: 0.2)) { ghostNext = true }
             if costs, miss(reason: "Out of hearts!", delay: 1.2) { running = false }
