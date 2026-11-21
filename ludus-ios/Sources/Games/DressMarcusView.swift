@@ -35,7 +35,21 @@ private struct Weather: Equatable {
     var fahrenheit: Int { Int((Double(celsius) * 9 / 5 + 32).rounded()) }
 }
 
-private enum Slot { case head, eyes, neck, body, hands, legs, feet, umbrella }
+private enum Slot { case head, eyes, neck, body, hands, legs, feet, umbrella
+    /// Drawing order on Marcus, skin out.
+    var layer: Int {
+        switch self {
+        case .body: return 0
+        case .legs: return 1
+        case .feet: return 2
+        case .neck: return 3
+        case .hands: return 4
+        case .eyes: return 5
+        case .head: return 6
+        case .umbrella: return -1    // drawn behind him (see MarcusFigure)
+        }
+    }
+}
 
 private enum Gear: CaseIterable {
     case umbrella, sunglasses, sunhat, tshirt, shorts, sandals, coat, scarf, gloves, boots
@@ -146,6 +160,7 @@ private struct DMRound {
     var need: Int
     var ask: String? = nil       // a "why" round's question
     var because: String? = nil   // …and the science behind its answer
+    var ouch: String? = nil      // what Marcus says if a "why" round goes wrong (default: by mood)
 }
 
 private struct WhyQ {
@@ -154,6 +169,7 @@ private struct WhyQ {
     let right: (String, UInt?, String, Slot)
     let wrong: (String, UInt?, String, Slot)
     let because: String
+    var ouch: String? = nil
 }
 
 private let whiteShirt: UInt = 0xfbfaf4, blackShirt: UInt = 0x1d1b22
@@ -176,7 +192,7 @@ private let whyQs: [WhyQ] = [
          because: "Layers trap warm air next to the body"),
     WhyQ(weather: Weather(sky: .sunny, heat: .hot, celsius: 31), ask: "What stops his skin getting SUNBURNT?",
          right: ("🧴", nil, "sunscreen", .hands), wrong: ("🕶️", nil, "sunglasses", .eyes),
-         because: "Sunscreen blocks the sun's UV rays on skin"),
+         because: "Sunscreen blocks the sun's UV rays on skin", ouch: "Ouch, sunburn! 🥵"),
     WhyQ(weather: Weather(sky: .cloudy, heat: .cold, windy: true, celsius: 1), ask: "Which top blocks the cold WIND?",
          right: ("🧥", nil, "windproof jacket", .body), wrong: ("🎽", nil, "mesh vest", .body),
          because: "Tightly woven cloth stops the wind; holes let it in"),
@@ -239,7 +255,7 @@ private func whyRound(base: Int) -> DMRound {
     w.gauge = Bool.random() ? .digitalC : .digitalF
     let a = DMItem(id: base, glyph: q.right.0, shirt: q.right.1, label: q.right.2, slot: q.right.3, right: true)
     let b = DMItem(id: base + 1, glyph: q.wrong.0, shirt: q.wrong.1, label: q.wrong.2, slot: q.wrong.3, right: false)
-    return DMRound(weather: w, items: [a, b].shuffled(), need: 1, ask: q.ask, because: q.because)
+    return DMRound(weather: w, items: [a, b].shuffled(), need: 1, ask: q.ask, because: q.because, ouch: q.ouch)
 }
 
 /// The knobs of one round (all read off the continuous difficulty `d` by the model).
@@ -301,7 +317,8 @@ private final class DressModel: ArcadeModel {
     @Published var beat = 0                // bumps on every reaction (drives shake / hop)
     @Published var revealing = false       // after a miss: the right gear is on him
     @Published var roundID = 0
-    @Published var bubble: String?
+    @Published var bubble: String?         // Marcus's short reaction (beside his head)
+    @Published var lesson: String?         // a "why" round's science, shown in place of the question
     @Published var wrongID: Int?
     @Published var cheers = 0              // bumps on each finished outfit (sparkle puff)
     var dropFrames: [Int: CGRect] = [:]    // Marcus's drop zone (kept current by the view)
@@ -343,7 +360,8 @@ private final class DressModel: ArcadeModel {
         if placed.count >= round.need {
             locked = true
             mood = .happy; beat += 1; cheers += 1
-            bubble = round.because.map { "✓ " + $0 } ?? ["Perfect!", "Just right!", "Bene!", "Off I go!"].randomElement()!
+            bubble = ["Perfect!", "Just right!", "Bene!", "Off I go!"].randomElement()!
+            lesson = round.because.map { "✓ " + $0 }
             hit()
             clock.after(round.because == nil ? 1.2 : 2.0) { self.next() }
         } else {
@@ -364,13 +382,14 @@ private final class DressModel: ArcadeModel {
         wrongID = item.id
         let m = reaction(item.gear, round.weather)
         mood = m; beat += 1
-        bubble = m == .cold ? "Brrr! 🥶" : m == .hot ? "Too hot! 🥵" : "I'm soaked! 💦"
+        bubble = round.ouch ?? (m == .cold ? "Brrr! 🥶" : m == .hot ? "Too hot! 🥵" : "I'm soaked! 💦")
         let last = miss(delay: 2.6)
         clock.after(0.9) {
             withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) {
                 self.revealing = true
                 let rights = self.round.items.filter(\.right).map { $0.shirt == nil ? $0.glyph : $0.label }
-                self.bubble = self.round.because ?? ("I need " + rights.joined(separator: " "))
+                self.bubble = "I need " + (self.round.because == nil ? rights.joined(separator: " ") : "the " + rights.joined())
+                self.lesson = self.round.because
             }
         }
         if !last { clock.after(2.7) { self.next() } }
@@ -382,7 +401,7 @@ private final class DressModel: ArcadeModel {
     }
 
     private func newRound() {
-        locked = false; placed = []; revealing = false; mood = .calm; bubble = nil; wrongID = nil
+        locked = false; placed = []; revealing = false; mood = .calm; bubble = nil; lesson = nil; wrongID = nil
         roundID += 1
         let k = knobs()
         var r = dmRound(k, base: roundID * 100)
@@ -390,6 +409,15 @@ private final class DressModel: ArcadeModel {
         if r.weather.sky == round.weather.sky, r.weather.heat == round.weather.heat {
             r = dmRound(k, base: roundID * 100)
         }
+        #if DEBUG
+        // LUDUS_DM_SKY=sunny|cloudy|rain|snow|why holds the weather (for checking how he looks).
+        if let want = ProcessInfo.processInfo.environment["LUDUS_DM_SKY"] {
+            var k2 = k; k2.why = want == "why"
+            for _ in 0..<200 where !k2.why && "\(r.weather.sky)" != want || k2.why && r.ask == nil {
+                r = dmRound(k2, base: roundID * 100)
+            }
+        }
+        #endif
         round = r
         served += 1
     }
@@ -437,10 +465,13 @@ struct DressMarcusView: View {
                 WeatherWindow(w: model.round.weather, live: model.phase == .playing)
                     .frame(height: 138)
                 if let ask = model.round.ask {
-                    Text(ask).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
+                    // The question; once answered, the science behind it takes its place.
+                    Text(model.lesson ?? ask).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0x3a2410))
                         .multilineTextAlignment(.center).minimumScaleFactor(0.7).lineLimit(2)
                         .padding(.horizontal, 14).padding(.vertical, 6)
-                        .background(Capsule().fill(Color(hex: 0xf7ecd0)))
+                        .frame(minHeight: 52)
+                        .background(Capsule().fill(Color(hex: model.lesson == nil ? 0xf7ecd0 : (model.mood == .happy ? 0xc8eec0 : Lu.gold))))
+                        .id(model.lesson ?? ask)
                         .transition(.opacity)
                 }
                 stage
@@ -456,7 +487,8 @@ struct DressMarcusView: View {
     /// Marcus by his door. The whole stage is the drop zone — anywhere on him counts.
     private var stage: some View {
         GeometryReader { geo in
-            let scale = min(1.3, geo.size.height / 262)
+            // Room above him for a sun hat (it sits above his hair) without touching the window.
+            let scale = min(1.3, (geo.size.height - 24) / 262)
             ZStack {
                 WoodDoor(open: model.mood == .happy)
                     .frame(width: 70 * scale, height: 150 * scale)
@@ -469,11 +501,12 @@ struct DressMarcusView: View {
                 .id(model.roundID)
                 .transition(.asymmetric(insertion: .offset(x: -geo.size.width).combined(with: .opacity),
                                         removal: .offset(x: geo.size.width).combined(with: .opacity)))
-                .position(x: geo.size.width * 0.46, y: geo.size.height / 2)
+                .position(x: geo.size.width * 0.40, y: geo.size.height / 2 + 12)
                 if let b = model.bubble {
                     VesBubble(text: b, hex: model.mood == .happy ? Lu.ink : (model.revealing ? Lu.gold : 0xf3c4b8))
-                        .frame(maxWidth: geo.size.width * 0.62)
-                        .position(x: geo.size.width * 0.66, y: 26)
+                        // beside his head, not over it
+                        .frame(maxWidth: geo.size.width * 0.42)
+                        .position(x: geo.size.width * 0.78, y: 34)
                         .transition(.scale(scale: 0.5).combined(with: .opacity))
                         .id(b)
                 }
@@ -600,6 +633,11 @@ private struct MarcusFigure: View {
 
     var body: some View {
         ZStack {
+            // An umbrella goes up behind him, its canopy over his head and the handle at his shoulder.
+            ForEach(worn.filter { $0.slot == .umbrella }) { item in
+                g(item, 118).position(x: 122, y: 30)
+                    .transition(.scale(scale: 2.2).combined(with: .opacity))
+            }
             Group {
                 Capsule().fill(skin).frame(width: 18, height: 62).position(x: 77, y: 210)
                 Capsule().fill(skin).frame(width: 18, height: 62).position(x: 103, y: 210)
@@ -612,7 +650,9 @@ private struct MarcusFigure: View {
             }
             .colorMultiply(tint)
             MarcusHead(mood: mood).frame(width: 84, height: 92).position(x: 90, y: 50)
-            ForEach(worn) { item in
+            // Dressed from the skin out (a scarf over the coat, a hat on top), whatever order the
+            // clothes were put on in.
+            ForEach(worn.filter { $0.slot != .umbrella }.sorted { $0.slot.layer < $1.slot.layer }) { item in
                 gear(item)
                     .transition(.scale(scale: 2.2).combined(with: .opacity))
             }
@@ -644,15 +684,38 @@ private struct MarcusFigure: View {
         switch item.slot {
         case .head: g(item, 62).position(x: 90, y: 12)
         case .eyes: g(item, 46).position(x: 90, y: 46)
-        case .neck: g(item, 46).position(x: 90, y: 100)
-        case .body: g(item, item.glyph.count > 1 ? 34 : 94).position(x: 90, y: 146)
+        case .neck:
+            // Drawn, not the emoji: a hanging 🧣 sat over his chin. Wrapped round the neck, one end down.
+            WornScarf().frame(width: 64, height: 54)
+                .background(glow ? Circle().fill(Color(hex: Lu.mint).opacity(0.45)).frame(width: 66, height: 66) : nil)
+                .position(x: 90, y: 120)
+        case .body:
+            if item.glyph.count > 1 {
+                // layers: each one peeking out from under the next
+                let parts = item.glyph.map(String.init)
+                ZStack {
+                    ForEach(Array(parts.enumerated()), id: \.offset) { i, e in
+                        Text(e).font(.system(size: 92))
+                            .scaleEffect(1 + CGFloat(i) * 0.08)
+                            .offset(y: CGFloat(parts.count - 1 - i) * -10)
+                    }
+                }
+                .background(glow ? Circle().fill(Color(hex: Lu.mint).opacity(0.45)).frame(width: 106, height: 106) : nil)
+                .position(x: 90, y: 150)
+            }
+            else { g(item, item.shirt == nil ? 108 : 100).position(x: 90, y: 148) }
         case .legs: g(item, 58).position(x: 90, y: 198)
         case .hands:
-            g(item, 38).position(x: 30, y: 182)
+            if item.gear == .gloves {      // one on each hand
+                g(item, 34).scaleEffect(x: -1).position(x: 30, y: 182)
+                g(item, 34).position(x: 150, y: 182)
+            } else {
+                g(item, 38).position(x: 30, y: 182)
+            }
         case .feet:
             HStack(spacing: 0) { g(item, 34); g(item, 34).scaleEffect(x: -1) }
                 .position(x: 90, y: 238)
-        case .umbrella: g(item, 78).position(x: 150, y: 22)
+        case .umbrella: EmptyView()      // drawn behind him, above
         }
     }
 
@@ -675,6 +738,30 @@ private struct MarcusFigure: View {
             Text("🎶").font(.system(size: 28)).position(x: 158, y: 70)
         case .calm:
             EmptyView()
+        }
+    }
+}
+
+/// A striped wool scarf wrapped round Marcus's neck, one end hanging down his chest.
+private struct WornScarf: View {
+    private let red = Color(hex: 0xd2333a), dark = Color(hex: 0x9a1f26), cream = Color(hex: 0xf5ecd8)
+    var body: some View {
+        ZStack(alignment: .top) {
+            // the hanging end
+            VStack(spacing: 0) {
+                Rectangle().fill(red)
+                Rectangle().fill(cream).frame(height: 4)
+                Rectangle().fill(red).frame(height: 8)
+                HStack(spacing: 2) { ForEach(0..<4, id: \.self) { _ in Rectangle().fill(red).frame(width: 2, height: 6) } }
+            }
+            .frame(width: 16, height: 44)
+            .rotationEffect(.degrees(-6), anchor: .top)
+            .offset(x: 14, y: 8)
+            // the wrap
+            Capsule().fill(LinearGradient(colors: [red, dark], startPoint: .top, endPoint: .bottom))
+                .overlay(Capsule().stroke(dark, lineWidth: 1.5))
+                .overlay(HStack(spacing: 12) { ForEach(0..<3, id: \.self) { _ in Rectangle().fill(cream).frame(width: 3) } }.padding(.vertical, 2))
+                .frame(width: 62, height: 18)
         }
     }
 }
