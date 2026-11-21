@@ -7,16 +7,19 @@ import SwiftUI
 // (major) or tragedy (minor). The right mask comes alive (comedy laughs and bounces, tragedy
 // weeps) and the crowd's lamps flare. A miss lights the right mask, says what it was, and plays
 // the music again so the ear connects the two. A 🔁 hear-again button is always there, and the
-// next piece never starts before the last one ends.
+// next piece never starts before the last one ends. The masks wake only once the piece has been
+// heard to the end the first time (a tune's deciding note can come late), so nobody answers
+// half-listened.
 //
 // Continuous ladder (all off `d`):
-//   1     C major vs C minor, wide block chords; the right mask glows for the first answers
-//   ~2.2  any root (C … B, with flats and sharps) fades in
-//   2.4   broken chords (arpeggios, up and back down) fade in
-//   3.6   short tunes in a major or a minor key (only the 3rd of the scale differs)
-//   5     + 😱 SPOOKY = diminished (a third mask)
+//   1     C major vs C minor, rolled up slowly and held, with the 3rd (the note that makes it
+//         happy or sad) on top where the ear hears it best; the right mask glows at first
+//   ~2.3  any root (C … B, with flats and sharps) fades in; the roll quickens to a block chord
+//   3     broken chords (arpeggios, up and back down) fade in
+//   4     short tunes in a major or a minor key (only the 3rd of the scale differs)
+//   5.2   + 😱 SPOOKY = diminished (a third mask)
 //   6.5   + 😵‍💫 DREAMY = augmented (a fourth mask)
-//   7     the masks carry chord names for the root shown: D · Dm · D° · D+
+//   7.2   the masks carry chord names for the root shown: D · Dm · D° · D+
 //   8     the chord's notes are spelled out too; close voicings creep in (harder to hear)
 
 private enum CTMood: Int, CaseIterable {
@@ -78,31 +81,35 @@ private final class ComedyModel: ArcadeModel {
     /// Builds the next piece off `d`.
     func make(last: CTMood?) -> CTItem {
         var moods: [CTMood] = [.happy, .sad]
-        if d >= 5 { moods.append(.spooky) }
+        if d >= 5.2 { moods.append(.spooky) }
         if d >= 6.5 { moods.append(.dreamy) }
         var mood: CTMood
-        switch tier([1, 5, 6.5], fadeIn: 1.2, keep: 0.5) {
+        switch tier([1, 5.2, 6.5], fadeIn: 1.2, keep: 0.5) {
         case 1: mood = .spooky
         case 2: mood = .dreamy
         default: mood = Bool.random() ? .happy : .sad
         }
         if mood == last && Bool.random() { mood = moods.randomElement()! }   // fewer long runs
-        let names = chance(1, from: 7, to: 8)
+        let names = chance(1, from: 7.2, to: 8.2)
         var root = Spelled("C")
-        if Double.random(in: 0..<1) < ramp(0, 0.85, from: 2.2, to: 3.5) {
+        if Double.random(in: 0..<1) < ramp(0, 0.85, from: 2.3, to: 3.6) {
             let pool = mood.quality == .minor || mood.quality == .diminished ? ctRootsMinor : ctRoots
             repeat { root = pool.randomElement()! } while !ctRootOK(root, mood.quality, moods)
         }
         let r = root.pc <= 6 ? 60 + root.pc : 48 + root.pc          // G3 … F♯4
         let q = mood.quality
-        var kind: CTKind = [.block, .arpeggio, .melody][tier([1, 2.4, 3.6])]
+        var kind: CTKind = [.block, .arpeggio, .melody][tier([1, 3, 4])]
         if kind == .melody && q.rawValue > 1 { kind = .arpeggio }
         let close = chance(0.5, from: 8, to: 10)
         var ev: [ToneEvent] = []
         switch kind {
         case .block:
-            let notes = close ? [r, r + q.third, r + q.fifth] : [r - 12, r - 12 + q.fifth, r + q.third, r + 12]
-            ev = notes.enumerated().map { ToneEvent(at: Double($0.offset) * 0.03, midi: $0.element, vel: 0.6, dur: close ? 1.1 : 1.6) }
+            // Open voicing with the 3rd doubled on top (the soprano is what the ear follows), rolled
+            // up slowly at first so each note — the 3rd last — is heard, then held together.
+            let notes = close ? [r, r + q.third, r + q.fifth] : [r - 12, r, r + q.third, r + q.fifth, r + 12 + q.third]
+            let roll = close ? 0.03 : ramp(0.22, 0.03, from: 1, to: 3)
+            let hold = Double(notes.count - 1) * roll + (close ? 1.1 : 1.6)
+            ev = notes.enumerated().map { ToneEvent(at: Double($0.offset) * roll, midi: $0.element, vel: 0.6, dur: hold - Double($0.offset) * roll) }
         case .arpeggio:
             let notes = [r, r + q.third, r + q.fifth, r + 12, r + q.fifth, r + q.third, r]
             let beat = ramp(0.3, 0.2, from: 2.4, to: 8), total = Double(notes.count) * beat + 0.5
@@ -127,14 +134,14 @@ private final class ComedyModel: ArcadeModel {
         revealed = false; chosen = nil; lesson = nil; performer = nil; heard = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             guard let self, self.phase == .playing else { return }
-            self.play()
+            self.play { [weak self] in self?.heard = true }    // the masks wake once it has all been heard
         }
     }
 
     func play(then: (() -> Void)? = nil) {
         guard phase == .playing, !listening else { return }
         let d = ToneSynth.shared.play(item.events)
-        heard = true; listening = true
+        listening = true
         soundUntil = Date().addingTimeInterval(d)
         playToken += 1
         let tok = playToken
@@ -145,7 +152,7 @@ private final class ComedyModel: ArcadeModel {
         }
     }
 
-    func replay() { if !revealed { play() } }
+    func replay() { if !revealed { play { [weak self] in self?.heard = true } } }
 
     func choose(_ m: CTMood) {
         guard phase == .playing, heard, !revealed else { return }
@@ -199,6 +206,7 @@ struct ComedyTragedyView: View {
             VStack(spacing: 8) {
                 HUDSpace(58)
                 caption.frame(height: 50)
+                Spacer(minLength: 0)
                 CTMasks(model: model)
                 ZStack {
                     if let l = model.lesson {
@@ -211,6 +219,7 @@ struct ComedyTragedyView: View {
                 }
                 .frame(height: 52)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: model.lesson)
+                Spacer(minLength: 0)
                 Spacer(minLength: 0)
                 HStack(spacing: 10) {
                     ReplayButton(enabled: !model.listening && !model.revealed && model.heard) { model.replay() }
@@ -239,8 +248,10 @@ struct ComedyTragedyView: View {
                 Text("Root: \(model.item.root.name)").font(luSerif(28, .black)).foregroundStyle(Color(hex: Lu.ink))
             } else {
                 HStack(spacing: 8) {
-                    if model.listening { CTNotes() }
-                    Text(model.listening ? "Listen…" : (model.revealed ? " " : (model.item.options.count > 2 ? "Which mood?" : "Happy or sad?")))
+                    if model.listening || (!model.heard && !model.revealed) { CTNotes() }
+                    Text(model.listening || !model.heard ? "Listen…"
+                         : model.revealed ? (model.chosen == model.item.mood ? "Bravo! 🎉" : "Listen again…")
+                         : (model.item.options.count > 2 ? "Which mood?" : "Happy or sad?"))
                         .font(luFont(22, .heavy)).foregroundStyle(Color(hex: Lu.ink))
                 }
             }
@@ -360,7 +371,7 @@ private struct CTMasks: View {
         let cols = Array(repeating: GridItem(.flexible(), spacing: 10), count: opts.count == 3 ? 3 : 2)
         LazyVGrid(columns: cols, spacing: 12) {
             ForEach(Array(opts.enumerated()), id: \.element) { i, m in
-                maskButton(m, height: opts.count <= 2 ? 250 : (opts.count == 3 ? 200 : 170))
+                maskButton(m, height: opts.count <= 2 ? 262 : (opts.count == 3 ? 200 : 176))
                     .rotationEffect(.degrees(sway ? (i % 2 == 0 ? -3 : 3) : 0), anchor: .top)
             }
         }
@@ -381,10 +392,11 @@ private struct CTMasks: View {
         let small = it.options.count > 2
         return Button { model.choose(m) } label: {
             VStack(spacing: 2) {
-                // Hanging cord
-                Rectangle().fill(Color(hex: 0x5a3a20)).frame(width: 3, height: 14)
+                // The bronze peg it hangs on
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xf0c870), Color(hex: 0x7a5418)], center: .init(x: 0.35, y: 0.35), startRadius: 0, endRadius: 7))
+                    .frame(width: 12, height: 12).shadow(color: .black.opacity(0.5), radius: 1, y: 1)
                 CTMaskFace(mood: m, performing: model.performer == m, dim: model.revealed && !right && !wrong)
-                    .frame(width: small ? 98 : 164, height: small ? 112 : 188)
+                    .frame(width: small ? 112 : 176, height: small ? 128 : 204)
                     .shadow(color: hinted || right ? Color(hex: m.hex) : .black.opacity(0.5), radius: hinted || right ? 16 : 6)
                     .overlay(alignment: .topTrailing) {
                         if wrong { Text("✗").font(luFont(30, .black)).foregroundStyle(Color(hex: Lu.coral)) }
@@ -401,6 +413,10 @@ private struct CTMasks: View {
             }
             .frame(maxWidth: .infinity, minHeight: height)
             .contentShape(Rectangle())
+            // Asleep (greyed, still solid) until the piece has been heard to the end.
+            .saturation(model.heard || model.revealed ? 1 : 0.35)
+            .brightness(model.heard || model.revealed ? 0 : -0.12)
+            .animation(.easeOut(duration: 0.3), value: model.heard)
             .scaleEffect(right ? 1.06 : (hinted ? 1.04 : 1))
             .animation(.spring(response: 0.3, dampingFraction: 0.55), value: model.revealed)
         }
@@ -502,7 +518,7 @@ private struct CTMaskFace: View {
         }
         .offset(y: performing ? (mood == .happy ? (t ? -14 : 0) : (mood == .sad ? 4 : (t ? -8 : 0))) : 0)
         .rotationEffect(.degrees(performing ? (mood == .happy ? (t ? 8 : -8) : (mood == .dreamy ? (t ? -6 : 6) : 0)) : 0))
-        .opacity(dim ? 0.45 : 1)
+        .saturation(dim ? 0.3 : 1).brightness(dim ? -0.2 : 0)     // dimmed but solid (the wall mustn't show through)
         .onChange(of: performing) { p in
             t = false
             if p { withAnimation(.easeInOut(duration: 0.3).repeatCount(6, autoreverses: true)) { t = true } }
@@ -517,7 +533,10 @@ private struct CTMaskFace: View {
 @MainActor private func ctSelfCheck(_ model: ComedyModel) {
     var fails = theatreTheoryCheck()
     var last: CTMood?
-    for _ in 0..<3000 {
+    // Sweep the ladder: `d` follows the level while the intro card is up (restored afterwards).
+    for i in 0..<3000 {
+        let lv = 1 + i % 11
+        model.level = lv; model.startLevel = lv
         let it = model.make(last: last); last = it.mood
         if !it.options.contains(it.mood) || Set(it.options).count != it.options.count { fails.append("options") }
         let q = it.mood.quality
@@ -529,6 +548,7 @@ private struct CTMaskFace: View {
         for o in it.options where spellTriad(it.root, o.quality) == nil { fails.append("unspellable \(it.root.name)\(o.quality.suffix)") }
         if let notes = spellTriad(it.root, q), !ctOddNotes.isDisjoint(with: notes) { fails.append("odd spelling \(it.name)") }
     }
+    model.level = 1; model.startLevel = 1
     NSLog("ComedyTragedy self-check: %@", fails.isEmpty ? "PASS" : "FAIL \(Array(Set(fails)).prefix(10))")
 }
 #endif
