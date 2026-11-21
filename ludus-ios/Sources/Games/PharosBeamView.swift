@@ -18,7 +18,9 @@ import SwiftUI
 //   7    bearings in degrees (045°, 270°…) on 45° steps
 //   8    bearings on 30° steps (12 spots)
 // From d 8 the place / degree calls may come on a turned rose too (chance → 60 % by d 10); a
-// patience clock appears at d 4.5 (20 s) and tightens smoothly to 7 s by d 10.
+// patience clock appears at d 5.5 — after the turned rose has settled in, a generous 22 s — and
+// tightens smoothly to 8 s by d 10. Below that the call is read aloud; the clock never runs until
+// the call has landed (bar full meanwhile).
 
 private enum PBLabels { case four, eight, degrees }
 
@@ -84,6 +86,13 @@ private struct PBRound {
     var mapStrong = false
     var ticks30 = false
     func screen(_ i: Int) -> Double { rose + bearings[i] }
+    /// The call read aloud, as on the note ("A ship from the north!").
+    var spoken: String {
+        let t = title.filter { $0.isLetter || $0.isNumber || $0 == " " || $0 == "-" }
+            .replacingOccurrences(of: "-", with: " ").trimmingCharacters(in: .whitespaces).lowercased()
+        if labels == .degrees { return "\(lead) \(Int(bearings[answer])) degrees!" }
+        return "\(lead) \(t)!"
+    }
     var answerName: String {
         let b = bearings[answer]
         if labels == .degrees { return String(format: "%03.0f°", b) }
@@ -158,6 +167,7 @@ private final class PharosModel: ArcadeModel {
     @Published var roundID = 0
     @Published var tLeft: Double = 0
     @Published var perQ: Double = 0
+    @Published var clockOn = false
     private var locked = false
 
     init() {
@@ -180,8 +190,17 @@ private final class PharosModel: ArcadeModel {
         if r.answer == round.answer && r.bearings.count == round.bearings.count && roundID > 0 { r = roll() }
         round = r
         chosen = nil; outcome = .none; showAnswer = false; locked = false
-        perQ = d < 4.5 ? 0 : ramp(20, 7, from: 4.5, to: 10); tLeft = perQ
+        perQ = d < 5.5 ? 0 : ramp(22, 8, from: 5.5, to: 10); tLeft = perQ
+        clockOn = false
         roundID += 1
+        let id = roundID
+        let start = { [weak self] in
+            guard let self, self.roundID == id, self.phase == .playing else { return }
+            self.clockOn = true
+        }
+        // Untimed calls are read aloud for the younger keepers; timed ones start once the note has landed.
+        if perQ == 0 { LibraryVoice.say(r.spoken, then: start) }
+        else { DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: start) }
     }
 
     /// Point the beam at a screen angle (finger drag).
@@ -198,7 +217,7 @@ private final class PharosModel: ArcadeModel {
     }
 
     func tick(_ dt: Double) {
-        guard phase == .playing, !locked, perQ > 0 else { return }
+        guard phase == .playing, !locked, perQ > 0, clockOn else { return }
         tLeft -= dt
         if tLeft <= 0 { lock(nil) }
     }
@@ -283,9 +302,11 @@ private struct PBSea: View {
 private struct PBRose: View {
     let round: PBRound
     let R: CGFloat
+    /// The letters are drawn as a separate layer above the tower, so its flame never hides N.
+    var lettersOnly = false
     var body: some View {
         ZStack {
-            Canvas { ctx, size in
+            if !lettersOnly { Canvas { ctx, size in
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
                 for k in 0..<8 {
                     let a = round.rose + Double(k) * 45
@@ -310,20 +331,21 @@ private struct PBRose: View {
                     p.addLine(to: CGPoint(x: c.x + u.x * R * 0.995, y: c.y + u.y * R * 0.995))
                     ctx.stroke(p, with: .color(Color(hex: Lu.ink).opacity(0.7)), lineWidth: 2)
                 }
-            }
-            ForEach(labels, id: \.0) { l in
+            } }
+            if lettersOnly { ForEach(labels, id: \.0) { l in
                 let u = pbUnit(round.rose + l.1)
                 Text(l.0)
                     .font(luFont(l.2 ? 22 : 14, .black))
                     .foregroundStyle(Color(hex: l.3))
                     .shadow(color: .black.opacity(0.7), radius: 2)
                     .position(x: R + u.x * R * labelR, y: R + u.y * R * labelR)
-            }
+            } }
         }
         .frame(width: R * 2, height: R * 2)
     }
 
-    private var labelR: CGFloat { round.labels == .degrees ? 0.5 : 0.6 }
+    // Letters sit well inside the ring of ships, so a ship (or the fog) never covers its letter.
+    private var labelR: CGFloat { round.labels == .degrees ? 0.5 : 0.52 }
 
     private var labels: [(String, Double, Bool, UInt)] {
         switch round.labels {
@@ -540,6 +562,7 @@ struct PharosBeamView: View {
                 .allowsHitTesting(false)
             ForEach(r.bearings.indices, id: \.self) { i in spot(i, R) }
             PBTower(glow: m.outcome == .lit)
+            PBRose(round: r, R: R, lettersOnly: true).allowsHitTesting(false)
         }
         .frame(width: R * 2, height: R * 2)
         .contentShape(Circle())
@@ -563,7 +586,7 @@ struct PharosBeamView: View {
         let shipShown = isShip && (!r.fog || (lit && m.outcome == .lit) || m.showAnswer)
         let fogShown = r.fog && !(lit || (isShip && m.showAnswer))
         let u = pbUnit(r.screen(i))
-        let rad = R * (r.bearings.count > 8 ? 0.84 : 0.8)
+        let rad = R * (r.bearings.count > 8 ? 0.84 : 0.82)
         ZStack {
             if fogShown {
                 Text("☁️").font(.system(size: r.bearings.count > 8 ? 34 : 42))
@@ -575,8 +598,8 @@ struct PharosBeamView: View {
             }
             if shipShown {
                 ZStack {
-                    if m.showAnswer { Circle().stroke(Color(hex: Lu.mint), lineWidth: 4).frame(width: 66, height: 66) }
-                    Text(r.traveller).font(.system(size: r.fog ? 44 : 56))
+                    if m.showAnswer { Circle().stroke(Color(hex: Lu.mint), lineWidth: 4).frame(width: 54, height: 54) }
+                    Text(r.traveller).font(.system(size: r.fog ? 42 : 48))
                         .rotationEffect(.degrees(bob ? -7 : 7))
                     if m.outcome == .lit {
                         Text("TOOT!").font(luFont(13, .black)).foregroundStyle(Color(hex: Lu.inkDark))
