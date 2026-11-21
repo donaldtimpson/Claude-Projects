@@ -24,7 +24,11 @@ import SwiftUI
 
 private enum Diet { case herbivore, carnivore, omnivore }
 
-private struct Food { let emoji: String; let name: String }
+private struct Food {
+    let emoji: String; let name: String
+    /// How the fact line says it ("The owl eats mice", not "eats mouse").
+    var eaten: String { ["mouse": "mice", "fly": "flies", "carrot": "carrots", "apple": "apples", "banana": "bananas"][name] ?? name }
+}
 private let plantFoods = [Food(emoji: "🥕", name: "carrot"), Food(emoji: "🎋", name: "bamboo"),
                           Food(emoji: "🍌", name: "banana"), Food(emoji: "🍎", name: "apple")]
 private let animalFoods = [Food(emoji: "🥩", name: "meat"), Food(emoji: "🐟", name: "fish"),
@@ -39,7 +43,8 @@ private struct Eater {
 }
 
 private let eaters: [Eater] = [
-    Eater(emoji: "🐇", name: "rabbit", diet: .herbivore, food: Food(emoji: "🥕", name: "carrot"), easy: true),
+    // Rabbits really live on grass and hay (carrots are only an occasional treat).
+    Eater(emoji: "🐇", name: "rabbit", diet: .herbivore, food: Food(emoji: "🌾", name: "grass"), easy: true),
     Eater(emoji: "🦛", name: "hippo", diet: .herbivore, food: Food(emoji: "🌾", name: "grass"), easy: false),
     Eater(emoji: "🐄", name: "cow", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
     Eater(emoji: "🐎", name: "horse", diet: .herbivore, food: Food(emoji: "🌾", name: "hay"), easy: true),
@@ -130,7 +135,7 @@ private struct ZKRound {
 
 private let dietZones: [ZKZone] = [
     ZKZone(id: 0, emoji: "🌿", title: "HERBIVORE", sub: "eats plants"),
-    ZKZone(id: 1, emoji: "🥩", title: "CARNIVORE", sub: "eats meat"),
+    ZKZone(id: 1, emoji: "🥩", title: "CARNIVORE", sub: "eats animals"),
     ZKZone(id: 2, emoji: "🌿🥩", title: "OMNIVORE", sub: "eats both"),
 ]
 private let roleZones: [ZKZone] = [
@@ -150,14 +155,14 @@ private func feedRound(easy: Bool, choices: Int, base: Int) -> ZKRound {
     return ZKRound(kind: .feed, animal: (a.emoji, a.name), tray: tray,
                    zones: [ZKZone(id: 0, emoji: a.emoji, title: a.name, sub: "")],
                    answerItem: right, answerZone: 0,
-                   lesson: "\(a.emoji) The \(a.name) eats \(a.food.emoji) \(a.food.name)")
+                   lesson: "\(a.emoji) The \(a.name) eats \(a.food.eaten) \(a.food.emoji)")
 }
 
 private func penRound(omnivores: Bool, base: Int) -> ZKRound {
     let a = penAnimals.filter { omnivores || $0.2 != .omnivore }.randomElement()!
     let zones = Array(dietZones.prefix(omnivores ? 3 : 2))
     let z = a.2 == .herbivore ? 0 : a.2 == .carnivore ? 1 : 2
-    let what = a.2 == .herbivore ? "plants" : a.2 == .carnivore ? "meat" : "plants AND meat"
+    let what = a.2 == .herbivore ? "plants" : a.2 == .carnivore ? "other animals" : "plants AND animals"
     return ZKRound(kind: .pens, tray: [ZKItem(id: base, emoji: a.0, label: a.1)], zones: zones,
                    answerItem: base, answerZone: z,
                    lesson: "\(a.0) The \(a.1) eats \(what) — \(zones[z].title.lowercased())")
