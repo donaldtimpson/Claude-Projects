@@ -17,7 +17,11 @@ import SwiftUI
 //   kind 6 (d 6.5)  "this but not that", OR across features, numbers + a feature
 //   SECRET rules fade in from d 5.5 (80 % of rules by d 7): a wall of ✓ / ✗ clue gladiators to
 //   work out — one feature (d 5.5), its NOT (d 7), colour + animal (d 8).
-// The march quickens smoothly: 7 s → 4.5 s for visible rules, 7.5 s → 5.5 s for secret ones.
+//   Logic words match the course to come: AND, OR (inclusive — either or both), NOT.
+// A NEW rule gets the stage first (the plaque glows; 1.5 s, or 3–4 s for a clue wall) before
+// anyone marches. No clock until d 2.5: the gladiator walks up and waits ("May I come in?").
+// From then waiting means SHUT, and the march quickens smoothly: 9 s → 4.5 s for visible rules,
+// 8 s → 5.5 s for secret ones.
 
 // MARK: Gladiators and rules
 
@@ -205,14 +209,18 @@ private func pcSecrets(_ level: Int) -> [[PCRule]] {
     return [ones]
 }
 
+/// Features a player might suspect: every secret feature, plus the number rules the visible
+/// plaques teach (> 5, < 4) — or clues of 7 ✓ 9 ✓ 2 ✗ 4 ✗ would fit "> 5" as well as "odd".
+private let pcSuspects: [PCAtom] = pcSingles + [.over(5), .under(4)]
+
 /// What a player might suspect: any one feature, any two features together, and (VII+) any
 /// NOT — de-duplicated by meaning ("odd" and "not even" admit the same gladiators). Clues must
 /// rule out every one of these but the secret, which is a far wider net than the secrets drawn.
 private func pcHypotheses(_ level: Int) -> [PCRule] {
-    var hs = pcSingles.map { PCRule(terms: [PCTerm(atom: $0)]) }
-    if level >= 7 { hs += pcSingles.map { PCRule(terms: [PCTerm(atom: $0, not: true)]) } }
-    for (i, a) in pcSingles.enumerated() {
-        for b in pcSingles[(i + 1)...] where a.kind != b.kind {
+    var hs = pcSuspects.map { PCRule(terms: [PCTerm(atom: $0)]) }
+    if level >= 7 { hs += pcSuspects.map { PCRule(terms: [PCTerm(atom: $0, not: true)]) } }
+    for (i, a) in pcSuspects.enumerated() {
+        for b in pcSuspects[(i + 1)...] where a.kind != b.kind {
             hs.append(PCRule(terms: [PCTerm(atom: a), PCTerm(atom: b)]))
         }
     }
@@ -303,10 +311,13 @@ private final class PortaModel: ArcadeModel {
     @Published var leaving = false
     @Published var crowd = "🙂"
     @Published var ruleVersion = 0
+    @Published var studying = false        // a new rule is up; the next gladiator waits for it
+    @Published var asking = false          // he's at the bars (no clock) waiting for your call
 
     private var gen = 0
     private var walkStart = Date()
     private var walkDur = 7.0
+    private var waits = false               // this gladiator stops at the bars (no clock)
     private var sinceRule = 0
     private var ruleStale = true
 
@@ -337,11 +348,16 @@ private final class PortaModel: ArcadeModel {
         let old = rule
         ruleStale = false
         sinceRule = 0
-        let secret = chance(0.8, from: 5.5, to: 7)
+        var secret = chance(0.8, from: 5.5, to: 7)
+        var kind = 1 + tier([1, 2, 3, 4, 5, 6.5])
+        #if DEBUG
+        // LUDUS_PC_KIND=n: always a visible rule of content kind n (1…6), to check how it reads.
+        if let k = Int(ProcessInfo.processInfo.environment["LUDUS_PC_KIND"] ?? "") { kind = k; secret = false }
+        #endif
         if secret, let h = pcHidden(6 + tier([5.5, 7, 8]), avoiding: old) {
             rule = h.0; pool = .all; clues = h.1; hidden = true
         } else {
-            (pool, rule) = pcVisible(1 + tier([1, 2, 3, 4, 5, 6.5]), avoiding: old)
+            (pool, rule) = pcVisible(kind, avoiding: old)
             clues = []; hidden = false
         }
         ruleVersion += 1
@@ -350,18 +366,38 @@ private final class PortaModel: ArcadeModel {
     private func nextWalker() {
         gen += 1
         let span = d < 2 ? 6 : (hidden ? 4 : 3)
-        if ruleStale || sinceRule >= span { makeRule() }
-        let w = pcWalker(rule, pool)
+        let fresh = ruleStale || sinceRule >= span
+        if fresh { makeRule() }
         var t = Transaction(); t.disablesAnimations = true
         withTransaction(t) {
-            walker = w; x = 0; mood = .walk; leaving = false; decision = nil
+            walker = nil; x = 0; mood = .walk; leaving = false; decision = nil; asking = false
         }
         withAnimation(.easeOut(duration: 0.25)) { outcome = nil; gateOpen = false; crowd = "🙂" }
-        walkDur = hidden ? ramp(7.5, 5.5, from: 5.5, to: 11) : ramp(7, 4.5, to: 11)
+        // A NEW rule gets the stage to itself first (the plaque glows, nobody marches), so the
+        // march never starts while the child is still reading it — longer for a clue wall.
+        let study = !fresh ? 0.05 : (hidden ? ramp(4, 3, from: 5.5, to: 10) : 1.5)
+        withAnimation(.easeOut(duration: 0.2)) { studying = fresh }
+        later(study) { [unowned self] in march() }
+    }
+
+    /// The gladiator sets off. Early on (d < 2.5) there is no clock: he walks up to the bars and
+    /// WAITS for your call. After that, waiting means SHUT — he marches into the bars — and the
+    /// march starts long (9 s) and quickens smoothly.
+    private func march() {
+        withAnimation(.easeOut(duration: 0.3)) { studying = false }
+        let w = pcWalker(rule, pool)
+        var t = Transaction(); t.disablesAnimations = true
+        withTransaction(t) { walker = w; x = 0 }
+        waits = d < 2.5
+        walkDur = waits ? 3.5 : (hidden ? ramp(8, 5.5, from: 5.5, to: 11) : ramp(9, 4.5, from: 2.5, to: 11))
         later(0.05) { [unowned self] in
             walkStart = Date()
-            withAnimation(.linear(duration: walkDur)) { x = 1 }
-            later(walkDur) { [unowned self] in if decision == nil { decide(open: false) } }
+            withAnimation(waits ? .easeOut(duration: walkDur) : .linear(duration: walkDur)) { x = waits ? 0.9 : 1 }
+            later(walkDur) { [unowned self] in
+                guard decision == nil else { return }
+                if waits { withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { asking = true } }
+                else { decide(open: false) }
+            }
         }
     }
 
@@ -369,6 +405,7 @@ private final class PortaModel: ArcadeModel {
     func decide(open: Bool) {
         guard phase == .playing, decision == nil, let w = walker else { return }
         decision = open
+        asking = false
         let p = CGFloat(min(1, max(0, Date().timeIntervalSince(walkStart) / walkDur)))
         let should = rule.admits(w), right = open == should
         if open {
@@ -474,7 +511,7 @@ private struct PCShield: View {
             Image(systemName: "shield").resizable().scaledToFit()
                 .foregroundStyle(Color.white.opacity(0.6))
             if let label {
-                Text(label).font(luFont(size * (label.count > 2 ? 0.24 : 0.42)))
+                Text(label).font(luFont(size * (label.count > 3 ? 0.24 : label.count > 2 ? 0.3 : 0.42)))
                     .foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.5)
                     .padding(.horizontal, size * 0.12).offset(y: -size * 0.04)
             }
@@ -491,23 +528,26 @@ private struct PCAtomGlyph: View {
         case .colour(let c): PCShield(hex: c.hex, size: size)
         case .pet(let p): Text(p.emoji).font(.system(size: size * 0.82))
         case .weapon(let w): Text(w.emoji).font(.system(size: size * 0.82))
-        case .even: PCShield(hex: 0x9a7b4f, label: "2 4 6", size: size)
-        case .odd: PCShield(hex: 0x9a7b4f, label: "1 3 5", size: size)
+        // The concept by name: "2 4 6" read as "only 2, 4 or 6" (is 8 allowed?).
+        case .even: PCShield(hex: 0x9a7b4f, label: "EVEN", size: size)
+        case .odd: PCShield(hex: 0x9a7b4f, label: "ODD", size: size)
         case .over(let n): PCShield(hex: 0x9a7b4f, label: "> \(n)", size: size)
         case .under(let n): PCShield(hex: 0x9a7b4f, label: "< \(n)", size: size)
         }
     }
 }
 
-/// The red "no" ring + slash drawn over a NOT term.
+/// The red "no" ring + slash drawn over a NOT term. Red and see-through, so the thing it
+/// forbids still reads underneath (a dark slash hid the dagger, which lies along it).
 private struct PCNoSign: View {
     let size: CGFloat
     var body: some View {
         ZStack {
-            Circle().stroke(Color(hex: 0x2a1830), lineWidth: size * 0.1)
-            Capsule().fill(Color(hex: 0x2a1830)).frame(width: size * 0.1, height: size * 0.92)
+            Circle().stroke(Color(hex: 0xd2322a), lineWidth: size * 0.09)
+            Capsule().fill(Color(hex: 0xd2322a)).frame(width: size * 0.08, height: size * 0.9)
                 .rotationEffect(.degrees(-45))
         }
+        .opacity(0.8)
         .frame(width: size, height: size)
     }
 }
@@ -521,9 +561,19 @@ private struct PCChip: View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22).fill(Color(hex: Lu.ink))
             PCAtomGlyph(atom: term.atom, size: size * 0.68)
-            if term.not { PCNoSign(size: size * 0.84).opacity(0.9) }
+            if term.not { PCNoSign(size: size * 0.84) }
         }
         .frame(width: size, height: size)
+        // Named in words too, like AND / OR (the logic words the course will use).
+        .overlay(alignment: .bottom) {
+            if term.not {
+                Text("NOT").font(luFont(max(8, size * 0.15), .heavy)).tracking(1)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, size * 0.07).padding(.vertical, 1)
+                    .background(Capsule().fill(Color(hex: 0xb02a22)))
+                    .offset(y: size * 0.1)
+            }
+        }
         .overlay(alignment: .topTrailing) {
             if let m = mark {
                 Image(systemName: m ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -539,15 +589,22 @@ private struct PCRuleRow: View {
     let rule: PCRule
     let size: CGFloat
     var marks: PCGladiator?
+    var joinHex: UInt = Lu.gold            // the AND / OR words (darker on the sand strip)
     var body: some View {
         HStack(spacing: size * 0.16) {
             ForEach(Array(rule.terms.enumerated()), id: \.offset) { i, term in
                 if i > 0 {
+                    // AND = "+" with its word; OR is just the word (a big "or" over a small
+                    // "OR" read as "or or").
                     VStack(spacing: -2) {
-                        Text(rule.isOr ? "or" : "+").font(luFont(size * (rule.isOr ? 0.4 : 0.55)))
-                        Text(rule.isOr ? "OR" : "AND").font(luFont(size * 0.17, .heavy))
+                        if rule.isOr {
+                            Text("OR").font(luFont(size * 0.3, .heavy))
+                        } else {
+                            Text("+").font(luFont(size * 0.55))
+                            Text("AND").font(luFont(size * 0.17, .heavy))
+                        }
                     }
-                    .foregroundStyle(Color(hex: Lu.gold))
+                    .foregroundStyle(Color(hex: joinHex))
                 }
                 PCChip(term: term, size: size, mark: marks.map { term.holds($0) })
             }
@@ -864,7 +921,7 @@ struct PortaCustosView: View {
                     Text("Only let in").font(luSerif(15, .heavy)).textCase(.uppercase).tracking(2)
                 }
                 .foregroundStyle(Color(hex: Lu.gold))
-                PCRuleRow(rule: model.rule, size: model.rule.terms.count == 1 ? 92 : 78)
+                PCRuleRow(rule: model.rule, size: model.rule.terms.count == 1 ? 104 : 84)
                     .id(model.ruleVersion)
                     .transition(.scale(scale: 0.4).combined(with: .opacity))
                 Spacer(minLength: 0)
@@ -877,6 +934,18 @@ struct PortaCustosView: View {
             .fill(LinearGradient(colors: [Color(hex: 0x6a4a34), Color(hex: 0x4a3224)], startPoint: .top, endPoint: .bottom)))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: 0xd9a84a), lineWidth: 3))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xd9a84a).opacity(0.4), lineWidth: 1).padding(5))
+        // A new rule glows while the next gladiator waits for the child to read it.
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: Lu.gold), lineWidth: 5)
+            .shadow(color: Color(hex: Lu.gold), radius: 8).opacity(model.studying ? 1 : 0))
+        .overlay(alignment: .bottom) {
+            if model.studying {
+                Text("NEW RULE").font(luFont(11, .heavy)).tracking(1.5).foregroundStyle(Color(hex: Lu.inkDark))
+                    .padding(.horizontal, 8).padding(.vertical, 3)
+                    .background(Capsule().fill(Color(hex: Lu.gold)))
+                    .offset(y: 9)
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
         .shadow(color: .black.opacity(0.35), radius: 6, y: 4)
         .animation(.spring(response: 0.4, dampingFraction: 0.55), value: model.ruleVersion)
     }
@@ -907,12 +976,12 @@ struct PortaCustosView: View {
                 } else {
                     VStack(spacing: 2) {
                         if o.reveal {
-                            Text("THE RULE").font(luFont(10, .heavy)).tracking(1.5).foregroundStyle(Color(hex: Lu.inkDim))
+                            Text("THE RULE").font(luFont(10, .heavy)).tracking(1.5).foregroundStyle(Color(hex: 0x5a3414))
                         }
-                        PCRuleRow(rule: model.rule, size: o.reveal ? 42 : 48, marks: o.walker)
+                        PCRuleRow(rule: model.rule, size: o.reveal ? 42 : 48, marks: o.walker, joinHex: 0x8a5a1a)
                     }
                     Image(systemName: "arrow.right").font(.system(size: 20, weight: .heavy))
-                        .foregroundStyle(Color(hex: Lu.inkDim))
+                        .foregroundStyle(Color(hex: 0x5a3414).opacity(0.7))
                 }
                 Text(o.shouldEnter ? "🚪 IN" : "⛔ OUT")
                     .font(luFont(22)).foregroundStyle(Color(hex: Lu.inkDark))
@@ -1004,6 +1073,15 @@ private struct PCArena: View {
                     }
                     .position(x: stop + fig * 0.1, y: footY - fig * 1.08)
                     .transition(.scale(scale: 0.2).combined(with: .opacity))
+                }
+                if model.asking {
+                    Text("May I come in?")
+                        .font(luFont(16, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Capsule().fill(.white).shadow(color: .black.opacity(0.25), radius: 3, y: 2))
+                        .fixedSize()
+                        .position(x: max(80, start + (stop - start) * 0.9), y: footY - fig * 1.1)
+                        .transition(.scale(scale: 0.3).combined(with: .opacity))
                 }
                 if model.mood == .happy {
                     Text("🎉").font(.system(size: 40))
