@@ -176,7 +176,7 @@ let ludusWorlds: [LudusWorld] = [
     ]),
     LudusWorld(name: "The Money Stall", subject: "Money & Life Skills", emoji: "🪙", colorHex: Lu.gold, games: [
         .init(title: "Porcus the Piggy Bank", mechanic: "drag coins", premise: "Feed Porcus real coins — exactly the price of the prize.", game: .porcus,
-              icon: "🐷", howTo: how(("🪁", "Look at the price tag"), ("🪙", "Drag coins into Porcus"), ("🎉", "Exactly right? He buys it!"))),
+              icon: "🐷", howTo: how(("🏷️", "Look at the price tag"), ("🪙", "Drag coins into Porcus"), ("🎉", "Exactly right? He buys it!"))),
         .init(title: "The Fig Stall", mechanic: "make change", premise: "Run the fruit stall — count up and give the right change.", game: .figStall,
               icon: "🧺", howTo: how(("💵", "They pay you"), ("👆", "Tap coins from the till"), ("➡️", "Count up to what they paid"))),
         .init(title: "The Clock Tower", mechanic: "turn the hands", premise: "Set the town clock to the time people need.", game: .clockTower,

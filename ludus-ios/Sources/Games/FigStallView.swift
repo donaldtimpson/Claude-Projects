@@ -9,9 +9,10 @@ import SwiftUI
 // shows the change that was right.
 //
 // Difficulty (continuous, `d`): paid with a nickel (I) → a dime → a quarter → a dollar → two
-// fruits (add them first) → $5 and $10 bills → $20 with three fruits. The count-up strip and the
-// value badges on the coins fade out; customers start to tap their feet (a patience bar that
-// tightens from 45 s to 20 s); from d≈7 the change must use the fewest coins and bills.
+// fruits (add them first) → $5 and $10 bills → $20 with three fruits. The count-up strip fades
+// (d 3.2–5.5), then the value badges on the coins (5–7.5); from d≈4.6 customers tap their feet (a
+// patience bar that tightens from 45 s to 20 s, running only once they've set their money down);
+// from d≈7.5 the change must use the fewest coins and bills.
 
 struct FSFruit: Hashable {
     let id: String, emoji: String, one: String, many: String
@@ -47,9 +48,11 @@ struct FSSale {
 
 @MainActor
 private func fsSale(_ m: ArcadeModel) -> FSSale {
-    let values = !m.chance(1, from: 3, to: 5.5)
-    let track = !m.chance(1, from: 3.5, to: 6.5)
-    let fewest = m.chance(1, from: 7, to: 9)
+    // Staggered so each help leaves on its own, never with a new coin or bill: the count-up strip
+    // fades first (d 3.2–5.5), the coins' value badges later (5–7.5), fewest-pieces last (7.5–9.5).
+    let values = !m.chance(1, from: 5, to: 7.5)
+    let track = !m.chance(1, from: 3.2, to: 5.5)
+    let fewest = m.chance(1, from: 7.5, to: 9.5)
     let pick = { (n: Int) in Array(fsFruits.map(\.id).shuffled().prefix(n)) }
     let coinsTill: [USMoney] = USMoney.coins
     switch m.tier([1, 2, 3, 4, 5.5, 6.5, 8], keep: 0.08) {
@@ -128,7 +131,7 @@ private final class FigStallModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil || ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         next()
     }
@@ -140,19 +143,30 @@ private final class FigStallModel: ArcadeModel {
         sale = fsSale(self)
         given = []; stage = .giving; mood = .waiting; reveal = false; note = ""
         serial += 1
-        patience = d < 3.5 ? 0 : ramp(45, 20, from: 3.5, to: 10)
-        deadline = patience > 0 ? Date().addingTimeInterval(patience) : nil
-        if d < 3 {
-            let f = fsFruit(sale.items[0].fruit)
-            LibraryVoice.say("One \(f.one), please. Here is \(sale.paidSum) cents.")
-        }
+        patience = d < 4.6 ? 0 : ramp(45, 20, from: 4.6, to: 10)
+        deadline = nil
         let s = serial
-        if patience > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
-                guard let self, self.serial == s, self.stage == .giving, self.phase == .playing else { return }
-                self.note = "Too slow! The change was \(usMoney(self.sale.change))."
-                self.resolve(false)
-            }
+        if d < 3 {
+            // Said exactly as the bubble shows it.
+            LibraryVoice.say("\(order) Here's \(sale.paidSum) cents.")
+        }
+        // The customer's patience runs only once they've walked up and set their money down.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.startClock(s) }
+    }
+
+    /// What the customer asks for, as the bubble shows it: "One fig, please!", "These, please!"
+    var order: String {
+        sale.items.count == 1 ? "One \(fsFruit(sale.items[0].fruit).one), please!" : "These, please!"
+    }
+
+    /// Starts the patience bar for sale `s` (it sits full until now).
+    private func startClock(_ s: Int) {
+        guard serial == s, stage == .giving, phase == .playing, patience > 0 else { return }
+        deadline = Date().addingTimeInterval(patience)
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
+            guard let self, self.serial == s, self.stage == .giving, self.phase == .playing else { return }
+            self.note = "Too slow! The change was \(usMoney(self.sale.change))."
+            self.resolve(false)
         }
     }
 
@@ -391,12 +405,21 @@ private struct FSPurse: View {
                     .offset(y: 44)
             }
             // Coins piling up
-            let cols = 6
+            // Bills three to a row and coins six, so a fistful of change stays inside the purse.
+            let rows: [[Int]] = {
+                var out: [[Int]] = []
+                for bills in [true, false] {
+                    let idx = given.indices.filter { given[$0].isBill == bills }
+                    let cols = bills ? 3 : 6
+                    for r in stride(from: 0, to: idx.count, by: cols) { out.append(Array(idx[r..<min(idx.count, r + cols)])) }
+                }
+                return out
+            }()
             VStack(spacing: -10) {
-                ForEach(Array(stride(from: 0, to: given.count, by: cols)), id: \.self) { r in
+                ForEach(rows, id: \.self) { row in
                     HStack(spacing: -8) {
-                        ForEach(r..<min(given.count, r + cols), id: \.self) { i in
-                            USMoneyView(kind: given[i], size: given[i].isBill ? 30 : 34, showValue: showValues)
+                        ForEach(row, id: \.self) { i in
+                            USMoneyView(kind: given[i], size: given[i].isBill ? 22 : 34, showValue: showValues)
                                 .transition(.move(edge: .bottom).combined(with: .opacity))
                         }
                     }
@@ -456,11 +479,14 @@ private struct FSPlay: View {
     var body: some View {
         VStack(spacing: 6) {
             Color.clear.frame(height: 96)
+            // Spare height goes up here (sky and houses), so the stall stays in one piece
+            // right above the till instead of a gap opening between them.
+            Spacer(minLength: 0)
             patienceBar
             customerRow
             counter
             track
-            Spacer(minLength: 0)
+            Color.clear.frame(height: 10)
             Text("THE TILL — tap to give change").font(luFont(12, .heavy)).tracking(1)
                 .foregroundStyle(Color(hex: 0x4e2e15).opacity(0.8))
             till
@@ -478,7 +504,8 @@ private struct FSPlay: View {
 
     @ViewBuilder private var patienceBar: some View {
         TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
-            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
+            // Full until the customer has settled; then it drains.
+            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? model.patience
             let f = model.patience > 0 ? CGFloat(left / model.patience) : 0
             HStack(spacing: 6) {
                 Text("⏳").font(.system(size: 14))
@@ -492,7 +519,7 @@ private struct FSPlay: View {
             }
         }
         .frame(height: 14)
-        .opacity(model.deadline != nil ? 1 : 0)
+        .opacity(model.patience > 0 && model.stage == .giving ? 1 : 0)
     }
 
     private var customerRow: some View {
@@ -509,7 +536,7 @@ private struct FSPlay: View {
                         Text(model.note).font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0xa33a24))
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
-                        Text(s.items.count == 1 ? "This one, please!" : "These, please!")
+                        Text(model.order)
                             .font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
                         HStack(spacing: 4) {
                             Text("Here's").font(luFont(17, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
@@ -584,8 +611,12 @@ private struct FSPlay: View {
                 if model.reveal {
                     HStack(spacing: 4) {
                         Text("Change:").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
-                        ForEach(Array(usFewest(s.change, from: s.till).enumerated()), id: \.offset) { _, k in
-                            USMoneyView(kind: k, size: 32, showValue: true)
+                        // One piece per kind with its count, so $17.35 in change still fits.
+                        let f = usFewest(s.change, from: s.till)
+                        ForEach(s.till.sorted(by: >).filter { f.contains($0) }, id: \.self) { k in
+                            let n = f.filter { $0 == k }.count
+                            USMoneyView(kind: k, size: k.isBill ? 24 : 32, showValue: true)
+                            if n > 1 { Text("×\(n)").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.inkDark)) }
                         }
                         Text("= \(usMoney(s.change))").font(luFont(17)).foregroundStyle(Color(hex: 0x2f7a3a))
                     }

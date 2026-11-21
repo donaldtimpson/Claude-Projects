@@ -10,8 +10,8 @@ import SwiftUI
 // Difficulty (continuous, `d`): which is cheaper (pictures + pennies) → needs vs wants → "you
 // have 25¢ — which can you buy?" → cheaper with dollars-and-cents traps ($2.05 vs $2.50) →
 // price per item ("3 for 60¢" vs "2 for 50¢") → price per ounce → percent discounts ("25% off
-// $20" vs "$16") → budgets for a whole basket and "buy 2 get 1 free". From d≈3 the market bell
-// starts a countdown that shortens from 20 s to 7 s.
+// $20" vs "$16") → budgets for a whole basket and "buy 2 get 1 free". From d≈4.4 the market bell
+// starts a countdown (once the sign has been read) that shortens from 25 s to 12 s.
 
 private struct DDOffer {
     var pic: String              // emoji (one or a few)
@@ -64,12 +64,12 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
         while abs(a - b) < 2 { b = Int.random(in: 1...10) }
         let lo = min(a, b), hi = max(a, b)
         let (o, c) = pair(DDOffer(pic: g.0, title: "\(lo)¢", pennies: lo), DDOffer(pic: g.0, title: "\(hi)¢", pennies: hi), aRight: true)
-        return DDRound(ask: "Which is CHEAPER?", askPic: "🪙⬇️", say: "Which one is cheaper?", offers: o, correct: c,
+        return DDRound(ask: "Which is CHEAPER?", askPic: "🪙⬇️", say: "Which is cheaper?", offers: o, correct: c,
                        why: "\(lo)¢ is less than \(hi)¢")
     case 1:
         let n = ddNeeds.randomElement()!, w = ddWants.randomElement()!
         let (o, c) = pair(DDOffer(pic: n.0, title: n.1), DDOffer(pic: w.0, title: w.1), aRight: true)
-        return DDRound(ask: "Which do you NEED?", askPic: "🏠", say: "Which one do you need?", offers: o, correct: c,
+        return DDRound(ask: "Which do you NEED?", askPic: "🏠", say: "Which do you need?", offers: o, correct: c,
                        why: "\(n.1) is a need — \(w.1.lowercased()) is a want")
     case 2:
         let budget = 5 * Int.random(in: m.rampInt(2, 6, from: 2.8, to: 4)...m.rampInt(6, 19, from: 2.8, to: 4.5))
@@ -77,8 +77,8 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
         let no = Int.random(in: (budget + 1)...(budget + 20))
         let g = ddCheap.shuffled().prefix(2).map { $0 }
         let (o, c) = pair(DDOffer(pic: g[0].0, title: usMoney(ok), sub: g[0].1), DDOffer(pic: g[1].0, title: usMoney(no), sub: g[1].1), aRight: true)
-        return DDRound(ask: "You have \(usMoney(budget)). Which can you buy?", askPic: "👛", say: "You have \(budget) cents. Which one can you buy?",
-                       offers: o, correct: c, why: "\(usMoney(ok)) ≤ \(usMoney(budget)) — \(usMoney(no)) is too much")
+        return DDRound(ask: "You have \(usMoney(budget)). Which can you buy?", askPic: "👛", say: "You have \(budget) cents. Which can you buy?",
+                       offers: o, correct: c, why: "\(usMoney(ok)) fits in \(usMoney(budget)) — \(usMoney(no)) is too much")
     case 3:
         // Decimal traps: $2.05 vs $2.50, 98¢ vs $1.02, $3.40 vs $3.04.
         let g = ddGoods.randomElement()!
@@ -87,7 +87,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
                                    (d * 100 + 4, d * 100 + 40), (d * 100 + 15, d * 100 + 51), (d * 100 + 99, (d + 1) * 100 + 9)]
         let (lo, hi) = kinds.randomElement()!
         let (o, c) = pair(DDOffer(pic: g.0, title: usDollars(lo), sub: g.1.capitalized), DDOffer(pic: g.0, title: usDollars(hi), sub: g.1.capitalized), aRight: true)
-        return DDRound(ask: "Which is CHEAPER?", askPic: "🪙⬇️", say: "Which one is cheaper?", offers: o, correct: c,
+        return DDRound(ask: "Which is CHEAPER?", askPic: "🪙⬇️", say: "Which is cheaper?", offers: o, correct: c,
                        why: "\(usDollars(lo)) < \(usDollars(hi)) — look at the dollars, then the dimes")
     case 4:
         // Price per item.
@@ -99,8 +99,8 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
             let better = ua < ub
             // The bigger pack shouldn't always be the better deal.
             let ta = na * ua, tb = nb * ub
-            let A = DDOffer(pic: String(repeating: g.0, count: min(na, 4)), title: "\(na) for \(usMoney(ta))", sub: g.1.capitalized)
-            let B = DDOffer(pic: String(repeating: g.0, count: min(nb, 4)), title: "\(nb) for \(usMoney(tb))", sub: g.1.capitalized)
+            let A = DDOffer(pic: String(repeating: g.0, count: na), title: "\(na) for \(usMoney(ta))", sub: g.1.capitalized)
+            let B = DDOffer(pic: String(repeating: g.0, count: nb), title: "\(nb) for \(usMoney(tb))", sub: g.1.capitalized)
             let (o, c) = pair(A, B, aRight: better)
             return DDRound(ask: "Which is the BETTER DEAL?", askPic: "🏷️", say: "Which is the better deal?", offers: o, correct: c,
                            why: "\(usMoney(ta)) ÷ \(na) = \(usMoney(ua)) each · \(usMoney(tb)) ÷ \(nb) = \(usMoney(ub)) each")
@@ -116,7 +116,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
             let ta = sa * ua, tb = sb * ub
             let A = DDOffer(pic: g.0, title: "\(sa) oz", sub: usDollars(ta)), B = DDOffer(pic: g.0, title: "\(sb) oz", sub: usDollars(tb))
             let (o, c) = pair(A, B, aRight: ua < ub)
-            return DDRound(ask: "\(g.1): which is the BETTER DEAL?", askPic: "⚖️", say: "Which is the better deal?", offers: o, correct: c,
+            return DDRound(ask: "\(g.1): which is the BETTER DEAL?", askPic: "⚖️", say: "\(g.1): which is the better deal?", offers: o, correct: c,
                            why: "\(usDollars(ta)) ÷ \(sa) = \(ua)¢ an ounce · \(usDollars(tb)) ÷ \(sb) = \(ub)¢ an ounce")
         }
         fallthrough
@@ -148,7 +148,7 @@ private func ddRound(_ m: ArcadeModel) -> DDRound {
                 let A = DDOffer(pic: items[0].0 + items[1].0, title: "\(usDollars(ps[0])) + \(usDollars(ps[1]))")
                 let B = DDOffer(pic: items[2].0 + items[3].0, title: "\(usDollars(ps[2])) + \(usDollars(ps[3]))")
                 let (o, c) = pair(A, B, aRight: a <= budget)
-                return DDRound(ask: "You have $\(budget / 100). Which basket can you buy?", askPic: "🧺", say: "Which basket can you buy?",
+                return DDRound(ask: "You have $\(budget / 100). Which basket can you buy?", askPic: "🧺", say: "You have \(budget / 100) dollars. Which basket can you buy?",
                                offers: o, correct: c, why: "\(usDollars(a)) vs \(usDollars(b)) — only one is ≤ $\(budget / 100).00")
             }
         }
@@ -188,7 +188,7 @@ private final class DonkeyModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil || ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         haul = []
         next()
@@ -198,15 +198,28 @@ private final class DonkeyModel: ArcadeModel {
         round = ddRound(self)
         stage = .choosing; chosen = nil; right = nil
         serial += 1
-        patience = d < 3 ? 0 : ramp(20, 7, from: 3, to: 10)
-        deadline = patience > 0 ? Date().addingTimeInterval(patience) : nil
-        if d < 5 { LibraryVoice.say(round.say) }
+        // The bell arrives after the budget and dollars-and-cents rounds have settled in (not with
+        // them), starts generous, and never drops below the time a unit price takes to work out.
+        // It rings only once the sign has been read out (or had time to be read).
+        patience = d < 4.4 ? 0 : ramp(25, 12, from: 4.4, to: 10)
+        deadline = nil
         let s = serial
-        if patience > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
-                guard let self, self.serial == s, self.stage == .choosing, self.phase == .playing else { return }
-                self.resolve(nil)
+        if d < 5 {
+            LibraryVoice.say(round.say) { [weak self] in self?.startClock(s) }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + min(2.5, LibraryVoice.readingTime(round.ask) * 0.6)) { [weak self] in
+                self?.startClock(s)
             }
+        }
+    }
+
+    /// Starts the market bell for round `s` (the bar sits full until now).
+    private func startClock(_ s: Int) {
+        guard serial == s, stage == .choosing, phase == .playing, patience > 0 else { return }
+        deadline = Date().addingTimeInterval(patience)
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
+            guard let self, self.serial == s, self.stage == .choosing, self.phase == .playing else { return }
+            self.resolve(nil)
         }
     }
 
@@ -445,7 +458,8 @@ private struct DDPlay: View {
 
     @ViewBuilder private var patienceBar: some View {
         TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
-            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
+            // Full while the sign is still being read; then it drains.
+            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? model.patience
             let f = model.patience > 0 ? CGFloat(left / model.patience) : 0
             HStack(spacing: 6) {
                 Text("🔔").font(.system(size: 14))
@@ -459,7 +473,7 @@ private struct DDPlay: View {
             }
         }
         .frame(height: 14)
-        .opacity(model.deadline != nil ? 1 : 0)
+        .opacity(model.patience > 0 && model.stage == .choosing ? 1 : 0)
     }
 
     private func stall(_ i: Int) -> some View {
@@ -476,7 +490,7 @@ private struct DDPlay: View {
                 .frame(height: 34)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 VStack(spacing: 6) {
-                    Text(o.pic).font(.system(size: o.pic.count > 2 ? 30 : 52)).lineLimit(1).minimumScaleFactor(0.5)
+                    picture(o.pic)
                     Text(o.title).font(luFont(o.title.count > 12 ? 18 : 26, .black)).foregroundStyle(Color(hex: Lu.inkDark))
                         .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
                     if !o.sub.isEmpty {
@@ -489,8 +503,10 @@ private struct DDPlay: View {
                         }
                     }
                 }
-                .padding(.vertical, 12).padding(.horizontal, 6)
-                .frame(maxWidth: .infinity, minHeight: 220)
+                .padding(.top, 22).padding(.bottom, 12).padding(.horizontal, 6)
+                // Stalls grow into a tall screen's spare height (no empty street gap above Asellus);
+                // goods hang from the top, so the two stalls' pictures and prices line up.
+                .frame(maxWidth: .infinity, minHeight: 220, maxHeight: 270, alignment: .top)
                 .background(Color(hex: 0xfdf3d7))
                 // Counter
                 Rectangle().fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x7a4b25)], startPoint: .top, endPoint: .bottom))
@@ -506,6 +522,21 @@ private struct DDPlay: View {
         .disabled(model.stage != .choosing)
         .id("\(model.serial)-\(i)")
         .transition(.scale(scale: 0.9).combined(with: .opacity))
+    }
+
+    /// The goods on a stall: one big picture, or a pack drawn as exactly that many (rows of 3),
+    /// so a child who counts them gets the number on the sign.
+    @ViewBuilder private func picture(_ pic: String) -> some View {
+        let items = pic.map(String.init)
+        if items.count <= 2 {
+            Text(pic).font(.system(size: items.count == 1 ? 60 : 44)).lineLimit(1).minimumScaleFactor(0.5)
+        } else {
+            VStack(spacing: 0) {
+                ForEach(Array(stride(from: 0, to: items.count, by: 3)), id: \.self) { r in
+                    Text(items[r..<min(items.count, r + 3)].joined()).font(.system(size: 30))
+                }
+            }
+        }
     }
 
     private func donkey(width w: CGFloat) -> some View {

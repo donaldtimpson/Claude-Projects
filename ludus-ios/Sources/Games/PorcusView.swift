@@ -4,15 +4,15 @@ import SwiftUI
 //
 // A ceramic piggy bank sits on a bedroom desk; a prize hangs on the shelf with its price tag.
 // Drag real US coins (and later dollar bills) from the tray into the slot on Porcus's back to
-// pay exactly the price. He gulps each coin, gets rounder, and his chalk tag counts along —
+// pay exactly the price. He gulps each coin, gets rounder, and the chalk tag on his side counts along —
 // until the tag goes blank and YOU must count (then you press PAY). Too much and he coughs the
 // coins back out, and a miss always shows a set of coins that works.
 //
 // Difficulty (continuous, `d`): content kinds fade in by `tier` — pennies (I) → + nickels →
 // + dimes → + quarters → fewest coins → dollar bills → "feed the rest" (saving toward a goal) →
-// interest (10%, then 5/20/25/50%). Price ranges grow with `d` inside each kind; the value
-// badges on the coins fade away (recognise them by size and colour), and so does the running
-// total on Porcus's tag.
+// interest (10%, then 5/20/25/50%). Price ranges grow with `d` inside each kind; the running
+// total on Porcus's tag fades away (d 3.3–5.3), and later the value badges on the coins
+// (d 5.5–7.5: recognise them by size and colour).
 
 struct PItem: Hashable { let emoji: String, name: String }
 
@@ -51,9 +51,10 @@ private func pPrice(_ lo: Int, _ hi: Int, needs coin: USMoney?) -> Int {
 @MainActor
 private func porcusTask(_ m: ArcadeModel) -> PorcusTask {
     let prize = pPrizes.randomElement()!
-    // Coin value badges fade out between d 2.5 and 5.5; the running total between 3 and 6.
-    let values = !m.chance(1, from: 2.5, to: 5.5)
-    let total = !m.chance(1, from: 3, to: 6)
+    // Staggered so no two arrive with a new coin: the running total fades between d 3.3 and 5.3
+    // (once dimes are known), the coins' value badges only after that, between 5.5 and 7.5.
+    let values = !m.chance(1, from: 5.5, to: 7.5)
+    let total = !m.chance(1, from: 3.3, to: 5.3)
     switch m.tier([1, 1.8, 2.8, 3.8, 5, 6, 7, 8.5], keep: 0.08) {
     case 0:
         let p = pPrice(2, m.rampInt(4, 9, to: 2.5), needs: nil)
@@ -80,7 +81,7 @@ private func porcusTask(_ m: ArcadeModel) -> PorcusTask {
     case 5:
         let p = 5 * Int.random(in: 21...m.rampInt(60, 99, from: 6, to: 8))
         return PorcusTask(kind: .dollars, prize: prize, price: p, target: p, tray: [.penny, .nickel, .dime, .quarter, .one],
-                          showTotal: total, showValues: values, line: "The \(prize.name) costs \(usMoney(p)).",
+                          showTotal: total, showValues: values, line: "The \(prize.name) costs \(usMoney(p)). Feed me exactly that!",
                           explain: pExplain(p, [.penny, .nickel, .dime, .quarter, .one]))
     case 6:
         let p = 5 * Int.random(in: 12...m.rampInt(30, 80, from: 7, to: 9))
@@ -102,7 +103,7 @@ private func porcusTask(_ m: ArcadeModel) -> PorcusTask {
         return PorcusTask(kind: .interest, prize: PItem(emoji: "💰", name: "interest"), price: held + i, saved: held, target: i,
                           tray: i >= 100 ? [.penny, .nickel, .dime, .quarter, .one] : USMoney.coins,
                           showTotal: false, showValues: values,
-                          line: "I pay \(r)% interest! I hold \(usMoney(held)). Feed me my interest!",
+                          line: "I hold \(usMoney(held)). It earns \(r)% interest. Feed me the interest!",
                           explain: "\(r)% of \(usMoney(held)) = \(usMoney(i))")
     }
 }
@@ -143,7 +144,7 @@ private final class PorcusModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil || ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         shelf = []
         newTask()
@@ -267,24 +268,13 @@ private struct PorcusRoom: View {
                         Rectangle().fill(Color.white.opacity(0.05)).frame(width: 22)
                     }
                 }
-                // Window with the night sky and moon
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x1d2a5c), Color(hex: 0x4a4f8f)],
-                                                                            startPoint: .top, endPoint: .bottom))
-                    Circle().fill(Color(hex: 0xfff4c9)).frame(width: 34).offset(x: 22, y: -26)
-                        .shadow(color: Color(hex: 0xfff4c9).opacity(0.8), radius: 10)
-                    ForEach(0..<6, id: \.self) { i in
-                        Circle().fill(Color.white.opacity(0.8)).frame(width: 2.5)
-                            .offset(x: CGFloat([-40, -20, 10, -46, 34, -8][i]), y: CGFloat([-40, 10, 30, 22, 26, -44][i]))
-                    }
-                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(width: 6)
-                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(height: 6)
-                    RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
+                // Sideways on a tablet the window hangs just right of the play column, below the
+                // HUD rails. Upright, it's part of the play area (the shelf row), so it can never
+                // slide under Porcus's speech bubble whatever the screen's height.
+                if w > h {
+                    PorcusWindow()
+                        .position(x: min(w - 66, w / 2 + ArcadeLayout.columnWidth / 2 + 90), y: h * 0.32)
                 }
-                .frame(width: 104, height: 108)
-                // Sideways on a tablet: just right of the play column and below the HUD rails.
-                .position(x: w > h ? min(w - 66, w / 2 + ArcadeLayout.columnWidth / 2 + 90) : w - 66,
-                          y: h * (w > h ? 0.32 : 0.205))
                 // Desk
                 VStack(spacing: 0) {
                     Rectangle().fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x8d5a2e)], startPoint: .top, endPoint: .bottom))
@@ -295,6 +285,26 @@ private struct PorcusRoom: View {
                 .offset(y: h * 0.62)
             }
         }
+    }
+}
+
+/// The bedroom window with the night sky and the moon.
+private struct PorcusWindow: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x1d2a5c), Color(hex: 0x4a4f8f)],
+                                                                    startPoint: .top, endPoint: .bottom))
+            Circle().fill(Color(hex: 0xfff4c9)).frame(width: 34).offset(x: 22, y: -26)
+                .shadow(color: Color(hex: 0xfff4c9).opacity(0.8), radius: 10)
+            ForEach(0..<6, id: \.self) { i in
+                Circle().fill(Color.white.opacity(0.8)).frame(width: 2.5)
+                    .offset(x: CGFloat([-40, -20, 10, -46, 34, -8][i]), y: CGFloat([-40, 10, 30, 22, 26, -44][i]))
+            }
+            Rectangle().fill(Color(hex: 0xe9d7b8)).frame(width: 6)
+            Rectangle().fill(Color(hex: 0xe9d7b8)).frame(height: 6)
+            RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
+        }
+        .frame(width: 104, height: 108)
     }
 }
 
@@ -455,6 +465,7 @@ private struct PorcusPlay: View {
     @ObservedObject var model: PorcusModel
     @State private var frames: [String: CGRect] = [:]
     @State private var hover = false
+    @Environment(\.ludusHUDOnTop) private var hudOnTop     // false in the sideways-tablet column
     @State private var plunk = false
 
     private var t: PorcusTask { model.task }
@@ -464,9 +475,7 @@ private struct PorcusPlay: View {
             HUDSpace(54)
             shelf
             bubble.padding(.top, 26)
-            Spacer(minLength: 0)
             pig
-            Spacer(minLength: 0)
             bottom
         }
         .padding(.horizontal, 12).padding(.bottom, 6)
@@ -512,6 +521,10 @@ private struct PorcusPlay: View {
             }
         }
         .padding(.top, 6)
+        // Upright, the window sits in the gap the shelf leaves for it (sideways, the room draws it).
+        .overlay(alignment: .topTrailing) {
+            if hudOnTop { PorcusWindow().padding(.top, 4) }
+        }
         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: model.shelf.count)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: model.serial)
     }
@@ -535,29 +548,41 @@ private struct PorcusPlay: View {
         .animation(.easeOut(duration: 0.2), value: model.reveal)
     }
 
+    // Porcus grows into whatever room the screen has (a tall phone has a lot of empty desk
+    // otherwise), and sits at the bottom of it, just above the coins.
     private var pig: some View {
+        GeometryReader { g in
+            // Never wider than the screen (he's ≈ 290 pt wide at k = 1).
+            let k = max(1, min(g.size.height / 250, (g.size.width - 12) / 290, 1.45))
+            pig(k)
+                .frame(width: g.size.width, height: 250 * k)
+                .marketFrame("pig", in: "porcus")      // the whole pig zone takes a dropped coin
+                .frame(width: g.size.width, height: g.size.height, alignment: .bottom)
+        }
+        .frame(minHeight: 250, maxHeight: .infinity)
+    }
+
+    private func pig(_ k: CGFloat) -> some View {
         let fat = CGFloat(min(1, Double(model.sum + model.task.saved) / Double(max(1, model.task.price))))
         return ZStack {
             PorcusPig(mood: model.mood, fat: fat)
-                .scaleEffect(hover ? 1.24 : 1.16)
+                .scaleEffect((hover ? 1.24 : 1.16) * k)
                 .scaleEffect(x: plunk ? 1.05 : 1, y: plunk ? 0.95 : 1, anchor: .bottom)
                 .modifier(MarketShake(shakes: CGFloat(model.lastMiss)))
                 .animation(.spring(response: 0.2, dampingFraction: 0.5), value: plunk)
                 .animation(.spring(response: 0.25, dampingFraction: 0.6), value: hover)
                 .animation(.linear(duration: 0.5), value: model.lastMiss)
                 .onTapGesture { model.shakeOut() }
-                .marketFrame("pig", in: "porcus")
             // Coins coughed back out
             if model.mood == .cough {
                 MarketSparks(trigger: model.lastMiss, glyphs: ["🪙"], radius: 120)
             }
             MarketSparks(trigger: model.sparks, glyphs: ["💕", "✨", "🪙"], radius: 110)
-            tag.offset(x: 24, y: 78)
+            tag.offset(x: 28 * k, y: 40 * k)
         }
-        .frame(height: 250)
     }
 
-    /// The chalk tag around his neck: the running total, or "?" once you must count yourself.
+    /// The chalk tag on his side: the running total, or "?" once you must count yourself.
     private var tag: some View {
         let text: String = {
             if t.kind == .goal || t.kind == .interest {
@@ -580,23 +605,35 @@ private struct PorcusPlay: View {
                 VStack(spacing: 4) {
                     Text(t.kind == .fewest ? "FEWEST COINS" : "THIS WORKS").font(luFont(12, .heavy)).tracking(2)
                         .foregroundStyle(Color(hex: Lu.ink).opacity(0.8))
-                    HStack(spacing: 4) {
-                        ForEach(Array(usFewest(t.target, from: t.tray).enumerated()), id: \.offset) { _, k in
-                            USMoneyView(kind: k, size: 40, showValue: true)
+                    // One piece per kind with its count ("× 3"), so even $5 in bills fits the width.
+                    let f = usFewest(t.target, from: t.tray)
+                    HStack(spacing: 10) {
+                        ForEach(t.tray.sorted(by: >).filter { f.contains($0) }, id: \.self) { k in
+                            let n = f.filter { $0 == k }.count
+                            HStack(spacing: 3) {
+                                USMoneyView(kind: k, size: k.isBill ? 34 : 40, showValue: true)
+                                if n > 1 { Text("× \(n)").font(luFont(18, .heavy)).foregroundStyle(Color(hex: Lu.inkDark)) }
+                            }
                         }
                     }
                     .padding(8)
                     .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.mint).opacity(0.85)))
                 }
                 .transition(.scale(scale: 0.8).combined(with: .opacity))
+                .frame(height: 78)
             } else {
-                // What's already gone in, small (so you can recount).
+                // What's already gone in, small (so you can recount); a long run shows its last
+                // dozen and how many more. Same height as the answer above, so Porcus doesn't
+                // jump in size when it appears.
                 HStack(spacing: 2) {
-                    ForEach(Array(model.fed.enumerated()), id: \.offset) { _, k in
-                        USMoneyView(kind: k, size: model.fed.count > 9 ? 22 : 30, showValue: t.showValues)
+                    if model.fed.count > 12 {
+                        Text("+\(model.fed.count - 12)").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.ink))
+                    }
+                    ForEach(Array(model.fed.suffix(12).enumerated()), id: \.offset) { _, k in
+                        USMoneyView(kind: k, size: k.isBill ? 20 : (model.fed.count > 9 ? 24 : 30), showValue: t.showValues)
                     }
                 }
-                .frame(height: 34)
+                .frame(height: 78)
             }
             tray
             if model.needsPay {
