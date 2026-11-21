@@ -14,7 +14,7 @@ import SwiftUI
 // heat leaks away toward room temperature when the fire is low.
 //
 // Misses: water boiled clean away when you wanted liquid, water frozen when you wanted liquid, or
-// (from d≈2.5, generous at first) the fire's fuel running out. A miss shows the answer: the right
+// (from d≈3, generous at first) the fire's fuel running out. A miss shows the answer: the right
 // band of the thermometer lights up, the pot is brought to the right state, and the fact is said.
 //
 // Continuous difficulty (all off `d`):
@@ -24,13 +24,29 @@ import SwiftUI
 //     stopping in time takes planning;
 //   • the hold-ring time grows 0.8 s → 2.6 s;
 //   • the target band on the thermometer fades out from d≈4 to d≈7 (watch the pot, know the facts);
-//   • fuel for the fire: none below d≈2.5, then 40 s easing to 13 s.
+//   • fuel for the fire: none below d≈3 (after the boil / freeze / condense orders and the snow
+//     bucket have settled in, so the clock never lands with them), then 45 s easing to 13 s. The
+//     log counter waits until the order card has landed and been read (or the first press).
 
 // MARK: Materials
 
 private enum FState: Int { case solid, liquid, gas
     var word: String { ["SOLID", "LIQUID", "GAS"][rawValue] }
-    var icon: String { ["🧊", "💧", "♨️"][rawValue] }
+    /// The order card's picture of this state for `mat` — an ice cube means ice, not solid gold.
+    func icon(_ mat: FMat) -> String {
+        switch self {
+        case .gas: return "♨️"
+        case .liquid: return mat.key == "water" ? "💧" : (mat.key == "chocolate" ? "🫗" : "🔥")
+        case .solid:
+            switch mat.key {
+            case "water": return "🧊"
+            case "chocolate": return "🍫"
+            case "wax": return "🕯️"
+            case "rock": return "🪨"
+            default: return "🧱"
+            }
+        }
+    }
 }
 
 private struct FMat {
@@ -193,6 +209,7 @@ private final class ForgeModel: ArcadeModel {
     private var lastState: FState?
     private var dwell: Double = 1
     private var lag: Double = 0.15
+    private var fuelWait: Double = 0          // reading time before the fuel starts to burn
 
     init() { super.init(key: GameID.forge.rawValue) }
 
@@ -230,7 +247,8 @@ private final class ForgeModel: ArcadeModel {
         lastState = o.start
         dwell = ramp(0.8, 2.6, to: 9)
         lag = ramp(0.15, 0.9, to: 9)
-        fuel = d < 2.5 ? nil : ramp(40, 13, from: 2.5, to: 9.5)
+        fuel = d < 3 ? nil : ramp(45, 13, from: 3, to: 9.5)
+        fuelWait = 1.6
         botGoal = nil
     }
 
@@ -259,7 +277,8 @@ private final class ForgeModel: ArcadeModel {
         var dh = span * 0.2 * flame - span * 0.28 * cooling
         dh -= (t - room) / span * span * 0.1          // heat leaks toward room temperature
         heat = max(physics.hMin, min(physics.hMax, heat + dh * dt))
-        if let f = fuel {
+        if fuelWait > 0 { fuelWait -= dt }
+        else if let f = fuel {
             fuel = max(0, f - dt)
             if fuel == 0 { fail("The fire went out!"); return }
         }
@@ -315,6 +334,7 @@ private final class ForgeModel: ArcadeModel {
 
     func press(_ which: String, _ down: Bool) {
         guard phase == .playing, stage == .working else { bellows = false; snow = false; return }
+        if down { fuelWait = 0 }
         if which == "fire" {
             if down && !bellows { Sfx.play(.whoosh, volume: 0.5) }
             bellows = down
@@ -385,7 +405,7 @@ private struct ForgePlay: View {
     private var orderCard: some View {
         let o = model.order
         return HStack(spacing: 12) {
-            Text(o.target.icon).font(.system(size: 40))
+            Text(o.target.icon(o.mat)).font(.system(size: 40))
                 .frame(width: 58, height: 58)
                 .background(Circle().fill(Color(hex: 0x2a1410)))
                 .overlay(Circle().trim(from: 0, to: model.hold)
@@ -547,7 +567,7 @@ private struct ForgeThermometer: View {
         let step = m.span > 1000 ? 500.0 : (m.span > 300 ? 100.0 : (m.span > 100 ? 50 : 20))
         var x = (m.lo / step).rounded(.up) * step
         while x <= m.hi {
-            if v.allSatisfy({ abs($0 - x) > m.span * 0.07 }) { v.append(x) }
+            if v.allSatisfy({ abs($0 - x) > m.span * 0.11 }) { v.append(x) }
             x += step
         }
         return v
@@ -614,8 +634,8 @@ private struct Crucible: View {
                         .position(x: W / 2, y: rimY / 2)
                     }
                     // the pot's front
-                    PotShape().fill(LinearGradient(colors: [Color(hex: 0xb8643a), Color(hex: 0x7a3a1c), Color(hex: 0x4e220e)], startPoint: .top, endPoint: .bottom))
-                        .overlay(PotShape().stroke(Color(hex: 0x3a1808), lineWidth: 2))
+                    PotShape(rim: 27).fill(LinearGradient(colors: [Color(hex: 0xb8643a), Color(hex: 0x7a3a1c), Color(hex: 0x4e220e)], startPoint: .top, endPoint: .bottom))
+                        .overlay(PotShape(rim: 27).stroke(Color(hex: 0x3a1808), lineWidth: 2))
                         .overlay(Rectangle().fill(Color(hex: 0xe0a83e).opacity(0.75)).frame(width: potW * 0.86, height: 5).offset(y: -potH * 0.22))
                         .overlay(Rectangle().fill(Color(hex: 0xe0a83e).opacity(0.5)).frame(width: potW * 0.8, height: 2).offset(y: -potH * 0.12))
                         .frame(width: potW, height: potH)
@@ -747,12 +767,14 @@ private struct RockCracks: Shape {
     }
 }
 
-/// A round-bellied clay crucible (open at the top).
+/// A round-bellied clay crucible (open at the top). Its top edge is the NEAR half of the rim
+/// ellipse (`rim` = the ellipse's half-height), so the mouth and whatever is in it show whole.
 private struct PotShape: Shape {
+    var rim: CGFloat = 0
     func path(in r: CGRect) -> Path {
         Path { p in
             p.move(to: CGPoint(x: r.minX, y: r.minY))
-            p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
+            p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY), control: CGPoint(x: r.midX, y: r.minY + rim * 2))
             p.addCurve(to: CGPoint(x: r.midX + r.width * 0.25, y: r.maxY),
                        control1: CGPoint(x: r.maxX + r.width * 0.02, y: r.minY + r.height * 0.6),
                        control2: CGPoint(x: r.maxX - r.width * 0.1, y: r.maxY))

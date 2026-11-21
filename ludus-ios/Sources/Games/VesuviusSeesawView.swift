@@ -13,11 +13,13 @@ import SwiftUI
 //   • pegs per side 3 → 6;  heaviest weight 1 block → 5 blocks (at d≈1 every weight is one block,
 //     so the answer is the MIRROR peg — pure "same on both sides").
 //   • while a weight hovers over a peg the beam LEANS the way it would go — a full-strength hint at
-//     d≈1 that fades to nothing by d≈4 (the 12-year-old has to work it out).
+//     d≈1 that holds until d≈3 and fades to nothing by d≈5 (the 12-year-old has to work it out).
 //   • content kinds fade in by `tier`: one weight on the far side → two weights on one side →
 //     weights on BOTH sides (the answer may then be on the left).
-//   • the bench offers 1 weight at first, then 2, 3, 4 to choose from (only one can balance).
-//   • peg numbers fade in from d≈2.5 (counting pegs works before then).
+//   • the bench offers 1 weight at first, then 2 (from d≈2.4), 3, 4 to choose from (only one can balance).
+//   • peg numbers fade in from d≈1.8, BEFORE heavier weights need them (counting pegs works before).
+//   Staggered so the 2-block weights (d≈2), numbers, a second bench weight and the fading lean hint
+//   never all arrive at once.
 // No clock at any level.
 
 // MARK: Rounds
@@ -163,9 +165,9 @@ private final class SeesawModel: ArcadeModel {
 
     override func perLevel(_ level: Int) -> Int { 5 }
 
-    /// How strongly the beam leans while a weight hovers (1 at the start → 0 by d≈4).
-    var hint: Double { ramp(1, 0, from: 2, to: 4) }
-    var showNumbers: Double { ramp(0, 1, from: 2.2, to: 3.2) }
+    /// How strongly the beam leans while a weight hovers (full until d≈3 → 0 by d≈5).
+    var hint: Double { ramp(1, 0, from: 3, to: 5) }
+    var showNumbers: Double { ramp(0, 1, from: 1.8, to: 2.6) }
 
     override func onBegin() {
         clock.reset()
@@ -177,7 +179,7 @@ private final class SeesawModel: ArcadeModel {
         let n = rampInt(3, 6, to: 7)
         let maxW = rampInt(1, 5, from: 1.3, to: 6.5)
         let kind = maxW == 1 ? 0 : tier([1, 3.5, 6])
-        let bench = rampInt(1, 4, from: 1.8, to: 8)
+        let bench = rampInt(1, 4, from: 2.4, to: 8)
         round = ssRound(pegs: n, maxW: maxW, kind: kind, benchCount: bench, base: roundID * 100)
         placed = nil; hover = nil; stage = .waiting
         selected = round.bench.count == 1 ? round.bench[0].id : nil
@@ -293,11 +295,12 @@ private struct SeesawPlay: View {
                     Text(prompt).font(luSerif(22, .black)).foregroundStyle(Color(hex: 0x3b2410))
                         .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.7)
                 }
+                // Swap the words at once: a cross-fade printed two prompts on top of each other.
+                .transaction { $0.animation = nil }
                 .padding(.horizontal, 18).padding(.vertical, 8)
                 .background(Capsule().fill(Color(hex: 0xf7ecd0).opacity(0.92))
                     .overlay(Capsule().stroke(Color(hex: 0xb08a4a), lineWidth: 2)))
                 .position(x: W / 2, y: 92)
-                .animation(.easeInOut(duration: 0.2), value: model.stage)
 
                 // Pivot (stone wedge) — drawn under the beam.
                 PivotStone().fill(LinearGradient(colors: [Color(hex: 0xb9b2a4), Color(hex: 0x7d766a)], startPoint: .top, endPoint: .bottom))
@@ -344,7 +347,9 @@ private struct SeesawPlay: View {
 
     private var prompt: String {
         switch model.stage {
-        case .waiting: return model.d < 2.5 ? "Make it balance!" : "Which weight, which peg?"
+        case .waiting:
+            if model.d < 2.5 { return "Make it balance!" }
+            return model.round.bench.count > 1 ? "Which weight, which peg?" : "Which peg balances it?"
         case .balanced: return ["Balanced! ⚖️", "Perfect balance!", "Aequilibrium!"][model.roundID % 3]
         case .slam: return "Bump! It tipped over"
         case .fix: return explain
