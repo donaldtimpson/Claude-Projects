@@ -180,35 +180,72 @@ private struct LibCrosslets: Shape {
     }
 }
 
-/// Painted garlands of laurel swagged along the top of the wall, tied with red ribbons.
+/// Painted laurel festoons swagged along the top of the wall, each hung from a gilded boss and
+/// tied with long cream ribbons that flutter down, as on Pompeian walls.
 private struct LibGarlands: View {
     let w: CGFloat, h: CGFloat
     var body: some View {
         let span = w * 0.26, y = h * 0.075
+        let leafDk = Color(hex: 0x56633a), leafLt = Color(hex: 0x8c9a5c)
+        let ribbon = Color(hex: 0xf3e6c4), ribbonDk = Color(hex: 0xc9a75e)
         ZStack(alignment: .topLeading) {
             ForEach(-6..<10, id: \.self) { i in
                 let x0 = w * 0.07 + CGFloat(i) * span - w * 0.01
-                LibSwag().stroke(Fr.leafDark, style: StrokeStyle(lineWidth: h * 0.022, lineCap: .round))
+                LibLaurel(side: 1).fill(leafDk)
                     .frame(width: span, height: h * 0.05).position(x: x0 + span / 2, y: y + h * 0.025)
-                LibSwag().stroke(Fr.leaf, style: StrokeStyle(lineWidth: h * 0.011, lineCap: .round, dash: [h * 0.012, h * 0.008]))
-                    .frame(width: span, height: h * 0.05).position(x: x0 + span / 2, y: y + h * 0.023)
-                // ribbon ends where two swags meet
+                LibLaurel(side: -1).fill(leafLt)
+                    .frame(width: span, height: h * 0.05).position(x: x0 + span / 2, y: y + h * 0.025)
+                // fluttering ribbon ends under the boss
                 ForEach([-1.0, 1.0], id: \.self) { s in
-                    Capsule().fill(Color(hex: 0xb8322a)).frame(width: h * 0.008, height: h * 0.04)
-                        .rotationEffect(.degrees(s * 14)).position(x: x0 + CGFloat(s) * h * 0.006, y: y + h * 0.022)
+                    LibRibbon(dir: CGFloat(s)).fill(ribbon)
+                        .overlay(LibRibbon(dir: CGFloat(s)).stroke(ribbonDk, lineWidth: 0.6))
+                        .frame(width: h * 0.03, height: h * 0.06).position(x: x0 + CGFloat(s) * h * 0.013, y: y + h * 0.034)
                 }
-                Circle().fill(Color(hex: 0xb8322a)).frame(width: h * 0.014).position(x: x0, y: y)
+                Circle().fill(LinearGradient(colors: [Color(hex: 0xf1cf74), Color(hex: 0xb58a37)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: h * 0.016).position(x: x0, y: y)
             }
         }
         .allowsHitTesting(false)
     }
 }
 
-private struct LibSwag: Shape {
+/// One festoon: pairs of laurel leaves set along a hanging curve (`side` picks the outer or inner row).
+private struct LibLaurel: Shape {
+    let side: CGFloat
     func path(in r: CGRect) -> Path {
         var p = Path()
-        p.move(to: CGPoint(x: r.minX, y: r.minY))
-        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY), control: CGPoint(x: r.midX, y: r.maxY * 1.6 - r.minY * 0.6))
+        let a = CGPoint(x: r.minX, y: r.minY), b = CGPoint(x: r.maxX, y: r.minY)
+        let c = CGPoint(x: r.midX, y: r.minY + r.height * 1.6)
+        let n = 18
+        let L = r.height * 0.42, W = r.height * 0.17
+        for i in 0...n {
+            let t = CGFloat(i) / CGFloat(n), u = 1 - t
+            let pt = CGPoint(x: u * u * a.x + 2 * u * t * c.x + t * t * b.x, y: u * u * a.y + 2 * u * t * c.y + t * t * b.y)
+            let tx = 2 * u * (c.x - a.x) + 2 * t * (b.x - c.x), ty = 2 * u * (c.y - a.y) + 2 * t * (b.y - c.y)
+            // leaves point toward the middle of the swag, splayed to either side
+            let dirAng = atan2(ty, tx) + (t < 0.5 ? 0 : .pi)
+            let k = 1 - 0.35 * abs(t - 0.5) * 2          // fuller in the middle
+            let ang = dirAng + side * 0.6 * (t < 0.5 ? 1 : -1)
+            var leaf = Path(ellipseIn: CGRect(x: 0, y: -W * k / 2, width: L * k, height: W * k))
+            leaf = leaf.applying(CGAffineTransform(rotationAngle: ang))
+            p.addPath(leaf.applying(CGAffineTransform(translationX: pt.x, y: pt.y)))
+        }
+        return p
+    }
+}
+
+/// A short ribbon end, waving as it hangs.
+private struct LibRibbon: Shape {
+    let dir: CGFloat
+    func path(in r: CGRect) -> Path {
+        func q(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: r.midX + dir * (x - 0.5) * r.width, y: r.minY + y * r.height) }
+        var p = Path()
+        p.move(to: q(0.35, 0))
+        p.addCurve(to: q(0.75, 1.0), control1: q(0.9, 0.3), control2: q(0.2, 0.65))
+        p.addLine(to: q(0.95, 0.9))
+        p.addLine(to: q(1.0, 1.0))
+        p.addCurve(to: q(0.65, 0), control1: q(0.5, 0.65), control2: q(1.15, 0.3))
+        p.closeSubpath()
         return p
     }
 }
@@ -398,15 +435,17 @@ private struct LibHomer: View {
                         .lib(0.5 + CGFloat(cos(a)) * 0.135, 0.245 + CGFloat(sin(a)) * 0.105, 0.075, 0.065, w, h)
                 }
                 Capsule().fill(Fr.marbleShade).overlay(Capsule().stroke(line, lineWidth: 0.6)).lib(0.5, 0.185, 0.29, 0.022, w, h)
-                // features: blind, closed eyes, brows, nose and moustache
+                // features: calm, relaxed brows over closed (blind) eyes, a straight nose, a soft
+                // moustache parting over a faint, peaceful smile
                 Path { p in
                     for s in [-1.0, 1.0] {
                         let s = CGFloat(s)
-                        p.move(to: CGPoint(x: w * (0.5 + s * 0.035), y: h * 0.235)); p.addQuadCurve(to: CGPoint(x: w * (0.5 + s * 0.11), y: h * 0.235), control: CGPoint(x: w * (0.5 + s * 0.07), y: h * 0.25))
-                        p.move(to: CGPoint(x: w * (0.5 + s * 0.04), y: h * 0.222)); p.addQuadCurve(to: CGPoint(x: w * (0.5 + s * 0.12), y: h * 0.226), control: CGPoint(x: w * (0.5 + s * 0.08), y: h * 0.205))
+                        p.move(to: CGPoint(x: w * (0.5 + s * 0.03), y: h * 0.214)); p.addQuadCurve(to: CGPoint(x: w * (0.5 + s * 0.115), y: h * 0.216), control: CGPoint(x: w * (0.5 + s * 0.072), y: h * 0.201))
+                        p.move(to: CGPoint(x: w * (0.5 + s * 0.042), y: h * 0.241)); p.addQuadCurve(to: CGPoint(x: w * (0.5 + s * 0.104), y: h * 0.241), control: CGPoint(x: w * (0.5 + s * 0.073), y: h * 0.253))
+                        p.move(to: CGPoint(x: w * 0.5, y: h * 0.303)); p.addQuadCurve(to: CGPoint(x: w * (0.5 + s * 0.085), y: h * 0.316), control: CGPoint(x: w * (0.5 + s * 0.05), y: h * 0.318))
                     }
-                    p.move(to: CGPoint(x: w * 0.5, y: h * 0.235)); p.addLine(to: CGPoint(x: w * 0.485, y: h * 0.29)); p.addLine(to: CGPoint(x: w * 0.52, y: h * 0.29))
-                    p.move(to: CGPoint(x: w * 0.42, y: h * 0.32)); p.addQuadCurve(to: CGPoint(x: w * 0.58, y: h * 0.32), control: CGPoint(x: w * 0.5, y: h * 0.295))
+                    p.move(to: CGPoint(x: w * 0.5, y: h * 0.23)); p.addLine(to: CGPoint(x: w * 0.49, y: h * 0.283)); p.addQuadCurve(to: CGPoint(x: w * 0.515, y: h * 0.287), control: CGPoint(x: w * 0.5, y: h * 0.292))
+                    p.move(to: CGPoint(x: w * 0.474, y: h * 0.33)); p.addQuadCurve(to: CGPoint(x: w * 0.526, y: h * 0.33), control: CGPoint(x: w * 0.5, y: h * 0.341))
                 }
                 .stroke(line.opacity(0.85), style: StrokeStyle(lineWidth: max(0.6, w * 0.011), lineCap: .round))
             }

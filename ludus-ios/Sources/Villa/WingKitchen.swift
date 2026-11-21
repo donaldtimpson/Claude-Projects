@@ -525,8 +525,69 @@ private struct HoneyPots: View {
             Rectangle().fill(Fr.frame).at(0.75, 0.67, 0.18, 0.022, s)
             // a bee who found it
             let a = t * 1.8
-            Text("🐝").font(.system(size: s.width * 0.14))
+            KBee(t: t, facing: sin(a) > 0 ? -1 : 1).frame(width: s.width * 0.12, height: s.width * 0.09)
                 .position(x: s.width * (0.6 + 0.22 * CGFloat(cos(a))), y: s.height * (0.1 + 0.06 * CGFloat(sin(a * 2))))
+        }
+    }
+}
+
+/// A little honeybee: striped ochre body, a dark head and two fluttering wings.
+private struct KBee: View {
+    let t: Double
+    let facing: CGFloat
+    var body: some View {
+        let flap = 0.55 + 0.45 * abs(sin(t * 38))
+        Art { s in
+            ForEach([0.0, 1.0], id: \.self) { k in
+                Ellipse().fill(Color.white.opacity(0.75)).overlay(Ellipse().stroke(Color(hex: 0x8a7a66).opacity(0.6), lineWidth: 0.4))
+                    .frame(width: s.width * 0.36, height: s.height * 0.42 * flap)
+                    .rotationEffect(.degrees(k == 0 ? -25 : 15))
+                    .position(x: s.width * (0.42 + 0.14 * k), y: s.height * 0.3)
+            }
+            Ellipse().fill(LinearGradient(colors: [Color(hex: 0xf2c24a), Color(hex: 0xc98a1c)], startPoint: .top, endPoint: .bottom))
+                .at(0.22, 0.4, 0.6, 0.48, s)
+            ForEach([0.4, 0.56] as [CGFloat], id: \.self) { x in
+                Capsule().fill(Color(hex: 0x3a2814)).at(x, 0.42, 0.07, 0.44, s)
+            }
+            Circle().fill(Color(hex: 0x3a2814)).at(0.06, 0.44, 0.24, 0.32, s)
+            Pth.poly([(0.8, 0.6), (0.98, 0.66), (0.8, 0.72)]).fill(Color(hex: 0x3a2814)).at(0, 0, 1, 1, s)
+        }
+        .scaleEffect(x: facing, y: 1)
+    }
+}
+
+/// An apple: a dimpled round fruit with a stem and one leaf.
+private struct KApple: View {
+    let hi: Color, lo: Color
+    var body: some View {
+        Art { s in
+            Pth { p, u in
+                p.move(to: u(0.5, 0.22))
+                p.addCurve(to: u(0.5, 0.98), control1: u(1.06, -0.02), control2: u(1.02, 0.98))
+                p.addCurve(to: u(0.5, 0.22), control1: u(-0.02, 0.98), control2: u(-0.06, -0.02))
+                p.closeSubpath()
+            }
+            .fill(RadialGradient(colors: [hi, lo], center: UnitPoint(x: 0.35, y: 0.4), startRadius: 0, endRadius: s.width * 0.6))
+            .at(0, 0, 1, 1, s)
+            Ellipse().fill(Color.white.opacity(0.35)).at(0.22, 0.34, 0.14, 0.18, s)
+            Pth { p, u in p.move(to: u(0.5, 0.28)); p.addQuadCurve(to: u(0.58, 0.02), control: u(0.5, 0.1)) }
+                .stroke(Color(hex: 0x5a3a1c), style: StrokeStyle(lineWidth: max(0.8, s.width * 0.08), lineCap: .round)).at(0, 0, 1, 1, s)
+            Ellipse().fill(Fr.leaf).frame(width: s.width * 0.34, height: s.height * 0.15)
+                .rotationEffect(.degrees(-20)).position(x: s.width * 0.74, y: s.height * 0.1)
+        }
+    }
+}
+
+/// A pomegranate: a deep red globe topped with its little spiky crown.
+private struct KPomegranate: View {
+    var body: some View {
+        Art { s in
+            Pth.poly([(0.36, 0.26), (0.32, 0.02), (0.43, 0.12), (0.5, -0.02), (0.57, 0.12), (0.68, 0.02), (0.64, 0.26)])
+                .fill(Color(hex: 0x8e2230)).at(0, 0, 1, 1, s)
+            Ellipse().fill(RadialGradient(colors: [Color(hex: 0xd2485a), Color(hex: 0x7c1828)], center: UnitPoint(x: 0.36, y: 0.38), startRadius: 0, endRadius: s.width * 0.6))
+                .at(0.02, 0.18, 0.96, 0.82, s)
+            Pth.poly([(0.38, 0.24), (0.42, 0.12), (0.5, 0.2), (0.58, 0.12), (0.62, 0.24)]).fill(Color(hex: 0xa52a3a)).at(0, 0, 1, 1, s)
+            Ellipse().fill(Color.white.opacity(0.3)).at(0.2, 0.34, 0.16, 0.16, s)
         }
     }
 }
@@ -722,12 +783,14 @@ private struct MarketTable: View {
             }
             Pth { p, u in p.move(to: u(0.33, 0.35)); p.addLine(to: u(0.57, 0.35)); p.addQuadCurve(to: u(0.45, 0.44), control: u(0.56, 0.44)); p.addQuadCurve(to: u(0.33, 0.35), control: u(0.34, 0.44)) }
                 .fill(vg(K.clayHi, K.clayDeep)).at(0, 0, 1, 1, s)
-            // apples and pears in a pyramid
-            ForEach(0..<6, id: \.self) { i in
-                let P: [(CGFloat, CGFloat)] = [(0.6, 0.38), (0.66, 0.38), (0.72, 0.38), (0.63, 0.33), (0.69, 0.33), (0.66, 0.28)]
-                let c = [Color(hex: 0xc93a2c), Color(hex: 0x9cbf4a), Color(hex: 0xc93a2c), Color(hex: 0xe0b23a), Color(hex: 0xc93a2c), Color(hex: 0x9cbf4a)][i]
-                Circle().fill(RadialGradient(colors: [c.opacity(0.8), c], center: UnitPoint(x: 0.35, y: 0.3), startRadius: 0, endRadius: s.width * 0.03)).at(P[i].0, P[i].1, 0.065, 0.065, s)
+            // apples piled in a pyramid, a pomegranate (crowned) on top
+            ForEach(0..<4, id: \.self) { i in
+                let P: [(CGFloat, CGFloat)] = [(0.592, 0.372), (0.658, 0.372), (0.724, 0.372), (0.69, 0.312)]
+                let c: [(Color, Color)] = [(Color(hex: 0xd8473a), Color(hex: 0x9c2a22)), (Color(hex: 0xb9cf5a), Color(hex: 0x7a9a36)),
+                                           (Color(hex: 0xd8473a), Color(hex: 0x9c2a22)), (Color(hex: 0xe8b84a), Color(hex: 0xc0582c))]
+                KApple(hi: c[i].0, lo: c[i].1).at(P[i].0, P[i].1, 0.072, 0.072, s)
             }
+            KPomegranate().at(0.618, 0.296, 0.078, 0.086, s)
             // grapes with a leaf
             Pth.poly([(0.78, 0.3), (0.94, 0.27), (0.9, 0.36)]).fill(Fr.leaf).at(0, 0, 1, 1, s)
             ForEach(0..<9, id: \.self) { i in
