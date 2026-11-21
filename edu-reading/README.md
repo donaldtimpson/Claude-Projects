@@ -36,27 +36,38 @@ never told they were wrong on a signal we don't trust, which is what makes an
 unreliable technology safe here. Recognition is forced on-device, so speech never
 leaves the phone.
 
-## The six decks
+## The decks
 
-Five of them form a ladder; the sixth runs alongside it.
+A ladder from hearing to reading to writing, with the vocabulary decks alongside it.
 
 | | Deck | What it does |
 |---|---|---|
-| 1 | **Letter Sounds** | 26 letters in teaching order, no pictures |
-| 2 | **Blending** | Two variants — see below |
-| 3 | **Words** | 57 words across CVC → digraphs → blends → silent e |
-| 4 | **Sentences** | 20 fully decodable sentences |
-| 5 | **Sight Words** | The rule-breakers, as *heart words* |
-| — | **Look and Say** | 211 words, 446 pictures, available any time |
+| ear | **Sound Hunt · First Sound** | Listening only, no print: hear /d/ /o/ /g/ and tap the dog; which picture starts with /m/? |
+| ear | **Rhyme Time** | Pictures and sound only — each choice is named as it lights up |
+| 1 | **Letters** | 26 letters; a tap plays the letter's *sound* from a recorded clip |
+| 2 | **Blending** | Consonant, vowel, then the two pushed together, each dot lit as it sounds |
+| 3 | **Word Blending** | Onset + rime families (at → cat, hat) |
+| 4 | **Words** | 186 words, CVC → digraphs → blends → silent e → vowel teams → r-controlled → diphthongs → endings; a tap sounds the word out grapheme by grapheme |
+| 5 | **By Heart** | 47 heart words, introduced just in time for the sentences that need them |
+| 6 | **Sentences** | 101 decodable sentences across all eight levels |
+| 7 | **Little Books** | Eight six-page decodable stories, one per level, ending in a picture question |
+| write | **Draw · Trace · Build a Word** | Pre-writing strokes → letter formation → spelling by sound |
+| — | **Look and Say** | 290 words in 19 decks + Mix, available any time |
 
-**Look and Say (deck 1) is the gentlest thing in the app** and the entry point for
-a child far too young for the rest of it: big picture, tap to hear it, tap again to
-cycle its three images, swipe on. It is not step one of reading and never gates the
-ladder. The word under the picture is for the
-adult, so they know which word the image is meant to prompt; the child is building
-spoken vocabulary. Reading mode hides the picture, so the same deck becomes a
-victory lap a year later. Three images per word, never one — a child shown a single
-dog learns that picture, not the category.
+**Look and Say is the gentlest thing in the app** and the entry point for a child
+far too young for the rest of it: big picture, tap to hear it, swipe on. It is not
+step one of reading and never gates the ladder. The word under the picture is for
+the adult, so they know which word the image is meant to prompt; the child is
+building spoken vocabulary. **Mix** deals twenty cards across every deck, the
+words seen longest ago first, cycling each word's pictures across sessions — an
+"all" deck that can actually be finished.
+
+**The only rule for a picture is that it shows the word unambiguously.** The count
+per word is free: a word with one clear picture beats a word with three where two
+are guesses. "Could a child, seeing only this picture, name it something else?" If
+yes, it goes — along with text or logos in the frame, a second dominant object,
+trademarked characters, and identifiable children. Cuts are logged with reasons in
+`tools/photos/rejected.json`.
 
 Each photograph is **its own card**, dealt in rounds so every word appears once
 before any word appears twice — meeting an unfamiliar dog thirty cards later asks
@@ -194,8 +205,7 @@ launches and devices; each deck owns a range:
 | 5000–5999 | Blending |
 
 `tools/photos/card-index.md` maps every number to its word, asset and source.
-Toggle the numbers off in the grown-ups' area before handing the app to anyone
-who isn't testing it.
+They are **off by default**; switch them on in the grown-ups' area when testing.
 
 ### Adding your own
 
@@ -213,11 +223,13 @@ photographer.
 ## My World — players, badges, places
 
 **What counts as earning was the whole problem.** A word used to be collected by
-swiping past its card, which is attendance rather than achievement — exactly why
-the reward layer felt hollow. A word is now *read* when the child **says it aloud**
-(the on-device listener in `Listener.swift`) or, with the microphone off, when the
-grown-up marks it. Both are moments, and a moment is what a badge and a toast can
-hang on.
+swiping past (later, tapping) its card, which is attendance rather than
+achievement. A word is now *read* only when the child **says it aloud** (the
+on-device listener in `Listener.swift`), picks its picture in Find It's **Read**
+mode, or — with the microphone off — when a grown-up **presses and holds** the
+card. A plain tap only *hears* the word, which is help, not reading. Words found by
+ear in Find It (Listen mode) and Sound Hunt are kept separately as **words I
+know**: real progress for a two-year-old, but vocabulary, not decoding.
 
 **Players.** Several children, one phone, no passwords: a three-year-old signs in
 by pointing at their own face. That is the only authentication a pre-reader can
@@ -225,7 +237,7 @@ perform, and it is all this needs — nothing stored is worth protecting and not
 leaves the device. A first run creates a default player silently rather than gating
 a child behind a setup screen.
 
-**Badges.** Thirteen, in `Achievements.swift`. The first lands on the first word,
+**Badges.** In `Achievements.swift`. The first lands on the first word,
 because a reward system that takes a week to start is not one. There is deliberately
 **no streak** — a streak punishes a family holiday and hands the guilt to the
 parent. *Welcome Back* rewards returning instead: it can be gained, never lost.
@@ -314,6 +326,40 @@ editing it:
 
 Keeping the decks as data rather than Swift is what makes an Android port a copy
 rather than a rewrite.
+
+### Decodability is checked, not hoped for
+
+Every reading word carries `parts` — its graphemes in order, each with its phoneme
+when that isn't the usual one: cake is `c a:ay k e:_` (`_` = silent). The parts
+drive sound-by-sound playback, the spelling tiles, and `tools/phonics.py`, which
+`sync-content.sh` runs first. Each grapheme/phoneme pair is taught at one level; a
+word may only use pairs taught by its level, and a sentence or book page only
+words that pass at its level plus heart words introduced by then. Segmenting is
+greedy against *every* grapheme the ladder knows, so "for" is f + **or** and fails
+at the digraph stage instead of slipping through as f-o-r; soft c/g are never
+taught, so "mice" and "huge" can't pass. `python3 tools/phonics.py parts <word>`
+shows how a word segments.
+
+## Sound
+
+Whole words are on-device synthesis. **Letter sounds never are**: synthesis can't
+make an isolated stop consonant — it gives silence or "kuh" — so every phoneme is
+a bundled clip, `Resources/Sounds/ph_<id>.m4a`, ids from `phonemeDefaults` in the
+content (`k`, `sh`, `ay`, `oo_short`…; "ng+k" plays two). With no clips bundled
+the letter decks stay silent rather than teach a sound wrong, and Sound Hunt /
+First Sound are hidden.
+
+## Writing
+
+**Draw** comes first: twenty pictures built from the pre-writing strokes in the
+order they develop — line down, line across, circle, cross, diagonals, triangle,
+square, zigzag, waves, arcs, spiral — each finishing as its emoji. **Trace** then
+teaches formation: stroke order, a green numbered start dot, a direction arrow, a
+pen-tip demo, three-line paper, lowercase first. Strokes are hand-authored in
+`Strokes.swift` (a tiny path language, documented there); progress only advances
+*along* a stroke, so a backwards or scribbled letter no longer passes, but the band
+is wide and a lifted finger carries on where it stopped. `-screen strokesheet
+lower|upper|digits|pictures` (DEBUG) draws every stroke set at once for checking.
 
 ## App Store notes
 
