@@ -268,24 +268,13 @@ private struct PorcusRoom: View {
                         Rectangle().fill(Color.white.opacity(0.05)).frame(width: 22)
                     }
                 }
-                // Window with the night sky and moon
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x1d2a5c), Color(hex: 0x4a4f8f)],
-                                                                            startPoint: .top, endPoint: .bottom))
-                    Circle().fill(Color(hex: 0xfff4c9)).frame(width: 34).offset(x: 22, y: -26)
-                        .shadow(color: Color(hex: 0xfff4c9).opacity(0.8), radius: 10)
-                    ForEach(0..<6, id: \.self) { i in
-                        Circle().fill(Color.white.opacity(0.8)).frame(width: 2.5)
-                            .offset(x: CGFloat([-40, -20, 10, -46, 34, -8][i]), y: CGFloat([-40, 10, 30, 22, 26, -44][i]))
-                    }
-                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(width: 6)
-                    Rectangle().fill(Color(hex: 0xe9d7b8)).frame(height: 6)
-                    RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
+                // Sideways on a tablet the window hangs just right of the play column, below the
+                // HUD rails. Upright, it's part of the play area (the shelf row), so it can never
+                // slide under Porcus's speech bubble whatever the screen's height.
+                if w > h {
+                    PorcusWindow()
+                        .position(x: min(w - 66, w / 2 + ArcadeLayout.columnWidth / 2 + 90), y: h * 0.32)
                 }
-                .frame(width: 104, height: 108)
-                // Sideways on a tablet: just right of the play column and below the HUD rails.
-                .position(x: w > h ? min(w - 66, w / 2 + ArcadeLayout.columnWidth / 2 + 90) : w - 66,
-                          y: h * (w > h ? 0.32 : 0.205))
                 // Desk
                 VStack(spacing: 0) {
                     Rectangle().fill(LinearGradient(colors: [Color(hex: 0xb07a46), Color(hex: 0x8d5a2e)], startPoint: .top, endPoint: .bottom))
@@ -296,6 +285,26 @@ private struct PorcusRoom: View {
                 .offset(y: h * 0.62)
             }
         }
+    }
+}
+
+/// The bedroom window with the night sky and the moon.
+private struct PorcusWindow: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(hex: 0x1d2a5c), Color(hex: 0x4a4f8f)],
+                                                                    startPoint: .top, endPoint: .bottom))
+            Circle().fill(Color(hex: 0xfff4c9)).frame(width: 34).offset(x: 22, y: -26)
+                .shadow(color: Color(hex: 0xfff4c9).opacity(0.8), radius: 10)
+            ForEach(0..<6, id: \.self) { i in
+                Circle().fill(Color.white.opacity(0.8)).frame(width: 2.5)
+                    .offset(x: CGFloat([-40, -20, 10, -46, 34, -8][i]), y: CGFloat([-40, 10, 30, 22, 26, -44][i]))
+            }
+            Rectangle().fill(Color(hex: 0xe9d7b8)).frame(width: 6)
+            Rectangle().fill(Color(hex: 0xe9d7b8)).frame(height: 6)
+            RoundedRectangle(cornerRadius: 10).stroke(Color(hex: 0xe9d7b8), lineWidth: 8)
+        }
+        .frame(width: 104, height: 108)
     }
 }
 
@@ -456,6 +465,7 @@ private struct PorcusPlay: View {
     @ObservedObject var model: PorcusModel
     @State private var frames: [String: CGRect] = [:]
     @State private var hover = false
+    @Environment(\.ludusHUDOnTop) private var hudOnTop     // false in the sideways-tablet column
     @State private var plunk = false
 
     private var t: PorcusTask { model.task }
@@ -511,6 +521,10 @@ private struct PorcusPlay: View {
             }
         }
         .padding(.top, 6)
+        // Upright, the window sits in the gap the shelf leaves for it (sideways, the room draws it).
+        .overlay(alignment: .topTrailing) {
+            if hudOnTop { PorcusWindow().padding(.top, 4) }
+        }
         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: model.shelf.count)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: model.serial)
     }
