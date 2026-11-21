@@ -12,7 +12,8 @@ import SwiftUI
 // Difficulty is continuous (GameKit `d`) — see `PPlan` below: first sounds with pictures → named
 // foods → blends & digraphs → ending sounds & long vowels → rhymes → prefixes & suffixes by
 // meaning, each fading in while the older kinds stay as review; plates 2 → 4; pictures fade out of
-// the sound rounds; a patience bar from d 4.5 (16 s → 7 s).
+// the sound rounds; a patience bar from d 5 (18 s → 8 s), started only after he has asked.
+// He asks for the SOUND ("What starts with /k/?"), spoken as the bare sound, not a word that has it.
 
 // MARK: Word data
 
@@ -224,25 +225,43 @@ private struct PRound {
 
     var right: PFood { foods.indices.contains(correct) ? foods[correct] : f("", "") }
 
-    /// Spoken cue (auto once per round, and on 🔊).
+    /// The sound asked for, in phonics slashes — "/k/", "/sh/", "/br/" — which the voice says as
+    /// the bare sound (LibraryVoice). Spelling becomes sound: c → /k/, -ck → /k/, -ll → /l/.
+    var sound: String {
+        switch kind {
+        case .letter:
+            return "/\(pLetters.first { $0.letter == bib }?.sound ?? bib)/"
+        case .start: return "/\(bib)/"
+        case .end:
+            let tail = String(bib.drop { $0 == "-" })
+            return "/\(["ck": "k", "ll": "l"][tail] ?? tail)/"
+        case .vowel:
+            // "long a" → /ā/
+            let v = bib.split(separator: " ").last.map(String.init) ?? bib
+            return "/\(["a": "ā", "e": "ē", "i": "ī", "o": "ō", "u": "ū"][v] ?? v)/"
+        case .rhyme, .affix: return bib
+        }
+    }
+
+    /// Spoken cue (auto once per round, and on 🔊): the sound itself, not a word that has it.
     var say: String {
         switch kind {
-        case .letter, .start: return "Feed me something that starts like… \(cue.word)!"
-        case .end: return "Feed me something that ends like… \(cue.word)!"
-        case .vowel: return "Feed me something with the \(bib) sound, like… \(cue.word)!"
-        case .rhyme: return "Feed me a word that rhymes with… \(cue.word)!"
-        case .affix: return "Feed me the word with a part that means… \(cue.word.lowercased())!"
+        case .letter, .start: return "What starts with \(sound)?"
+        case .end: return "What ends with \(sound)?"
+        case .vowel: return "What has the \(bib.uppercased().replacingOccurrences(of: "LONG", with: "long")) sound?"
+        case .rhyme: return "What rhymes with \(cue.word)?"
+        case .affix: return "Which word has a part that means \(cue.word.lowercased())?"
         }
     }
 
     /// The bubble's small heading.
     var heading: String {
         switch kind {
-        case .letter, .start: return "STARTS LIKE"
-        case .end: return "ENDS LIKE"
-        case .vowel: return "HAS THE VOWEL SOUND IN"
-        case .rhyme: return "RHYMES WITH"
-        case .affix: return "HAS A PART THAT MEANS"
+        case .letter, .start: return "WHAT STARTS WITH"
+        case .end: return "WHAT ENDS WITH"
+        case .vowel: return "WHAT HAS THE SOUND"
+        case .rhyme: return "WHAT RHYMES WITH"
+        case .affix: return "WHICH HAS A PART THAT MEANS"
         }
     }
 
@@ -252,9 +271,9 @@ private struct PRound {
         let pic = pictures && !r.emoji.isEmpty ? r.emoji + " " : ""
         let cuePic = cue.emoji.isEmpty ? "" : cue.emoji + " "
         switch kind {
-        case .letter, .start: return "\(pic)\(r.word) starts like \(cuePic)\(cue.word)"
-        case .end: return "\(pic)\(r.word) ends like \(cuePic)\(cue.word)"
-        case .vowel: return "\(pic)\(r.word) has the \(bib), like \(cuePic)\(cue.word)"
+        case .letter, .start: return "\(pic)\(r.word) starts with \(sound), like \(cuePic)\(cue.word)"
+        case .end: return "\(pic)\(r.word) ends with \(sound), like \(cuePic)\(cue.word)"
+        case .vowel: return "\(pic)\(r.word) has \(sound), like \(cuePic)\(cue.word)"
         case .rhyme: return "\(r.word) rhymes with \(cue.word)"
         case .affix:
             let part = bib.split(separator: " ").map(String.init).first { p in
@@ -274,7 +293,7 @@ private struct PRound {
 ///   tier 4  rhymes, words only, spelling traps                (from d 5.4)
 ///   tier 5  prefixes & suffixes by meaning                    (from d 6.6)
 /// Older tiers stay in the mix as review. Plates grow 2 → 4; pictures fade from the sound decks
-/// from d 4.5; a patience bar appears at d 4.5 and tightens from 16 s toward 7 s by d 10.
+/// from d 4.5; a patience bar appears at d 5 and tightens from 18 s toward 8 s by d 10.
 private struct PPlan {
     var tier = 0
     var n = 2
@@ -408,8 +427,10 @@ private final class PolyModel: ArcadeModel {
         #endif
     }
 
-    /// Seconds of patience for the next round (0 = none): none until d 4.5, then 16 s → 7 s by d 10.
-    var patience: Double { d < 4.5 ? 0 : ramp(16, 7, from: 4.5, to: 10) }
+    /// Seconds of patience for the next round (0 = none), counted from the end of the question:
+    /// none until d 5 — after ending sounds and the fading pictures have settled in, so the clock
+    /// isn't a third new thing at once — then 18 s → 8 s by d 10.
+    var patience: Double { d < 5 ? 0 : ramp(18, 8, from: 5, to: 10) }
     /// Until d 3 a tap feeds a plate too (small hands needn't drag); dragging works always.
     var tapFeeds: Bool { d < 3 }
     @Published var roundPatience: Double = 0
@@ -430,19 +451,25 @@ private final class PolyModel: ArcadeModel {
         stage = .waiting
         let patience = self.patience
         roundPatience = patience
-        if patience > 0 {
-            deadline = Date().addingTimeInterval(patience)
-            let g = gen
-            let item = DispatchWorkItem { [weak self] in
-                guard let self, self.gen == g, self.phase == .playing, self.stage == .waiting else { return }
-                self.timedOut()
-            }
-            timeout = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience, execute: item)
-        } else {
-            deadline = nil
+        deadline = nil
+        // The patience clock starts once he has finished asking — a child should listen, not race
+        // the voice. Until then the bar waits, full.
+        let g = gen
+        LibraryVoice.say(round.say) { [weak self] in
+            guard let self, patience > 0, self.gen == g, self.phase == .playing, self.stage == .waiting else { return }
+            self.startClock(patience)
         }
-        LibraryVoice.say(round.say)
+    }
+
+    private func startClock(_ patience: Double) {
+        deadline = Date().addingTimeInterval(patience)
+        let g = gen
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, self.gen == g, self.phase == .playing, self.stage == .waiting else { return }
+            self.timedOut()
+        }
+        timeout = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience, execute: item)
     }
 
     /// Run `step` after `t` s, unless the round or run has moved on.
@@ -482,7 +509,7 @@ private final class PolyModel: ArcadeModel {
     /// Spit the wrong plate, then show and gulp the right one.
     private func reveal(after t: Double) {
         later(t) { $0.stage = .spit }
-        later(t + 0.5) { m in m.stage = .reveal; LibraryVoice.say(m.round.why.filter { $0.isLetter || $0 == " " || $0 == "-" || $0 == ":" }) }
+        later(t + 0.5) { m in m.stage = .reveal; LibraryVoice.say(m.round.why.filter { $0.isLetter || " -:/,".contains($0) }) }
         later(t + 1.9) { $0.stage = .gulp }
         later(t + 2.6) { m in if !m.dying { m.next() } }
     }
@@ -574,7 +601,7 @@ private struct PolyPlay: View {
         let per = model.roundPatience
         TimelineView(.animation(minimumInterval: 0.1, paused: model.phase != .playing || model.deadline == nil)) { tl in
             let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
-            let frac = per > 0 ? CGFloat(left / per) : 0
+            let frac = per > 0 ? (model.deadline == nil ? 1 : CGFloat(left / per)) : 0
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color(hex: 0x1a120d).opacity(0.7))
@@ -606,15 +633,20 @@ private struct PolyPlay: View {
                         .frame(minWidth: 70, minHeight: 64)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.gold)))
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(r.kind == .letter && !r.labels ? "LIKE" : r.heading)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(r.heading)
                         .font(luFont(11, .heavy)).tracking(1.2).foregroundStyle(Color(hex: 0x7a5a32))
-                    HStack(spacing: 8) {
-                        if !r.cue.emoji.isEmpty { Text(r.cue.emoji).font(.system(size: 50)) }
-                        if r.labels || r.cue.emoji.isEmpty {
-                            Text(r.cue.word)
-                                .font(luFont(r.kind == .affix ? 26 : 24)).foregroundStyle(Color(hex: 0x2a1d10))
-                                .lineLimit(2).minimumScaleFactor(0.6)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(r.kind == .rhyme || r.kind == .affix ? r.cue.word.lowercased() : r.sound)
+                            .font(luSerif(r.kind == .affix ? 28 : 36, .black)).foregroundStyle(Color(hex: 0x2a1d10))
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                        // A picture hint for the sound rounds: a word that has it (never spoken).
+                        if r.kind != .rhyme && r.kind != .affix && !r.cue.emoji.isEmpty && r.pictures {
+                            HStack(spacing: 3) {
+                                Text("like").font(luFont(13, .bold)).foregroundStyle(Color(hex: 0x7a5a32))
+                                Text(r.cue.emoji).font(.system(size: 30))
+                            }
                         }
                     }
                     if r.kind == .affix {

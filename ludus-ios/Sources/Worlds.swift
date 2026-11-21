@@ -128,7 +128,7 @@ let ludusWorlds: [LudusWorld] = [
     ]),
     LudusWorld(name: "Word Wizards", subject: "Language Arts", emoji: "✏️", colorHex: Lu.mint, games: [
         .init(title: "Polyphemus Is Hungry", mechanic: "feed", premise: "Feed the Cyclops only foods with his sound.", game: .polyphemus,
-              icon: "👁️", howTo: how(("🅱️", "Look at his letter"), ("🍌", "Drag him a food with it"), ("🔊", "Tap to hear it"))),
+              icon: "👁️", howTo: how(("👂", "Hear the sound he wants"), ("🍌", "Drag him a food with that sound"), ("🔊", "Tap 🔊 to hear it again"))),
         .init(title: "Scroll Catcher", mechanic: "catch", premise: "Catch the falling letters to spell the word.", game: .scrollCatcher,
               icon: "📜", howTo: how(("🐱", "Look at the picture"), ("👉", "Slide the scroll box"), ("🔤", "Catch its letters in order"))),
         .init(title: "Minerva's Owl", mechanic: "aim", premise: "Aim the owl at the moth with the right kind of word.", game: .minervaOwl,
