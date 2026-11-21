@@ -888,9 +888,11 @@ private struct Countryside: View {
                 .frame(width: w * 0.28, height: w * 0.28).position(x: X(0.84), y: Y(0.11))
             Circle().fill(Color(hex: 0xfff1c4)).frame(width: w * 0.08).position(x: X(0.84), y: Y(0.11))
             // soft clouds drifting across the whole sky
-            let clouds = max(2, Int((fw / w * 2).rounded()))
+            // (The first layout pass can hand us a zero-size canvas: Int(∞) traps, so guard the ratio.)
+            let ratio = w > 0 && fw > 0 ? fw / w : 1
+            let clouds = min(12, max(2, Int((ratio * 2).rounded())))
             ForEach(0..<clouds, id: \.self) { i in
-                let x = (CGFloat((t * (0.008 + Double(i % 2) * 0.004) * Double(w / fw) + Double(i) / Double(clouds)).truncatingRemainder(dividingBy: 1.3)) - 0.15) * fw
+                let x = (CGFloat((t * (0.008 + Double(i % 2) * 0.004) / Double(ratio) + Double(i) / Double(clouds)).truncatingRemainder(dividingBy: 1.3)) - 0.15) * fw
                 CloudPuff().fill(.white.opacity(0.75))
                     .frame(width: w * (0.22 - CGFloat(i % 2) * 0.05), height: w * 0.07)
                     .position(x: x, y: Y(0.08 + CGFloat(i % 3) * 0.05))
@@ -912,6 +914,7 @@ private struct Countryside: View {
 
     /// Grass tufts scattered over the lawn (the canvas's own fourteen, plus more on any extra lawn).
     private var tufts: some View {
+        let w = max(self.w, 1), h = max(self.h, 1)
         let u0 = -ox / w, u1 = 1 + ox / w, v1 = (fh - oy) / h
         let spots: [CGPoint] = (0..<60).compactMap { i in
             let fx = CGFloat((i * 37) % 100) / 100, fy = CGFloat((i * 53) % 40) / 100
