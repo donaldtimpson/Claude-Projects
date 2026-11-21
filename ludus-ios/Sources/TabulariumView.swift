@@ -223,20 +223,27 @@ struct TabulariumView: View {
 
     private func track(rank: LudusEconomy.Rank) -> some View {
         let steps = LudusEconomy.rankSteps
-        return HStack(spacing: 0) {
+        return HStack(alignment: .top, spacing: 0) {
             ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                 VStack(spacing: 4) {
                     Circle().fill(i <= rank.index ? Tb.gold : Tb.redDeep)
                         .overlay(Circle().stroke(Tb.gold, lineWidth: 1.5))
                         .frame(width: i == rank.index ? 22 : 16, height: i == rank.index ? 22 : 16)
                         .frame(height: 22)
-                    Text(step.0).font(luCinzel(13, bold: true))
-                        .foregroundStyle(Tb.parchment.opacity(i <= rank.index ? 1 : 0.55))
-                        .lineLimit(1).minimumScaleFactor(0.8)
-                    HStack(spacing: 3) {
-                        Image("CoinGold").resizable().frame(width: 13, height: 13)
-                        Text("\(step.1)").font(luGaramond(14, semibold: true)).foregroundStyle(Tb.parchment.opacity(0.7))
+                    // Seven ranks are too many names for one row: alternate rows, each label free to be
+                    // wider than its column (its neighbours sit on the other row).
+                    VStack(spacing: 2) {
+                        Text(step.0).font(luCinzel(12, bold: true))
+                            .foregroundStyle(Tb.parchment.opacity(i <= rank.index ? 1 : 0.55))
+                            .lineLimit(1).fixedSize()
+                        HStack(spacing: 3) {
+                            Image("CoinGold").resizable().frame(width: 12, height: 12)
+                            Text("\(step.1)").font(luGaramond(13, semibold: true)).foregroundStyle(Tb.parchment.opacity(0.7))
+                        }
                     }
+                    .fixedSize()
+                    .padding(.top, i % 2 == 1 ? 34 : 0)
+                    .frame(width: 10, alignment: .top)
                 }
                 .frame(maxWidth: .infinity)
             }

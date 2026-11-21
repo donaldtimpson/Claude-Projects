@@ -46,6 +46,8 @@ struct LudusApp: App {
         // LUDUS_SCREEN=villa|records opens those pages (=players: the picker; see Profiles.swift).
         let _ = {
             if let n = Int(env["LUDUS_GRANT"] ?? "") { LudusStore.defaults.set(n, forKey: LudusStore.denariiKey) }
+            // LUDUS_AUREI=n: n spare gold aurei on top of what laurels earned (spent goes negative).
+            if let n = Int(env["LUDUS_AUREI"] ?? "") { LudusStore.defaults.set(-n, forKey: LudusEconomy.spentAureiKey) }
             if let o = env["LUDUS_OWN"] {
                 LudusStore.defaults.set(o == "all" ? villaCatalog.map(\.id) : o.split(separator: ",").map(String.init),
                                           forKey: LudusEconomy.ownedKey)

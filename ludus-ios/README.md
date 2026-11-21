@@ -33,11 +33,23 @@ speaks (Library, Market…) can take a few seconds in the simulator while speech
   +5 per level climbed. (Score is each game's own business.)
 - **Aurei** (gold) — earned only by **laurels**: bronze 1, silver +2, gold +3 per game (up to
   6 a game, 240 in all). Computed from progress — never bought, never stored separately.
-- **Rank** = aurei *earned* (not the balance), so spending never demotes:
-  Tiro → Legionary (5) → Centurion (20) → Consul (50).
-- **The Villa** — a Pompeian-fresco villa the child furnishes: garden, water, statues, pets
-  (that wander the lawn) for denarii; grand works (golden eagle, chariot, golden roof,
-  elephant) for aurei. Catalog: `villaCatalog` in `VillaView.swift`.
+- **Rank** = aurei *earned* (not the balance), so spending never demotes, and it runs the
+  whole way to the 240 the laurels can earn: Tiro → Legionary (5) → Centurion (20) →
+  Tribune (45) → Legate (80) → Consul (130) → Caesar (200).
+- **The Villa estate** (`VillaView.swift`, `Villa/`) — where both coins go:
+  - **The garden** — the starting scene: garden, water, statues, pets for denarii; grand works
+    (golden eagle, chariot, golden roof, elephant) for aurei. Catalog: `gardenCatalog`.
+  - **Eight wings**, one per world (`Villa/VillaEstate.swift`): a wing opens once the child holds
+    a laurel in that world and is built with denarii (250, then +50 each); each is a drawn room
+    furnished with ~8 themed denarii items, each with a true one-line fact (`Villa/Wing*.swift`).
+    An unbuilt wing shows a faded preview of the furnished room.
+  - **Prizes** (`Villa/VillaPrizes.swift`) — real rewards a grown-up writes and prices in silver
+    (everyday) or gold (big), claimable again and again; the claim waits on the board until a
+    grown-up marks it given. Grown-up mode is behind a 4-digit PIN set on first use.
+  - **Saving goal** — tapping something the child can't afford yet makes it the goal; the
+    game-over card then says how close it is ("40 more denarii for the Fountain").
+  - Rough budget at ~150 denarii a day: garden 1,275 + wings 3,400 to build + ~6,600 to furnish
+    ≈ 75 days of things; silver prizes never run out. Gold: 22 for grand works, the rest prizes.
 
 ## GameKit — how every game is built (`GameKit.swift`)
 
@@ -71,7 +83,8 @@ the intro card (how to play, laurel goals, start level), the level-up banner and
 
 `LUDUS_GAME=<id>` open a game · `LUDUS_AUTOPLAY=1` skip the intro · `LUDUS_BOT=0.9`
 (+`LUDUS_BOT_EVERY`) autoplay · `LUDUS_START_LEVEL=n` · `LUDUS_WORLD=<subject>` ·
-`LUDUS_SCREEN=villa|records` · `LUDUS_GRANT=n` denarii · `LUDUS_OWN=all|id,id` villa items ·
+`LUDUS_SCREEN=villa|records` · `LUDUS_GRANT=n` denarii · `LUDUS_AUREI=n` spare gold · `LUDUS_OWN=all|id,id` /
+`LUDUS_VILLA_OWN=id+id` villa items (wings are `wing_<id>`) · `LUDUS_PLACE=garden|prizes|<wing>` · `LUDUS_PRIZES_DEMO=1` ·
 `LUDUS_MUTE=1` · `LUDUS_SELFCHECK=1` (per-game content checks) · `LUDUS_TOUR` (map tour).
 
 ## The games

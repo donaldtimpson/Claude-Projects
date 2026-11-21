@@ -16,7 +16,7 @@ is drawn by the app in the bundled Cinzel / EB Garamond; everything else is bake
                      the app centre-crops it, so the coins always sit on lacquer
   SidePanel          the sideways-iPad panel ("Atlas and Ledger"): a full-height lacquer slab with the
                      same gilt moulding + fillet down its map-facing (left) edge, casting onto the map
-  Rank0…Rank3        the rank on the tab: gilt Cinzel + plaque sprigs + honour pips (= the standard's discs)
+  Rank0…Rank6        the rank on the tab: gilt Cinzel + plaque sprigs + one honour pip per rank climbed
   CoinSilver/Gold    denarius / aureus (D)
   Seal<key>          wax seal bodies with gold-leaf emblems (D), no ring
   Ring<n>_<d>        n-segment progress ring with d filled (d < n); RingCrown = all done (band + laurel)
@@ -146,7 +146,10 @@ def side_panel():
     return E.to_pil(E.down(out, 2))
 
 
-def rank_tab(idx, name):
+RANKS = ('Tiro', 'Legionary', 'Centurion', 'Tribune', 'Legate', 'Consul', 'Caesar')   # = LudusEconomy.rankSteps
+
+
+def rank_tab(idx, name, pips=len(RANKS) - 1):
     """Rank lettering for the tab (transparent): gilt Cinzel like LVDVS, the plaque's laurel sprigs,
     and three honour pips — filled = the discs on the child's standard."""
     from eparts import gilt_text, rivet
@@ -184,13 +187,13 @@ def rank_tab(idx, name):
         out = E.over(out, E.rgba(E.metal(hm, k=0.9, gloss=50, contrast=1.3), la))
     py = (mid + gap) * K                                      # pips
     rh = np.zeros((Hh, W)); ring = np.zeros((Hh, W))
-    for i in range(3):
-        px = W / 2 + (i - 1) * 11 * s * K
+    for i in range(pips):
+        px = W / 2 + (i - (pips - 1) / 2) * 9 * s * K
         if i < idx:
-            rivet(rh, x, y, px, py, 2.9 * s * K)
+            rivet(rh, x, y, px, py, 2.6 * s * K)
         else:
             rr = np.hypot(x - px, y - py)
-            ring = np.maximum(ring, np.clip(1 - np.abs(rr - 2.5 * s * K) / (0.45 * K), 0, 1))
+            ring = np.maximum(ring, np.clip(1 - np.abs(rr - 2.2 * s * K) / (0.45 * K), 0, 1))
     ra = np.clip(rh * 2, 0, 1)
     sh = ndi.shift(E.blur(ra, 0.6 * K), (0.7 * K, 0.2 * K), order=1) * 0.55
     out = E.over(out, np.dstack([np.zeros((Hh, W, 3)) + [0.12, 0, 0], sh]))
@@ -394,6 +397,7 @@ def main():
         bakes = {'TopPlaque': top_plaque, 'BottomBar': bottom_bar,
                  'BottomBarWide': lambda: bottom_bar(BAR_W_WIDE), 'SidePanel': side_panel,
                  'PlayPlaque': play_plaque, 'CardShadow': card_shadow}
+        bakes.update({f'Rank{i}': (lambda i=i, r=r: rank_tab(i, r)) for i, r in enumerate(RANKS)})
         for n in only:
             out[n] = save(n, bakes[n]())
     else:
@@ -409,7 +413,7 @@ def bake_all(out, U):
     out['BottomBar'] = save('BottomBar', bottom_bar())
     out['BottomBarWide'] = save('BottomBarWide', bottom_bar(BAR_W_WIDE))
     out['SidePanel'] = save('SidePanel', side_panel())
-    for i, r in enumerate(('Tiro', 'Legionary', 'Centurion', 'Consul')):
+    for i, r in enumerate(RANKS):
         out[f'Rank{i}'] = save(f'Rank{i}', rank_tab(i, r))
     out['PlayPlaque'] = save('PlayPlaque', play_plaque())
     out['CoinSilver'] = save('CoinSilver', D.coin(21, 'silver', scale=SEAL_PX))
