@@ -616,48 +616,40 @@ private struct PolyPlay: View {
 
     // MARK: Speech bubble — the cue
 
+    // The bubble says the SOUND; the spelling (Ll, -ck, long a) is on his bib just below, so the
+    // two never repeat each other. Rounded type with a little tracking: a serif l reads as 1, and
+    // a serif "fl" fuses into a ligature.
     private var bubble: some View {
         ZStack {
             HStack(spacing: 12) {
-                if r.kind == .letter {
-                    Text(r.bib.uppercased() + r.bib)
-                        .font(luSerif(44, .black)).foregroundStyle(Color(hex: Lu.inkDark))
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                        .padding(.horizontal, 12)
-                        .frame(minWidth: 84, minHeight: 70)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.gold)))
-                } else if r.kind != .affix && r.kind != .rhyme {
-                    Text(r.bib).font(luSerif(r.bib.count > 4 ? 26 : 38, .black)).foregroundStyle(Color(hex: Lu.inkDark))
-                        .lineLimit(1).minimumScaleFactor(0.5)
-                        .padding(.horizontal, 10)
-                        .frame(minWidth: 70, minHeight: 64)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color(hex: Lu.gold)))
-                }
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(r.heading)
-                        .font(luFont(11, .heavy)).tracking(1.2).foregroundStyle(Color(hex: 0x7a5a32))
+                        .font(luFont(12, .heavy)).tracking(1.2).foregroundStyle(Color(hex: 0x7a5a32))
                         .lineLimit(1).minimumScaleFactor(0.7)
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(r.kind == .rhyme || r.kind == .affix ? r.cue.word.lowercased() : r.sound)
-                            .font(luSerif(r.kind == .affix ? 28 : 36, .black)).foregroundStyle(Color(hex: 0x2a1d10))
+                    HStack(alignment: .center, spacing: 12) {
+                        cueText
+                            .tracking(1.5)
                             .lineLimit(1).minimumScaleFactor(0.5)
                         // A picture hint for the sound rounds: a word that has it (never spoken).
                         if r.kind != .rhyme && r.kind != .affix && !r.cue.emoji.isEmpty && r.pictures {
-                            HStack(spacing: 3) {
-                                Text("like").font(luFont(13, .bold)).foregroundStyle(Color(hex: 0x7a5a32))
+                            HStack(spacing: 4) {
+                                Text("like").font(luFont(16, .heavy)).foregroundStyle(Color(hex: 0x7a5a32))
                                 Text(r.cue.emoji).font(.system(size: 30))
                             }
+                            .padding(.leading, 10).padding(.trailing, 6).padding(.vertical, 2)
+                            .background(Capsule().fill(Color.white.opacity(0.45)))
                         }
                     }
                     if r.kind == .affix {
-                        Text(r.bib).font(luFont(15, .bold)).foregroundStyle(Color(hex: 0xa0581c))
+                        Text(r.bib).font(luFont(16, .heavy)).tracking(0.5).foregroundStyle(Color(hex: 0xa0581c))
                     }
                 }
                 Spacer(minLength: 0)
                 LibrarySpeakerButton(size: 48) { model.sayCue() }
             }
-            .padding(.horizontal, 14).padding(.vertical, 10)
+            .padding(.horizontal, 18).padding(.vertical, 10)
             .opacity(showWhy ? 0 : 1)
+            .transaction { $0.animation = nil }     // the question steps aside at once for the answer
 
             if showWhy {
                 Text(model.tooSlow ? "Too slow! " + r.why : r.why)
@@ -669,7 +661,21 @@ private struct PolyPlay: View {
         }
         .frame(maxWidth: .infinity, minHeight: 92)
         .background(Parchment(radius: 20))
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showWhy)
+        // Springs in; leaves at once when the next round deals, so the old answer never
+        // cross-fades over the new question.
+        .animation(showWhy ? .spring(response: 0.3, dampingFraction: 0.7) : nil, value: showWhy)
+    }
+
+    /// The bubble's big line. A sound's slashes are thin and pale so the letters inside stand out
+    /// ("/l/" in one heavy weight reads as three strokes).
+    private var cueText: Text {
+        let ink = Color(hex: 0x2a1d10)
+        if r.kind == .rhyme || r.kind == .affix {
+            return Text(r.cue.word.lowercased()).font(luFont(r.kind == .affix ? 30 : 42, .black)).foregroundColor(ink)
+        }
+        let inner = String(r.sound.dropFirst().dropLast())
+        let slash = Text("/").font(luFont(40, .light)).foregroundColor(Color(hex: 0x9a7a52))
+        return slash + Text(inner).font(luFont(42, .black)).foregroundColor(ink) + slash
     }
 
     private var showWhy: Bool { model.stage == .reveal || model.stage == .gulp }
@@ -728,6 +734,8 @@ private struct PolyPlay: View {
         if let text {
             Text(text)
                 .font(luFont(30)).foregroundStyle(Color(hex: text == "BLEH!" ? Lu.mint : Lu.gold))
+                .shadow(color: Color(hex: 0x1a120d), radius: 0, x: 2, y: 2)   // readable over the bright sea
+                .shadow(color: Color(hex: 0x1a120d).opacity(0.6), radius: 4)
                 .rotationEffect(.degrees(-10))
                 .offset(x: 92, y: 4)
                 .transition(.scale(scale: 0.3).combined(with: .opacity))
@@ -858,7 +866,7 @@ private struct PlateView: View {
                 Text(food.word)
                     .font(luFont(pictures ? 16 : 22, .heavy)).foregroundStyle(Color(hex: 0x2a1d10))
                     .lineLimit(1).minimumScaleFactor(0.5)
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, 12)       // clear of the painted rim
             }
         }
         .padding(.horizontal, 6)
@@ -992,9 +1000,12 @@ private struct CyclopsFace: View {
                     .offset(x: 104 * belly, y: -6)
                 // Bib
                 Text(bib)
-                    .font(luSerif(bib.count > 4 ? 15 : 28, .black)).foregroundStyle(Color(hex: Lu.inkDark))
+                    .font(luFont(bib.count <= 3 ? 32 : (bib.count <= 6 ? 24 : 15), .black)).tracking(1)
+                    .foregroundStyle(Color(hex: Lu.inkDark))
                     .lineLimit(1).minimumScaleFactor(0.4)
-                    .frame(width: 92, height: 54)
+                    .padding(.horizontal, 6)
+                    .frame(width: 104, height: 54)
+                    .transaction { $0.animation = nil }      // a new bib snaps in, never cross-fades
                     .background(RoundedRectangle(cornerRadius: 12).fill(Color(hex: 0xfdf6e3)))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: Lu.goldLine), lineWidth: 2))
                     .offset(y: -8)
@@ -1030,12 +1041,10 @@ private struct CyclopsFace: View {
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: open)
     }
 
-    @ViewBuilder private var eye: some View {
-        if mood == .happy {
-            // A closed, smiling eye: ^
-            HappyEyeArc().stroke(Color(hex: 0x3a2412), style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                .frame(width: 70, height: 30)
-        } else {
+    // Happy = a smiling squint: the cheek pushes the lower lid up into a curve (a closed "^" eye
+    // read as a frown on his big face).
+    private var eye: some View {
+        ZStack {
             ZStack {
                 Ellipse().fill(Color.white).frame(width: 88, height: 80)
                 Circle().fill(RadialGradient(colors: [Color(hex: 0x8a5a2b), Color(hex: 0x4a2f1e)], center: .center, startRadius: 2, endRadius: 22))
@@ -1047,11 +1056,18 @@ private struct CyclopsFace: View {
                     // a droopy lid
                     Rectangle().fill(skin[0]).frame(width: 92, height: 34).offset(y: -26)
                 }
+                if mood == .happy {
+                    // the smiling lower lid, with its crease
+                    Ellipse().fill(skin[0]).frame(width: 120, height: 64).offset(y: 44)
+                    Ellipse().stroke(Color(hex: 0x3a2412).opacity(0.6), lineWidth: 4).frame(width: 120, height: 64).offset(y: 44)
+                }
             }
             .frame(width: 88, height: 80)
             .clipShape(Ellipse())
-            .overlay(Ellipse().stroke(Color(hex: 0x3a2412).opacity(0.5), lineWidth: 3))
+            .overlay(Ellipse().stroke(Color(hex: 0x3a2412).opacity(0.5), lineWidth: 3)
+                .mask(Rectangle().frame(height: mood == .happy ? 46 : 80).frame(maxHeight: .infinity, alignment: .top)))
         }
+        .frame(width: 88, height: 80)
     }
 
     private var mouthView: some View {
@@ -1072,14 +1088,5 @@ private struct CyclopsFace: View {
         .background(GeometryReader { g in
             Color.clear.preference(key: PolyFrames.self, value: [pMouthKey: g.frame(in: .named("poly"))])
         })
-    }
-}
-
-private struct HappyEyeArc: Shape {
-    func path(in rect: CGRect) -> Path {
-        var p = Path()
-        p.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-        p.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.maxY), control: CGPoint(x: rect.midX, y: rect.minY - rect.height * 0.6))
-        return p
     }
 }
