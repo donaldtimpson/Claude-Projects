@@ -12,8 +12,10 @@ import SwiftUI
 // equivalents → fraction / decimal arithmetic. Tuned off `d`:
 //   • content kind via `tier` (halves & quarters with a ribbon at the target → marks only →
 //     thirds/fifths/sixths → tenths as decimals → percentages & equivalents → sums/differences);
-//   • the jug's marks fade out (and later lie in a DIFFERENT denominator, so it's estimation);
-//   • the flow speeds up (a full jug in ~6 s → ~2.4 s) and the "close enough" window shrinks.
+//   • each kind arrives WITH marks on the jug; they fade out ~2 levels after that kind came in (and
+//     later lie in a DIFFERENT denominator, so it's estimation) — so a new kind never also loses
+//     its marks at once;
+//   • the flow speeds up (a full jug in ~6 s → ~2.8 s) and the "close enough" window shrinks (±7.5 % → ±3.5 %).
 
 // MARK: Content
 
@@ -26,16 +28,33 @@ private struct FOrder {
     var ribbon = false           // the target level is drawn on the jug (the very start)
     var marks = 0                // parts the jug's side is marked in (0 = no marks)
     var picture = false          // a little jug icon on the card shows the level
+    var result: FPart? = nil     // the worked answer for a sum ("2⁄3"), shown on the ribbon after a miss
+}
+
+/// n⁄d in lowest terms, as a card part.
+private func fReduced(_ n: Int, _ d: Int) -> FPart {
+    let g = fGcd(n, d)
+    return .frac(n / g, d / g)
 }
 
 private func fGcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : fGcd(b, a % b) }
 
 private func fSay(_ n: Int, _ d: Int) -> String {
-    let names = [2: "half", 3: "third", 4: "quarter", 5: "fifth", 6: "sixth", 8: "eighth", 10: "tenth", 12: "twelfth"]
+    let names = [2: "half", 3: "third", 4: "quarter", 5: "fifth", 6: "sixth", 8: "eighth", 9: "ninth", 10: "tenth",
+                 12: "twelfth", 15: "fifteenth", 16: "sixteenth", 20: "twentieth"]
     let nums = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven"]
     let base = names[d] ?? "\(d)th"
     if n == 1 { return "one " + base }
     return (n < nums.count ? nums[n] : "\(n)") + " " + (base == "half" ? "halves" : base + "s")
+}
+
+/// A decimal the way it's read aloud: 0.75 → "zero point seven five" (not "point seventy-five").
+private func fSayDec(_ x: Double) -> String {
+    let digits = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+    let parts = fDec(x).split(separator: ".")
+    let whole = parts.first.flatMap { Int($0) }.map { $0 < 10 ? digits[$0] : "\($0)" } ?? "zero"
+    guard parts.count > 1 else { return whole }
+    return whole + " point " + parts[1].compactMap { $0.wholeNumberValue }.map { digits[$0] }.joined(separator: " ")
 }
 
 private func fDec(_ x: Double) -> String {
@@ -59,10 +78,11 @@ private final class FountainModel: ArcadeModel {
     @Published var perfect = false
     @Published var spilled = false
     @Published var showAnswer = false
+    @Published var verdict = ""                 // fixed at judging (the water then slides to the answer)
     @Published var roundID = 0
 
-    var flow: Double { ramp(0.16, 0.42, to: 9) }          // jugs per second
-    var tol: Double { ramp(0.075, 0.025, to: 9.5) }
+    var flow: Double { ramp(0.16, 0.36, to: 9) }          // jugs per second
+    var tol: Double { ramp(0.075, 0.035, to: 9.5) }       // at the top: ±3.5 % at 0.36 jugs/s ≈ ±0.1 s
 
     private var gen = 0
     private var overflow: DispatchWorkItem?
@@ -86,7 +106,7 @@ private final class FountainModel: ArcadeModel {
         var n = 0
         while abs(o.target - order.target) < 0.001 && n < 6 { o = makeOrder(); n += 1 }
         order = o
-        water = 0; pourStart = nil; good = false; perfect = false; spilled = false; showAnswer = false
+        water = 0; pourStart = nil; good = false; perfect = false; spilled = false; showAnswer = false; verdict = ""
         stage = .ready
         roundID += 1
         if d < 4 { LibraryVoice.say("Fill it to " + o.say, rate: 0.45) }
@@ -130,12 +150,14 @@ private final class FountainModel: ArcadeModel {
         if !spilled && err <= tol {
             good = true
             perfect = err <= tol * 0.35
+            verdict = perfect ? "PERFECT!" : "LOVELY!"
             stage = .done
             Sfx.play(.sparkle)
             hit(points: perfect ? 2 : 1)
             later(1.3) { $0.next() }
         } else {
             good = false
+            verdict = spilled ? "SPLASH!" : (water > order.target ? "Too full!" : "Not enough!")
             stage = .done
             if spilled { Sfx.play(.whoosh) }
             miss(reason: spilled ? "Splash!" : "Out of hearts!", delay: 2.6)
@@ -161,8 +183,10 @@ private final class FountainModel: ArcadeModel {
 
     private func makeOrder() -> FOrder {
         func r(_ a: Int, _ b: Int) -> Int { Int.random(in: a...b) }
-        let marksGone = chance(1, from: 3.6, to: 5.6)          // the jug's side marks fade out
-        let k = tier([1, 2, 3, 4.3, 5.3, 6.3, 7.3], keep: 0.15)
+        let starts: [Double] = [1, 2, 3, 4.3, 5.3, 6.3, 7.3]
+        let k = tier(starts, keep: 0.15)
+        // The jug's side marks fade out ~2 levels after this kind arrived (never with it).
+        let marksGone = chance(1, from: starts[k] + 2, to: starts[k] + 4)
         switch k {
         case 0:   // halves and quarters, with a ribbon at the level
             let (n, dd) = [(1, 2), (1, 4), (3, 4), (1, 2)].randomElement()!
@@ -179,7 +203,7 @@ private final class FountainModel: ArcadeModel {
                           marks: marksGone ? (chance(1, from: 5, to: 7) ? [4, 10].randomElement()! : 0) : dd)
         case 3:   // decimals
             let t = Double(r(1, 9)) / 10 + (chance(0.5, from: 5, to: 7) ? 0.05 : 0)
-            return FOrder(target: t, parts: [.txt(fDec(t))], say: fDec(t).replacingOccurrences(of: "0.", with: "zero point "),
+            return FOrder(target: t, parts: [.txt(fDec(t))], say: fSayDec(t),
                           marks: marksGone ? 0 : 10)
         case 4:   // percentages
             let p = [10, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90].randomElement()!
@@ -198,22 +222,25 @@ private final class FountainModel: ArcadeModel {
                              ((1, 4), (1, 2)), ((2, 5), (1, 5)), ((1, 6), (1, 2)), ((1, 8), (1, 2))]
                 let (a, b) = pairs.randomElement()!
                 let t = Double(a.0) / Double(a.1) + Double(b.0) / Double(b.1)
+                let lcm = a.1 * b.1 / fGcd(a.1, b.1)
                 return FOrder(target: t, parts: [.frac(a.0, a.1), .txt("+"), .frac(b.0, b.1)],
-                              say: fSay(a.0, a.1) + " plus " + fSay(b.0, b.1))
+                              say: fSay(a.0, a.1) + " plus " + fSay(b.0, b.1), marks: marksGone ? 0 : lcm,
+                              result: fReduced(a.0 * (lcm / a.1) + b.0 * (lcm / b.1), lcm))
             case 1:   // 1 − a/b
                 let (n, dd) = [(1, 3), (1, 4), (3, 4), (2, 5), (1, 6), (3, 8)].randomElement()!
                 return FOrder(target: 1 - Double(n) / Double(dd), parts: [.txt("1 −"), .frac(n, dd)],
-                              say: "one minus " + fSay(n, dd))
+                              say: "one minus " + fSay(n, dd), marks: marksGone ? 0 : dd, result: fReduced(dd - n, dd))
             case 2:   // a fraction of a fraction
                 let (a, b) = [((1, 2), (1, 2)), ((1, 2), (3, 4)), ((2, 3), (3, 4)), ((1, 3), (3, 4)), ((1, 2), (4, 5))].randomElement()!
                 let t = Double(a.0 * b.0) / Double(a.1 * b.1)
                 return FOrder(target: t, parts: [.frac(a.0, a.1), .txt("of"), .frac(b.0, b.1)],
-                              say: fSay(a.0, a.1) + " of " + fSay(b.0, b.1))
+                              say: fSay(a.0, a.1) + " of " + fSay(b.0, b.1), marks: marksGone || a.1 * b.1 > 12 ? 0 : a.1 * b.1,
+                              result: fReduced(a.0 * b.0, a.1 * b.1))
             default:  // decimals sum
                 let a = Double(r(1, 4)) / 10, b = Double(r(1, 9)) * 0.05
                 let t = a + b
                 return FOrder(target: t, parts: [.txt("\(fDec(a)) + \(fDec(b))")],
-                              say: "\(fDec(a)) plus \(fDec(b))")
+                              say: fSayDec(a) + " plus " + fSayDec(b), marks: marksGone ? 0 : 10, result: .txt(fDec(t)))
             }
         }
     }
@@ -317,7 +344,13 @@ private struct FountainPlay: View {
                             model.stopPour()
                         })
 
-                orderCard.frame(width: w - 28).position(x: w / 2, y: 112)
+                // The order card sits just under the HUD row (not under the pills).
+                VStack(spacing: 0) {
+                    HUDSpace(58)
+                    orderCard.frame(width: w - 28)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: w, height: h)
 
                 TimelineView(.animation(minimumInterval: 1 / 60, paused: model.phase != .playing)) { tl in
                     let lv = model.stage == .pouring ? model.liveLevel(at: tl.date) : model.water
@@ -383,7 +416,7 @@ private struct FountainPlay: View {
 
     @ViewBuilder private var verdict: some View {
         if model.stage == .done {
-            Text(model.good ? (model.perfect ? "PERFECT!" : "LOVELY!") : (model.spilled ? "SPLASH!" : (model.water > model.order.target ? "Too full!" : "Not enough!")))
+            Text(model.verdict)
                 .font(luFont(28)).foregroundStyle(Color(hex: model.good ? Lu.gold : 0xffffff))
                 .shadow(color: .black.opacity(0.5), radius: 0, x: 2, y: 2)
                 .padding(.horizontal, 14).padding(.vertical, 4)
@@ -519,7 +552,16 @@ private struct Jug: View {
 
     private var answerTag: some View {
         Group {
-            if order.parts.count == 1, case .frac(let n, let d) = order.parts[0] {
+            if let r = order.result {
+                switch r {
+                case .frac(let n, let d):
+                    HStack(spacing: 3) {
+                        Text("=").font(luFont(15, .heavy)).foregroundStyle(Color(hex: 0x14283a))
+                        FracView(n: n, d: d, size: 16)
+                    }
+                case .txt(let s): Text("= " + s).font(luFont(15, .heavy)).foregroundStyle(Color(hex: 0x14283a))
+                }
+            } else if order.parts.count == 1, case .frac(let n, let d) = order.parts[0] {
                 FracView(n: n, d: d, size: 16)
             } else if order.parts.count == 1, case .txt(let s) = order.parts[0] {
                 Text(s).font(luFont(17, .heavy)).foregroundStyle(Color(hex: 0x14283a))
