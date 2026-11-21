@@ -12,6 +12,7 @@ struct PhotoCreditsView: View {
                     .font(.andika(15)).foregroundStyle(Theme.inkSoft)
                     .padding(.bottom, 4)
 
+
                 ForEach(credits, id: \.asset) { c in
                     HStack(alignment: .top, spacing: 12) {
                         Image(c.asset)
