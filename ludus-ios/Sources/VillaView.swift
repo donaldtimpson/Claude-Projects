@@ -37,9 +37,13 @@ struct VillaItem: Identifiable, Hashable {
     let category: VillaCategory
     let price: VillaPrice
     let blurb: String
+    var place = "garden"       // "garden", or the id of the wing it furnishes (VillaEstate.swift)
 }
 
-let villaCatalog: [VillaItem] = [
+/// Everything for sale: the garden's things and every wing's (VillaEstate.swift).
+let villaCatalog: [VillaItem] = gardenCatalog + wingCatalog
+
+let gardenCatalog: [VillaItem] = [
     .init(id: "roses", name: "Rose Beds", category: .garden, price: .denarii(25), blurb: "Romans loved roses."),
     .init(id: "cypress", name: "Cypress Trees", category: .garden, price: .denarii(30), blurb: "Tall and pointy, like green flames."),
     .init(id: "banners", name: "Red Banners", category: .garden, price: .denarii(40), blurb: "Hang them between the columns."),
@@ -68,7 +72,7 @@ let villaCatalog: [VillaItem] = [
 
 // MARK: - Fresco palette
 
-private enum Fr {
+enum Fr {
     static let frame = Color(hex: 0x8f2a1e)       // Pompeian red
     static let frameDeep = Color(hex: 0x6b1d14)
     static let gold = Color(hex: 0xd9a944)
@@ -106,6 +110,8 @@ struct VillaView: View {
     let onClose: () -> Void
 
     @State private var tab: VillaCategory = .garden
+    @State private var place: VillaPlace = .garden
+    @State private var goal: String? = LudusEconomy.goal
     @State private var refresh = 0                 // bumps after a purchase (UserDefaults isn't observed)
     @State private var justBought: String?
     @State private var poke: String?               // an owned item tapped → it bounces in the scene
@@ -121,6 +127,10 @@ struct VillaView: View {
     init(onClose: @escaping () -> Void) {
         self.onClose = onClose
         #if DEBUG
+        // LUDUS_PLACE=garden|prizes|<wing id> opens the Villa on that place (for screenshots).
+        if let p = ProcessInfo.processInfo.environment["LUDUS_PLACE"] {
+            _place = State(initialValue: p == "prizes" ? .prizes : (villaWings.contains { $0.id == p } ? .wing(p) : .garden))
+        }
         // LUDUS_VILLA_OWN=id+id+… marks villa items owned, once per launch (the capture probe's
         // env list is comma-separated, so LUDUS_OWN can only carry one id through it).
         if !Self.didDebugOwn, let o = ProcessInfo.processInfo.environment["LUDUS_VILLA_OWN"] {
@@ -141,9 +151,10 @@ struct VillaView: View {
                 Fr.frameDeep.ignoresSafeArea()
                 VStack(spacing: 0) {
                     header
+                    placeBar.padding(.bottom, 8)
                     switch layout {
                     case .phone:
-                        scene.frame(height: min(h * 0.56, w * 1.12)).padding(.horizontal, 10)
+                        scene.frame(height: min(h * 0.5, w * 1.05)).padding(.horizontal, 10)
                         stripShop
                     case .tall:
                         scene.padding(.horizontal, 14)
@@ -163,8 +174,64 @@ struct VillaView: View {
 
     private var scene: some View {
         FrescoFrame {
-            VillaScene(owned: owned, justBought: justBought, poke: poke, onTap: pokeOwned)
+            switch place {
+            case .garden:
+                VillaScene(owned: owned, justBought: justBought, poke: poke, onTap: pokeOwned)
+            case .wing:
+                if let wing = place.wing, LudusEconomy.built(wing) {
+                    wingRoom(wing, WingState(owned: owned, justBought: justBought, poke: poke, onTap: pokeOwned))
+                } else if let wing = place.wing {
+                    WingSite(wing: wing)
+                }
+            case .prizes:
+                PrizeHall(refresh: refresh)
+            }
         }
+        .id(place)
+        .transition(.opacity)
+    }
+
+    // MARK: Places — the garden, the eight wings, the prize hall
+
+    private var placeBar: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    placeChip(.garden, icon: "leaf.fill", name: "Garden", state: .open)
+                    ForEach(villaWings) { wing in
+                        placeChip(.wing(wing.id), icon: wing.icon, name: wing.short,
+                                  state: LudusEconomy.built(wing) ? .open : (LudusEconomy.wingUnlocked(wing) ? .buildable : .locked))
+                    }
+                    placeChip(.prizes, icon: "gift.fill", name: "Prizes", state: .open)
+                }
+                .padding(.horizontal, 14).padding(.vertical, 2)
+            }
+            .onAppear { proxy.scrollTo(place, anchor: .center) }
+        }
+    }
+
+    private enum ChipState { case open, buildable, locked }
+
+    private func placeChip(_ p: VillaPlace, icon: String, name: String, state: ChipState) -> some View {
+        let on = place == p
+        return Button {
+            Sfx.play(.tick)
+            withAnimation(.easeOut(duration: 0.2)) { place = p; note = nil }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: state == .locked ? "lock.fill" : icon).font(.system(size: 12, weight: .bold))
+                Text(name.uppercased()).font(luCinzel(11, bold: true)).tracking(0.4).lineLimit(1)
+                if state == .buildable && !on {
+                    Circle().fill(Fr.gold).frame(width: 7, height: 7)      // ready to build
+                }
+            }
+            .foregroundStyle(on ? Fr.frameDeep : Fr.parchment.opacity(state == .locked ? 0.45 : 0.9))
+            .padding(.horizontal, 11).frame(height: 32)
+            .background(Capsule().fill(on ? Fr.gold : Fr.frame)
+                .overlay(Capsule().stroke(Fr.gold.opacity(on ? 0 : 0.45), lineWidth: 1)))
+        }
+        .buttonStyle(.plain)
+        .id(p)
     }
 
     // MARK: Header
@@ -204,14 +271,19 @@ struct VillaView: View {
 
     private var stripShop: some View {
         VStack(spacing: 10) {
-            tabs
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(items) { item in card(item, width: 108) }
+            switch shopMode {
+            case .items:
+                if place == .garden { tabs }
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(items) { item in card(item, width: 108) }
+                    }
+                    .padding(.horizontal, 2).padding(.vertical, 4)
                 }
-                .padding(.horizontal, 2).padding(.vertical, 4)
+                noteLine
+            case .build(let wing): buildPanel(wing)
+            case .prizes: PrizeList(refresh: $refresh, note: $note)
             }
-            noteLine
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 12).padding(.top, 12)
@@ -224,13 +296,18 @@ struct VillaView: View {
         let cols = 4, gap: CGFloat = 10
         let tw = floor((width - 24 - gap * CGFloat(cols - 1)) / CGFloat(cols))
         return VStack(spacing: 10) {
-            tabs(roomy: true)
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
-                ForEach(items) { item in rowCard(item, width: tw) }
+            switch shopMode {
+            case .items:
+                if place == .garden { tabs(roomy: true) }
+                LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
+                    ForEach(items) { item in rowCard(item, width: tw) }
+                }
+                .frame(height: rowCardHeight * 2 + gap, alignment: .top)
+                .id(tab)
+                noteLine.frame(minHeight: 36)
+            case .build(let wing): buildPanel(wing).frame(minHeight: rowCardHeight * 2 + gap + 80)
+            case .prizes: PrizeList(refresh: $refresh, note: $note).frame(height: rowCardHeight * 2 + gap + 90)
             }
-            .frame(height: rowCardHeight * 2 + gap, alignment: .top)
-            .id(tab)
-            noteLine.frame(minHeight: 36)
         }
         .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 4)
         .background(parchmentPanel(top: true))
@@ -242,13 +319,18 @@ struct VillaView: View {
             let cols = 3, gap: CGFloat = 10
             let tw = floor((g.size.width - 24 - gap * CGFloat(cols - 1)) / CGFloat(cols))
             VStack(spacing: 12) {
-                tabs
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
-                        ForEach(items) { item in card(item, width: tw) }
+                switch shopMode {
+                case .items:
+                    if place == .garden { tabs }
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.fixed(tw), spacing: gap), count: cols), spacing: gap) {
+                            ForEach(items) { item in card(item, width: tw) }
+                        }
+                        .padding(.vertical, 4)
+                        .id(tab)
                     }
-                    .padding(.vertical, 4)
-                    .id(tab)
+                case .build(let wing): buildPanel(wing)
+                case .prizes: PrizeList(refresh: $refresh, note: $note)
                 }
                 Spacer(minLength: 0)
                 VStack(spacing: 12) {
@@ -264,7 +346,81 @@ struct VillaView: View {
         .background(parchmentPanel(top: false))
     }
 
-    private var items: [VillaItem] { villaCatalog.filter { $0.category == tab } }
+    private var items: [VillaItem] {
+        switch place {
+        case .garden: return gardenCatalog.filter { $0.category == tab }
+        case .wing(let id): return villaCatalog.filter { $0.place == id }
+        case .prizes: return []
+        }
+    }
+
+    private enum ShopMode { case items, build(VillaWing), prizes }
+    private var shopMode: ShopMode {
+        _ = refresh
+        switch place {
+        case .garden: return .items
+        case .prizes: return .prizes
+        case .wing:
+            guard let wing = place.wing else { return .items }
+            return LudusEconomy.built(wing) ? .items : .build(wing)
+        }
+    }
+
+    // MARK: Building a wing
+
+    private func buildPanel(_ wing: VillaWing) -> some View {
+        let unlocked = LudusEconomy.wingUnlocked(wing)
+        let cost = LudusEconomy.nextWingCost
+        let afford = aurei >= cost
+        return VStack(spacing: 10) {
+            Text(wing.name.uppercased()).font(luCinzel(17, bold: true)).tracking(1).foregroundStyle(Fr.ink)
+            Text(wing.blurb).font(luGaramond(15, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
+                .multilineTextAlignment(.center)
+            if unlocked {
+                Button { build(wing) } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hammer.fill").font(.system(size: 15, weight: .bold))
+                        Text("BUILD IT").font(luCinzel(15, bold: true)).tracking(1)
+                        Image("CoinGold").resizable().frame(width: 20, height: 20)
+                        Text("\(cost)").font(luCinzel(16)).monospacedDigit()
+                    }
+                    .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
+                    .padding(.horizontal, 22).frame(height: 46)
+                    .background(Capsule().fill(afford ? Fr.frame : Color(hex: 0xd6c39b)))
+                    .overlay(Capsule().stroke(Fr.gold.opacity(afford ? 0.9 : 0.4), lineWidth: 1.5))
+                }
+                .buttonStyle(.plain)
+                .offset(x: shake == wing.ownedID ? -6 : 0)
+                Text(note ?? (afford ? "Gold aurei come from laurels." :
+                              "You need \(cost - aurei) more gold aure\(cost - aurei == 1 ? "us" : "i"). Win laurels to earn them!"))
+                    .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.7)).multilineTextAlignment(.center)
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.fill").foregroundStyle(Fr.frame)
+                    Text("Win a laurel in \(LudusEconomy.worldName(wing)) to build it.")
+                        .font(luGaramond(16, semibold: true)).foregroundStyle(Fr.ink)
+                }
+                .padding(.horizontal, 16).padding(.vertical, 10)
+                .background(Capsule().fill(Color.white.opacity(0.4)))
+                Text("A laurel = reach Gradus III in any \(wing.subject) game.")
+                    .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.65))
+            }
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 6)
+    }
+
+    private func build(_ wing: VillaWing) {
+        if LudusEconomy.build(wing) {
+            Sfx.play(.coin); Haptics.success()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { Sfx.play(.sparkle) }
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) { refresh += 1 }
+            note = "\(wing.name) is built! Now fill it with things."
+        } else {
+            Sfx.play(.wrong); Haptics.error()
+            withAnimation(.linear(duration: 0.05).repeatCount(5, autoreverses: true)) { shake = wing.ownedID }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { shake = nil }
+        }
+    }
 
     private var tabs: some View { tabs(roomy: false) }
 
@@ -312,6 +468,7 @@ struct VillaView: View {
     }
 
     private var hint: String {
+        if place != .garden { return "Tap a thing to buy it. Hold one to save up for it." }
         if tab == .grand { return "Grand works cost gold aurei. Win laurels in the games to earn them!" }
         if owned.contains(where: { villaMovable.contains($0) }) { return "Drag your things to move them around the villa." }
         return "Every right answer in a game earns a silver denarius."
@@ -346,7 +503,7 @@ struct VillaView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(LinearGradient(colors: [Fr.skyLow, Fr.lawn.opacity(0.55)], startPoint: .top, endPoint: .bottom))
-                    VillaThumb(id: item.id).padding(6)
+                    thumb(item).padding(6)
                 }
                 .frame(width: width - 12, height: thumbHeight(width))
                 .overlay(RoundedRectangle(cornerRadius: 12).stroke(Fr.gold.opacity(0.8), lineWidth: 1))
@@ -371,12 +528,34 @@ struct VillaView: View {
             .padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(has ? 0.5 : 0.35))
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Fr.gold.opacity(0.5), lineWidth: 1)))
+            .overlay(alignment: .top) { goalRibbon(item).offset(y: -6) }
             .offset(x: shake == item.id ? -6 : 0)
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in toggleGoal(item) })
     }
 
     private let rowCardHeight: CGFloat = 80
+
+    private func thumb(_ item: VillaItem) -> AnyView { wingThumb(item) ?? AnyView(VillaThumb(id: item.id)) }
+
+    // MARK: Saving for something — hold a card to set a goal (shown on the card and after every game)
+
+    private func goalRibbon(_ item: VillaItem) -> some View {
+        Text("SAVING").font(luCinzel(9, bold: true)).tracking(0.8).foregroundStyle(Fr.frameDeep)
+            .padding(.horizontal, 7).padding(.vertical, 3)
+            .background(Capsule().fill(Fr.gold))
+            .opacity(goal == item.id && !owned.contains(item.id) ? 1 : 0)
+    }
+
+    private func toggleGoal(_ item: VillaItem) {
+        guard !owned.contains(item.id) else { return }
+        Haptics.light(); Sfx.play(.tick)
+        let new = goal == item.id ? nil : item.id
+        LudusEconomy.goal = new
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = new }
+        note = new == nil ? "No goal for now." : "Saving for the \(item.name)! You'll see how close you are after every game."
+    }
 
     /// The compact card of the upright iPad grid: picture on the left, name and price beside it.
     private func rowCard(_ item: VillaItem, width: CGFloat) -> some View {
@@ -387,7 +566,7 @@ struct VillaView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(LinearGradient(colors: [Fr.skyLow, Fr.lawn.opacity(0.55)], startPoint: .top, endPoint: .bottom))
-                    VillaThumb(id: item.id).padding(4)
+                    thumb(item).padding(4)
                 }
                 .frame(width: 64, height: 64)
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Fr.gold.opacity(0.8), lineWidth: 1))
@@ -414,9 +593,11 @@ struct VillaView: View {
             .frame(width: width, height: rowCardHeight)
             .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(has ? 0.5 : 0.35))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Fr.gold.opacity(0.5), lineWidth: 1)))
+            .overlay(alignment: .topTrailing) { goalRibbon(item).offset(x: -6, y: -6) }
             .offset(x: shake == item.id ? -6 : 0)
         }
         .buttonStyle(.plain)
+        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in toggleGoal(item) })
     }
 
     private func pokeOwned(_ id: String) {
@@ -430,6 +611,7 @@ struct VillaView: View {
     private func tap(_ item: VillaItem) {
         if owned.contains(item.id) { pokeOwned(item.id); return }
         if LudusEconomy.buy(item) {
+            if goal == item.id { LudusEconomy.goal = nil; goal = nil }
             VillaPlacement.reset(item: item.id)          // a new purchase lands at its home spot
             Sfx.play(.coin); Haptics.success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { Sfx.play(.sparkle) }
