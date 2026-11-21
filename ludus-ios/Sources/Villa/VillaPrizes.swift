@@ -110,6 +110,20 @@ struct PrizeHall: View {
     var body: some View {
         WingRoom(wall: Color(hex: 0x5a2a1c), panel: Color(hex: 0x7a3a26), floorLine: 0.68) { w, h, t in
             ZStack(alignment: .topLeading) {
+                // a marble sideboard along the wall (covers the dark dado band) with lamps on it
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(LinearGradient(colors: [Fr.marble, Fr.marbleShade], startPoint: .top, endPoint: .bottom))
+                    .frame(width: w * 1.6, height: h * 0.12)
+                    .position(x: w * 0.5, y: h * 0.63)
+                Rectangle().fill(Color.black.opacity(0.18)).frame(width: w * 1.6, height: 2).position(x: w * 0.5, y: h * 0.57)
+                ForEach([0.12, 0.88], id: \.self) { x in
+                    VStack(spacing: 0) {
+                        Ellipse().fill(Color(hex: 0xffd27a)).frame(width: w * 0.025, height: w * 0.04)
+                            .opacity(0.75 + 0.25 * sin(t * 7 + x * 10))
+                        Capsule().fill(Color(hex: 0xb07a3a)).frame(width: w * 0.08, height: w * 0.03)
+                    }
+                    .position(x: w * x, y: h * 0.545)
+                }
                 // the family strongbox (an arca) on the floor, a glint running over its gold bands
                 Arca(glint: 0.5 + 0.5 * sin(t * 1.6))
                     .frame(width: w * 0.36, height: w * 0.27)
@@ -167,14 +181,17 @@ struct PrizeList: View {
                     Text("🎁").font(.system(size: 34))
                     Text("Ask a grown-up to add prizes you can buy with your coins.")
                         .font(luGaramond(16, semibold: true)).foregroundStyle(Fr.ink).multilineTextAlignment(.center)
-                    Text("Grown-ups: hold the Grown-ups button for 2 seconds.")
+                    Text("Grown-ups: hold the Grown-ups button, then set a PIN.")
                         .font(luGaramond(13)).foregroundStyle(Fr.ink.opacity(0.65))
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 10)
             } else {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 8) { ForEach(book.prizes) { row($0) } }.padding(.vertical, 2)
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(spacing: 8) { ForEach(book.prizes) { row($0) } }.padding(.vertical, 2).padding(.bottom, 14)
                 }
+                // a soft fade at the bottom says "there's more below"
+                .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.85),
+                                             .init(color: .black.opacity(0.2), location: 1)], startPoint: .top, endPoint: .bottom))
                 Text(note ?? "You can claim a prize again and again.")
                     .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
                     .multilineTextAlignment(.center)
@@ -345,11 +362,38 @@ struct GrownUpGate<Content: View>: View {
     @State private var first: String?          // setting up: the first entry, waiting for the repeat
     @State private var open = false
     @State private var wrong = false
+    @State private var misses = 0
+    @State private var lockedUntil: Date?
+    @State private var resetting = false          // "Forgot PIN?": a grown-up sum clears it
+    @State private var sum = (Int.random(in: 12...29), Int.random(in: 13...19))
+    @State private var sumEntry = ""
     private static var key: String { "ludus_grownup_pin" }
     private var saved: String? { UserDefaults.standard.string(forKey: Self.key) }
 
     var body: some View {
-        if open { content } else { pad }
+        if open { content } else if resetting { reset } else { pad }
+    }
+
+    /// A grown-up sum (two 2-digit numbers multiplied) clears the PIN so a new one can be set.
+    private var reset: some View {
+        VStack(spacing: 18) {
+            HStack { Button("Back") { resetting = false }; Spacer() }.padding(.horizontal)
+            Text("Forgot the PIN?").font(.title3.weight(.semibold))
+            Text("Grown-ups: what is \(sum.0) × \(sum.1)?").font(.headline)
+            TextField("Answer", text: $sumEntry).keyboardType(.numberPad).textFieldStyle(.roundedBorder)
+                .frame(width: 160).multilineTextAlignment(.center)
+            Button("Reset the PIN") {
+                if Int(sumEntry) == sum.0 * sum.1 {
+                    UserDefaults.standard.removeObject(forKey: Self.key)
+                    resetting = false; first = nil; entry = ""; wrong = false; misses = 0
+                } else {
+                    sum = (Int.random(in: 12...29), Int.random(in: 13...19)); sumEntry = ""
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            Spacer()
+        }
+        .padding(.top, 12)
     }
 
     private var title: String {
@@ -361,8 +405,7 @@ struct GrownUpGate<Content: View>: View {
         VStack(spacing: 22) {
             HStack { Spacer(); Button("Cancel") { dismiss() } }.padding(.horizontal)
             Text(title).font(.title3.weight(.semibold))
-            Text(saved == nil ? "It keeps prizes in grown-up hands." : (wrong ? "That's not it — try again." : " "))
-                .font(.footnote).foregroundStyle(wrong ? .red : .secondary)
+            Text(hint).font(.footnote).foregroundStyle(wrong || lockedUntil != nil ? .red : .secondary)
             HStack(spacing: 16) {
                 ForEach(0..<4, id: \.self) { i in
                     Circle().fill(i < entry.count ? Color.primary : Color.secondary.opacity(0.25)).frame(width: 16, height: 16)
@@ -379,18 +422,37 @@ struct GrownUpGate<Content: View>: View {
                     }
                 }
             }
+            if saved != nil {
+                Button("Forgot PIN?") { resetting = true }.font(.footnote)
+            }
             Spacer()
         }
         .padding(.top, 12)
     }
 
+    private var hint: String {
+        if let until = lockedUntil, until > Date() { return "Too many tries — wait a minute." }
+        if saved == nil {
+            if wrong { return "Those didn't match — choose it again." }
+            return "It keeps prizes in grown-up hands."
+        }
+        return wrong ? "That's not it — try again." : " "
+    }
+
     private func press(_ k: String) {
+        if let until = lockedUntil {
+            if until > Date() { return }
+            lockedUntil = nil; misses = 0
+        }
         if k == "⌫" { if !entry.isEmpty { entry.removeLast() }; return }
         guard entry.count < 4 else { return }
         entry += k
         guard entry.count == 4 else { return }
         if let pin = saved {
-            if entry == pin { open = true } else { wrong = true; entry = "" }
+            if entry == pin { open = true } else {
+                wrong = true; entry = ""; misses += 1
+                if misses >= 5 { lockedUntil = Date().addingTimeInterval(60) }
+            }
         } else if let f = first {
             if entry == f { UserDefaults.standard.set(entry, forKey: Self.key); open = true }
             else { first = nil; entry = ""; wrong = true }

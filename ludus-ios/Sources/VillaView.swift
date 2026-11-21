@@ -112,6 +112,8 @@ struct VillaView: View {
     @State private var tab: VillaCategory = .garden
     @State private var place: VillaPlace = .garden
     @State private var goal: String? = LudusEconomy.goal
+    @State private var armed: String?              // tapped once while unaffordable: a second tap saves for it
+    @ObservedObject private var book = PrizeBook.shared
     @State private var refresh = 0                 // bumps after a purchase (UserDefaults isn't observed)
     @State private var justBought: String?
     @State private var poke: String?               // an owned item tapped → it bounces in the scene
@@ -171,6 +173,7 @@ struct VillaView: View {
             }
         }
         .statusBarHidden(true)
+        .onAppear { book.reload() }
     }
 
     private var scene: some View {
@@ -270,7 +273,7 @@ struct VillaView: View {
 
     /// The prize board, always one tap away (a badge counts prizes waiting for a grown-up).
     private var prizesButton: some View {
-        let waiting = PrizeBook.shared.pending.count
+        let waiting = book.pending.count
         return Button {
             Sfx.play(.tick)
             withAnimation(.easeOut(duration: 0.2)) { place = place == .prizes ? .garden : .prizes; note = nil }
@@ -295,7 +298,9 @@ struct VillaView: View {
     private func purse(img: String, value: Int) -> some View {
         HStack(spacing: 5) {
             Image(img).resizable().frame(width: 24, height: 24)
-            Text("\(value)").font(luCinzel(17)).monospacedDigit().foregroundStyle(Fr.parchment)
+            // a two-month hoard shouldn't push the title off the header: 12,345 → 12.3k
+            Text(value >= 10_000 ? String(format: "%.1fk", Double(value) / 1000) : "\(value)")
+                .font(luCinzel(17)).monospacedDigit().foregroundStyle(Fr.parchment)
                 .contentTransition(.numericText())
         }
         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -431,7 +436,7 @@ struct VillaView: View {
             } else {
                 HStack(spacing: 8) {
                     Image(systemName: "lock.fill").foregroundStyle(Fr.frame)
-                    Text("Win a laurel at \(wing.landmark) to build it.")
+                    Text("Win a laurel at \(midSentence(wing.landmark)) to build it.")
                         .font(luGaramond(16, semibold: true)).foregroundStyle(Fr.ink)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
@@ -449,10 +454,10 @@ struct VillaView: View {
             Sfx.play(.coin); Haptics.success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { Sfx.play(.sparkle) }
             withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) { refresh += 1 }
-            note = "\(wing.name) is built! Now fill it with things."
+            note = "\(wing.name) is built! Now fill it with things — and gild it with gold leaf."
         } else {
             Sfx.play(.wrong); Haptics.error()
-            if LudusEconomy.wingUnlocked(wing) { setGoal(wing.ownedID, name: wing.name) }
+            if LudusEconomy.wingUnlocked(wing) { aim(wing.ownedID, name: wing.name, need: LudusEconomy.nextWingCost - denarii, gold: false) }
             withAnimation(.linear(duration: 0.05).repeatCount(5, autoreverses: true)) { shake = wing.ownedID }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { shake = nil }
         }
@@ -584,10 +589,29 @@ struct VillaView: View {
             .opacity(goal == item.id && !owned.contains(item.id) ? 1 : 0)
     }
 
-    private func setGoal(_ id: String, name: String) {
-        LudusEconomy.goal = id
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = id }
-        if let line = LudusEconomy.goalLine { note = "Saving for \(name)! " + line + "." }
+    /// A tap on something not yet affordable. First tap: the price and "tap again to save for it".
+    /// Second tap: it becomes the goal. Tapping the goal: progress, and a further tap stops saving.
+    private func aim(_ id: String, name: String, need: Int, gold: Bool) {
+        let coin = gold ? "gold aure\(need == 1 ? "us" : "i")" : "silver denari\(need == 1 ? "us" : "i")"
+        let what = midSentence(name)
+        if goal == id {
+            if armed == id {
+                LudusEconomy.goal = nil; armed = nil
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = nil }
+                note = "Stopped saving for \(what)."
+            } else {
+                armed = id
+                note = "Saving for \(what): \(need) more \(coin) to go. Tap again to stop."
+            }
+        } else if armed == id {
+            LudusEconomy.goal = id; armed = nil
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = id }
+            note = "Saving for \(what)! \(need) more \(coin) — you'll see how close you are after every game."
+        } else {
+            armed = id
+            note = "You need \(need) more \(coin). Tap again to save up for \(what)!"
+                + (gold ? " Gold comes from new laurels in the games." : "")
+        }
     }
 
     /// The compact card of the upright iPad grid: picture on the left, name and price beside it.
@@ -654,8 +678,7 @@ struct VillaView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { if justBought == item.id { justBought = nil } }
         } else {
             Sfx.play(.wrong); Haptics.error()
-            setGoal(item.id, name: item.name)
-            if item.price.gold { note = (note ?? "") + " Gold comes from new laurels in the games." }
+            aim(item.id, name: item.name, need: item.price.amount - (item.price.gold ? aurei : denarii), gold: item.price.gold)
             withAnimation(.linear(duration: 0.05).repeatCount(5, autoreverses: true)) { shake = item.id }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { shake = nil }
         }

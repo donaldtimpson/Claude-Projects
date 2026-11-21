@@ -10,7 +10,7 @@ let harborItems: [VillaItem] = [
     .init(id: "har_anchor", name: "Anchor", category: .garden, price: .denarii(60), blurb: "Roman anchors were made of wood and lead.", place: "harbor"),
     .init(id: "har_amphora", name: "Cargo Jars", category: .garden, price: .denarii(70), blurb: "Amphorae of oil and wine sailed across the sea.", place: "harbor"),
     .init(id: "har_boat", name: "Rowing Boat", category: .garden, price: .denarii(75), blurb: "Row out into the bay to fish.", place: "harbor"),
-    .init(id: "har_dolphin", name: "Dolphins", category: .garden, price: .denarii(90), blurb: "Sailors thought dolphins brought good luck.", place: "harbor"),
+    .init(id: "har_dolphin", name: "Leaping Dolphin", category: .garden, price: .denarii(90), blurb: "Sailors thought dolphins brought good luck.", place: "harbor"),
     .init(id: "har_map", name: "Map Table", category: .garden, price: .denarii(120), blurb: "Romans called the Mediterranean Mare Nostrum: our sea.", place: "harbor"),
     .init(id: "har_lighthouse", name: "Little Lighthouse", category: .garden, price: .denarii(180), blurb: "Like the Pharos of Alexandria, a wonder of the world.", place: "harbor"),
     .init(id: "har_ship", name: "Merchant Ship", category: .garden, price: .denarii(270), blurb: "A big-bellied cargo ship with a square sail.", place: "harbor"),

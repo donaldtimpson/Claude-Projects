@@ -86,9 +86,9 @@ extension LudusEconomy {
     static var goalLine: String? {
         guard let g = goalPrice else { return nil }
         let need = g.amount - (g.gold ? aurei : LudusStore.denarii)
-        if need <= 0 { return "You can buy \(g.name) now!" }
+        if need <= 0 { return "You can buy \(midSentence(g.name)) now!" }
         let coin = g.gold ? "gold aure\(need == 1 ? "us" : "i")" : "denari\(need == 1 ? "us" : "i")"
-        return "\(need) more \(coin) for \(g.name)"
+        return "\(need) more \(coin) for \(midSentence(g.name))"
     }
 
     /// The goal's name, price and coin (nil when there's no goal or it's already owned).
@@ -273,10 +273,24 @@ struct WingSite: View {
 // MARK: - Registry: each wing's room and thumbnails (see the Wing<Name>.swift files)
 
 let wingCatalog: [VillaItem] = libraryItems + countingItems + odeumItems + harborItems
-    + workshopItems + tablinumItems + kitchenItems + palaestraItems
+    + workshopItems + tablinumItems + kitchenItems + palaestraItems + gildItems
+
+/// Gold leaf for each built wing — a gold sink that needs no grown-up setup (8 × 10 aurei, on top of
+/// the garden's 22 of grand works): the room gets a gilded frieze, gold light and a slow glitter.
+let gildItems: [VillaItem] = villaWings.map { w in
+    VillaItem(id: "gild_" + w.id, name: "Gold Leaf", category: .grand, price: .aurei(10),
+              blurb: "Rich Romans gilded their ceilings — Nero's Golden House glittered with gold leaf.", place: w.id)
+}
+
+func wingRoom(_ wing: VillaWing, _ s: WingState) -> some View {
+    ZStack {
+        wingRoomArt(wing, s)
+        if s.has("gild_" + wing.id) { GildOverlay().allowsHitTesting(false) }
+    }
+}
 
 @ViewBuilder
-func wingRoom(_ wing: VillaWing, _ s: WingState) -> some View {
+private func wingRoomArt(_ wing: VillaWing, _ s: WingState) -> some View {
     switch wing.id {
     case "library": LibraryRoom(s: s)
     case "counting": CountingRoom(s: s)
@@ -292,6 +306,7 @@ func wingRoom(_ wing: VillaWing, _ s: WingState) -> some View {
 
 /// The card picture for a wing item (`nil` = not a wing item).
 func wingThumb(_ item: VillaItem) -> AnyView? {
+    if item.id.hasPrefix("gild_") { return AnyView(GildThumb()) }
     switch item.place {
     case "library": return AnyView(LibraryThumb(id: item.id))
     case "counting": return AnyView(CountingThumb(id: item.id))
@@ -304,3 +319,64 @@ func wingThumb(_ item: VillaItem) -> AnyView? {
     default: return nil
     }
 }
+
+// MARK: - Gold leaf
+
+/// A gilded wing: a gold frieze along the top, warm gold light from above and a few slow glints.
+private struct GildOverlay: View {
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 15)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            GeometryReader { g in
+                let w = g.size.width, h = g.size.height
+                ZStack(alignment: .top) {
+                    LinearGradient(colors: [Color(hex: 0xffd76a).opacity(0.28), .clear], startPoint: .top, endPoint: .center)
+                    // the frieze: a gilt band with a running row of rosettes
+                    VStack(spacing: 0) {
+                        Rectangle().fill(LinearGradient(colors: [Color(hex: 0xfbe08a), Fr.gold, Color(hex: 0xa87a1f)],
+                                                        startPoint: .top, endPoint: .bottom))
+                            .frame(height: max(8, h * 0.05))
+                            .overlay(HStack(spacing: 0) {
+                                ForEach(0..<Int(max(4, w / 26)), id: \.self) { _ in
+                                    Circle().fill(Color(hex: 0xfff2c0)).frame(width: max(4, h * 0.018)).frame(maxWidth: .infinity)
+                                }
+                            })
+                        Rectangle().fill(Color(hex: 0x7a5410)).frame(height: 2)
+                    }
+                    // glints drifting along the frieze
+                    ForEach(0..<3, id: \.self) { i in
+                        let ph = (t * 0.07 + Double(i) / 3).truncatingRemainder(dividingBy: 1)
+                        Image(systemName: "sparkle").font(.system(size: max(9, w * 0.03), weight: .bold))
+                            .foregroundStyle(Color(hex: 0xfff4c4))
+                            .opacity(sin(ph * .pi))
+                            .position(x: w * CGFloat(ph), y: max(4, h * 0.025))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The Gold Leaf card: a gilded laurel wreath.
+private struct GildThumb: View {
+    var body: some View {
+        GeometryReader { g in
+            let w = min(g.size.width, g.size.height)
+            ZStack {
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xfff2c0), .clear], center: .center, startRadius: 0, endRadius: w * 0.5))
+                ForEach(0..<14, id: \.self) { i in
+                    let a = Double(i) / 14 * .pi * 1.7 + .pi * 0.65
+                    Ellipse().fill(LinearGradient(colors: [Color(hex: 0xfbe08a), Fr.gold, Color(hex: 0xa87a1f)], startPoint: .top, endPoint: .bottom))
+                        .frame(width: w * 0.09, height: w * 0.2)
+                        .rotationEffect(.radians(a + .pi / 2))
+                        .offset(x: CGFloat(cos(a)) * w * 0.3, y: CGFloat(sin(a)) * w * 0.3)
+                }
+                Text("AVRVM").font(luCinzel(w * 0.13, bold: true)).foregroundStyle(Color(hex: 0x8a6414))
+            }
+            .frame(width: g.size.width, height: g.size.height)
+        }
+    }
+}
+
+/// "The Library" → "the Library" for use mid-sentence.
+func midSentence(_ name: String) -> String { name.hasPrefix("The ") ? "the " + name.dropFirst(4) : name }
