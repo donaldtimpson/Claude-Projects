@@ -20,7 +20,7 @@ import SwiftUI
 //   • peg numbers fade in from d≈1.8, BEFORE heavier weights need them (counting pegs works before).
 //   Staggered so the 2-block weights (d≈2), numbers, a second bench weight and the fading lean hint
 //   never all arrive at once.
-// No clock at any level.
+// No clock at any level. Each round's prompt is read aloud for pre-readers; 🔊 repeats it.
 
 // MARK: Rounds
 
@@ -183,6 +183,13 @@ private final class SeesawModel: ArcadeModel {
         round = ssRound(pegs: n, maxW: maxW, kind: kind, benchCount: bench, base: roundID * 100)
         placed = nil; hover = nil; stage = .waiting
         selected = round.bench.count == 1 ? round.bench[0].id : nil
+        LibraryVoice.say(ask)
+    }
+
+    /// The round's question (shown and said).
+    var ask: String {
+        if d < 2.5 { return "Make it balance!" }
+        return round.bench.count > 1 ? "Which weight, which peg?" : "Which peg balances it?"
     }
 
     /// Net turning effect (positive = right side down).
@@ -291,7 +298,8 @@ private struct SeesawPlay: View {
             let blockW = min(54, gap * 0.9)
             ZStack {
                 // Prompt
-                VStack(spacing: 2) {
+                HStack(spacing: 8) {
+                    if model.stage == .waiting { LibrarySpeakerButton(size: 34) { LibraryVoice.say(model.ask) } }
                     Text(prompt).font(luSerif(22, .black)).foregroundStyle(Color(hex: 0x3b2410))
                         .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.7)
                 }
@@ -347,9 +355,7 @@ private struct SeesawPlay: View {
 
     private var prompt: String {
         switch model.stage {
-        case .waiting:
-            if model.d < 2.5 { return "Make it balance!" }
-            return model.round.bench.count > 1 ? "Which weight, which peg?" : "Which peg balances it?"
+        case .waiting: return model.ask
         case .balanced: return ["Balanced! ⚖️", "Perfect balance!", "Aequilibrium!"][model.roundID % 3]
         case .slam: return "Bump! It tipped over"
         case .fix: return explain
