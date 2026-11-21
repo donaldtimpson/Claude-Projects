@@ -19,21 +19,15 @@ struct WorldView: View {
                     if progress.readWords.isEmpty {
                         hint("Read a word out loud and it comes to live here.")
                     } else {
-                        LazyVGrid(columns: columns, spacing: 10) {
-                            ForEach(collected, id: \.self) { w in
-                                Button { Voice.shared.say(w) } label: {
-                                    VStack(spacing: 3) {
-                                        Text(face(for: w)).font(.system(size: 30))
-                                        phonics(w, size: 13)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(Skin.live.card)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
+                        wordGrid(read)
+                    }
+                }
+
+                // Vocabulary, kept apart from reading: words found by ear. Real
+                // progress for a two-year-old, but not decoding, so not "read".
+                if !progress.knownWords.isEmpty {
+                    section("WORDS I KNOW", "\(progress.knownWords.count)") {
+                        wordGrid(known)
                     }
                 }
 
@@ -98,11 +92,37 @@ struct WorldView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var collected: [String] {
-        c.pictureWords.map(\.word).filter { progress.knows(word: $0) }
+    /// Every word read, in content order: picture words first, then the decodable
+    /// words, then anything else (a word met only inside a sentence).
+    private var read: [String] {
+        let order = c.pictureWords.map(\.word) + c.words.map(\.word)
+        let rank = Dictionary(order.enumerated().map { ($1.lowercased(), $0) },
+                              uniquingKeysWith: { a, _ in a })
+        return progress.readWords.sorted { (rank[$0] ?? .max, $0) < (rank[$1] ?? .max, $1) }
+    }
+    private var known: [String] {
+        c.pictureWords.map(\.word).filter { progress.knownWords.contains($0.lowercased()) }
     }
     private func face(for word: String) -> String {
-        c.pictureWords.first { $0.word == word }?.images.first ?? "🔤"
+        c.pictureWords.first { $0.word.lowercased() == word }?.images.first
+            ?? c.words.first { $0.word == word }?.image ?? "🔤"
+    }
+    private func wordGrid(_ words: [String]) -> some View {
+        LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(words, id: \.self) { w in
+                Button { Voice.shared.say(w) } label: {
+                    VStack(spacing: 3) {
+                        Text(face(for: w)).font(.system(size: 30))
+                        phonics(w, size: 13)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Skin.live.card)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
     private var nextWorldHint: String {
         if let next = Awards.all.first(where: { $0.unlocksWorld != nil && !progress.has($0.id) }) {

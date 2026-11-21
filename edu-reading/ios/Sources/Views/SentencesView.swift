@@ -21,8 +21,11 @@ struct SentencesView: View {
                 CardTag(id: CardIds.sentences + (c.sentences.firstIndex(of: s) ?? 0) + 1).padding(18)
             }
         } onTap: { i in
+            // Hearing it read aloud is help, not reading — no credit for a tap.
             Voice.shared.say(pool[min(i, pool.count - 1)].text)
+        } onHold: { i in
             collect(i)
+            celebrateMark()
         }
         // Ramp like Words: shuffle within a level, never across it, so the deck gets
         // harder as it goes. Unleveled sentences sort to the end.

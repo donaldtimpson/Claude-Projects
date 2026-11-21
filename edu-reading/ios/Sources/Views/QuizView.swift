@@ -177,7 +177,8 @@ struct QuizView: View {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { right = w }
             Buzz.yes()
             Voice.shared.chime()
-            progress.readWord(w)
+            // Read mode is decoding; Listen mode is vocabulary. Both count, apart.
+            if reads { progress.readWord(w) } else { progress.knewWord(w) }
             progress.answeredQuiz()
             asked += 1
             // Long enough to see the green and the tick before the next question.

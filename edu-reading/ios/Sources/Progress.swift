@@ -12,6 +12,10 @@ final class Progress {
     var profileID: UUID?
 
     private(set) var readWords: Set<String> = []
+    /// Vocabulary, kept apart from reading: a word found by ear in Find It, or said
+    /// to a picture. Real progress for a two-year-old, but not decoding — so it no
+    /// longer inflates "words read".
+    private(set) var knownWords: Set<String> = []
     private(set) var seenLetters: Set<String> = []
     private(set) var readSentences: Set<String> = []
     private(set) var colours: Set<String> = []
@@ -38,6 +42,7 @@ final class Progress {
         // Optional so a save written before these decks existed still decodes.
         var wrote: [String]?; var spelled: [String]?
         var rhyme: Int?; var match: Int?
+        var known: [String]?
         var lastDay: String = ""
     }
 
@@ -48,6 +53,7 @@ final class Progress {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
+        knownWords = []
         guard let d = UserDefaults.standard.data(forKey: key(profile)),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         readWords = Set(s.words); seenLetters = Set(s.letters); readSentences = Set(s.sentences)
@@ -56,6 +62,7 @@ final class Progress {
         finishedDecks = Set(s.decks); lastDay = s.lastDay; quizRight = s.quizRight
         wroteLetters = Set(s.wrote ?? []); spelledWords = Set(s.spelled ?? [])
         rhymeRight = s.rhyme ?? 0; matchWins = s.match ?? 0
+        knownWords = Set(s.known ?? [])
     }
 
     private func save() {
@@ -76,6 +83,7 @@ final class Progress {
         s.spelled = Array(spelledWords)
         s.rhyme = rhymeRight
         s.match = matchWins
+        s.known = Array(knownWords)
         if let d = try? JSONEncoder().encode(s) {
             UserDefaults.standard.set(d, forKey: key(profileID))
         }
@@ -84,6 +92,7 @@ final class Progress {
     // MARK: earning
 
     func readWord(_ w: String)      { if readWords.insert(w.lowercased()).inserted { check() } }
+    func knewWord(_ w: String)      { if knownWords.insert(w.lowercased()).inserted { check() } }
     func metLetter(_ l: String)     { if seenLetters.insert(l.lowercased()).inserted { check() } }
     func readSentence(_ s: String)  { if readSentences.insert(s).inserted { check() } }
     func namedColour(_ c: String)   { if colours.insert(c).inserted { check() } }
@@ -164,6 +173,7 @@ final class Progress {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
+        knownWords = []
         save()
     }
 }

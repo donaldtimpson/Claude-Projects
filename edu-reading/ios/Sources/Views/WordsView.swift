@@ -70,11 +70,13 @@ struct WordsView: View {
             guard i < pool.count else { return }
             let w = pool[i]
             Voice.shared.say(w.word)
-            progress.readWord( w.word)
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { flipped = true }
         } onAdvance: {
             pictureHold?.cancel()
             flipped = false
+        } onHold: { i in
+            guard i < pool.count else { return }
+            markRead(pool[i].word, progress)
         }
         .onAppear { if pool.isEmpty { pool = makePool() } }
     }

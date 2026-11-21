@@ -228,3 +228,16 @@ struct ReadItCelebration: View {
         .opacity(go ? 0 : 1)
     }
 }
+
+/// The grown-up's "they read it" — a press-and-hold on a reading card when the
+/// microphone is off. Same reward as a voice match, minus the confetti: a felt yes
+/// and a heard yes. A plain tap only ever HEARS the word, which is help, not reading.
+@MainActor func markRead(_ word: String, _ progress: Progress) {
+    progress.readWord(word)
+    celebrateMark()
+}
+
+@MainActor func celebrateMark() {
+    Buzz.yes()
+    Voice.shared.celebrate()
+}

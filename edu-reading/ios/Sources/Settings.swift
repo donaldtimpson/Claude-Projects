@@ -23,7 +23,8 @@ final class Settings {
     var pictureStyle: PictureStyle = .both
 
     // Card ids, for reporting a bad card without having to describe it.
-    var showCardIds = true
+    // Off by default: a number on every card is for whoever is testing, not a child.
+    var showCardIds = false
 
     // Levels rather than a free range: 1–10 and 1–20 are real boundaries. English
     // teens are irregular, and past twenty the lesson becomes place value.

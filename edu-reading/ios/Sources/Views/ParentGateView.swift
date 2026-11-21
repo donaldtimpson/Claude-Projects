@@ -63,7 +63,8 @@ private struct AdultView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 section("WHERE THEY ARE") {
-                    row("Words read aloud", "\(progress.readWords.count)")
+                    row("Words read", "\(progress.readWords.count)")
+                    row("Words known by ear", "\(progress.knownWords.count)")
                     row("Letters met", "\(progress.seenLetters.count) of \(c.letters.count)")
                     row("Sentences read", "\(progress.readSentences.count)")
                     row("Badges", "\(progress.awards.count) of \(Awards.all.count)")

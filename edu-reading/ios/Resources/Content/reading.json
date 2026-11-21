@@ -116,6 +116,13 @@
       ]
     },
     {
+      "word": "turkey",
+      "category": "Pets & Farm",
+      "images": [
+        "🦃"
+      ]
+    },
+    {
       "word": "lion",
       "category": "Wild Animals",
       "images": [
@@ -235,8 +242,50 @@
       ]
     },
     {
+      "word": "dinosaur",
+      "category": "Wild Animals",
+      "images": [
+        "🦕"
+      ]
+    },
+    {
+      "word": "polar bear",
+      "category": "Wild Animals",
+      "images": [
+        "🐻‍❄️"
+      ]
+    },
+    {
+      "word": "hippo",
+      "category": "Wild Animals",
+      "images": [
+        "🦛"
+      ]
+    },
+    {
+      "word": "rhino",
+      "category": "Wild Animals",
+      "images": [
+        "🦏"
+      ]
+    },
+    {
+      "word": "gorilla",
+      "category": "Wild Animals",
+      "images": [
+        "🦍"
+      ]
+    },
+    {
+      "word": "bat",
+      "category": "Wild Animals",
+      "images": [
+        "🦇"
+      ]
+    },
+    {
       "word": "fish",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐟",
         "🐠",
@@ -245,119 +294,177 @@
     },
     {
       "word": "whale",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐳"
       ]
     },
     {
       "word": "shark",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🦈"
       ]
     },
     {
       "word": "dolphin",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐬"
       ]
     },
     {
       "word": "seal",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🦭"
       ]
     },
     {
       "word": "crab",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🦀"
       ]
     },
     {
       "word": "turtle",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐢"
       ]
     },
     {
       "word": "penguin",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐧"
       ]
     },
     {
       "word": "frog",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🐸"
       ]
     },
     {
       "word": "swan",
-      "category": "In the Water",
+      "category": "Sea & Pond",
       "images": [
         "🦢"
       ]
     },
     {
       "word": "goose",
-      "category": "In the Water",
-      "images": []
+      "category": "Sea & Pond",
+      "images": [
+        "🪿"
+      ]
+    },
+    {
+      "word": "octopus",
+      "category": "Sea & Pond",
+      "images": [
+        "🐙"
+      ]
+    },
+    {
+      "word": "jellyfish",
+      "category": "Sea & Pond",
+      "images": [
+        "🪼"
+      ]
+    },
+    {
+      "word": "lobster",
+      "category": "Sea & Pond",
+      "images": [
+        "🦞"
+      ]
     },
     {
       "word": "bee",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🐝"
       ]
     },
     {
       "word": "ant",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🐜"
       ]
     },
     {
       "word": "spider",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🕷️"
       ]
     },
     {
       "word": "butterfly",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🦋"
       ]
     },
     {
       "word": "snail",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🐌"
       ]
     },
     {
       "word": "hedgehog",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🦔"
       ]
     },
     {
       "word": "squirrel",
-      "category": "Little Ones",
+      "category": "Bugs & Little Ones",
       "images": [
         "🐿️"
+      ]
+    },
+    {
+      "word": "ladybug",
+      "category": "Bugs & Little Ones",
+      "images": [
+        "🐞"
+      ]
+    },
+    {
+      "word": "worm",
+      "category": "Bugs & Little Ones",
+      "images": [
+        "🪱"
+      ]
+    },
+    {
+      "word": "caterpillar",
+      "category": "Bugs & Little Ones",
+      "images": [
+        "🐛"
+      ]
+    },
+    {
+      "word": "beetle",
+      "category": "Bugs & Little Ones",
+      "images": [
+        "🪲"
+      ]
+    },
+    {
+      "word": "fly",
+      "category": "Bugs & Little Ones",
+      "images": [
+        "🪰"
       ]
     },
     {
@@ -488,8 +595,64 @@
       ]
     },
     {
+      "word": "broccoli",
+      "category": "Fruit & Veg",
+      "images": [
+        "🥦"
+      ]
+    },
+    {
+      "word": "peas",
+      "category": "Fruit & Veg",
+      "images": [
+        "🫛"
+      ]
+    },
+    {
+      "word": "pineapple",
+      "category": "Fruit & Veg",
+      "images": [
+        "🍍"
+      ]
+    },
+    {
+      "word": "avocado",
+      "category": "Fruit & Veg",
+      "images": [
+        "🥑"
+      ]
+    },
+    {
+      "word": "coconut",
+      "category": "Fruit & Veg",
+      "images": [
+        "🥥"
+      ]
+    },
+    {
+      "word": "blueberry",
+      "category": "Fruit & Veg",
+      "images": [
+        "🫐"
+      ]
+    },
+    {
+      "word": "kiwi",
+      "category": "Fruit & Veg",
+      "images": [
+        "🥝"
+      ]
+    },
+    {
+      "word": "cucumber",
+      "category": "Fruit & Veg",
+      "images": [
+        "🥒"
+      ]
+    },
+    {
       "word": "bread",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍞",
         "🥖"
@@ -497,42 +660,40 @@
     },
     {
       "word": "cheese",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🧀"
       ]
     },
     {
       "word": "rice",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍚"
       ]
     },
     {
       "word": "soup",
-      "category": "Meals",
-      "images": [
-        "🍲"
-      ]
+      "category": "Food & Drink",
+      "images": []
     },
     {
       "word": "pizza",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍕"
       ]
     },
     {
       "word": "cookie",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍪"
       ]
     },
     {
       "word": "cake",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍰",
         "🎂",
@@ -541,58 +702,98 @@
     },
     {
       "word": "egg",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🥚"
       ]
     },
     {
       "word": "milk",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🥛"
       ]
     },
     {
       "word": "water",
-      "category": "Meals",
-      "images": [
-        "💧"
-      ]
+      "category": "Food & Drink",
+      "images": []
     },
     {
       "word": "honey",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍯"
       ]
     },
     {
       "word": "pasta",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🍝"
       ]
     },
     {
       "word": "salad",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🥗"
       ]
     },
     {
       "word": "sandwich",
-      "category": "Meals",
+      "category": "Food & Drink",
       "images": [
         "🥪"
       ]
     },
     {
-      "word": "bed",
-      "category": "At Home",
+      "word": "ice cream",
+      "category": "Food & Drink",
       "images": [
-        "🛏️"
+        "🍦"
+      ]
+    },
+    {
+      "word": "juice",
+      "category": "Food & Drink",
+      "images": [
+        "🧃"
+      ]
+    },
+    {
+      "word": "pancake",
+      "category": "Food & Drink",
+      "images": [
+        "🥞"
+      ]
+    },
+    {
+      "word": "popcorn",
+      "category": "Food & Drink",
+      "images": [
+        "🍿"
+      ]
+    },
+    {
+      "word": "donut",
+      "category": "Food & Drink",
+      "images": [
+        "🍩"
+      ]
+    },
+    {
+      "word": "burger",
+      "category": "Food & Drink",
+      "images": [
+        "🍔"
+      ]
+    },
+    {
+      "word": "lollipop",
+      "category": "Food & Drink",
+      "images": [
+        "🍭"
       ]
     },
     {
@@ -652,23 +853,13 @@
     {
       "word": "lamp",
       "category": "At Home",
-      "images": [
-        "💡",
-        "🪔"
-      ]
+      "images": []
     },
     {
       "word": "mirror",
       "category": "At Home",
       "images": [
         "🪞"
-      ]
-    },
-    {
-      "word": "bath",
-      "category": "At Home",
-      "images": [
-        "🛁"
       ]
     },
     {
@@ -707,29 +898,7 @@
       ]
     },
     {
-      "word": "blanket",
-      "category": "At Home",
-      "images": []
-    },
-    {
       "word": "stairs",
-      "category": "At Home",
-      "images": []
-    },
-    {
-      "word": "soap",
-      "category": "At Home",
-      "images": [
-        "🧼"
-      ]
-    },
-    {
-      "word": "towel",
-      "category": "At Home",
-      "images": []
-    },
-    {
-      "word": "brush",
       "category": "At Home",
       "images": []
     },
@@ -743,6 +912,77 @@
       ]
     },
     {
+      "word": "TV",
+      "category": "At Home",
+      "images": [
+        "📺"
+      ]
+    },
+    {
+      "word": "sofa",
+      "category": "At Home",
+      "images": [
+        "🛋️"
+      ]
+    },
+    {
+      "word": "plant",
+      "category": "At Home",
+      "images": [
+        "🪴"
+      ]
+    },
+    {
+      "word": "bed",
+      "category": "Bath & Bedtime",
+      "images": [
+        "🛏️"
+      ]
+    },
+    {
+      "word": "bath",
+      "category": "Bath & Bedtime",
+      "images": [
+        "🛁"
+      ]
+    },
+    {
+      "word": "blanket",
+      "category": "Bath & Bedtime",
+      "images": []
+    },
+    {
+      "word": "soap",
+      "category": "Bath & Bedtime",
+      "images": [
+        "🧼"
+      ]
+    },
+    {
+      "word": "towel",
+      "category": "Bath & Bedtime",
+      "images": []
+    },
+    {
+      "word": "brush",
+      "category": "Bath & Bedtime",
+      "images": []
+    },
+    {
+      "word": "toothbrush",
+      "category": "Bath & Bedtime",
+      "images": [
+        "🪥"
+      ]
+    },
+    {
+      "word": "toilet",
+      "category": "Bath & Bedtime",
+      "images": [
+        "🚽"
+      ]
+    },
+    {
       "word": "spoon",
       "category": "In the Kitchen",
       "images": [
@@ -752,9 +992,7 @@
     {
       "word": "fork",
       "category": "In the Kitchen",
-      "images": [
-        "🍴"
-      ]
+      "images": []
     },
     {
       "word": "knife",
@@ -766,9 +1004,7 @@
     {
       "word": "plate",
       "category": "In the Kitchen",
-      "images": [
-        "🍽️"
-      ]
+      "images": []
     },
     {
       "word": "bowl",
@@ -821,72 +1057,121 @@
     },
     {
       "word": "bike",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚲"
       ]
     },
     {
       "word": "boat",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "⛵"
       ]
     },
     {
       "word": "train",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚂"
       ]
     },
     {
       "word": "car",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚗"
       ]
     },
     {
       "word": "bus",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚌"
       ]
     },
     {
       "word": "truck",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚚"
       ]
     },
     {
       "word": "plane",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "✈️"
       ]
     },
     {
       "word": "tractor",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚜"
       ]
     },
     {
       "word": "ship",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚢"
       ]
     },
     {
       "word": "rocket",
-      "category": "Getting Around",
+      "category": "Things That Go",
       "images": [
         "🚀"
+      ]
+    },
+    {
+      "word": "fire engine",
+      "category": "Things That Go",
+      "images": [
+        "🚒"
+      ]
+    },
+    {
+      "word": "police car",
+      "category": "Things That Go",
+      "images": [
+        "🚓"
+      ]
+    },
+    {
+      "word": "ambulance",
+      "category": "Things That Go",
+      "images": [
+        "🚑"
+      ]
+    },
+    {
+      "word": "helicopter",
+      "category": "Things That Go",
+      "images": [
+        "🚁"
+      ]
+    },
+    {
+      "word": "motorbike",
+      "category": "Things That Go",
+      "images": [
+        "🏍️"
+      ]
+    },
+    {
+      "word": "scooter",
+      "category": "Things That Go",
+      "images": [
+        "🛴"
+      ]
+    },
+    {
+      "word": "taxi",
+      "category": "Things That Go",
+      "images": [
+        "🚕"
       ]
     },
     {
@@ -954,6 +1239,34 @@
       "category": "Sky & Weather",
       "images": [
         "🔥"
+      ]
+    },
+    {
+      "word": "umbrella",
+      "category": "Sky & Weather",
+      "images": [
+        "☂️"
+      ]
+    },
+    {
+      "word": "snowman",
+      "category": "Sky & Weather",
+      "images": [
+        "⛄"
+      ]
+    },
+    {
+      "word": "storm",
+      "category": "Sky & Weather",
+      "images": [
+        "⛈️"
+      ]
+    },
+    {
+      "word": "lightning",
+      "category": "Sky & Weather",
+      "images": [
+        "⚡"
       ]
     },
     {
@@ -1066,6 +1379,20 @@
       "images": []
     },
     {
+      "word": "cactus",
+      "category": "Out in the Wild",
+      "images": [
+        "🌵"
+      ]
+    },
+    {
+      "word": "volcano",
+      "category": "Out in the Wild",
+      "images": [
+        "🌋"
+      ]
+    },
+    {
       "word": "farm",
       "category": "Places We Go",
       "images": []
@@ -1091,7 +1418,7 @@
       "word": "building",
       "category": "Places We Go",
       "images": [
-        "🏪"
+        "🏢"
       ]
     },
     {
@@ -1114,6 +1441,27 @@
       ]
     },
     {
+      "word": "hospital",
+      "category": "Places We Go",
+      "images": [
+        "🏥"
+      ]
+    },
+    {
+      "word": "castle",
+      "category": "Places We Go",
+      "images": [
+        "🏰"
+      ]
+    },
+    {
+      "word": "tent",
+      "category": "Places We Go",
+      "images": [
+        "⛺"
+      ]
+    },
+    {
       "word": "ball",
       "category": "Toys & Play",
       "images": [
@@ -1123,9 +1471,7 @@
     {
       "word": "doll",
       "category": "Toys & Play",
-      "images": [
-        "🪆"
-      ]
+      "images": []
     },
     {
       "word": "balloon",
@@ -1168,59 +1514,183 @@
       ]
     },
     {
+      "word": "kite",
+      "category": "Toys & Play",
+      "images": [
+        "🪁"
+      ]
+    },
+    {
+      "word": "drum",
+      "category": "Toys & Play",
+      "images": [
+        "🥁"
+      ]
+    },
+    {
+      "word": "crayon",
+      "category": "Toys & Play",
+      "images": [
+        "🖍️"
+      ]
+    },
+    {
+      "word": "robot",
+      "category": "Toys & Play",
+      "images": [
+        "🤖"
+      ]
+    },
+    {
+      "word": "yo-yo",
+      "category": "Toys & Play",
+      "images": [
+        "🪀"
+      ]
+    },
+    {
       "word": "baby",
-      "category": "People",
+      "category": "Family & Helpers",
       "images": [
         "👶"
       ]
     },
     {
       "word": "boy",
-      "category": "People",
+      "category": "Family & Helpers",
       "images": [
         "👦"
       ]
     },
     {
       "word": "man",
-      "category": "People",
+      "category": "Family & Helpers",
       "images": [
         "👨"
       ]
     },
     {
       "word": "woman",
-      "category": "People",
+      "category": "Family & Helpers",
       "images": [
         "👩"
       ]
     },
     {
-      "word": "hand",
-      "category": "People",
+      "word": "girl",
+      "category": "Family & Helpers",
       "images": [
-        "✋",
-        "🤚",
-        "🖐️"
+        "👧"
+      ]
+    },
+    {
+      "word": "grandma",
+      "category": "Family & Helpers",
+      "images": [
+        "👵"
+      ]
+    },
+    {
+      "word": "grandpa",
+      "category": "Family & Helpers",
+      "images": [
+        "👴"
+      ]
+    },
+    {
+      "word": "family",
+      "category": "Family & Helpers",
+      "images": [
+        "👪"
+      ]
+    },
+    {
+      "word": "doctor",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍⚕️"
+      ]
+    },
+    {
+      "word": "teacher",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍🏫"
+      ]
+    },
+    {
+      "word": "firefighter",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍🚒"
+      ]
+    },
+    {
+      "word": "police officer",
+      "category": "Family & Helpers",
+      "images": [
+        "👮"
+      ]
+    },
+    {
+      "word": "farmer",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍🌾"
+      ]
+    },
+    {
+      "word": "cook",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍🍳"
+      ]
+    },
+    {
+      "word": "astronaut",
+      "category": "Family & Helpers",
+      "images": [
+        "🧑‍🚀"
+      ]
+    },
+    {
+      "word": "king",
+      "category": "Family & Helpers",
+      "images": [
+        "🤴"
+      ]
+    },
+    {
+      "word": "queen",
+      "category": "Family & Helpers",
+      "images": [
+        "👸"
+      ]
+    },
+    {
+      "word": "hand",
+      "category": "My Body",
+      "images": [
+        "✋"
       ]
     },
     {
       "word": "foot",
-      "category": "People",
+      "category": "My Body",
       "images": [
         "🦶"
       ]
     },
     {
       "word": "nose",
-      "category": "People",
+      "category": "My Body",
       "images": [
         "👃"
       ]
     },
     {
       "word": "eye",
-      "category": "People",
+      "category": "My Body",
       "images": [
         "👁️",
         "👀"
@@ -1228,63 +1698,196 @@
     },
     {
       "word": "mouth",
-      "category": "People",
+      "category": "My Body",
       "images": [
         "👄"
       ]
     },
     {
       "word": "tooth",
-      "category": "People",
+      "category": "My Body",
       "images": [
         "🦷"
       ]
     },
     {
+      "word": "ear",
+      "category": "My Body",
+      "images": [
+        "👂"
+      ]
+    },
+    {
+      "word": "leg",
+      "category": "My Body",
+      "images": [
+        "🦵"
+      ]
+    },
+    {
+      "word": "tongue",
+      "category": "My Body",
+      "images": [
+        "👅"
+      ]
+    },
+    {
+      "word": "happy",
+      "category": "Feelings",
+      "images": [
+        "😀"
+      ]
+    },
+    {
+      "word": "sad",
+      "category": "Feelings",
+      "images": [
+        "☹️"
+      ]
+    },
+    {
+      "word": "angry",
+      "category": "Feelings",
+      "images": [
+        "😠"
+      ]
+    },
+    {
+      "word": "scared",
+      "category": "Feelings",
+      "images": [
+        "😨"
+      ]
+    },
+    {
+      "word": "surprised",
+      "category": "Feelings",
+      "images": [
+        "😲"
+      ]
+    },
+    {
+      "word": "sick",
+      "category": "Feelings",
+      "images": [
+        "🤒"
+      ]
+    },
+    {
+      "word": "silly",
+      "category": "Feelings",
+      "images": [
+        "🤪"
+      ]
+    },
+    {
+      "word": "tired",
+      "category": "Feelings",
+      "images": [
+        "🥱"
+      ]
+    },
+    {
       "word": "shoe",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "👟"
       ]
     },
     {
       "word": "coat",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "🧥"
       ]
     },
     {
       "word": "dress",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "👗"
       ]
     },
     {
       "word": "boot",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "👢"
       ]
     },
     {
       "word": "scarf",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "🧣"
       ]
     },
     {
       "word": "belt",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": []
     },
     {
       "word": "sock",
-      "category": "What We Wear",
+      "category": "Clothes",
       "images": [
         "🧦"
+      ]
+    },
+    {
+      "word": "hat",
+      "category": "Clothes",
+      "images": [
+        "👒"
+      ]
+    },
+    {
+      "word": "cap",
+      "category": "Clothes",
+      "images": [
+        "🧢"
+      ]
+    },
+    {
+      "word": "gloves",
+      "category": "Clothes",
+      "images": [
+        "🧤"
+      ]
+    },
+    {
+      "word": "glasses",
+      "category": "Clothes",
+      "images": [
+        "👓"
+      ]
+    },
+    {
+      "word": "shirt",
+      "category": "Clothes",
+      "images": [
+        "👕"
+      ]
+    },
+    {
+      "word": "shorts",
+      "category": "Clothes",
+      "images": [
+        "🩳"
+      ]
+    },
+    {
+      "word": "jeans",
+      "category": "Clothes",
+      "images": [
+        "👖"
+      ]
+    },
+    {
+      "word": "crown",
+      "category": "Clothes",
+      "images": [
+        "👑"
       ]
     },
     {
@@ -1310,9 +1913,7 @@
     {
       "word": "stand",
       "category": "Doing Things",
-      "images": [
-        "🧍"
-      ]
+      "images": []
     },
     {
       "word": "climb",
@@ -1339,7 +1940,7 @@
       "word": "sleep",
       "category": "Doing Things",
       "images": [
-        "😴"
+        "🛌"
       ]
     },
     {
@@ -1363,14 +1964,14 @@
       "word": "cry",
       "category": "Doing Things",
       "images": [
-        "😢"
+        "😭"
       ]
     },
     {
       "word": "laugh",
       "category": "Doing Things",
       "images": [
-        "😄"
+        "😂"
       ]
     },
     {
@@ -1385,6 +1986,20 @@
       "category": "Doing Things",
       "images": [
         "🚴"
+      ]
+    },
+    {
+      "word": "wave",
+      "category": "Doing Things",
+      "images": [
+        "👋"
+      ]
+    },
+    {
+      "word": "hug",
+      "category": "Doing Things",
+      "images": [
+        "🫂"
       ]
     }
   ],
@@ -3753,19 +4368,22 @@
   "deckOrder": [
     "Pets & Farm",
     "Wild Animals",
-    "In the Water",
-    "Little Ones",
+    "Sea & Pond",
+    "Bugs & Little Ones",
     "Fruit & Veg",
-    "Meals",
+    "Food & Drink",
     "At Home",
+    "Bath & Bedtime",
     "In the Kitchen",
-    "Getting Around",
+    "Things That Go",
     "Sky & Weather",
     "Out in the Wild",
     "Places We Go",
     "Toys & Play",
-    "People",
-    "What We Wear",
+    "Family & Helpers",
+    "My Body",
+    "Feelings",
+    "Clothes",
     "Doing Things"
   ],
   "colors": [

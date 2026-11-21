@@ -136,9 +136,10 @@ struct WordBlendingView: View {
             }
         } onTap: { i in
             guard i < rimeCards.count else { return }
-            let w = rimeCards[i].word
-            Voice.shared.say(w)
-            progress.readWord(w)
+            Voice.shared.say(rimeCards[i].word)
+        } onHold: { i in
+            guard i < rimeCards.count else { return }
+            markRead(rimeCards[i].word, progress)
         }
         .onAppear { if rimeCards.isEmpty { makePool() } }
         .onChange(of: ordered) { index = 0; makePool() }

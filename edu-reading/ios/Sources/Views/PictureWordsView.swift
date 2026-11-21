@@ -18,6 +18,8 @@ struct PictureWordsView: View {
     /// Which deck this is. Nil means every word, which is only used by the
     /// screenshot router.
     var deck: String? = nil
+    /// A short mixed session across every deck instead of one deck — see makeMix.
+    var mix: Bool = false
 
     @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
@@ -29,7 +31,7 @@ struct PictureWordsView: View {
     @State private var index = 0
 
     var body: some View {
-        DeckScreen(title: deck ?? "Look and Say", count: pool.count,
+        DeckScreen(title: deck ?? (mix ? "Mix" : "Look and Say"), count: pool.count,
                    index: $index, accent: accent) { i in
             let card = pool[min(i, max(pool.count - 1, 0))]
             let p = c.pictureWords.first { $0.word == card.word }
@@ -73,7 +75,11 @@ struct PictureWordsView: View {
             guard i < pool.count else { return }
             Voice.shared.say(pool[i].word)
         }
-        .onAppear { if pool.isEmpty { pool = makePool() } }
+        .onAppear {
+            if pool.isEmpty { pool = mix ? makeMix() : makePool() }
+            if mix, let first = pool.first { MixMemory.saw(first.word) }
+        }
+        .onChange(of: index) { if mix, index < pool.count { MixMemory.saw(pool[index].word) } }
     }
 
     private func photoCount(_ word: String) -> Int {
@@ -87,10 +93,38 @@ struct PictureWordsView: View {
         variant == 0 ? UIImage(named: word) : UIImage(named: "\(word)-\(variant + 1)")
     }
 
+    /// Twenty cards, one per word, spread across the decks, the words met longest
+    /// ago first (never-met words count as oldest, in random order). Each word shows
+    /// its next picture each time it comes round, so a word with four photos cycles
+    /// through all four over successive sessions instead of always leading with one.
+    private func makeMix(size: Int = 20) -> [Card] {
+        let all = makePool(words: c.pictureWords)
+        let byWord = Dictionary(grouping: all, by: \.word)
+        let decks = c.pictureCategories
+        // Freshest-first queue within each deck, then deal round-robin across decks.
+        var queues: [[String]] = decks.map { d in
+            c.words(in: d).map(\.word).filter { byWord[$0] != nil }
+                .shuffled().sorted { MixMemory.last($0) < MixMemory.last($1) }
+        }
+        var picked: [String] = []
+        let deckOrder = Array(queues.indices).sorted {
+            MixMemory.last(queues[$0].first ?? "") < MixMemory.last(queues[$1].first ?? "")
+        }
+        while picked.count < size, queues.contains(where: { !$0.isEmpty }) {
+            for q in deckOrder where !queues[q].isEmpty && picked.count < size {
+                picked.append(queues[q].removeFirst())
+            }
+        }
+        return picked.shuffled().compactMap { w in
+            guard let cards = byWord[w], !cards.isEmpty else { return nil }
+            return cards[MixMemory.nextVariant(w) % cards.count]
+        }
+    }
+
     /// Ids are assigned by walking the content in order, so a card's number is the
     /// same on every launch and every device no matter how the deck is shuffled.
-    private func makePool() -> [Card] {
-        let words = deck.map { c.words(in: $0) } ?? c.pictureWords
+    private func makePool(words override: [ReadingContent.PictureWord]? = nil) -> [Card] {
+        let words = override ?? deck.map { c.words(in: $0) } ?? c.pictureWords
         // Ids stay tied to overall content order, so a number means the same card
         // whichever deck it was met in.
         var photoId: [String: Int] = [:], drawId: [String: Int] = [:]
@@ -123,5 +157,29 @@ struct PictureWordsView: View {
             out.append(contentsOf: byWord.values.compactMap { r < $0.count ? $0[r] : nil }.shuffled())
         }
         return out
+    }
+}
+
+/// When each picture word was last shown in Mix, and which of its pictures comes
+/// next. Device-wide rather than per child: it only decides what is fresh, and a
+/// sibling seeing the same dog yesterday doesn't make it stale for anyone.
+enum MixMemory {
+    private static let seenKey = "sound-it-out.mix.seen"
+    private static let variantKey = "sound-it-out.mix.variant"
+    static func last(_ word: String) -> Double {
+        (UserDefaults.standard.dictionary(forKey: seenKey)?[word] as? Double) ?? 0
+    }
+    static func saw(_ word: String) {
+        var d = UserDefaults.standard.dictionary(forKey: seenKey) ?? [:]
+        d[word] = Date().timeIntervalSince1970
+        UserDefaults.standard.set(d, forKey: seenKey)
+    }
+    /// Returns this word's picture index for now, and moves it on for next time.
+    static func nextVariant(_ word: String) -> Int {
+        var d = UserDefaults.standard.dictionary(forKey: variantKey) ?? [:]
+        let n = (d[word] as? Int) ?? 0
+        d[word] = n + 1
+        UserDefaults.standard.set(d, forKey: variantKey)
+        return n
     }
 }

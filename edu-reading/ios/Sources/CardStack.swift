@@ -12,6 +12,10 @@ struct CardStack<Content: View>: View {
     var accent: Color
     var onTap: () -> Void
     var onAdvance: (() -> Void)? = nil
+    /// A press-and-hold on the card: the grown-up's "they read it" when the
+    /// microphone is off. A child taps; holding still for most of a second is an
+    /// adult's gesture, so it can't be earned by accident in the normal flow.
+    var onHold: (() -> Void)? = nil
     /// A forward step the deck did not ask for: bump this and the current card is
     /// thrown and the next dealt, exactly as a swipe would. Used by the reading deck
     /// to move on by itself once a read word's picture has been shown for a beat.
@@ -41,6 +45,8 @@ struct CardStack<Content: View>: View {
     @State private var busy = false
     @State private var hinted = false
     @State private var turnTask: DispatchWorkItem?
+    /// Set by a hold so the release that ends it isn't also read as a tap.
+    @State private var held = false
 
     var body: some View {
         GeometryReader { geo in
@@ -92,6 +98,17 @@ struct CardStack<Content: View>: View {
                                 }
                         )
                         .onTapGesture { tapped() }
+                        .simultaneousGesture(
+                            LongPressGesture(minimumDuration: 0.8).onEnded { _ in
+                                guard let onHold else { return }
+                                held = true
+                                onHold()
+                                withAnimation(.spring(response: 0.2, dampingFraction: 0.45)) { pop = true }
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { pop = false }
+                                }
+                            }
+                        )
                 }
             }
             .onAppear { hintOnce(geo.size.width) }
@@ -127,6 +144,7 @@ struct CardStack<Content: View>: View {
     static var turn: Animation { .easeOut(duration: slow ? 2.5 : 0.34) }
 
     private func tapped() {
+        if held { held = false; return }
         turnTask?.cancel()
         guard armed else { return }
         guard speaks else {
@@ -307,6 +325,8 @@ struct DeckScreen<Content: View>: View {
     @ViewBuilder var content: (Int) -> Content
     var onTap: (Int) -> Void
     var onAdvance: (() -> Void)? = nil
+    /// See CardStack.onHold.
+    var onHold: ((Int) -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     private let skin = Skin.current
@@ -320,7 +340,9 @@ struct DeckScreen<Content: View>: View {
         VStack(spacing: 0) {
             CardStack(count: count, index: $index, accent: accent,
                       onTap: { if count > 0 { onTap(index % count) } },
-                      onAdvance: onAdvance, advance: advance, speaks: speaks) { i in
+                      onAdvance: onAdvance,
+                      onHold: onHold.map { h in { if count > 0 { h(index % count) } } },
+                      advance: advance, speaks: speaks) { i in
                 content(i)
             }
             Dots(count: count, index: $index, accent: accent)
