@@ -27,6 +27,7 @@ final class Progress {
     private(set) var quizRight: Int = 0
     private(set) var wroteLetters: Set<String> = []
     private(set) var spelledWords: Set<String> = []
+    private(set) var drawings: Set<String> = []
     private(set) var rhymeRight: Int = 0
     private(set) var matchWins: Int = 0
     private(set) var lastDay: String = ""
@@ -42,7 +43,7 @@ final class Progress {
         // Optional so a save written before these decks existed still decodes.
         var wrote: [String]?; var spelled: [String]?
         var rhyme: Int?; var match: Int?
-        var known: [String]?
+        var known: [String]?; var drawn: [String]?
         var lastDay: String = ""
     }
 
@@ -53,7 +54,7 @@ final class Progress {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
-        knownWords = []
+        knownWords = []; drawings = []
         guard let d = UserDefaults.standard.data(forKey: key(profile)),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         readWords = Set(s.words); seenLetters = Set(s.letters); readSentences = Set(s.sentences)
@@ -62,7 +63,7 @@ final class Progress {
         finishedDecks = Set(s.decks); lastDay = s.lastDay; quizRight = s.quizRight
         wroteLetters = Set(s.wrote ?? []); spelledWords = Set(s.spelled ?? [])
         rhymeRight = s.rhyme ?? 0; matchWins = s.match ?? 0
-        knownWords = Set(s.known ?? [])
+        knownWords = Set(s.known ?? []); drawings = Set(s.drawn ?? [])
     }
 
     private func save() {
@@ -84,6 +85,7 @@ final class Progress {
         s.rhyme = rhymeRight
         s.match = matchWins
         s.known = Array(knownWords)
+        s.drawn = Array(drawings)
         if let d = try? JSONEncoder().encode(s) {
             UserDefaults.standard.set(d, forKey: key(profileID))
         }
@@ -102,6 +104,7 @@ final class Progress {
     /// Traced a letter's shape with a finger; spelled a word from tiles. Both are
     /// doings rather than sayings — the two active-recall decks.
     func wroteLetter(_ l: String)   { if wroteLetters.insert(l.lowercased()).inserted { check() } }
+    func drewPicture(_ p: String)   { if drawings.insert(p).inserted { check() } }
     func spelledWord(_ w: String)   { if spelledWords.insert(w.lowercased()).inserted { check() } }
     func rhymeGot()                 { rhymeRight += 1; check() }
     func matchWon()                 { matchWins += 1; check() }
@@ -160,6 +163,8 @@ final class Progress {
         if quizRight >= 20 { grant("quiz-twenty") }
         if !wroteLetters.isEmpty { grant("first-write") }
         if wroteLetters.count >= c.letters.count { grant("all-written") }
+        if !drawings.isEmpty { grant("first-drawing") }
+        if drawings.count >= 10 { grant("ten-drawings") }
         if !spelledWords.isEmpty { grant("first-spell") }
         if spelledWords.count >= 10 { grant("spell-ten") }
         if rhymeRight >= 1  { grant("first-rhyme") }
@@ -173,7 +178,7 @@ final class Progress {
         readWords = []; seenLetters = []; readSentences = []; colours = []; shapes = []
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
-        knownWords = []
+        knownWords = []; drawings = []
         save()
     }
 }

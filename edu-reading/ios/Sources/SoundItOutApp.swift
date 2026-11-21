@@ -61,6 +61,8 @@ private struct RootView: View {
                 case "blending":   BlendingView()
                 case "wordblending": WordBlendingView()
                 case "trace":      TraceView()
+                case "draw":       TraceView(pictures: true)
+                case "strokesheet": StrokeSheet(set: ProcessInfo.processInfo.arguments.last ?? "")
                 case "spell":      SpellView()
                 case "rhyme":      RhymeView()
                 case "soundhunt":  SoundGameView(mode: .blend)

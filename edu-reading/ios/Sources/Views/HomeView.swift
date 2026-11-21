@@ -65,8 +65,10 @@ struct HomeView: View {
                         Text("WRITE IT")
                             .font(.andika(12, bold: true)).kerning(1.4)
                             .foregroundStyle(Skin.live.onSkySoft)
+                        DeckTile(step: "🖍️", tint: 0xE0724E, name: "Draw",
+                                 blurb: "Lines, circles, then pictures") { TraceView(pictures: true) }
                         DeckTile(step: "✏️", tint: 0x7A5EA8, name: "Trace",
-                                 blurb: "Draw each letter with your finger") { TraceView() }
+                                 blurb: "Write each letter the right way") { TraceView() }
                     }
 
                     VStack(alignment: .leading, spacing: 9) {

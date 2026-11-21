@@ -1,183 +1,95 @@
 import SwiftUI
-import CoreText
 
-// Writing, not just reading. A faint letter with a dotted line down its CENTRE, and
-// the child draws over it with a finger. No wrong stroke, no scolding — the card
-// notices when the centre-line has been traced and celebrates.
+// Writing, taught as FORMATION. Each letter is drawn stroke by stroke, in order,
+// from a green start dot in the direction of its arrow — because a correctly formed
+// letter is the whole point of handwriting practice, and the old coverage check let
+// a backwards or scribbled letter pass.
 //
-// The centre-line is the glyph's skeleton, derived straight from the real Andika
-// outline by morphological thinning (Zhang–Suen). That means it is genuinely centred
-// for every letter with nothing hand-authored, so what is drawn is also exactly what
-// recognition checks.
+// It stays forgiving: the band around each stroke is wide, the finger can lift and
+// carry on from where it stopped, and wandering off simply doesn't advance — there
+// is still no wrong and no scolding. A pen-tip demo shows each new letter first.
+//
+// The same engine runs the Draw lane: pictures built from the pre-writing strokes
+// (lines, circles, crosses, zigzags), which finish by turning into their emoji.
 
-enum Glyph {
-    private static let font: CTFont? = {
-        guard let url = Bundle.main.url(forResource: "Andika-Bold", withExtension: "ttf"),
-              let provider = CGDataProvider(url: url as CFURL),
-              let cg = CGFont(provider) else { return nil }
-        return CTFontCreateWithGraphicsFont(cg, 100, nil, nil)
-    }()
+/// One thing to trace, already parsed into strokes.
+struct TraceItem: Equatable {
+    let key: String
+    let strokes: [Strokes.Stroke]
+    let ruled: Bool           // letters sit on three-line paper; pictures don't
+    let emoji: String?        // a picture's reward
 
-    static func path(_ ch: Character) -> CGPath? {
-        guard let font else { return nil }
-        var uni = Array(String(ch).utf16)
-        var g = CGGlyph()
-        guard CTFontGetGlyphsForCharacters(font, &uni, &g, 1) else { return nil }
-        return CTFontCreatePathForGlyph(font, g, nil)
-    }
-
-    /// The glyph outline, scaled and centred to fill `rect` (aspect preserved, y flipped).
-    static func fitted(_ ch: Character, in rect: CGRect) -> CGPath? {
-        guard let raw = path(ch) else { return nil }
-        let box = raw.boundingBoxOfPath
-        guard box.width > 0, box.height > 0 else { return nil }
-        let s = min(rect.width / box.width, rect.height / box.height)
-        let offX = rect.midX - box.midX * s
-        let offY = rect.midY + box.midY * s
-        var tf = CGAffineTransform(a: s, b: 0, c: 0, d: -s, tx: offX, ty: offY)
-        return raw.copy(using: &tf)
-    }
-
-    /// The centre-line of a filled glyph, as points, via Zhang–Suen thinning of a
-    /// raster of the shape. Centred by construction, one cell wide.
-    static func skeleton(_ path: CGPath, in fb: CGRect, step: CGFloat) -> [CGPoint] {
-        guard step > 0, fb.width > 0, fb.height > 0 else { return [] }
-        let cols = Int(ceil(fb.width / step)) + 2
-        let rows = Int(ceil(fb.height / step)) + 2
-        let ox = fb.minX - step, oy = fb.minY - step
-        func center(_ c: Int, _ r: Int) -> CGPoint {
-            CGPoint(x: ox + (CGFloat(c) + 0.5) * step, y: oy + (CGFloat(r) + 0.5) * step)
-        }
-        var g = Array(repeating: Array(repeating: false, count: cols), count: rows)
-        for r in 0..<rows { for c in 0..<cols { g[r][c] = path.contains(center(c, r), using: .winding) } }
-
-        // P2..P9, clockwise from north.
-        func nb(_ r: Int, _ c: Int) -> [Bool] {
-            [g[r-1][c], g[r-1][c+1], g[r][c+1], g[r+1][c+1],
-             g[r+1][c], g[r+1][c-1], g[r][c-1], g[r-1][c-1]]
-        }
-        var changed = true
-        while changed {
-            changed = false
-            for sub in 0..<2 {
-                var rem: [(Int, Int)] = []
-                for r in 1..<rows - 1 { for c in 1..<cols - 1 where g[r][c] {
-                    let n = nb(r, c)
-                    let b = n.filter { $0 }.count
-                    if b < 2 || b > 6 { continue }
-                    var a = 0
-                    for i in 0..<8 where !n[i] && n[(i + 1) % 8] { a += 1 }
-                    if a != 1 { continue }
-                    if sub == 0 {
-                        if n[0] && n[2] && n[4] { continue }
-                        if n[2] && n[4] && n[6] { continue }
-                    } else {
-                        if n[0] && n[2] && n[6] { continue }
-                        if n[0] && n[4] && n[6] { continue }
-                    }
-                    rem.append((r, c))
-                }}
-                if !rem.isEmpty { changed = true; for (r, c) in rem { g[r][c] = false } }
-            }
-        }
-        var pts: [CGPoint] = []
-        for r in 1..<rows - 1 { for c in 1..<cols - 1 where g[r][c] {
-            if nb(r, c).contains(true) { pts.append(center(c, r)) }  // drop lone specks
-        }}
-        return pts
-    }
+    static func == (a: TraceItem, b: TraceItem) -> Bool { a.key == b.key }
 }
 
 struct TraceView: View {
+    /// Letters (a / A / 1) or the Draw lane's pictures.
+    var pictures = false
+
     @Environment(Progress.self) private var progress
     @Environment(\.dismiss) private var dismiss
     private let c = ReadingContent.shared
-    private let accent = Color(hex: 0x7A5EA8)
+    private var accent: Color { pictures ? Color(hex: 0xE0724E) : Color(hex: 0x7A5EA8) }
 
     enum Mode: CaseIterable {
-        case upper, lower, digit
+        case lower, upper, digit
         var next: Mode {
-            switch self { case .upper: return .lower; case .lower: return .digit; case .digit: return .upper }
+            switch self { case .lower: return .upper; case .upper: return .digit; case .digit: return .lower }
         }
         var badge: String {
-            switch self { case .upper: return "A"; case .lower: return "a"; case .digit: return "1" }
+            switch self { case .lower: return "a"; case .upper: return "A"; case .digit: return "1" }
         }
     }
 
     @State private var index = 0
-    @State private var mode: Mode = .upper
-    @State private var strokes: [[CGPoint]] = []
-    @State private var current: [CGPoint] = []
-    @State private var ghost = Path()
-    @State private var dots: [CGPoint] = []          // the centre-line, and the target
-    @State private var guideDots: [CGPoint] = []     // a spaced subset, for drawing
-    @State private var dotCell: [Int] = []
-    @State private var covered: [Bool] = []
-    @State private var cellTotal: [Int: Int] = [:]
-    @State private var cellCov: [Int: Int] = [:]
-    @State private var done = false
-    @State private var canvas: CGSize = .zero
+    @State private var mode: Mode = .lower    // lowercase first: it's most of what's read
 
-    private var items: [String] {
+    private var keys: [String] {
+        if pictures { return Strokes.pictures.map(\.name) }
         switch mode {
-        case .upper: return c.letters.map(\.upper)
-        case .lower: return c.letters.map(\.lower)
+        case .lower: return c.letters.map(\.lower).sorted()
+        case .upper: return c.letters.map(\.upper).sorted()
         case .digit: return (0...9).map(String.init)
         }
     }
-    private var glyph: String { items.isEmpty ? "" : items[index % items.count] }
-    private var ink: CGFloat { max(min(canvas.width, canvas.height) * 0.05, 8) }
+
+    private var item: TraceItem {
+        let k = keys[index % max(keys.count, 1)]
+        if pictures, let p = Strokes.pictures.first(where: { $0.name == k }) {
+            return TraceItem(key: k, strokes: Strokes.parse(p.path), ruled: false, emoji: p.emoji)
+        }
+        return TraceItem(key: k, strokes: Strokes.strokes(for: k) ?? [], ruled: true, emoji: nil)
+    }
 
     var body: some View {
         ZStack {
             Skin.current.appGround.ignoresSafeArea()
-            VStack(spacing: 16) { card; controls }
-                .padding(18)
+            VStack(spacing: 16) {
+                StrokeTracer(item: item, accent: accent, onStroke: strokeDone, onDone: finished)
+                    .id(item.key)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .modifier(CardSurfaceStyle(skin: Skin.current))
+                controls
+            }
+            .padding(18)
         }
         .overlay(alignment: .topLeading) { BackChevron { dismiss() }.padding(.leading, 10).padding(.top, 6) }
-        .overlay(alignment: .topTrailing) { modeToggle.padding(.trailing, 10).padding(.top, 6) }
+        .overlay(alignment: .topTrailing) {
+            if !pictures { modeToggle.padding(.trailing, 10).padding(.top, 6) }
+        }
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
-    }
-
-    private var card: some View {
-        GeometryReader { geo in
-            ZStack {
-                ghost.fill(Skin.live.cardInkSoft.opacity(0.13))
-                if !done {
-                    Canvas { ctx, _ in
-                        let r: CGFloat = max(min(geo.size.width, geo.size.height) * 0.009, 3)
-                        for p in guideDots {
-                            ctx.fill(Path(ellipseIn: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)),
-                                     with: .color(Skin.live.cardInkSoft.opacity(0.75)))
-                        }
-                    }
-                }
-                ForEach(strokes.indices, id: \.self) { i in line(strokes[i]).stroke(accent, style: inkStyle) }
-                line(current).stroke(accent, style: inkStyle)
-                if done { ReadItCelebration(accent: accent).allowsHitTesting(false) }
-            }
-            .frame(width: geo.size.width, height: geo.size.height)
-            .contentShape(Rectangle())
-            .gesture(draw)
-            .onAppear { canvas = geo.size; prepare(speak: true) }
-            .onChange(of: geo.size) { _, s in canvas = s; prepare(speak: false) }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .modifier(CardSurfaceStyle(skin: Skin.current))
+        .onAppear { announce() }
     }
 
     private var controls: some View {
         HStack {
-            glass("eraser") {
-                strokes = []; current = []; done = false
-                covered = Array(repeating: false, count: dots.count); cellCov = [:]
-            }
+            glass("arrow.left") { step(-1) }
             Spacer()
-            Text("\(index % max(items.count, 1) + 1) / \(items.count)")
+            Text("\(index % max(keys.count, 1) + 1) / \(keys.count)")
                 .font(.andika(14, bold: true)).monospacedDigit().foregroundStyle(Skin.live.onSkySoft)
             Spacer()
-            glass("arrow.right") { next() }
+            glass("arrow.right") { step(1) }
         }
         .padding(.horizontal, 4)
     }
@@ -185,13 +97,13 @@ struct TraceView: View {
     private var modeToggle: some View {
         Button {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { mode = mode.next; index = 0 }
-            prepare(speak: false)
+            announce()
         } label: {
             Text(mode.badge).font(.andika(19, bold: true)).foregroundStyle(Skin.live.cardInk)
                 .frame(width: 42, height: 42).contentShape(Circle())
         }
         .buttonStyle(.plain).modifier(GlassCircle())
-        .accessibilityLabel("Capitals, small letters or numbers")
+        .accessibilityLabel("Small letters, capitals or numbers")
     }
 
     private func glass(_ symbol: String, _ action: @escaping () -> Void) -> some View {
@@ -202,105 +114,265 @@ struct TraceView: View {
         .buttonStyle(.plain).modifier(GlassCircle())
     }
 
-    private var inkStyle: StrokeStyle { StrokeStyle(lineWidth: ink, lineCap: .round, lineJoin: .round) }
-
-    /// Greedily thin a point cloud so no two kept points are closer than `minDist` —
-    /// evenly spaced dots along the centre-line without needing them ordered.
-    private static func spaced(_ pts: [CGPoint], minDist: CGFloat) -> [CGPoint] {
-        let d2 = minDist * minDist
-        var kept: [CGPoint] = []
-        for p in pts {
-            var ok = true
-            for q in kept {
-                let dx = p.x - q.x, dy = p.y - q.y
-                if dx * dx + dy * dy < d2 { ok = false; break }
-            }
-            if ok { kept.append(p) }
-        }
-        return kept
+    private func step(_ d: Int) {
+        index = (index + d + keys.count) % keys.count
+        announce()
     }
 
-    private func line(_ pts: [CGPoint]) -> Path {
-        var p = Path()
-        guard let first = pts.first else { return p }
-        p.move(to: first)
-        for pt in pts.dropFirst() { p.addLine(to: pt) }
-        if pts.count == 1 { p.addLine(to: CGPoint(x: first.x + 0.5, y: first.y)) }
-        return p
-    }
-
-    private var draw: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { v in current.append(v.location); absorb(v.location) }
-            .onEnded { _ in if !current.isEmpty { strokes.append(current); current = [] } }
-    }
-
-    /// Mark centre-line points the finger passes near; celebrate once the whole line
-    /// is traced — region by region, so no part (an A crossbar) can be skipped.
-    private func absorb(_ p: CGPoint) {
-        guard !dots.isEmpty else { return }
-        let r2 = pow(min(canvas.width, canvas.height) * 0.06, 2)
-        for i in dots.indices where !covered[i] {
-            let dx = dots[i].x - p.x, dy = dots[i].y - p.y
-            if dx * dx + dy * dy <= r2 { covered[i] = true; cellCov[dotCell[i], default: 0] += 1 }
-        }
-        if !done, traced() { finish() }
-    }
-
-    private func traced() -> Bool {
-        guard !dots.isEmpty else { return false }
-        let hit = cellCov.values.reduce(0, +)
-        guard Double(hit) / Double(dots.count) >= 0.75 else { return false }
-        let minPts = max(2, dots.count / 40)
-        for (cell, total) in cellTotal where total >= minPts {
-            if Double(cellCov[cell] ?? 0) / Double(total) < 0.5 { return false }
-        }
-        return true
-    }
-
-    private func finish() {
-        done = true
-        Buzz.yes()
-        Voice.shared.celebrate()
-        if let ch = glyph.first, ch.isLetter { progress.wroteLetter(glyph.lowercased()) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { next() }
-    }
-
-    private func next() {
-        index = (index + 1) % max(items.count, 1)
-        prepare(speak: true)
-    }
-
-    private func prepare(speak: Bool) {
-        strokes = []; current = []; done = false
-        dots = []; guideDots = []; dotCell = []; covered = []; cellTotal = [:]; cellCov = [:]
-        guard canvas.width > 1, let ch = glyph.first else { return }
-        let target = CGRect(x: canvas.width * 0.22, y: canvas.height * 0.16,
-                            width: canvas.width * 0.56, height: canvas.height * 0.68)
-        guard let fitted = Glyph.fitted(ch, in: target) else { return }
-        ghost = Path(fitted)
-
-        let fb = fitted.boundingBoxOfPath
-        let step = max(min(canvas.width, canvas.height) * 0.016, 4)
-        dots = Glyph.skeleton(fitted, in: fb, step: step)
-        covered = Array(repeating: false, count: dots.count)
-        // A spaced subset for a clean dotted look — the full set still drives recognition.
-        guideDots = Self.spaced(dots, minDist: step * 2.8)
-
-        // Coarse regions for "every part traced".
-        let cellSize = max(min(canvas.width, canvas.height) * 0.13, 10)
-        let gcols = max(1, Int(ceil(fb.width / cellSize)))
-        for p in dots {
-            let cc = min(gcols - 1, max(0, Int((p.x - fb.minX) / cellSize)))
-            let cr = max(0, Int((p.y - fb.minY) / cellSize))
-            let cell = cr * gcols + cc
-            dotCell.append(cell); cellTotal[cell, default: 0] += 1
-        }
-
-        if speak, ch.isLetter,
-           let l = c.letters.first(where: { $0.lower == glyph.lowercased() }) {
+    /// A letter says its SOUND as it appears; a picture says its name.
+    private func announce() {
+        let k = item.key
+        if pictures { Voice.shared.say(k); return }
+        if mode == .digit { Voice.shared.say(k); return }
+        if let l = c.letters.first(where: { $0.lower == k.lowercased() }) {
             Voice.shared.phoneme(c.phoneme(of: l))
         }
     }
+
+    private func strokeDone() { Buzz.pick() }
+
+    private func finished() {
+        Buzz.yes()
+        Voice.shared.celebrate()
+        let k = item.key
+        if pictures {
+            progress.drewPicture(k)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { Voice.shared.say(k) }
+        } else {
+            progress.wroteLetter(k)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { announce() }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { step(1) }
+    }
 }
 
+/// The tracing surface: guide, start dot and arrow, a pen-tip demo, and the judging.
+struct StrokeTracer: View {
+    let item: TraceItem
+    let accent: Color
+    var onStroke: () -> Void = {}
+    var onDone: () -> Void = {}
+
+    @State private var strokeIndex = 0
+    @State private var progress = 0          // points of the current stroke traced
+    @State private var live: [CGPoint] = []  // the finger, in view space
+    @State private var started = false       // this touch began at the right place
+    @State private var done = false
+    @State private var demo: (stroke: Int, t: CGFloat)?
+    @State private var demoTimer: Timer?
+    @State private var nudge = false
+
+    var body: some View {
+        GeometryReader { geo in
+            let map = Mapper(item: item, size: geo.size)
+            ZStack {
+                if item.ruled { paper(map, geo.size) }
+                // The whole shape, faint and wide — where the ink should go.
+                ForEach(item.strokes.indices, id: \.self) { i in
+                    path(item.strokes[i].points, map)
+                        .stroke(Skin.live.cardInkSoft.opacity(0.14),
+                                style: StrokeStyle(lineWidth: map.band * 1.5, lineCap: .round, lineJoin: .round))
+                }
+                // Finished strokes, and the traced part of the current one, in ink.
+                ForEach(0..<min(strokeIndex, item.strokes.count), id: \.self) { i in
+                    ink(item.strokes[i], map)
+                }
+                if !done, strokeIndex < item.strokes.count {
+                    let s = item.strokes[strokeIndex]
+                    if !s.isDot {
+                        path(s.points, map)
+                            .stroke(accent.opacity(0.55),
+                                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round, dash: [2, 9]))
+                        path(Array(s.points.prefix(progress + 1)), map)
+                            .stroke(accent, style: StrokeStyle(lineWidth: map.ink, lineCap: .round, lineJoin: .round))
+                    }
+                    startMarker(s, map)
+                }
+                if let demo, demo.stroke < item.strokes.count {
+                    let pts = item.strokes[demo.stroke].points
+                    let p = map.view(pts[min(Int(demo.t * CGFloat(pts.count - 1)), pts.count - 1)])
+                    Circle().fill(accent).frame(width: map.ink * 1.4, height: map.ink * 1.4)
+                        .shadow(color: accent.opacity(0.5), radius: 6)
+                        .position(p)
+                }
+                if done, let e = item.emoji {
+                    Text(e).font(.system(size: min(geo.size.width, geo.size.height) * 0.55))
+                        .transition(.scale(scale: 0.2).combined(with: .opacity))
+                }
+                if done { ReadItCelebration(accent: accent).allowsHitTesting(false) }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .gesture(drag(map))
+            .overlay(alignment: .bottomTrailing) {
+                // Show me again: replays the pen-tip demo.
+                Button { runDemo() } label: {
+                    Image(systemName: "hand.point.up.left.fill")
+                        .font(.system(size: 17, weight: .semibold)).foregroundStyle(accent)
+                        .frame(width: 40, height: 40).contentShape(Circle())
+                }
+                .buttonStyle(.plain).padding(10)
+                .opacity(done ? 0 : 1)
+            }
+        }
+        .onAppear { runDemo() }
+        .onDisappear { demoTimer?.invalidate() }
+    }
+
+    // MARK: drawing
+
+    /// Three-line paper: top line, dashed midline, baseline — the lines a child
+    /// writes on at school, so lowercase sits at the right height.
+    private func paper(_ m: Mapper, _ size: CGSize) -> some View {
+        let lineColor = Skin.live.cardInkSoft.opacity(0.35)
+        return ZStack {
+            Path { p in
+                for y in [0.0, 1.0] { let v = m.view(CGPoint(x: 0, y: y)).y
+                    p.move(to: CGPoint(x: 16, y: v)); p.addLine(to: CGPoint(x: size.width - 16, y: v)) }
+            }.stroke(lineColor, lineWidth: 1.5)
+            Path { p in
+                let v = m.view(CGPoint(x: 0, y: 0.5)).y
+                p.move(to: CGPoint(x: 16, y: v)); p.addLine(to: CGPoint(x: size.width - 16, y: v))
+            }.stroke(lineColor, style: StrokeStyle(lineWidth: 1.2, dash: [6, 6]))
+        }
+    }
+
+    private func path(_ pts: [CGPoint], _ m: Mapper) -> Path {
+        var p = Path()
+        guard let f = pts.first else { return p }
+        p.move(to: m.view(f))
+        for q in pts.dropFirst() { p.addLine(to: m.view(q)) }
+        return p
+    }
+
+    @ViewBuilder private func ink(_ s: Strokes.Stroke, _ m: Mapper) -> some View {
+        if s.isDot, let p = s.points.first {
+            Circle().fill(accent).frame(width: m.ink * 1.3, height: m.ink * 1.3).position(m.view(p))
+        } else {
+            path(s.points, m).stroke(accent, style: StrokeStyle(lineWidth: m.ink, lineCap: .round, lineJoin: .round))
+        }
+    }
+
+    /// The green dot where the finger goes next, numbered for the stroke, with an
+    /// arrow pointing the way the stroke runs.
+    @ViewBuilder private func startMarker(_ s: Strokes.Stroke, _ m: Mapper) -> some View {
+        let at = s.points[min(progress, s.points.count - 1)]
+        let p = m.view(at)
+        let d = m.band * 1.25
+        ZStack {
+            Circle().fill(Theme.go).frame(width: d, height: d)
+                .shadow(color: Theme.go.opacity(0.45), radius: nudge ? 10 : 3)
+                .scaleEffect(nudge ? 1.25 : 1)
+            if progress == 0 {
+                Text("\(strokeIndex + 1)").font(.andika(d * 0.55, bold: true)).foregroundStyle(.white)
+            }
+        }
+        .position(p)
+        .animation(.spring(response: 0.25, dampingFraction: 0.5), value: nudge)
+        if !s.isDot, progress < s.points.count - 4 {
+            let ahead = m.view(s.points[min(progress + 5, s.points.count - 1)])
+            let angle = atan2(ahead.y - p.y, ahead.x - p.x)
+            Image(systemName: "arrowtriangle.right.fill")
+                .font(.system(size: d * 0.5)).foregroundStyle(Theme.go)
+                .rotationEffect(.radians(Double(angle)))
+                .position(x: p.x + cos(angle) * d * 0.95, y: p.y + sin(angle) * d * 0.95)
+        }
+    }
+
+    // MARK: judging
+
+    private func drag(_ m: Mapper) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { v in
+                guard !done, strokeIndex < item.strokes.count else { return }
+                if demo != nil { stopDemo() }
+                let s = item.strokes[strokeIndex]
+                let target = m.view(s.points[min(progress, s.points.count - 1)])
+                if live.isEmpty {
+                    // A touch counts only if it starts on the green dot (or where the
+                    // finger last left off). Anywhere else, the dot pulses: start here.
+                    started = dist(v.location, target) < m.band * 1.4
+                    if !started { pulse() }
+                }
+                live.append(v.location)
+                guard started else { return }
+                if s.isDot { completeStroke(); return }
+                // Advance along the stroke only, never back: the nearest of the next
+                // few points within the band. Off the band, nothing happens.
+                let window = progress + 1 ..< min(progress + 14, s.points.count)
+                if let j = window.last(where: { dist(v.location, m.view(s.points[$0])) < m.band }) {
+                    progress = j
+                }
+                if progress >= s.points.count - 2 { completeStroke() }
+            }
+            .onEnded { _ in live = []; started = false }
+    }
+
+    private func completeStroke() {
+        started = false
+        live = []
+        progress = 0
+        strokeIndex += 1
+        onStroke()
+        if strokeIndex >= item.strokes.count {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { done = true }
+            onDone()
+        }
+    }
+
+    private func pulse() {
+        nudge = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { nudge = false }
+    }
+
+    private func dist(_ a: CGPoint, _ b: CGPoint) -> CGFloat { hypot(a.x - b.x, a.y - b.y) }
+
+    // MARK: demo
+
+    /// A pen tip runs through every stroke in order — watch, then do.
+    private func runDemo() {
+        stopDemo()
+        guard !done, !item.strokes.isEmpty else { return }
+        demo = (strokeIndex, 0)
+        demoTimer = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { _ in
+            guard let d = demo else { return }
+            let pts = item.strokes[d.stroke].points.count
+            let dt = item.strokes[d.stroke].isDot ? 0.06 : max(0.012, 1.4 / CGFloat(pts))
+            var t = d.t + dt
+            var s = d.stroke
+            if t >= 1 { s += 1; t = 0 }
+            if s >= item.strokes.count { stopDemo(); return }
+            demo = (s, t)
+        }
+    }
+
+    private func stopDemo() { demoTimer?.invalidate(); demoTimer = nil; demo = nil }
+}
+
+/// Unit coordinates (the stroke language) to view coordinates for one item.
+private struct Mapper {
+    let scale: CGFloat
+    let origin: CGPoint
+    let band: CGFloat
+    let ink: CGFloat
+
+    init(item: TraceItem, size: CGSize) {
+        let xs = item.strokes.flatMap { $0.points.map(\.x) }
+        let minX = xs.min() ?? 0, maxX = xs.max() ?? 1
+        if item.ruled {
+            // Paper spans y 0…1.5 (descenders) with a margin; letters centred across.
+            let s = min(size.height / 1.7, (size.width - 60) / max(maxX - minX + 0.2, 0.6))
+            scale = s
+            origin = CGPoint(x: size.width / 2 - (minX + maxX) / 2 * s, y: size.height * 0.5 - 0.72 * s)
+        } else {
+            let s = min(size.width, size.height) * 0.86
+            scale = s
+            origin = CGPoint(x: (size.width - s) / 2, y: (size.height - s) / 2)
+        }
+        let short = min(size.width, size.height)
+        band = max(26, short * 0.085)
+        ink = max(10, short * 0.04)
+    }
+
+    func view(_ p: CGPoint) -> CGPoint { CGPoint(x: origin.x + p.x * scale, y: origin.y + p.y * scale) }
+}
