@@ -5,15 +5,16 @@ import SwiftUI
 // Watch the bus pull up at each stop: riders walk from the kerb to the door one at a time (or a
 // whole family / crowd at once later on) and others step off. Then the inspector asks a question
 // and the child taps one of 2–3 big numbers. A miss lights the right number and spells out the
-// sum (and, on the see-through bus, numbers every rider).
+// sum (and, on the see-through bus, numbers every rider). Early on the question is read aloud.
 //
 // Difficulty is continuous (GameKit `d`, 4 routes a Gradus): every knob ramps a little with each
 // right answer —
 //   • numbers: start riders 0–2 → up to 40, group sizes 1–2 → 3–15, the total cap 4 → 100;
 //   • stops 1 → 4, events per stop 1 → 2, the walk pace 1.1 s → 0.35 s a rider;
-//   • kinds fade in: getting OFF (~I½), on-and-off every route (~II½), misted windows — keep count
-//     in your head (~II–III), families (~IV), crowds (~IV½), "3 families of 4" (~VI), "half get
-//     off" (~VII), "25% get off" (~VIII);
+//   • kinds fade in one at a time: getting OFF (~I½), on-and-off every route (~II½), more stops
+//     (from ~II½), misted windows — keep count in your head (~III–IV), families (~IV½), crowds (~V),
+//     "3 families of 4" (~VI), "half get off" (~VII), "25% get off" (~VIII). A route with more
+//     riders than the windows can show (10) is always misted;
 //   • questions fade in via `tier`: how many now → how many got OFF in all (~V) → how many at the
 //     START (~VI) → fares (~VII), with "how many now" always kept as review;
 //   • 2 choices within ±2 at the very start, then 3; "watch again" until ~III½.
@@ -77,18 +78,18 @@ private struct OBKnobs {
 
 @MainActor
 private func obKnobs(_ m: ArcadeModel) -> OBKnobs {
-    let maxStops = m.rampInt(1, 4, from: 2.2, to: 8)
+    let maxStops = m.rampInt(1, 4, from: 2.6, to: 8)
     let minStops = min(maxStops, m.rampInt(1, 3, from: 3, to: 7.5))
     let lo = m.rampInt(1, 3, from: 5, to: 9), hi = max(lo, m.rampInt(2, 15, to: 9))
     let t = OBTier(stops: minStops...maxStops, perStop: 1...m.rampInt(1, 2, from: 2, to: 3.5), each: lo...hi,
                    cap: m.rampInt(4, 100, to: 9),
-                   crowd: m.chance(1, from: 4.3, to: 5.3), family: m.chance(1, from: 3.4, to: 4.4),
+                   crowd: m.chance(1, from: 4.7, to: 5.5), family: m.chance(1, from: 4.0, to: 4.9),
                    multi: m.chance(1, from: 5.4, to: 6.6), fraction: m.chance(1, from: 6.4, to: 7.6))
     let kinds: [OBAsk] = [.now, .offTotal, .start, .fare(Int.random(in: 2...m.rampInt(5, 9, from: 6.6, to: 9)))]
     let ask = kinds[m.tier([1, 4.6, 5.5, 6.6])]
     let sLo = m.rampInt(0, 5, from: 2, to: 7)
     let sHi = max(sLo + 2, m.rampInt(2, 40, to: 9))
-    return OBKnobs(tier: t, start: sLo...sHi, ask: ask, fog: m.chance(0.9, from: 2.2, to: 3.4),
+    return OBKnobs(tier: t, start: sLo...sHi, ask: ask, fog: m.chance(0.9, from: 3.0, to: 4.0),
                    offs: m.chance(1, from: 1.4, to: 2.2), both: m.chance(1, from: 2.2, to: 3),
                    percent: m.chance(0.5, from: 7.5, to: 9.5), choices: m.d < 1.8 ? 2 : 3, tight: m.d < 1.8)
 }
@@ -99,12 +100,13 @@ private struct OBGen {
     var stops: [[OBEvent]] = []
     var cur: [OBEvent] = []
     var onTotal = 0, offTotal = 0, offEvents = 0
+    var peak = 0                     // most riders aboard at once
     var usedFraction = false
 
-    init(_ start: Int) { self.start = start; r = start }
+    init(_ start: Int) { self.start = start; r = start; peak = start }
 
     mutating func on(_ n: Int, label: String? = nil, groups: [Int]? = nil, badge: String? = nil, term: String? = nil, crowd: Bool = false) {
-        r += n; onTotal += n
+        r += n; onTotal += n; peak = max(peak, r)
         cur.append(OBEvent(on: true, count: n, label: label ?? (n == 1 ? "1 gets on" : "\(n) get on"),
                            groups: groups ?? (crowd ? [n] : Array(repeating: 1, count: n)), badge: badge, term: term ?? "+ \(n)"))
     }
@@ -204,7 +206,8 @@ private func obRoute(_ m: ArcadeModel) -> OBRoute {
         let picked = k.tight ? cands.filter { abs($0 - answer) <= 2 } : cands
         for c in picked.shuffled() where c >= 0 && !opts.contains(c) && opts.count < n { opts.append(c) }
         for c in [answer + 1, answer + 2, answer + 3] where opts.count < n && !opts.contains(c) { opts.append(c) }
-        return OBRoute(start: g.start, stops: g.stops, ask: ask, fog: k.fog, final: g.r,
+        // The windows seat 10: a fuller bus is always misted (counted in your head, not by eye).
+        return OBRoute(start: g.start, stops: g.stops, ask: ask, fog: k.fog || g.peak > 10, final: g.r,
                        answer: answer, options: opts.sorted(), sum: sum)
     }
 }
@@ -367,6 +370,8 @@ private final class OmnibusModel: ArcadeModel {
             guard await wait(0.4) else { return }
         }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { caption = rt.question; stage = .asking }
+        if self.d < 3.6 { LibraryVoice.say(rt.question.replacingOccurrences(of: "START", with: "start")
+                                                 .replacingOccurrences(of: "OFF", with: "off"), rate: 0.46) }
     }
 
     func choose(_ i: Int) {
@@ -397,8 +402,12 @@ struct OmnibusView: View {
     @StateObject private var model = OmnibusModel()
 
     var body: some View {
-        ArcadeShell(model: model, spec: GameID.omnibus.spec!, accent: Lu.gold, onClose: onClose,
+        ArcadeShell(model: model, spec: GameID.omnibus.spec!, accent: Lu.gold, onClose: { LibraryVoice.stop(); onClose() },
                     backdrop: { OBStreetBackdrop() }) {
+            GeometryReader { outer in
+            // The street scene is laid out at 330 pt and scaled up into whatever height the screen
+            // has spare (so a tall phone isn't half empty pavement under the answers).
+            let k = min(1.4, max(1, (outer.size.height - 56 - 74 - 200) / 330))
             VStack(spacing: 10) {
                 HUDSpace(56)
                 Text(model.caption)
@@ -412,17 +421,21 @@ struct OmnibusView: View {
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
 
                 // The street runs edge to edge (past the column too, when sideways).
-                GeometryReader { geo in OBScene(model: model, size: geo.size) }
-                    .frame(height: 330)
-                    .padding(.horizontal, -14)
-                    .ludusBleed()
+                GeometryReader { geo in
+                    OBScene(model: model, size: CGSize(width: geo.size.width / k, height: 330))
+                        .scaleEffect(k, anchor: .topLeading)
+                }
+                .frame(height: 330 * k)
+                .padding(.horizontal, -14)
+                .ludusBleed()
 
                 answerArea
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 14)
+            }
         }
-        .onDisappear { model.stop() }
+        .onDisappear { model.stop(); LibraryVoice.stop() }
     }
 
     @ViewBuilder private var answerArea: some View {
