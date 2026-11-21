@@ -13,7 +13,10 @@ enum LibraryVoice {
     private static let voice = AVSpeechSynthesisVoice(language: "en-US")
     private static var sessionReady = false
     private static let relay = Relay()
-    private static var finished: [ObjectIdentifier: () -> Void] = [:]
+    private static var finished: [ObjectIdentifier: Once] = [:]
+    /// Set by the 🔊 button: the next `say` is a REPEAT, so whatever was waiting on the line it
+    /// cuts off (a game's clock) keeps waiting until the repeat is done, instead of starting now.
+    fileprivate static var repeatNext = false
 
     /// Says `text`. A sound written between slashes — "What starts with /k/?" — is spoken as the
     /// bare sound (IPA, see `phonics`), not the letter name. `then` runs once the voice is done
@@ -21,6 +24,8 @@ enum LibraryVoice {
     /// so a game can start its clock AFTER the directions instead of during them.
     static func say(_ text: String, rate: Float = 0.42, then done: (() -> Void)? = nil) {
         let once = Once(done)
+        let isRepeat = repeatNext
+        repeatNext = false
         // The Tabularium's sound switch silences speech too (and `LUDUS_MUTE`, via `Sfx.muted`).
         guard !Sfx.muted, !text.isEmpty else {
             DispatchQueue.main.asyncAfter(deadline: .now() + readingTime(text)) { once.run() }
@@ -38,7 +43,14 @@ enum LibraryVoice {
         u.rate = rate
         u.pitchMultiplier = 1.05
         u.voice = voice
-        finished[ObjectIdentifier(u)] = { once.run() }
+        if isRepeat {
+            // Hold every line still waiting and hand it on to this one.
+            let held = Array(finished.values)
+            finished.removeAll()
+            held.forEach { $0.held = true }
+            once.chain(held)
+        }
+        finished[ObjectIdentifier(u)] = once
         synth.speak(u)
         // Belt and braces: if the voice never reports back (a cold simulator can stall for
         // seconds), don't hold the game hostage.
@@ -88,7 +100,7 @@ enum LibraryVoice {
     }
 
     fileprivate static func done(_ u: AVSpeechUtterance) {
-        finished.removeValue(forKey: ObjectIdentifier(u))?()
+        finished.removeValue(forKey: ObjectIdentifier(u))?.run()
     }
 
     private final class Relay: NSObject, AVSpeechSynthesizerDelegate {
@@ -100,11 +112,20 @@ enum LibraryVoice {
         }
     }
 
-    /// A completion that runs at most once.
-    private final class Once {
+    /// A completion that runs at most once. A `held` one ignores its own triggers (cut-off,
+    /// fallback timer) and runs only when the repeat it was handed to finishes.
+    fileprivate final class Once {
         private var f: (() -> Void)?
+        private var next: [Once] = []
+        var held = false
         init(_ f: (() -> Void)?) { self.f = f }
-        func run() { let g = f; f = nil; g?() }
+        func chain(_ others: [Once]) { next += others }
+        func run() {
+            guard !held else { return }
+            let g = f; f = nil; g?()
+            let n = next; next = []
+            n.forEach { $0.held = false; $0.run() }
+        }
     }
 }
 
@@ -115,7 +136,7 @@ struct LibrarySpeakerButton: View {
     var size: CGFloat = 44
     let action: () -> Void
     var body: some View {
-        Button(action: action) {
+        Button(action: { LibraryVoice.repeatNext = true; action(); LibraryVoice.repeatNext = false }) {
             Image(systemName: "speaker.wave.2.fill")
                 .font(.system(size: size * 0.42, weight: .bold))
                 .foregroundStyle(Color(hex: Lu.inkDark))
