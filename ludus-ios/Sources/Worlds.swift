@@ -148,7 +148,7 @@ let ludusWorlds: [LudusWorld] = [
         .init(title: "Porta Custos", mechanic: "gatekeeper", premise: "Only gladiators who follow the rule may enter.", game: .portaCustos,
               icon: "🛡️", howTo: how(("🛡️", "Look at the rule"), ("🚪", "OPEN if he fits it"), ("✋", "SHUT if he doesn't"))),
         .init(title: "Torches of the Arena", mechanic: "lights-out", premise: "Light every torch — but each tap flips its neighbours.", game: .torches,
-              icon: "🔥", howTo: how(("👆", "Tap a torch"), ("↔️", "Its neighbours flip too"), ("🔥", "Light them all!"))),
+              icon: "🔥", howTo: how(("👆", "Tap a torch"), ("➕", "It and its neighbours flip"), ("🔥", "Light them all!"))),
     ]),
     LudusWorld(name: "Lab Rats", subject: "Science", emoji: "🔬", colorHex: Lu.tangerine, games: [
         .init(title: "Vulcan's Forge", mechanic: "heat & cool", premise: "Melt, boil and freeze things in the fire inside Vesuvius.", game: .forge,
