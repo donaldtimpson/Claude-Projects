@@ -15,6 +15,19 @@ struct WorldView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 26) {
 
+                // One sticker per finished Play session — the board is the record
+                // a child who can't read numbers can still see growing.
+                section("MY STICKERS", "\(progress.stickers.count)") {
+                    if progress.stickers.isEmpty {
+                        hint("Finish a Play and pick a sticker for your board.")
+                    } else {
+                        StickerBoard(stickers: progress.stickers, size: 38)
+                            .frame(maxWidth: .infinity)
+                            .padding(12)
+                            .background(Skin.live.card, in: RoundedRectangle(cornerRadius: 16))
+                    }
+                }
+
                 section("WHAT I'VE READ", "\(progress.readWords.count)") {
                     if progress.readWords.isEmpty {
                         hint("Read a word out loud and it comes to live here.")
