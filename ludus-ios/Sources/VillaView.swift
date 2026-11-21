@@ -154,7 +154,8 @@ struct VillaView: View {
                     placeBar.padding(.bottom, 8)
                     switch layout {
                     case .phone:
-                        scene.frame(height: min(h * 0.5, w * 1.05)).padding(.horizontal, 10)
+                        // The scene takes whatever the shop strip leaves (up to a little taller than wide).
+                        scene.frame(maxHeight: w * 1.2).padding(.horizontal, 10)
                         stripShop
                     case .tall:
                         scene.padding(.horizontal, 14)
@@ -281,12 +282,11 @@ struct VillaView: View {
                     .padding(.horizontal, 2).padding(.vertical, 4)
                 }
                 noteLine
-            case .build(let wing): buildPanel(wing)
-            case .prizes: PrizeList(refresh: $refresh, note: $note)
+            case .build(let wing): buildPanel(wing).frame(height: 214)
+            case .prizes: PrizeList(refresh: $refresh, note: $note).frame(height: 214)
             }
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12).padding(.top, 12)
+        .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 6)
         .background(parchmentPanel(top: true))
         .padding(.top, 12)
     }
