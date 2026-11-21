@@ -182,7 +182,7 @@ struct VillaView: View {
                 if let wing = place.wing, LudusEconomy.built(wing) {
                     wingRoom(wing, WingState(owned: owned, justBought: justBought, poke: poke, onTap: pokeOwned))
                 } else if let wing = place.wing {
-                    WingSite(wing: wing)
+                    WingPreview(wing: wing)
                 }
             case .prizes:
                 PrizeHall(refresh: refresh)
@@ -203,7 +203,6 @@ struct VillaView: View {
                         placeChip(.wing(wing.id), icon: wing.icon, name: wing.short,
                                   state: LudusEconomy.built(wing) ? .open : (LudusEconomy.wingUnlocked(wing) ? .buildable : .locked))
                     }
-                    placeChip(.prizes, icon: "gift.fill", name: "Prizes", state: .open)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 2)
             }
@@ -220,9 +219,16 @@ struct VillaView: View {
             withAnimation(.easeOut(duration: 0.2)) { place = p; note = nil }
         } label: {
             HStack(spacing: 5) {
-                Image(systemName: state == .locked ? "lock.fill" : icon).font(.system(size: 12, weight: .bold))
+                // locked wings keep their subject's icon (so the chip still says which world), with a small lock
+                Image(systemName: icon).font(.system(size: 12, weight: .bold))
+                    .overlay(alignment: .bottomTrailing) {
+                        if state == .locked {
+                            Image(systemName: "lock.fill").font(.system(size: 8, weight: .black))
+                                .foregroundStyle(Fr.gold).offset(x: 5, y: 4)
+                        }
+                    }
                 Text(name.uppercased()).font(luCinzel(11, bold: true)).tracking(0.4).lineLimit(1)
-                if state == .buildable && !on {
+                if state == .buildable && !on && denarii >= LudusEconomy.nextWingCost {
                     Circle().fill(Fr.gold).frame(width: 7, height: 7)      // ready to build
                 }
             }
@@ -249,13 +255,41 @@ struct VillaView: View {
             .accessibilityLabel("Back to the map")
             VStack(alignment: .leading, spacing: 0) {
                 Text("VILLA").font(luCinzel(24)).foregroundStyle(Fr.parchment).tracking(2)
+                    .lineLimit(1).minimumScaleFactor(0.7)
                 Text(ludusRank() + "'s house").font(luGaramond(13, semibold: true)).foregroundStyle(Fr.gold)
+                    .lineLimit(1).minimumScaleFactor(0.7)
             }
+            .layoutPriority(-1)
             Spacer()
             purse(img: "CoinSilver", value: denarii)
             purse(img: "CoinGold", value: aurei)
+            prizesButton
         }
         .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 8)
+    }
+
+    /// The prize board, always one tap away (a badge counts prizes waiting for a grown-up).
+    private var prizesButton: some View {
+        let waiting = PrizeBook.shared.pending.count
+        return Button {
+            Sfx.play(.tick)
+            withAnimation(.easeOut(duration: 0.2)) { place = place == .prizes ? .garden : .prizes; note = nil }
+        } label: {
+            Image(systemName: "gift.fill").font(.system(size: 17, weight: .bold))
+                .foregroundStyle(place == .prizes ? Fr.frameDeep : Fr.gold)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(place == .prizes ? Fr.gold : Fr.frame)
+                    .overlay(Circle().stroke(Fr.gold.opacity(0.7), lineWidth: 1)))
+                .overlay(alignment: .topTrailing) {
+                    if waiting > 0 {
+                        Text("\(waiting)").font(.system(size: 11, weight: .heavy)).foregroundStyle(.white)
+                            .frame(minWidth: 17, minHeight: 17).background(Circle().fill(Color(hex: 0xc0392b)))
+                            .offset(x: 4, y: -4)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Prizes")
     }
 
     private func purse(img: String, value: Int) -> some View {
@@ -371,7 +405,7 @@ struct VillaView: View {
     private func buildPanel(_ wing: VillaWing) -> some View {
         let unlocked = LudusEconomy.wingUnlocked(wing)
         let cost = LudusEconomy.nextWingCost
-        let afford = aurei >= cost
+        let afford = denarii >= cost
         return VStack(spacing: 10) {
             Text(wing.name.uppercased()).font(luCinzel(17, bold: true)).tracking(1).foregroundStyle(Fr.ink)
             Text(wing.blurb).font(luGaramond(15, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
@@ -381,8 +415,8 @@ struct VillaView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "hammer.fill").font(.system(size: 15, weight: .bold))
                         Text("BUILD IT").font(luCinzel(15, bold: true)).tracking(1)
-                        Image("CoinGold").resizable().frame(width: 20, height: 20)
-                        Text("\(cost)").font(luCinzel(16)).monospacedDigit()
+                        Image("CoinSilver").resizable().frame(width: 20, height: 20)
+                        Text("\(cost)").font(luCinzel(16)).monospacedDigit().fixedSize()
                     }
                     .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
                     .padding(.horizontal, 22).frame(height: 46)
@@ -391,18 +425,18 @@ struct VillaView: View {
                 }
                 .buttonStyle(.plain)
                 .offset(x: shake == wing.ownedID ? -6 : 0)
-                Text(note ?? (afford ? "Gold aurei come from laurels." :
-                              "You need \(cost - aurei) more gold aure\(cost - aurei == 1 ? "us" : "i"). Win laurels to earn them!"))
+                Text(note ?? (afford ? "Every wing you build makes the next one cost a little more." :
+                              "You need \(cost - denarii) more silver denarii. Every right answer earns one!"))
                     .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.7)).multilineTextAlignment(.center)
             } else {
                 HStack(spacing: 8) {
                     Image(systemName: "lock.fill").foregroundStyle(Fr.frame)
-                    Text("Win a laurel in \(LudusEconomy.worldName(wing)) to build it.")
+                    Text("Win a laurel at \(wing.landmark) to build it.")
                         .font(luGaramond(16, semibold: true)).foregroundStyle(Fr.ink)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 10)
                 .background(Capsule().fill(Color.white.opacity(0.4)))
-                Text("A laurel = reach Gradus III in any \(wing.subject) game.")
+                Text("Reach Gradus III in any of its games to win a laurel.")
                     .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.65))
             }
         }
@@ -411,12 +445,14 @@ struct VillaView: View {
 
     private func build(_ wing: VillaWing) {
         if LudusEconomy.build(wing) {
+            if goal == wing.ownedID { LudusEconomy.goal = nil; goal = nil }
             Sfx.play(.coin); Haptics.success()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { Sfx.play(.sparkle) }
             withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) { refresh += 1 }
             note = "\(wing.name) is built! Now fill it with things."
         } else {
             Sfx.play(.wrong); Haptics.error()
+            if LudusEconomy.wingUnlocked(wing) { setGoal(wing.ownedID, name: wing.name) }
             withAnimation(.linear(duration: 0.05).repeatCount(5, autoreverses: true)) { shake = wing.ownedID }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { shake = nil }
         }
@@ -468,7 +504,7 @@ struct VillaView: View {
     }
 
     private var hint: String {
-        if place != .garden { return "Tap a thing to buy it. Hold one to save up for it." }
+        if place != .garden { return "Tap a thing to buy it — or to start saving for it." }
         if tab == .grand { return "Grand works cost gold aurei. Win laurels in the games to earn them!" }
         if owned.contains(where: { villaMovable.contains($0) }) { return "Drag your things to move them around the villa." }
         return "Every right answer in a game earns a silver denarius."
@@ -532,14 +568,14 @@ struct VillaView: View {
             .offset(x: shake == item.id ? -6 : 0)
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in toggleGoal(item) })
     }
 
     private let rowCardHeight: CGFloat = 80
 
     private func thumb(_ item: VillaItem) -> AnyView { wingThumb(item) ?? AnyView(VillaThumb(id: item.id)) }
 
-    // MARK: Saving for something — hold a card to set a goal (shown on the card and after every game)
+    // MARK: Saving for something — tapping a thing the child can't afford yet makes it the goal (shown on
+    // its card, in the note, and after every game). A long-press was invisible and collided with the tap.
 
     private func goalRibbon(_ item: VillaItem) -> some View {
         Text("SAVING").font(luCinzel(9, bold: true)).tracking(0.8).foregroundStyle(Fr.frameDeep)
@@ -548,13 +584,10 @@ struct VillaView: View {
             .opacity(goal == item.id && !owned.contains(item.id) ? 1 : 0)
     }
 
-    private func toggleGoal(_ item: VillaItem) {
-        guard !owned.contains(item.id) else { return }
-        Haptics.light(); Sfx.play(.tick)
-        let new = goal == item.id ? nil : item.id
-        LudusEconomy.goal = new
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = new }
-        note = new == nil ? "No goal for now." : "Saving for the \(item.name)! You'll see how close you are after every game."
+    private func setGoal(_ id: String, name: String) {
+        LudusEconomy.goal = id
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) { goal = id }
+        if let line = LudusEconomy.goalLine { note = "Saving for \(name)! " + line + "." }
     }
 
     /// The compact card of the upright iPad grid: picture on the left, name and price beside it.
@@ -597,7 +630,6 @@ struct VillaView: View {
             .offset(x: shake == item.id ? -6 : 0)
         }
         .buttonStyle(.plain)
-        .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in toggleGoal(item) })
     }
 
     private func pokeOwned(_ id: String) {
@@ -622,10 +654,8 @@ struct VillaView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { if justBought == item.id { justBought = nil } }
         } else {
             Sfx.play(.wrong); Haptics.error()
-            let need = item.price.amount - (item.price.gold ? aurei : denarii)
-            note = item.price.gold
-                ? "You need \(need) more gold aure\(need == 1 ? "us" : "i"). Win laurels to earn them!"
-                : "You need \(need) more silver denari\(need == 1 ? "us" : "i"). Go play a game!"
+            setGoal(item.id, name: item.name)
+            if item.price.gold { note = (note ?? "") + " Gold comes from new laurels in the games." }
             withAnimation(.linear(duration: 0.05).repeatCount(5, autoreverses: true)) { shake = item.id }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { shake = nil }
         }
@@ -633,7 +663,7 @@ struct VillaView: View {
 }
 
 /// Catalog items the child can drag around the scene (the rest belong to the house).
-private let villaMovable: Set<String> = Set(villaCatalog.map(\.id)).subtracting(["roses", "banners", "goldroof", "eagle"])
+private let villaMovable: Set<String> = Set(gardenCatalog.map(\.id)).subtracting(["roses", "banners", "goldroof", "eagle"])
 
 // MARK: - The fresco frame
 

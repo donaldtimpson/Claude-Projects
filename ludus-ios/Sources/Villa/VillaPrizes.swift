@@ -1,12 +1,13 @@
 import SwiftUI
 
-// MARK: - Prizes — real rewards a grown-up sets, paid for in gold aurei
+// MARK: - Prizes — real rewards a grown-up sets, paid for in silver or gold
 //
-// Laurels can earn 240 aurei; the garden's grand works and the eight wings take about 75. The rest goes
-// here: a grown-up writes the prizes ("Pick tonight's dinner", "20 minutes extra play") and prices them
-// in aurei; the child claims one, the gold is spent, and the claim waits on the board — "Show a
-// grown-up!" — until a grown-up marks it given. Prizes can be claimed again and again, so gold never
-// runs out of uses. Grown-up mode is a two-second hold, like the player picker's.
+// A grown-up writes the prizes ("Pick tonight's dinner", "20 minutes extra play") and prices each in
+// silver denarii (everyday prizes — the sink that never runs out, since silver comes from every right
+// answer) or gold aurei (big ones — gold comes only from laurels, 240 in all, of which the garden's grand
+// works take 22). The child claims one, the coins are spent, and the claim waits on the board — "Show a
+// grown-up!" — until a grown-up marks it given. Prizes can be claimed again and again.
+// Grown-up mode sits behind a 4-digit PIN the grown-up sets the first time (shared by every player).
 //
 // Saved per player: `ludus_prizes` and `ludus_prize_claims` (JSON) in the player's store.
 
@@ -15,6 +16,10 @@ struct VillaPrize: Codable, Identifiable, Hashable {
     var name: String
     var emoji: String
     var cost: Int
+    var silver: Bool? = nil        // nil/false = gold aurei
+    var isSilver: Bool { silver ?? false }
+    var afford: Bool { isSilver ? LudusStore.denarii >= cost : LudusEconomy.aurei >= cost }
+    var coinImage: String { isSilver ? "CoinSilver" : "CoinGold" }
 }
 
 struct PrizeClaim: Codable, Identifiable, Hashable {
@@ -34,14 +39,15 @@ final class PrizeBook: ObservableObject {
     private let prizesKey = "ludus_prizes", claimsKey = "ludus_prize_claims"
 
     /// Ideas a grown-up can add with one tap.
+    /// Ideas a grown-up can add with one tap. Silver prices assume ~150 denarii a day of play.
     static let suggestions: [VillaPrize] = [
-        .init(name: "Pick tonight's dinner", emoji: "🍝", cost: 5),
-        .init(name: "20 minutes extra play", emoji: "⏰", cost: 4),
-        .init(name: "Choose the family movie", emoji: "🎬", cost: 6),
-        .init(name: "Stay up 15 minutes later", emoji: "🌙", cost: 5),
+        .init(name: "20 minutes extra play", emoji: "⏰", cost: 150, silver: true),
+        .init(name: "Pick tonight's dinner", emoji: "🍝", cost: 200, silver: true),
+        .init(name: "Stay up 15 minutes later", emoji: "🌙", cost: 200, silver: true),
+        .init(name: "A special treat", emoji: "🍦", cost: 250, silver: true),
+        .init(name: "Choose the family movie", emoji: "🎬", cost: 5),
+        .init(name: "Skip one chore", emoji: "🧹", cost: 6),
         .init(name: "A trip to the park", emoji: "🛝", cost: 8),
-        .init(name: "A special treat", emoji: "🍦", cost: 6),
-        .init(name: "Skip one chore", emoji: "🧹", cost: 7),
         .init(name: "A new book", emoji: "📕", cost: 15),
     ]
 
@@ -63,14 +69,15 @@ final class PrizeBook: ObservableObject {
 
     var pending: [PrizeClaim] { claims.filter { !$0.given } }
 
-    func add(_ p: VillaPrize) { prizes.append(VillaPrize(name: p.name, emoji: p.emoji, cost: p.cost)); save() }
+    func add(_ p: VillaPrize) { prizes.append(VillaPrize(name: p.name, emoji: p.emoji, cost: p.cost, silver: p.silver)); save() }
     func update(_ p: VillaPrize) { if let i = prizes.firstIndex(where: { $0.id == p.id }) { prizes[i] = p; save() } }
     func remove(_ p: VillaPrize) { prizes.removeAll { $0.id == p.id }; save() }
 
-    /// Spends the gold and puts the claim on the board. False if the child can't afford it.
+    /// Spends the coins and puts the claim on the board. False if the child can't afford it.
     func claim(_ p: VillaPrize) -> Bool {
-        guard LudusEconomy.aurei >= p.cost else { return false }
-        LudusEconomy.spendAurei(p.cost)
+        guard p.afford else { return false }
+        if p.isSilver { LudusStore.defaults.set(LudusStore.denarii - p.cost, forKey: LudusStore.denariiKey) }
+        else { LudusEconomy.spendAurei(p.cost) }
         claims.append(PrizeClaim(name: p.name, emoji: p.emoji, date: Date()))
         save()
         return true
@@ -82,7 +89,10 @@ final class PrizeBook: ObservableObject {
 
     private func save() {
         LudusStore.defaults.set(try? JSONEncoder().encode(prizes), forKey: prizesKey)
-        LudusStore.defaults.set(try? JSONEncoder().encode(Array(claims.suffix(60))), forKey: claimsKey)
+        // keep every claim still waiting, and only the latest 40 given ones
+        let given = claims.filter(\.given).suffix(40)
+        claims = claims.filter { !$0.given || given.contains($0) }
+        LudusStore.defaults.set(try? JSONEncoder().encode(claims), forKey: claimsKey)
         objectWillChange.send()
     }
     private func decode<T: Decodable>(_ key: String) -> T? {
@@ -98,17 +108,17 @@ struct PrizeHall: View {
     @State private var manage = false
 
     var body: some View {
-        WingRoom(wall: Color(hex: 0x5a2a1c), panel: Color(hex: 0x7a3a26)) { w, h, t in
+        WingRoom(wall: Color(hex: 0x5a2a1c), panel: Color(hex: 0x7a3a26), floorLine: 0.68) { w, h, t in
             ZStack(alignment: .topLeading) {
                 // the family strongbox (an arca) on the floor, a glint running over its gold bands
                 Arca(glint: 0.5 + 0.5 * sin(t * 1.6))
-                    .frame(width: w * 0.34, height: w * 0.25)
+                    .frame(width: w * 0.36, height: w * 0.27)
                     .position(x: w * 0.5, y: h * 0.80)
                 // the board
                 VStack(spacing: w * 0.02) {
                     Text("PRAEMIA · PRIZES").font(luCinzel(w * 0.05, bold: true)).tracking(1.5).foregroundStyle(Fr.gold)
                     if book.pending.isEmpty {
-                        Text(book.prizes.isEmpty ? "No prizes yet." : "Claim a prize below with your gold!")
+                        Text(book.prizes.isEmpty ? "No prizes yet — ask a grown-up!" : "Pick a prize below and claim it with your coins!")
                             .font(luGaramond(w * 0.045, semibold: true)).foregroundStyle(Fr.parchment.opacity(0.85))
                             .multilineTextAlignment(.center)
                     } else {
@@ -129,16 +139,17 @@ struct PrizeHall: View {
                     }
                 }
                 .padding(w * 0.04)
-                .frame(width: w * 0.8)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: 0x2c1810).opacity(0.85))
+                .frame(width: w * 0.84)
+                .frame(minHeight: h * 0.36)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: 0x2c1810).opacity(0.92))
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Fr.gold, lineWidth: 2)))
-                .position(x: w * 0.5, y: h * 0.32)
+                .position(x: w * 0.5, y: h * 0.38)
                 GrownUpHold { manage = true }
-                    .position(x: w * 0.5, y: h * 0.96)
+                    .position(x: w * 0.83, y: h * 0.95)
             }
         }
         .onAppear { book.reload() }
-        .sheet(isPresented: $manage) { PrizeManager() }
+        .sheet(isPresented: $manage) { GrownUpGate { PrizeManager() } }
     }
 }
 
@@ -154,9 +165,9 @@ struct PrizeList: View {
             if book.prizes.isEmpty {
                 VStack(spacing: 6) {
                     Text("🎁").font(.system(size: 34))
-                    Text("Ask a grown-up to add prizes you can buy with gold.")
+                    Text("Ask a grown-up to add prizes you can buy with your coins.")
                         .font(luGaramond(16, semibold: true)).foregroundStyle(Fr.ink).multilineTextAlignment(.center)
-                    Text("Grown-ups: hold the button on the board for 2 seconds.")
+                    Text("Grown-ups: hold the Grown-ups button for 2 seconds.")
                         .font(luGaramond(13)).foregroundStyle(Fr.ink.opacity(0.65))
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 10)
@@ -164,7 +175,7 @@ struct PrizeList: View {
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 8) { ForEach(book.prizes) { row($0) } }.padding(.vertical, 2)
                 }
-                Text(note ?? "Prizes cost gold aurei. You can claim one again and again.")
+                Text(note ?? "You can claim a prize again and again.")
                     .font(luGaramond(14, semibold: true)).foregroundStyle(Fr.ink.opacity(0.75))
                     .multilineTextAlignment(.center)
             }
@@ -173,7 +184,7 @@ struct PrizeList: View {
     }
 
     private func row(_ p: VillaPrize) -> some View {
-        let afford = LudusEconomy.aurei >= p.cost
+        let afford = p.afford
         return HStack(spacing: 10) {
             Text(p.emoji).font(.system(size: 28))
             Text(p.name).font(luCinzel(13, bold: true)).foregroundStyle(Fr.ink).lineLimit(2).minimumScaleFactor(0.8)
@@ -185,12 +196,13 @@ struct PrizeList: View {
                     note = "\(p.name)! Show a grown-up to get your prize."
                 } else {
                     Sfx.play(.wrong); Haptics.error()
-                    let need = p.cost - LudusEconomy.aurei
-                    note = "You need \(need) more gold aure\(need == 1 ? "us" : "i"). Win laurels to earn them!"
+                    let need = p.cost - (p.isSilver ? LudusStore.denarii : LudusEconomy.aurei)
+                    note = p.isSilver ? "You need \(need) more silver denarii. Every right answer earns one!"
+                        : "You need \(need) more gold aure\(need == 1 ? "us" : "i"). Gold comes from new laurels in the games."
                 }
             } label: {
                 HStack(spacing: 4) {
-                    Image("CoinGold").resizable().frame(width: 18, height: 18)
+                    Image(p.coinImage).resizable().frame(width: 18, height: 18)
                     Text("\(p.cost)").font(luCinzel(14)).monospacedDigit().fixedSize()
                 }
                 .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
@@ -212,7 +224,8 @@ private struct PrizeManager: View {
     @ObservedObject private var book = PrizeBook.shared
     @State private var name = ""
     @State private var emoji = "🎁"
-    @State private var cost = 5
+    @State private var cost = 150
+    @State private var silver = true
 
     private let emojis = ["🎁", "🍝", "🍦", "🎬", "⏰", "🌙", "🛝", "📕", "🧸", "🎮", "🧹", "🚲", "🎨", "⚽", "🏊", "🍕"]
 
@@ -240,9 +253,16 @@ private struct PrizeManager: View {
                                 .onTapGesture { emoji = e }
                         } }
                     }
-                    Stepper("Costs \(cost) gold aure\(cost == 1 ? "us" : "i")", value: $cost, in: 1...60)
+                    Picker("Paid in", selection: $silver) {
+                        Text("Silver (everyday)").tag(true)
+                        Text("Gold (big prizes)").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: silver) { s in cost = s ? 150 : 5 }
+                    Stepper(silver ? "Costs \(cost) silver denarii" : "Costs \(cost) gold aure\(cost == 1 ? "us" : "i")",
+                            value: $cost, in: silver ? 10...3000 : 1...60, step: silver ? 10 : 1)
                     Button("Add prize") {
-                        book.add(VillaPrize(name: name.trimmingCharacters(in: .whitespaces), emoji: emoji, cost: cost))
+                        book.add(VillaPrize(name: name.trimmingCharacters(in: .whitespaces), emoji: emoji, cost: cost, silver: silver))
                         name = ""
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -250,7 +270,8 @@ private struct PrizeManager: View {
                 Section("Ideas — tap to add") {
                     ForEach(PrizeBook.suggestions.filter { s in !book.prizes.contains { $0.name == s.name } }) { s in
                         Button { book.add(s) } label: {
-                            HStack { Text(s.emoji); Text(s.name).foregroundStyle(.primary); Spacer(); Text("\(s.cost) 🪙").foregroundStyle(.secondary) }
+                            HStack { Text(s.emoji); Text(s.name).foregroundStyle(.primary); Spacer()
+                                Text("\(s.cost) \(s.isSilver ? "silver" : "gold")").foregroundStyle(.secondary) }
                         }
                     }
                 }
@@ -259,7 +280,9 @@ private struct PrizeManager: View {
                         ForEach(book.prizes) { p in
                             HStack {
                                 Text(p.emoji); Text(p.name); Spacer()
-                                Stepper("\(p.cost) 🪙", value: Binding(get: { p.cost }, set: { var q = p; q.cost = $0; book.update(q) }), in: 1...60)
+                                Stepper("\(p.cost) \(p.isSilver ? "silver" : "gold")",
+                                        value: Binding(get: { p.cost }, set: { var q = p; q.cost = $0; book.update(q) }),
+                                        in: p.isSilver ? 10...3000 : 1...60, step: p.isSilver ? 10 : 1)
                                     .fixedSize()
                             }
                         }
@@ -267,7 +290,7 @@ private struct PrizeManager: View {
                     }
                 }
                 Section {
-                    Text("A laurel in a game earns gold: bronze 1, silver 2 more, gold 3 more. All 40 games can earn 240 in total; the villa's wings and grand works use about 75.")
+                    Text("Silver denarii: 1 for every right answer and 5 per level climbed — roughly 100–200 on a day of play, so silver suits everyday prizes. Gold aurei come only from laurels (bronze 1, silver 2 more, gold 3 more; 240 across all 40 games), so gold suits big ones.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             }
@@ -309,6 +332,70 @@ private struct Arca: View {
                     .blendMode(.screen)
             }
             .frame(width: w, height: h, alignment: .topLeading)
+        }
+    }
+}
+
+/// A 4-digit grown-up PIN in front of `content`: set the first time, then asked for every time. Shared by
+/// every player (UserDefaults.standard), so one grown-up PIN covers the whole family.
+struct GrownUpGate<Content: View>: View {
+    @ViewBuilder let content: Content
+    @Environment(\.dismiss) private var dismiss
+    @State private var entry = ""
+    @State private var first: String?          // setting up: the first entry, waiting for the repeat
+    @State private var open = false
+    @State private var wrong = false
+    private static var key: String { "ludus_grownup_pin" }
+    private var saved: String? { UserDefaults.standard.string(forKey: Self.key) }
+
+    var body: some View {
+        if open { content } else { pad }
+    }
+
+    private var title: String {
+        if saved != nil { return "Grown-up PIN" }
+        return first == nil ? "Choose a 4-digit grown-up PIN" : "Type it again"
+    }
+
+    private var pad: some View {
+        VStack(spacing: 22) {
+            HStack { Spacer(); Button("Cancel") { dismiss() } }.padding(.horizontal)
+            Text(title).font(.title3.weight(.semibold))
+            Text(saved == nil ? "It keeps prizes in grown-up hands." : (wrong ? "That's not it — try again." : " "))
+                .font(.footnote).foregroundStyle(wrong ? .red : .secondary)
+            HStack(spacing: 16) {
+                ForEach(0..<4, id: \.self) { i in
+                    Circle().fill(i < entry.count ? Color.primary : Color.secondary.opacity(0.25)).frame(width: 16, height: 16)
+                }
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(84)), count: 3), spacing: 14) {
+                ForEach(["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"], id: \.self) { k in
+                    if k.isEmpty { Color.clear.frame(height: 64) } else {
+                        Button { press(k) } label: {
+                            Text(k).font(.title).frame(width: 76, height: 64)
+                                .background(Circle().fill(Color.secondary.opacity(0.15)))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            Spacer()
+        }
+        .padding(.top, 12)
+    }
+
+    private func press(_ k: String) {
+        if k == "⌫" { if !entry.isEmpty { entry.removeLast() }; return }
+        guard entry.count < 4 else { return }
+        entry += k
+        guard entry.count == 4 else { return }
+        if let pin = saved {
+            if entry == pin { open = true } else { wrong = true; entry = "" }
+        } else if let f = first {
+            if entry == f { UserDefaults.standard.set(entry, forKey: Self.key); open = true }
+            else { first = nil; entry = ""; wrong = true }
+        } else {
+            first = entry; entry = ""; wrong = false
         }
     }
 }
