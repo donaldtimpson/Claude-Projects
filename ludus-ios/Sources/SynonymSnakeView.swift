@@ -6,7 +6,8 @@ import SwiftUI
 // her head (she turns toward your finger) or by swiping. The sign says what to eat — fruit, words
 // that MEAN the same, words that mean the OPPOSITE, words built on a Latin root — and the rest
 // make her sick. No crash deaths (she wraps through the hedges and may cross herself), so hearts
-// are only about words. A wrong bite says why ("*tiny* is the OPPOSITE of big").
+// are only about words. A wrong bite says why ("*tiny* is the OPPOSITE of big"), aloud too.
+// Each new sign is read aloud while Vipera holds still ("Listen!"); she moves on once it's said.
 //
 // Continuous difficulty (GameKit `d`); kinds fade in via `tier`, older kinds stay as review:
 //   pictures: "eat the FRUIT" (d 1) → easy synonyms with a picture hint (2.4) → easy OPPOSITES
@@ -76,10 +77,10 @@ private let ssFillers = ["dog", "table", "purple", "pizza", "tree", "sock", "riv
 
 /// Latin (and two Greek) roots. "good" really come from the root; "opposite" only look like it.
 private let ssRoots: [SSSet] = [
-    SSSet(target: "SCRIB", hint: "write ✍️", good: ["describe", "scribble", "script", "manuscript", "inscription"],
+    SSSet(target: "SCRIB / SCRIPT", hint: "write ✍️", good: ["describe", "scribble", "script", "manuscript", "inscription"],
           opposite: ["scrub", "scrap", "screen", "scream", "crib"]),
     SSSet(target: "PORT", hint: "carry 📦", good: ["transport", "portable", "import", "export", "report"],
-          opposite: ["pork", "short", "popcorn", "forty"]),
+          opposite: ["pork", "porch", "portion", "portrait"]),   // porch ← porta (gate), portrait ← pro-trahere
     SSSet(target: "AUD", hint: "hear 👂", good: ["audio", "audience", "audible", "auditorium", "audition"],
           opposite: ["aunt", "autumn", "author", "August"]),
     SSSet(target: "VIS / VID", hint: "see 👁️", good: ["vision", "visible", "video", "invisible", "television", "supervise"],
@@ -160,6 +161,9 @@ private final class SynonymSnakeModel: ArcadeModel {
     private var loop: Task<Void, Never>?
     private var botGoal: UUID?
     private var lessonToken = UUID()
+    /// A new sign is being read out: Vipera holds still until the voice is done.
+    @Published private(set) var listening = false
+    private var setGen = 0
 
     init() {
         super.init(key: GameID.synonymSnake.rawValue)
@@ -211,7 +215,15 @@ private final class SynonymSnakeModel: ArcadeModel {
         round = r; eatenThisSet = 0
         foods = []
         refill()
-        LibraryVoice.say(sayCue)
+        // Hold still while the new sign is read — the rules just changed, so listen before moving on.
+        listening = true
+        setGen += 1
+        let g = setGen
+        LibraryVoice.say(sayCue) { [weak self] in
+            guard let self, self.setGen == g else { return }
+            self.stepAt = Date()
+            self.listening = false
+        }
     }
 
     var sayCue: String {
@@ -278,7 +290,7 @@ private final class SynonymSnakeModel: ArcadeModel {
     // MARK: Step
 
     private func step() {
-        guard phase == .playing, let head = snake.first else { return }
+        guard phase == .playing, !listening, let head = snake.first else { return }
         botSteer(head)
         if let q = queued { dir = q; queued = nil }
         let (dc, dr) = dir.delta
@@ -287,7 +299,7 @@ private final class SynonymSnakeModel: ArcadeModel {
         stepAt = Date()
         var body = snake
         body.insert(next, at: 0)
-        if let i = foods.firstIndex(where: { $0.cell == next }) {
+        if let i = foods.firstIndex(where: { covers($0, next) }) {
             let f = foods.remove(at: i)
             if f.good { if body.count > 12 { body.removeLast() } } else { body.removeLast(); if body.count > 3 { body.removeLast() } }
             snake = body
@@ -298,6 +310,20 @@ private final class SynonymSnakeModel: ArcadeModel {
             body.removeLast()
             snake = body
         }
+    }
+
+    /// Half a food's drawn width, in cells: a word label is wider than its cell.
+    var foodHalfWidth: CGFloat { pictures ? 0.5 : 0.8 }
+
+    /// Does the food, as DRAWN, cover `cell`'s centre? A word label is 1.6 cells wide and is nudged
+    /// inward at the board's edge, so a word in the edge column also sits over its neighbour —
+    /// biting where the word visibly is must count. (Foods in a row are ≥ 2 columns apart, so two
+    /// labels never cover the same cell.)
+    func covers(_ f: SSFood, _ cell: SSCell) -> Bool {
+        guard f.cell.row == cell.row else { return false }
+        let half = foodHalfWidth
+        let mid = min(max(CGFloat(f.cell.col) + 0.5, half), CGFloat(cols) - half)
+        return abs(CGFloat(cell.col) + 0.5 - mid) < half
     }
 
     private func eat(_ f: SSFood, at cell: SSCell) {
@@ -313,6 +339,7 @@ private final class SynonymSnakeModel: ArcadeModel {
         } else {
             mood = -1
             say(lessonFor(f))
+            if round.mode != .pictures { LibraryVoice.say(lessonFor(f).replacingOccurrences(of: "*", with: "")) }
             miss(delay: 1.6)
             refill()
         }
@@ -489,6 +516,18 @@ private struct SSPlayArea: View {
                     }
                     .frame(width: geo.size.width, height: h)
                     .allowsHitTesting(false)
+                    if model.listening && model.phase == .playing, let head = model.snake.first {
+                        // Over Vipera's head (no food is ever placed that close to it).
+                        let hp = center(head)
+                        Text("👂 Listen!").font(luFont(18, .heavy)).foregroundStyle(Color(hex: 0xfff3c4))
+                            .padding(.horizontal, 14).padding(.vertical, 6)
+                            .background(Capsule().fill(Color(hex: 0x2f6b2a).opacity(0.9)))
+                            .fixedSize()
+                            .position(x: min(max(hp.x, ox + 70), ox + w - 70),
+                                      y: hp.y < cell * 1.5 ? hp.y + cell * 0.9 : hp.y - cell * 0.9)
+                            .transition(.opacity)
+                            .allowsHitTesting(false)
+                    }
                     ForEach(model.pops) { p in
                         LibraryBurst(glyphs: p.good ? ["✨", "⭐️", "✨", "🌟", "✨"] : ["💥", "🤢", "💥"]).position(center(p.cell))
                     }
@@ -621,10 +660,11 @@ private struct SSBanner: View {
                 LibrarySpeakerButton(size: 44) { LibraryVoice.say(model.sayCue) }
             }
             .opacity(model.lesson == nil ? 1 : 0)
+            .transaction { $0.animation = nil }     // steps aside at once for the lesson
             if let lesson = model.lesson {
                 libMarked(lesson, base: 0x2a1d10, mark: 0xb0371c)
                     .font(luFont(17, .heavy)).multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6)
-                    .transition(.scale(scale: 0.8).combined(with: .opacity))
+                    .transition(.asymmetric(insertion: .scale(scale: 0.8).combined(with: .opacity), removal: .identity))
             }
         }
         .padding(.horizontal, 14).padding(.vertical, 10)
