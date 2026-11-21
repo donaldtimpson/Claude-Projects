@@ -422,7 +422,15 @@ private struct BridgePlay: View {
         var rows: [[Int]] = [[]], widths: [CGFloat] = [0]
         for i in words.indices {
             let w = stoneW(words[i]) + 8
-            if widths[widths.count - 1] + w > maxW && !rows[rows.count - 1].isEmpty { rows.append([]); widths.append(0) }
+            // The end mark never wraps onto a row of its own: if it doesn't fit, the last word goes
+            // down with it.
+            if widths[widths.count - 1] + w > maxW && !rows[rows.count - 1].isEmpty {
+                var carry: [Int] = []
+                if i == words.count - 1, rows[rows.count - 1].count > 1, let last = rows[rows.count - 1].popLast() {
+                    carry = [last]; widths[widths.count - 1] -= stoneW(words[last]) + 8
+                }
+                rows.append(carry); widths.append(carry.map { stoneW(words[$0]) + 8 }.reduce(0, +))
+            }
             rows[rows.count - 1].append(i); widths[widths.count - 1] += w
         }
         let mid = (riverTop(size) + riverBottom(size)) / 2
