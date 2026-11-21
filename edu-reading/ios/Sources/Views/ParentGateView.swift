@@ -194,7 +194,7 @@ private struct AdultView: View {
                 section("THANK YOU") {
                     // CC BY / CC BY-SA attribution for everything the app ships.
                     credit("Andika", "SIL International, under the Open Font License. A typeface drawn for beginning readers — single-storey a and g, and letterforms that can't be confused with one another.")
-                    credit("Letter sounds", "Generated with Kokoro-82M (voice \u{201C}af_heart\u{201D}) by hexgrad, under the Apache License 2.0. Synthesised, then cut so every stop is clipped — /k/, never \u{201C}kuh\u{201D}.")
+                    credit("Letter sounds", "Recorded for FreeReading (freereading.net), under Creative Commons Attribution-ShareAlike 3.0. Each sound is trimmed from its example word and levelled; the trimmed clips are shared under the same licence.")
                     credit("Lingua Libre & Wikimedia Commons", "Recorded English pronunciations, contributed by volunteers under CC BY-SA.")
                     credit("Openverse", "How the photographs were found — an index of openly-licensed images.")
                     Text("If a recording or picture here is yours, thank you. Tell us and we'll name you properly.")

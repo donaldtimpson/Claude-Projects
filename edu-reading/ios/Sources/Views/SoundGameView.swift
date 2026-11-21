@@ -38,7 +38,11 @@ struct SoundGameView: View {
     /// Words with a picture, from the early levels — short enough to hold in the
     /// ear, and every one is a thing a child can point at.
     private var bank: [Word] {
-        c.words.filter { $0.image != nil && ["CVC", "Digraphs", "Blends"].contains($0.level) }
+        // Only words whose every sound has a recording — the prompt is built from them.
+        c.words.filter { w in
+            w.image != nil && ["CVC", "Digraphs", "Blends"].contains(w.level)
+                && c.sounds(of: w).allSatisfy { $0.phoneme == "_" || Voice.shared.hasPhoneme($0.phoneme) }
+        }
     }
     /// The words that may be the ANSWER: in a session, only the letters being learnt.
     private var answers: [Word] {

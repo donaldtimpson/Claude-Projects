@@ -157,9 +157,10 @@ final class Voice: NSObject {
     /// nothing to play and should not ask for two taps.
     var hasAnyLetterAudio: Bool { hasPhoneme("s") }
 
-    /// A phoneme clip is `ph_<id>.m4a`. Synthesis can't make an isolated stop
-    /// consonant — it gives silence or "kuh" — so every letter SOUND comes from a
-    /// clip, and with no clip the app stays silent rather than teach it wrong.
+    /// A phoneme clip is `ph_<id>.m4a`: human recordings of the single-letter
+    /// sounds (FreeReading, CC BY-SA). Synthesis can't make an isolated stop
+    /// consonant — it gives silence or "kuh" — and stretched synthesis came out at
+    /// lengths all over the place, so a sound with no recording is never faked.
     func hasPhoneme(_ id: String) -> Bool {
         id.split(separator: "+").allSatisfy {
             Bundle.main.url(forResource: "ph_\($0)", withExtension: "m4a") != nil
@@ -202,6 +203,14 @@ final class Voice: NSObject {
                   onStep: @escaping (Int?) -> Void, then done: (() -> Void)? = nil) {
         soundOutRun += 1
         let run = soundOutRun
+        // Only sound a word out when every sound in it has a real recording. A word
+        // with a sound we have no clip for (sh, ee …) is simply said whole: better
+        // than sounding out three letters and skipping the fourth.
+        guard sounds.allSatisfy({ $0.phoneme == "_" || hasPhoneme($0.phoneme) }) else {
+            onStep(nil)
+            say(word, then: done)
+            return
+        }
         func step(_ i: Int) {
             guard run == soundOutRun else { return }
             guard i < sounds.count else {
