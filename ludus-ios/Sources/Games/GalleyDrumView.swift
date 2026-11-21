@@ -17,10 +17,13 @@ import SwiftUI
 // CACurrentMediaTime on touch-down.
 //
 // Continuous ladder (all off `d`):
-//   tempo 76 → 112 bpm; timing window ±0.20 s → ±0.09 s (never more than 45% of the gap);
+//   tempo 76 → 112 bpm; timing window ±0.27 s → ±0.09 s (never more than 45% of the gap) —
+//        a third of a beat either side at first, so a 7-year-old's "near enough" counts;
 //   1    keep a steady beat, 4 taps, the drum glows on every beat
-//   ~1.8 the glow fades; 4 → 8 beats
-//   2.6  echo: ta and sh (quarters and rests)
+//   1.5  the glow fades out by 2.5
+//   2.6  echo: ta and sh (quarters and rests) — the captain's whole phrase is heard before
+//        your turn opens (taps during it just sound the drum)
+//   3.2  keep-the-beat rounds (now review) run 8 beats
 //   3.8  + ti-ti (eighths)
 //   5    + ta-a (a 2-beat note), two-bar echoes fade in from 5.5
 //   6    the cards start to hide (echo by ear alone, ~80% by 9)
@@ -88,9 +91,9 @@ private final class GalleyModel: ArcadeModel {
         let bpm = ramp(76, 112, to: 9)
         let kind = tier([1, 2.6], fadeIn: 1.2, keep: 0.25)
         if kind == 0 {
-            let n = rampInt(4, 8, from: 1.5, to: 3) >= 6 ? 8 : 4
+            let n = d >= 3.2 ? 8 : 4
             return GDRound(echo: false, cells: Array(repeating: .ta, count: n), bpm: bpm,
-                           guide: Double.random(in: 0..<1) < ramp(1, 0, from: 1.6, to: 3), showCards: true)
+                           guide: Double.random(in: 0..<1) < ramp(1, 0, from: 1.5, to: 2.5), showCards: true)
         }
         // Echo: fill 4 (or 8) beats with cells whose kinds fade in with d.
         let bars = chance(0.6, from: 5.5, to: 8) ? 2 : 1
@@ -143,10 +146,11 @@ private final class GalleyModel: ArcadeModel {
         // The click carries on under your turn (softer), so there's always a pulse to lock to.
         let ys = Int(yourStart)
         for i in 0..<round.beatsLong { ev.append(ToneEvent(at: Double(ys + i) * b, midi: i % 4 == 0 ? 88 : 81, vel: 0.45, dur: 0.08, voice: .block)) }
-        // Window: from ±0.20 s to ±0.09 s, and never so wide that two onsets share it.
+        // Window: from ±0.27 s to ±0.09 s, and never so wide that two onsets share it.
         let gaps = zip(round.onsets.dropFirst(), round.onsets).map { ($0 - $1) * b }
-        window = min(ramp(0.2, 0.09, to: 9), (gaps.min() ?? 1) * 0.45)
-        t0 = ToneSynth.shared.playTimed(ev, lead: 0.15)
+        window = min(ramp(0.27, 0.09, to: 9), (gaps.min() ?? 1) * 0.45)
+        // A short "Ready…" before the first click, so the count-in never takes anyone by surprise.
+        t0 = ToneSynth.shared.playTimed(ev, lead: 0.7)
         expected = round.onsets.map { t0 + (yourStart + $0) * b }
         stage = .countIn
         let now = CACurrentMediaTime()
