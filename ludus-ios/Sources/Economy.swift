@@ -9,7 +9,7 @@ import SwiftUI
 //     Never bought with denarii. Computed from progress, so laurels won before this existed count.
 //
 // RANK is pinned to aurei EARNED (not the balance), so spending never demotes a child:
-//   Tiro → Legionary (5) → Centurion (20) → Consul (50).
+//   Tiro → Legionary (5) → Centurion (20) → Tribune (45) → Legate (80) → Consul (130) → Caesar (200).
 //
 // Both coins are spent at the Villa (VillaView): garden, statues, pets, grand works.
 
@@ -33,7 +33,10 @@ enum LudusEconomy {
     // MARK: Rank
 
     struct Rank { let index: Int; let name: String; let next: Int? }
-    static let rankSteps: [(String, Int)] = [("Tiro", 0), ("Legionary", 5), ("Centurion", 20), ("Consul", 50)]
+    /// Runs the whole way to the 240 aurei the laurels can earn, so the last laurels still promote.
+    /// (Ranks past Centurion reuse the top insignia art, `Rank3` / `Standard3`, until they get their own.)
+    static let rankSteps: [(String, Int)] = [("Tiro", 0), ("Legionary", 5), ("Centurion", 20), ("Tribune", 45),
+                                             ("Legate", 80), ("Consul", 130), ("Caesar", 200)]
     static var rank: Rank { rank(forAurei: aureiEarned) }
     static func rank(forAurei a: Int) -> Rank {
         var i = 0

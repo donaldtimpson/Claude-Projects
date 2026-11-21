@@ -845,6 +845,12 @@ private struct ArcadeOverView: View {
                 if result.newBest && !result.newMedal {
                     Text("★ NEW BEST! ★").font(luFont(15)).foregroundStyle(Color(hex: Lu.mint))
                 }
+                // What the child is saving up for at the Villa (held on a shop card).
+                if let goal = LudusEconomy.goalLine {
+                    Label(goal, systemImage: "scope")
+                        .font(luFont(14, .bold)).foregroundStyle(Color(hex: Lu.gold))
+                        .multilineTextAlignment(.center)
+                }
                 LudusButton(title: "Play Again", action: onAgain).padding(.top, 10)
                 HStack(spacing: 28) {
                     Button("Change level", action: onMenu)

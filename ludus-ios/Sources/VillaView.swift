@@ -516,7 +516,7 @@ struct VillaView: View {
                 } else {
                     HStack(spacing: 4) {
                         Image(item.price.gold ? "CoinGold" : "CoinSilver").resizable().frame(width: 18, height: 18)
-                        Text("\(item.price.amount)").font(luCinzel(14)).monospacedDigit()
+                        Text("\(item.price.amount)").font(luCinzel(14)).monospacedDigit().fixedSize()
                     }
                     .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
                     .frame(maxWidth: .infinity).frame(height: 26)
@@ -580,7 +580,7 @@ struct VillaView: View {
                     } else {
                         HStack(spacing: 4) {
                             Image(item.price.gold ? "CoinGold" : "CoinSilver").resizable().frame(width: 16, height: 16)
-                            Text("\(item.price.amount)").font(luCinzel(13.5)).monospacedDigit()
+                            Text("\(item.price.amount)").font(luCinzel(13.5)).monospacedDigit().fixedSize()
                         }
                         .foregroundStyle(afford ? Fr.parchment : Fr.ink.opacity(0.45))
                         .padding(.horizontal, 10).frame(height: 24)
