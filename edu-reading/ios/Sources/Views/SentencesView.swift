@@ -4,6 +4,8 @@ import SwiftUI
 // "the" and "a" appear here rather than waiting for the sight-word deck, because
 // without them a decodable sentence can only ever be "Sam sat."
 struct SentencesView: View {
+    /// In a Play session: four sentences from this level.
+    var level: Int? = nil
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x7A5EA8)
@@ -29,7 +31,11 @@ struct SentencesView: View {
         }
         // Ramp like Words: shuffle within a level, never across it, so the deck gets
         // harder as it goes. Unleveled sentences sort to the end.
-        .onAppear { if pool.isEmpty { pool = shuffledWithin(c.sentences) { $0.level ?? 99 } } }
+        .onAppear {
+            guard pool.isEmpty else { return }
+            if let level { pool = Array(c.sentences.filter { $0.level == level }.shuffled().prefix(4)) }
+            else { pool = shuffledWithin(c.sentences) { $0.level ?? 99 } }
+        }
     }
 
     private func collect(_ i: Int) {

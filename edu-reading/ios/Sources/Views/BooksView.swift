@@ -63,6 +63,7 @@ struct BookReader: View {
 
     @Environment(Progress.self) private var progress
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     @State private var page = 0
     @State private var picked: String?
@@ -209,6 +210,7 @@ struct BookReader: View {
             Buzz.yes()
             Voice.shared.celebrate()
             progress.finishedBook(book.title)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) { session?.finish() }
             for p in book.pages { progress.readSentence(p.text) }
         } else {
             Buzz.no()

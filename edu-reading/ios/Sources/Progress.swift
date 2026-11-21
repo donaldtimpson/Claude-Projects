@@ -29,6 +29,15 @@ final class Progress {
     private(set) var spelledWords: Set<String> = []
     private(set) var drawings: Set<String> = []
     private(set) var books: Set<String> = []
+    /// First Sound: right answers per phoneme — how the path knows a letter's
+    /// sound is secure, not just met.
+    private(set) var soundHits: [String: Int] = [:]
+    /// Sound Hunt right answers (oral blending).
+    private(set) var blendRight: Int = 0
+    /// Stickers chosen at the end of each Play session, in order — the board fills.
+    private(set) var stickers: [String] = []
+    /// The grown-up's "start here": the path never places the child below it.
+    private(set) var pathFloor: Int = 0
     private(set) var rhymeRight: Int = 0
     private(set) var matchWins: Int = 0
     private(set) var lastDay: String = ""
@@ -45,6 +54,7 @@ final class Progress {
         var wrote: [String]?; var spelled: [String]?
         var rhyme: Int?; var match: Int?
         var known: [String]?; var drawn: [String]?; var books: [String]?
+        var hits: [String: Int]?; var blend: Int?; var stickers: [String]?; var floor: Int?
         var lastDay: String = ""
     }
 
@@ -56,6 +66,7 @@ final class Progress {
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
         knownWords = []; drawings = []; books = []
+        soundHits = [:]; blendRight = 0; stickers = []; pathFloor = 0
         guard let d = UserDefaults.standard.data(forKey: key(profile)),
               let s = try? JSONDecoder().decode(Snapshot.self, from: d) else { return }
         readWords = Set(s.words); seenLetters = Set(s.letters); readSentences = Set(s.sentences)
@@ -65,6 +76,8 @@ final class Progress {
         wroteLetters = Set(s.wrote ?? []); spelledWords = Set(s.spelled ?? [])
         rhymeRight = s.rhyme ?? 0; matchWins = s.match ?? 0
         knownWords = Set(s.known ?? []); drawings = Set(s.drawn ?? []); books = Set(s.books ?? [])
+        soundHits = s.hits ?? [:]; blendRight = s.blend ?? 0
+        stickers = s.stickers ?? []; pathFloor = s.floor ?? 0
     }
 
     private func save() {
@@ -88,6 +101,7 @@ final class Progress {
         s.known = Array(knownWords)
         s.drawn = Array(drawings)
         s.books = Array(books)
+        s.hits = soundHits; s.blend = blendRight; s.stickers = stickers; s.floor = pathFloor
         if let d = try? JSONEncoder().encode(s) {
             UserDefaults.standard.set(d, forKey: key(profileID))
         }
@@ -106,6 +120,11 @@ final class Progress {
     /// Traced a letter's shape with a finger; spelled a word from tiles. Both are
     /// doings rather than sayings — the two active-recall decks.
     func wroteLetter(_ l: String)   { if wroteLetters.insert(l.lowercased()).inserted { check() } }
+    func heardFirstSound(_ phoneme: String) { soundHits[phoneme, default: 0] += 1; check() }
+    func blended()                  { blendRight += 1; check() }
+    func keptSticker(_ s: String)   { stickers.append(s); save() }
+    func setPathFloor(_ i: Int)     { pathFloor = max(0, i); save() }
+
     /// Read a little book to the end AND answered its question about it.
     func finishedBook(_ t: String)  { if books.insert(t).inserted { check() } }
     func drewPicture(_ p: String)   { if drawings.insert(p).inserted { check() } }
@@ -185,6 +204,7 @@ final class Progress {
         counted = []; awards = []; worlds = [World.free]; finishedDecks = []; lastDay = ""
         quizRight = 0; wroteLetters = []; spelledWords = []; rhymeRight = 0; matchWins = 0
         knownWords = []; drawings = []; books = []
+        soundHits = [:]; blendRight = 0; stickers = []; pathFloor = 0
         save()
     }
 }

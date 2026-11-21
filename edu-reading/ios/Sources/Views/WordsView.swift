@@ -8,6 +8,10 @@ import SwiftUI
 // On sat, chat, mud it speaks instead — a recording works for every word, a picture
 // does not, and that is the honest limit of picture-based self-check.
 struct WordsView: View {
+    /// In a Play session: one level, optionally only words made of these graphemes,
+    /// and a short deck.
+    var level: String? = nil
+    var allowed: [String]? = nil
     @Environment(Progress.self) private var progress
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x3B7EA1)
@@ -29,6 +33,13 @@ struct WordsView: View {
 
     private func makePool() -> [ReadingContent.Word] {
         let order = c.wordLevels
+        if let level {
+            let ok = Set(allowed ?? [])
+            let pick = c.words.filter { w in
+                w.level == level && (allowed == nil || c.sounds(of: w).allSatisfy { ok.contains($0.grapheme.lowercased()) })
+            }
+            return Array(pick.shuffled().prefix(8))
+        }
         return shuffledWithin(c.words) { order.firstIndex(of: $0.level) ?? 9 }
     }
 

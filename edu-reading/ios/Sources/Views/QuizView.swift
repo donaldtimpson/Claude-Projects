@@ -17,6 +17,7 @@ struct QuizView: View {
     @Environment(Progress.self) private var progress
     @Environment(Settings.self) private var settings
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x3E8FA8)
 
@@ -180,6 +181,7 @@ struct QuizView: View {
             // Read mode is decoding; Listen mode is vocabulary. Both count, apart.
             if reads { progress.readWord(w) } else { progress.knewWord(w) }
             progress.answeredQuiz()
+            session?.scored()
             asked += 1
             // Long enough to see the green and the tick before the next question.
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {

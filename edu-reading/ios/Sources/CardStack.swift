@@ -27,6 +27,10 @@ struct CardStack<Content: View>: View {
     @ViewBuilder var content: (Int) -> Content
 
     @Environment(Settings.self) private var settings
+    @Environment(Progress.self) private var progress
+    @Environment(\.session) private var session
+    /// Named so finishing the deck can be credited (the "A Whole Deck" badge).
+    var deckName: String? = nil
     private let skin = Skin.current
     @State private var drag: CGSize = .zero
     @State private var pop = false
@@ -183,6 +187,12 @@ struct CardStack<Content: View>: View {
         // in there can mean reading a deck that had not loaded yet.
         let n = count
         guard n > 0, !busy else { return }
+        // Turning past the last card finishes the deck: in a Play session that ends
+        // the activity; otherwise it earns the deck and wraps round.
+        if d == 1, index == n - 1 {
+            if let session { session.finish(); return }
+            if let deckName { progress.finishedDeck(deckName) }
+        }
         busy = true
         lastDir = d
 
@@ -342,7 +352,7 @@ struct DeckScreen<Content: View>: View {
                       onTap: { if count > 0 { onTap(index % count) } },
                       onAdvance: onAdvance,
                       onHold: onHold.map { h in { if count > 0 { h(index % count) } } },
-                      advance: advance, speaks: speaks) { i in
+                      advance: advance, speaks: speaks, deckName: title) { i in
                 content(i)
             }
             Dots(count: count, index: $index, accent: accent)

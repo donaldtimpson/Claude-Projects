@@ -25,9 +25,12 @@ struct TraceItem: Equatable {
 struct TraceView: View {
     /// Letters (a / A / 1) or the Draw lane's pictures.
     var pictures = false
+    /// In a Play session: just these letters.
+    var only: [String]? = nil
 
     @Environment(Progress.self) private var progress
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     private var accent: Color { pictures ? Color(hex: 0xE0724E) : Color(hex: 0x7A5EA8) }
 
@@ -45,6 +48,7 @@ struct TraceView: View {
     @State private var mode: Mode = .lower    // lowercase first: it's most of what's read
 
     private var keys: [String] {
+        if let only { return only }
         if pictures { return Strokes.pictures.map(\.name) }
         switch mode {
         case .lower: return c.letters.map(\.lower).sorted()
@@ -75,7 +79,7 @@ struct TraceView: View {
         }
         .overlay(alignment: .topLeading) { BackChevron { dismiss() }.padding(.leading, 10).padding(.top, 6) }
         .overlay(alignment: .topTrailing) {
-            if !pictures { modeToggle.padding(.trailing, 10).padding(.top, 6) }
+            if !pictures && only == nil { modeToggle.padding(.trailing, 10).padding(.top, 6) }
         }
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
@@ -142,6 +146,7 @@ struct TraceView: View {
             progress.wroteLetter(k)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { announce() }
         }
+        session?.scored()
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { step(1) }
     }
 }

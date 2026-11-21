@@ -71,6 +71,8 @@ private struct RootView: View {
                 case "words":      WordsView()
                 case "sentences":  SentencesView()
                 case "books":      BooksView()
+                case "session":    SessionView()
+                case "home":       HomeView()
                 case "book":       BookReader(book: ReadingContent.shared.books![0])
                 case "heart":      HeartWordsView()
                 case "pictures":   PictureWordsView()

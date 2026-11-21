@@ -12,6 +12,7 @@ struct RhymeView: View {
     @Environment(Progress.self) private var progress
     @Environment(Settings.self) private var settings
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x7A5EA8)
     typealias Pic = ReadingContent.Pic
@@ -101,6 +102,7 @@ struct RhymeView: View {
             Buzz.yes()
             Voice.shared.chime()
             progress.rhymeGot()
+            session?.scored()
             // Say the pair together — "cat, bat" — so the rhyme itself is the reward.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                 Voice.shared.say("\(round.target.word), \(p.word)")

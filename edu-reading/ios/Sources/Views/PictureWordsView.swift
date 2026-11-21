@@ -20,6 +20,7 @@ struct PictureWordsView: View {
     var deck: String? = nil
     /// A short mixed session across every deck instead of one deck — see makeMix.
     var mix: Bool = false
+    var mixSize: Int = 20
 
     @Environment(Settings.self) private var settings
     private let c = ReadingContent.shared
@@ -76,7 +77,7 @@ struct PictureWordsView: View {
             Voice.shared.say(pool[i].word)
         }
         .onAppear {
-            if pool.isEmpty { pool = mix ? makeMix() : makePool() }
+            if pool.isEmpty { pool = mix ? makeMix(size: mixSize) : makePool() }
             if mix, let first = pool.first { MixMemory.saw(first.word) }
         }
         .onChange(of: index) { if mix, index < pool.count { MixMemory.saw(pool[index].word) } }

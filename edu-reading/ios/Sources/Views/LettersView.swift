@@ -10,6 +10,8 @@ struct LettersView: View {
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xF0A93B)
     var start: Int = 0
+    /// In a Play session: just these letters, in this order.
+    var only: [String]? = nil
     @State private var index = 0
     @State private var ordered = true
 
@@ -26,6 +28,7 @@ struct LettersView: View {
     /// button: a parent presses "in order" and expects the alphabet. Shuffle is
     /// there for when they want something else.
     private func makePool() -> [ReadingContent.Letter] {
+        if let only { return only.compactMap { l in c.letters.first { $0.lower == l } } }
         let alphabetical = c.letters.sorted { $0.upper < $1.upper }
         #if DEBUG
         if start > 0 { return alphabetical }

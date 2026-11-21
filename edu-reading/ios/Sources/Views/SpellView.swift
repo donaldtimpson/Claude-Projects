@@ -12,9 +12,12 @@ import SwiftUI
 // cake), so a beginner never meets "knife".
 
 struct SpellView: View {
+    /// In a Play session: only this level's words.
+    var level: String? = nil
     @Environment(Progress.self) private var progress
     @Environment(Settings.self) private var settings
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xC98A3E)
     typealias Sound = (grapheme: String, phoneme: String)
@@ -139,6 +142,7 @@ struct SpellView: View {
         done = true
         guard let w = round else { return }
         progress.spelledWord(w.word)
+        session?.scored()
         // Read back what was built — each sound lit in its slot, then the word.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             let cheer = {
@@ -162,7 +166,7 @@ struct SpellView: View {
         // Level order (CVC, digraphs, blends …), shuffled within a level; inflected
         // endings are left out — "jumping" is a reading word, not a spelling one.
         let order = c.wordLevels
-        let spellable = c.words.filter { $0.level != "Endings" && $0.parts != nil }
+        let spellable = c.words.filter { $0.level != "Endings" && $0.parts != nil && (level == nil || $0.level == level) }
         pool = shuffledWithin(spellable) { order.firstIndex(of: $0.level) ?? 9 }
         setupRound()
     }

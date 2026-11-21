@@ -14,10 +14,13 @@ import SwiftUI
 struct SoundGameView: View {
     enum Mode { case blend, first }
     let mode: Mode
+    /// In a Play session: only words starting with these letters' sounds.
+    var only: [String]? = nil
 
     @Environment(Progress.self) private var progress
     @Environment(Settings.self) private var settings
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.session) private var session
     private let c = ReadingContent.shared
     private var accent: Color { mode == .blend ? Color(hex: 0x2E7D6E) : Color(hex: 0xC8433A) }
     typealias Word = ReadingContent.Word
@@ -36,6 +39,13 @@ struct SoundGameView: View {
     /// ear, and every one is a thing a child can point at.
     private var bank: [Word] {
         c.words.filter { $0.image != nil && ["CVC", "Digraphs", "Blends"].contains($0.level) }
+    }
+    /// The words that may be the ANSWER: in a session, only the letters being learnt.
+    private var answers: [Word] {
+        guard let only else { return bank }
+        let wanted = Set(only.compactMap { l in c.letters.first { $0.lower == l }.map { c.phoneme(of: $0) } })
+        let a = bank.filter { wanted.contains(first($0)) }
+        return a.count >= 2 ? a : bank
     }
 
     var body: some View {
@@ -111,6 +121,8 @@ struct SoundGameView: View {
             Voice.shared.chime()
             progress.knewWord(w.word)
             progress.answeredQuiz()
+            if mode == .first { progress.heardFirstSound(first(w)) } else { progress.blended() }
+            session?.scored()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { Voice.shared.say(w.word) }
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
                 withAnimation(.easeInOut(duration: 0.25)) { right = nil; deal() }
@@ -128,7 +140,7 @@ struct SoundGameView: View {
     private func first(_ w: Word) -> String { c.sounds(of: w).first?.phoneme ?? "" }
 
     private func deal() {
-        guard let answer = bank.randomElement() else { return }
+        guard let answer = (mode == .first ? answers : bank).randomElement() else { return }
         let n = min(max(settings.quizChoices, 2), 3)
         // Decoys that start with a different sound, so exactly one choice is right.
         let aSounds = c.sounds(of: answer).map(\.phoneme)

@@ -62,7 +62,15 @@ private struct AdultView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                section("WHERE THEY ARE") {
+                section("THE PATH") {
+                    PathSummary()
+                }
+
+                section("LETTERS") {
+                    LetterGrid()
+                }
+
+                section("COUNTS") {
                     row("Words read", "\(progress.readWords.count)")
                     row("Words known by ear", "\(progress.knownWords.count)")
                     row("Letters met", "\(progress.seenLetters.count) of \(c.letters.count)")
@@ -260,5 +268,104 @@ private struct AdultView: View {
             Text(name).font(.andika(16, bold: true)).foregroundStyle(Theme.ink)
             Text(what).font(.andika(13)).foregroundStyle(Theme.inkSoft)
         }
+    }
+}
+
+/// Where the child is on the learning path, what finishing this step takes, the
+/// steps around it, and a "start here" for a child who is past the beginning.
+private struct PathSummary: View {
+    @Environment(Progress.self) private var progress
+
+    var body: some View {
+        let steps = LearningPath.steps
+        let at = LearningPath.currentIndex(progress)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Text(steps[at].emoji).font(.system(size: 30))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Now: \(steps[at].title)").font(.andika(16, bold: true)).foregroundStyle(Theme.ink)
+                    Text("Step \(at + 1) of \(steps.count). Moves on when: \(steps[at].detail)")
+                        .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+                }
+            }
+            // Every step, done ones ticked — a map a grown-up can read at a glance.
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { i, s in
+                    HStack(spacing: 8) {
+                        Image(systemName: s.isDone(progress) ? "checkmark.circle.fill"
+                              : (i == at ? "play.circle.fill" : "circle"))
+                            .foregroundStyle(s.isDone(progress) ? Theme.go : (i == at ? Theme.heart : Theme.inkSoft.opacity(0.5)))
+                        Text(s.title).font(.andika(13, bold: i == at))
+                            .foregroundStyle(i == at ? Theme.ink : Theme.inkSoft)
+                        Spacer()
+                        if i < at, i >= progress.pathFloor, !s.isDone(progress) {
+                            Text("skipped").font(.andika(11)).foregroundStyle(Theme.inkSoft)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            HStack {
+                Text("Start them at").font(.andika(14)).foregroundStyle(Theme.ink)
+                Spacer()
+                Menu {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { i, s in
+                        Button(s.title) { progress.setPathFloor(i) }
+                    }
+                } label: {
+                    Text(steps[min(progress.pathFloor, steps.count - 1)].title)
+                        .font(.andika(14, bold: true)).foregroundStyle(Theme.go)
+                }
+            }
+            Text("For a child who already knows the early steps. The path never places them below this, and moves on from it as usual.")
+                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+        }
+    }
+}
+
+/// All 26 letters, each with three marks: the sound picked out in First Sound
+/// (twice = secure), traced, and met on a card. What to practise at the table.
+private struct LetterGrid: View {
+    @Environment(Progress.self) private var progress
+    private let c = ReadingContent.shared
+
+    var body: some View {
+        let letters = c.letters.sorted { $0.lower < $1.lower }
+        VStack(alignment: .leading, spacing: 10) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 7), spacing: 8) {
+                ForEach(letters, id: \.lower) { l in
+                    let hits = progress.soundHits[c.phoneme(of: l)] ?? 0
+                    let wrote = progress.wroteLetters.contains(l.lower)
+                    let met = progress.seenLetters.contains(l.lower)
+                    let secure = hits >= 2 && wrote
+                    VStack(spacing: 3) {
+                        Text(l.lower).font(.andika(20, bold: true))
+                            .foregroundStyle(secure ? .white : Theme.ink)
+                        HStack(spacing: 2) {
+                            dot(hits >= 2, secure)
+                            dot(wrote, secure)
+                            dot(met, secure)
+                        }
+                    }
+                    .frame(maxWidth: .infinity).padding(.vertical, 6)
+                    .background(secure ? Theme.go : Theme.paperDim, in: RoundedRectangle(cornerRadius: 10))
+                }
+            }
+            Text("Dots: sound heard right twice · traced · met on a card. Green = secure.")
+                .font(.andika(12)).foregroundStyle(Theme.inkSoft)
+            let shaky = letters.filter { l in
+                progress.seenLetters.contains(l.lower) &&
+                ((progress.soundHits[c.phoneme(of: l)] ?? 0) < 2 || !progress.wroteLetters.contains(l.lower))
+            }.prefix(6).map(\.lower)
+            if !shaky.isEmpty {
+                Text("Worth practising: " + shaky.joined(separator: "  "))
+                    .font(.andika(14, bold: true)).foregroundStyle(Theme.heart)
+            }
+        }
+    }
+
+    private func dot(_ on: Bool, _ secure: Bool) -> some View {
+        Circle().fill(on ? (secure ? Color.white : Theme.go) : Theme.inkSoft.opacity(0.25))
+            .frame(width: 5, height: 5)
     }
 }
