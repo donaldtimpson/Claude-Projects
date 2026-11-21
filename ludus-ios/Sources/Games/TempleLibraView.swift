@@ -329,7 +329,13 @@ private struct LibraPlay: View {
             let hang: CGFloat = h * 0.17
 
             ZStack(alignment: .topLeading) {
-                equationPlaque.frame(width: w - 32).position(x: w / 2, y: 98)
+                // The plaque sits just under the HUD row (not under the pills).
+                VStack(spacing: 0) {
+                    HUDSpace(58)
+                    equationPlaque.frame(width: w - 32)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: w, height: h)
 
                 // Post and base
                 RoundedRectangle(cornerRadius: 6)

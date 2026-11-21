@@ -7,7 +7,9 @@ import SwiftUI
 // swipe (or just tap) the fruit in that table: it splits into two halves and splashes juice. Slicing
 // a wrong one (or a bomb) is a miss: the game says why ("7 is not in the 2s") and rings the fruit
 // that IS right. Fruit that falls unsliced is fine — no penalty. The table changes every 3 slices
-// (the fruit in the air puffs away so nothing changes meaning mid-flight).
+// (the fruit in the air puffs away so nothing changes meaning mid-flight). Each new table is said
+// aloud ("Slice the threes!") and no fruit is thrown until that's done — the rush starts AFTER the
+// child knows what to slice.
 //
 // Strand: skip counting → times tables → division facts. Tuned off `d` (GameKit):
 //   • which table: `tier` over 2s → 5s → 10s → 3s → 4s → 6s → 7s → 8s → 9s → 11s → 12s → ÷ facts
@@ -77,6 +79,9 @@ private final class TTNEngine: ArcadeModel {
     private var swiping = false
     private var hitsOnTarget = 0
     private var swipeSound = false
+    /// True while a new table is being announced: no launches until the voice is done.
+    private var cueing = false
+    private var cueID = 0
 
     init() {
         super.init(key: GameID.timesTableNinja.rawValue)
@@ -100,6 +105,23 @@ private final class TTNEngine: ArcadeModel {
         spawnAcc = 0.8; lastTick = nil; shake = 0; swiping = false
         hitsOnTarget = 0
         pickTarget(avoidSame: false)
+        announce()
+    }
+
+    /// Says the table, holding launches until it's said (or, muted, until it could be read).
+    private func announce() {
+        cueing = true
+        cueID += 1
+        let id = cueID
+        let words = [2: "twos", 3: "threes", 4: "fours", 5: "fives", 6: "sixes", 7: "sevens", 8: "eights",
+                     9: "nines", 10: "tens", 11: "elevens", 12: "twelves"]
+        let line = division ? "Make \(target). Slice each division that equals \(target)."
+                            : "Slice the \(words[target] ?? "\(target)s")!"
+        LibraryVoice.say(line, rate: 0.47) { [weak self] in
+            guard let self, self.cueID == id else { return }
+            self.cueing = false
+            self.spawnAcc = self.interval          // first fruit right away
+        }
     }
 
     /// Choose the next table (or ÷ answer) by the difficulty tiers.
@@ -126,8 +148,8 @@ private final class TTNEngine: ArcadeModel {
         pickTarget(avoidSame: true)
         if old != (target, division) {
             for i in fruit.indices where fruit[i].alive { fruit[i].fade = 0.001 }
-            spawnAcc = interval * 0.5
             Sfx.play(.sparkle, volume: 0.5)
+            announce()
         }
     }
 
@@ -141,7 +163,7 @@ private final class TTNEngine: ArcadeModel {
         let dt = min(max(date.timeIntervalSince(prev), 0), 0.05)
         let g = gravity * size.height / 800
 
-        if !dying {
+        if !dying && !cueing {
             spawnAcc += dt
             if spawnAcc >= interval {
                 spawnAcc = 0
@@ -479,7 +501,7 @@ struct TimesTableNinjaView: View {
     var body: some View {
         ArcadeShell(model: game,
                     spec: GameID.timesTableNinja.spec ?? GameSpec(title: "Times Table Ninja", mechanic: "slash", premise: "", game: .timesTableNinja),
-                    accent: Lu.coral, onClose: onClose,
+                    accent: Lu.coral, onClose: { LibraryVoice.stop(); onClose() },
                     backdrop: { MoonGarden() }) {
             ZStack(alignment: .top) {
                 TimelineView(.animation(minimumInterval: nil, paused: game.phase != .playing)) { tl in
@@ -501,6 +523,7 @@ struct TimesTableNinjaView: View {
                 .allowsHitTesting(false)
             }
         }
+        .onDisappear { LibraryVoice.stop() }
     }
 }
 
@@ -582,7 +605,7 @@ private struct TTNBanner: View {
                 Text(division ? "Make \(target)" : "Slice the \(target)s").font(luFont(28)).foregroundStyle(Color(hex: 0x2b1708))
             }
             if division {
-                Text("slice the ÷ that equal \(target)").font(luFont(15, .bold)).foregroundStyle(Color(hex: 0x6e4520))
+                Text("slice each ÷ that equals \(target)").font(luFont(15, .bold)).foregroundStyle(Color(hex: 0x6e4520))
             } else if hint {
                 let shown = (1...min(5, maxMul)).map { "\($0 * target)" }.joined(separator: " · ")
                 Text(shown + " …").font(luFont(17, .heavy)).foregroundStyle(Color(hex: 0xa2401c))
