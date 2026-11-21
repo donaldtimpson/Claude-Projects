@@ -67,7 +67,8 @@ private final class HelmetModel: ArcadeModel {
             roundID += 1
         }
         swapDur = ramp(0.95, 0.34, to: 9)
-        later(1.3) { [unowned self] in
+        // Long enough to find Leo and say hi before the helmets drop (young players need it).
+        later(ramp(2.1, 1.3, to: 4)) { [unowned self] in
             withAnimation(.spring(response: 0.3, dampingFraction: 0.62)) { lifted = [] }
             stage = .cover
             Sfx.play(.thud)
@@ -432,7 +433,8 @@ struct WhereLeoView: View {
                     .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(Capsule().fill(Color.black.opacity(0.4)))
                     .fixedSize()
-                    .position(x: min(max(8 + slotW * (CGFloat(h.slot) + 0.5), 90), size.width - 90), y: floorY - hs * 2.15)
+                    // Below the row, on the open floor: above it, the lifted helmet would cover it.
+                    .position(x: min(max(8 + slotW * (CGFloat(h.slot) + 0.5), 90), size.width - 90), y: floorY + 46)
                     .transition(.scale.combined(with: .opacity))
             }
         }
