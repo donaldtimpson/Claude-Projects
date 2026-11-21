@@ -3,11 +3,11 @@ import SwiftUI
 // MARK: - Minerva's Owl  (Word Wizards · aim & swoop, parts of speech in a real sentence)
 //
 // Night over Minerva's temple. A sentence flutters past as a line of moths, one word on each.
-// The owl on the olive branch is told which KIND of word to catch ("the DOING word"). Pull the
+// The owl on the olive branch is told which KIND of word to catch ("Catch the verb."). Pull the
 // owl back like a slingshot, aim the dotted line at the right moth and let go — she swoops and
 // snatches it. A wrong moth makes her spit it out, hoot why ("*runs* is a VERB — a doing word"),
 // and then swoop for the right one herself, so every miss shows the answer. Tapping a moth says
-// its word; while the game is easy (d < 2.5) a tap also sends the owl, for small hands.
+// its word; while the game is easy (d < 3.2) a tap also sends the owl, for small hands.
 //
 // Continuous difficulty (GameKit `d`):
 //   parts fade in   noun & verb (d 1) → adjective (2.3) → adverb (3.5) → pronoun & preposition
@@ -15,9 +15,11 @@ import SwiftUI
 //                   stay as review
 //   sentence length 3 words at d 1 → up to 10 by d 8
 //   "catch ALL"     chance of having to catch every one of several targets ramps in from d 3
-//   moths drift     bob 3 → 14 pt, sideways drift 0 → 24 pt from d 3.5 → 9 (aim + timing)
+//   moths drift     bob 3 → 10 pt, each row sways 0 → 22 pt from d 3.5 → 9 (aim + timing; a row
+//                   sways as one, so the sentence keeps its reading order)
 //   aim preview     the moth the line would hit glows until d 4; then only the dotted line
-//   dawn bar        none until d 5, then 18 s → 8 s by d 10
+//   dawn bar        none until d 6.4, then 20 s → 8 s by d 10 — started only once the cue and the
+//                   sentence have been read aloud (the bar waits, full, until then)
 
 private struct OPart {
     let tag: Character
@@ -81,7 +83,7 @@ private let oSentences: [[OToken]] = [
     "The|d cat|ns slept|v under|e a|d warm|a blanket.|n", "It|ps rolled|v down|e the|d hill.|n",
     "We|ps walked|v to|e school|n together.|r", "I|ps put|v the|d book|no on|e the|d shelf.|n",
     "The|d bird|ns flew|v over|e the|d wall.|n", "After|e lunch,|n we|ps played|v outside.|r",
-    "Mia|ns helped|v him.|po", "Dad|ns called|v us|po for|e dinner.|n", "The|d puppy|ns followed|v them|po home.|r",
+    "Mia|ns helped|v him.|po", "Dad|ns called|v us|po for|e dinner.|n", "The|d puppy|ns followed|v them|po everywhere.|r",
     "The|d keys|ns are|v behind|e the|d door.|n",
     // conjunctions & interjections
     "Cats|ns and|c dogs|ns play.|v", "I|ps wanted|v cake,|no but|c we|ps had|v pie.|no",
@@ -107,7 +109,7 @@ private let oSentences: [[OToken]] = [
     "Paint|v the|d fence|no white.|a", "The|d paint|ns is|v wet.|a",
     "She|ps runs|v fast.|r", "The|d fast|a car|ns zoomed|v past.|r",
     "We|ps worked|v hard.|r", "The|d hard|a rock|ns cracked.|v",
-    "The|d hungry|a owl|ns quietly|r watched|v the|d field|no below.|r",
+    "The|d hungry|a owl|ns quietly|r watched|v the|d dark|a field.|no",
     "Before|e sunrise,|n the|d busy|a baker|ns sold|v warm|a bread|no and|c sweet|a figs.|no",
 ].map(oParse)
 
@@ -128,6 +130,7 @@ private final class OwlModel: ArcadeModel {
     @Published var busy = false
     @Published var deadline: Date?
     @Published var roundPatience: Double = 0
+    @Published var dawnWaiting = false      // the cue is still being read: dawn bar full, not moving
     @Published var hoot = 0                 // bumps when the owl is confused
 
     /// Moth centres in the play area, written by the view whenever it lays the sentence out.
@@ -148,10 +151,10 @@ private final class OwlModel: ArcadeModel {
     override func perLevel(_ level: Int) -> Int { 6 }
 
     var part: OPart { oParts[target]! }
-    var tapFlies: Bool { d < 2.5 }
+    var tapFlies: Bool { d < 3.2 }      // past adjectives (2.3), so the aim lesson isn't new at the same time
     var showAimTarget: Bool { d < 4 }
-    var bob: CGFloat { CGFloat(ramp(3, 14, to: 9)) }
-    var drift: CGFloat { CGFloat(ramp(0, 24, from: 3.5, to: 9)) }
+    var bob: CGFloat { CGFloat(ramp(3, 10, to: 9)) }
+    var drift: CGFloat { CGFloat(ramp(0, 22, from: 3.5, to: 9)) }
     var targets: [Int] { tokens.indices.filter { tokens[$0].tags.contains(target) } }
     var done: Bool { caught.intersection(targets).count >= need }
 
@@ -176,29 +179,38 @@ private final class OwlModel: ArcadeModel {
         need = count > 1 && chance(0.7, from: 3, to: 7) ? count : 1
         caught = []; carrying = nil; spat = nil; glow = nil; lesson = nil; owlAt = nil; busy = false
         roundID += 1
-        let p = d < 5 ? 0 : ramp(18, 8, from: 5, to: 10)
+        // The clock arrives at d 6.4 — after the aim preview (gone at 4), the hint (4.5) and the
+        // pronoun & preposition moths (4.6) have settled — and starts generous.
+        let p = d < 6.4 ? 0 : ramp(20, 8, from: 6.4, to: 10)
         roundPatience = p
-        deadline = p > 0 ? Date().addingTimeInterval(p) : nil
-        if p > 0 {
-            let g = gen
-            DispatchQueue.main.asyncAfter(deadline: .now() + p) { [weak self] in
-                guard let self, self.gen == g, self.phase == .playing, !self.busy, !self.done else { return }
-                self.timedOut()
-            }
+        deadline = nil
+        dawnWaiting = p > 0
+        // Dawn only starts creeping once the owl has said what to catch AND read the sentence —
+        // until then the bar waits, full.
+        let g = gen
+        LibraryVoice.say(cueLine) { [weak self] in
+            guard let self, p > 0, self.gen == g, self.phase == .playing, !self.done, self.lesson == nil else { return }
+            self.startDawn(p)
         }
-        sayCue()
     }
 
-    var cueText: String {
-        let what = need > 1 ? "all the \(part.kid)s" : "the \(part.kid)"
-        let name = need > 1 ? part.name.lowercased() + "s" : part.name.lowercased()
-        return "Catch \(what)! The \(name)."
+    private func startDawn(_ p: Double) {
+        dawnWaiting = false
+        deadline = Date().addingTimeInterval(p)
+        let g = gen
+        DispatchQueue.main.asyncAfter(deadline: .now() + p) { [weak self] in
+            guard let self, self.gen == g, self.phase == .playing, !self.busy, !self.done else { return }
+            self.timedOut()
+        }
     }
 
-    func sayCue() {
+    /// What to catch, then the sentence: "Catch the verb. The dog runs."
+    var cueLine: String {
         let sentence = tokens.map(\.text).joined(separator: " ")
-        LibraryVoice.say("Catch \(need > 1 ? "every" : "the") \(part.name.lowercased()). \(sentence)")
+        return "Catch \(need > 1 ? "every" : "the") \(part.name.lowercased()). \(sentence)"
     }
+
+    func sayCue() { LibraryVoice.say(cueLine) }
 
     private func later(_ t: Double, _ step: @escaping (OwlModel) -> Void) {
         let g = gen
@@ -236,7 +248,7 @@ private final class OwlModel: ArcadeModel {
         } else {
             spat = i
             hoot += 1
-            deadline = nil
+            deadline = nil; dawnWaiting = false
             let t = tokens[i]
             lesson = whyNot(t)
             miss(delay: 2.8)
@@ -248,7 +260,7 @@ private final class OwlModel: ArcadeModel {
 
     private func whyNot(_ t: OToken) -> String {
         let real = oParts.values.filter { $0.tag != "s" && $0.tag != "o" }.first { t.tags.contains($0.tag) }
-        if t.tags.contains("d") { return "*\(t.bare)* is an article — find the \(part.kid)" }
+        if t.tags.contains("d") { return "*\(t.bare)* is an article — find the \(part.name.lowercased())" }
         if target == "s" || target == "o" {
             return "*\(t.bare)* isn't the \(part.name) — find who or what \(target == "s" ? "the sentence is about" : "gets the action")"
         }
@@ -472,7 +484,7 @@ private struct OwlPlay: View {
         let maxW = size.width - 40
         var rows: [[Int]] = [[]], widths: [CGFloat] = [0]
         for i in model.tokens.indices {
-            let w = wordWidth(model.tokens[i].text) + 26
+            let w = wordWidth(model.tokens[i].text) + 30     // room for both wings: neighbours never overlap
             if widths[widths.count - 1] + w > maxW && !rows[rows.count - 1].isEmpty { rows.append([]); widths.append(0) }
             rows[rows.count - 1].append(i); widths[widths.count - 1] += w
         }
@@ -483,7 +495,7 @@ private struct OwlPlay: View {
             var x = (size.width - widths[r]) / 2
             let y = rows.count == 1 ? top + 40 : top + span * CGFloat(r) / CGFloat(rows.count - 1)
             for i in row {
-                let w = wordWidth(model.tokens[i].text) + 26
+                let w = wordWidth(model.tokens[i].text) + 30
                 out[i] = CGPoint(x: x + w / 2, y: y + (r % 2 == 0 ? 0 : 0))
                 x += w
             }
@@ -494,7 +506,9 @@ private struct OwlPlay: View {
     private func moving(_ p: CGPoint, _ i: Int, _ t: Double) -> CGPoint {
         if model.carrying == i { return p }
         let b = model.bob, dr = model.drift
-        return CGPoint(x: p.x + dr * CGFloat(sin(t * 0.9 + Double(i) * 1.7)),
+        // A row sways sideways as one (seeded by its height), so the words keep their reading order
+        // and never drift into each other; each moth bobs on its own.
+        return CGPoint(x: p.x + dr * CGFloat(sin(t * 0.9 + Double(p.y) * 0.05)),
                        y: p.y + b * CGFloat(sin(t * 2.1 + Double(i) * 0.9)))
     }
 
@@ -626,10 +640,11 @@ private struct OwlPlay: View {
                         .lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .opacity(model.lesson == nil ? 1 : 0)
+                .transaction { $0.animation = nil }     // steps aside at once: no two lines on top of each other
                 if let lesson = model.lesson {
                     libMarked(lesson, base: 0xfff3c4, mark: 0xffb37a)
                         .font(luFont(17, .heavy)).lineLimit(3).minimumScaleFactor(0.6)
-                        .transition(.opacity)
+                        .transition(.asymmetric(insertion: .opacity, removal: .identity))
                 }
             }
             Spacer(minLength: 0)
@@ -649,7 +664,7 @@ private struct OwlPlay: View {
         if per > 0 {
             TimelineView(.animation(minimumInterval: 0.1, paused: model.phase != .playing || model.deadline == nil)) { tl in
                 let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
-                let frac = CGFloat(left / per)
+                let frac = model.dawnWaiting ? 1 : CGFloat(left / per)   // full while she asks
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color(hex: 0x0b1030))
@@ -678,7 +693,7 @@ private struct MothView: View {
                 Spacer(minLength: 0)
                 wing.scaleEffect(x: -(0.55 + flutter * 0.45), y: 1, anchor: .leading)
             }
-            .frame(width: CGFloat(word.count) * 12.5 + 64, height: 52)
+            .frame(width: CGFloat(word.count) * 12.5 + 50, height: 52)
             // antennae
             Path { p in
                 p.move(to: CGPoint(x: -4, y: 0)); p.addQuadCurve(to: CGPoint(x: -12, y: -14), control: CGPoint(x: -4, y: -10))
