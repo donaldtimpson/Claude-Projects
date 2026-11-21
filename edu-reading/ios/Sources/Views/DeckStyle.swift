@@ -53,7 +53,7 @@ struct PictureDecksHub: View {
                             .foregroundStyle(Skin.live.cardInkSoft)
                     }
                     Spacer()
-                    HStack(spacing: -6) {
+                    HStack(spacing: 2) {
                         ForEach(["🐄", "🍎", "🚒", "😀"], id: \.self) { Text($0).font(.system(size: 24)) }
                     }
                 }

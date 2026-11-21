@@ -2213,83 +2213,6 @@
       "set": 4
     }
   ],
-  "cvBlends": [
-    {
-      "text": "fa"
-    },
-    {
-      "text": "fe"
-    },
-    {
-      "text": "fi"
-    },
-    {
-      "text": "fo"
-    },
-    {
-      "text": "fu"
-    },
-    {
-      "text": "ma"
-    },
-    {
-      "text": "me"
-    },
-    {
-      "text": "mi"
-    },
-    {
-      "text": "mo"
-    },
-    {
-      "text": "mu"
-    },
-    {
-      "text": "sa"
-    },
-    {
-      "text": "se"
-    },
-    {
-      "text": "si"
-    },
-    {
-      "text": "so"
-    },
-    {
-      "text": "su"
-    },
-    {
-      "text": "ta"
-    },
-    {
-      "text": "te"
-    },
-    {
-      "text": "ti"
-    },
-    {
-      "text": "to"
-    },
-    {
-      "text": "tu"
-    },
-    {
-      "text": "pa"
-    },
-    {
-      "text": "pe"
-    },
-    {
-      "text": "pi"
-    },
-    {
-      "text": "po"
-    },
-    {
-      "text": "pu"
-    }
-  ],
   "rimes": [
     {
       "rime": "at",
@@ -2311,8 +2234,7 @@
         "man",
         "ran",
         "can",
-        "pan",
-        "tan"
+        "pan"
       ]
     },
     {
@@ -2342,9 +2264,7 @@
       "words": [
         "ham",
         "jam",
-        "ram",
-        "yam",
-        "dam"
+        "ram"
       ]
     },
     {
@@ -2371,7 +2291,6 @@
       "rime": "ip",
       "words": [
         "dip",
-        "hip",
         "lip",
         "rip",
         "sip",
@@ -2386,8 +2305,6 @@
         "fit",
         "hit",
         "kit",
-        "lit",
-        "pit",
         "sit"
       ]
     },
@@ -2397,8 +2314,7 @@
         "hop",
         "mop",
         "pop",
-        "top",
-        "cop"
+        "top"
       ]
     },
     {
@@ -2406,7 +2322,6 @@
       "words": [
         "dog",
         "fog",
-        "hog",
         "jog",
         "log"
       ]
@@ -2439,16 +2354,13 @@
       "words": [
         "but",
         "cut",
-        "gut",
         "hut",
-        "nut",
-        "rut"
+        "nut"
       ]
     },
     {
       "rime": "et",
       "words": [
-        "bet",
         "get",
         "jet",
         "met",
@@ -2461,15 +2373,12 @@
       "words": [
         "bed",
         "fed",
-        "led",
-        "red",
-        "wed"
+        "red"
       ]
     },
     {
       "rime": "en",
       "words": [
-        "den",
         "hen",
         "men",
         "pen",
@@ -2490,18 +2399,14 @@
     {
       "rime": "ill",
       "words": [
-        "bill",
         "fill",
         "hill",
-        "pill",
-        "will",
-        "mill"
+        "will"
       ]
     },
     {
       "rime": "ock",
       "words": [
-        "dock",
         "lock",
         "rock",
         "sock",
@@ -2513,9 +2418,7 @@
       "words": [
         "back",
         "pack",
-        "rack",
         "sack",
-        "tack",
         "jack"
       ]
     },
@@ -2525,17 +2428,14 @@
         "king",
         "ring",
         "sing",
-        "wing",
-        "ding"
+        "wing"
       ]
     },
     {
       "rime": "ump",
       "words": [
         "bump",
-        "dump",
         "jump",
-        "lump",
         "pump"
       ]
     }
@@ -2543,861 +2443,1842 @@
   "words": [
     {
       "word": "sat",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "s",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "sit",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "s",
+        "i",
+        "t"
+      ]
     },
     {
       "word": "pat",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "p",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "pin",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "p",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "tap",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "t",
+        "a",
+        "p"
+      ]
     },
     {
       "word": "tin",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "t",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "nap",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "n",
+        "a",
+        "p"
+      ]
     },
     {
       "word": "cat",
       "level": "CVC",
-      "image": "🐱"
+      "image": "🐱",
+      "parts": [
+        "c",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "dog",
       "level": "CVC",
-      "image": "🐕"
+      "image": "🐕",
+      "parts": [
+        "d",
+        "o",
+        "g"
+      ]
     },
     {
       "word": "bed",
       "level": "CVC",
-      "image": "🛏️"
+      "image": "🛏️",
+      "parts": [
+        "b",
+        "e",
+        "d"
+      ]
     },
     {
       "word": "run",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "r",
+        "u",
+        "n"
+      ]
     },
     {
       "word": "hop",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "h",
+        "o",
+        "p"
+      ]
     },
     {
       "word": "big",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "b",
+        "i",
+        "g"
+      ]
     },
     {
       "word": "mud",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "m",
+        "u",
+        "d"
+      ]
     },
     {
       "word": "wet",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "w",
+        "e",
+        "t"
+      ]
     },
     {
       "word": "bus",
       "level": "CVC",
-      "image": "🚌"
+      "image": "🚌",
+      "parts": [
+        "b",
+        "u",
+        "s"
+      ]
     },
     {
       "word": "cup",
       "level": "CVC",
-      "image": "🥤"
+      "parts": [
+        "c",
+        "u",
+        "p"
+      ]
     },
     {
       "word": "hat",
       "level": "CVC",
-      "image": "🎩"
+      "image": "🎩",
+      "parts": [
+        "h",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "log",
       "level": "CVC",
-      "image": "🪵"
+      "image": "🪵",
+      "parts": [
+        "l",
+        "o",
+        "g"
+      ]
     },
     {
       "word": "sun",
       "level": "CVC",
-      "image": "☀️"
+      "image": "☀️",
+      "parts": [
+        "s",
+        "u",
+        "n"
+      ]
     },
     {
       "word": "pig",
       "level": "CVC",
-      "image": "🐷"
+      "image": "🐷",
+      "parts": [
+        "p",
+        "i",
+        "g"
+      ]
     },
     {
       "word": "web",
       "level": "CVC",
-      "image": "🕸️"
+      "image": "🕸️",
+      "parts": [
+        "w",
+        "e",
+        "b"
+      ]
     },
     {
       "word": "fox",
       "level": "CVC",
-      "image": "🦊"
+      "image": "🦊",
+      "parts": [
+        "f",
+        "o",
+        "x"
+      ]
     },
     {
       "word": "box",
       "level": "CVC",
-      "image": "📦"
+      "image": "📦",
+      "parts": [
+        "b",
+        "o",
+        "x"
+      ]
     },
     {
       "word": "van",
       "level": "CVC",
-      "image": "🚐"
+      "image": "🚐",
+      "parts": [
+        "v",
+        "a",
+        "n"
+      ]
     },
     {
       "word": "jet",
-      "level": "CVC"
+      "level": "CVC",
+      "parts": [
+        "j",
+        "e",
+        "t"
+      ]
     },
     {
       "word": "hen",
       "level": "CVC",
-      "image": "🐔"
+      "image": "🐔",
+      "parts": [
+        "h",
+        "e",
+        "n"
+      ]
     },
     {
       "word": "pen",
       "level": "CVC",
-      "image": "🖊️"
+      "image": "🖊️",
+      "parts": [
+        "p",
+        "e",
+        "n"
+      ]
     },
     {
       "word": "ten",
       "level": "CVC",
-      "image": "🔟"
+      "parts": [
+        "t",
+        "e",
+        "n"
+      ]
     },
     {
       "word": "rat",
       "level": "CVC",
-      "image": "🐀"
+      "image": "🐀",
+      "parts": [
+        "r",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "mug",
       "level": "CVC",
-      "image": "☕"
+      "image": "☕",
+      "parts": [
+        "m",
+        "u",
+        "g"
+      ]
     },
     {
       "word": "pot",
       "level": "CVC",
-      "image": "🍲"
+      "parts": [
+        "p",
+        "o",
+        "t"
+      ]
     },
     {
       "word": "ship",
       "level": "Digraphs",
-      "image": "🚢"
+      "image": "🚢",
+      "parts": [
+        "sh",
+        "i",
+        "p"
+      ]
     },
     {
       "word": "chat",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "ch",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "thin",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "th",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "fish",
       "level": "Digraphs",
-      "image": "🐟"
+      "image": "🐟",
+      "parts": [
+        "f",
+        "i",
+        "sh"
+      ]
     },
     {
       "word": "shop",
       "level": "Digraphs",
-      "image": "🏪"
+      "image": "🏪",
+      "parts": [
+        "sh",
+        "o",
+        "p"
+      ]
     },
     {
       "word": "bath",
       "level": "Digraphs",
-      "image": "🛁"
+      "image": "🛁",
+      "parts": [
+        "b",
+        "a",
+        "th"
+      ]
     },
     {
       "word": "chin",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "ch",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "dish",
       "level": "Digraphs",
-      "image": "🍽️"
+      "parts": [
+        "d",
+        "i",
+        "sh"
+      ]
     },
     {
       "word": "much",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "m",
+        "u",
+        "ch"
+      ]
     },
     {
       "word": "shed",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "sh",
+        "e",
+        "d"
+      ]
     },
     {
       "word": "chop",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "ch",
+        "o",
+        "p"
+      ]
     },
     {
       "word": "duck",
       "level": "Digraphs",
-      "image": "🦆"
+      "image": "🦆",
+      "parts": [
+        "d",
+        "u",
+        "ck"
+      ]
     },
     {
       "word": "sock",
       "level": "Digraphs",
-      "image": "🧦"
+      "image": "🧦",
+      "parts": [
+        "s",
+        "o",
+        "ck"
+      ]
     },
     {
       "word": "rock",
       "level": "Digraphs",
-      "image": "🪨"
+      "image": "🪨",
+      "parts": [
+        "r",
+        "o",
+        "ck"
+      ]
     },
     {
       "word": "lock",
       "level": "Digraphs",
-      "image": "🔒"
+      "image": "🔒",
+      "parts": [
+        "l",
+        "o",
+        "ck"
+      ]
     },
     {
       "word": "neck",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "n",
+        "e",
+        "ck"
+      ]
     },
     {
       "word": "back",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "b",
+        "a",
+        "ck"
+      ]
     },
     {
       "word": "pick",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "p",
+        "i",
+        "ck"
+      ]
     },
     {
       "word": "that",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "th:dh",
+        "a",
+        "t"
+      ]
     },
     {
       "word": "this",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "th:dh",
+        "i",
+        "s"
+      ]
     },
     {
       "word": "with",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "w",
+        "i",
+        "th:dh"
+      ]
     },
     {
       "word": "then",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "th:dh",
+        "e",
+        "n"
+      ]
     },
     {
       "word": "rich",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "r",
+        "i",
+        "ch"
+      ]
     },
     {
       "word": "wish",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "w",
+        "i",
+        "sh"
+      ]
     },
     {
       "word": "moth",
-      "level": "Digraphs"
+      "level": "Digraphs",
+      "parts": [
+        "m",
+        "o",
+        "th"
+      ]
     },
     {
       "word": "stop",
       "level": "Blends",
-      "image": "🛑"
+      "image": "🛑",
+      "parts": [
+        "s",
+        "t",
+        "o",
+        "p"
+      ]
     },
     {
       "word": "frog",
       "level": "Blends",
-      "image": "🐸"
+      "image": "🐸",
+      "parts": [
+        "f",
+        "r",
+        "o",
+        "g"
+      ]
     },
     {
       "word": "clap",
       "level": "Blends",
-      "image": "👏"
+      "image": "👏",
+      "parts": [
+        "c",
+        "l",
+        "a",
+        "p"
+      ]
     },
     {
       "word": "drum",
       "level": "Blends",
-      "image": "🥁"
+      "image": "🥁",
+      "parts": [
+        "d",
+        "r",
+        "u",
+        "m"
+      ]
     },
     {
       "word": "trip",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "t",
+        "r",
+        "i",
+        "p"
+      ]
     },
     {
       "word": "flag",
       "level": "Blends",
-      "image": "🚩"
+      "image": "🚩",
+      "parts": [
+        "f",
+        "l",
+        "a",
+        "g"
+      ]
     },
     {
       "word": "spin",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "s",
+        "p",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "slip",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "s",
+        "l",
+        "i",
+        "p"
+      ]
     },
     {
       "word": "crab",
       "level": "Blends",
-      "image": "🦀"
+      "image": "🦀",
+      "parts": [
+        "c",
+        "r",
+        "a",
+        "b"
+      ]
     },
     {
       "word": "plum",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "p",
+        "l",
+        "u",
+        "m"
+      ]
     },
     {
       "word": "grin",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "g",
+        "r",
+        "i",
+        "n"
+      ]
     },
     {
       "word": "swim",
       "level": "Blends",
-      "image": "🏊"
+      "image": "🏊",
+      "parts": [
+        "s",
+        "w",
+        "i",
+        "m"
+      ]
     },
     {
       "word": "sled",
       "level": "Blends",
-      "image": "🛷"
+      "image": "🛷",
+      "parts": [
+        "s",
+        "l",
+        "e",
+        "d"
+      ]
     },
     {
       "word": "step",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "s",
+        "t",
+        "e",
+        "p"
+      ]
     },
     {
       "word": "desk",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "d",
+        "e",
+        "s",
+        "k"
+      ]
     },
     {
       "word": "jump",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "j",
+        "u",
+        "m",
+        "p"
+      ]
     },
     {
       "word": "hand",
       "level": "Blends",
-      "image": "✋"
+      "image": "✋",
+      "parts": [
+        "h",
+        "a",
+        "n",
+        "d"
+      ]
     },
     {
       "word": "milk",
       "level": "Blends",
-      "image": "🥛"
+      "image": "🥛",
+      "parts": [
+        "m",
+        "i",
+        "l",
+        "k"
+      ]
     },
     {
       "word": "gift",
       "level": "Blends",
-      "image": "🎁"
+      "image": "🎁",
+      "parts": [
+        "g",
+        "i",
+        "f",
+        "t"
+      ]
     },
     {
       "word": "nest",
       "level": "Blends",
-      "image": "🪹"
+      "image": "🪹",
+      "parts": [
+        "n",
+        "e",
+        "s",
+        "t"
+      ]
     },
     {
       "word": "tent",
       "level": "Blends",
-      "image": "⛺"
+      "image": "⛺",
+      "parts": [
+        "t",
+        "e",
+        "n",
+        "t"
+      ]
     },
     {
       "word": "lamp",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "l",
+        "a",
+        "m",
+        "p"
+      ]
     },
     {
       "word": "belt",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "b",
+        "e",
+        "l",
+        "t"
+      ]
     },
     {
       "word": "sink",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "s",
+        "i",
+        "nk"
+      ]
     },
     {
       "word": "pond",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "p",
+        "o",
+        "n",
+        "d"
+      ]
     },
     {
       "word": "snap",
-      "level": "Blends"
+      "level": "Blends",
+      "parts": [
+        "s",
+        "n",
+        "a",
+        "p"
+      ]
     },
     {
       "word": "cake",
       "level": "SilentE",
-      "image": "🍰"
+      "image": "🍰",
+      "parts": [
+        "c",
+        "a:ay",
+        "k",
+        "e:_"
+      ]
     },
     {
       "word": "bike",
       "level": "SilentE",
-      "image": "🚲"
+      "image": "🚲",
+      "parts": [
+        "b",
+        "i:igh",
+        "k",
+        "e:_"
+      ]
     },
     {
       "word": "home",
       "level": "SilentE",
-      "image": "🏠"
+      "parts": [
+        "h",
+        "o:oa",
+        "m",
+        "e:_"
+      ]
     },
     {
       "word": "kite",
       "level": "SilentE",
-      "image": "🪁"
+      "image": "🪁",
+      "parts": [
+        "k",
+        "i:igh",
+        "t",
+        "e:_"
+      ]
     },
     {
       "word": "rope",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "r",
+        "o:oa",
+        "p",
+        "e:_"
+      ]
     },
     {
       "word": "note",
       "level": "SilentE",
-      "image": "📝"
+      "image": "📝",
+      "parts": [
+        "n",
+        "o:oa",
+        "t",
+        "e:_"
+      ]
     },
     {
       "word": "game",
       "level": "SilentE",
-      "image": "🎮"
+      "image": "🎮",
+      "parts": [
+        "g",
+        "a:ay",
+        "m",
+        "e:_"
+      ]
     },
     {
       "word": "ride",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "r",
+        "i:igh",
+        "d",
+        "e:_"
+      ]
     },
     {
       "word": "tune",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "t",
+        "u:oo",
+        "n",
+        "e:_"
+      ]
     },
     {
       "word": "five",
       "level": "SilentE",
-      "image": "5️⃣"
+      "parts": [
+        "f",
+        "i:igh",
+        "v",
+        "e:_"
+      ]
     },
     {
-      "word": "nose",
+      "word": "hole",
       "level": "SilentE",
-      "image": "👃"
+      "parts": [
+        "h",
+        "o:oa",
+        "l",
+        "e:_"
+      ]
     },
     {
-      "word": "cube",
+      "word": "cave",
       "level": "SilentE",
-      "image": "🧊"
+      "parts": [
+        "c",
+        "a:ay",
+        "v",
+        "e:_"
+      ]
     },
     {
       "word": "snake",
       "level": "SilentE",
-      "image": "🐍"
+      "image": "🐍",
+      "parts": [
+        "s",
+        "n",
+        "a:ay",
+        "k",
+        "e:_"
+      ]
     },
     {
       "word": "whale",
       "level": "SilentE",
-      "image": "🐳"
+      "image": "🐳",
+      "parts": [
+        "wh",
+        "a:ay",
+        "l",
+        "e:_"
+      ]
     },
     {
       "word": "grape",
       "level": "SilentE",
-      "image": "🍇"
+      "image": "🍇",
+      "parts": [
+        "g",
+        "r",
+        "a:ay",
+        "p",
+        "e:_"
+      ]
     },
     {
       "word": "plane",
       "level": "SilentE",
-      "image": "✈️"
+      "image": "✈️",
+      "parts": [
+        "p",
+        "l",
+        "a:ay",
+        "n",
+        "e:_"
+      ]
     },
     {
       "word": "cane",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "c",
+        "a:ay",
+        "n",
+        "e:_"
+      ]
     },
     {
       "word": "wave",
       "level": "SilentE",
-      "image": "🌊"
+      "image": "🌊",
+      "parts": [
+        "w",
+        "a:ay",
+        "v",
+        "e:_"
+      ]
     },
     {
       "word": "gate",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "g",
+        "a:ay",
+        "t",
+        "e:_"
+      ]
     },
     {
       "word": "name",
-      "level": "SilentE"
+      "level": "SilentE",
+      "parts": [
+        "n",
+        "a:ay",
+        "m",
+        "e:_"
+      ]
     },
     {
       "word": "bone",
       "level": "SilentE",
-      "image": "🦴"
+      "image": "🦴",
+      "parts": [
+        "b",
+        "o:oa",
+        "n",
+        "e:_"
+      ]
     },
     {
       "word": "cone",
       "level": "SilentE",
-      "image": "🍦"
+      "parts": [
+        "c",
+        "o:oa",
+        "n",
+        "e:_"
+      ]
     },
     {
-      "word": "rose",
+      "word": "stone",
       "level": "SilentE",
-      "image": "🌹"
+      "parts": [
+        "s",
+        "t",
+        "o:oa",
+        "n",
+        "e:_"
+      ]
     },
     {
-      "word": "mice",
+      "word": "skate",
       "level": "SilentE",
-      "image": "🐭"
+      "image": "⛸️",
+      "parts": [
+        "s",
+        "k",
+        "a:ay",
+        "t",
+        "e:_"
+      ]
     },
     {
-      "word": "rice",
+      "word": "flute",
       "level": "SilentE",
-      "image": "🍚"
+      "image": "🪈",
+      "parts": [
+        "f",
+        "l",
+        "u:oo",
+        "t",
+        "e:_"
+      ]
     },
     {
       "word": "pine",
       "level": "SilentE",
-      "image": "🌲"
+      "image": "🌲",
+      "parts": [
+        "p",
+        "i:igh",
+        "n",
+        "e:_"
+      ]
     },
     {
       "word": "rain",
       "level": "VowelTeams",
-      "image": "🌧️"
+      "image": "🌧️",
+      "parts": [
+        "r",
+        "ai",
+        "n"
+      ]
     },
     {
       "word": "tail",
-      "level": "VowelTeams"
+      "level": "VowelTeams",
+      "parts": [
+        "t",
+        "ai",
+        "l"
+      ]
     },
     {
       "word": "nail",
-      "level": "VowelTeams"
+      "level": "VowelTeams",
+      "parts": [
+        "n",
+        "ai",
+        "l"
+      ]
     },
     {
       "word": "sail",
       "level": "VowelTeams",
-      "image": "⛵"
+      "parts": [
+        "s",
+        "ai",
+        "l"
+      ]
     },
     {
       "word": "train",
       "level": "VowelTeams",
-      "image": "🚂"
+      "image": "🚂",
+      "parts": [
+        "t",
+        "r",
+        "ai",
+        "n"
+      ]
     },
     {
       "word": "hay",
-      "level": "VowelTeams"
+      "level": "VowelTeams",
+      "parts": [
+        "h",
+        "ay"
+      ]
     },
     {
       "word": "play",
-      "level": "VowelTeams"
+      "level": "VowelTeams",
+      "parts": [
+        "p",
+        "l",
+        "ay"
+      ]
     },
     {
       "word": "tree",
       "level": "VowelTeams",
-      "image": "🌳"
+      "image": "🌳",
+      "parts": [
+        "t",
+        "r",
+        "ee"
+      ]
     },
     {
       "word": "bee",
       "level": "VowelTeams",
-      "image": "🐝"
+      "image": "🐝",
+      "parts": [
+        "b",
+        "ee"
+      ]
     },
     {
       "word": "feet",
       "level": "VowelTeams",
-      "image": "🦶"
+      "parts": [
+        "f",
+        "ee",
+        "t"
+      ]
     },
     {
       "word": "seed",
       "level": "VowelTeams",
-      "image": "🌱"
+      "image": "🌱",
+      "parts": [
+        "s",
+        "ee",
+        "d"
+      ]
     },
     {
       "word": "leaf",
       "level": "VowelTeams",
-      "image": "🍃"
+      "image": "🍃",
+      "parts": [
+        "l",
+        "ea",
+        "f"
+      ]
     },
     {
       "word": "meat",
       "level": "VowelTeams",
-      "image": "🥩"
+      "image": "🥩",
+      "parts": [
+        "m",
+        "ea",
+        "t"
+      ]
     },
     {
       "word": "boat",
       "level": "VowelTeams",
-      "image": "🚤"
+      "image": "🚤",
+      "parts": [
+        "b",
+        "oa",
+        "t"
+      ]
     },
     {
       "word": "coat",
       "level": "VowelTeams",
-      "image": "🧥"
+      "image": "🧥",
+      "parts": [
+        "c",
+        "oa",
+        "t"
+      ]
     },
     {
       "word": "goat",
       "level": "VowelTeams",
-      "image": "🐐"
+      "image": "🐐",
+      "parts": [
+        "g",
+        "oa",
+        "t"
+      ]
     },
     {
       "word": "snow",
       "level": "VowelTeams",
-      "image": "❄️"
+      "image": "❄️",
+      "parts": [
+        "s",
+        "n",
+        "ow:oa"
+      ]
     },
     {
       "word": "night",
       "level": "VowelTeams",
-      "image": "🌃"
+      "parts": [
+        "n",
+        "igh",
+        "t"
+      ]
     },
     {
       "word": "light",
       "level": "VowelTeams",
-      "image": "💡"
+      "image": "💡",
+      "parts": [
+        "l",
+        "igh",
+        "t"
+      ]
     },
     {
       "word": "moon",
       "level": "VowelTeams",
-      "image": "🌙"
+      "image": "🌙",
+      "parts": [
+        "m",
+        "oo",
+        "n"
+      ]
     },
     {
       "word": "boot",
       "level": "VowelTeams",
-      "image": "👢"
+      "image": "👢",
+      "parts": [
+        "b",
+        "oo",
+        "t"
+      ]
     },
     {
       "word": "book",
       "level": "VowelTeams",
-      "image": "📖"
+      "image": "📖",
+      "parts": [
+        "b",
+        "oo:oo_short",
+        "k"
+      ]
     },
     {
       "word": "foot",
       "level": "VowelTeams",
-      "image": "🦶"
+      "image": "🦶",
+      "parts": [
+        "f",
+        "oo:oo_short",
+        "t"
+      ]
     },
     {
       "word": "car",
       "level": "RControlled",
-      "image": "🚗"
+      "image": "🚗",
+      "parts": [
+        "c",
+        "ar"
+      ]
     },
     {
       "word": "star",
       "level": "RControlled",
-      "image": "⭐"
+      "image": "⭐",
+      "parts": [
+        "s",
+        "t",
+        "ar"
+      ]
     },
     {
       "word": "jar",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "j",
+        "ar"
+      ]
     },
     {
       "word": "arm",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "ar",
+        "m"
+      ]
     },
     {
       "word": "farm",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "f",
+        "ar",
+        "m"
+      ]
     },
     {
       "word": "park",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "p",
+        "ar",
+        "k"
+      ]
     },
     {
       "word": "dark",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "d",
+        "ar",
+        "k"
+      ]
     },
     {
       "word": "corn",
       "level": "RControlled",
-      "image": "🌽"
+      "image": "🌽",
+      "parts": [
+        "c",
+        "or",
+        "n"
+      ]
     },
     {
       "word": "fork",
       "level": "RControlled",
-      "image": "🍴"
+      "image": "🍴",
+      "parts": [
+        "f",
+        "or",
+        "k"
+      ]
     },
     {
       "word": "horn",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "h",
+        "or",
+        "n"
+      ]
     },
     {
       "word": "storm",
       "level": "RControlled",
-      "image": "⛈️"
+      "image": "⛈️",
+      "parts": [
+        "s",
+        "t",
+        "or",
+        "m"
+      ]
     },
     {
       "word": "fern",
       "level": "RControlled",
-      "image": "🌿"
+      "image": "🌿",
+      "parts": [
+        "f",
+        "er",
+        "n"
+      ]
     },
     {
       "word": "her",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "h",
+        "er"
+      ]
     },
     {
       "word": "girl",
       "level": "RControlled",
-      "image": "👧"
+      "image": "👧",
+      "parts": [
+        "g",
+        "ir",
+        "l"
+      ]
     },
     {
       "word": "bird",
       "level": "RControlled",
-      "image": "🐦"
+      "image": "🐦",
+      "parts": [
+        "b",
+        "ir",
+        "d"
+      ]
     },
     {
       "word": "shirt",
       "level": "RControlled",
-      "image": "👕"
+      "image": "👕",
+      "parts": [
+        "sh",
+        "ir",
+        "t"
+      ]
     },
     {
       "word": "fur",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "f",
+        "ur"
+      ]
     },
     {
       "word": "turn",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "t",
+        "ur",
+        "n"
+      ]
     },
     {
       "word": "burn",
-      "level": "RControlled"
+      "level": "RControlled",
+      "parts": [
+        "b",
+        "ur",
+        "n"
+      ]
     },
     {
       "word": "surf",
       "level": "RControlled",
-      "image": "🏄"
+      "image": "🏄",
+      "parts": [
+        "s",
+        "ur",
+        "f"
+      ]
     },
     {
       "word": "cloud",
       "level": "Diphthongs",
-      "image": "☁️"
+      "image": "☁️",
+      "parts": [
+        "c",
+        "l",
+        "ou",
+        "d"
+      ]
     },
     {
       "word": "out",
-      "level": "Diphthongs"
+      "level": "Diphthongs",
+      "parts": [
+        "ou",
+        "t"
+      ]
     },
     {
       "word": "loud",
-      "level": "Diphthongs"
+      "level": "Diphthongs",
+      "parts": [
+        "l",
+        "ou",
+        "d"
+      ]
     },
     {
       "word": "mouth",
       "level": "Diphthongs",
-      "image": "👄"
+      "image": "👄",
+      "parts": [
+        "m",
+        "ou",
+        "th"
+      ]
     },
     {
       "word": "house",
       "level": "Diphthongs",
-      "image": "🏠"
+      "image": "🏠",
+      "parts": [
+        "h",
+        "ou",
+        "s",
+        "e:_"
+      ]
     },
     {
       "word": "cow",
       "level": "Diphthongs",
-      "image": "🐄"
+      "image": "🐄",
+      "parts": [
+        "c",
+        "ow"
+      ]
     },
     {
       "word": "now",
-      "level": "Diphthongs"
+      "level": "Diphthongs",
+      "parts": [
+        "n",
+        "ow"
+      ]
     },
     {
       "word": "owl",
       "level": "Diphthongs",
-      "image": "🦉"
+      "image": "🦉",
+      "parts": [
+        "ow",
+        "l"
+      ]
     },
     {
       "word": "down",
-      "level": "Diphthongs"
+      "level": "Diphthongs",
+      "parts": [
+        "d",
+        "ow",
+        "n"
+      ]
     },
     {
       "word": "town",
       "level": "Diphthongs",
-      "image": "🏘️"
+      "image": "🏘️",
+      "parts": [
+        "t",
+        "ow",
+        "n"
+      ]
     },
     {
       "word": "brown",
       "level": "Diphthongs",
-      "image": "🟤"
+      "parts": [
+        "b",
+        "r",
+        "ow",
+        "n"
+      ]
     },
     {
       "word": "clown",
       "level": "Diphthongs",
-      "image": "🤡"
+      "image": "🤡",
+      "parts": [
+        "c",
+        "l",
+        "ow",
+        "n"
+      ]
     },
     {
       "word": "oil",
       "level": "Diphthongs",
-      "image": "🛢️"
+      "image": "🛢️",
+      "parts": [
+        "oi",
+        "l"
+      ]
     },
     {
       "word": "coin",
       "level": "Diphthongs",
-      "image": "🪙"
+      "image": "🪙",
+      "parts": [
+        "c",
+        "oi",
+        "n"
+      ]
     },
     {
       "word": "boy",
       "level": "Diphthongs",
-      "image": "👦"
+      "image": "👦",
+      "parts": [
+        "b",
+        "oy"
+      ]
     },
     {
       "word": "toy",
       "level": "Diphthongs",
-      "image": "🧸"
+      "image": "🧸",
+      "parts": [
+        "t",
+        "oy"
+      ]
     },
     {
       "word": "joy",
       "level": "Diphthongs",
-      "image": "😊"
+      "parts": [
+        "j",
+        "oy"
+      ]
     },
     {
       "word": "saw",
       "level": "Diphthongs",
-      "image": "🪚"
+      "image": "🪚",
+      "parts": [
+        "s",
+        "aw"
+      ]
     },
     {
       "word": "paw",
       "level": "Diphthongs",
-      "image": "🐾"
+      "image": "🐾",
+      "parts": [
+        "p",
+        "aw"
+      ]
     },
     {
       "word": "draw",
-      "level": "Diphthongs"
+      "level": "Diphthongs",
+      "parts": [
+        "d",
+        "r",
+        "aw"
+      ]
     },
     {
       "word": "cats",
       "level": "Endings",
-      "image": "🐱"
+      "image": "🐱",
+      "parts": [
+        "c",
+        "a",
+        "t",
+        "s"
+      ]
     },
     {
       "word": "dogs",
       "level": "Endings",
-      "image": "🐕"
+      "image": "🐕",
+      "parts": [
+        "d",
+        "o",
+        "g",
+        "s"
+      ]
     },
     {
       "word": "pigs",
       "level": "Endings",
-      "image": "🐷"
+      "image": "🐷",
+      "parts": [
+        "p",
+        "i",
+        "g",
+        "s"
+      ]
     },
     {
       "word": "cups",
       "level": "Endings",
-      "image": "☕"
+      "parts": [
+        "c",
+        "u",
+        "p",
+        "s"
+      ]
     },
     {
       "word": "bugs",
       "level": "Endings",
-      "image": "🐛"
+      "image": "🐛",
+      "parts": [
+        "b",
+        "u",
+        "g",
+        "s"
+      ]
     },
     {
       "word": "jumping",
-      "level": "Endings"
+      "level": "Endings",
+      "parts": [
+        "j",
+        "u",
+        "m",
+        "p",
+        "i",
+        "ng"
+      ]
     },
     {
-      "word": "running",
+      "word": "resting",
       "level": "Endings",
-      "image": "🏃"
+      "parts": [
+        "r",
+        "e",
+        "s",
+        "t",
+        "i",
+        "ng"
+      ]
     },
     {
       "word": "singing",
       "level": "Endings",
-      "image": "🎤"
+      "image": "🎤",
+      "parts": [
+        "s",
+        "i",
+        "ng",
+        "i",
+        "ng"
+      ]
     },
     {
       "word": "playing",
-      "level": "Endings"
+      "level": "Endings",
+      "parts": [
+        "p",
+        "l",
+        "ay",
+        "i",
+        "ng"
+      ]
     },
     {
       "word": "reading",
       "level": "Endings",
-      "image": "📖"
+      "parts": [
+        "r",
+        "ea",
+        "d",
+        "i",
+        "ng"
+      ]
     },
     {
       "word": "fishing",
       "level": "Endings",
-      "image": "🎣"
+      "image": "🎣",
+      "parts": [
+        "f",
+        "i",
+        "sh",
+        "i",
+        "ng"
+      ]
     },
     {
       "word": "jumps",
-      "level": "Endings"
+      "level": "Endings",
+      "parts": [
+        "j",
+        "u",
+        "m",
+        "p",
+        "s"
+      ]
     },
     {
       "word": "runs",
-      "level": "Endings"
+      "level": "Endings",
+      "parts": [
+        "r",
+        "u",
+        "n",
+        "s"
+      ]
     },
     {
       "word": "plays",
-      "level": "Endings"
+      "level": "Endings",
+      "parts": [
+        "p",
+        "l",
+        "ay",
+        "s"
+      ]
     }
   ],
   "sentences": [
@@ -3458,6 +4339,22 @@
       "level": 1
     },
     {
+      "text": "The pup is in his bed.",
+      "level": 1
+    },
+    {
+      "text": "I can hop to Mom.",
+      "level": 1
+    },
+    {
+      "text": "I sat on a big log.",
+      "level": 1
+    },
+    {
+      "text": "Get the red pen.",
+      "level": 1
+    },
+    {
       "text": "The fish is in a dish.",
       "level": 2
     },
@@ -3470,7 +4367,7 @@
       "level": 2
     },
     {
-      "text": "I wish for a fish.",
+      "text": "I wish I had a fish.",
       "level": 2
     },
     {
@@ -3498,6 +4395,26 @@
       "level": 2
     },
     {
+      "text": "She has a red sock.",
+      "level": 2
+    },
+    {
+      "text": "He can kick it.",
+      "level": 2
+    },
+    {
+      "text": "We sat on the deck.",
+      "level": 2
+    },
+    {
+      "text": "Was the bath hot?",
+      "level": 2
+    },
+    {
+      "text": "You can pick a shell.",
+      "level": 2
+    },
+    {
       "text": "The frog is on a log.",
       "level": 3
     },
@@ -3518,7 +4435,7 @@
       "level": 3
     },
     {
-      "text": "A plum for Mom.",
+      "text": "Mom has a plum.",
       "level": 3
     },
     {
@@ -3538,6 +4455,26 @@
       "level": 3
     },
     {
+      "text": "They swim in the pond.",
+      "level": 3
+    },
+    {
+      "text": "My dog can jump.",
+      "level": 3
+    },
+    {
+      "text": "Do not step on the plant.",
+      "level": 3
+    },
+    {
+      "text": "Go and get the tent.",
+      "level": 3
+    },
+    {
+      "text": "Dad said to stop.",
+      "level": 3
+    },
+    {
       "text": "I ride my bike home.",
       "level": 4
     },
@@ -3546,79 +4483,233 @@
       "level": 4
     },
     {
-      "text": "A whale is huge.",
-      "level": 4
-    },
-    {
       "text": "I like cake.",
       "level": 4
     },
     {
-      "text": "The goat ate a leaf.",
+      "text": "The cake is on a plate.",
       "level": 4
+    },
+    {
+      "text": "Kate has a kite.",
+      "level": 4
+    },
+    {
+      "text": "Come and ride the bike.",
+      "level": 4
+    },
+    {
+      "text": "We have a pet snake.",
+      "level": 4
+    },
+    {
+      "text": "I hope the rope is long.",
+      "level": 4
+    },
+    {
+      "text": "Give me a grape.",
+      "level": 4
+    },
+    {
+      "text": "The whale is big.",
+      "level": 4
+    },
+    {
+      "text": "Put the bone in the box.",
+      "level": 4
+    },
+    {
+      "text": "What a fine game!",
+      "level": 4
+    },
+    {
+      "text": "The goat ate a leaf.",
+      "level": 5
     },
     {
       "text": "A boat is on the lake.",
-      "level": 4
+      "level": 5
     },
     {
-      "text": "The bee sat on a rose.",
-      "level": 4
+      "text": "The bee is on a leaf.",
+      "level": 5
     },
     {
       "text": "We see a green tree.",
-      "level": 4
+      "level": 5
     },
     {
       "text": "Rain fell on the road.",
-      "level": 4
+      "level": 5
     },
     {
       "text": "The train is late.",
-      "level": 4
-    },
-    {
-      "text": "They said it was fun.",
       "level": 5
     },
     {
-      "text": "You have to come home.",
+      "text": "Where is your coat?",
       "level": 5
     },
     {
-      "text": "I have some cake for you.",
+      "text": "Two sheep sleep in the hay.",
       "level": 5
     },
     {
-      "text": "Do you have a pet?",
+      "text": "The moon is up at night.",
       "level": 5
     },
     {
-      "text": "One dog and some cats.",
+      "text": "Who has a seed?",
       "level": 5
     },
     {
-      "text": "Come to the shop with me.",
+      "text": "Feed the goat.",
       "level": 5
     },
     {
-      "text": "They come to see the snake.",
+      "text": "Look at the book.",
       "level": 5
     },
     {
-      "text": "You are so good.",
-      "level": 5
+      "text": "A star is in the dark.",
+      "level": 6
     },
     {
-      "text": "We come home to rest.",
-      "level": 5
+      "text": "The car is in the park.",
+      "level": 6
     },
     {
-      "text": "Do you like to play?",
-      "level": 5
+      "text": "A bird sat on her arm.",
+      "level": 6
+    },
+    {
+      "text": "Pass the corn to the girl.",
+      "level": 6
+    },
+    {
+      "text": "The storm was dark.",
+      "level": 6
+    },
+    {
+      "text": "I would like a jar of jam.",
+      "level": 6
+    },
+    {
+      "text": "Could you get the fork?",
+      "level": 6
+    },
+    {
+      "text": "The girl has a red shirt.",
+      "level": 6
+    },
+    {
+      "text": "She should start the car.",
+      "level": 6
+    },
+    {
+      "text": "A farm has a barn.",
+      "level": 6
+    },
+    {
+      "text": "The cow is brown.",
+      "level": 7
+    },
+    {
+      "text": "A clown fell down.",
+      "level": 7
+    },
+    {
+      "text": "The owl is out at night.",
+      "level": 7
+    },
+    {
+      "text": "The boy has a toy.",
+      "level": 7
+    },
+    {
+      "text": "I saw a big cloud.",
+      "level": 7
+    },
+    {
+      "text": "The house is in the town.",
+      "level": 7
+    },
+    {
+      "text": "The dog hurt its paw.",
+      "level": 7
+    },
+    {
+      "text": "Draw a coin.",
+      "level": 7
+    },
+    {
+      "text": "The mouse is loud.",
+      "level": 7
+    },
+    {
+      "text": "Now we can shout.",
+      "level": 7
+    },
+    {
+      "text": "The cats are jumping.",
+      "level": 8
+    },
+    {
+      "text": "The dogs ran to the pond.",
+      "level": 8
+    },
+    {
+      "text": "He is fishing in the sea.",
+      "level": 8
+    },
+    {
+      "text": "She plays with the pigs.",
+      "level": 8
+    },
+    {
+      "text": "We are singing a song.",
+      "level": 8
+    },
+    {
+      "text": "The bugs are in the jar.",
+      "level": 8
+    },
+    {
+      "text": "Mom is reading a book.",
+      "level": 8
+    },
+    {
+      "text": "The boy jumps and runs.",
+      "level": 8
+    },
+    {
+      "text": "I am resting in bed.",
+      "level": 8
     }
   ],
   "heartWords": [
+    {
+      "word": "I",
+      "parts": [
+        {
+          "grapheme": "I",
+          "regular": false
+        }
+      ],
+      "sentence": "I can hop.",
+      "level": 1
+    },
+    {
+      "word": "a",
+      "parts": [
+        {
+          "grapheme": "a",
+          "regular": false
+        }
+      ],
+      "sentence": "A big dog ran.",
+      "level": 1
+    },
     {
       "word": "the",
       "parts": [
@@ -3631,17 +4722,166 @@
           "regular": false
         }
       ],
-      "sentence": "The cat sat on the mat."
+      "sentence": "The cat sat on the mat.",
+      "level": 1
     },
     {
-      "word": "a",
+      "word": "is",
       "parts": [
         {
-          "grapheme": "a",
+          "grapheme": "i",
+          "regular": true
+        },
+        {
+          "grapheme": "s",
           "regular": false
         }
       ],
-      "sentence": "A big dog ran."
+      "sentence": "The cat is big.",
+      "level": 1
+    },
+    {
+      "word": "to",
+      "parts": [
+        {
+          "grapheme": "t",
+          "regular": true
+        },
+        {
+          "grapheme": "o",
+          "regular": false
+        }
+      ],
+      "sentence": "Tim ran to Mom.",
+      "level": 1
+    },
+    {
+      "word": "has",
+      "parts": [
+        {
+          "grapheme": "h",
+          "regular": true
+        },
+        {
+          "grapheme": "a",
+          "regular": true
+        },
+        {
+          "grapheme": "s",
+          "regular": false
+        }
+      ],
+      "sentence": "Dad has a hat.",
+      "level": 1
+    },
+    {
+      "word": "his",
+      "parts": [
+        {
+          "grapheme": "h",
+          "regular": true
+        },
+        {
+          "grapheme": "i",
+          "regular": true
+        },
+        {
+          "grapheme": "s",
+          "regular": false
+        }
+      ],
+      "sentence": "Tim sat on his bed.",
+      "level": 1
+    },
+    {
+      "word": "as",
+      "parts": [
+        {
+          "grapheme": "a",
+          "regular": true
+        },
+        {
+          "grapheme": "s",
+          "regular": false
+        }
+      ],
+      "sentence": "It is as big as a bus.",
+      "level": 1
+    },
+    {
+      "word": "of",
+      "parts": [
+        {
+          "grapheme": "o",
+          "regular": false
+        },
+        {
+          "grapheme": "f",
+          "regular": false
+        }
+      ],
+      "sentence": "A lot of hens.",
+      "level": 1
+    },
+    {
+      "word": "be",
+      "parts": [
+        {
+          "grapheme": "b",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "Be still.",
+      "level": 2
+    },
+    {
+      "word": "he",
+      "parts": [
+        {
+          "grapheme": "h",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "He can hop.",
+      "level": 2
+    },
+    {
+      "word": "me",
+      "parts": [
+        {
+          "grapheme": "m",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "Sit with me.",
+      "level": 2
+    },
+    {
+      "word": "she",
+      "parts": [
+        {
+          "grapheme": "sh",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "She has a pet.",
+      "level": 2
     },
     {
       "word": "was",
@@ -3659,7 +4899,124 @@
           "regular": false
         }
       ],
-      "sentence": "The dog was big."
+      "sentence": "The dog was big.",
+      "level": 2
+    },
+    {
+      "word": "we",
+      "parts": [
+        {
+          "grapheme": "w",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "We sat in the sun.",
+      "level": 2
+    },
+    {
+      "word": "you",
+      "parts": [
+        {
+          "grapheme": "y",
+          "regular": true
+        },
+        {
+          "grapheme": "ou",
+          "regular": false
+        }
+      ],
+      "sentence": "You can run.",
+      "level": 2
+    },
+    {
+      "word": "are",
+      "parts": [
+        {
+          "grapheme": "are",
+          "regular": false
+        }
+      ],
+      "sentence": "The cats are big.",
+      "level": 3
+    },
+    {
+      "word": "by",
+      "parts": [
+        {
+          "grapheme": "b",
+          "regular": true
+        },
+        {
+          "grapheme": "y",
+          "regular": false
+        }
+      ],
+      "sentence": "Sit by me.",
+      "level": 3
+    },
+    {
+      "word": "do",
+      "parts": [
+        {
+          "grapheme": "d",
+          "regular": true
+        },
+        {
+          "grapheme": "o",
+          "regular": false
+        }
+      ],
+      "sentence": "Do not run.",
+      "level": 3
+    },
+    {
+      "word": "go",
+      "parts": [
+        {
+          "grapheme": "g",
+          "regular": true
+        },
+        {
+          "grapheme": "o",
+          "regular": false
+        }
+      ],
+      "sentence": "Go to bed.",
+      "level": 3
+    },
+    {
+      "word": "my",
+      "parts": [
+        {
+          "grapheme": "m",
+          "regular": true
+        },
+        {
+          "grapheme": "y",
+          "regular": false
+        }
+      ],
+      "sentence": "My cat is soft.",
+      "level": 3
+    },
+    {
+      "word": "no",
+      "parts": [
+        {
+          "grapheme": "n",
+          "regular": true
+        },
+        {
+          "grapheme": "o",
+          "regular": false
+        }
+      ],
+      "sentence": "No, do not jump.",
+      "level": 3
     },
     {
       "word": "said",
@@ -3677,13 +5034,14 @@
           "regular": true
         }
       ],
-      "sentence": "She said it was fun."
+      "sentence": "Dad said to stop.",
+      "level": 3
     },
     {
-      "word": "to",
+      "word": "so",
       "parts": [
         {
-          "grapheme": "t",
+          "grapheme": "s",
           "regular": true
         },
         {
@@ -3691,71 +5049,8 @@
           "regular": false
         }
       ],
-      "sentence": "They have to go."
-    },
-    {
-      "word": "do",
-      "parts": [
-        {
-          "grapheme": "d",
-          "regular": true
-        },
-        {
-          "grapheme": "o",
-          "regular": false
-        }
-      ],
-      "sentence": "Do you have a pen?"
-    },
-    {
-      "word": "you",
-      "parts": [
-        {
-          "grapheme": "y",
-          "regular": true
-        },
-        {
-          "grapheme": "ou",
-          "regular": false
-        }
-      ],
-      "sentence": "You said it was fun."
-    },
-    {
-      "word": "your",
-      "parts": [
-        {
-          "grapheme": "y",
-          "regular": true
-        },
-        {
-          "grapheme": "our",
-          "regular": false
-        }
-      ],
-      "sentence": "Is this your hat?"
-    },
-    {
-      "word": "have",
-      "parts": [
-        {
-          "grapheme": "h",
-          "regular": true
-        },
-        {
-          "grapheme": "a",
-          "regular": true
-        },
-        {
-          "grapheme": "v",
-          "regular": true
-        },
-        {
-          "grapheme": "e",
-          "regular": false
-        }
-      ],
-      "sentence": "You have a red hat."
+      "sentence": "I am so glad.",
+      "level": 3
     },
     {
       "word": "they",
@@ -3769,39 +5064,8 @@
           "regular": false
         }
       ],
-      "sentence": "They ran to the shop."
-    },
-    {
-      "word": "of",
-      "parts": [
-        {
-          "grapheme": "o",
-          "regular": true
-        },
-        {
-          "grapheme": "f",
-          "regular": false
-        }
-      ],
-      "sentence": "A cup of milk."
-    },
-    {
-      "word": "one",
-      "parts": [
-        {
-          "grapheme": "o",
-          "regular": false
-        },
-        {
-          "grapheme": "n",
-          "regular": true
-        },
-        {
-          "grapheme": "e",
-          "regular": false
-        }
-      ],
-      "sentence": "One big dog."
+      "sentence": "They ran to the shop.",
+      "level": 3
     },
     {
       "word": "come",
@@ -3823,241 +5087,8 @@
           "regular": false
         }
       ],
-      "sentence": "Come to the shed."
-    },
-    {
-      "word": "some",
-      "parts": [
-        {
-          "grapheme": "s",
-          "regular": true
-        },
-        {
-          "grapheme": "o",
-          "regular": false
-        },
-        {
-          "grapheme": "m",
-          "regular": true
-        },
-        {
-          "grapheme": "e",
-          "regular": false
-        }
-      ],
-      "sentence": "Some of the cake."
-    },
-    {
-      "word": "are",
-      "parts": [
-        {
-          "grapheme": "are",
-          "regular": false
-        }
-      ],
-      "sentence": "The cats are big."
-    },
-    {
-      "word": "were",
-      "parts": [
-        {
-          "grapheme": "w",
-          "regular": true
-        },
-        {
-          "grapheme": "ere",
-          "regular": false
-        }
-      ],
-      "sentence": "They were sad."
-    },
-    {
-      "word": "there",
-      "parts": [
-        {
-          "grapheme": "th",
-          "regular": true
-        },
-        {
-          "grapheme": "ere",
-          "regular": false
-        }
-      ],
-      "sentence": "The dog is there."
-    },
-    {
-      "word": "where",
-      "parts": [
-        {
-          "grapheme": "wh",
-          "regular": true
-        },
-        {
-          "grapheme": "ere",
-          "regular": false
-        }
-      ],
-      "sentence": "Where is the cat?"
-    },
-    {
-      "word": "here",
-      "parts": [
-        {
-          "grapheme": "h",
-          "regular": true
-        },
-        {
-          "grapheme": "ere",
-          "regular": false
-        }
-      ],
-      "sentence": "Come here."
-    },
-    {
-      "word": "what",
-      "parts": [
-        {
-          "grapheme": "wh",
-          "regular": true
-        },
-        {
-          "grapheme": "a",
-          "regular": false
-        },
-        {
-          "grapheme": "t",
-          "regular": true
-        }
-      ],
-      "sentence": "What is that?"
-    },
-    {
-      "word": "who",
-      "parts": [
-        {
-          "grapheme": "wh",
-          "regular": false
-        },
-        {
-          "grapheme": "o",
-          "regular": false
-        }
-      ],
-      "sentence": "Who is it?"
-    },
-    {
-      "word": "why",
-      "parts": [
-        {
-          "grapheme": "wh",
-          "regular": true
-        },
-        {
-          "grapheme": "y",
-          "regular": false
-        }
-      ],
-      "sentence": "Why is it wet?"
-    },
-    {
-      "word": "would",
-      "parts": [
-        {
-          "grapheme": "w",
-          "regular": true
-        },
-        {
-          "grapheme": "oul",
-          "regular": false
-        },
-        {
-          "grapheme": "d",
-          "regular": true
-        }
-      ],
-      "sentence": "Would you play?"
-    },
-    {
-      "word": "could",
-      "parts": [
-        {
-          "grapheme": "c",
-          "regular": true
-        },
-        {
-          "grapheme": "oul",
-          "regular": false
-        },
-        {
-          "grapheme": "d",
-          "regular": true
-        }
-      ],
-      "sentence": "I could see it."
-    },
-    {
-      "word": "should",
-      "parts": [
-        {
-          "grapheme": "sh",
-          "regular": true
-        },
-        {
-          "grapheme": "oul",
-          "regular": false
-        },
-        {
-          "grapheme": "d",
-          "regular": true
-        }
-      ],
-      "sentence": "You should rest."
-    },
-    {
-      "word": "two",
-      "parts": [
-        {
-          "grapheme": "two",
-          "regular": false
-        }
-      ],
-      "sentence": "I have two cats."
-    },
-    {
-      "word": "four",
-      "parts": [
-        {
-          "grapheme": "f",
-          "regular": true
-        },
-        {
-          "grapheme": "our",
-          "regular": false
-        }
-      ],
-      "sentence": "I see four dogs."
-    },
-    {
-      "word": "love",
-      "parts": [
-        {
-          "grapheme": "l",
-          "regular": true
-        },
-        {
-          "grapheme": "o",
-          "regular": false
-        },
-        {
-          "grapheme": "v",
-          "regular": true
-        },
-        {
-          "grapheme": "e",
-          "regular": false
-        }
-      ],
-      "sentence": "I love my dog."
+      "sentence": "Come to the shed.",
+      "level": 4
     },
     {
       "word": "give",
@@ -4079,7 +5110,46 @@
           "regular": false
         }
       ],
-      "sentence": "Give it to me."
+      "sentence": "Give it to me.",
+      "level": 4
+    },
+    {
+      "word": "have",
+      "parts": [
+        {
+          "grapheme": "h",
+          "regular": true
+        },
+        {
+          "grapheme": "a",
+          "regular": true
+        },
+        {
+          "grapheme": "v",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "You have a red hat.",
+      "level": 4
+    },
+    {
+      "word": "here",
+      "parts": [
+        {
+          "grapheme": "h",
+          "regular": true
+        },
+        {
+          "grapheme": "ere",
+          "regular": false
+        }
+      ],
+      "sentence": "Come here.",
+      "level": 4
     },
     {
       "word": "live",
@@ -4101,25 +5171,50 @@
           "regular": false
         }
       ],
-      "sentence": "Fish live here."
+      "sentence": "Fish live in the pond.",
+      "level": 4
     },
     {
-      "word": "put",
+      "word": "love",
       "parts": [
         {
-          "grapheme": "p",
+          "grapheme": "l",
           "regular": true
         },
         {
-          "grapheme": "u",
+          "grapheme": "o",
           "regular": false
         },
         {
-          "grapheme": "t",
+          "grapheme": "v",
           "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
         }
       ],
-      "sentence": "Put it in the box."
+      "sentence": "I love my dog.",
+      "level": 4
+    },
+    {
+      "word": "one",
+      "parts": [
+        {
+          "grapheme": "o",
+          "regular": false
+        },
+        {
+          "grapheme": "n",
+          "regular": true
+        },
+        {
+          "grapheme": "e",
+          "regular": false
+        }
+      ],
+      "sentence": "One big dog.",
+      "level": 4
     },
     {
       "word": "pull",
@@ -4137,24 +5232,30 @@
           "regular": true
         }
       ],
-      "sentence": "Pull the rope."
+      "sentence": "Pull the rope.",
+      "level": 4
     },
     {
-      "word": "go",
+      "word": "put",
       "parts": [
         {
-          "grapheme": "g",
+          "grapheme": "p",
           "regular": true
         },
         {
-          "grapheme": "o",
+          "grapheme": "u",
           "regular": false
+        },
+        {
+          "grapheme": "t",
+          "regular": true
         }
       ],
-      "sentence": "Go to bed."
+      "sentence": "Put it in the box.",
+      "level": 4
     },
     {
-      "word": "so",
+      "word": "some",
       "parts": [
         {
           "grapheme": "s",
@@ -4163,121 +5264,210 @@
         {
           "grapheme": "o",
           "regular": false
-        }
-      ],
-      "sentence": "I am so glad."
-    },
-    {
-      "word": "no",
-      "parts": [
-        {
-          "grapheme": "n",
-          "regular": true
         },
-        {
-          "grapheme": "o",
-          "regular": false
-        }
-      ],
-      "sentence": "No, do not run."
-    },
-    {
-      "word": "my",
-      "parts": [
         {
           "grapheme": "m",
           "regular": true
         },
         {
-          "grapheme": "y",
-          "regular": false
-        }
-      ],
-      "sentence": "My cat is soft."
-    },
-    {
-      "word": "by",
-      "parts": [
-        {
-          "grapheme": "b",
-          "regular": true
-        },
-        {
-          "grapheme": "y",
-          "regular": false
-        }
-      ],
-      "sentence": "Sit by me."
-    },
-    {
-      "word": "he",
-      "parts": [
-        {
-          "grapheme": "h",
-          "regular": true
-        },
-        {
           "grapheme": "e",
           "regular": false
         }
       ],
-      "sentence": "He can run fast."
+      "sentence": "Some ducks swim.",
+      "level": 4
     },
     {
-      "word": "she",
-      "parts": [
-        {
-          "grapheme": "sh",
-          "regular": true
-        },
-        {
-          "grapheme": "e",
-          "regular": false
-        }
-      ],
-      "sentence": "She has a pet."
-    },
-    {
-      "word": "we",
+      "word": "were",
       "parts": [
         {
           "grapheme": "w",
           "regular": true
         },
         {
-          "grapheme": "e",
+          "grapheme": "ere",
           "regular": false
         }
       ],
-      "sentence": "We like to read."
+      "sentence": "They were sad.",
+      "level": 4
     },
     {
-      "word": "me",
+      "word": "what",
       "parts": [
         {
-          "grapheme": "m",
+          "grapheme": "wh",
           "regular": true
         },
         {
-          "grapheme": "e",
+          "grapheme": "a",
           "regular": false
+        },
+        {
+          "grapheme": "t",
+          "regular": true
         }
       ],
-      "sentence": "Come with me."
+      "sentence": "What is that?",
+      "level": 4
     },
     {
-      "word": "be",
+      "word": "four",
       "parts": [
         {
-          "grapheme": "b",
+          "grapheme": "f",
           "regular": true
         },
         {
-          "grapheme": "e",
+          "grapheme": "our",
           "regular": false
         }
       ],
-      "sentence": "I will be good."
+      "sentence": "I see four sheep.",
+      "level": 5
+    },
+    {
+      "word": "there",
+      "parts": [
+        {
+          "grapheme": "th",
+          "regular": true
+        },
+        {
+          "grapheme": "ere",
+          "regular": false
+        }
+      ],
+      "sentence": "The dog is there.",
+      "level": 5
+    },
+    {
+      "word": "two",
+      "parts": [
+        {
+          "grapheme": "two",
+          "regular": false
+        }
+      ],
+      "sentence": "I have two cats.",
+      "level": 5
+    },
+    {
+      "word": "where",
+      "parts": [
+        {
+          "grapheme": "wh",
+          "regular": true
+        },
+        {
+          "grapheme": "ere",
+          "regular": false
+        }
+      ],
+      "sentence": "Where is the cat?",
+      "level": 5
+    },
+    {
+      "word": "who",
+      "parts": [
+        {
+          "grapheme": "wh",
+          "regular": false
+        },
+        {
+          "grapheme": "o",
+          "regular": false
+        }
+      ],
+      "sentence": "Who is it?",
+      "level": 5
+    },
+    {
+      "word": "why",
+      "parts": [
+        {
+          "grapheme": "wh",
+          "regular": true
+        },
+        {
+          "grapheme": "y",
+          "regular": false
+        }
+      ],
+      "sentence": "Why is it wet?",
+      "level": 5
+    },
+    {
+      "word": "your",
+      "parts": [
+        {
+          "grapheme": "y",
+          "regular": true
+        },
+        {
+          "grapheme": "our",
+          "regular": false
+        }
+      ],
+      "sentence": "Is this your hat?",
+      "level": 5
+    },
+    {
+      "word": "could",
+      "parts": [
+        {
+          "grapheme": "c",
+          "regular": true
+        },
+        {
+          "grapheme": "oul",
+          "regular": false
+        },
+        {
+          "grapheme": "d",
+          "regular": true
+        }
+      ],
+      "sentence": "I could see the star.",
+      "level": 6
+    },
+    {
+      "word": "should",
+      "parts": [
+        {
+          "grapheme": "sh",
+          "regular": true
+        },
+        {
+          "grapheme": "oul",
+          "regular": false
+        },
+        {
+          "grapheme": "d",
+          "regular": true
+        }
+      ],
+      "sentence": "You should rest.",
+      "level": 6
+    },
+    {
+      "word": "would",
+      "parts": [
+        {
+          "grapheme": "w",
+          "regular": true
+        },
+        {
+          "grapheme": "oul",
+          "regular": false
+        },
+        {
+          "grapheme": "d",
+          "regular": true
+        }
+      ],
+      "sentence": "Would you like to play?",
+      "level": 6
     }
   ],
   "world": {
@@ -4342,28 +5532,53 @@
     ]
   },
   "sightWords": [
-    "the",
-    "a",
-    "was",
-    "said",
-    "to",
-    "you",
-    "your",
-    "have",
-    "they",
-    "of",
-    "one",
-    "come",
-    "some",
-    "do",
-    "is",
-    "are",
-    "here",
-    "for",
     "I",
+    "a",
+    "the",
+    "is",
+    "to",
+    "has",
+    "his",
+    "as",
+    "of",
+    "be",
+    "he",
+    "me",
+    "she",
+    "was",
+    "we",
+    "you",
+    "are",
+    "by",
+    "do",
+    "go",
     "my",
-    "on",
-    "in"
+    "no",
+    "said",
+    "so",
+    "they",
+    "come",
+    "give",
+    "have",
+    "here",
+    "live",
+    "love",
+    "one",
+    "pull",
+    "put",
+    "some",
+    "were",
+    "what",
+    "four",
+    "there",
+    "two",
+    "where",
+    "who",
+    "why",
+    "your",
+    "could",
+    "should",
+    "would"
   ],
   "deckOrder": [
     "Pets & Farm",
@@ -4602,7 +5817,6 @@
     "m",
     "n",
     "p",
-    "qu",
     "r",
     "s",
     "t",
@@ -4610,5 +5824,399 @@
     "w",
     "y",
     "z"
+  ],
+  "phonemeDefaults": {
+    "a": "a",
+    "ai": "ay",
+    "ar": "ar",
+    "aw": "aw",
+    "ay": "ay",
+    "b": "b",
+    "c": "k",
+    "ch": "ch",
+    "ck": "k",
+    "d": "d",
+    "e": "e",
+    "ea": "ee",
+    "ee": "ee",
+    "er": "er",
+    "f": "f",
+    "ff": "f",
+    "g": "g",
+    "h": "h",
+    "i": "i",
+    "igh": "igh",
+    "ir": "er",
+    "j": "j",
+    "k": "k",
+    "l": "l",
+    "ll": "l",
+    "m": "m",
+    "n": "n",
+    "ng": "ng",
+    "nk": "ng+k",
+    "o": "o",
+    "oa": "oa",
+    "oi": "oi",
+    "oo": "oo",
+    "or": "or",
+    "ou": "ow",
+    "ow": "ow",
+    "oy": "oi",
+    "p": "p",
+    "qu": "kw",
+    "r": "r",
+    "s": "s",
+    "sh": "sh",
+    "ss": "s",
+    "t": "t",
+    "th": "th",
+    "u": "u",
+    "ur": "er",
+    "v": "v",
+    "w": "w",
+    "wh": "w",
+    "x": "ks",
+    "y": "y",
+    "z": "z",
+    "zz": "z"
+  },
+  "rhymeSets": [
+    {
+      "words": [
+        {
+          "word": "cat",
+          "image": "🐱"
+        },
+        {
+          "word": "bat",
+          "image": "🦇"
+        },
+        {
+          "word": "rat",
+          "image": "🐀"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "dog",
+          "image": "🐕"
+        },
+        {
+          "word": "frog",
+          "image": "🐸"
+        },
+        {
+          "word": "log",
+          "image": "🪵"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "bee",
+          "image": "🐝"
+        },
+        {
+          "word": "tree",
+          "image": "🌳"
+        },
+        {
+          "word": "key",
+          "image": "🔑"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "car",
+          "image": "🚗"
+        },
+        {
+          "word": "star",
+          "image": "⭐"
+        },
+        {
+          "word": "jar",
+          "image": "🫙"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "cake",
+          "image": "🍰"
+        },
+        {
+          "word": "snake",
+          "image": "🐍"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "goat",
+          "image": "🐐"
+        },
+        {
+          "word": "boat",
+          "image": "⛵"
+        },
+        {
+          "word": "coat",
+          "image": "🧥"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "bug",
+          "image": "🐛"
+        },
+        {
+          "word": "mug",
+          "image": "☕"
+        },
+        {
+          "word": "hug",
+          "image": "🫂"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "fox",
+          "image": "🦊"
+        },
+        {
+          "word": "box",
+          "image": "📦"
+        },
+        {
+          "word": "socks",
+          "image": "🧦"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "train",
+          "image": "🚂"
+        },
+        {
+          "word": "rain",
+          "image": "🌧️"
+        },
+        {
+          "word": "chain",
+          "image": "⛓️"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "clock",
+          "image": "🕐"
+        },
+        {
+          "word": "rock",
+          "image": "🪨"
+        },
+        {
+          "word": "lock",
+          "image": "🔒"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "bell",
+          "image": "🔔"
+        },
+        {
+          "word": "shell",
+          "image": "🐚"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "ring",
+          "image": "💍"
+        },
+        {
+          "word": "king",
+          "image": "🤴"
+        },
+        {
+          "word": "wing",
+          "image": "🪽"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "bed",
+          "image": "🛏️"
+        },
+        {
+          "word": "sled",
+          "image": "🛷"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "moon",
+          "image": "🌙"
+        },
+        {
+          "word": "spoon",
+          "image": "🥄"
+        },
+        {
+          "word": "balloon",
+          "image": "🎈"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "house",
+          "image": "🏠"
+        },
+        {
+          "word": "mouse",
+          "image": "🐭"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "snail",
+          "image": "🐌"
+        },
+        {
+          "word": "whale",
+          "image": "🐳"
+        },
+        {
+          "word": "mail",
+          "image": "📬"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "pan",
+          "image": "🍳"
+        },
+        {
+          "word": "van",
+          "image": "🚐"
+        },
+        {
+          "word": "man",
+          "image": "👨"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "bear",
+          "image": "🐻"
+        },
+        {
+          "word": "pear",
+          "image": "🍐"
+        },
+        {
+          "word": "chair",
+          "image": "🪑"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "crown",
+          "image": "👑"
+        },
+        {
+          "word": "clown",
+          "image": "🤡"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "pie",
+          "image": "🥧"
+        },
+        {
+          "word": "tie",
+          "image": "👔"
+        },
+        {
+          "word": "fly",
+          "image": "🪰"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "nose",
+          "image": "👃"
+        },
+        {
+          "word": "rose",
+          "image": "🌹"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "dice",
+          "image": "🎲"
+        },
+        {
+          "word": "rice",
+          "image": "🍚"
+        }
+      ]
+    },
+    {
+      "words": [
+        {
+          "word": "kite",
+          "image": "🪁"
+        },
+        {
+          "word": "light",
+          "image": "💡"
+        }
+      ]
+    }
   ]
 }

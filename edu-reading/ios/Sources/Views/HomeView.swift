@@ -80,7 +80,7 @@ struct HomeView: View {
                         DeckTile(step: "🧩", tint: 0xC98A3E, name: "Build a Word",
                                  blurb: "Spell the picture from letters") { SpellView() }
                         DeckTile(step: "🎵", tint: 0x7A5EA8, name: "Rhyme Time",
-                                 blurb: "Find the word that rhymes") { RhymeView() }
+                                 blurb: "Hear a word, find its rhyme") { RhymeView() }
                         DeckTile(step: "🃏", tint: 0x3E8FA8, name: "Match Up",
                                  blurb: "Match each word to its picture") { MatchView() }
                     }

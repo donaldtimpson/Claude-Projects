@@ -4,5 +4,7 @@
 # and it is what makes an Android port a copy rather than a rewrite.
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"
+# Refuse to ship a word or sentence that uses a sound not yet taught at its level.
+python3 "$root/edu-reading/tools/phonics.py" lint
 cp "$root/content/reading/reading.json" "$root/edu-reading/ios/Resources/Content/reading.json"
 echo "synced reading.json -> edu-reading/ios/Resources/Content/"

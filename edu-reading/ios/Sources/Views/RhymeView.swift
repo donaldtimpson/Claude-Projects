@@ -1,37 +1,44 @@
 import SwiftUI
 
-// Hearing that two words end the same is the root skill under decoding — a child who
-// can hear "cat / hat" is ready to see that -at is a unit. This is that ear-training
-// as a game: a target word, and three words to pick the rhyme from. It reuses the
-// rime families the Word Blending deck is built on, so the answer genuinely rhymes
-// and the decoys genuinely do not. Like Find It, a wrong tap is only ruled out — the
-// game never scolds.
+// Hearing that two words end the same is an EAR skill, and it comes before reading —
+// so nothing here is printed. The first version showed written choices, which the
+// child who needs this game can't read and the child who can read doesn't need.
+//
+// A round: a picture is named ("cat"), then each choice is named in turn as it
+// lights up, so a picture that could be called two things is pinned to one word.
+// Then the child taps the one that rhymes. Like Find It, a wrong tap is only ruled
+// out — the game never scolds.
 struct RhymeView: View {
     @Environment(Progress.self) private var progress
     @Environment(Settings.self) private var settings
     @Environment(\.dismiss) private var dismiss
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0x7A5EA8)
+    typealias Pic = ReadingContent.Pic
 
-    struct Round: Equatable { let target: String; let answer: String; let choices: [String] }
+    struct Round: Equatable { let target: Pic; let answer: Pic; let choices: [Pic] }
 
     @State private var round: Round?
     @State private var right: String?
     @State private var flash: String?
     @State private var ruledOut: Set<String> = []
     @State private var armed = false
-    @State private var armFallback: DispatchWorkItem?
+    @State private var naming: String?     // the choice being named right now
+    @State private var generation = 0      // so a stale naming chain stops
 
     var body: some View {
         VStack(spacing: 0) {
-            prompt.padding(.top, 10).padding(.bottom, 22)
             if let round {
-                VStack(spacing: 12) {
-                    ForEach(round.choices, id: \.self) { choice($0, in: round) }
+                target(round).padding(.top, 54)
+                Spacer(minLength: 18)
+                let cols = round.choices.count > 2 ? 3 : 2
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: cols),
+                          spacing: 12) {
+                    ForEach(round.choices, id: \.word) { choice($0, in: round) }
                 }
-                .padding(.horizontal, 22)
+                .padding(.horizontal, 18)
+                Spacer(minLength: 24)
             }
-            Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Skin.current.ground(accent).ignoresSafeArea())
@@ -41,89 +48,105 @@ struct RhymeView: View {
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
         .onAppear { if round == nil { deal() } }
+        .onDisappear { generation += 1 }
     }
 
-    @ViewBuilder
-    private var prompt: some View {
-        if let round {
-            VStack(spacing: 12) {
-                Text("Which word rhymes?")
-                    .font(.andika(15)).foregroundStyle(Skin.live.onSkySoft)
-                Button { Voice.shared.say(round.target) } label: {
-                    HStack(spacing: 12) {
-                        phonics(round.target, size: 46)
-                        Image(systemName: "speaker.wave.2.fill")
-                            .font(.system(size: 22)).foregroundStyle(accent)
-                    }
-                    .padding(.horizontal, 24).padding(.vertical, 12)
-                    .background(Skin.live.card, in: Capsule())
-                    .shadow(color: .black.opacity(0.08), radius: 5, y: 2)
-                }
-                .buttonStyle(.plain)
+    private func target(_ round: Round) -> some View {
+        Button { if armed { Voice.shared.say(round.target.word) } } label: {
+            VStack(spacing: 4) {
+                Text(round.target.image).font(.system(size: 110))
+                Image(systemName: "speaker.wave.2.fill")
+                    .font(.system(size: 20)).foregroundStyle(accent)
             }
+            .padding(.horizontal, 34).padding(.vertical, 16)
+            .background(Skin.live.card, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .shadow(color: .black.opacity(0.08), radius: 6, y: 3)
         }
+        .buttonStyle(.plain)
     }
 
-    private func choice(_ w: String, in round: Round) -> some View {
-        let isRight = right == w, isWrong = flash == w, out = ruledOut.contains(w)
-        return Button { pick(w, in: round) } label: {
-            phonics(w, size: 40)
+    private func choice(_ p: Pic, in round: Round) -> some View {
+        let isRight = right == p.word, isWrong = flash == p.word, out = ruledOut.contains(p.word)
+        let lit = naming == p.word
+        return Button { pick(p, in: round) } label: {
+            Text(p.image).font(.system(size: 72))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 22)
                 .background(isRight ? Color(hex: 0x3E9B4F).opacity(0.22)
-                            : (isWrong ? Color(hex: 0xD62828).opacity(0.20) : Skin.live.card))
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            : (isWrong ? Color(hex: 0xD62828).opacity(0.20)
+                               : (lit ? accent.opacity(0.18) : Skin.live.card)))
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .stroke(isRight ? Color(hex: 0x3E9B4F)
-                            : (isWrong ? Color(hex: 0xD62828) : Skin.live.cardInk.opacity(0.12)),
-                            lineWidth: (isRight || isWrong) ? 4 : 1))
-                .opacity(out && !isWrong ? 0.35 : (armed ? 1 : 0.55))
+                            : (isWrong ? Color(hex: 0xD62828)
+                               : (lit ? accent : Skin.live.cardInk.opacity(0.12))),
+                            lineWidth: (isRight || isWrong || lit) ? 4 : 1))
+                .scaleEffect(lit || isRight ? 1.06 : 1)
+                .opacity(out && !isWrong ? 0.35 : (armed || lit ? 1 : 0.6))
+                .grayscale(out && !isWrong ? 0.9 : 0)
                 .offset(x: isWrong ? -7 : 0)
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
         }
         .buttonStyle(.plain)
         .disabled(!armed || out || right != nil)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: lit)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: armed)
     }
 
-    private func pick(_ w: String, in round: Round) {
-        guard armed, right == nil, !ruledOut.contains(w) else { return }
-        Voice.shared.say(w)
-        if w == round.answer {
+    private func pick(_ p: Pic, in round: Round) {
+        guard armed, right == nil, !ruledOut.contains(p.word) else { return }
+        if p == round.answer {
             armed = false
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { right = w }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { right = p.word }
             Buzz.yes()
+            Voice.shared.chime()
             progress.rhymeGot()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) {
+            // Say the pair together — "cat, bat" — so the rhyme itself is the reward.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                Voice.shared.say("\(round.target.word), \(p.word)")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) {
                 withAnimation(.easeInOut(duration: 0.25)) { right = nil; deal() }
             }
         } else {
+            Voice.shared.say(p.word)
             Buzz.no()
-            withAnimation(.default.repeatCount(3, autoreverses: true).speed(6)) { flash = w }
+            withAnimation(.default.repeatCount(3, autoreverses: true).speed(6)) { flash = p.word }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
-                withAnimation(.easeOut(duration: 0.25)) { flash = nil; _ = ruledOut.insert(w) }
+                withAnimation(.easeOut(duration: 0.25)) { flash = nil; _ = ruledOut.insert(p.word) }
             }
         }
     }
 
     private func deal() {
-        let fams = c.rimes.filter { $0.words.count >= 2 }
-        guard let fam = fams.randomElement() else { return }
-        let pair = fam.words.shuffled().prefix(2)
-        guard let target = pair.first, let answer = pair.last, target != answer else { return }
+        let sets = c.rhymeSets ?? []
+        guard let fam = sets.filter({ $0.words.count >= 2 }).randomElement() else { return }
+        let pair = Array(fam.words.shuffled().prefix(2))
         // Decoys from OTHER families, so they share no rime with the target.
-        let others = c.rimes.filter { $0.rime != fam.rime }.flatMap { $0.words }
-        let decoys = Array(others.shuffled().prefix(max(1, settings.rhymeChoices - 1)))
-        round = Round(target: target, answer: answer, choices: (decoys + [answer]).shuffled())
-        ruledOut = []; armed = false; flash = nil
+        let others = sets.filter { $0 != fam }.flatMap(\.words)
+        let n = min(max(settings.rhymeChoices, 2), 3)
+        let decoys = Array(others.shuffled().prefix(n - 1))
+        let r = Round(target: pair[0], answer: pair[1], choices: (decoys + [pair[1]]).shuffled())
+        round = r
+        ruledOut = []; armed = false; flash = nil; naming = nil
+        generation += 1
+        let gen = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            Voice.shared.say(target) { withAnimation { armed = true } }
+            Voice.shared.say(r.target.word) { name(r.choices, 0, gen) }
         }
-        // Belt-and-braces arm, if the utterance never reports back. Cancel any prior
-        // one so a previous round's timer can't arm the next round early.
-        armFallback?.cancel()
-        let fb = DispatchWorkItem { if !armed { withAnimation { armed = true } } }
-        armFallback = fb
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: fb)
+    }
+
+    /// Name each choice in turn as it lights up, then hand over to the child.
+    private func name(_ choices: [Pic], _ i: Int, _ gen: Int) {
+        guard gen == generation else { return }
+        guard i < choices.count else {
+            withAnimation { naming = nil; armed = true }
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + (i == 0 ? 0.5 : 0.25)) {
+            guard gen == generation else { return }
+            withAnimation { naming = choices[i].word }
+            Voice.shared.say(choices[i].word) { name(choices, i + 1, gen) }
+        }
     }
 }
