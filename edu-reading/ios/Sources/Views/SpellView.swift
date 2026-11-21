@@ -1,10 +1,15 @@
 import SwiftUI
 
-// Building a word, the mirror of reading it: a picture, a row of empty slots, and a
-// tray of letters. The child taps letters to fill the slots. Only the correct NEXT
-// letter locks in; a wrong tap gives a little shake and nothing else — the game, like
-// the rest of the app, can only ever say yes. A couple of decoy letters make it a
-// real choice rather than an ordering drill.
+// Building a word, the mirror of reading it — and the bridge to writing. A picture
+// (or, for a word with no picture, just its sound), one slot per GRAPHEME, and a
+// tray of grapheme tiles: "sh" and "ck" are one tile each, because they are one
+// sound each. Every tile says its sound when touched, so the child spells by ear
+// rather than from memorised letter strings. Only the right tile for the next slot
+// locks in; a wrong one says its sound and stays in the tray. Tapping the glowing
+// slot plays the sound it wants — help, never a telling-off.
+//
+// Words come only from the decodable list, in level order (cat before ship before
+// cake), so a beginner never meets "knife".
 
 struct SpellView: View {
     @Environment(Progress.self) private var progress
@@ -12,21 +17,21 @@ struct SpellView: View {
     @Environment(\.dismiss) private var dismiss
     private let c = ReadingContent.shared
     private let accent = Color(hex: 0xC98A3E)
+    typealias Sound = (grapheme: String, phoneme: String)
 
-    @State private var pool: [ReadingContent.PictureWord] = []
+    @State private var pool: [ReadingContent.Word] = []
     @State private var index = 0
-    @State private var placed: [Character] = []
+    @State private var placed = 0
     @State private var tray: [Tile] = []
     @State private var done = false
     @State private var wrongTile: UUID?
     @State private var shake: CGFloat = 0
+    @State private var active: Int?
 
-    struct Tile: Identifiable { let id = UUID(); let ch: Character }
+    struct Tile: Identifiable { let id = UUID(); let grapheme: String; let phoneme: String }
 
-    private var round: ReadingContent.PictureWord? {
-        pool.isEmpty ? nil : pool[index % pool.count]
-    }
-    private var word: [Character] { Array(round?.word ?? "") }
+    private var round: ReadingContent.Word? { pool.isEmpty ? nil : pool[index % pool.count] }
+    private var sounds: [Sound] { round.map { c.sounds(of: $0) } ?? [] }
 
     var body: some View {
         ZStack {
@@ -35,7 +40,12 @@ struct SpellView: View {
                 VStack(spacing: 26) {
                     Spacer(minLength: 0)
                     Button { say() } label: {
-                        Text(round.images.first ?? "🔤").font(.system(size: 116))
+                        if let img = round.image {
+                            Text(img).font(.system(size: 116))
+                        } else {
+                            Image(systemName: "speaker.wave.2.circle.fill")
+                                .font(.system(size: 96)).foregroundStyle(accent)
+                        }
                     }
                     .buttonStyle(.plain)
 
@@ -60,30 +70,39 @@ struct SpellView: View {
         .toolbar(.hidden, for: .navigationBar)
         .noBackSwipe()
         .onAppear { if pool.isEmpty { makePool() } }
+        .onDisappear { Voice.shared.cancelSoundOut() }
     }
 
     private var slots: some View {
-        HStack(spacing: 10) {
-            ForEach(0..<word.count, id: \.self) { i in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(Skin.live.card)
-                        .frame(width: 56, height: 64)
-                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(i == placed.count ? accent : Skin.live.cardEdge,
-                                    lineWidth: i == placed.count ? 2.5 : 1.5))
-                    if i < placed.count { phonics(String(placed[i]), size: 34) }
+        HStack(spacing: 8) {
+            ForEach(Array(sounds.enumerated()), id: \.offset) { i, s in
+                let next = i == placed && !done
+                let wide = s.grapheme.count > 1
+                Button { if next { Voice.shared.phoneme(s.phoneme) } } label: {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(i == active ? Theme.go.opacity(0.18) : Skin.live.card)
+                            .frame(width: wide ? 78 : 56, height: 64)
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(next ? accent : (i == active ? Theme.go : Skin.live.cardEdge),
+                                        lineWidth: next || i == active ? 2.5 : 1.5))
+                        if i < placed {
+                            phonicsParts([s], active: nil, size: 34)
+                        }
+                    }
                 }
+                .buttonStyle(.plain)
+                .disabled(!next)
             }
         }
     }
 
     private var trayView: some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 60), spacing: 12)], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72), spacing: 12)], spacing: 12) {
             ForEach(tray) { tile in
                 Button { tap(tile) } label: {
-                    phonics(String(tile.ch), size: 32)
-                        .frame(width: 60, height: 66)
+                    phonics(tile.grapheme, size: 32)
+                        .frame(width: 72, height: 66)
                         .background(Skin.live.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .stroke(accent.opacity(0.45), lineWidth: 1.5))
@@ -97,14 +116,17 @@ struct SpellView: View {
     }
 
     private func tap(_ tile: Tile) {
-        guard !done, placed.count < word.count else { return }
-        if tile.ch == word[placed.count] {
+        guard !done, placed < sounds.count else { return }
+        let want = sounds[placed]
+        // A silent letter has no sound of its own; its tile says nothing.
+        if tile.phoneme != "_" { Voice.shared.phoneme(tile.phoneme) }
+        if tile.grapheme.lowercased() == want.grapheme.lowercased() {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
-                placed.append(tile.ch)
+                placed += 1
                 tray.removeAll { $0.id == tile.id }
             }
             Buzz.pick()
-            if placed.count == word.count { finish() }
+            if placed == sounds.count { finish() }
         } else {
             Buzz.no()
             wrongTile = tile.id; shake = 0
@@ -115,43 +137,67 @@ struct SpellView: View {
 
     private func finish() {
         done = true
-        Buzz.yes()
-        Voice.shared.celebrate()
-        if let w = round?.word { progress.spelledWord(w) }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-            index += 1; setupRound()
+        guard let w = round else { return }
+        progress.spelledWord(w.word)
+        // Read back what was built — each sound lit in its slot, then the word.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            let cheer = {
+                Buzz.yes()
+                Voice.shared.celebrate()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { index += 1; setupRound() }
+            }
+            if Voice.shared.hasAnyLetterAudio {
+                Voice.shared.soundOut(sounds, word: w.word,
+                                      onStep: { i in withAnimation { active = i } }, then: cheer)
+            } else {
+                Voice.shared.say(w.word); cheer()
+            }
         }
     }
 
-    private func skip() { index += 1; setupRound() }
+    private func skip() { Voice.shared.cancelSoundOut(); index += 1; setupRound() }
     private func say() { if let w = round?.word { Voice.shared.say(w) } }
 
     private func makePool() {
-        // Ramp by length: three-letter words (cat, dog, sun) first, longer ones
-        // later — so a beginner never opens on "onion". Shuffled within a length so
-        // it is not the same order every time.
-        let showable = c.pictureWords
-            .filter { (3...6).contains($0.word.count) && $0.word.allSatisfy(\.isLetter) }
-        pool = shuffledWithin(showable) { $0.word.count }
+        // Level order (CVC, digraphs, blends …), shuffled within a level; inflected
+        // endings are left out — "jumping" is a reading word, not a spelling one.
+        let order = c.wordLevels
+        let spellable = c.words.filter { $0.level != "Endings" && $0.parts != nil }
+        pool = shuffledWithin(spellable) { order.firstIndex(of: $0.level) ?? 9 }
         setupRound()
     }
 
     private func setupRound() {
-        placed = []; done = false; wrongTile = nil
+        placed = 0; done = false; wrongTile = nil; active = nil
         guard let round else { return }
-        let letters = Array(round.word)
-        // Two decoys the word does not use, so the tray is a choice. Drawn from the
-        // whole alphabet, and we force one vowel when we can so a vowel slot isn't a
-        // giveaway (the only vowel tile otherwise being the word's own).
-        let vowels = Set("aeiou")
-        let bank = Array("abcdefghijklmnopqrstuvwxyz").filter { !letters.contains($0) }
-        var decoys = Array(bank.shuffled().prefix(settings.spellDecoys))
-        // Force one vowel decoy when there is room, so a vowel slot isn't a giveaway.
-        if settings.spellDecoys > 0, !decoys.contains(where: { vowels.contains($0) }),
-           let v = bank.filter({ vowels.contains($0) }).randomElement() {
-            if decoys.isEmpty { decoys = [v] } else { decoys[0] = v }
+        let mine = sounds
+        let own = Set(mine.map { $0.grapheme.lowercased() })
+        // Decoys from graphemes already met at this level or before, the same kind
+        // as the word's own (a digraph word gets a digraph decoy), and always one
+        // vowel when there's room so a vowel slot isn't a giveaway.
+        let lv = c.wordLevels.firstIndex(of: round.level) ?? 0
+        var bank: [Sound] = []
+        var seen = Set<String>()
+        for w in c.words where (c.wordLevels.firstIndex(of: w.level) ?? 9) <= lv {
+            for s in c.sounds(of: w) where s.phoneme != "_" {
+                let g = s.grapheme.lowercased()
+                if !own.contains(g), seen.insert(g).inserted { bank.append((g, s.phoneme)) }
+            }
         }
-        tray = (letters + decoys).map { Tile(ch: $0) }.shuffled()
+        let vowels = Set("aeiou")
+        let isVowel: (Sound) -> Bool = { $0.grapheme.allSatisfy { vowels.contains($0) } }
+        var decoys: [Sound] = []
+        let n = settings.spellDecoys
+        if n > 0, let v = bank.filter(isVowel).randomElement() { decoys.append(v) }
+        if mine.contains(where: { $0.grapheme.count > 1 }),
+           let d = bank.filter({ $0.grapheme.count > 1 && !isVowel($0) }).randomElement() {
+            decoys.append(d)
+        }
+        for s in bank.shuffled() where decoys.count < n && !decoys.contains(where: { $0.grapheme == s.grapheme }) {
+            decoys.append(s)
+        }
+        tray = (mine + decoys.prefix(max(n, decoys.count > n ? n : decoys.count)))
+            .map { Tile(grapheme: $0.grapheme, phoneme: $0.phoneme) }.shuffled()
         say()
     }
 }

@@ -63,6 +63,8 @@ private struct RootView: View {
                 case "trace":      TraceView()
                 case "spell":      SpellView()
                 case "rhyme":      RhymeView()
+                case "soundhunt":  SoundGameView(mode: .blend)
+                case "firstsound": SoundGameView(mode: .first)
                 case "match":      MatchView()
                 case "words":      WordsView()
                 case "sentences":  SentencesView()

@@ -78,7 +78,13 @@ struct HomeView: View {
                                                            : "Hear the word, find the picture")
                             { QuizView() }
                         DeckTile(step: "🧩", tint: 0xC98A3E, name: "Build a Word",
-                                 blurb: "Spell the picture from letters") { SpellView() }
+                                 blurb: "Spell it with sounds") { SpellView() }
+                        if Voice.shared.hasAnyLetterAudio {
+                            DeckTile(step: "👂", tint: 0x2E7D6E, name: "Sound Hunt",
+                                     blurb: "Hear the sounds, find the picture") { SoundGameView(mode: .blend) }
+                            DeckTile(step: "🔉", tint: 0xC8433A, name: "First Sound",
+                                     blurb: "Which one starts with that sound?") { SoundGameView(mode: .first) }
+                        }
                         DeckTile(step: "🎵", tint: 0x7A5EA8, name: "Rhyme Time",
                                  blurb: "Hear a word, find its rhyme") { RhymeView() }
                         DeckTile(step: "🃏", tint: 0x3E8FA8, name: "Match Up",
