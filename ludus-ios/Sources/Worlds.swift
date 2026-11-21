@@ -108,7 +108,7 @@ let ludusWorlds: [LudusWorld] = [
         .init(title: "Omnibus Driver", mechanic: "story-sum", premise: "Passengers hop on and off — how many are riding?", game: .omnibus,
               icon: "🚌", howTo: how(("👀", "Watch who gets on and off"), ("🧠", "Keep count in your head"), ("👆", "Tap how many are riding"))),
         .init(title: "Times Table Ninja", mechanic: "slash", premise: "Slice the fruit from the right times table, dodge the bombs.", game: .timesTableNinja,
-              icon: "🥷", howTo: how(("👀", "Look at the table on the banner"), ("👉", "Swipe fruit from that table"), ("💣", "Never slice a bomb"))),
+              icon: "🥷", howTo: how(("📣", "Hear which table to slice"), ("👉", "Swipe fruit from that table"), ("💣", "Never slice a bomb"))),
         .init(title: "Leo's Fountain", mechanic: "pour", premise: "Fill each jug to just the right level — ½, ¾, 0.7, 40%.", game: .fountain,
               icon: "🦁", howTo: how(("🏺", "Look at how full"), ("✋", "HOLD to pour"), ("💧", "Let go at just the right level"))),
         .init(title: "Libra", mechanic: "balance", premise: "Fill the sack until the great scales balance.", game: .libra,
