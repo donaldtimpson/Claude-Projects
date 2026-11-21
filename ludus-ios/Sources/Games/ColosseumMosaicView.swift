@@ -412,7 +412,7 @@ struct MosaicMenderView: View {
         case .cross: line = "Bah! THIS one fits!"
         case .neutral:
             line = !model.holeOpen ? "Ah, my beautiful floor…"
-                : (model.puzzle.mirror ? "Mus! Make both sides match!" : "Mus took a tile! Which fits?")
+                : (model.puzzle.mirror ? "Both halves match! Which fits?" : "Mus took a tile! Which fits?")
         }
         return HStack(spacing: 6) {
             MEmperor(s: 118, mood: mood)
@@ -421,8 +421,11 @@ struct MosaicMenderView: View {
                 .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.7)
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                // A fresh line swaps in whole: animating the text itself cross-faded two
+                // different-length lines on top of each other.
+                .id(line)
+                .transition(.identity)
                 .background(MBubble().fill(Color(hex: 0xfbf3e0)).shadow(color: .black.opacity(0.35), radius: 4, y: 2))
-                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: line)
         }
     }
 
