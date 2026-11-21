@@ -423,8 +423,10 @@ private struct TBackdrop: View {
                         ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r)), with: .color(.white.opacity(i % 3 == 0 ? 0.9 : 0.5)))
                     }
                 }
-                Circle().fill(RadialGradient(colors: [Color(hex: 0xfff8e4), Color(hex: 0xe8dcc0)], center: .topLeading, startRadius: 2, endRadius: 50)).frame(width: 52).shadow(color: .white.opacity(0.5), radius: 16)
-                    .position(x: w * 0.12, y: h * 0.235)
+                Circle().fill(RadialGradient(colors: [Color(hex: 0xfff8e4), Color(hex: 0xe8dcc0)], center: .topLeading, startRadius: 2, endRadius: 40)).frame(width: 38).shadow(color: .white.opacity(0.5), radius: 12)
+                    // High in the open sky above the HUD row, right of the island (lower, it sat
+                    // behind the arcade and showed through the arches as a split white blob).
+                    .position(x: w * 0.76, y: h * 0.05)
                 // Ring of arches (two tiers), dark against the sky
                 VStack(spacing: 0) {
                     TArches(count: 9).fill(Color(hex: 0x3a2e3e), style: FillStyle(eoFill: true)).frame(height: h * 0.09)
