@@ -46,9 +46,20 @@ final class PrizeBook: ObservableObject {
     ]
 
     func reload() {
+        #if DEBUG
+        // LUDUS_PRIZES_DEMO: four of the suggested prizes and one claim waiting (for screenshots).
+        if !didDemo, ProcessInfo.processInfo.environment["LUDUS_PRIZES_DEMO"] != nil {
+            didDemo = true
+            prizes = Array(Self.suggestions.prefix(4)); claims = [PrizeClaim(name: "A trip to the park", emoji: "🛝", date: Date())]
+            save(); return
+        }
+        #endif
         prizes = decode(prizesKey) ?? []
         claims = decode(claimsKey) ?? []
     }
+    #if DEBUG
+    private var didDemo = false
+    #endif
 
     var pending: [PrizeClaim] { claims.filter { !$0.given } }
 
@@ -89,13 +100,13 @@ struct PrizeHall: View {
     var body: some View {
         WingRoom(wall: Color(hex: 0x5a2a1c), panel: Color(hex: 0x7a3a26)) { w, h, t in
             ZStack(alignment: .topLeading) {
-                // the treasure chest on the floor, glinting
-                Text("🪙").font(.system(size: w * 0.07)).opacity(0.6 + 0.4 * sin(t * 2))
-                    .position(x: w * 0.62, y: h * 0.70)
-                Text("🧰").font(.system(size: w * 0.18)).position(x: w * 0.5, y: h * 0.82)
+                // the family strongbox (an arca) on the floor, a glint running over its gold bands
+                Arca(glint: 0.5 + 0.5 * sin(t * 1.6))
+                    .frame(width: w * 0.34, height: w * 0.25)
+                    .position(x: w * 0.5, y: h * 0.80)
                 // the board
                 VStack(spacing: w * 0.02) {
-                    Text("PRAEMIA").font(luCinzel(w * 0.06, bold: true)).tracking(2).foregroundStyle(Fr.gold)
+                    Text("PRAEMIA · PRIZES").font(luCinzel(w * 0.05, bold: true)).tracking(1.5).foregroundStyle(Fr.gold)
                     if book.pending.isEmpty {
                         Text(book.prizes.isEmpty ? "No prizes yet." : "Claim a prize below with your gold!")
                             .font(luGaramond(w * 0.045, semibold: true)).foregroundStyle(Fr.parchment.opacity(0.85))
@@ -262,6 +273,43 @@ private struct PrizeManager: View {
             }
             .navigationTitle("Prizes")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+    }
+}
+
+/// A Roman strongbox: oak body, domed lid, gilt bands and a lock plate.
+private struct Arca: View {
+    var glint: Double
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width, h = g.size.height
+            let wood = LinearGradient(colors: [Color(hex: 0x8a5a32), Color(hex: 0x5e3a1e)], startPoint: .top, endPoint: .bottom)
+            let gold = LinearGradient(colors: [Color(hex: 0xf7d36b), Fr.gold, Color(hex: 0xa87a1f)], startPoint: .top, endPoint: .bottom)
+            ZStack(alignment: .topLeading) {
+                Ellipse().fill(Color.black.opacity(0.25)).frame(width: w * 1.05, height: h * 0.16).offset(x: -w * 0.025, y: h * 0.9)
+                // body
+                RoundedRectangle(cornerRadius: w * 0.03).fill(wood)
+                    .frame(width: w, height: h * 0.62).offset(y: h * 0.36)
+                // domed lid
+                UnevenRoundedRectangle(topLeadingRadius: w * 0.2, bottomLeadingRadius: 2, bottomTrailingRadius: 2, topTrailingRadius: w * 0.2)
+                    .fill(LinearGradient(colors: [Color(hex: 0x9c6a3c), Color(hex: 0x6e4524)], startPoint: .top, endPoint: .bottom))
+                    .frame(width: w, height: h * 0.38).offset(y: 0)
+                // gilt bands
+                ForEach([0.16, 0.5, 0.84], id: \.self) { f in
+                    Rectangle().fill(gold).frame(width: w * 0.07, height: h * 0.98)
+                        .offset(x: w * f - w * 0.035, y: h * 0.01)
+                }
+                Rectangle().fill(gold).frame(width: w, height: h * 0.06).offset(y: h * 0.34)
+                // lock plate
+                RoundedRectangle(cornerRadius: 3).fill(gold).frame(width: w * 0.16, height: h * 0.24).offset(x: w * 0.42, y: h * 0.4)
+                Capsule().fill(Color(hex: 0x3a2412)).frame(width: w * 0.035, height: h * 0.1).offset(x: w * 0.4825, y: h * 0.47)
+                // a glint running over the bands
+                Rectangle().fill(Color.white.opacity(0.35 * glint)).frame(width: w * 0.04, height: h * 0.9)
+                    .rotationEffect(.degrees(18)).offset(x: w * CGFloat(0.1 + 0.8 * glint), y: h * 0.04)
+                    .blendMode(.screen)
+                    .mask(RoundedRectangle(cornerRadius: w * 0.05).frame(width: w, height: h * 0.97))
+            }
+            .frame(width: w, height: h, alignment: .topLeading)
         }
     }
 }
