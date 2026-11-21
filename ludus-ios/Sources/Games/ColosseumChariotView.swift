@@ -324,7 +324,7 @@ private final class ChariotModel: ArcadeModel {
             }
             if isAnswer {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.5)) { cheer = true }
-                bubble = "That's the way!"
+                bubble = "That's one way!"
                 later(1.3) { [unowned self] in if !dying { newPuzzle() } }
                 return
             }
@@ -568,7 +568,7 @@ struct ChariotCodeView: View {
         let pz = model.puzzle
         let gap: CGFloat = 4
         // A tablet's play area is wider than a phone's: let the small boards' squares grow a little.
-        let cs = min(size.width > 500 ? 128 : 104, (size.width - gap * CGFloat(pz.cols - 1)) / CGFloat(pz.cols),
+        let cs = min(size.width > 500 ? 128 : 118, (size.width - gap * CGFloat(pz.cols - 1)) / CGFloat(pz.cols),
                      (size.height - gap * CGFloat(pz.rows - 1)) / CGFloat(pz.rows))
         let gw = cs * CGFloat(pz.cols) + gap * CGFloat(pz.cols - 1)
         let gh = cs * CGFloat(pz.rows) + gap * CGFloat(pz.rows - 1)
@@ -668,17 +668,19 @@ struct ChariotCodeView: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            if pz.loops && !model.running {
+            if pz.loops {
+                // Hidden (not removed) while running, so the scroll doesn't change height mid-drive.
                 Text("Tap a step to repeat it ×2, ×3")
                     .font(luFont(13, .heavy)).foregroundStyle(Color(hex: 0x5a3414))
+                    .opacity(model.running ? 0 : 1)
             }
         }
-        .padding(.horizontal, 10).padding(.vertical, 9)
+        .padding(.horizontal, 10).padding(.top, pz.loops ? 14 : 9).padding(.bottom, 9)
         .background(CCScrollShape().fill(LinearGradient(colors: [Color(hex: 0xf7e7c0), Color(hex: 0xe8cf98)], startPoint: .top, endPoint: .bottom))
             .overlay(CCScrollShape().stroke(Color(hex: 0xa77a44), lineWidth: 2)))
         .overlay(alignment: .topTrailing) {
             if model.showing {
-                Text("THE RIGHT WAY").font(luFont(10, .heavy)).tracking(1.2)
+                Text("ONE WAY THAT WORKS").font(luFont(10, .heavy)).tracking(1.2)
                     .foregroundStyle(.white).padding(.horizontal, 8).padding(.vertical, 3)
                     .background(Capsule().fill(Color(hex: 0x4e8a3a))).offset(x: -10, y: -9)
             }
@@ -700,9 +702,10 @@ struct ChariotCodeView: View {
                     Image(systemName: c.dir.arrow).font(.system(size: side * 0.48, weight: .black))
                         .foregroundStyle(Color(hex: active ? Lu.inkDark : 0xfff4dc))
                     if c.times > 1 {
-                        Text("×\(c.times)").font(luFont(13, .black)).foregroundStyle(Color(hex: Lu.inkDark))
+                        // Dark on the lit (gold) step, so the badge doesn't melt into it.
+                        Text("×\(c.times)").font(luFont(13, .black)).foregroundStyle(Color(hex: active ? Lu.gold : Lu.inkDark))
                             .padding(.horizontal, 4).padding(.vertical, 1)
-                            .background(Capsule().fill(Color(hex: Lu.gold)))
+                            .background(Capsule().fill(Color(hex: active ? Lu.inkDark : Lu.gold)))
                             .offset(x: side * 0.34, y: -side * 0.38)
                     }
                 }
