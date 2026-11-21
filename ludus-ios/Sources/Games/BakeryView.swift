@@ -10,9 +10,26 @@ import SwiftUI
 // Difficulty (continuous, `d`): fill to the star (I) → ½ and 1 cup with labelled marks → ¼ ½ ¾
 // → a 2-cup jug (1½, 1¼…) → the labels fade (just tick marks) → thirds (⅓, ⅔, 1⅓) → scaling a
 // recipe (double ¾ = 1½, half of 1 = ½) → harder scaling (double ⅔, half of 1½, 1½ × 1 cup).
-// The pour speeds up and the band you must hit narrows; from d≈5 Ursa's oven timer ticks.
+// The pour speeds up and the band you must hit narrows; from d≈7 (after the labels fade and
+// thirds arrive) Ursa's oven timer ticks — starting only once she has read the step out.
 //
 // Amounts are kept in twelfths of a cup, so quarters (3/12) and thirds (4/12) share one ruler.
+
+/// How an amount is SAID ("three quarters of a cup", "one and a half cups") — the voice
+/// stumbles over "¾" and "1½", so speech never gets the written glyphs.
+func bkSay(_ twelfths: Int) -> String {
+    let w = twelfths / 12, r = twelfths % 12
+    let part = [3: "a quarter", 4: "a third", 6: "a half", 8: "two thirds", 9: "three quarters"][r]
+    let whole = ["", "one", "two"][min(w, 2)]
+    if r == 0 { return w == 1 ? "one cup" : "\(whole) cups" }
+    if w == 0 { return r == 6 ? "half a cup" : (part ?? "") + " of a cup" }
+    return "\(whole) and \(part ?? "") cups"
+}
+
+/// A recipe's spoken line with any leftover glyphs ("Make 1½ batches!") in words.
+private func bkSpoken(_ s: String) -> String {
+    s.replacingOccurrences(of: "1½", with: "one and a half").replacingOccurrences(of: "½", with: "half")
+}
 
 /// "¾ cup", "1½ cups", "2 cups", "⅓ cup".
 func bkCups(_ twelfths: Int) -> String {
@@ -56,27 +73,27 @@ private func bkTask(_ m: ArcadeModel) -> BKTask {
     case 0:
         let t = [6, 9, 12, 3].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 12, grid: 3, labels: false, star: true,
-                      line: "Fill the cup to the ⭐️", say: "Pour the \(nm) up to the star!", why: "Up to the star!")
+                      line: "Pour the \(nm) up to the ⭐️!", say: "Pour the \(nm) up to the star!", why: "Up to the star!")
     case 1:
         let t = [6, 12].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 12, grid: 3, labels: true,
-                      line: "\(bkCups(t)) of \(nm)", say: "\(bkCups(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
+                      line: "\(bkCups(t)) of \(nm)", say: "\(bkSay(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
     case 2:
         let t = [3, 6, 9].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 12, grid: 3, labels: true,
-                      line: "\(bkCups(t)) of \(nm)", say: "\(bkCups(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
+                      line: "\(bkCups(t)) of \(nm)", say: "\(bkSay(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
     case 3:
         let t = [15, 18, 21, 24, 9].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 24, grid: 3, labels: true,
-                      line: "\(bkCups(t)) of \(nm)", say: "\(bkCups(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
+                      line: "\(bkCups(t)) of \(nm)", say: "\(bkSay(t)) of \(nm), please!", why: "\(bkCups(t)) is this line")
     case 4:
         let t = 3 * Int.random(in: 1...8)
         return BKTask(ingredient: ing, target: t, capacity: 24, grid: 3, labels: labels && m.d < 6,
-                      line: "\(bkCups(t)) of \(nm)", say: "\(bkCups(t)) of \(nm).", why: "\(bkCups(t)) is this line")
+                      line: "\(bkCups(t)) of \(nm)", say: "\(bkSay(t)) of \(nm).", why: "\(bkCups(t)) is this line")
     case 5:
         let t = [4, 8, 16, 20, 12].randomElement()!
         return BKTask(ingredient: ing, target: t, capacity: 24, grid: 4, labels: labels,
-                      line: "\(bkCups(t)) of \(nm)", say: "\(bkCups(t)) of \(nm).", why: "\(bkCups(t)) — count the thirds")
+                      line: "\(bkCups(t)) of \(nm)", say: "\(bkSay(t)) of \(nm).", why: "\(bkCups(t)) — count the thirds")
     case 6:
         // Scale a recipe: double or half (quarters).
         let opts: [(Int, Int, Int, String, String)] = [    // base, numerator, denominator, wording
@@ -88,7 +105,7 @@ private func bkTask(_ m: ArcadeModel) -> BKTask {
         let o = opts.randomElement()!
         let t = o.0 * o.1 / o.2
         return BKTask(ingredient: ing, target: t, capacity: 24, grid: 3, labels: labels,
-                      line: "Recipe \(o.3): \(bkCups(o.0)) of \(nm). \(o.4)", say: "The recipe \(o.3) needs \(bkCups(o.0)) of \(nm). \(o.4)",
+                      line: "Recipe \(o.3): \(bkCups(o.0)) of \(nm). \(o.4)", say: "The recipe \(o.3) needs \(bkSay(o.0)) of \(nm). \(o.4)",
                       why: o.2 == 2 ? "Half of \(bkCups(o.0)) = \(bkCups(t))" : "\(o.1) × \(bkCups(o.0)) = \(bkCups(t))")
     default:
         let opts: [(Int, Int, Int, String, Int)] = [      // base, ×num, ÷den, wording, grid
@@ -100,7 +117,7 @@ private func bkTask(_ m: ArcadeModel) -> BKTask {
         let t = o.0 * o.1 / o.2
         let factor = o.2 == 2 && o.1 == 1 ? "½ ×" : o.2 == 2 ? "1½ ×" : "\(o.1) ×"
         return BKTask(ingredient: ing, target: t, capacity: 24, grid: o.4, labels: labels && m.d < 9,
-                      line: "Recipe: \(bkCups(o.0)) of \(nm). \(o.3)", say: "The recipe needs \(bkCups(o.0)) of \(nm). \(o.3)",
+                      line: "Recipe: \(bkCups(o.0)) of \(nm). \(o.3)", say: "The recipe needs \(bkSay(o.0)) of \(nm). \(o.3)",
                       why: "\(factor) \(bkCups(o.0)) = \(bkCups(t))")
     }
 }
@@ -136,7 +153,7 @@ private final class BakeryModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil || ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         bakes = []
         next()
@@ -146,19 +163,31 @@ private final class BakeryModel: ArcadeModel {
         task = bkTask(self)
         fill = 0; holding = false; stage = .pouring; mood = .calm; right = nil; spilled = false
         serial += 1
-        patience = d < 5 ? 0 : ramp(40, 18, from: 5, to: 10)
-        deadline = patience > 0 ? Date().addingTimeInterval(patience) : nil
-        if d < 7 { LibraryVoice.say(task.say) }
+        // The oven timer waits until the labels have faded and thirds have arrived (so it isn't one
+        // more new thing on top of them), and only starts once Ursa has read the step out.
+        patience = d < 7 ? 0 : ramp(45, 20, from: 7, to: 11)
+        deadline = nil
         let s = serial
-        if patience > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
-                guard let self, self.serial == s, self.stage == .pouring, self.phase == .playing else { return }
-                self.stopPour(); self.check(timeUp: true)
+        if d < 7 {
+            LibraryVoice.say(bkSpoken(task.say)) { [weak self] in self?.startClock(s) }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + min(3, LibraryVoice.readingTime(task.line) * 0.5)) { [weak self] in
+                self?.startClock(s)
             }
         }
     }
 
-    func sayAgain() { LibraryVoice.say(task.say) }
+    /// Starts the oven timer for round `s` (it sits full until now).
+    private func startClock(_ s: Int) {
+        guard serial == s, stage == .pouring, phase == .playing, patience > 0 else { return }
+        deadline = Date().addingTimeInterval(patience)
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
+            guard let self, self.serial == s, self.stage == .pouring, self.phase == .playing else { return }
+            self.stopPour(); self.check(timeUp: true)
+        }
+    }
+
+    func sayAgain() { LibraryVoice.say(bkSpoken(task.say)) }
 
     func startPour() {
         guard phase == .playing, stage == .pouring, !holding else { return }
@@ -451,7 +480,8 @@ private struct BKPlay: View {
 
     @ViewBuilder private var patienceBar: some View {
         TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
-            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
+            // Full while the step is still being read; then it drains.
+            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? model.patience
             let f = model.patience > 0 ? CGFloat(left / model.patience) : 0
             HStack(spacing: 6) {
                 Text("⏲️").font(.system(size: 14))
@@ -465,7 +495,7 @@ private struct BKPlay: View {
             }
         }
         .frame(height: 14)
-        .opacity(model.deadline != nil ? 1 : 0)
+        .opacity(model.patience > 0 && model.stage == .pouring ? 1 : 0)
     }
 
     /// The ingredient (tipping when you pour) above the glass measuring cup.
@@ -603,7 +633,10 @@ private struct BKCup: View {
                     Rectangle().fill(Color(hex: 0xb03a2e)).frame(width: whole ? 44 : 28, height: whole ? 4 : 3)
                 }
                 .frame(width: width - 8)
-                .offset(y: -(8 + y) + 2)
+                // A zero-height row is centred ON the level (a labelled row used to rest on it,
+                // so its line sat ~9 pt above the amount it names — pouring to it could miss).
+                .frame(height: 0)
+                .offset(y: -(8 + y))
             }
             if let s = star {
                 HStack(spacing: 2) {
@@ -611,7 +644,8 @@ private struct BKCup: View {
                     Text("⭐️").font(.system(size: 30))
                 }
                 .frame(width: width + 30)
-                .offset(x: 14, y: -(8 + inner * s) + 15)
+                .frame(height: 0)
+                .offset(x: 14, y: -(8 + inner * s))
             }
             if let a = answer {
                 HStack(spacing: 2) {
@@ -619,7 +653,8 @@ private struct BKCup: View {
                     Text("◀︎").font(luFont(22)).foregroundStyle(Color(hex: Lu.mint))
                 }
                 .frame(width: width + 30)
-                .offset(x: 14, y: -(8 + inner * a) + 13)
+                .frame(height: 0)
+                .offset(x: 14, y: -(8 + inner * a))
                 .transition(.opacity)
             }
         }
