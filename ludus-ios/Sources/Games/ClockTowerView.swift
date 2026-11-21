@@ -10,7 +10,8 @@ import SwiftUI
 // Difficulty (continuous, `d`): o'clock (only the short hand moves) → half past → quarter
 // past / quarter to → 5-minute times → times in words only ("twenty-five to nine") →
 // to-the-minute (8:47) → elapsed time ("in at 2:40, bakes 35 minutes") → hours-and-minutes
-// elapsed, forwards and backwards. From d≈4 the townsfolk get impatient (45 s, tightening to 15 s).
+// elapsed, forwards and backwards. From d≈4.8 the townsfolk get impatient (50 s, tightening to 18 s);
+// their patience starts only once the request has been said.
 
 private let ctNums = ["twelve", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven",
                       "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
@@ -150,7 +151,7 @@ private final class ClockModel: ArcadeModel {
 
     override func onBegin() {
         #if DEBUG
-        if ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
+        if ProcessInfo.processInfo.environment["LUDUS_SELFCHECK"] != nil || ProcessInfo.processInfo.environment["LUDUS_SELFTEST"] != nil { selfTest() }
         #endif
         next()
     }
@@ -180,15 +181,27 @@ private final class ClockModel: ArcadeModel {
         time = ((task.start % 720) + 720) % 720
         stage = .setting; right = nil
         serial += 1
-        patience = d < 4 ? 0 : ramp(45, 15, from: 4, to: 10)
-        deadline = patience > 0 ? Date().addingTimeInterval(patience) : nil
-        if d < 6.5 { LibraryVoice.say(task.say) }
+        // The townsfolk's patience arrives after the 5-minute times have settled in (not with them),
+        // and only starts running once the request has been said (or had time to be read).
+        patience = d < 4.8 ? 0 : ramp(50, 18, from: 4.8, to: 10)
+        deadline = nil
         let s = serial
-        if patience > 0 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
-                guard let self, self.serial == s, self.stage == .setting, self.phase == .playing else { return }
-                self.ring()
+        if d < 6.5 {
+            LibraryVoice.say(task.say) { [weak self] in self?.startClock(s) }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + min(3, LibraryVoice.readingTime(task.line) * 0.5)) { [weak self] in
+                self?.startClock(s)
             }
+        }
+    }
+
+    /// Starts the patience bar for round `s` (it sits full until now).
+    private func startClock(_ s: Int) {
+        guard serial == s, stage == .setting, phase == .playing, patience > 0 else { return }
+        deadline = Date().addingTimeInterval(patience)
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience) { [weak self] in
+            guard let self, self.serial == s, self.stage == .setting, self.phase == .playing else { return }
+            self.ring()
         }
     }
 
@@ -353,7 +366,8 @@ private struct CTPlay: View {
 
     @ViewBuilder private var patienceBar: some View {
         TimelineView(.animation(minimumInterval: 0.1, paused: model.deadline == nil || model.phase != .playing)) { tl in
-            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? 0
+            // Full while the request is still being said; then it drains.
+            let left = model.deadline.map { max(0, $0.timeIntervalSince(tl.date)) } ?? model.patience
             let f = model.patience > 0 ? CGFloat(left / model.patience) : 0
             GeometryReader { g in
                 ZStack(alignment: .leading) {
@@ -364,13 +378,15 @@ private struct CTPlay: View {
             .frame(height: 8)
         }
         .frame(height: 8)
-        .opacity(model.deadline != nil ? 1 : 0)
+        .opacity(model.patience > 0 && model.stage == .setting ? 1 : 0)
     }
 
     // The stone tower with its roof, Gallus on top, and the big clock face.
     private var tower: some View {
         GeometryReader { g in
-            let face = min(g.size.width - 50, g.size.height - 110, 320)
+            // While the minute numbers ride on the rim, the bezel is wider: the dial shrinks to fit.
+            let rim = model.d < 7 && !model.task.minuteLocked
+            let face = min(g.size.width - 50, g.size.height - 110, 320) - (rim ? 28 : 0)
             ZStack(alignment: .top) {
                 // Tower body
                 RoundedRectangle(cornerRadius: 6)
@@ -390,18 +406,21 @@ private struct CTPlay: View {
                     Rectangle().fill(Color(hex: 0x4a3a2a)).frame(width: 4, height: 16)
                 }
                 .offset(y: -60)
-                .overlay(alignment: .topTrailing) {
+                // His crow hangs off to his LEFT (a zero-width anchor at his side), so it stays on
+                // screen — out to the right it ran off the edge of a phone.
+                .overlay(alignment: .leading) {
                     if hop {
                         Text("Cock-a-doodle-doo!").font(luFont(15, .heavy)).foregroundStyle(Color(hex: Lu.inkDark))
                             .padding(.horizontal, 8).padding(.vertical, 4)
                             .background(Capsule().fill(Color.white))
                             .fixedSize()
-                            .offset(x: 150, y: -70)
+                            .frame(width: 0, alignment: .trailing)
+                            .offset(x: -4, y: -66)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
                 CTFace(time: model.time, size: face, minuteLocked: model.task.minuteLocked,
-                       grabbing: grabbing, labelsHours: model.d < 3.5, fiveMarks: model.d < 6)
+                       grabbing: grabbing, labelsHours: model.d < 3.5, fiveMarks: model.d < 7)
                     .overlay(alignment: .center) {
                         if let r = model.right {
                             Circle().stroke(Color(hex: r ? Lu.mint : Lu.coral), lineWidth: 8).frame(width: face + 6, height: face + 6)
@@ -477,8 +496,8 @@ private struct CTFace: View {
         let r = size / 2
         let hourDeg = Double(time) / 720 * 360
         let minDeg = Double(time % 60) / 60 * 360
+        let rim = fiveMarks && !minuteLocked
         ZStack {
-            Circle().fill(Color(hex: 0x4a3a2a)).frame(width: size + 18, height: size + 18)
             Circle().fill(RadialGradient(colors: [Color(hex: 0xfffaf0), Color(hex: 0xf1e4c8)], center: .center, startRadius: 4, endRadius: r))
                 .overlay(Circle().stroke(Color(hex: 0xc9a46a), lineWidth: 6))
             // Minute ticks
@@ -488,18 +507,10 @@ private struct CTFace: View {
                     .offset(y: -r + 14)
                     .rotationEffect(.degrees(Double(i) * 6))
             }
-            // Minute numbers around the rim (a helper while learning 5-minute times)
-            if fiveMarks && !minuteLocked {
-                ForEach(0..<12, id: \.self) { i in
-                    let a = Double(i) * 30 * .pi / 180
-                    Text(String(format: "%02d", i * 5)).font(luFont(size * 0.042, .heavy)).foregroundStyle(Color(hex: 0x2f6fa0))
-                        .position(x: r + sin(a) * (r - 30), y: r - cos(a) * (r - 30))
-                }
-            }
-            // Hour numbers
+            // Hour numbers, inside the ticks and inside the minute hand's knob.
             ForEach(1...12, id: \.self) { n in
                 let a = Double(n) * 30 * .pi / 180
-                let rr = r - (fiveMarks && !minuteLocked ? 60 : 48)
+                let rr = r - size * 0.19
                 Text("\(n)").font(luSerif(size * (labelsHours ? 0.12 : 0.1), .black))
                     .foregroundStyle(Color(hex: 0x3a2a1a))
                     .position(x: r + sin(a) * rr, y: r - cos(a) * rr)
@@ -508,17 +519,33 @@ private struct CTFace: View {
             CTHand(length: r * 0.5, width: 14, color: 0x3a2a1a, knob: grabbing == .hour ? Lu.gold : 0xe0684f)
                 .rotationEffect(.degrees(hourDeg))
             // Minute hand
-            CTHand(length: r * 0.82, width: 8, color: 0x2a3a4a, knob: grabbing == .minute ? Lu.gold : 0x4fa6cf)
+            CTHand(length: r * 0.9, width: 8, color: 0x2a3a4a, knob: grabbing == .minute ? Lu.gold : 0x4fa6cf)
                 .rotationEffect(.degrees(minDeg))
                 .opacity(minuteLocked ? 0.85 : 1)
             Circle().fill(Color(hex: 0xc9a46a)).frame(width: 18, height: 18)
         }
         .frame(width: size, height: size)
+        // The dark bezel. While learning 5-minute times it is wide and carries the minute numbers,
+        // outside the dial, where no hand or hour number can cover them.
+        .background(
+            ZStack {
+                Circle().fill(Color(hex: 0x4a3a2a))
+                if rim {
+                    ForEach(0..<12, id: \.self) { i in
+                        let a = Double(i) * 30 * .pi / 180
+                        Text(String(format: "%02d", i * 5)).font(luFont(13, .heavy)).foregroundStyle(Color(hex: 0xf8e6b8))
+                            .offset(x: sin(a) * (r + 12), y: -cos(a) * (r + 12))
+                    }
+                }
+            }
+            .frame(width: size + (rim ? 44 : 18), height: size + (rim ? 44 : 18))
+        )
         .animation(.spring(response: 0.25, dampingFraction: 0.8), value: time)
     }
 }
 
-/// A clock hand pointing up from the centre, with a round grab knob near its tip. The view is
+/// A clock hand pointing up from the centre, with a round grab knob at its tip (out past the
+/// hour numbers for the long hand, so it never hides one). The view is
 /// twice the hand's length tall, so rotating it about its centre turns the hand about the dial's.
 private struct CTHand: View {
     let length: CGFloat, width: CGFloat
@@ -529,7 +556,6 @@ private struct CTHand: View {
                 Capsule().fill(Color(hex: color)).frame(width: width, height: length + width / 2)
                 Circle().fill(Color(hex: knob)).frame(width: width * 2.4, height: width * 2.4)
                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                    .offset(y: length * 0.08)
             }
             .frame(height: length, alignment: .top)
             Color.clear.frame(height: length)
