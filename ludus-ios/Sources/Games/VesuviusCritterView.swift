@@ -15,7 +15,10 @@ import SwiftUI
 //   • names under the pictures fade in from d≈1.6; from d≈6.5 some animals come as a NAME only;
 //   • a patience bar appears at d≈5 (15 s — after the last house and the first tricky ones, so
 //     no two new things land together) and shortens to 6 s by d≈9.5. It sits FULL until the
-//     animal has rolled in (and any "New house!" news has been read), then starts to drain.
+//     question has been said (and any "New house!" news with it), then starts to drain.
+//
+// Each animal comes with a question, shown and read aloud for pre-readers ("Is the goat a mammal
+// or a bird?"; with all five houses, "Which house does the goat go in?"); 🔊 repeats it.
 
 private struct CHouse: Identifiable, Equatable {
     let id: String, title: String, icon: String, tint: UInt, why: String
@@ -90,6 +93,7 @@ private final class CritterModel: ArcadeModel {
     @Published var news: String?
     @Published var deadline: Date?
     @Published var patience: Double = 0
+    @Published var prompt = ""
     @Published var cheers = 0
     private let clock = VesRunClock()
     private var recent: [String] = []
@@ -145,25 +149,43 @@ private final class CritterModel: ArcadeModel {
         showPicture = !pick.emoji.isEmpty && !chance(0.35, from: 6.5, to: 9.5)
         stage = .waiting
         lesson = nil
-        // Patience (none for the youngest).
+        prompt = question(pick)
+        // Patience (none for the youngest). The clock starts once the question has been said;
+        // until then the bar shows full.
         timeout?.cancel()
-        if d >= 5 {
-            patience = ramp(15, 6, from: 5, to: 9.5)
-            // The clock starts once the animal has rolled in (and a new house's news is read);
-            // until then the bar shows full.
-            let lead = announced ? 2.4 : 0.6
-            deadline = Date().addingTimeInterval(lead + patience)
-            let id = roundID
-            let item = DispatchWorkItem { [weak self] in
-                guard let self, self.roundID == id, self.stage == .waiting, self.phase == .playing else { return }
-                self.wrong(nil)
-            }
-            timeout = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + lead + patience, execute: item)
-        } else {
-            deadline = nil
+        deadline = nil
+        patience = d >= 5 ? ramp(15, 6, from: 5, to: 9.5) : 0
+        let id = roundID
+        let news = announced ? "New house: \(houses.last!.title.lowercased())! " : ""
+        LibraryVoice.say(news + prompt) { [weak self] in
+            guard let self, self.roundID == id, self.patience > 0 else { return }
+            self.startClock(round: id)
         }
     }
+
+    /// "Is the goat a mammal or a bird?" — or, with all five houses open, "Which house does
+    /// the goat go in?"
+    private func question(_ c: CCritter) -> String {
+        let names = houses.map { ($0.id == "amphibian" ? "an " : "a ") + $0.id }
+        guard names.count <= 4 else { return "Which house does the \(c.name) go in?" }
+        let list = names.count == 2 ? names.joined(separator: " or ")
+                                    : names.dropLast().joined(separator: ", ") + " or " + names.last!
+        return "Is the \(c.name) \(list)?"
+    }
+
+    private func startClock(round id: Int) {
+        guard phase == .playing, stage == .waiting else { return }
+        deadline = Date().addingTimeInterval(patience)
+        let item = DispatchWorkItem { [weak self] in
+            guard let self, self.roundID == id, self.stage == .waiting, self.phase == .playing else { return }
+            self.wrong(nil)
+        }
+        timeout = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + patience, execute: item)
+    }
+
+    /// 🔊: ask again (a clock still waiting keeps waiting).
+    func sayAgain() { LibraryVoice.say(prompt) }
 
     /// Send the animal to house `id` (a swipe, a tap on a house, and the bot all land here).
     func send(to id: String) {
@@ -268,10 +290,22 @@ private struct CritterPlay: View {
                     .onChange(of: model.roundID) { _ in drag = .zero }
                 VesBurst(trigger: model.cheers, emojis: ["✨", "⭐️", "💛", "🎉"], radius: 90, size: 26)
                     .position(model.houses.firstIndex { $0.id == model.critter.cls }.map { spots[$0] } ?? center)
-                // patience
-                if let dl = model.deadline {
+                // the question
+                HStack(spacing: 8) {
+                    LibrarySpeakerButton(size: 36) { model.sayAgain() }
+                    Text(model.prompt).font(luSerif(18, .black)).foregroundStyle(Color(hex: 0x2a1a08))
+                        .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.7)
+                }
+                .padding(.leading, 6).padding(.trailing, 14).padding(.vertical, 5)
+                .background(Capsule().fill(Color(hex: 0xfff6e0).opacity(0.95))
+                    .overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
+                .frame(maxWidth: W - 24)
+                .position(x: W / 2, y: 84)
+                .opacity(model.stage == .waiting ? 1 : 0.5)
+                // patience (full while the question is being asked)
+                if model.patience > 0, model.deadline != nil || model.stage == .waiting {
                     TimelineView(.animation(minimumInterval: 0.1)) { tl in
-                        let left = min(1, max(0, dl.timeIntervalSince(tl.date)) / max(0.1, model.patience))
+                        let left = model.deadline.map { min(1, max(0, $0.timeIntervalSince(tl.date)) / max(0.1, model.patience)) } ?? 1
                         ZStack(alignment: .leading) {
                             Capsule().fill(Color.black.opacity(0.25))
                             Capsule().fill(Color(hex: left < 0.3 ? Lu.coral : Lu.mint)).frame(width: 150 * left)

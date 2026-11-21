@@ -14,7 +14,8 @@ import SwiftUI
 //   • items to put on 1 → 4 (from d≈1.6 to 8.5); extra wrong items in the chest 1 → 4;
 //   • boots / flip-flops join after the first few rounds; words under the clothes from d≈1.5;
 //   • "why" rounds (light vs dark colours, waterproof stuff, layers) between outfits from d≈6.
-//   No clock at any level.
+//   No clock at any level. Each round is read aloud for pre-readers ("What should Marcus wear?
+//   Pick 2 things.", or a why-round's question); 🔊 by the slots repeats it.
 //
 // Uniqueness: every gear item is rated need / wrong / unsure for the day's weather; a round offers
 // only `need` items (all of them right) and `wrong` items, never an `unsure` one — so exactly the
@@ -420,6 +421,7 @@ private final class DressModel: ArcadeModel {
         #endif
         round = r
         served += 1
+        LibraryVoice.say(ask)
     }
 
     /// Everything about the next round, read off the continuous difficulty `d`.
@@ -433,6 +435,12 @@ private final class DressModel: ArcadeModel {
         k.simple = !chance(1, from: 1.2, to: 2.2)
         k.why = served % 2 == 1 && chance(1, from: 6.2, to: 8)
         return k
+    }
+
+    /// The round's spoken cue: a why-round's question, or how many things to put on.
+    var ask: String {
+        if let q = round.ask { return q }
+        return round.need > 1 ? "What should Marcus wear? Pick \(round.need) things." : "What should Marcus wear?"
     }
 
     /// Words under the clothes fade in once reading is likely.
@@ -520,6 +528,7 @@ struct DressMarcusView: View {
     /// One slot per item to put on — they fill as Marcus dresses.
     private var pips: some View {
         HStack(spacing: 8) {
+            LibrarySpeakerButton(size: 34) { LibraryVoice.say(model.ask) }.padding(.trailing, 6)
             ForEach(0..<model.round.need, id: \.self) { i in
                 let w = model.worn
                 ZStack {

@@ -15,6 +15,9 @@ import SwiftUI
 //     join after the first few rounds; words under the pictures from d≈1.5;
 //   • chain choices 3 → 4; the "drag it to the pen" hint fades out by d≈5. No clock at any level.
 //
+// Every round's question is shown at the top and read aloud for pre-readers ("What does the tiger
+// eat?", "Is the goat a herbivore or a carnivore?"); 🔊 repeats it.
+//
 // One right answer, by construction: a plant-eater is only ever offered animal foods as
 // distractors and a meat-eater only plant foods (so no "well, sometimes" pairs); chain gaps are
 // filled only by organisms whose role cannot fit (see `chainRound`); pens use only animals whose
@@ -347,6 +350,21 @@ private final class ZooModel: ArcadeModel {
             r = zkRound(k, base: roundID * 100)
         }
         round = r
+        LibraryVoice.say(ask)
+    }
+
+    /// The round's question (shown and said).
+    var ask: String {
+        let r = round
+        switch r.kind {
+        case .feed: return "What does the \(r.animal.name) eat?"
+        case .pens:
+            let name = r.tray.first?.label ?? ""
+            return r.zones.count > 2 ? "Is the \(name) a herbivore, a carnivore or an omnivore?"
+                                     : "Is the \(name) a herbivore or a carnivore?"
+        case .chain: return "What fills the gap in the food chain?"
+        case .roles: return "Is the \(r.tray.first?.label ?? "") a producer, a consumer or a decomposer?"
+        }
     }
 
     /// Everything about the next round, read off the continuous difficulty `d`.
@@ -390,10 +408,15 @@ struct ZookeeperView: View {
                     backdrop: { Menagerie() }) {
             VStack(spacing: 10) {
                 HUDSpace(54)
-                Text(header).font(luSerif(17, .black)).textCase(.uppercase).tracking(2)
-                    .foregroundStyle(Color(hex: 0x3a2410))
-                    .padding(.horizontal, 16).padding(.vertical, 5)
-                    .background(Capsule().fill(Color(hex: 0xf7ecd0).opacity(0.92)).overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
+                HStack(spacing: 8) {
+                    LibrarySpeakerButton(size: 34) { LibraryVoice.say(model.ask) }
+                    Text(model.ask).font(luSerif(18, .black))
+                        .foregroundStyle(Color(hex: 0x3a2410))
+                        .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.7)
+                }
+                .padding(.leading, 6).padding(.trailing, 14).padding(.vertical, 5)
+                .background(Capsule().fill(Color(hex: 0xf7ecd0).opacity(0.92)).overlay(Capsule().stroke(Color(hex: 0x9c7b33), lineWidth: 2)))
+                .transaction { $0.animation = nil }
                 Group {
                     switch model.round.kind {
                     case .feed: feedStage
@@ -408,15 +431,6 @@ struct ZookeeperView: View {
             .padding(.horizontal, 14).padding(.bottom, 6)
             .coordinateSpace(name: space)
             .onPreferenceChange(VesDropZones.self) { model.dropFrames = $0 }
-        }
-    }
-
-    private var header: String {
-        switch model.round.kind {
-        case .feed: return "Breakfast time!"
-        case .pens: return "Which pen?"
-        case .chain: return "Food chain"
-        case .roles: return "What does it do?"
         }
     }
 
