@@ -2,9 +2,9 @@ import SwiftUI
 
 // MARK: - Wing: the Music Room (see VillaEstate.swift)
 //
-// A little odeum: black Third-Style panels with gold candelabra on a red wall, a marble stage
-// (pulpitum) with its row of niches along the back, and a cream mosaic floor with a black wave band
-// and a laurel roundel for Apollo. The household band's instruments hang on the wall or stand about,
+// A little odeum: a stage-front of marble columns and black panels with the royal door and its red
+// curtain in the middle, a plank stage with a niched marble front (pulpitum), and a cream mosaic
+// floor with a Greek-key band and a great round emblem. The household band's instruments hang on the wall or stand about,
 // and tapping one plays a short note on the Theatre's synth (silent when the sound switch is off).
 // Drawings use the unit-square kit in WingCountingArt.swift.
 
@@ -21,14 +21,14 @@ let odeumItems: [VillaItem] = [
 
 /// Where each thing stands (feet at canvas fractions; wall pieces hang with their feet on the wall).
 private let odeumSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat)] = [
-    "ode_masks": (0.18, 0.46, 0.21),
-    "ode_pipes": (0.70, 0.45, 0.15),
-    "ode_cornu": (0.905, 0.47, 0.25),
-    "ode_organ": (0.44, 0.665, 0.42),
-    "ode_aulos": (0.24, 0.83, 0.22),
-    "ode_lyre": (0.75, 0.86, 0.23),
-    "ode_drum": (0.13, 0.975, 0.19),
-    "ode_cymbals": (0.89, 0.975, 0.16),
+    "ode_masks": (0.165, 0.49, 0.3),
+    "ode_pipes": (0.5, 0.3, 0.21),
+    "ode_cornu": (0.84, 0.48, 0.31),
+    "ode_organ": (0.5, 0.69, 0.47),
+    "ode_aulos": (0.165, 0.695, 0.27),
+    "ode_cymbals": (0.84, 0.69, 0.2),
+    "ode_drum": (0.15, 0.975, 0.28),
+    "ode_lyre": (0.83, 0.96, 0.33),
 ]
 
 private let odeumThumbBox: [String: CGRect] = [
@@ -46,33 +46,23 @@ struct OdeumRoom: View {
     let s: WingState
     @State private var synthOn = false
     var body: some View {
-        WingRoom(panel: Color(hex: 0x241b18), floor: Color(hex: 0xe4d3ae)) { w, h, t in
+        WingRoom(floor: Color(hex: 0xe8d8b4)) { w, h, t in
             ZStack(alignment: .topLeading) {
-                OdeumCandelabra(skip: candelabraHidden).fill(Fr.gold.opacity(0.85)).frame(width: w, height: h)
-                OdeumStage(w: w, h: h).frame(width: w, height: h, alignment: .topLeading)
-                OdeumWaveBand().fill(Color(hex: 0x2f2622)).frame(width: w, height: h)
-                LaurelRoundel().frame(width: w * 0.3, height: w * 0.3).position(x: w * 0.5, y: h * 0.885)
+                OdeumBackdrop(w: w, h: h).equatable()
+                OdeumCurtain(w: w, h: h, t: t)
+                OdeumEmblem().frame(width: w * 0.5, height: w * 0.5).position(x: w * 0.5, y: h * 0.905)
                 ForEach(odeumItems.filter { s.has($0.id) }.sorted { (odeumSpots[$0.id]?.y ?? 0) < (odeumSpots[$1.id]?.y ?? 0) }) { item in
                     if let p = odeumSpots[item.id] {
                         WingSpot(x: p.x, y: p.y, size: p.size, w: w, h: h, lift: s.lift(item.id)) {
                             OdeumArt(id: item.id, t: t, playing: s.lift(item.id) > 1)
                         }
+                        .zIndex(Double(p.y))
                         .onTapGesture { s.onTap(item.id); sound(item.id) }
                     }
                 }
             }
         }
         .onDisappear { if synthOn { ToneSynth.shared.stop(); synthOn = false } }
-    }
-
-    /// Panels (by index in OdeumCandelabra) whose painted candelabrum an instrument now covers.
-    private var candelabraHidden: Set<Int> {
-        var h: Set<Int> = []
-        if s.has("ode_masks") { h.insert(1) }
-        if s.has("ode_organ") { h.insert(2) }
-        if s.has("ode_pipes") { h.insert(3) }
-        if s.has("ode_cornu") { h.insert(4) }
-        return h
     }
 
     /// A short phrase on the Theatre's synth for each instrument (nothing when the sound is off).
@@ -125,120 +115,249 @@ private struct OdeumArt: View {
 }
 
 // MARK: - The room itself
+//
+// The back wall is a little stage-front (scaenae frons): marble columns under a gilded entablature,
+// black panels between them, and in the middle the royal door with its red curtain. A plank stage
+// with a niched marble front runs along it, and the floor is a cream mosaic with a Greek-key band,
+// a field of black crosslets and a great round emblem.
 
-/// A slender gold candelabrum painted down the middle of each black panel.
-private struct OdeumCandelabra: Shape {
-    var skip: Set<Int> = []         // panels with an instrument hung in front of them
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        let w = r.width, h = r.height
-        let top = h * 0.62 * 0.2, bottom = h * 0.62 * 0.68
-        let lw = max(1, w * 0.0045)
-        for (i, f) in ([-0.08, 0.18, 0.44, 0.70, 0.96, 1.22] as [CGFloat]).enumerated() {
-            let x = w * f
-            // garland swags between the panels
-            let gx = x + w * 0.13
-            p.move(to: CGPoint(x: gx - w * 0.1, y: top - w * 0.02))
-            p.addQuadCurve(to: CGPoint(x: gx + w * 0.1, y: top - w * 0.02), control: CGPoint(x: gx, y: top + w * 0.05))
-            p.addQuadCurve(to: CGPoint(x: gx - w * 0.1, y: top - w * 0.02), control: CGPoint(x: gx, y: top + w * 0.035))
-            if skip.contains(i) { continue }
-            p.addRect(CGRect(x: x - lw / 2, y: top, width: lw, height: bottom - top))
-            for k in [0.3, 0.55, 0.78] as [CGFloat] {
-                let y = top + (bottom - top) * k
-                p.addEllipse(in: CGRect(x: x - w * 0.018, y: y - w * 0.004, width: w * 0.036, height: w * 0.008))
-            }
-            // a little bowl and flame on top, a tripod foot below
-            p.move(to: CGPoint(x: x - w * 0.026, y: top))
-            p.addQuadCurve(to: CGPoint(x: x + w * 0.026, y: top), control: CGPoint(x: x, y: top + w * 0.03))
-            p.closeSubpath()
-            p.move(to: CGPoint(x: x, y: top - w * 0.035))
-            p.addQuadCurve(to: CGPoint(x: x, y: top - w * 0.002), control: CGPoint(x: x + w * 0.016, y: top - w * 0.01))
-            p.addQuadCurve(to: CGPoint(x: x, y: top - w * 0.035), control: CGPoint(x: x - w * 0.016, y: top - w * 0.01))
-            p.move(to: CGPoint(x: x - w * 0.03, y: bottom)); p.addLine(to: CGPoint(x: x, y: bottom - w * 0.03))
-            p.addLine(to: CGPoint(x: x + w * 0.03, y: bottom)); p.addLine(to: CGPoint(x: x + w * 0.02, y: bottom))
-            p.addLine(to: CGPoint(x: x, y: bottom - w * 0.015)); p.addLine(to: CGPoint(x: x - w * 0.02, y: bottom)); p.closeSubpath()
-        }
-        return p
-    }
+/// A shape drawn straight in canvas points (w × h), free to spill past the canvas to fill wide frames.
+private struct OCanvas: Shape {
+    let draw: (_ w: CGFloat, _ h: CGFloat, _ p: inout Path) -> Void
+    init(_ draw: @escaping (_ w: CGFloat, _ h: CGFloat, _ p: inout Path) -> Void) { self.draw = draw }
+    func path(in r: CGRect) -> Path { var p = Path(); draw(r.width, r.height, &p); return p }
 }
 
-/// The marble stage front along the back wall, with its row of round and square niches.
-private struct OdeumStage: View {
+private let odeumColumns: [CGFloat] = [-0.26, 0.02, 0.30, 0.70, 0.98, 1.26]
+
+private struct OdeumBackdrop: View, Equatable {
     let w: CGFloat, h: CGFloat
     var body: some View {
+        let ink = Color(hex: 0x2b2220)
         ZStack(alignment: .topLeading) {
-            Rectangle().fill(LinearGradient(colors: [Fr.marble, Color(hex: 0xe2d8c2)], startPoint: .top, endPoint: .bottom))
-                .frame(width: w * 3, height: h * 0.06).offset(x: -w, y: h * 0.62)
-            Rectangle().fill(Fr.marbleShade).frame(width: w * 3, height: max(1, h * 0.006)).offset(x: -w, y: h * 0.62 + h * 0.008)
-            Rectangle().fill(Color.black.opacity(0.18)).frame(width: w * 3, height: max(1, h * 0.004)).offset(x: -w, y: h * 0.68)
-            StageNiches().fill(Color(hex: 0xc4b89e)).frame(width: w, height: h)
-        }
-    }
-}
-
-private struct StageNiches: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        let w = r.width, h = r.height
-        let top = h * 0.638, bottom = h * 0.672, nw = w * 0.032
-        var i = 0
-        var x = -w + w * 0.02
-        while x < 2 * w {
-            if i % 2 == 0 {
-                p.move(to: CGPoint(x: x, y: bottom))
-                p.addLine(to: CGPoint(x: x, y: top + nw / 2))
-                p.addArc(center: CGPoint(x: x + nw / 2, y: top + nw / 2), radius: nw / 2, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
-                p.addLine(to: CGPoint(x: x + nw, y: bottom)); p.closeSubpath()
-            } else {
-                p.addRect(CGRect(x: x, y: top + h * 0.004, width: nw * 1.4, height: bottom - top - h * 0.004))
+            // red wall
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: -h, width: w * 3, height: h * 1.62)) }
+                .fill(LinearGradient(colors: [Color(hex: 0x9c3222), Color(hex: 0x7a2218)], startPoint: .top, endPoint: .bottom))
+            // black panels in the side bays, framed in gold, with a painted swan-neck lyre-stand (candelabrum)
+            OCanvas { w, h, p in
+                for i in 0..<(odeumColumns.count - 1) where !(odeumColumns[i] == 0.30) {
+                    let x0 = odeumColumns[i] + 0.045, x1 = odeumColumns[i + 1] - 0.045
+                    p.addRect(CGRect(x: x0 * w, y: h * 0.13, width: (x1 - x0) * w, height: h * 0.44))
+                }
             }
-            x += w * 0.075
-            i += 1
-        }
-        return p
-    }
-}
-
-/// A black running-wave band in the mosaic floor.
-private struct OdeumWaveBand: Shape {
-    func path(in r: CGRect) -> Path {
-        var p = Path()
-        let w = r.width, h = r.height
-        let y0 = h * 0.716, amp = h * 0.0075, period = w * 0.06
-        p.move(to: CGPoint(x: -w, y: y0 + amp * 2.4))
-        var x = -w
-        while x <= 2 * w {
-            let ph = (x / period) * .pi * 2
-            p.addLine(to: CGPoint(x: x, y: y0 + amp * CGFloat(sin(ph)) + amp * 0.6 * CGFloat(sin(ph * 2 + 0.6))))
-            x += period / 14
-        }
-        p.addLine(to: CGPoint(x: 2 * w, y: y0 + amp * 2.4))
-        p.closeSubpath()
-        p.addRect(CGRect(x: -w, y: y0 - amp * 2.6, width: w * 3, height: max(1, h * 0.004)))
-        p.addRect(CGRect(x: -w, y: y0 + amp * 3.4, width: w * 3, height: max(1, h * 0.004)))
-        return p
-    }
-}
-
-/// A laurel wreath for Apollo, set into the floor.
-private struct LaurelRoundel: View {
-    var body: some View {
-        ZStack {
-            COPath { p in p.coRing(0.5, 0.5, 0.48, 0.13, 0.02) }.fill(Color(hex: 0x2f2622))
-            COPath { p in p.coRing(0.5, 0.5, 0.42, 0.105, 0.008) }.fill(Fr.frame)
-            COPath { p in
-                for i in 0..<22 {
-                    let a = Double(i) / 22 * .pi * 2
-                    let c = CGPoint(x: 0.5 + 0.33 * CGFloat(cos(a)), y: 0.5 + 0.08 * CGFloat(sin(a)))
-                    var leaf = Path(ellipseIn: CGRect(x: -0.035, y: -0.011, width: 0.07, height: 0.022))
-                    leaf = leaf.applying(CGAffineTransform(rotationAngle: CGFloat(a + .pi / 2 + 0.5)).scaledBy(x: 1, y: 1))
-                    p.addPath(leaf.applying(CGAffineTransform(a: 1, b: 0, c: 0, d: 0.45, tx: c.x, ty: c.y)))
+            .fill(Color(hex: 0x221a17))
+            OCanvas { w, h, p in
+                for i in 0..<(odeumColumns.count - 1) where !(odeumColumns[i] == 0.30) {
+                    let x0 = odeumColumns[i] + 0.06, x1 = odeumColumns[i + 1] - 0.06
+                    p.addRect(CGRect(x: x0 * w, y: h * 0.145, width: (x1 - x0) * w, height: h * 0.41))
+                }
+            }
+            .stroke(Fr.gold.opacity(0.8), lineWidth: max(1, w * 0.004))
+            // the royal door: marble surround, dark opening
+            OCanvas { w, h, p in
+                p.addRect(CGRect(x: w * 0.355, y: h * 0.3, width: w * 0.29, height: h * 0.32))
+                p.addEllipse(in: CGRect(x: w * 0.355, y: h * 0.3 - w * 0.145, width: w * 0.29, height: w * 0.29))
+            }
+            .fill(LinearGradient(colors: [Fr.marble, Fr.marbleShade], startPoint: .leading, endPoint: .trailing))
+            OCanvas { w, h, p in
+                p.addRect(CGRect(x: w * 0.38, y: h * 0.3, width: w * 0.24, height: h * 0.32))
+                p.addEllipse(in: CGRect(x: w * 0.38, y: h * 0.3 - w * 0.12, width: w * 0.24, height: w * 0.24))
+            }
+            .fill(Color(hex: 0x1d1310))
+            OCanvas { w, h, p in       // keystone
+                p.move(to: CGPoint(x: w * 0.48, y: h * 0.3 - w * 0.148)); p.addLine(to: CGPoint(x: w * 0.52, y: h * 0.3 - w * 0.148))
+                p.addLine(to: CGPoint(x: w * 0.512, y: h * 0.3 - w * 0.115)); p.addLine(to: CGPoint(x: w * 0.488, y: h * 0.3 - w * 0.115)); p.closeSubpath()
+            }
+            .fill(Fr.gold)
+            // columns: fluted marble shafts, gilded capitals and bases
+            OCanvas { w, h, p in
+                for c in odeumColumns { p.addRect(CGRect(x: (c - 0.026) * w, y: h * 0.11, width: w * 0.052, height: h * 0.49)) }
+            }
+            .fill(Fr.marble)
+            OCanvas { w, h, p in
+                for c in odeumColumns {
+                    p.addRect(CGRect(x: (c + 0.01) * w, y: h * 0.11, width: w * 0.016, height: h * 0.49))
+                    for k in [-0.014, 0.0] as [CGFloat] { p.addRect(CGRect(x: (c + k) * w, y: h * 0.12, width: max(0.6, w * 0.0025), height: h * 0.47)) }
+                }
+            }
+            .fill(Fr.marbleShade)
+            OCanvas { w, h, p in
+                for c in odeumColumns {
+                    p.addRect(CGRect(x: (c - 0.038) * w, y: h * 0.088, width: w * 0.076, height: h * 0.026))
+                    p.addEllipse(in: CGRect(x: (c - 0.046) * w, y: h * 0.096, width: w * 0.02, height: w * 0.02))
+                    p.addEllipse(in: CGRect(x: (c + 0.026) * w, y: h * 0.096, width: w * 0.02, height: w * 0.02))
+                    p.addRect(CGRect(x: (c - 0.036) * w, y: h * 0.595, width: w * 0.072, height: h * 0.025))
+                }
+            }
+            .fill(LinearGradient(colors: [COC.bronzeLt, Fr.gold], startPoint: .top, endPoint: .bottom))
+            // entablature, dentils and a frieze of gold rosettes
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: h * 0.06, width: w * 3, height: h * 0.03)) }.fill(Fr.marble)
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: -h, width: w * 3, height: h * 1.06)) }
+                .fill(LinearGradient(colors: [Color(hex: 0x5e1a12), Color(hex: 0x7a2218)], startPoint: .top, endPoint: .bottom))
+            OCanvas { w, h, p in
+                p.addRect(CGRect(x: -w, y: h * 0.05, width: w * 3, height: h * 0.012))
+                var x = -w
+                while x < 2 * w { p.addRect(CGRect(x: x, y: h * 0.062, width: w * 0.012, height: h * 0.012)); x += w * 0.024 }
+            }
+            .fill(Fr.marbleShade)
+            OCanvas { w, h, p in
+                var x = -w + w * 0.04
+                while x < 2 * w { p.addEllipse(in: CGRect(x: x - w * 0.01, y: h * 0.02, width: w * 0.02, height: w * 0.02)); x += w * 0.08 }
+            }
+            .fill(Fr.gold)
+            // laurel garlands swagged between the columns
+            OCanvas { w, h, p in
+                for i in 0..<(odeumColumns.count - 1) {
+                    let a = odeumColumns[i] * w, b = odeumColumns[i + 1] * w
+                    var q = Path()
+                    q.move(to: CGPoint(x: a + w * 0.03, y: h * 0.11))
+                    q.addQuadCurve(to: CGPoint(x: b - w * 0.03, y: h * 0.11), control: CGPoint(x: (a + b) / 2, y: h * 0.19))
+                    p.addPath(q.strokedPath(StrokeStyle(lineWidth: w * 0.014, lineCap: .round, dash: [w * 0.012, w * 0.006])))
                 }
             }
             .fill(Fr.leaf)
-            COPath { p in p.coDot(0.5, 0.5, 0.035, 0.012) }.fill(Fr.frame)
+            // the stage: plank floor, then the niched marble front
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: h * 0.62, width: w * 3, height: h * 0.08)) }
+                .fill(LinearGradient(colors: [Color(hex: 0x8a5a31), Color(hex: 0xa9773f)], startPoint: .top, endPoint: .bottom))
+            OCanvas { w, h, p in
+                for y in [0.64, 0.663, 0.69] as [CGFloat] { p.addRect(CGRect(x: -w, y: h * y, width: w * 3, height: max(0.6, h * 0.0025))) }
+                p.addRect(CGRect(x: -w, y: h * 0.62, width: w * 3, height: h * 0.006))
+            }
+            .fill(Color.black.opacity(0.2))
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: h * 0.7, width: w * 3, height: h * 0.065)) }
+                .fill(LinearGradient(colors: [Fr.marble, Color(hex: 0xe0d5bd)], startPoint: .top, endPoint: .bottom))
+            OCanvas { w, h, p in
+                p.addRect(CGRect(x: -w, y: h * 0.7, width: w * 3, height: h * 0.007))
+                let top = h * 0.716, bottom = h * 0.756, nw = w * 0.036
+                var x = -w + w * 0.02, i = 0
+                while x < 2 * w {
+                    if i % 2 == 0 {
+                        p.move(to: CGPoint(x: x, y: bottom)); p.addLine(to: CGPoint(x: x, y: top + nw / 2))
+                        p.addArc(center: CGPoint(x: x + nw / 2, y: top + nw / 2), radius: nw / 2, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+                        p.addLine(to: CGPoint(x: x + nw, y: bottom)); p.closeSubpath()
+                    } else {
+                        p.addRect(CGRect(x: x, y: top + h * 0.006, width: nw * 1.5, height: bottom - top - h * 0.006))
+                    }
+                    x += w * 0.08; i += 1
+                }
+            }
+            .fill(Color(hex: 0xc2b598))
+            OCanvas { w, h, p in p.addRect(CGRect(x: -w, y: h * 0.765, width: w * 3, height: max(1, h * 0.006))) }.fill(Color.black.opacity(0.22))
+            // floor mosaic: Greek-key band, then a field of black crosslets
+            OCanvas { w, h, p in
+                p.addRect(CGRect(x: -w, y: h * 0.778, width: w * 3, height: h * 0.006))
+                p.addRect(CGRect(x: -w, y: h * 0.836, width: w * 3, height: h * 0.006))
+                let u = w * 0.05, y0 = h * 0.79, bh = h * 0.04
+                let unit: [(CGFloat, CGFloat)] = [(0, 0.85), (0, 0.15), (0.6, 0.15), (0.6, 0.55), (0.3, 0.55), (0.3, 0.85), (1, 0.85)]
+                var q = Path()
+                var x = -w
+                q.move(to: CGPoint(x: x, y: y0 + bh * 0.85))
+                while x < 2 * w {
+                    for (ux, uy) in unit { q.addLine(to: CGPoint(x: x + ux * u, y: y0 + uy * bh)) }
+                    x += u
+                }
+                p.addPath(q.strokedPath(StrokeStyle(lineWidth: h * 0.0075, lineCap: .square, lineJoin: .miter)))
+            }
+            .fill(ink)
+            OCanvas { w, h, p in
+                var y: CGFloat = 0.87, row = 0
+                while y < 1.6 {
+                    let near = (y - 0.85) / 0.15
+                    let dx = w * 0.07 * (1 + near * 0.25), d = w * 0.008 * (1 + near * 0.3)
+                    var x = -w + (row % 2 == 0 ? 0 : dx / 2)
+                    while x < 2 * w {
+                        p.addRect(CGRect(x: x - d, y: y * h - d * 0.22, width: d * 2, height: d * 0.44))
+                        p.addRect(CGRect(x: x - d * 0.3, y: y * h - d * 0.75, width: d * 0.6, height: d * 1.5))
+                        x += dx
+                    }
+                    y += 0.04 * (1 + near * 0.3); row += 1
+                }
+            }
+            .fill(ink.opacity(0.55))
         }
-        .frame(maxHeight: .infinity, alignment: .center)
+        .frame(width: w, height: h, alignment: .topLeading)
+    }
+}
+
+/// The red curtain in the royal door, tied back, stirring a little.
+private struct OdeumCurtain: View {
+    let w: CGFloat, h: CGFloat, t: Double
+    var body: some View {
+        let sway = CGFloat(sin(t * 0.7)) * w * 0.006
+        ZStack(alignment: .topLeading) {
+            OCanvas { w, h, p in
+                let top = h * 0.3 - w * 0.12
+                for side in [-1.0, 1.0] as [CGFloat] {
+                    let edge = w * (0.5 + side * 0.12), tie = w * (0.5 + side * 0.075) + sway * side
+                    p.move(to: CGPoint(x: edge, y: top + w * 0.06))
+                    p.addQuadCurve(to: CGPoint(x: w * 0.5 + side * w * 0.01, y: top + w * 0.01), control: CGPoint(x: w * (0.5 + side * 0.06), y: top - w * 0.005))
+                    p.addQuadCurve(to: CGPoint(x: tie, y: h * 0.45), control: CGPoint(x: w * (0.5 + side * 0.02) + sway, y: h * 0.36))
+                    p.addQuadCurve(to: CGPoint(x: edge - side * w * 0.01, y: h * 0.62), control: CGPoint(x: tie - side * w * 0.01, y: h * 0.54))
+                    p.addLine(to: CGPoint(x: edge, y: h * 0.62))
+                    p.closeSubpath()
+                }
+            }
+            .fill(LinearGradient(colors: [Color(hex: 0xc23a2c), Color(hex: 0x7d1c16)], startPoint: .top, endPoint: .bottom))
+            OCanvas { w, h, p in       // folds
+                for side in [-1.0, 1.0] as [CGFloat] {
+                    for k in [0.035, 0.07] as [CGFloat] {
+                        var q = Path()
+                        q.move(to: CGPoint(x: w * (0.5 + side * (0.12 - k * 0.5)), y: h * 0.3 - w * 0.04))
+                        q.addQuadCurve(to: CGPoint(x: w * (0.5 + side * (0.12 - k * 0.4)), y: h * 0.6), control: CGPoint(x: w * (0.5 + side * (0.09 - k * 0.3)) + sway * side, y: h * 0.45))
+                        p.addPath(q.strokedPath(StrokeStyle(lineWidth: max(0.8, w * 0.004))))
+                    }
+                }
+            }
+            .fill(Color.black.opacity(0.22))
+            OCanvas { w, h, p in       // gold tie-backs
+                for side in [-1.0, 1.0] as [CGFloat] {
+                    p.addEllipse(in: CGRect(x: w * (0.5 + side * 0.075) + sway * side - w * 0.022, y: h * 0.445, width: w * 0.044, height: w * 0.016))
+                }
+            }
+            .fill(Fr.gold)
+        }
+        .frame(width: w, height: h, alignment: .topLeading)
+    }
+}
+
+/// The great round emblem in the floor: rings of black, red and ochre around an eight-petalled rosette.
+private struct OdeumEmblem: View {
+    var body: some View {
+        ZStack {
+            COPath { p in p.coDot(0.5, 0.5, 0.5, 0.17) }.fill(Color(hex: 0x2b2220))
+            COPath { p in p.coDot(0.5, 0.5, 0.46, 0.152) }.fill(Fr.marble)
+            COPath { p in
+                let pts = (0...48).map { i -> CGPoint in
+                    let a = Double(i) / 48 * .pi * 2
+                    let r: CGFloat = i % 2 == 0 ? 0.43 : 0.385
+                    return coPt(0.5 + r * CGFloat(cos(a)), 0.5 + r * 0.33 * CGFloat(sin(a)))
+                }
+                p.addLines(pts); p.closeSubpath()
+            }
+            .fill(Fr.frame)
+            COPath { p in p.coDot(0.5, 0.5, 0.36, 0.118) }.fill(Fr.ochre)
+            COPath { p in p.coDot(0.5, 0.5, 0.33, 0.108) }.fill(Color(hex: 0xf3e8cf))
+            COPath { p in
+                for i in 0..<26 {
+                    let a = Double(i) / 26 * .pi * 2
+                    let c = CGPoint(x: 0.5 + 0.28 * CGFloat(cos(a)), y: 0.5 + 0.092 * CGFloat(sin(a)))
+                    var leaf = Path(ellipseIn: CGRect(x: -0.03, y: -0.01, width: 0.06, height: 0.02))
+                    leaf = leaf.applying(CGAffineTransform(rotationAngle: CGFloat(a + .pi / 2 + 0.5)))
+                    p.addPath(leaf.applying(CGAffineTransform(a: 1, b: 0, c: 0, d: 0.4, tx: c.x, ty: c.y)))
+                }
+            }
+            .fill(Fr.leaf)
+            COPath { p in
+                for i in 0..<8 {
+                    let a = Double(i) / 8 * .pi * 2
+                    var petal = Path(ellipseIn: CGRect(x: 0.015, y: -0.022, width: 0.14, height: 0.044))
+                    petal = petal.applying(CGAffineTransform(rotationAngle: CGFloat(a)))
+                    p.addPath(petal.applying(CGAffineTransform(a: 1, b: 0, c: 0, d: 0.33, tx: 0.5, ty: 0.5)))
+                }
+            }
+            .fill(Fr.frame)
+            COPath { p in p.coDot(0.5, 0.5, 0.03, 0.01) }.fill(Fr.gold)
+        }
     }
 }
 

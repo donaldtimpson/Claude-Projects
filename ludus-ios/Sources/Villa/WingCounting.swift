@@ -20,14 +20,14 @@ let countingItems: [VillaItem] = [
 
 /// Where each thing stands: feet at canvas fractions, box `size` canvas-widths square.
 private let countingSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat)] = [
-    "cnt_groma": (0.09, 0.74, 0.32),
-    "cnt_rods": (0.36, 0.66, 0.30),
-    "cnt_archimedes": (0.59, 0.67, 0.26),
-    "cnt_scale": (0.84, 0.70, 0.30),
-    "cnt_abacus": (0.23, 0.875, 0.28),
-    "cnt_chest": (0.8, 0.93, 0.22),
-    "cnt_pebbles": (0.1, 0.975, 0.2),
-    "cnt_mosaic": (0.5, 0.985, 0.42),
+    "cnt_groma": (0.09, 0.74, 0.37),
+    "cnt_rods": (0.36, 0.665, 0.35),
+    "cnt_archimedes": (0.59, 0.675, 0.31),
+    "cnt_scale": (0.83, 0.71, 0.35),
+    "cnt_abacus": (0.23, 0.885, 0.33),
+    "cnt_chest": (0.79, 0.935, 0.27),
+    "cnt_pebbles": (0.1, 0.98, 0.23),
+    "cnt_mosaic": (0.5, 0.99, 0.48),
 ]
 
 /// Unit-space bounds of each drawing, for framing its shop card.
