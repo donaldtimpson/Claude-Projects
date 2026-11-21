@@ -2,7 +2,8 @@ import SwiftUI
 
 // MARK: - Wing: Palaestra (see VillaEstate.swift)
 //
-// PLACEHOLDER art: emoji at each spot. Replace with fresco drawings.
+// Open air: a shady colonnade along the back, a herm of Hermes and raked sand (PalaestraBackdrop).
+// Every item is drawn in WingPalaestraArt.swift.
 
 let palaestraItems: [VillaItem] = [
     .init(id: "pal_tali", name: "Knucklebones", category: .garden, price: .denarii(40), blurb: "Tali: toss them and see how they land.", place: "palaestra"),
@@ -15,28 +16,47 @@ let palaestraItems: [VillaItem] = [
     .init(id: "pal_horse", name: "Racehorse", category: .garden, price: .denarii(225), blurb: "A champion of the Circus Maximus.", place: "palaestra"),
 ]
 
-private let palaestraSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat, emoji: String)] = [
-    "pal_tali": (0.18, 0.95, 0.12, "🎲"),
-    "pal_sand": (0.5, 0.96, 0.3, "🏖️"),
-    "pal_discus": (0.84, 0.92, 0.12, "🥏"),
-    "pal_dummy": (0.86, 0.66, 0.18, "🪵"),
-    "pal_weights": (0.66, 0.92, 0.14, "🏋️"),
-    "pal_board": (0.36, 0.86, 0.18, "♟️"),
-    "pal_maze": (0.5, 0.62, 0.3, "🌀"),
-    "pal_horse": (0.16, 0.7, 0.28, "🐎"),
+/// Where each thing stands (its feet, in canvas fractions) and how big its box is (canvas widths).
+private let palaestraSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat)] = [
+    "pal_horse": (0.17, 0.665, 0.32),          // at its rail by the colonnade
+    "pal_dummy": (0.85, 0.675, 0.24),
+    "pal_maze": (0.5, 0.815, 0.46),            // laid flat in the middle of the yard
+    "pal_board": (0.82, 0.865, 0.22),
+    "pal_sand": (0.18, 0.975, 0.32),
+    "pal_tali": (0.42, 0.96, 0.13),
+    "pal_weights": (0.6, 0.975, 0.15),
+    "pal_discus": (0.86, 0.985, 0.13),
 ]
+
+@ViewBuilder
+private func palaestraArt(_ id: String, t: Double = 0) -> some View {
+    switch id {
+    case "pal_tali": PlTali()
+    case "pal_sand": PlSandPit()
+    case "pal_discus": PlDiscus()
+    case "pal_dummy": PlPost()
+    case "pal_weights": PlWeights()
+    case "pal_board": PlBoard()
+    case "pal_maze": PlMaze()
+    case "pal_horse": PlHorse(t: t)
+    default: EmptyView()
+    }
+}
 
 struct PalaestraRoom: View {
     let s: WingState
     var body: some View {
-        WingRoom { w, h, _ in
+        WingRoom(floor: Pl.sand, floorLine: PalaestraBackdrop.floorLine, outdoor: true) { w, h, t in
             ZStack(alignment: .topLeading) {
+                PalaestraBackdrop(w: w, h: h, t: t)
                 ForEach(palaestraItems.filter { s.has($0.id) }) { item in
                     if let p = palaestraSpots[item.id] {
                         WingSpot(x: p.x, y: p.y, size: p.size, w: w, h: h, lift: s.lift(item.id)) {
-                            Text(p.emoji).font(.system(size: w * p.size * 0.8))
+                            palaestraArt(item.id, t: t)
                         }
                         .onTapGesture { s.onTap(item.id) }
+                        // the mosaic lies flat on the ground: always under whatever stands near it
+                        .zIndex(item.id == "pal_maze" ? 0 : Double(p.y))
                     }
                 }
             }
@@ -48,8 +68,18 @@ struct PalaestraThumb: View {
     let id: String
     var body: some View {
         GeometryReader { g in
-            Text(palaestraSpots[id]?.emoji ?? "❔").font(.system(size: g.size.width * 0.55))
-                .frame(width: g.size.width, height: g.size.height)
+            let w = g.size.width, h = g.size.height, side = min(w, h)
+            Group {
+                switch id {
+                // flat things: show them tipped up toward the viewer so the pattern reads
+                case "pal_maze": PlMaze(tilt: 38).frame(width: side * 0.9, height: side * 0.9)
+                case "pal_tali": PlTali().frame(width: side * 0.95, height: side * 0.95).offset(y: side * 0.04)
+                case "pal_sand": PlSandPit().frame(width: side * 1.12, height: side * 1.12).offset(y: side * 0.03)
+                default: palaestraArt(id).frame(width: side * 0.98, height: side * 0.98)
+                }
+            }
+            .frame(width: w, height: h, alignment: .bottom)
+            .padding(.bottom, h * 0.03)
         }
     }
 }
