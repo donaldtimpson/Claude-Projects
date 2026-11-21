@@ -12,18 +12,18 @@ let odeumItems: [VillaItem] = [
     .init(id: "ode_cymbals", name: "Cymbals", category: .garden, price: .denarii(45), blurb: "Little bronze cymbals clashed in parades.", place: "odeum"),
     .init(id: "ode_pipes", name: "Pan Pipes", category: .garden, price: .denarii(50), blurb: "Reeds of different lengths: short ones sing high.", place: "odeum"),
     .init(id: "ode_drum", name: "Tympanum", category: .garden, price: .denarii(60), blurb: "A Roman hand drum, beaten with the palm.", place: "odeum"),
-    .init(id: "ode_aulos", name: "Aulos", category: .garden, price: .denarii(75), blurb: "Two pipes played at once, one in each hand.", place: "odeum"),
+    .init(id: "ode_aulos", name: "Double Pipes", category: .garden, price: .denarii(75), blurb: "Romans called them the tibia: two pipes played at once.", place: "odeum"),
     .init(id: "ode_lyre", name: "Lyre", category: .garden, price: .denarii(90), blurb: "Strings over a tortoise-shell sound box.", place: "odeum"),
     .init(id: "ode_masks", name: "Theatre Masks", category: .garden, price: .denarii(105), blurb: "Actors wore masks: smiling for comedy, sad for tragedy.", place: "odeum"),
     .init(id: "ode_cornu", name: "Cornu", category: .garden, price: .denarii(135), blurb: "A great G-shaped bronze horn that signalled the legions.", place: "odeum"),
-    .init(id: "ode_organ", name: "Water Organ", category: .garden, price: .denarii(300), blurb: "The hydraulis: water pressure pushed air through its pipes.", place: "odeum"),
+    .init(id: "ode_organ", name: "Water Organ", category: .garden, price: .denarii(300), blurb: "The hydraulis: water in its tank kept the air pressure steady for the pipes.", place: "odeum"),
 ]
 
 /// Where each thing stands (feet at canvas fractions; wall pieces hang with their feet on the wall).
 private let odeumSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat)] = [
     "ode_masks": (0.165, 0.49, 0.3),
     "ode_pipes": (0.5, 0.3, 0.21),
-    "ode_cornu": (0.84, 0.48, 0.31),
+    "ode_cornu": (0.8, 0.48, 0.29),
     "ode_organ": (0.5, 0.69, 0.47),
     "ode_aulos": (0.165, 0.695, 0.27),
     "ode_cymbals": (0.84, 0.69, 0.2),
@@ -599,44 +599,129 @@ private struct Lyre: View {
 
 private struct TheatreMasks: View {
     var body: some View {
-        let hole = Color(hex: 0x2a1d16)
+        let hole = Color(hex: 0x24180f)
+        let paint = Color(hex: 0x6b4426)      // painted brows and hair
+        let lip = Color(hex: 0xa8432f)
         ZStack {
-            COPath { p in p.coLine([coPt(0.36, 0.3), coPt(0.5, 0.05), coPt(0.66, 0.24)], 0.014) }.fill(COC.red)
+            // the cord they hang by, and its nail
+            COPath { p in p.coLine([coPt(0.33, 0.33), coPt(0.5, 0.05), coPt(0.68, 0.22)], 0.014) }.fill(COC.red)
             COPath { $0.coDot(0.5, 0.05, 0.035) }.fill(COC.woodDk)
-            // tragedy: tall hair, pale face, sad brows, a downturned open mouth
-            COPath { $0.coOval(0.5, 0.18, 0.3, 0.28) }.fill(Color(hex: 0x4f3322))
-            COPath { $0.coOval(0.47, 0.3, 0.36, 0.62) }
-                .fill(LinearGradient(colors: [Color(hex: 0xefe9dc), Color(hex: 0xc9c0ad)], startPoint: .leading, endPoint: .trailing))
+
+            // TRAGEDY (behind): a tall crown of hair (the onkos), a cool marble face, brows lifted
+            // in grief and a gaping, down-turned mouth.
             COPath { p in
-                p.coDot(0.585, 0.56, 0.032, 0.02); p.coDot(0.715, 0.56, 0.032, 0.02)
-                p.move(to: coPt(0.58, 0.82)); p.addQuadCurve(to: coPt(0.72, 0.82), control: coPt(0.65, 0.68))
-                p.addQuadCurve(to: coPt(0.58, 0.82), control: coPt(0.65, 0.77))
+                p.move(to: coPt(0.47, 0.5))
+                p.addCurve(to: coPt(0.65, 0.09), control1: coPt(0.42, 0.28), control2: coPt(0.52, 0.09))
+                p.addCurve(to: coPt(0.83, 0.5), control1: coPt(0.78, 0.09), control2: coPt(0.88, 0.28))
+                p.closeSubpath()
+            }
+            .fill(LinearGradient(colors: [Color(hex: 0x7a5232), Color(hex: 0x4a2f1c)], startPoint: .top, endPoint: .bottom))
+            COPath { p in
+                for i in 0..<4 { p.coQuad(coPt(0.5 + CGFloat(i) * 0.075, 0.42), coPt(0.53 + CGFloat(i) * 0.075, 0.2 + (i == 1 || i == 2 ? -0.03 : 0.04)), coPt(0.6 + CGFloat(i) * 0.03, 0.13), 0.009) }
+            }
+            .fill(Color(hex: 0x2e1d12).opacity(0.55))
+            COPath { p in
+                p.move(to: coPt(0.49, 0.36))
+                p.addQuadCurve(to: coPt(0.81, 0.36), control: coPt(0.65, 0.27))
+                p.addCurve(to: coPt(0.65, 0.95), control1: coPt(0.84, 0.66), control2: coPt(0.76, 0.93))
+                p.addCurve(to: coPt(0.49, 0.36), control1: coPt(0.54, 0.93), control2: coPt(0.46, 0.66))
+                p.closeSubpath()
+            }
+            .fill(LinearGradient(colors: [Color(hex: 0xf2eee6), Color(hex: 0xc3bcae)], startPoint: .leading, endPoint: .trailing))
+            COPath { p in      // hollow cheeks
+                p.coDot(0.555, 0.7, 0.03, 0.06); p.coDot(0.745, 0.7, 0.03, 0.06)
+            }
+            .fill(Color.black.opacity(0.07))
+            COPath { p in
+                p.coQuad(coPt(0.535, 0.53), coPt(0.6, 0.53), coPt(0.635, 0.465), 0.02)
+                p.coQuad(coPt(0.665, 0.465), coPt(0.7, 0.53), coPt(0.765, 0.53), 0.02)
+            }
+            .fill(paint)
+            COPath { p in
+                for cx in [0.59, 0.71] as [CGFloat] {
+                    let d: CGFloat = cx < 0.65 ? -1 : 1
+                    p.move(to: coPt(cx - 0.042, 0.585 + d * 0.006))
+                    p.addQuadCurve(to: coPt(cx + 0.042, 0.585 - d * 0.006), control: coPt(cx, 0.545))
+                    p.addQuadCurve(to: coPt(cx - 0.042, 0.585 + d * 0.006), control: coPt(cx, 0.612))
+                }
             }
             .fill(hole)
-            COPath { p in
-                p.coLine([coPt(0.545, 0.53), coPt(0.625, 0.49)], 0.016)
-                p.coLine([coPt(0.675, 0.49), coPt(0.755, 0.53)], 0.016)
-                p.coLine([coPt(0.65, 0.58), coPt(0.64, 0.66), coPt(0.66, 0.67)], 0.01)
+            COPath { p in p.coLine([coPt(0.65, 0.58), coPt(0.635, 0.7), coPt(0.665, 0.705)], 0.011) }.fill(Color(hex: 0x8d8473))
+            COPath { p in      // the mouth: a dark O pulled down at the corners, painted lips round it
+                p.move(to: coPt(0.575, 0.85))
+                p.addQuadCurve(to: coPt(0.725, 0.85), control: coPt(0.65, 0.71))
+                p.addQuadCurve(to: coPt(0.575, 0.85), control: coPt(0.65, 0.9))
             }
-            .fill(Color(hex: 0x7a6a58))
-            // comedy: curly hair, golden face, raised brows and a wide grin
-            COPath { $0.coOval(0.17, 0.3, 0.38, 0.56) }
-                .fill(LinearGradient(colors: [Color(hex: 0xf6d791), Color(hex: 0xd9a74e)], startPoint: .topLeading, endPoint: .bottomTrailing))
-            COPath { p in for i in 0..<6 { p.coDot(0.2 + CGFloat(i) * 0.064, 0.34 + (i == 0 || i == 5 ? 0.04 : 0), 0.04) } }
-                .fill(Color(hex: 0x7a4a24))
-            COPath { p in p.coDot(0.24, 0.66, 0.035, 0.025); p.coDot(0.48, 0.66, 0.035, 0.025) }.fill(Color(hex: 0xe0806a).opacity(0.55))
+            .fill(lip)
             COPath { p in
-                p.coDot(0.295, 0.53, 0.032, 0.022); p.coDot(0.425, 0.53, 0.032, 0.022)
-                p.move(to: coPt(0.25, 0.68)); p.addQuadCurve(to: coPt(0.47, 0.68), control: coPt(0.36, 0.88))
-                p.addQuadCurve(to: coPt(0.25, 0.68), control: coPt(0.36, 0.73))
+                p.move(to: coPt(0.592, 0.842))
+                p.addQuadCurve(to: coPt(0.708, 0.842), control: coPt(0.65, 0.74))
+                p.addQuadCurve(to: coPt(0.592, 0.842), control: coPt(0.65, 0.875))
             }
             .fill(hole)
+
+            // COMEDY (in front): warm painted marble, a crown of sculpted curls, high-arched brows,
+            // laughing eyes and the huge open grin of the comic stage.
             COPath { p in
-                p.coQuad(coPt(0.255, 0.49), coPt(0.295, 0.445), coPt(0.335, 0.48), 0.014)
-                p.coQuad(coPt(0.385, 0.48), coPt(0.425, 0.445), coPt(0.465, 0.49), 0.014)
-                p.coLine([coPt(0.36, 0.56), coPt(0.35, 0.63), coPt(0.37, 0.64)], 0.01)
+                p.move(to: coPt(0.15, 0.48))
+                p.addQuadCurve(to: coPt(0.57, 0.48), control: coPt(0.36, 0.25))
+                p.addCurve(to: coPt(0.36, 0.97), control1: coPt(0.6, 0.78), control2: coPt(0.5, 0.97))
+                p.addCurve(to: coPt(0.15, 0.48), control1: coPt(0.22, 0.97), control2: coPt(0.12, 0.78))
+                p.closeSubpath()
             }
-            .fill(Color(hex: 0x8a5a2a))
+            .fill(LinearGradient(colors: [Color(hex: 0xf7ecd2), Color(hex: 0xdcc59a)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            COPath { p in      // cheeks lifted by the laugh
+                p.coDot(0.215, 0.69, 0.035, 0.05); p.coDot(0.505, 0.69, 0.035, 0.05)
+            }
+            .fill(Color(hex: 0xb07a4a).opacity(0.16))
+            COPath { p in      // the curls: a ring of little spirals over the brow
+                for i in 0..<7 {
+                    let a = Double.pi * (1.08 + Double(i) * 0.14)
+                    p.coDot(0.36 + 0.215 * CGFloat(cos(a)), 0.49 + 0.17 * CGFloat(sin(a)), 0.042)
+                }
+            }
+            .fill(LinearGradient(colors: [Color(hex: 0x9a6a3c), paint], startPoint: .top, endPoint: .bottom))
+            COPath { p in
+                for i in 0..<7 {
+                    let a = Double.pi * (1.08 + Double(i) * 0.14)
+                    p.coRing(0.36 + 0.215 * CGFloat(cos(a)), 0.49 + 0.17 * CGFloat(sin(a)), 0.02, 0.02, 0.009)
+                }
+            }
+            .fill(Color(hex: 0x3e2614).opacity(0.6))
+            COPath { p in
+                p.coQuad(coPt(0.235, 0.505), coPt(0.29, 0.43), coPt(0.345, 0.49), 0.02)
+                p.coQuad(coPt(0.375, 0.49), coPt(0.43, 0.43), coPt(0.485, 0.505), 0.02)
+            }
+            .fill(paint)
+            COPath { p in      // eyes squeezed into upturned crescents
+                for cx in [0.29, 0.43] as [CGFloat] {
+                    p.move(to: coPt(cx - 0.042, 0.56))
+                    p.addQuadCurve(to: coPt(cx + 0.042, 0.56), control: coPt(cx, 0.505))
+                    p.addQuadCurve(to: coPt(cx - 0.042, 0.56), control: coPt(cx, 0.545))
+                }
+            }
+            .fill(hole)
+            COPath { p in p.coQuad(coPt(0.335, 0.6), coPt(0.36, 0.66), coPt(0.39, 0.655), 0.012); p.coDot(0.335, 0.655, 0.012, 0.009); p.coDot(0.385, 0.655, 0.012, 0.009) }
+                .fill(Color(hex: 0xa98a5e))
+            COPath { p in      // the grin: wide, with thick painted lips
+                p.move(to: coPt(0.205, 0.7))
+                p.addQuadCurve(to: coPt(0.515, 0.7), control: coPt(0.36, 0.74))
+                p.addQuadCurve(to: coPt(0.205, 0.7), control: coPt(0.36, 1.0))
+            }
+            .fill(lip)
+            COPath { p in
+                p.move(to: coPt(0.235, 0.715))
+                p.addQuadCurve(to: coPt(0.485, 0.715), control: coPt(0.36, 0.75))
+                p.addQuadCurve(to: coPt(0.235, 0.715), control: coPt(0.36, 0.955))
+            }
+            .fill(hole)
+            // a wool fillet tied at the brow, its ends hanging loose
+            COPath { p in
+                p.coCurve(coPt(0.16, 0.5), coPt(0.08, 0.6), coPt(0.15, 0.7), coPt(0.09, 0.82), 0.022)
+                p.coCurve(coPt(0.165, 0.51), coPt(0.19, 0.62), coPt(0.13, 0.7), coPt(0.17, 0.8), 0.022)
+            }
+            .fill(COC.ivory)
+            COPath { $0.coDot(0.16, 0.5, 0.025) }.fill(Color(hex: 0xd8c79f))
         }
     }
 }

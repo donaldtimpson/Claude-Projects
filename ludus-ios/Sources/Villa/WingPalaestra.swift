@@ -22,8 +22,8 @@ private let palaestraSpots: [String: (x: CGFloat, y: CGFloat, size: CGFloat)] = 
     "pal_dummy": (0.85, 0.675, 0.24),
     "pal_maze": (0.5, 0.815, 0.46),            // laid flat in the middle of the yard
     "pal_board": (0.82, 0.865, 0.22),
-    "pal_sand": (0.18, 0.975, 0.32),
-    "pal_tali": (0.42, 0.96, 0.13),
+    "pal_sand": (0.205, 0.955, 0.3),
+    "pal_tali": (0.44, 0.96, 0.13),
     "pal_weights": (0.6, 0.975, 0.15),
     "pal_discus": (0.86, 0.985, 0.13),
 ]

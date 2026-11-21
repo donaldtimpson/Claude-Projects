@@ -473,8 +473,8 @@ struct HbDolphins: View {
                     let x = still ? (i == 0 ? 0.3 : 0.7) : x0 + 0.42 * CGFloat(q)
                     let y = still ? (i == 0 ? 0.5 : 0.6) : 0.82 - 0.55 * CGFloat(sin(Double.pi * q))
                     let tilt = still ? (i == 0 ? -20.0 : 25.0) : -35 + 70 * q
-                    Text("🐬").font(.system(size: W * 0.4))
-                        .scaleEffect(x: -1, y: 1)
+                    HbDolphin()
+                        .frame(width: W * 0.4, height: W * 0.24)
                         .rotationEffect(.degrees(tilt))
                         .position(x: W * x, y: H * y)
                         .opacity(up ? 1 : 0)
@@ -486,6 +486,71 @@ struct HbDolphins: View {
                 }
             }
         }
+    }
+}
+
+/// One dolphin in the fresco style, facing right: slate-blue back fading to a pale belly,
+/// a swept-back dorsal fin, forked flukes, a short beak and a bright eye.
+struct HbDolphin: View {
+    var body: some View {
+        let back = Color(hex: 0x3f5f78), backLt = Color(hex: 0x6f93ab), belly = Color(hex: 0xe4ece8)
+        let skin = LinearGradient(gradient: Gradient(stops: [.init(color: back, location: 0.15), .init(color: backLt, location: 0.5),
+                                                             .init(color: belly, location: 0.6), .init(color: belly, location: 1)]),
+                                  startPoint: .top, endPoint: .bottom)
+        ZStack {
+            HbDolphinPart(.dorsal).fill(back)
+            HbDolphinPart(.flukes).fill(back)
+            HbDolphinPart(.body).fill(skin)
+            HbDolphinPart(.body).stroke(Color(hex: 0x2a3f50).opacity(0.55), lineWidth: 0.7)
+            HbDolphinPart(.flipper).fill(Color(hex: 0x4d6e86))
+            HbDolphinPart(.shine).stroke(Color.white.opacity(0.45), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+            HbDolphinPart(.mouth).stroke(Color(hex: 0x2a3f50).opacity(0.7), style: StrokeStyle(lineWidth: 0.8, lineCap: .round))
+            HbDolphinPart(.eye).fill(Color(hex: 0x1d2a33))
+        }
+    }
+}
+
+private struct HbDolphinPart: Shape {
+    enum Kind { case body, dorsal, flukes, flipper, shine, mouth, eye }
+    let kind: Kind
+    init(_ kind: Kind) { self.kind = kind }
+    func path(in r: CGRect) -> Path {
+        func u(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: r.minX + x * r.width, y: r.minY + y * r.height) }
+        var p = Path()
+        switch kind {
+        case .body:
+            p.move(to: u(0.1, 0.5))
+            p.addCurve(to: u(0.76, 0.34), control1: u(0.3, 0.24), control2: u(0.58, 0.16))
+            p.addQuadCurve(to: u(0.86, 0.47), control: u(0.84, 0.38))
+            p.addQuadCurve(to: u(0.99, 0.52), control: u(0.93, 0.48))
+            p.addQuadCurve(to: u(0.86, 0.6), control: u(0.96, 0.6))
+            p.addCurve(to: u(0.1, 0.58), control1: u(0.6, 0.82), control2: u(0.3, 0.74))
+            p.closeSubpath()
+        case .dorsal:
+            p.move(to: u(0.54, 0.26))
+            p.addQuadCurve(to: u(0.37, 0.03), control: u(0.47, 0.08))
+            p.addQuadCurve(to: u(0.36, 0.32), control: u(0.41, 0.18))
+            p.closeSubpath()
+        case .flukes:
+            p.move(to: u(0.14, 0.5))
+            p.addQuadCurve(to: u(0.0, 0.3), control: u(0.08, 0.36))
+            p.addQuadCurve(to: u(0.07, 0.54), control: u(0.08, 0.46))
+            p.addQuadCurve(to: u(0.0, 0.78), control: u(0.08, 0.64))
+            p.addQuadCurve(to: u(0.14, 0.58), control: u(0.08, 0.72))
+            p.closeSubpath()
+        case .flipper:
+            p.move(to: u(0.64, 0.64))
+            p.addQuadCurve(to: u(0.5, 0.86), control: u(0.62, 0.78))
+            p.addQuadCurve(to: u(0.54, 0.65), control: u(0.5, 0.72))
+            p.closeSubpath()
+        case .shine:
+            p.move(to: u(0.3, 0.36)); p.addQuadCurve(to: u(0.66, 0.27), control: u(0.48, 0.26))
+        case .mouth:
+            p.move(to: u(0.88, 0.555)); p.addQuadCurve(to: u(0.98, 0.53), control: u(0.93, 0.56))
+        case .eye:
+            p.addEllipse(in: CGRect(x: r.minX + 0.79 * r.width - r.height * 0.035, y: r.minY + 0.46 * r.height - r.height * 0.035, width: r.height * 0.07, height: r.height * 0.07))
+        }
+        return p
     }
 }
 
