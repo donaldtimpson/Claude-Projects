@@ -230,6 +230,25 @@ def _rel_cx(cl):
     return rl + rw / 2
 
 
+# A conjunctive adverb (*where*, *when*) does two jobs (Harvey §101.8): it modifies the verb of its own
+# clause and joins that clause to the word the clause modifies. A clause names it as `via` (it is also
+# one of the clause's `pmod`, on its usual slant): the dashed connector then drops from the modified word
+# to the clause's baseline just past the verb's last letter, and hooks onto the END of the adverb's
+# slant — meeting the adverb, not the verb, and passing through no word.
+_VIA_GAP = 4
+
+
+def _via_geom(cl, drop):
+    """(x where the connector drops, end x on the adverb's slant), clause coordinates drawn from 0."""
+    _, _, mods, _, cslots, _ = _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                                           cl.get("smod"), cl.get("pmod"), cl.get("omod"))
+    tag = f">{esc(cl['via'])}</text>"
+    end = next(float(re.search(r'\bx="(-?[\d.]+)"', fr).group(1)) for fr in mods if fr.endswith(tag))
+    pl, pw = cslots["p"]
+    cross = max(pl + pw / 2 + len(cl.get("p", "")) * _CH / 2 + _VIA_GAP, end)
+    return cross, end
+
+
 def _clause_w(cl):
     return _diag_parts(0, 0, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
                        cl.get("smod"), cl.get("pmod"), cl.get("omod"))[3]
@@ -599,7 +618,9 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
     baseline beneath that slot, a dashed line running from the relative pronoun
     (the clause slot named by "rel") up to its antecedent. An adverbial clause
     names the slot it modifies as "rel" and may set `link`, the connective
-    written beside the dashed line."""
+    written beside the dashed line (a true conjunction: *if*, *though*), or
+    `via`, a conjunctive adverb among its own `pmod` (*where*, *when*) that the
+    dashed line hooks onto (see _via_geom)."""
     reach = max(_reach(w) for w in (s, p, o))
     base = 30 + max(_up(w) for w in (s, p, o))
     drop, inset = 80, 10          # clause baseline below the main one; connector inset
@@ -607,7 +628,8 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
         drop += 36                # clear the main line's phrases
     clauses = {"s": sclause, "p": pclause, "o": oclause}
 
-    rel_cx = _rel_cx
+    def rel_cx(cl):
+        return _via_geom(cl, drop)[0] if cl.get("via") else _rel_cx(cl)
 
     # Shift the main line right so each clause's relative sits straight beneath
     # its antecedent's left end (the clause may reach left of the main line).
@@ -629,8 +651,13 @@ def diagram_svg(s, p, o=None, c=None, smod=None, pmod=None, omod=None, sappo=Non
         l2, t2, m2, r2, _, hm2 = _diag_parts(
             cl_left, cbase, cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
             cl.get("smod"), cl.get("pmod"), cl.get("omod"))
-        lines += l2 + [f'<line x1="{anchor:.0f}" y1="{base}" x2="{anchor:.0f}" '
-                       f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
+        if cl.get("via"):
+            end = cl_left + _via_geom(cl, drop)[1]
+            lines += l2 + [f'<line x1="{anchor:.0f}" y1="{base}" x2="{anchor:.0f}" y2="{cbase}" stroke-dasharray="5 4"/>',
+                           f'<line x1="{anchor:.0f}" y1="{cbase}" x2="{end:.0f}" y2="{cbase + 20}" stroke-dasharray="3 3"/>']
+        else:
+            lines += l2 + [f'<line x1="{anchor:.0f}" y1="{base}" x2="{anchor:.0f}" '
+                           f'y2="{cbase - 22}" stroke-dasharray="5 4"/>']
         texts += t2
         if cl.get("link"):
             # A connective (e.g. the *if* of an adverbial clause) written on the connector,

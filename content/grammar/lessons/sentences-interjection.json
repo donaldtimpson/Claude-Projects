@@ -538,7 +538,8 @@
             "smod": "the",
             "p": "fall",
             "pmod": "where",
-            "rel": "p"
+            "rel": "p",
+            "via": "where"
           },
           "note": "Declarative; complex.  *He builds a palace of ice* is the principal clause;  *the torrents fall*, the subordinate clause;  *where*, the connective.  *He* is the subject of the principal clause;  *builds*, the predicate, which is modified by *palace*, an objective element, and by the clause *where the torrents fall*, an adverbial element.  *palace* is modified by *a* and the phrase *of ice*, adjective elements.  *torrents* is the subject of the subordinate clause;  *fall*, the predicate.  *torrents* is modified by *the*, an adjective element;  *fall*, by *where*, an adverbial element."
         }
@@ -655,12 +656,13 @@
             "s": "he",
             "p": "saw",
             "pmod": [
-              "when",
-              "first"
+              "first",
+              "when"
             ],
             "o": "lion",
             "omod": "a",
-            "rel": "p"
+            "rel": "p",
+            "via": "when"
           },
           "note": "Declarative; complex.  *He was frightened* is the principal clause;  *he first saw a lion*, the subordinate clause;  *when*, the connective.  *He* is the subject;  *was frightened*, the predicate, modified by the clause *when he first saw a lion*, an adverbial element.  In the clause, *he* is the subject;  *saw*, the predicate, modified by *when* and *first*, adverbial elements, and by *lion*, an objective element, which *a* modifies."
         }
@@ -686,7 +688,8 @@
                 "mod": "so"
               }
             ],
-            "rel": "p"
+            "rel": "p",
+            "via": "where"
           },
           "note": "Declarative; complex.  *I can not study* is the principal clause;  *pupils make so much noise*, the subordinate clause;  *where*, the connective.  *I* is the subject;  *can study*, the predicate, modified by *not* and by the clause *where pupils make so much noise*, adverbial elements.  In the clause, *pupils* is the subject;  *make*, the predicate, modified by *where*, an adverbial element, and by *noise*, an objective element.  *noise* is modified by *much*, an adjective element;  *much*, by *so*, an adverbial element."
         }

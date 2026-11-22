@@ -587,9 +587,44 @@ def _slot_layout(s, p, o=None, c=None, sappo=None, smod=None, pmod=None, omod=No
     return out
 
 
+# A conjunctive adverb (*where*, *when*) does two jobs (Harvey §101.8): it modifies the verb of its own
+# clause and joins that clause to the word the clause modifies. A clause names it as `via` (it is also
+# one of the clause's `pmod`, on its usual slant): the dashed connector then drops from the modified
+# word to the clause's baseline just past the verb's last letter, and hooks onto the END of the
+# adverb's slant — meeting the adverb, not the verb, and passing through no word. Mirrors preview.py.
+VIA_GAP = Inches(0.06)
+
+
+def _via_geom(cl):
+    """(x where the connector drops, end x of the adverb's slant), relative to the clause's left."""
+    slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
+                         smod=cl.get("smod"), pmod=cl.get("pmod"), omod=cl.get("omod"))
+    pl, pw = slots["p"]
+    ms = _mlist(cl.get("pmod"))
+    end = pl + pw / 2
+    if _plan_pmods(cl.get("o"), cl.get("pmod"), cl.get("omod")) or any(isinstance(m, dict) for m in ms):
+        for m, off in _mod_plan(ms)[0]:
+            if m == cl["via"]:
+                end = pl + off + max(MOD_DX, _slot_w(m) / 2)
+    else:                                   # _draw_mods: stepped right from under the word
+        wx, prev = pl + pw / 2 + Inches(0.24), 0
+        for i, m in enumerate(ms):
+            w = _slot_w(m)
+            if i:
+                wx += prev / 2 + w / 2 + Inches(0.06)
+            if m == cl["via"]:
+                end = wx
+            prev = w
+    cross = max(pl + pw / 2 + len(cl.get("p", "")) * DIAG_CHW / 2 + VIA_GAP, end)
+    return cross, end
+
+
 def _clause_rel(cl):
     """Center of a clause's relative pronoun (the slot named by cl["rel"]),
-    relative to the clause diagram's left edge."""
+    relative to the clause diagram's left edge — or, for a conjunctive adverb
+    (`via`), where its connector drops."""
+    if cl.get("via"):
+        return _via_geom(cl)[0]
     slots = _slot_layout(cl["s"], cl.get("p", ""), cl.get("o"), cl.get("c"),
                          smod=cl.get("smod"), pmod=cl.get("pmod"), omod=cl.get("omod"))
     rl, rw = slots[cl.get("rel", "s")]
@@ -610,7 +645,9 @@ def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP, ante_mods=False)
     clause on its own baseline — its own subject | predicate — with a dashed line
     dropping straight from the antecedent's left end to the relative pronoun.
     An adverbial clause names the modified slot as its "rel" (usually "p") and
-    may set `link`, the connective written beside the dashed line.
+    may set `link`, the connective written beside the dashed line (a true
+    conjunction: *if*, *though*), or `via`, a conjunctive adverb among its own
+    `pmod` (*where*, *when*) that the dashed line hooks onto (see _via_geom).
     `ante` is the antecedent's (left, width) relative to `left`. Returns the
     clause's right edge (EMU)."""
     anchor = left + ante[0] + CLAUSE_INSET
@@ -619,7 +656,13 @@ def _draw_clause(slide, left, base, ante, cl, drop=CLAUSE_DROP, ante_mods=False)
     right = _draw_diagram(slide, cl_left, ctop, cl["s"], cl.get("p", ""), cl.get("o"),
                           cl.get("c"), smod=cl.get("smod"), pmod=cl.get("pmod"),
                           omod=cl.get("omod"))
-    _line(slide, int(anchor), base, int(anchor), ctop + Inches(0.02), dashed=True)
+    if cl.get("via"):
+        cbase = ctop + Inches(0.30) + max(_up(w) for w in (cl["s"], cl.get("p", ""), cl.get("o")))
+        end = cl_left + _via_geom(cl)[1]
+        _line(slide, int(anchor), base, int(anchor), int(cbase), dashed=True)
+        _line(slide, int(anchor), int(cbase), int(end), int(cbase + Inches(0.34)), dashed=True)
+    else:
+        _line(slide, int(anchor), base, int(anchor), ctop + Inches(0.02), dashed=True)
     if cl.get("link"):
         # A connective (e.g. the *when* of an adverbial clause) written on the connector.
         # On the connector's left when the antecedent's own modifiers hang to the right.

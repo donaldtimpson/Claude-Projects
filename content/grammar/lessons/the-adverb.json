@@ -39,9 +39,9 @@
         "How:  *slowly*, *sweetly*, *well*.   ·   When:  *soon*, *now*, *never*.",
         "Where:  *here*, *there*, *yonder*.   ·   How much:  *very*, *quite*, *too*.",
         "“The river flows **slowly**.” — how.",
-  "“I will come **soon**.” — when.",
-  "“Put it **yonder**.” — where.",
-  "“The day is **very** warm.” — how much."
+        "“I will come **soon**.” — when.",
+        "“Put it **yonder**.” — where.",
+        "“The day is **very** warm.” — how much."
       ]
     },
     {
@@ -187,9 +187,10 @@
             "s": "it",
             "p": "thunders",
             "rel": "p",
-            "link": "when"
+            "pmod": "when",
+            "via": "when"
           },
-          "note": "Declarative. *He* is the subject; *trembles*, the predicate. *trembles* is modified by the clause *when it thunders*, an adverbial element. Within the clause, *it* is the subject; *thunders*, the predicate."
+          "note": "Declarative. *He* is the subject; *trembles*, the predicate. *trembles* is modified by the clause *when it thunders*, an adverbial element. Within the clause, *it* is the subject; *thunders*, the predicate, modified by *when*, an adverbial element. *when* also joins the clause to *trembles*."
         },
         {
           "sentence": "The bear growled when he saw the hunter.",
@@ -202,9 +203,10 @@
             "o": "hunter",
             "omod": "the",
             "rel": "p",
-            "link": "when"
+            "pmod": "when",
+            "via": "when"
           },
-          "note": "Declarative. *bear* is the subject; *growled*, the predicate. *bear* is modified by *the*, an adjective element; *growled*, by the clause *when he saw the hunter*, an adverbial element. Within the clause, *he* is the subject; *saw*, the predicate, modified by *hunter*, an objective element."
+          "note": "Declarative. *bear* is the subject; *growled*, the predicate. *bear* is modified by *the*, an adjective element; *growled*, by the clause *when he saw the hunter*, an adverbial element. Within the clause, *he* is the subject; *saw*, the predicate, modified by *when*, an adverbial element, and by *hunter*, an objective element. *when* also joins the clause to *growled*."
         }
       ]
     },
