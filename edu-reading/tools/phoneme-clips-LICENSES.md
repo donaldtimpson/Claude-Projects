@@ -31,3 +31,16 @@ Known: b/d/g are 70-105 ms — the source's own, phonetically correct (no "buh")
 Mapping (file -> id): c,k->k  qu->kw  x->ks  th->th  th-voiced->dh  ai->ay
 u-e->yoo  oo->oo  oo-book->oo_short  ur->er  (others same name). Unused: nk (the
 app plays ng+k), ear, air, ure, zh.
+
+## Where the clips live
+
+Not as plain files in git (the repo is public). They are committed only as an
+AES-256 encrypted archive, `tools/sounds/clips.tar.enc`; the key is kept outside
+the repo at `~/.config/sound-it-out/sounds.key` on each machine.
+
+- New machine: copy `sounds.key` to that path, then `edu-reading/tools/sounds/decrypt.sh`.
+- After changing the clips: `edu-reading/tools/sounds/encrypt.sh`, commit `clips.tar.enc`.
+- From scratch (no archive/key): `tools/sounds/build_sounds.py <pack dir>` rebuilds them
+  from the Phonicademy download.
+
+Without the clips the app still builds; letter sounds stay silent.

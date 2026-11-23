@@ -349,6 +349,12 @@ content (`k`, `sh`, `ay`, `oo_short`…; "ng+k" plays two). With no clips bundle
 the letter decks stay silent rather than teach a sound wrong, and Sound Hunt /
 First Sound are hidden.
 
+The clips are Phonicademy's (credit in the grown-ups' area) and are **not in git as
+files** — the repo is public. They're committed encrypted as
+`tools/sounds/clips.tar.enc`; on a fresh clone copy the key to
+`~/.config/sound-it-out/sounds.key` and run `tools/sounds/decrypt.sh`. Details in
+`tools/phoneme-clips-LICENSES.md`.
+
 ## Writing
 
 **Draw** comes first: twenty pictures built from the pre-writing strokes in the
