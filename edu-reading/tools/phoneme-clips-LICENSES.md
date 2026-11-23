@@ -26,7 +26,15 @@ Acceptance (all 43 pass): length inside a band per sound class; voiceless stops,
 affricates and fricatives unvoiced and with no vowel tail (two independent checks:
 periodicity + low-band energy, and spectrograms reviewed); one take per clip; no
 clipping; encoded length identical to source.
-Known: b/d/g are 70-105 ms — the source's own, phonetically correct (no "buh").
+b, d, g are NOT Phonicademy's: theirs were 70-105 ms and the owner found them too
+short on device. They come from FreeReading's "Most common letter sounds" clips
+(https://www.freereading.net/wiki/Most_common_letter_sounds_(audio_clips).html,
+CC BY-SA 3.0): each cut at the silence before its example word (bat / dot / got —
+verified by transcribing the remainder, before any Phonicademy file was involved),
+started at the burst less 15 ms, levelled to the same loudness: b 234 ms, d 165 ms,
+g 269 ms — a burst with a short fading release, no held vowel. Adapted clips are
+CC BY-SA 3.0. build_sounds.py rebuilds only the Phonicademy ones; the archive
+(clips.tar.enc) holds the full set.
 
 Mapping (file -> id): c,k->k  qu->kw  x->ks  th->th  th-voiced->dh  ai->ay
 u-e->yoo  oo->oo  oo-book->oo_short  ur->er  (others same name). Unused: nk (the
