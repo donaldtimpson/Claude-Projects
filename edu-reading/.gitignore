@@ -3,3 +3,6 @@ ios/SoundItOut.xcodeproj/
 *.xcuserdatad
 .DS_Store
 *.mov
+
+# Phonicademy clips: licence forbids publishing them as files; rebuild with tools/sounds/build_sounds.py
+ios/Resources/Sounds/ph_*.m4a

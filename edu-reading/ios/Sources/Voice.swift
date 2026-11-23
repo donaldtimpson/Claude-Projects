@@ -157,10 +157,11 @@ final class Voice: NSObject {
     /// nothing to play and should not ask for two taps.
     var hasAnyLetterAudio: Bool { hasPhoneme("s") }
 
-    /// A phoneme clip is `ph_<id>.m4a`: human recordings of the single-letter
-    /// sounds (FreeReading, CC BY-SA). Synthesis can't make an isolated stop
-    /// consonant — it gives silence or "kuh" — and stretched synthesis came out at
-    /// lengths all over the place, so a sound with no recording is never faked.
+    /// A phoneme clip is `ph_<id>.m4a`, one per sound the app teaches, from the
+    /// Phonicademy 44 Sounds pack (see tools/phoneme-clips-LICENSES.md). Synthesis
+    /// can't make an isolated stop consonant — it gives silence or "kuh" — and
+    /// stretched synthesis came out at lengths all over the place, so a sound with
+    /// no clip is never faked.
     func hasPhoneme(_ id: String) -> Bool {
         id.split(separator: "+").allSatisfy {
             Bundle.main.url(forResource: "ph_\($0)", withExtension: "m4a") != nil
