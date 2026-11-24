@@ -10,37 +10,61 @@
 
 (a) (3 pts) Compute $AB$.
 
+[work]: # "2.0in"
+
 (b) (3 pts) Let $X$ be a $p\times q$ matrix, and let $M=\begin{bmatrix}I_p&X\\0&I_q\end{bmatrix}$. Use block multiplication to find $M^{-1}$, and verify your answer.
+
+[work]: # "2.5in"
 
 **2. The Inverse of a Matrix (10 points).** Let $A=\begin{bmatrix}1&-1&1\\-2&3&-1\\1&0&3\end{bmatrix}$.
 
 (a) (7 pts) Find $A^{-1}$ by row reducing $[\,A\ \ I\,]$.
 
+[work]: # "4.0in"
+
 (b) (3 pts) Use $A^{-1}$ to solve $A\mathbf x=\mathbf b$ for $\mathbf b=\begin{bmatrix}2\\-1\\1\end{bmatrix}$.
+
+[work]: # "1.5in"
 
 **3. Invertible Linear Transformations (6 points).** Let $T:\mathbb R^2\to\mathbb R^2$ be defined by $T(x_1,x_2)=(4x_1+7x_2,\;x_1+2x_2)$.
 
 (a) (2 pts) Find the standard matrix of $T$ and explain why $T$ is invertible.
 
+[work]: # "1.5in"
+
 (b) (4 pts) Find a formula for $T^{-1}(x_1,x_2)$.
+
+[work]: # "2.0in"
 
 **4. LU Factorization (8 points).** Let $A=\begin{bmatrix}1&-2&3\\3&-4&8\\-1&6&-8\end{bmatrix}$ and $\mathbf b=\begin{bmatrix}-3\\-6\\12\end{bmatrix}$.
 
 (a) (5 pts) Find an LU factorization of $A$, with $L$ unit lower triangular.
 
+[work]: # "3.0in"
+
 (b) (3 pts) Use the factorization to solve $A\mathbf x=\mathbf b$: first solve $L\mathbf y=\mathbf b$, then $U\mathbf x=\mathbf y$.
+
+[work]: # "2.5in"
 
 **5. The Leontief Model (6 points).** An economy has two sectors, Manufacturing and Agriculture. Producing one unit of manufacturing output consumes $0.1$ unit of manufacturing and $0.3$ unit of agriculture. Producing one unit of agricultural output consumes $0.4$ unit of manufacturing and $0.2$ unit of agriculture.
 
 (a) (2 pts) Write the consumption matrix $C$.
 
+[work]: # "1.0in"
+
 (b) (4 pts) Find the production vector $\mathbf x$ that satisfies a final demand of $45$ units of manufacturing and $15$ units of agriculture.
+
+[work]: # "2.5in"
 
 **6. Computer Graphics (6 points).**
 
 (a) (4 pts) Find the $3\times3$ matrix that, acting on homogeneous coordinates, rotates points of $\mathbb R^2$ through $90^\circ$ **clockwise about the point $(1,3)$**.
 
+[work]: # "3.0in"
+
 (b) (2 pts) Use your matrix to find the image of the point $(2,5)$.
+
+[work]: # "1.0in"
 
 **7. Subspaces, Dimension, and Rank (12 points).** The matrix $A$ is row equivalent to the echelon form $B$:
 
@@ -48,19 +72,33 @@ $$A=\begin{bmatrix}1&0&-2&0&3\\2&1&-3&0&5\\-1&3&5&1&-4\\0&1&1&-2&-5\end{bmatrix}
 
 (a) (4 pts) Find a basis for $\operatorname{Col}A$.
 
+[work]: # "1.0in"
+
 (b) (4 pts) Find a basis for $\operatorname{Nul}A$.
+
+[work]: # "2.1in"
 
 (c) (2 pts) Find $\operatorname{rank}A$ and $\dim\operatorname{Nul}A$, and show that they agree with the Rank Theorem.
 
+[work]: # "0.6in"
+
 (d) (2 pts) Is $\operatorname{Col}A=\mathbb R^4$? Is $\operatorname{Nul}A$ a subspace of $\mathbb R^4$ or of $\mathbb R^5$? Justify.
+
+[work]: # "0.9in"
 
 **8. Determinants (10 points).**
 
 (a) (4 pts) Compute $\det\begin{bmatrix}2&0&1&0\\3&-1&4&2\\1&0&5&0\\6&3&-2&0\end{bmatrix}$ by cofactor expansion. Choose the row or column that makes the work shortest.
 
+[work]: # "2.2in"
+
 (b) (3 pts) Compute $\det\begin{bmatrix}1&-1&2\\3&-1&4\\-2&6&1\end{bmatrix}$ by row reducing to echelon form.
 
+[work]: # "1.8in"
+
 (c) (3 pts) Let $A$ and $B$ be $4\times4$ matrices with $\det A=3$ and $\det B=-1$. Find $\det(2A)$, $\det(A^TB^{-1})$, and $\det(B^5)$.
+
+[work]: # "1.3in"
 
 **9. Cramer's Rule and Area (8 points).**
 
@@ -68,13 +106,21 @@ $$A=\begin{bmatrix}1&0&-2&0&3\\2&1&-3&0&5\\-1&3&5&1&-4\\0&1&1&-2&-5\end{bmatrix}
 
 $$\begin{aligned} s\,x_1 + 3x_2 &= 5 \\ 3x_1 + s\,x_2 &= -1 \end{aligned}$$
 
+[work]: # "3.0in"
+
 (b) (4 pts) Find the area of the parallelogram with vertices $(1,-1)$, $(4,1)$, $(2,3)$, and $(5,5)$. Then find the area of its image under the linear transformation with standard matrix $\begin{bmatrix}1&-2\\3&1\end{bmatrix}$.
+
+[work]: # "2.5in"
 
 **10. Proofs (8 points).**
 
 (a) (4 pts) Let $A$ be an invertible $n\times n$ matrix. Prove that $A^T$ is invertible and that $(A^T)^{-1}=(A^{-1})^T$.
 
+[work]: # "2.5in"
+
 (b) (4 pts) Let $A$ be an $n\times n$ matrix with $A^3=0$. Prove that $A$ is not invertible.
+
+[work]: # "2.5in"
 
 ### Part II — Cumulative (20 points)
 
@@ -82,25 +128,43 @@ $$\begin{aligned} s\,x_1 + 3x_2 &= 5 \\ 3x_1 + s\,x_2 &= -1 \end{aligned}$$
 
 (a) (5 pts) Write the solution set of $A\mathbf x=\mathbf b$ in parametric vector form.
 
+[work]: # "3.0in"
+
 (b) (3 pts) Let $T(\mathbf x)=A\mathbf x$. Is $T$ one-to-one? Does $T$ map $\mathbb R^4$ onto $\mathbb R^3$? Justify each answer.
 
+[work]: # "1.8in"
+
 (c) (2 pts) Find a linear dependence relation among the columns $\mathbf a_1,\dots,\mathbf a_4$ of $A$.
+
+[work]: # "0.9in"
 
 **12. True or False (10 points, 2 each).** State whether each statement is true or false, and justify: cite a theorem or definition if true, give a counterexample if false.
 
 (a) If $A$ is an $n\times n$ matrix with $A^2=I$, then $A=I$ or $A=-I$.
 
+[work]: # "1.0in"
+
 (b) If $A$ is an $n\times n$ matrix and $A\mathbf x=\mathbf 0$ has a nontrivial solution, then the columns of $A$ span $\mathbb R^n$.
+
+[work]: # "1.0in"
 
 (c) If $A$ is an $n\times n$ matrix and $c$ is a scalar, then $\det(cA)=c\det A$.
 
+[work]: # "1.0in"
+
 (d) If $\{\mathbf v_1,\mathbf v_2\}$ is a linearly dependent set in $\mathbb R^n$, then one of the vectors is a scalar multiple of the other.
 
+[work]: # "1.0in"
+
 (e) If $A$ is a $4\times6$ matrix with $\operatorname{rank}A=4$, then $\mathbf x\mapsto A\mathbf x$ maps $\mathbb R^6$ onto $\mathbb R^4$.
+
+[work]: # "1.0in"
 
 ### Extra Credit (5 points ••)
 
 Let $n$ be odd. Prove that there is no $n\times n$ matrix $A$ (with real entries) such that $A^2=-I$.
+
+[work]: # "3.5in"
 
 <!-- SOLUTIONS -->
 

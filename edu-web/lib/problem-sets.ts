@@ -308,7 +308,7 @@ export function insertChunk(md: string, before: Chunk | null, text: string): str
 }
 
 /**
- * Estimate how many ruled work lines to leave under a problem on a printed
+ * Estimate how much work space (in 0.3in "lines", unruled) to leave under a problem on a printed
  * worksheet, from its worked solution (a proxy for how much a student must
  * write). Prose contributes by length; each displayed equation and each matrix
  * needs extra vertical room. Returns a clamped line count so no single problem
@@ -331,6 +331,38 @@ export function estimateWorkLines(solution: string | null | undefined): number {
     alignments * 2;
 
   return Math.max(4, Math.min(lines, 24)); // never cramped, never over ~a page
+}
+
+/**
+ * Authored work space for printed worksheets: a line `[work]: # "2.5in"` after a
+ * part leaves that much blank room under it. It's a Markdown link-reference
+ * definition, so every renderer (web, admin, iOS `marked`) draws nothing for it
+ * on screen.
+ */
+const WORK_RE = /^\[work\]:\s*#\s*"(\d+(?:\.\d+)?)in"\s*$/;
+
+export type WorkSegment = { text: string; inches: number | null };
+
+/**
+ * Split a problem at its `[work]` markers: each segment is the text up to a
+ * marker plus the space it asks for. Text after the last marker (or a problem
+ * with no markers at all) comes back with `inches: null`.
+ */
+export function splitWorkSpaces(md: string): WorkSegment[] {
+  const segments: WorkSegment[] = [];
+  let buf: string[] = [];
+  for (const line of md.split("\n")) {
+    const m = line.trim().match(WORK_RE);
+    if (m) {
+      segments.push({ text: buf.join("\n").trim(), inches: Number(m[1]) });
+      buf = [];
+    } else {
+      buf.push(line);
+    }
+  }
+  const rest = buf.join("\n").trim();
+  if (rest) segments.push({ text: rest, inches: null });
+  return segments;
 }
 
 /**

@@ -6,7 +6,7 @@ import { join } from "node:path";
 // ProblemSet rows on the Linear Algebra course. Same shape as
 // import-physics-midterm.ts.
 //
-//   npx tsx scripts/import-linear-algebra-tests.ts [--dry-run] [--update]
+//   npx tsx scripts/import-linear-algebra-tests.ts [--dry-run] [--update] [--only <file substring>]
 //
 // - Practice Test: Published + solutions public — behaves like a normal
 //   problem set (students study it with the worked key).
@@ -82,6 +82,10 @@ function parse(file: string): { body: string; solution: string } {
 async function main() {
   const dryRun = process.argv.includes("--dry-run");
   const update = process.argv.includes("--update");
+  // --only test-2 limits the run to matching files, so an --update can't
+  // clobber admin edits made to earlier tests.
+  const onlyIdx = process.argv.indexOf("--only");
+  const only = onlyIdx !== -1 ? process.argv[onlyIdx + 1] : null;
 
   const course = await prisma.course.findUnique({
     where: { id: COURSE_ID },
@@ -96,7 +100,7 @@ async function main() {
     select: { title: true, createdAt: true },
   });
 
-  for (const cfg of CONFIGS) {
+  for (const cfg of CONFIGS.filter((c) => !only || c.file.includes(only))) {
     const { body, solution } = parse(cfg.file);
     // Keep the slot strictly between the two sets (they may be only ~ms apart,
     // so do NOT floor the gap — a floor would overshoot past later sets).
