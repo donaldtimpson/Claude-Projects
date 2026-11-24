@@ -16,7 +16,7 @@ import { join } from "node:path";
 // Idempotent: a row whose title already exists is skipped unless --update is
 // passed (which overwrites body/solution/points/flags, preserving createdAt so
 // the list order is stable). Each test is slotted just after the last section
-// set it covers (Test 1 → after 1.10, before 2.1).
+// set it covers (Test 1 → after 1.10, before 2.1; Test 2 → after 3.3, before 4.1).
 
 const prisma = new PrismaClient();
 const COURSE_ID = "cmr6plbkh0000jg044yr526qd"; // Linear Algebra (Lay 5e)
@@ -50,6 +50,24 @@ const CONFIGS: Cfg[] = [
     solutionsPublic: false,
     after: "1.10 Exercises",
     before: "2.1 Exercises",
+    order: 0.66,
+  },
+  {
+    file: "practice-test-2.md",
+    title: "Practice Test 2 — Chapters 2–3",
+    isDraft: false,
+    solutionsPublic: true,
+    after: "3.3 Exercises",
+    before: "4.1 Exercises",
+    order: 0.33,
+  },
+  {
+    file: "test-2.md",
+    title: "Test 2 — Chapters 2–3",
+    isDraft: true,
+    solutionsPublic: false,
+    after: "3.3 Exercises",
+    before: "4.1 Exercises",
     order: 0.66,
   },
 ];
